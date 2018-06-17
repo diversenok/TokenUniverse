@@ -10,8 +10,8 @@ type
   TInfoDialog = class(TForm)
     PageControl: TPageControl;
     TabMain: TTabSheet;
-    TabSheet1: TTabSheet;
-    Privileges: TTabSheet;
+    TabGroups: TTabSheet;
+    TabPrivileges: TTabSheet;
     StaticTextUser: TStaticText;
     EditUser: TEdit;
     StaticTextSid: TStaticText;
@@ -20,6 +20,7 @@ type
     Edit1: TEdit;
     ButtonUserSID: TSpeedButton;
     ButtonCancel: TButton;
+    GroupListView: TListView;
     procedure EditColorOutdated(Sender: TObject);
   private
     { Private declarations }

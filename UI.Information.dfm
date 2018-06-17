@@ -26,10 +26,8 @@ object InfoDialog: TInfoDialog
     ActivePage = TabMain
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitHeight = 255
     object TabMain: TTabSheet
       Caption = 'Main information'
-      ExplicitHeight = 258
       DesignSize = (
         357
         241)
@@ -181,15 +179,30 @@ object InfoDialog: TInfoDialog
         OnChange = EditColorOutdated
       end
     end
-    object TabSheet1: TTabSheet
+    object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      ExplicitHeight = 258
+      object GroupListView: TListView
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 351
+        Height = 235
+        Align = alClient
+        Columns = <>
+        GridLines = True
+        RowSelect = True
+        TabOrder = 0
+        ViewStyle = vsReport
+        ExplicitLeft = 32
+        ExplicitTop = 40
+        ExplicitWidth = 250
+        ExplicitHeight = 150
+      end
     end
-    object Privileges: TTabSheet
+    object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      ExplicitHeight = 258
     end
   end
   object ButtonCancel: TButton
@@ -202,6 +215,5 @@ object InfoDialog: TInfoDialog
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
-    ExplicitTop = 260
   end
 end

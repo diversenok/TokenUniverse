@@ -83,6 +83,7 @@ object FormMain: TFormMain
       Height = 25
       Caption = 'Open Process'
       TabOrder = 0
+      OnClick = Button1Click
     end
   end
   object PopupMenuItem: TPopupMenu

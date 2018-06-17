@@ -38,6 +38,7 @@ type
       Selected: Boolean);
     procedure ActionDuplicateClick(Sender: TObject);
     procedure ActionCloseClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   end;
 
 var
@@ -46,7 +47,7 @@ var
 implementation
 
 uses
-  TU.Common, UI.Information, UI.Duplicate;
+  TU.Common, UI.Information, UI.Duplicate, UI.ProcessList;
 
 {$R *.dfm}
 
@@ -96,6 +97,11 @@ begin
     try SubItems.Add(Token.Integrity.ToString);
     except on E: EOSError do SubItems.Add(ERROR_MSG); end;
   end;
+end;
+
+procedure TFormMain.Button1Click(Sender: TObject);
+begin
+  TProcessListDialog.Execute(Self);
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
