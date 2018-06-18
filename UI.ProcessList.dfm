@@ -21,9 +21,9 @@ object ProcessListDialog: TProcessListDialog
   TextHeight = 13
   object TreeView: TTreeView
     Left = 3
-    Top = 3
+    Top = 35
     Width = 325
-    Height = 264
+    Height = 232
     Anchors = [akLeft, akTop, akRight, akBottom]
     Indent = 19
     TabOrder = 0
@@ -59,5 +59,15 @@ object ProcessListDialog: TProcessListDialog
     Caption = 'Refresh'
     TabOrder = 3
     OnClick = ButtonRefreshClick
+  end
+  object SearchBox: TButtonedEdit
+    Left = 3
+    Top = 8
+    Width = 325
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 4
+    TextHint = 'Search'
+    OnChange = SearchBoxChange
   end
 end

@@ -17,7 +17,7 @@ type
     function GetItem(i: integer): TProcessItem;
   public
     constructor Create;
-    destructor Destroy; overload;
+    destructor Destroy; override;
     property Count: integer read FCount;
     property Items[i: integer]: TProcessItem read GetItem; default;
   end;
@@ -118,6 +118,9 @@ begin
   begin
     SetString(FItems[i].ImageName, SysInfo.ImageName.Buffer,
       SysInfo.ImageName.Length div SizeOf(WChar));
+    if FItems[i].ImageName = '' then
+      FItems[i].ImageName := 'System Idle Process';
+
     FItems[i].PID := SysInfo.ProcessId;
     FItems[i].ParentPID := SysInfo.InheritedFromProcessId;
 
