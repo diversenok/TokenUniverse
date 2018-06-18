@@ -69,7 +69,6 @@ object ProcessListDialog: TProcessListDialog
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 4
     TextHint = 'Search'
-    OnChange = SearchBoxChange
   end
   object ImageList: TImageList
     ColorDepth = cd32Bit
