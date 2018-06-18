@@ -5,30 +5,27 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, TU.EnumProcesses, Vcl.ExtCtrls;
+  Vcl.StdCtrls, Vcl.ComCtrls, TU.EnumProcesses, Vcl.ExtCtrls, System.ImageList,
+  Vcl.ImgList;
 
 type
-  TProcessItemHolder = class
-    Data: TProcessItem;
-    Node: TTreeNode;
-    ParentExists: Boolean;
-    ParentIndex: Integer;
-    Added: Boolean;
-    constructor Create(Src: TProcessItem);
-  end;
-
   TProcessListDialog = class(TForm)
-    TreeView: TTreeView;
     ButtonOk: TButton;
     ButtonCancel: TButton;
     ButtonRefresh: TButton;
     SearchBox: TButtonedEdit;
+    ListView: TListView;
+    ImageList: TImageList;
     procedure ButtonRefreshClick(Sender: TObject);
     class function Execute(AOwner: TComponent): Cardinal; // returns PID
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SearchBoxChange(Sender: TObject);
+    procedure MethodNoIndent;
+    procedure MethodIndent;
+    procedure UpdateProcessIcons;
   private
-    Holders: array of TProcessItemHolder;
+    ProcListSnapshot: TProcessList;
+    function AddChild(ParentIndex: Integer): TListItem;
+    function ImageListAddIcon(SrcFile: PWideChar; DefaultIcon: integer): Integer;
   public
     { Public declarations }
   end;
@@ -38,22 +35,110 @@ var
 
 implementation
 
+uses
+  Winapi.ShellApi;
+
 {$R *.dfm}
 
-function ProcessToString(const Data: TProcessItem): String;
+type
+  TProcessItemHolder = class
+    Data: TProcessItem;
+    Item: TListItem;
+    ParentExists: Boolean;
+    ParentIndex: Integer;
+    Added: Boolean;
+    constructor Create(Src: TProcessItem);
+  end;
+  PProcessItemHolder = ^TProcessItemHolder;
+
+function TProcessListDialog.AddChild(ParentIndex: Integer): TListItem;
+var
+  NextSibling, ParentIndent: Integer;
 begin
-  Result := Format('%s (%d)', [Data.ImageName, Data.PID]);
+  ParentIndent := ListView.Items[ParentIndex].Indent;
+  for NextSibling := ParentIndex + 1 to ListView.Items.Count - 1 do
+    if ListView.Items[NextSibling].Indent <= ParentIndent then
+      Break;
+
+  if NextSibling = ListView.Items.Count then
+    Result := ListView.Items.Add
+  else
+    Result := ListView.Items.Insert(NextSibling);
+
+  Result.Indent := ParentIndent + 1;
 end;
 
 procedure TProcessListDialog.ButtonRefreshClick(Sender: TObject);
+begin
+  //MethodNoIndent;
+  MethodIndent;
+  UpdateProcessIcons;
+end;
+
+class function TProcessListDialog.Execute(AOwner: TComponent): Cardinal;
+begin
+  with TProcessListDialog.Create(AOwner) do
+  begin
+    ShowModal; // And wait until the dialog closes
+    Result := 0;
+  end;
+end;
+
+procedure TProcessListDialog.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+var
+  i: integer;
+begin
+  ProcListSnapshot.Free;
+  Action := caFree;
+end;
+
+procedure TProcessListDialog.UpdateProcessIcons;
+var
+  i: integer;
+  hProcess: THandle;
+  Buffer: PWideChar;
+  BufferSize: Cardinal;
+  DefaultIcon: integer;
+begin
+  ImageList.Clear;
+  DefaultIcon := ImageListAddIcon(PWideChar(GetEnvironmentVariable('SystemRoot')
+    + '\system32\user32.dll'), -1);
+
+  Buffer := AllocMem(NT_FILENAME_MAX);
+  try
+    for i := 0 to ProcListSnapshot.Count - 1 do
+    begin
+      ListView.Items[i].ImageIndex := DefaultIcon;
+
+      BufferSize := NT_FILENAME_MAX;
+      //hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, ProcListSnapshot[i].PID);
+      hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, PProcessItemHolder(ListView.Items[i].Data).Data.PID);
+
+      if hProcess = 0 then
+        Continue;
+
+      if QueryFullProcessImageNameW(hProcess, 0, Buffer, BufferSize) then
+      begin
+        ListView.Items[i].ImageIndex := ImageListAddIcon(Buffer, DefaultIcon);
+        CloseHandle(hProcess);
+      end;
+    end;
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+procedure TProcessListDialog.MethodIndent;
 var
   i, j, LoopAdded: integer;
+  Holders: array of TProcessItemHolder;
 begin
-  TreeView.Items.BeginUpdate;
+  ProcListSnapshot.Free;
+  ProcListSnapshot := TProcessList.Create;
 
-  TreeView.Items.Clear;
-  for i := 0 to High(Holders) do
-    Holders[i].Free;
+  ListView.Items.BeginUpdate;
+  ListView.Items.Clear;
 
   // Create a list of holders
   with TProcessList.Create do
@@ -78,9 +163,10 @@ begin
   for i := 0 to High(Holders) do
     if not Holders[i].ParentExists then
     begin
-      Holders[i].Node := TreeView.Items.Add(nil,
-        ProcessToString(Holders[i].Data));
-      Holders[i].Node.Data := Holders[i];
+      Holders[i].Item := ListView.Items.Add;
+      Holders[i].Item.Caption := ' ' + Holders[i].Data.ImageName;
+      Holders[i].Item.SubItems.Add(IntToStr(Holders[i].Data.PID));
+      Holders[i].Item.Data := @Holders[i];
       Holders[i].Added := True;
     end;
 
@@ -91,52 +177,67 @@ begin
       if Holders[i].ParentExists and (not Holders[i].Added) and
         Holders[Holders[i].ParentIndex].Added then
       begin
-        Holders[i].Node := TreeView.Items.AddChild(
-          Holders[Holders[i].ParentIndex].Node,
-          ProcessToString(Holders[i].Data));
-        Holders[Holders[i].ParentIndex].Node.Expand(False);
-        Holders[i].Node.Data := Holders[i];
+        Holders[i].Item := AddChild(Holders[Holders[i].ParentIndex].Item.Index);
+        Holders[i].Item.Caption := ' ' + Holders[i].Data.ImageName;
+        Holders[i].Item.SubItems.Add(IntToStr(Holders[i].Data.PID));
+        Holders[i].Item.Data := @Holders[i];
         Holders[i].Added := True;
         Inc(LoopAdded);
       end;
   until LoopAdded = 0;
 
-  TreeView.Items.EndUpdate;
+  ListView.Items.EndUpdate;
+
+  {for i := 0 to 4 do
+    ShowMessage(PProcessItemHolder(ListView.Items[i].Data).Data.ImageName);}
+
+end;
+
+function TProcessListDialog.ImageListAddIcon(SrcFile: PWideChar;
+  DefaultIcon: integer): Integer;
+var
+  ObjIcon: TIcon;
+  LargeHIcon, SmallHIcon: HICON;
+begin
+  if ExtractIconExW(SrcFile, 0, LargeHIcon, SmallHIcon, 1) <> 0  then
+  begin
+    ObjIcon := TIcon.Create;
+    ObjIcon.Handle := SmallHIcon;
+    Result := ImageList.AddIcon(ObjIcon);
+    ObjIcon.Free;
+    DestroyIcon(SmallHIcon);
+    DestroyIcon(LargeHIcon);
+  end
+  else
+    Result := DefaultIcon;
+end;
+
+procedure TProcessListDialog.MethodNoIndent;
+var
+  i: integer;
+begin
+  ProcListSnapshot.Free;
+  ProcListSnapshot := TProcessList.Create;
+
+  ListView.Items.BeginUpdate;
+  ListView.Items.Clear;
+
+  for i := 0 to ProcListSnapshot.Count - 1 do
+    with ListView.Items.Add do
+    begin
+      Caption := ' ' + ProcListSnapshot[i].ImageName;
+      SubItems.Add(IntToStr(ProcListSnapshot[i].PID));
+    end;
+
+  ListView.Items.EndUpdate;
+//  UpdateProcessList;
 end;
 
 { TProcessItemHolder }
 
-constructor TProcessItemHolder.Create;
+constructor TProcessItemHolder.Create(Src: TProcessItem);
 begin
   Data := Src;
-end;
-
-class function TProcessListDialog.Execute(AOwner: TComponent): Cardinal;
-begin
-  with TProcessListDialog.Create(AOwner) do
-  begin
-    ShowModal; // And wait until the dialog closes
-    Result := 0;
-  end;
-end;
-
-procedure TProcessListDialog.FormClose(Sender: TObject;
-  var Action: TCloseAction);
-var
-  i: integer;
-begin
-  for i := 0 to High(Holders) do
-    Holders[i].Free;
-  Action := caFree;
-end;
-
-procedure TProcessListDialog.SearchBoxChange(Sender: TObject);
-var
-  i: integer;
-begin
-  for i := 0 to High(Holders) do
-    if Holders[i].Data.ImageName.Contains(SearchBox.Text) then
-      Holders[i].Node;
 end;
 
 end.

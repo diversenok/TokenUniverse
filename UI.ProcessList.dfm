@@ -19,17 +19,8 @@ object ProcessListDialog: TProcessListDialog
     306)
   PixelsPerInch = 96
   TextHeight = 13
-  object TreeView: TTreeView
-    Left = 3
-    Top = 35
-    Width = 325
-    Height = 232
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Indent = 19
-    TabOrder = 0
-  end
   object ButtonOk: TButton
-    Left = 253
+    Left = 172
     Top = 273
     Width = 75
     Height = 25
@@ -37,10 +28,10 @@ object ProcessListDialog: TProcessListDialog
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 1
+    TabOrder = 0
   end
   object ButtonCancel: TButton
-    Left = 172
+    Left = 253
     Top = 273
     Width = 75
     Height = 25
@@ -48,7 +39,7 @@ object ProcessListDialog: TProcessListDialog
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 2
+    TabOrder = 1
   end
   object ButtonRefresh: TButton
     Left = 3
@@ -57,7 +48,7 @@ object ProcessListDialog: TProcessListDialog
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Refresh'
-    TabOrder = 3
+    TabOrder = 2
     OnClick = ButtonRefreshClick
   end
   object SearchBox: TButtonedEdit
@@ -66,8 +57,35 @@ object ProcessListDialog: TProcessListDialog
     Width = 325
     Height = 21
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 4
+    TabOrder = 3
     TextHint = 'Search'
-    OnChange = SearchBoxChange
+  end
+  object ListView: TListView
+    Left = 3
+    Top = 33
+    Width = 325
+    Height = 234
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Columns = <
+      item
+        Caption = 'Process name'
+        Width = 220
+      end
+      item
+        Alignment = taCenter
+        Caption = 'PID'
+        Width = 60
+      end>
+    GridLines = True
+    ReadOnly = True
+    RowSelect = True
+    SmallImages = ImageList
+    TabOrder = 4
+    ViewStyle = vsReport
+  end
+  object ImageList: TImageList
+    ColorDepth = cd32Bit
+    Left = 80
+    Top = 112
   end
 end
