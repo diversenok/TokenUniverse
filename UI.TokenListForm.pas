@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, TU.TokenUtils,
   System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Menus;
+  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs;
 
 type
   TFormMain = class(TForm)
@@ -101,7 +101,7 @@ end;
 
 procedure TFormMain.Button1Click(Sender: TObject);
 begin
-  TProcessListDialog.Execute(Self);
+  ShowMessage(IntToStr(TProcessListDialog.Execute(Self)));
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -113,8 +113,6 @@ begin
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
-var
-  Token: TToken;
 begin
   try
     with AddToken(TToken.CreateFromCurrent) do
