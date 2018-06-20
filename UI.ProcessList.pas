@@ -28,6 +28,7 @@ type
     SearchBox: TButtonedEdit;
     ListView: TListView;
     ImageList: TImageList;
+    SearchButtons: TImageList;
     procedure ReloadProcessList(Sender: TObject);
     procedure ReloadProcessIcons;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -39,6 +40,8 @@ type
     ///  Displays the dialog and returns PID of the selected process.
     /// </summary>
     class function Execute(AOwner: TComponent): Cardinal;
+    destructor Destroy; override;
+    procedure SearchBoxRightButtonClick(Sender: TObject);
   private
     ProcessListEx: array of TProcessItemEx;
     function AddChild(ParentIndex: Integer): TListItem;
@@ -97,26 +100,33 @@ begin
   DestroyIcon(LargeHIcon);
 end;
 
+destructor TProcessListDialog.Destroy;
+var
+  i: integer;
+begin
+  for i := 0 to High(ProcessListEx) do
+    ProcessListEx[i].Free;
+  inherited;
+end;
+
 class function TProcessListDialog.Execute(AOwner: TComponent): Cardinal;
 begin
   with TProcessListDialog.Create(AOwner) do
   begin
     ShowModal; // And wait until the dialog closes
 
+    // The form wouldn't be actually destroyed until Application.ProcessMessages
+
     if (ModalResult <> mrOk) or (ListView.Selected = nil) then
       raise EAbort.Create('');
 
-    Result := 0;
+    Result := PProcessItemEx(ListView.Selected.Data).Process.PID;
   end;
 end;
 
 procedure TProcessListDialog.FormClose(Sender: TObject;
   var Action: TCloseAction);
-var
-  i: integer;
 begin
-  for i := 0 to High(ProcessListEx) do
-    ProcessListEx[i].Free;
   Action := caFree;
 end;
 
@@ -125,6 +135,15 @@ procedure TProcessListDialog.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   if Key = VK_F5 then
     ReloadProcessList(Sender);
+  if (Key = Ord('F')) and (Shift = [ssCtrl]) then
+    SearchBox.SetFocus;
+  if Key = VK_ESCAPE then
+  begin
+    if SearchBox.Focused and (SearchBox.Text <> '') then
+      SearchBox.Text := ''
+    else
+      Close;
+  end;
 end;
 
 procedure TProcessListDialog.ListViewSelectItem(Sender: TObject;
@@ -142,6 +161,7 @@ var
   DefaultIcon: integer;
 begin
   // TODO: Setting for disabling process icons on slow systems
+
   ImageList.BeginUpdate;
   ImageList.Clear;
 
@@ -214,6 +234,8 @@ var
   i, LoopAdded: integer;
   SearchQuery: String;
 begin
+  SearchBox.RightButton.Visible := SearchBox.Text <> '';
+
   ListView.Items.BeginUpdate;
   ListView.Items.Clear;
 
@@ -257,6 +279,11 @@ begin
   until LoopAdded = 0;
 
   ListView.Items.EndUpdate;
+end;
+
+procedure TProcessListDialog.SearchBoxRightButtonClick(Sender: TObject);
+begin
+  SearchBox.Text := '';
 end;
 
 { TProcessItemEx }
