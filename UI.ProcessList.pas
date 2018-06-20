@@ -5,8 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, TU.EnumProcesses, Vcl.ExtCtrls, System.ImageList,
-  Vcl.ImgList;
+  Vcl.StdCtrls, Vcl.ComCtrls, TU.EnumProcesses, Vcl.ExtCtrls;
 
 type
   TProcessItemHolder = class
@@ -18,8 +17,7 @@ type
     constructor Create(Src: TProcessItem);
   end;
 
-  TProcessListDialog = class (TForm)
-    ImageList: TImageList;
+  TProcessListDialog = class(TForm)
     TreeView: TTreeView;
     ButtonOk: TButton;
     ButtonCancel: TButton;
