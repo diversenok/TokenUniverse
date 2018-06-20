@@ -2,12 +2,17 @@ unit TU.EnumProcesses;
 
 interface
 
+const
+  PROCESS_QUERY_LIMITED_INFORMATION = $1000;
+  NT_FILENAME_MAX = 32768;
+
 type
   TProcessItem = record
     ImageName: String;
     PID: Cardinal;
     ParentPID: Cardinal;
   end;
+  PProcessItem = ^TProcessItem;
 
   TProcessList = class
   private
@@ -21,6 +26,10 @@ type
     property Count: integer read FCount;
     property Items[i: integer]: TProcessItem read GetItem; default;
   end;
+
+function QueryFullProcessImageNameW(hProcess: THandle; dwFlags: Cardinal;
+  lpExeName: PWideChar; var lpdwSize: Cardinal): LongBool; stdcall;
+  external 'kernel32.dll' delayed;
 
 implementation
 
