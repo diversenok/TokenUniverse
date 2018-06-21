@@ -12,33 +12,52 @@ type
     TokenListView: TListView;
     Panel1: TPanel;
     Button1: TButton;
-    Label1: TLabel;
-    PopupMenuItem: TPopupMenu;
-    ActionDuplicate: TMenuItem;
-    ActionClose: TMenuItem;
-    PopupMenuNothing: TPopupMenu;
-    Otherprocess1: TMenuItem;
-    Createnewtoken2: TMenuItem;
-    CreatefromSaferAPI1: TMenuItem;
-    LogonUser1: TMenuItem;
-    Fromotherprocess1: TMenuItem;
-    Searchforhandles1: TMenuItem;
-    hread1: TMenuItem;
-    WTSQueryUserToken1: TMenuItem;
-    New1: TMenuItem;
-    Opencurrentprocess2: TMenuItem;
-    N1: TMenuItem;
-    N3: TMenuItem;
+    MainMenu: TMainMenu;
+    Program1: TMenuItem;
+    View1: TMenuItem;
+    Help1: TMenuItem;
+    RunasAdministrator1: TMenuItem;
+    RunasSYSTEM1: TMenuItem;
+    RunasSYSTEM2: TMenuItem;
+    PopupMenu: TPopupMenu;
+    TokenDuplicate: TMenuItem;
+    TokenRestrict: TMenuItem;
+    TokenRename: TMenuItem;
+    TokenClose: TMenuItem;
+    HLine1: TMenuItem;
+    TokenRun: TMenuItem;
+    TokenSendHandle: TMenuItem;
+    NewMenu: TMenuItem;
+    NewOpenSelf: TMenuItem;
+    NewOpenProcess: TMenuItem;
+    NewOpenThread: TMenuItem;
+    HLine3: TMenuItem;
+    NewLogonUser: TMenuItem;
+    NewQueryUserToken: TMenuItem;
+    NewSaferApi: TMenuItem;
+    NewNtCreateToken: TMenuItem;
+    HLine4: TMenuItem;
+    NewCopyHandle: TMenuItem;
+    NewSearchHandle: TMenuItem;
+    ProgramRun: TMenuItem;
+    MenuItem21: TMenuItem;
+    MenuItem22: TMenuItem;
+    MenuItem23: TMenuItem;
+    HLine2: TMenuItem;
+    RunTaskAsInteractiveUser1: TMenuItem;
     function AddToken(Token: TToken): TToken;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure TokenListViewEdited(Sender: TObject; Item: TListItem;
       var S: string);
+    procedure ActionDuplicate(Sender: TObject);
+    procedure ActionClose(Sender: TObject);
+    procedure ActionOpenProcess(Sender: TObject);
+    procedure ActionRename(Sender: TObject);
+    procedure ActionRunWithToken(Sender: TObject);
     procedure TokenListViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
-    procedure ActionDuplicateClick(Sender: TObject);
-    procedure ActionCloseClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure ActionOpenSelf(Sender: TObject);
   end;
 
 var
@@ -47,15 +66,14 @@ var
 implementation
 
 uses
-  TU.Common, UI.Information, UI.Duplicate, UI.ProcessList;
+  TU.Common, UI.Information, UI.Duplicate, UI.ProcessList, UI.Run;
 
 {$R *.dfm}
 
 { TForm1 }
 
-procedure TFormMain.ActionCloseClick(Sender: TObject);
+procedure TFormMain.ActionClose(Sender: TObject);
 begin
-  if TokenListView.Selected.Data = nil then Exit;
   with TokenListView.Selected do
   begin
     TToken(Data).Free;
@@ -63,10 +81,35 @@ begin
   end;
 end;
 
-procedure TFormMain.ActionDuplicateClick(Sender: TObject);
+procedure TFormMain.ActionDuplicate(Sender: TObject);
 begin
-  if TokenListView.Selected.Data = nil then Exit;
   AddToken(TDuplicateDialog.Execute(Self, TokenListView.Selected.Data));
+end;
+
+procedure TFormMain.ActionOpenProcess(Sender: TObject);
+begin
+  AddToken(TToken.CreateFromProcess(TProcessListDialog.Execute(Self)));
+end;
+
+procedure TFormMain.ActionOpenSelf(Sender: TObject);
+begin
+  AddToken(TToken.CreateFromCurrent);
+end;
+
+procedure TFormMain.ActionRename(Sender: TObject);
+var
+  NewName: string;
+begin
+  if InputQuery('Rename token', 'New token name: ', NewName) then
+  begin
+    TokenListView.Selected.Caption := NewName;
+    TokenListViewEdited(Sender, TokenListView.Selected, NewName);
+  end;
+end;
+
+procedure TFormMain.ActionRunWithToken(Sender: TObject);
+begin
+  TRunDialog.Execute(Self, TokenListView.Selected.Data);
 end;
 
 function TFormMain.AddToken(Token: TToken): TToken;
@@ -99,11 +142,6 @@ begin
   end;
 end;
 
-procedure TFormMain.Button1Click(Sender: TObject);
-begin
-  ShowMessage(IntToStr(TProcessListDialog.Execute(Self)));
-end;
-
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   Item: TListItem;
@@ -133,10 +171,10 @@ end;
 procedure TFormMain.TokenListViewSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 begin
-  if Selected then
-    TokenListView.PopupMenu := PopupMenuItem
-  else
-    TokenListView.PopupMenu := PopupMenuNothing;
+  TokenDuplicate.Enabled := Selected;
+  TokenRename.Enabled := Selected;
+  TokenClose.Enabled := Selected;
+  TokenRun.Enabled := Selected;
 end;
 
 end.
