@@ -3,11 +3,11 @@ object RunDialog: TRunDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Run program with token'
-  ClientHeight = 362
-  ClientWidth = 399
+  ClientHeight = 406
+  ClientWidth = 374
   Color = clBtnFace
-  Constraints.MinHeight = 400
-  Constraints.MinWidth = 415
+  Constraints.MinHeight = 444
+  Constraints.MinWidth = 390
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -15,44 +15,48 @@ object RunDialog: TRunDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCreate = FormCreate
   DesignSize = (
-    399
-    362)
+    374
+    406)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonCancel: TButton
-    Left = 317
-    Top = 331
+    Left = 292
+    Top = 375
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 0
-    ExplicitTop = 329
+    TabOrder = 11
+    ExplicitLeft = 317
+    ExplicitTop = 331
   end
   object GroupBoxAppName: TGroupBox
     Left = 8
     Top = 16
-    Width = 383
+    Width = 358
     Height = 49
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
+    ExplicitWidth = 383
     DesignSize = (
-      383
+      358
       49)
     object EditAppName: TEdit
       Left = 11
       Top = 15
-      Width = 296
+      Width = 271
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
       TabOrder = 0
+      ExplicitWidth = 296
     end
     object ButtonBrowseAppName: TButton
-      Left = 313
+      Left = 288
       Top = 13
       Width = 62
       Height = 25
@@ -60,6 +64,7 @@ object RunDialog: TRunDialog
       Caption = 'Browse'
       Enabled = False
       TabOrder = 1
+      ExplicitLeft = 313
     end
   end
   object CheckBoxAppName: TCheckBox
@@ -68,30 +73,32 @@ object RunDialog: TRunDialog
     Width = 102
     Height = 17
     Caption = 'Application name'
-    TabOrder = 2
+    TabOrder = 0
     OnClick = CheckBoxAppNameClick
   end
   object GroupBoxCmd: TGroupBox
     Left = 8
     Top = 80
-    Width = 383
+    Width = 358
     Height = 49
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 3
+    ExplicitWidth = 383
     DesignSize = (
-      383
+      358
       49)
     object EditCmd: TEdit
       Left = 11
       Top = 15
-      Width = 296
+      Width = 271
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
       TabOrder = 0
+      ExplicitWidth = 296
     end
     object ButtonBrowseCmd: TButton
-      Left = 313
+      Left = 288
       Top = 13
       Width = 62
       Height = 25
@@ -99,6 +106,7 @@ object RunDialog: TRunDialog
       Caption = 'Browse'
       Enabled = False
       TabOrder = 1
+      ExplicitLeft = 313
     end
   end
   object CheckBoxCmd: TCheckBox
@@ -107,16 +115,18 @@ object RunDialog: TRunDialog
     Width = 86
     Height = 17
     Caption = 'Command line'
-    TabOrder = 4
+    TabOrder = 2
     OnClick = CheckBoxCmdClick
   end
   object GroupBoxFlags: TGroupBox
     Left = 8
     Top = 199
-    Width = 173
-    Height = 122
+    Width = 358
+    Height = 74
+    Anchors = [akLeft, akTop, akRight]
     Caption = 'Flags '
-    TabOrder = 5
+    TabOrder = 6
+    ExplicitWidth = 383
     object CheckBoxInherit: TCheckBox
       Left = 11
       Top = 24
@@ -134,16 +144,16 @@ object RunDialog: TRunDialog
       TabOrder = 1
     end
     object CheckBoxNewConsole: TCheckBox
-      Left = 11
-      Top = 70
+      Left = 179
+      Top = 22
       Width = 150
       Height = 17
       Caption = 'Create new console'
       TabOrder = 2
     end
     object CheckBoxBreakaway: TCheckBox
-      Left = 11
-      Top = 93
+      Left = 179
+      Top = 45
       Width = 150
       Height = 17
       Caption = 'Breakaway from job'
@@ -153,24 +163,26 @@ object RunDialog: TRunDialog
   object GroupBoxDirectory: TGroupBox
     Left = 8
     Top = 144
-    Width = 383
+    Width = 358
     Height = 49
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 6
+    TabOrder = 5
+    ExplicitWidth = 383
     DesignSize = (
-      383
+      358
       49)
     object EditDirectory: TEdit
       Left = 11
       Top = 15
-      Width = 296
+      Width = 271
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
       TabOrder = 0
+      ExplicitWidth = 296
     end
     object ButtonBrowseDirectory: TButton
-      Left = 313
+      Left = 288
       Top = 13
       Width = 62
       Height = 25
@@ -178,6 +190,7 @@ object RunDialog: TRunDialog
       Caption = 'Browse'
       Enabled = False
       TabOrder = 1
+      ExplicitLeft = 313
     end
   end
   object CheckBoxDirectory: TCheckBox
@@ -186,65 +199,25 @@ object RunDialog: TRunDialog
     Width = 104
     Height = 17
     Caption = 'Current directory'
-    TabOrder = 7
+    TabOrder = 4
     OnClick = CheckBoxDirectoryClick
   end
-  object GroupBoxParent: TGroupBox
-    Left = 187
-    Top = 204
-    Width = 204
-    Height = 50
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 8
-    DesignSize = (
-      204
-      50)
-    object EditParent: TEdit
-      Left = 12
-      Top = 17
-      Width = 115
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      Enabled = False
-      NumbersOnly = True
-      TabOrder = 0
-    end
-    object ButtonChooseParent: TButton
-      Left = 133
-      Top = 15
-      Width = 62
-      Height = 25
-      Anchors = [akTop, akRight]
-      Caption = 'Choose'
-      Enabled = False
-      TabOrder = 1
-      OnClick = ButtonChooseParentClick
-    end
-  end
-  object CheckBoxParent: TCheckBox
-    Left = 199
-    Top = 197
-    Width = 134
-    Height = 17
-    Caption = 'Replace parent process'
-    TabOrder = 9
-    OnClick = CheckBoxParentClick
-  end
   object GroupBoxDesktop: TGroupBox
-    Left = 187
-    Top = 259
-    Width = 204
-    Height = 62
+    Left = 8
+    Top = 279
+    Width = 175
+    Height = 59
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Desktop '
-    TabOrder = 10
+    TabOrder = 7
+    ExplicitWidth = 200
     DesignSize = (
-      204
-      62)
+      175
+      59)
     object ComboBoxDesktop: TComboBox
       Left = 12
       Top = 24
-      Width = 177
+      Width = 148
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       ItemIndex = 0
@@ -253,26 +226,66 @@ object RunDialog: TRunDialog
       Items.Strings = (
         'WinSta0\Default'
         'WinSta0\Winlogon')
+      ExplicitWidth = 173
     end
   end
   object ButtonAsUser: TButton
     Left = 8
-    Top = 331
-    Width = 137
+    Top = 344
+    Width = 173
     Height = 25
-    Anchors = [akLeft, akBottom]
-    Caption = 'CreateProcessAsUser'
-    TabOrder = 11
-    ExplicitTop = 329
+    Caption = 'CreateProcessAsUser #1'
+    TabOrder = 9
+    OnClick = ButtonAsUserClick
   end
   object ButtonWithToken: TButton
-    Left = 151
-    Top = 331
-    Width = 160
+    Left = 8
+    Top = 375
+    Width = 173
     Height = 25
-    Anchors = [akLeft, akBottom]
-    Caption = 'CreateProcessWithTokenW'
-    TabOrder = 12
-    ExplicitTop = 329
+    Caption = 'CreateProcessWithTokenW #2'
+    TabOrder = 10
+    OnClick = ButtonWithTokenClick
+  end
+  object GroupBoxLogon: TGroupBox
+    Left = 189
+    Top = 279
+    Width = 177
+    Height = 90
+    Anchors = [akTop, akRight]
+    Caption = 'Logon flags for method #2'
+    TabOrder = 8
+    ExplicitLeft = 214
+    object RadioButtonLogonZero: TRadioButton
+      Left = 11
+      Top = 20
+      Width = 151
+      Height = 17
+      Caption = 'Default'
+      Checked = True
+      TabOrder = 0
+      TabStop = True
+    end
+    object RadioButtonLogonProfile: TRadioButton
+      Left = 11
+      Top = 43
+      Width = 151
+      Height = 17
+      Caption = 'Logon with profile'
+      TabOrder = 1
+    end
+    object RadioButtonLogonNet: TRadioButton
+      Left = 11
+      Top = 66
+      Width = 151
+      Height = 17
+      Caption = 'Network only credentials'
+      TabOrder = 2
+    end
+  end
+  object OpenDialog1: TOpenDialog
+    Filter = 'Executable files|(*.exe, *.com, *.scr)|All files|*'
+    Left = 184
+    Top = 64
   end
 end

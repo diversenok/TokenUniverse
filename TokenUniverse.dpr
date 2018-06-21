@@ -8,7 +8,8 @@ uses
   UI.Information in 'UI.Information.pas' {InfoDialog},
   UI.Duplicate in 'UI.Duplicate.pas' {DuplicateDialog},
   TU.EnumProcesses in 'TU.EnumProcesses.pas',
-  UI.ProcessList in 'UI.ProcessList.pas' {ProcessListDialog};
+  UI.ProcessList in 'UI.ProcessList.pas' {ProcessListDialog},
+  UI.Run in 'UI.Run.pas' {RunDialog};
 
 {$R *.res}
 

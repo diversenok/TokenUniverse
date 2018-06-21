@@ -127,6 +127,7 @@ type
       TokenTypeInfo: TTokenTypeInfo);
     destructor Destroy; override;
     var Caption: String;
+    property Handle: THandle read hToken;
     property Access: ACCESS_MASK read GetAccess;
     property User: TSecurityIdentifier read GetUser;                            // class 1
     property Groups: TGroupArray read GetGroups;                                // class 2
