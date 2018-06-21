@@ -49,8 +49,10 @@ begin
     SetDefaults(Source);
     ShowModal; // And wait until the dialog closes
 
+    // The form wouldn't be actually destroyed until Application.ProcessMessages
+
     if ModalResult <> mrOk then
-      raise EAbort.Create('Canceled');
+      raise EAbort.Create('');
 
     if RadioButtonPrimary.Checked then
     begin
@@ -83,14 +85,6 @@ begin
         RadioButtonIdentification.Checked := Impersonation = SecurityIdentification;
         RadioButtonImpersonation.Checked := Impersonation = SecurityImpersonation;
         RadioButtonDelegation.Checked := Impersonation = SecurityDelegation;
-        if Impersonation = SecurityAnonymous then
-          RadioButtonIdentification.Font.Style := [fsStrikeOut];
-        if Impersonation <= SecurityIdentification then
-        begin
-          RadioButtonImpersonation.Font.Style := [fsStrikeOut];
-          RadioButtonDelegation.Font.Style := [fsStrikeOut];
-          RadioButtonPrimary.Font.Style := [fsStrikeOut];
-        end;
       end
       else
         RadioButtonPrimary.Checked := True;

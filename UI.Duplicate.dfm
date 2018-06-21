@@ -29,7 +29,6 @@ object DuplicateDialog: TDuplicateDialog
     Anchors = [akTop, akRight]
     Caption = 'Token Type '
     TabOrder = 0
-    ExplicitLeft = 228
     object RadioButtonPrimary: TRadioButton
       Tag = 4
       Left = 16
@@ -85,7 +84,7 @@ object DuplicateDialog: TDuplicateDialog
     end
   end
   object ButtonOK: TButton
-    Left = 288
+    Left = 214
     Top = 153
     Width = 66
     Height = 25
@@ -94,7 +93,6 @@ object DuplicateDialog: TDuplicateDialog
     Default = True
     ModalResult = 1
     TabOrder = 1
-    ExplicitLeft = 302
   end
   object StaticTextAccess: TStaticText
     Left = 5
@@ -106,7 +104,6 @@ object DuplicateDialog: TDuplicateDialog
     AutoSize = False
     Caption = 'Access rights'
     TabOrder = 2
-    ExplicitWidth = 209
   end
   object ListBoxAccess: TCheckListBox
     Left = 5
@@ -118,11 +115,9 @@ object DuplicateDialog: TDuplicateDialog
     ItemHeight = 18
     Style = lbOwnerDrawFixed
     TabOrder = 3
-    ExplicitWidth = 209
-    ExplicitHeight = 157
   end
   object ButtonCancel: TButton
-    Left = 214
+    Left = 288
     Top = 153
     Width = 66
     Height = 25
@@ -131,6 +126,5 @@ object DuplicateDialog: TDuplicateDialog
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 4
-    ExplicitLeft = 228
   end
 end
