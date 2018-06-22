@@ -9,7 +9,8 @@ uses
   UI.Duplicate in 'UI.Duplicate.pas' {DuplicateDialog},
   TU.EnumProcesses in 'TU.EnumProcesses.pas',
   UI.ProcessList in 'UI.ProcessList.pas' {ProcessListDialog},
-  UI.Run in 'UI.Run.pas' {RunDialog};
+  UI.Run in 'UI.Run.pas' {RunDialog},
+  UI.TokenListFrame in 'UI.TokenListFrame.pas' {FrameTokenList: TFrame};
 
 {$R *.res}
 

@@ -5,18 +5,17 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, TU.TokenUtils,
   System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs;
+  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame;
 
 type
   TFormMain = class(TForm)
-    TokenListView: TListView;
     Panel1: TPanel;
     Button1: TButton;
     MainMenu: TMainMenu;
     Program1: TMenuItem;
     View1: TMenuItem;
     Help1: TMenuItem;
-    RunasAdministrator1: TMenuItem;
+    RunAsAdmin: TMenuItem;
     RunasSYSTEM1: TMenuItem;
     RunasSYSTEM2: TMenuItem;
     PopupMenu: TPopupMenu;
@@ -45,19 +44,22 @@ type
     MenuItem23: TMenuItem;
     HLine2: TMenuItem;
     RunTaskAsInteractiveUser1: TMenuItem;
-    function AddToken(Token: TToken): TToken;
+    TokenDuplicateHandle: TMenuItem;
+    Propmtonhandleclose1: TMenuItem;
+    Showiconsinprocesslist1: TMenuItem;
+    Frame: TFrameTokenList;
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure TokenListViewEdited(Sender: TObject; Item: TListItem;
-      var S: string);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
     procedure ActionOpenProcess(Sender: TObject);
     procedure ActionRename(Sender: TObject);
     procedure ActionRunWithToken(Sender: TObject);
-    procedure TokenListViewSelectItem(Sender: TObject; Item: TListItem;
+    procedure ListViewTokenSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure ActionOpenSelf(Sender: TObject);
+    procedure RunAsAdminClick(Sender: TObject);
+    procedure ActionSendHandle(Sender: TObject);
+    procedure ActionDuplicateHandle(Sender: TObject);
   end;
 
 var
@@ -66,7 +68,8 @@ var
 implementation
 
 uses
-  TU.Common, UI.Information, UI.Duplicate, UI.ProcessList, UI.Run;
+  Winapi.ShellApi, TU.Common, UI.Information, UI.Duplicate, UI.ProcessList,
+  UI.Run;
 
 {$R *.dfm}
 
@@ -74,26 +77,27 @@ uses
 
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
-  with TokenListView.Selected do
-  begin
-    TToken(Data).Free;
-    Delete;
-  end;
+  Frame.DeleteToken(Frame.ListViewTokens.Selected);
 end;
 
 procedure TFormMain.ActionDuplicate(Sender: TObject);
 begin
-  AddToken(TDuplicateDialog.Execute(Self, TokenListView.Selected.Data));
+  Frame.AddToken(TDuplicateDialog.Execute(Self, Frame.GetSelectedToken));
+end;
+
+procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
+begin
+  Frame.AddToken(TToken.CreateDuplicateHandle(Frame.GetSelectedToken, 0, True));
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 begin
-  AddToken(TToken.CreateFromProcess(TProcessListDialog.Execute(Self)));
+  Frame.AddToken(TToken.CreateFromProcess(TProcessListDialog.Execute(Self)));
 end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
 begin
-  AddToken(TToken.CreateFromCurrent);
+  Frame.AddToken(TToken.CreateFromCurrent);
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
@@ -101,79 +105,66 @@ var
   NewName: string;
 begin
   if InputQuery('Rename token', 'New token name: ', NewName) then
-  begin
-    TokenListView.Selected.Caption := NewName;
-    TokenListViewEdited(Sender, TokenListView.Selected, NewName);
-  end;
+    Frame.RenameToken(NewName, Frame.ListViewTokens.Selected);
 end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
 begin
-  TRunDialog.Execute(Self, TokenListView.Selected.Data);
+  TRunDialog.Execute(Self, Frame.GetSelectedToken);
 end;
 
-function TFormMain.AddToken(Token: TToken): TToken;
-const
-  ERROR_MSG = 'Unknown';
-begin
-  Result := Token;
-  with TokenListView.Items.Add do
-  begin
-    Data := Token;
-    Caption := Token.Caption;
-
-    try SubItems.Add(Token.TokenTypeAndImpersonation.ToString);
-    except on E: EOSError do SubItems.Add(ERROR_MSG); end;
-
-    try SubItems.Add(TTokenAccess.ToString(Token.Access));
-    except on E: EOSError do SubItems.Add(ERROR_MSG); end;
-
-    try SubItems.Add(Token.User.ToString);
-    except on E: EOSError do SubItems.Add(ERROR_MSG); end;
-
-    try SubItems.Add(Token.Session.ToString);
-    except on E: EOSError do SubItems.Add(ERROR_MSG); end;
-
-    try SubItems.Add(Token.Elevation.ToString);
-    except on E: EOSError do SubItems.Add(ERROR_MSG); end;
-
-    try SubItems.Add(Token.Integrity.ToString);
-    except on E: EOSError do SubItems.Add(ERROR_MSG); end;
-  end;
-end;
-
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFormMain.ActionSendHandle(Sender: TObject);
 var
-  Item: TListItem;
+  NewHandle: NativeUInt;
 begin
-  for Item in TokenListView.Items do
-    TToken(Item.Data).Free;
+  NewHandle := Frame.GetSelectedToken.SendHandleToProcess(
+    TProcessListDialog.Execute(Self));
+
+  MessageDlg(Format('The handle was successfully sent.'#$D#$A +
+    'It''s value is %d (0x%0.6x)', [NewHandle, NewHandle]), mtInformation,
+    [mbOK], 0);
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   try
-    with AddToken(TToken.CreateFromCurrent) do
+    with Frame.AddToken(TToken.CreateFromCurrent) do
       if Elevation <> TokenElevationTypeDefault then
-        AddToken(LinkedToken);
+        Frame.AddToken(LinkedToken);
   except
     on E: EOSError do;
   end;
   ReportMemoryLeaksOnShutdown := True;
 end;
 
-procedure TFormMain.TokenListViewEdited(Sender: TObject; Item: TListItem;
-  var S: string);
+procedure TFormMain.RunAsAdminClick(Sender: TObject);
+var
+  ExecInfo: TShellExecuteInfoW;
 begin
-  TToken(Item.Data).Caption := S;
+  FillChar(ExecInfo, SizeOf(ExecInfo), 0);
+  with ExecInfo do
+  begin
+    cbSize := SizeOf(ExecInfo);
+    Wnd := Handle;
+    lpVerb := PWideChar('runas');
+    lpFile := PWideChar(ParamStr(0));
+    fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_UNICODE or SEE_MASK_FLAG_NO_UI;
+    nShow := SW_SHOWNORMAL;
+  end;
+  if not ShellExecuteExW(@ExecInfo) then
+    RaiseLastOSError
+  else
+    Close;
 end;
 
-procedure TFormMain.TokenListViewSelectItem(Sender: TObject; Item: TListItem;
+procedure TFormMain.ListViewTokenSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 begin
   TokenDuplicate.Enabled := Selected;
+  TokenDuplicateHandle.Enabled := Selected;
   TokenRename.Enabled := Selected;
   TokenClose.Enabled := Selected;
+  TokenSendHandle.Enabled := Selected;
   TokenRun.Enabled := Selected;
 end;
 

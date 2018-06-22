@@ -13,11 +13,6 @@ uses
   System.SysUtils, Winapi.Windows;
 
 type
-  TTokenAccess = class
-    class function ToString(Access: Cardinal): String;
-    class function ToDetailedString(Access: Cardinal): String;
-  end;
-
   TSecurityIdentifier = record
   private
     procedure GetDomainAndUser(SrcSid: PSID);
@@ -125,6 +120,8 @@ type
     constructor CreateFromProcess(PID: Cardinal);
     constructor CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
       TokenTypeInfo: TTokenTypeInfo);
+    constructor CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
+      SameAccess: Boolean);
     destructor Destroy; override;
     var Caption: String;
     property Handle: THandle read hToken;
@@ -149,6 +146,7 @@ type
     property LinkedToken: TToken read GetLinkedToken;                           // class 19
     property HasRestrictions: LongBool read GetHasRestrictions;
     property Integrity: TTokenIntegrity read GetIntegrity;
+    function SendHandleToProcess(PID: Cardinal): THandle;
   end;
 
 const
@@ -162,6 +160,9 @@ const
     'Duplicate', 'Impersonate', 'Query', 'Query source', 'Adjust privileges',
     'Adjust groups', 'Adjust default', 'Adjust SessionId', 'Delete',
     'Read control', 'Write DAC', 'Write owner');
+
+function AccessToString(Access: Cardinal): String;
+function AccessToDetailedString(Access: Cardinal): String;
 
 implementation
 
@@ -187,7 +188,6 @@ type
     Hash: array [0 .. SID_HASH_SIZE-1] of NativeUInt;
   end;
   PSIDAndAttributesHash = ^TSIDAndAttributesHash;
-
 
   TTokenAccessInformation = record
     SidHash: PSIDAndAttributesHash;
@@ -219,6 +219,22 @@ begin
     TokenTypeInfo.Impersonation, TokenTypeInfo.TokenType, hToken),
     'TToken.CreateDuplicate');
   Caption := SrcToken.Caption + ' (copy)';
+end;
+
+constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
+  SameAccess: Boolean);
+var
+  Options: Cardinal;
+begin
+  if SameAccess then
+    Options := DUPLICATE_SAME_ACCESS
+  else
+    Options := 0;
+
+  Win32Check(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
+    GetCurrentProcess, @hToken, Access, False, Options),
+    'TToken.CreateDuplicateHandle');
+  Caption := SrcToken.Caption + ' (reference)';
 end;
 
 constructor TToken.CreateFromCurrent;
@@ -479,20 +495,37 @@ begin
   end;
 end;
 
-{ TTokenAccess }
-
-class function TTokenAccess.ToDetailedString(Access: Cardinal): String;
+function TToken.SendHandleToProcess(PID: Cardinal): THandle;
+var
+  hTargetProcess: THandle;
 begin
-  Result := Format('0x%0.8x: %s', [Access, TTokenAccess.ToString(Access)]);
+  hTargetProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
+  Win32Check(LongBool(hTargetProcess), 'TToken.SendHandleToProcess#1');
+
+  if not DuplicateHandle(GetCurrentProcess, hToken, hTargetProcess, @Result, 0,
+    False, DUPLICATE_SAME_ACCESS) then
+    Win32Check(False, 'TToken.SendHandleToProcess#2')
+  else
+    CloseHandle(hTargetProcess);
 end;
 
-class function TTokenAccess.ToString(Access: Cardinal): String;
+{ TTokenAccess }
+
+function AccessToDetailedString(Access: Cardinal): String;
+begin
+  Result := Format('0x%0.8x: %s', [Access, AccessToString(Access)]);
+end;
+
+function AccessToString(Access: Cardinal): String;
 var
   Granted: array of string;
   Right, StrInd: integer;
 begin
   if Access = TOKEN_ALL_ACCESS then
     Exit('Full access');
+
+  if Access = 0 then
+    Exit('No access');
 
   SetLength(Granted, ACCESS_COUNT);
   StrInd := 0;
