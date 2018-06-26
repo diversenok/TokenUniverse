@@ -2,15 +2,15 @@ program TokenUniverse;
 
 uses
   Vcl.Forms,
-  UI.TokenListForm in 'UI.TokenListForm.pas' {FormMain},
-  TU.TokenUtils in 'TU.TokenUtils.pas',
-  TU.Common in 'TU.Common.pas',
-  UI.Information in 'UI.Information.pas' {InfoDialog},
-  UI.Duplicate in 'UI.Duplicate.pas' {DuplicateDialog},
-  TU.EnumProcesses in 'TU.EnumProcesses.pas',
-  UI.ProcessList in 'UI.ProcessList.pas' {ProcessListDialog},
-  UI.Run in 'UI.Run.pas' {RunDialog},
-  UI.TokenListFrame in 'UI.TokenListFrame.pas' {FrameTokenList: TFrame};
+  TU.Common in 'Core\TU.Common.pas',
+  TU.Processes in 'Core\TU.Processes.pas',
+  TU.Tokens in 'Core\TU.Tokens.pas',
+  UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
+  UI.Duplicate in 'UI\UI.Duplicate.pas' {DuplicateDialog},
+  UI.Information in 'UI\UI.Information.pas' {InfoDialog},
+  UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
+  UI.Run in 'UI\UI.Run.pas' {RunDialog},
+  UI.MainForm in 'UI\UI.MainForm.pas' {FormMain};
 
 {$R *.res}
 

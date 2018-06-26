@@ -103,33 +103,27 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="UI.TokenListForm.pas">
-            <Form>FormMain</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="TU.TokenUtils.pas"/>
-        <DCCReference Include="TU.Common.pas"/>
-        <DCCReference Include="UI.Information.pas">
-            <Form>InfoDialog</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="UI.Duplicate.pas">
-            <Form>DuplicateDialog</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="TU.EnumProcesses.pas"/>
-        <DCCReference Include="UI.ProcessList.pas">
-            <Form>ProcessListDialog</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="UI.Run.pas">
-            <Form>RunDialog</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="UI.TokenListFrame.pas">
+        <DCCReference Include="Core\TU.Common.pas"/>
+        <DCCReference Include="Core\TU.Processes.pas"/>
+        <DCCReference Include="Core\TU.Tokens.pas"/>
+        <DCCReference Include="UI\UI.TokenListFrame.pas">
             <Form>FrameTokenList</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="UI\UI.Duplicate.pas">
+            <Form>DuplicateDialog</Form>
+        </DCCReference>
+        <DCCReference Include="UI\UI.Information.pas">
+            <Form>InfoDialog</Form>
+        </DCCReference>
+        <DCCReference Include="UI\UI.ProcessList.pas">
+            <Form>ProcessListDialog</Form>
+        </DCCReference>
+        <DCCReference Include="UI\UI.Run.pas">
+            <Form>RunDialog</Form>
+        </DCCReference>
+        <DCCReference Include="UI\UI.MainForm.pas">
+            <Form>FormMain</Form>
         </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
@@ -164,15 +158,15 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>TokenUniverse.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="Win64\Debug\TokenUniverse.rsm" Configuration="Debug" Class="DebugSymbols">
                     <Platform Name="Win64">
                         <RemoteName>TokenUniverse.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>TokenUniverse.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -564,13 +558,13 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>
                 <Platform value="Win32">True</Platform>
