@@ -10,7 +10,7 @@ interface
   on the same simple type. }
 
 uses
-  System.SysUtils, Winapi.Windows;
+  System.SysUtils, Winapi.Windows, TU.Handles;
 
 type
   TSecurityIdentifier = record
@@ -91,13 +91,14 @@ type
   end;
 
   TToken = class
-  private
+  protected
     hToken: THandle;
-    function GetAccess: ACCESS_MASK;
+    Origin: THandleItem;
     function QuerySid(InfoClass: TTokenInformationClass;
       ErrorComment: String): TSecurityIdentifier;
     function QueryGroups(InfoClass: TTokenInformationClass;
       ErrorComment: String): TGroupArray;
+    function GetAccess: ACCESS_MASK;
     function GetUser: TSecurityIdentifier;             // class 1
     function GetGroups: TGroupArray;                   // class 2
     function GetPrivileges: TPrivilegeArray;           // class 3
@@ -122,7 +123,9 @@ type
       TokenTypeInfo: TTokenTypeInfo);
     constructor CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
       SameAccess: Boolean);
+    constructor CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
     destructor Destroy; override;
+    function IsValidToken: Boolean;
     var Caption: String;
     property Handle: THandle read hToken;
     property Access: ACCESS_MASK read GetAccess;
@@ -233,15 +236,30 @@ begin
 
   Win32Check(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
     GetCurrentProcess, @hToken, Access, False, Options),
-    'TToken.CreateDuplicateHandle');
-  Caption := SrcToken.Caption + ' (reference)';
+    'TToken.CreateDuplicateHandle1');
+
+  if SrcToken.Origin.OwnerPID = GetCurrentProcessId then
+    Caption := SrcToken.Caption + ' (reference)'
+  else
+    Caption := Format('Referenced 0x%x from PID %d', [SrcToken.Origin.hToken,
+      SrcToken.Origin.OwnerPID]);
 end;
 
 constructor TToken.CreateFromCurrent;
 begin
-  Win32Check(OpenProcessToken(GetCurrentProcess(), MAXIMUM_ALLOWED, hToken),
+  Win32Check(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
     'TToken.CreateFromCurrent');
   Caption := 'Current process';
+end;
+
+constructor TToken.CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
+begin
+  Origin := Item;
+  Caption := Format('0x%x', [Item.hToken]);
+
+  if not DuplicateHandle(hProcess, Item.hToken, GetCurrentProcess, @hToken, 0,
+    False, DUPLICATE_SAME_ACCESS) then
+    hToken := 0;
 end;
 
 constructor TToken.CreateFromProcess(PID: Cardinal);
@@ -259,7 +277,8 @@ end;
 
 destructor TToken.Destroy;
 begin
-  CloseHandle(hToken);
+  if hToken <> 0 then
+    CloseHandle(hToken);
   inherited;
 end;
 
@@ -267,6 +286,10 @@ function TToken.GetAccess: ACCESS_MASK;
 var
   info: TObjectBasicInformaion;
 begin
+  // Pseudo-token mode
+  if hToken = 0 then
+    Exit(Origin.Access);
+
   NativeCheck(NtQueryObject(hToken, ObjectBasicInformation, @info,
     SizeOf(info), nil), 'TToken.GetAccess');
 
@@ -446,6 +469,11 @@ begin
   finally
     FreeMem(Buffer);
   end;
+end;
+
+function TToken.IsValidToken: Boolean;
+begin
+  Result := hToken <> 0;
 end;
 
 function TToken.QueryGroups(InfoClass: TTokenInformationClass;

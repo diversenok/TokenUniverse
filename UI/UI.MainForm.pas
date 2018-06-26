@@ -48,6 +48,9 @@ type
     Propmtonhandleclose1: TMenuItem;
     Showiconsinprocesslist1: TMenuItem;
     Frame: TFrameTokenList;
+    TokenImpersonate: TMenuItem;
+    Displayallsearchresults1: TMenuItem;
+    TokenOpenLinked: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -60,6 +63,7 @@ type
     procedure RunAsAdminClick(Sender: TObject);
     procedure ActionSendHandle(Sender: TObject);
     procedure ActionDuplicateHandle(Sender: TObject);
+    procedure ActionSearch(Sender: TObject);
   end;
 
 var
@@ -68,8 +72,9 @@ var
 implementation
 
 uses
-  Winapi.ShellApi, TU.Common, UI.Information, UI.Duplicate, UI.ProcessList,
-  UI.Run;
+  Winapi.ShellApi,
+  TU.Common, TU.Handles,
+  UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch;
 
 {$R *.dfm}
 
@@ -111,6 +116,11 @@ end;
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
 begin
   TRunDialog.Execute(Self, Frame.GetSelectedToken);
+end;
+
+procedure TFormMain.ActionSearch(Sender: TObject);
+begin
+  TFormHandleSearch.Create(Self).Show;
 end;
 
 procedure TFormMain.ActionSendHandle(Sender: TObject);

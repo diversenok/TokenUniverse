@@ -1,8 +1,9 @@
-object FormMain: TFormMain
+object FormHandleSearch: TFormHandleSearch
   Left = 0
   Top = 0
-  Caption = 'Token Universe :: Main Window'
-  ClientHeight = 303
+  BorderIcons = [biSystemMenu]
+  Caption = 'Search for token handles'
+  ClientHeight = 358
   ClientWidth = 750
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -10,47 +11,38 @@ object FormMain: TFormMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  Menu = MainMenu
   OldCreateOrder = False
-  OnCreate = FormCreate
+  Position = poMainFormCenter
+  OnClose = FormClose
+  DesignSize = (
+    750
+    358)
   PixelsPerInch = 96
   TextHeight = 13
-  object Panel1: TPanel
-    Left = 0
-    Top = 0
-    Width = 750
-    Height = 32
-    Align = alTop
-    BevelOuter = bvNone
-    TabOrder = 0
-    object Button1: TButton
-      Left = 3
-      Top = 4
-      Width = 86
-      Height = 25
-      Caption = 'Open Process'
-      TabOrder = 0
-      OnClick = ActionOpenProcess
-    end
+  object LabelStatistics: TLabel
+    Left = 90
+    Top = 333
+    Width = 189
+    Height = 13
+    Anchors = [akLeft, akBottom]
+    Caption = 'Found 0 opened handles in 0 processes'
   end
   inline Frame: TFrameTokenList
     Left = 0
-    Top = 32
+    Top = 0
     Width = 750
-    Height = 271
-    Align = alClient
-    TabOrder = 1
-    ExplicitTop = 32
-    ExplicitHeight = 271
+    Height = 325
+    TabOrder = 0
     inherited ListViewTokens: TListView
-      Height = 242
+      MultiSelect = True
+      GroupView = True
+      ReadOnly = True
       PopupMenu = PopupMenu
-      OnSelectItem = ListViewTokenSelectItem
-      ExplicitHeight = 242
+      OnContextPopup = FrameListViewTokensContextPopup
     end
     inherited SearchButtons: TImageList
       Bitmap = {
-        494C010104001800580010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+        494C010104001800500010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
         0000000000003600000028000000400000002000000001002000000000000020
         0000000000000000000000000000000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000000000000000000000
@@ -322,169 +314,34 @@ object FormMain: TFormMain
         000000000000}
     end
   end
-  object MainMenu: TMainMenu
-    Left = 96
-    Top = 112
-    object Program1: TMenuItem
-      Caption = 'Program'
-      object RunAsAdmin: TMenuItem
-        Caption = 'Restart as Administrator'
-        OnClick = RunAsAdminClick
-      end
-      object RunasSYSTEM1: TMenuItem
-        Caption = 'Restart as SYSTEM'
-      end
-      object RunasSYSTEM2: TMenuItem
-        Caption = 'Restart as SYSTEM+'
-      end
-    end
-    object View1: TMenuItem
-      Caption = 'Settings'
-      object Propmtonhandleclose1: TMenuItem
-        Caption = 'Propmt on handle close'
-      end
-      object Showiconsinprocesslist1: TMenuItem
-        Caption = 'Show icons in process list'
-        Checked = True
-      end
-      object Displayallsearchresults1: TMenuItem
-        Caption = 'Display all search results'
-      end
-    end
-    object Help1: TMenuItem
-      Caption = 'Help'
-    end
+  object ButtonClose: TButton
+    Left = 672
+    Top = 328
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Cancel = True
+    Caption = 'Close'
+    ModalResult = 2
+    TabOrder = 1
+  end
+  object ButtonRefresh: TButton
+    Left = 3
+    Top = 328
+    Width = 75
+    Height = 25
+    Anchors = [akLeft, akBottom]
+    Caption = 'Refresh'
+    TabOrder = 2
+    OnClick = ButtonRefreshClick
   end
   object PopupMenu: TPopupMenu
-    Left = 168
-    Top = 112
-    object TokenDuplicate: TMenuItem
-      Caption = 'Duplicate token object'
-      Enabled = False
-      ShortCut = 16452
-      OnClick = ActionDuplicate
-    end
-    object TokenDuplicateHandle: TMenuItem
-      Caption = 'Reference with new handle'
-      Enabled = False
+    Left = 336
+    Top = 264
+    object TokenObtain: TMenuItem
+      Caption = 'Get this handle'
       ShortCut = 24644
-      OnClick = ActionDuplicateHandle
-    end
-    object TokenRun: TMenuItem
-      Caption = 'Run program with this token'
-      Enabled = False
-      ShortCut = 16453
-      OnClick = ActionRunWithToken
-    end
-    object TokenRename: TMenuItem
-      Caption = 'Rename'
-      Enabled = False
-      ShortCut = 113
-      OnClick = ActionRename
-    end
-    object TokenClose: TMenuItem
-      Caption = 'Close'
-      Enabled = False
-      ShortCut = 46
-      OnClick = ActionClose
-    end
-    object HLine1: TMenuItem
-      Caption = '-'
-    end
-    object TokenRestrict: TMenuItem
-      Caption = 'Create restricted token'
-      Enabled = False
-      ShortCut = 16466
-    end
-    object TokenOpenLinked: TMenuItem
-      Caption = 'Open linked token'
-      Enabled = False
-      ShortCut = 24652
-    end
-    object TokenImpersonate: TMenuItem
-      Caption = 'Impersonate'
-      Enabled = False
-      ShortCut = 16457
-    end
-    object TokenSendHandle: TMenuItem
-      Caption = 'Copy handle to another process'
-      Enabled = False
-      OnClick = ActionSendHandle
-    end
-    object HLine2: TMenuItem
-      Caption = '-'
-      Enabled = False
-      Visible = False
-    end
-    object NewMenu: TMenuItem
-      Caption = 'New'
-      object NewOpenSelf: TMenuItem
-        Caption = 'Open current process'
-        ShortCut = 24655
-        OnClick = ActionOpenSelf
-      end
-      object NewOpenProcess: TMenuItem
-        Caption = 'Open other process'
-        ShortCut = 16463
-        OnClick = ActionOpenProcess
-      end
-      object NewOpenThread: TMenuItem
-        Caption = 'Open other thread'
-        Enabled = False
-      end
-      object HLine3: TMenuItem
-        Caption = '-'
-      end
-      object NewLogonUser: TMenuItem
-        Caption = 'Logon user'
-        Enabled = False
-        ShortCut = 16460
-      end
-      object NewQueryUserToken: TMenuItem
-        Caption = 'WTSQueryUserToken'
-        Enabled = False
-      end
-      object NewSaferApi: TMenuItem
-        Caption = 'Create using Safer API'
-        Enabled = False
-      end
-      object NewNtCreateToken: TMenuItem
-        Caption = 'Create using NtCreateToken'
-        Enabled = False
-        ShortCut = 16462
-      end
-      object HLine4: TMenuItem
-        Caption = '-'
-      end
-      object NewCopyHandle: TMenuItem
-        Caption = 'Copy handle from other process'
-        Enabled = False
-        ShortCut = 24643
-      end
-      object NewSearchHandle: TMenuItem
-        Caption = 'Search for token handles'
-        ShortCut = 16454
-        OnClick = ActionSearch
-      end
-    end
-    object ProgramRun: TMenuItem
-      Caption = 'Run program'
-      object MenuItem21: TMenuItem
-        Caption = 'CreateProcess'
-        Enabled = False
-      end
-      object MenuItem22: TMenuItem
-        Caption = 'ShellExecuteEx'
-        Enabled = False
-      end
-      object RunTaskAsInteractiveUser1: TMenuItem
-        Caption = 'RunTaskAsInteractiveUser'
-        Enabled = False
-      end
-      object MenuItem23: TMenuItem
-        Caption = 'CreateProcessWithLogonW'
-        Enabled = False
-      end
+      OnClick = ActionObtain
     end
   end
 end

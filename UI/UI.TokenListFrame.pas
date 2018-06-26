@@ -5,13 +5,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ExtCtrls, System.ImageList, Vcl.ImgList, Vcl.ComCtrls, TU.Tokens;
+  Vcl.ExtCtrls, System.ImageList, Vcl.ImgList, Vcl.ComCtrls,
+  TU.Tokens, TU.Handles;
 
 type
   TTokenItem = class
     Token: TToken;
     StringData: array of String;
     OriginalIndex: Integer;
+    GroupIndex: Integer;
     destructor Destroy; override;
   end;
 
@@ -22,56 +24,77 @@ type
     ComboBoxColumn: TComboBox;
     procedure SearchBoxRightButtonClick(Sender: TObject);
     procedure SearchBoxChange(Sender: TObject);
-  private
+  protected
     TokenDB: array of TTokenItem;
+    procedure AddStringData(Index: Integer; Caption: String);
     procedure AddTokenToList(TokenIndex: Integer);
     function TokenMatchesSearch(Search: String; TokenIndex: Integer): Boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function AddToken(SrcToken: TToken): TToken;
+    procedure ClearAll;
+    function AddToken(SrcToken: TToken; GroupID: Integer = -1): TToken;
     procedure DeleteToken(Item: TListItem);
     procedure RenameToken(NewName: String; Item: TListItem);
-    function GetToken(Item: TListItem): TToken;
     function GetSelectedToken: TToken;
+    function GetToken(Item: TListItem): TToken;
   end;
 
 implementation
 
 {$R *.dfm}
 
-function TFrameTokenList.AddToken(SrcToken: TToken): TToken;
+procedure TFrameTokenList.AddStringData(Index: Integer; Caption: String);
 const
   ERROR_MSG = 'Unknown';
+var
+  i: integer;
+begin
+  with TokenDB[Index] do
+  begin
+    SetLength(StringData, ListViewTokens.Columns.Count);
+    StringData[0] := Caption;
+
+    if Token.IsValidToken then
+    begin
+      try StringData[1] := Token.TokenTypeAndImpersonation.ToString;
+      except on E: EOSError do StringData[1] := ERROR_MSG; end;
+
+      try StringData[2] := AccessToString(Token.Access);
+      except on E: EOSError do StringData[2] := ERROR_MSG; end;
+
+      try StringData[3] := Token.User.ToString;
+      except on E: EOSError do StringData[3] := ERROR_MSG; end;
+
+      try StringData[4] := Token.Session.ToString;
+      except on E: EOSError do StringData[4] := ERROR_MSG; end;
+
+      try StringData[5] := Token.Elevation.ToString;
+      except on E: EOSError do StringData[5] := ERROR_MSG; end;
+
+      try StringData[6] := Token.Integrity.ToString;
+      except on E: EOSError do StringData[6] := ERROR_MSG; end;
+    end
+    else
+    begin
+      for i := 1 to ListViewTokens.Columns.Count - 1 do
+        StringData[i] := ERROR_MSG;
+      StringData[2] := AccessToString(TokenDB[Index].Token.Access);
+    end;
+  end;
+end;
+
+function TFrameTokenList.AddToken(SrcToken: TToken; GroupID: Integer = -1): TToken;
 begin
   Result := SrcToken;
   SetLength(TokenDB, Length(TokenDB) + 1);
   TokenDB[High(TokenDB)] := TTokenItem.Create;
   with TokenDB[High(TokenDB)] do
   begin
-    OriginalIndex := High(TokenDB);
     Token := SrcToken;
-
-    SetLength(StringData, ListViewTokens.Columns.Count);
-    StringData[0] := Token.Caption;
-
-    try StringData[1] := Token.TokenTypeAndImpersonation.ToString;
-    except on E: EOSError do StringData[1] := ERROR_MSG; end;
-
-    try StringData[2] := AccessToString(Token.Access);
-    except on E: EOSError do StringData[2] := ERROR_MSG; end;
-
-    try StringData[3] := Token.User.ToString;
-    except on E: EOSError do StringData[3] := ERROR_MSG; end;
-
-    try StringData[4] := Token.Session.ToString;
-    except on E: EOSError do StringData[4] := ERROR_MSG; end;
-
-    try StringData[5] := Token.Elevation.ToString;
-    except on E: EOSError do StringData[5] := ERROR_MSG; end;
-
-    try StringData[6] := Token.Integrity.ToString;
-    except on E: EOSError do StringData[6] := ERROR_MSG; end;
+    OriginalIndex := High(TokenDB);
+    GroupIndex := GroupID;
+    AddStringData(High(TokenDB), Token.Caption);
   end;
 
   // Show the newly created item regardless of the search filter
@@ -86,9 +109,22 @@ begin
   begin
     Caption := StringData[0];
     Data := TokenDB[TokenIndex];
+    GroupID := GroupIndex;
     for i := 1 to High(StringData) do
       SubItems.Add(StringData[i]);
   end;
+end;
+
+procedure TFrameTokenList.ClearAll;
+var
+  i: integer;
+begin
+  ListViewTokens.Items.Clear;
+  ListViewTokens.Groups.Clear;
+  for i := 0 to High(TokenDB) do
+    TokenDB[i].Token.Free;
+
+  SetLength(TokenDB, 0);
 end;
 
 constructor TFrameTokenList.Create(AOwner: TComponent);
@@ -108,7 +144,10 @@ begin
   TokenDB[OriginalIndex].Free;
 
   for i := OriginalIndex + 1  to High(TokenDB) do
+  begin
     TokenDB[i - 1] := TokenDB[i];
+    TokenDB[i - 1].OriginalIndex := i - 1;
+  end;
 
   SetLength(TokenDB, Length(TokenDB) - 1);
   Item.Delete;
