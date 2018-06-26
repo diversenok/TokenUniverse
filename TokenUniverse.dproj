@@ -104,6 +104,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Core\TU.Common.pas"/>
+        <DCCReference Include="Core\TU.NativeAPI.pas"/>
         <DCCReference Include="Core\TU.Processes.pas"/>
         <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="UI\UI.TokenListFrame.pas">

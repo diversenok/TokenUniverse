@@ -2,13 +2,12 @@ unit TU.Common;
 
 interface
 
-const
-  STATUS_SUCCESS = $00000000;
-
+uses
+  TU.NativeAPI;
 
 function Win32Check(RetVal: LongBool; Where: String): LongBool;
 procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String);
-function NativeCheck(Status: LongWord; Where: String): Boolean;
+function NativeCheck(Status: NTSTATUS; Where: String): Boolean;
 
 implementation
 
@@ -16,7 +15,8 @@ uses
   System.SysUtils, Winapi.WIndows;
 
 resourcestring
-  SOSError = 'System Error in %s. Code: 0x%x.'#$D#$A'%s';
+  SOSError = 'System Error in %s' + #$D#$A#$D#$A +
+    'Code:  0x%x.' + #$D#$A#$D#$A + '%s';
 
 function Win32Check(RetVal: LongBool; Where: String): LongBool;
 begin
@@ -34,7 +34,7 @@ begin
       SysErrorMessage(GetLastError)]);
 end;
 
-function NativeCheck(Status: LongWord; Where: String): Boolean;
+function NativeCheck(Status: NTSTATUS; Where: String): Boolean;
 begin
   if Status <> STATUS_SUCCESS then
     raise EOSError.CreateResFmt(@SOSError, [Where, Status,

@@ -3,6 +3,7 @@ program TokenUniverse;
 uses
   Vcl.Forms,
   TU.Common in 'Core\TU.Common.pas',
+  TU.NativeAPI in 'Core\TU.NativeAPI.pas',
   TU.Processes in 'Core\TU.Processes.pas',
   TU.Tokens in 'Core\TU.Tokens.pas',
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},

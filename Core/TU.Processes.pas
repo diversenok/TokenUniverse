@@ -15,16 +15,15 @@ type
   PProcessItem = ^TProcessItem;
 
   TProcessList = class
-  private
-    Buffer: Pointer;
+  protected
     FCount: integer;
     FItems: array of TProcessItem;
     function GetItem(i: integer): TProcessItem;
   public
     constructor Create;
-    destructor Destroy; override;
     property Count: integer read FCount;
     property Items[i: integer]: TProcessItem read GetItem; default;
+    function FindName(PID: Cardinal): String;
   end;
 
 function QueryFullProcessImageNameW(hProcess: THandle; dwFlags: Cardinal;
@@ -33,61 +32,22 @@ function QueryFullProcessImageNameW(hProcess: THandle; dwFlags: Cardinal;
 
 implementation
 
-uses Winapi.Windows;
-
-{$MINENUMSIZE 4}
-
-type
-  TByteArray = array [Word] of Byte;
-  PByteArray = ^TByteArray;
-
-  NTSTATUS = LongWord;
-
-  UNICODE_STRING = record
-    Length: USHORT;
-    MaximumLength: USHORT;
-    Buffer: PWChar;
-  end;
-
-  TSystemProcessInformation = record
-    NextEntryOffset: ULONG;
-    NumberOfThreads: ULONG;
-    Reserved: array [0 .. 5] of LARGE_INTEGER;
-    ImageName: UNICODE_STRING;
-    BasePriority: ULONG;
-    ProcessId: THandle;
-    InheritedFromProcessId: THandle;
-  end;
-
-  PSystemProcessInformation = ^TSystemProcessInformation;
-
-  TSystemInformationClass = (SystemProcessInformation = 5);
-
-function NtQuerySystemInformation(SystemInformationClass
-  : TSystemInformationClass; SystemInformation: PVOID;
-  SystemInformationLength: ULONG; var ReturnLength: ULONG): NTSTATUS; stdcall;
-  external 'ntdll.dll' name 'NtQuerySystemInformation';
-
-const
-  STATUS_SUCCESS = $00000000;
-  STATUS_INFO_LENGTH_MISMATCH = $C0000004;
-  STATUS_BUFFER_TOO_SMALL = $C0000023;
+uses
+  Winapi.Windows, TU.NativeAPI;
 
   { TProcessList }
 
 constructor TProcessList.Create;
 var
+  Buffer: Pointer;
   BufferSize: NativeUInt;
   ReturnLength: Cardinal;
   status: NTSTATUS;
   SysInfo: PSystemProcessInformation;
   i: integer;
 begin
-  FCount := 0;
-  ReturnLength := 0;
-  NtQuerySystemInformation(SystemProcessInformation, nil, 0, ReturnLength);
-  BufferSize := ReturnLength;
-  Buffer := AllocMem(BufferSize);
+  Buffer := nil;
+  BufferSize := 0;
 
   while True do
   begin
@@ -110,6 +70,7 @@ begin
     Exit;
   end;
 
+  FCount := 0;
   SysInfo := PSystemProcessInformation(Buffer);
   while True do
   begin
@@ -140,11 +101,19 @@ begin
       [SysInfo.NextEntryOffset]);
     Inc(i);
   end;
+
+  FreeMem(Buffer);
 end;
 
-destructor TProcessList.Destroy;
+function TProcessList.FindName(PID: Cardinal): String;
+var
+  i: integer;
 begin
-  FreeMem(Buffer);
+  for i := 0 to High(FItems) do
+    if FItems[i].PID = PID then
+      Exit(FItems[i].ImageName);
+
+  Result := 'Unknown process';
 end;
 
 function TProcessList.GetItem(i: integer): TProcessItem;
