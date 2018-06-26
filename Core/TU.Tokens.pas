@@ -117,12 +117,34 @@ type
     function GetHasRestrictions: LongBool;             // class 20
     function GetIntegrity: TTokenIntegrity;
   public
+    /// <summary> Opens a token of current process. </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateFromCurrent;
+
+    /// <summary> Opens a token of another process. </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateFromProcess(PID: Cardinal);
+
+    /// <summary> Creates a duplicate of a token. </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
       TokenTypeInfo: TTokenTypeInfo);
+
+    /// <summary> Duplicates a handle. The result handle references for the same
+    ///   token object as the source handle. </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
       SameAccess: Boolean);
+
+    /// <summary>
+    ///   Tries to duplicate a token handle from another process.
+    /// </summary>
+    /// <remarks>
+    ///   If <paramref name="hProcess"/> is zero then the object represents
+    ///   a pseudo-token. In this case only access and kernel object pointer can
+    ///   be successfully queried.
+    /// </remarks>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
     destructor Destroy; override;
     function IsValidToken: Boolean;

@@ -6,9 +6,15 @@ uses
   Winapi.Windows;
 
 type
+  /// <summary> Represents a token handle from another process. </summary>
+  /// <remarks>
+  ///   The handle value from <c>hToken</c> field is valid only in context of
+  ///   the process with <c>OwnerPID</c>.
+  ///  </remarks>
   THandleItem = record
     OwnerPID: NativeUInt;
-    hToken: NativeUInt; // Valid only in context of OwnerPID
+    /// <remarks> Valid only in context of <c>OwnerPID</c>.</remarks>
+    hToken: NativeUInt;
     Access: ACCESS_MASK;
     KernelObjectAddress: Pointer;
   end;
@@ -28,10 +34,17 @@ type
     ///  Creates a list of all handles on the system (excluding current process)
     ///  that represent token objects.
     /// </summary>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create;
     property Handles[Ind: Integer]: THandleItem read GetItem; default;
     property Count: Integer read GetCount;
+    /// <returns>
+    ///   Returns an array of all processes that have opened token handles.
+    /// </returns>
     property Processes: TNativeUIntArray read GetProcesses;
+    /// <returns>
+    ///   Returns an array of all token handles opened by the specified process.
+    /// </returns>
     property ProcessHandles[PID: NativeUInt]: THandleItemArray read GetProcessHandles;
   end;
 
@@ -41,6 +54,7 @@ uses
   System.SysUtils, TU.Common, TU.NativeAPI;
 
 const
+  // TODO: Is this value fixed or should be somehow obtained in runtime?
   TokenObjectTypeIndex = 5;
 
 { THandleList }
@@ -76,30 +90,35 @@ begin
     Exit;
   end;
 
-  Count := 0;
-  for i := 0 to Buffer.NumberOfHandles - 1 do
-  with Buffer.Handles[i] do
-    if (ObjectTypeIndex = TokenObjectTypeIndex) and
-      (UniqueProcessId <> GetCurrentProcessId) then
-      Inc(Count);
+  try
+    // Count all token handles from other processes
+    Count := 0;
+    for i := 0 to Buffer.NumberOfHandles - 1 do
+    with Buffer.Handles[i] do
+      if (ObjectTypeIndex = TokenObjectTypeIndex) and
+        (UniqueProcessId <> GetCurrentProcessId) then
+        Inc(Count);
 
-  SetLength(FItems, Count);
+    // Allocate memory
+    SetLength(FItems, Count);
 
-  Count := 0;
-  for i := 0 to Buffer.NumberOfHandles - 1 do
-  with Buffer.Handles[i] do
-    if (ObjectTypeIndex = TokenObjectTypeIndex) and
-      (UniqueProcessId <> GetCurrentProcessId) then
-    with FItems[Count] do
-    begin
-      OwnerPID := UniqueProcessId;
-      hToken := HandleValue;
-      Access := GrantedAccess;
-      KernelObjectAddress := PObject;
-      Inc(Count);
-    end;
-
-  FreeMem(Buffer);
+    // Save all these handles and additional information
+    Count := 0;
+    for i := 0 to Buffer.NumberOfHandles - 1 do
+    with Buffer.Handles[i] do
+      if (ObjectTypeIndex = TokenObjectTypeIndex) and
+        (UniqueProcessId <> GetCurrentProcessId) then
+      with FItems[Count] do
+      begin
+        OwnerPID := UniqueProcessId;
+        hToken := HandleValue;
+        Access := GrantedAccess;
+        KernelObjectAddress := PObject;
+        Inc(Count);
+      end;
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
 function THandleList.GetCount: Integer;

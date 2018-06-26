@@ -16,7 +16,6 @@ const
   STATUS_BUFFER_TOO_SMALL: NTSTATUS = $C0000023;
 
 type
-
   UNICODE_STRING = record
     Length: Word;
     MaximumLength: Word;

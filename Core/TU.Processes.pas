@@ -14,12 +14,15 @@ type
   end;
   PProcessItem = ^TProcessItem;
 
+  /// <summary> Stores a snapshot of all processes in the system. </summary>
   TProcessList = class
   protected
     FCount: integer;
     FItems: array of TProcessItem;
     function GetItem(i: integer): TProcessItem;
   public
+    /// <summary> Create a snapshot of all processes in the system. </summary>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create;
     property Count: integer read FCount;
     property Items[i: integer]: TProcessItem read GetItem; default;
@@ -39,11 +42,10 @@ uses
 
 constructor TProcessList.Create;
 var
-  Buffer: Pointer;
+  Buffer, SysInfo: PSystemProcessInformation;
   BufferSize: NativeUInt;
   ReturnLength: Cardinal;
   status: NTSTATUS;
-  SysInfo: PSystemProcessInformation;
   i: integer;
 begin
   Buffer := nil;
@@ -70,39 +72,45 @@ begin
     Exit;
   end;
 
-  FCount := 0;
-  SysInfo := PSystemProcessInformation(Buffer);
-  while True do
-  begin
-    Inc(FCount);
-    if SysInfo.NextEntryOffset = 0 then
-      Break;
-    SysInfo := PSystemProcessInformation(@PByteArray(SysInfo)
-      [SysInfo.NextEntryOffset]);
+  try
+    // Count processes
+    FCount := 0;
+    SysInfo := Buffer;
+    while True do
+    begin
+      Inc(FCount);
+      if SysInfo.NextEntryOffset = 0 then
+        Break;
+      SysInfo := @PByteArray(SysInfo)[SysInfo.NextEntryOffset];
+    end;
+
+    // Allocate memory
+    SetLength(FItems, FCount);
+
+    // Save each process information
+    i := 0;
+    SysInfo := Buffer;
+    while True do
+    with FItems[i] do
+    begin
+      SetString(ImageName, SysInfo.ImageName.Buffer,
+        SysInfo.ImageName.Length div SizeOf(WChar));
+
+      if ImageName = '' then
+        ImageName := 'System Idle Process';
+
+      PID := SysInfo.ProcessId;
+      ParentPID := SysInfo.InheritedFromProcessId;
+
+      if SysInfo.NextEntryOffset = 0 then
+        Break;
+
+      SysInfo := @PByteArray(SysInfo)[SysInfo.NextEntryOffset];
+      Inc(i);
+    end;
+  finally
+    FreeMem(Buffer);
   end;
-
-  i := 0;
-  SysInfo := PSystemProcessInformation(Buffer);
-  SetLength(FItems, FCount);
-  while True do
-  begin
-    SetString(FItems[i].ImageName, SysInfo.ImageName.Buffer,
-      SysInfo.ImageName.Length div SizeOf(WChar));
-    if FItems[i].ImageName = '' then
-      FItems[i].ImageName := 'System Idle Process';
-
-    FItems[i].PID := SysInfo.ProcessId;
-    FItems[i].ParentPID := SysInfo.InheritedFromProcessId;
-
-    if SysInfo.NextEntryOffset = 0 then
-      Break;
-
-    SysInfo := PSystemProcessInformation(@PByteArray(SysInfo)
-      [SysInfo.NextEntryOffset]);
-    Inc(i);
-  end;
-
-  FreeMem(Buffer);
 end;
 
 function TProcessList.FindName(PID: Cardinal): String;
@@ -118,10 +126,7 @@ end;
 
 function TProcessList.GetItem(i: integer): TProcessItem;
 begin
-  if (i >= Low(FItems)) and (i <= High(FItems)) then
-    Result := FItems[i]
-  else
-    FillChar(Result, SizeOf(Result), 0);
+  Result := FItems[i];
 end;
 
 end.
