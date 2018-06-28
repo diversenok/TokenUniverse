@@ -20,15 +20,15 @@ object FrameTokenList: TFrameTokenList
       end
       item
         Caption = 'Type'
-        Width = 80
+        Width = 100
       end
       item
         Caption = 'Access'
-        Width = 120
+        Width = 100
       end
       item
         Caption = 'User'
-        Width = 180
+        Width = 170
       end
       item
         Alignment = taCenter
@@ -42,7 +42,7 @@ object FrameTokenList: TFrameTokenList
       item
         Alignment = taCenter
         Caption = 'Integrity'
-        Width = 68
+        Width = 70
       end>
     DoubleBuffered = True
     GridLines = True
@@ -86,7 +86,7 @@ object FrameTokenList: TFrameTokenList
     Left = 264
     Top = 160
     Bitmap = {
-      494C0101040018004C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001800580010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

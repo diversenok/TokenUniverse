@@ -55,31 +55,34 @@ begin
     SetLength(StringData, ListViewTokens.Columns.Count);
     StringData[0] := Caption;
 
+    for i := 1 to ListViewTokens.Columns.Count - 1 do
+      StringData[i] := ERROR_MSG;
+
     if Token.IsValidToken then
     begin
-      try StringData[1] := Token.TokenTypeAndImpersonation.ToString;
-      except on E: EOSError do StringData[1] := ERROR_MSG; end;
+      with Token.TokenTypeInfo do
+        if IsValid then
+          StringData[1] := Value.ToString;
 
-      try StringData[2] := AccessToString(Token.Access);
-      except on E: EOSError do StringData[2] := ERROR_MSG; end;
+      with Token.Access do
+        if IsValid then
+          StringData[2] := AccessToString(Value);
 
-      try StringData[3] := Token.User.ToString;
-      except on E: EOSError do StringData[3] := ERROR_MSG; end;
+      with Token.User do
+        if IsValid then
+          StringData[3] := Value.ToString;
 
-      try StringData[4] := Token.Session.ToString;
-      except on E: EOSError do StringData[4] := ERROR_MSG; end;
+      with Token.Session do
+        if IsValid then
+          StringData[4] := Value.ToString;
 
-      try StringData[5] := Token.Elevation.ToString;
-      except on E: EOSError do StringData[5] := ERROR_MSG; end;
+      with Token.Elevation do
+        if IsValid then
+          StringData[5] := Value.ToString;
 
-      try StringData[6] := Token.Integrity.ToString;
-      except on E: EOSError do StringData[6] := ERROR_MSG; end;
-    end
-    else
-    begin
-      for i := 1 to ListViewTokens.Columns.Count - 1 do
-        StringData[i] := ERROR_MSG;
-      StringData[2] := AccessToString(TokenDB[Index].Token.Access);
+      with Token.Integrity do
+        if IsValid then
+          StringData[6] := Value.ToString;
     end;
   end;
 end;
@@ -210,6 +213,8 @@ function TFrameTokenList.TokenMatchesSearch(Search: String;
 var
   i: integer;
 begin
+  // TODO: Inverse search (not something)
+
   if Search = '' then
     Exit(True);
 

@@ -138,9 +138,10 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   try
-    with Frame.AddToken(TToken.CreateFromCurrent) do
-      if Elevation <> TokenElevationTypeDefault then
-        Frame.AddToken(LinkedToken);
+    with Frame.AddToken(TToken.CreateFromCurrent), Elevation do
+      if IsValid then
+        if Elevation.Value <> TokenElevationTypeDefault then
+          Frame.AddToken(LinkedToken);
   except
     on E: EOSError do;
   end;

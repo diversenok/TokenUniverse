@@ -1,10 +1,10 @@
 object FormHandleSearch: TFormHandleSearch
   Left = 0
   Top = 0
-  BorderIcons = [biSystemMenu]
+  BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Search for token handles'
-  ClientHeight = 358
-  ClientWidth = 750
+  ClientHeight = 354
+  ClientWidth = 673
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,13 +15,13 @@ object FormHandleSearch: TFormHandleSearch
   Position = poMainFormCenter
   OnClose = FormClose
   DesignSize = (
-    750
-    358)
+    673
+    354)
   PixelsPerInch = 96
   TextHeight = 13
   object LabelStatistics: TLabel
     Left = 90
-    Top = 333
+    Top = 331
     Width = 189
     Height = 13
     Anchors = [akLeft, akBottom]
@@ -30,19 +30,62 @@ object FormHandleSearch: TFormHandleSearch
   inline Frame: TFrameTokenList
     Left = 0
     Top = 0
-    Width = 750
+    Width = 673
     Height = 325
+    Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
+    ExplicitWidth = 671
     inherited ListViewTokens: TListView
+      Width = 667
+      Columns = <
+        item
+          Caption = 'Description'
+          Width = 100
+        end
+        item
+          Caption = 'Type'
+          Width = 100
+        end
+        item
+          Caption = 'Access'
+          Width = 100
+        end
+        item
+          Caption = 'User'
+          Width = 170
+        end
+        item
+          Alignment = taCenter
+          Caption = 'Session'
+        end
+        item
+          Alignment = taCenter
+          Caption = 'Elevated'
+          Width = 55
+        end
+        item
+          Alignment = taCenter
+          Caption = 'Integrity'
+          Width = 70
+        end>
       MultiSelect = True
       GroupView = True
       ReadOnly = True
       PopupMenu = PopupMenu
       OnContextPopup = FrameListViewTokensContextPopup
+      ExplicitWidth = 665
+    end
+    inherited SearchBox: TButtonedEdit
+      Width = 520
+      ExplicitWidth = 518
+    end
+    inherited ComboBoxColumn: TComboBox
+      Left = 527
+      ExplicitLeft = 525
     end
     inherited SearchButtons: TImageList
       Bitmap = {
-        494C010104001800500010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+        494C0101040018005C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
         0000000000003600000028000000400000002000000001002000000000000020
         0000000000000000000000000000000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000000000000000000000
@@ -315,8 +358,8 @@ object FormHandleSearch: TFormHandleSearch
     end
   end
   object ButtonClose: TButton
-    Left = 672
-    Top = 328
+    Left = 595
+    Top = 326
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -324,10 +367,11 @@ object FormHandleSearch: TFormHandleSearch
     Caption = 'Close'
     ModalResult = 2
     TabOrder = 1
+    ExplicitLeft = 593
   end
   object ButtonRefresh: TButton
     Left = 3
-    Top = 328
+    Top = 326
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]

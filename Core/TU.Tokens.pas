@@ -10,7 +10,7 @@ interface
   on the same simple type. }
 
 uses
-  System.SysUtils, Winapi.Windows, TU.Handles;
+  System.SysUtils, Winapi.Windows, TU.Handles, TU.Common;
 
 type
   TSecurityIdentifier = record
@@ -95,27 +95,26 @@ type
     hToken: THandle;
     Origin: THandleItem;
     function QuerySid(InfoClass: TTokenInformationClass;
-      ErrorComment: String): TSecurityIdentifier;
+      ErrorComment: String): CanFail<TSecurityIdentifier>;
     function QueryGroups(InfoClass: TTokenInformationClass;
-      ErrorComment: String): TGroupArray;
-    function GetAccess: ACCESS_MASK;
-    function GetUser: TSecurityIdentifier;             // class 1
-    function GetGroups: TGroupArray;                   // class 2
-    function GetPrivileges: TPrivilegeArray;           // class 3
-    function GetOwner: TSecurityIdentifier;            // class 4
-    function GetPrimaryGroup: TSecurityIdentifier;     // class 5
-    function GetDefaultDacl: PACL;                     // class 6
-    function GetTokenType: TTokenTypeInfo;             // classes 7 & 8
-    function GetStatistics: TTokenStatistics;          // class 9
-    function GetSource: TTokenSource;                  // class 10
-    function GetRestrictedSids: TGroupArray;           // class 11
-    function GetSession: Cardinal;                     // class 12
-    function GetSandboxInert: LongBool;                // class 15
-    function GetTokenOrigin: Int64;                    // class 17
-    function GetElevationType: TTokenElevationType;    // classes 18 & 20
-    function GetLinkedToken: TToken;                   // class 19
-    function GetHasRestrictions: LongBool;             // class 20
-    function GetIntegrity: TTokenIntegrity;
+      ErrorComment: String): CanFail<TGroupArray>;
+    function GetAccess: CanFail<ACCESS_MASK>;
+    function GetUser: CanFail<TSecurityIdentifier>;           // class 1
+    function GetGroups: CanFail<TGroupArray>;                 // class 2
+    function GetPrivileges: CanFail<TPrivilegeArray>;         // class 3
+    function GetOwner: CanFail<TSecurityIdentifier>;          // class 4
+    function GetPrimaryGroup: CanFail<TSecurityIdentifier>;   // class 5
+    function GetTokenType: CanFail<TTokenTypeInfo>;           // classes 7 & 8
+    function GetStatistics: CanFail<TTokenStatistics>;        // class 9
+    function GetSource: CanFail<TTokenSource>;                // class 10
+    function GetRestrictedSids: CanFail<TGroupArray>;         // class 11
+    function GetSession: CanFail<Cardinal>;                   // class 12
+    function GetSandboxInert: CanFail<LongBool>;              // class 15
+    function GetTokenOrigin: CanFail<Int64>;                  // class 17
+    function GetElevation: CanFail<TTokenElevationType>;      // classes 18 & 20
+    function GetLinkedToken: TToken;                          // class 19
+    function GetHasRestrictions: CanFail<LongBool>;           // class 20
+    function GetIntegrity: CanFail<TTokenIntegrity>;
   public
     /// <summary> Opens a token of current process. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
@@ -150,28 +149,36 @@ type
     function IsValidToken: Boolean;
     var Caption: String;
     property Handle: THandle read hToken;
-    property Access: ACCESS_MASK read GetAccess;
-    property User: TSecurityIdentifier read GetUser;                            // class 1
-    property Groups: TGroupArray read GetGroups;                                // class 2
-    property Privileges: TPrivilegeArray read GetPrivileges;                    // class 3
-    property Owner: TSecurityIdentifier read GetOwner;                          // class 4
-    property PrimaryGroup: TSecurityIdentifier read GetPrimaryGroup;            // class 5
-    property DefaultDacl: PACL read GetDefaultDacl;                             // class 6
-    property Source: TTokenSource read GetSource;                               // classes 7 & 8
-    property TokenTypeAndImpersonation: TTokenTypeInfo read GetTokenType;       // class 9
-    property Statistics: TTokenStatistics read GetStatistics;                   // class 10
-    property RestrictedSids: TGroupArray read GetRestrictedSids;                // class 11
-    property Session: Cardinal read GetSession;                                 // class 12
-    // class 13 TokenGroupsAndPrivileges
-    // TODO -cEnhancement: class 14 SessionReference
-    property SandboxInert: LongBool read GetSandboxInert;                       // class 15
+    property Access: CanFail<ACCESS_MASK> read GetAccess;
+
+    { Token Information classes }
+
+    property User: CanFail<TSecurityIdentifier> read GetUser;                   // class 1
+    property Groups: CanFail<TGroupArray> read GetGroups;                       // class 2
+    property Privileges: CanFail<TPrivilegeArray> read GetPrivileges;           // class 3
+    property Owner: CanFail<TSecurityIdentifier> read GetOwner;                 // class 4
+    property PrimaryGroup: CanFail<TSecurityIdentifier> read GetPrimaryGroup;   // class 5
+    // TODO: class 6: DefaultDacl
+    property Source: CanFail<TTokenSource> read GetSource;                      // classes 7 & 8
+    property TokenTypeInfo: CanFail<TTokenTypeInfo> read GetTokenType;          // class 9
+    property Statistics: CanFail<TTokenStatistics> read GetStatistics;          // class 10
+    property RestrictedSids: CanFail<TGroupArray> read GetRestrictedSids;       // class 11
+    property Session: CanFail<Cardinal> read GetSession;                        // class 12
+    // TODO: class 13 TokenGroupsAndPrivileges
+    // TODO: class 14 SessionReference
+    property SandboxInert: CanFail<LongBool> read GetSandboxInert;              // class 15
     // TODO -cEnhancement: class 16 TokenAuditPolicy
-    property TokenOrigin: Int64 read GetTokenOrigin;                            // class 17
-    property Elevation: TTokenElevationType read GetElevationType;              // classes 18 & 20
+    property TokenOrigin: CanFail<Int64> read GetTokenOrigin;                   // class 17
+    property Elevation: CanFail<TTokenElevationType> read GetElevation;         // classes 18 & 20
     property LinkedToken: TToken read GetLinkedToken;                           // class 19
-    property HasRestrictions: LongBool read GetHasRestrictions;
-    property Integrity: TTokenIntegrity read GetIntegrity;
-    function SendHandleToProcess(PID: Cardinal): THandle;
+    property HasRestrictions: CanFail<LongBool> read GetHasRestrictions;        // class 21
+    // TODO: class 22 AccessInformation
+    // TODO: class 23 & 24 Virtualization
+    property Integrity: CanFail<TTokenIntegrity> read GetIntegrity;             // class 25
+
+    { Actions }
+
+    function SendHandleToProcess(PID: Cardinal): NativeUInt;
   end;
 
 const
@@ -190,9 +197,6 @@ function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
 
 implementation
-
-uses
-  TU.Common;
 
 type
   TObjectInformationClass = (ObjectBasicInformation);
@@ -242,7 +246,7 @@ constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
 begin
   Win32Check(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
     TokenTypeInfo.Impersonation, TokenTypeInfo.TokenType, hToken),
-    'TToken.CreateDuplicate');
+    'DuplicateTokenEx');
   Caption := SrcToken.Caption + ' (copy)';
 end;
 
@@ -258,7 +262,7 @@ begin
 
   Win32Check(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
     GetCurrentProcess, @hToken, Access, False, Options),
-    'TToken.CreateDuplicateHandle1');
+    'DuplicateHandle');
 
   if SrcToken.Origin.OwnerPID = GetCurrentProcessId then
     Caption := SrcToken.Caption + ' (reference)'
@@ -270,7 +274,7 @@ end;
 constructor TToken.CreateFromCurrent;
 begin
   Win32Check(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
-    'TToken.CreateFromCurrent');
+    'OpenProcessToken');
   Caption := 'Current process';
 end;
 
@@ -290,10 +294,10 @@ var
 begin
   hProcess := OpenProcess(MAXIMUM_ALLOWED, False, PID);
   if hProcess = 0 then
-    Win32Check(False, 'TToken.CreateFromProcess#1');
+    Win32Check(False, 'OpenProcess');
 
   Win32Check(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
-    'TToken.CreateFromProcess#2');
+    'OpenProcessToken');
   Caption := 'PID ' + IntToStr(PID);
 end;
 
@@ -304,62 +308,71 @@ begin
   inherited;
 end;
 
-function TToken.GetAccess: ACCESS_MASK;
+function TToken.GetAccess: CanFail<ACCESS_MASK>;
 var
   info: TObjectBasicInformaion;
 begin
+  Result.Init;
+
   // Pseudo-token mode
   if hToken = 0 then
-    Exit(Origin.Access);
+    Exit(Result.Succeed(Origin.Access));
 
-  NativeCheck(NtQueryObject(hToken, ObjectBasicInformation, @info,
-    SizeOf(info), nil), 'TToken.GetAccess');
-
-  Result := info.GrantedAccess;
+  if Result.CheckNativeError(NtQueryObject(hToken, ObjectBasicInformation, @info,
+    SizeOf(info), nil), 'NtQueryObject') then
+    Result.Succeed(info.GrantedAccess);
 end;
 
-function TToken.GetDefaultDacl: PACL;
-begin
-  raise ENotImplemented.Create('TToken.GetDefaultDacl');
-end;
-
-function TToken.GetElevationType: TTokenElevationType;
+function TToken.GetElevation: CanFail<TTokenElevationType>;
 var
   ReturnValue: DWORD;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenElevationType, @Result,
-    SizeOf(Result), ReturnValue), 'TToken.GetElevationType');
+  Result.Init;
+
+  Result.CheckError(GetTokenInformation(hToken, TokenElevationType,
+    @Result.Value, SizeOf(Result.Value), ReturnValue),
+    'GetTokenInformation:TokenElevationType');
 end;
 
-function TToken.GetGroups: TGroupArray;
+function TToken.GetGroups: CanFail<TGroupArray>;
 begin
-  Result := QueryGroups(TokenGroups, 'TToken.GetGroups');
+  Result := QueryGroups(TokenGroups, 'GetTokenInformation:TokenGroups');
 end;
 
-function TToken.GetHasRestrictions: LongBool;
+function TToken.GetHasRestrictions: CanFail<LongBool>;
 var
   ReturnLength: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenHasRestrictions, @Result,
-    SizeOf(Result), ReturnLength), 'TToken.GetHasRestrictions');
+  Result.Init;
+
+  Result.CheckError(GetTokenInformation(hToken, TokenHasRestrictions,
+    @Result.Value, SizeOf(Result.Value), ReturnLength),
+    'GetTokenInformation:TokenHasRestrictions');
 end;
 
-function TToken.GetIntegrity: TTokenIntegrity;
+function TToken.GetIntegrity: CanFail<TTokenIntegrity>;
 var
   Buffer: PSIDAndAttributes;
   BufferSize, ReturnValue: Cardinal;
 begin
+  Result.Init;
+
   BufferSize := 0;
   GetTokenInformation(hToken, TokenIntegrityLevel, nil, 0, BufferSize);
-  Win32CheckBuffer(BufferSize, 'TToken.GetIntegrity#1');
+  if not Result.CheckBuffer(BufferSize,
+    'GetTokenInformation:TokenIntegrityLevel') then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
   try
-    Win32Check(GetTokenInformation(hToken, TokenIntegrityLevel, Buffer,
-      BufferSize, ReturnValue), 'TToken.GetIntegrity#2');
+    if not Result.CheckError(GetTokenInformation(hToken, TokenIntegrityLevel,
+      Buffer, BufferSize, ReturnValue),
+      'GetTokenInformation:TokenIntegrityLevel') then
+      Exit;
 
-    Result.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
-    Result.Level := TTokenIntegrityLevel(GetSidSubAuthority(Buffer.Sid, 0)^);
+    Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+    Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(Buffer.Sid, 0)^);
+    Result.Succeed;
   finally
     FreeMem(Buffer);
   end;
@@ -371,123 +384,147 @@ var
   ReturnValue: DWORD;
 begin
   Win32Check(GetTokenInformation(hToken, TokenLinkedToken, @hLinkedToken,
-    SizeOf(hLinkedToken), ReturnValue), 'TToken.GetLinkedToken');
+    SizeOf(hLinkedToken), ReturnValue), 'GetTokenInformation:TokenLinkedToken');
   Result := TToken.Create;
   Result.hToken := hLinkedToken;
   Result.Caption := 'Linked token for ' + Caption;
 end;
 
-function TToken.GetOwner: TSecurityIdentifier;
+function TToken.GetOwner: CanFail<TSecurityIdentifier>;
 begin
-  Result := QuerySid(TokenOwner, 'TToken.GetOwner');
+  Result := QuerySid(TokenOwner, 'GetTokenInformation:TokenOwner');
 end;
 
-function TToken.GetPrimaryGroup: TSecurityIdentifier;
+function TToken.GetPrimaryGroup: CanFail<TSecurityIdentifier>;
 begin
-  Result := QuerySid(TokenPrimaryGroup, 'TToken.GetPrimaryGroup');
+  Result := QuerySid(TokenPrimaryGroup, 'GetTokenInformation:TokenPrimaryGroup');
 end;
 
-function TToken.GetPrivileges: TPrivilegeArray;
+function TToken.GetPrivileges: CanFail<TPrivilegeArray>;
 var
   Buffer: PTokenPrivileges;
   BufferSize, ReturnLength: Cardinal;
   i: integer;
 begin
+  Result.Init;
+
   BufferSize := 0;
   GetTokenInformation(hToken, TokenPrivileges, nil, 0, BufferSize);
-  Win32CheckBuffer(BufferSize, 'TToken.GetPrivileges#1');
+
+  if not Result.CheckBuffer(BufferSize, 'GetTokenInformation:TokenPrivileges')
+    then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
   try
-    Win32Check(GetTokenInformation(hToken, TokenPrivileges, Buffer, BufferSize,
-      ReturnLength), 'TToken.GetPrivileges#2');
+    if not Result.CheckError(GetTokenInformation(hToken, TokenPrivileges,
+      Buffer, BufferSize, ReturnLength), 'GetTokenInformation:TokenPrivileges')
+      then
+      Exit;
 
-    SetLength(Result, Buffer.PrivilegeCount);
+    SetLength(Result.Value, Buffer.PrivilegeCount);
     for i := 0 to Buffer.PrivilegeCount - 1 do
-      Result[i] := Buffer.Privileges[i];
+      Result.Value[i] := Buffer.Privileges[i];
+    Result.Succeed;
   finally
     FreeMem(Buffer);
   end;
 end;
 
-function TToken.GetRestrictedSids: TGroupArray;
+function TToken.GetRestrictedSids: CanFail<TGroupArray>;
 begin
-  Result := QueryGroups(TokenRestrictedSids, 'TToken.GetRestrictedSids');
+  Result := QueryGroups(TokenRestrictedSids,
+    'GetTokenInformation:TokenRestrictedSids');
 end;
 
-function TToken.GetSandboxInert: LongBool;
+function TToken.GetSandboxInert: CanFail<LongBool>;
 var
   ReturnLength: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenSandBoxInert, @Result,
-    SizeOf(Result), ReturnLength), 'TToken.GetSandboxInert');
+  Result.Init;
+
+  Result.CheckError(GetTokenInformation(hToken, TokenSandBoxInert,
+    @Result.Value, SizeOf(Result.Value), ReturnLength),
+    'GetTokenInformation:TokenSandBoxInert');
 end;
 
-function TToken.GetSession: Cardinal;
+function TToken.GetSession: CanFail<Cardinal>;
 var
   ReturnValue: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenSessionId, @Result,
-    SizeOf(Result), ReturnValue), 'TToken.GetSession');
+  Result.Init;
+
+  Result.CheckError(GetTokenInformation(hToken, TokenSessionId, @Result.Value,
+    SizeOf(Result.Value), ReturnValue), 'GetTokenInformation:TokenSessionId');
 end;
 
-function TToken.GetSource: TTokenSource;
+function TToken.GetSource: CanFail<TTokenSource>;
 var
   ReturnLength: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenSource, @Result, SizeOf(Result),
-    ReturnLength), 'TToken.GetSource');
+  Result.Init;
+  Result.CheckError(GetTokenInformation(hToken, TokenSource, @Result.Value,
+    SizeOf(Result.Value), ReturnLength), 'GetTokenInformation:TokenSource');
 end;
 
-function TToken.GetStatistics: TTokenStatistics;
+function TToken.GetStatistics: CanFail<TTokenStatistics>;
 var
   ReturnLength: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenStatistics, @Result,
-    SizeOf(Result), ReturnLength), 'TToken.GetStatistics');
+  Result.Init;
+
+  Result.CheckError(GetTokenInformation(hToken, TokenStatistics, @Result.Value,
+    SizeOf(Result.Value), ReturnLength), 'GetTokenInformation:TokenStatistics');
 end;
 
-function TToken.GetTokenOrigin: Int64;
+function TToken.GetTokenOrigin: CanFail<Int64>;
 var
   ReturnLength: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TTokenInformationClass.TokenOrigin,
-    @Result, SizeOf(Result), ReturnLength), 'TToken.GetTokenOrigin');
+  Result.Init;
+
+  Result.CheckError(GetTokenInformation(hToken,
+    TTokenInformationClass.TokenOrigin, @Result.Value, SizeOf(Result.Value),
+    ReturnLength), 'GetTokenInformation:TokenOrigin');
 end;
 
-function TToken.GetTokenType: TTokenTypeInfo;
+function TToken.GetTokenType: CanFail<TTokenTypeInfo>;
 var
- tokType: TTokenType;
- tokImp: TSecurityImpersonationLevel;
  ReturnValue: Cardinal;
 begin
-  Win32Check(GetTokenInformation(hToken, TokenType, @tokType, SizeOf(tokType),
-    ReturnValue), 'TToken.GetTokenType#1');
+  Result.Init;
 
-  Result.TokenType := tokType;
+  if not Result.CheckError(GetTokenInformation(hToken, TokenType,
+    @Result.Value.TokenType, SizeOf(Result.Value.TokenType), ReturnValue),
+    'GetTokenInformation:TokenType') then
+    Exit;
 
-  if tokType = TokenImpersonation then
-  begin
-    Win32Check(GetTokenInformation(hToken, TokenImpersonationLevel, @tokImp,
-      SizeOf(tokImp), ReturnValue), 'TToken.GetTokenType#2');
-    Result.Impersonation := tokImp;
-  end;
+  if Result.Value.TokenType = TokenImpersonation then
+    Result.CheckError(GetTokenInformation(hToken, TokenImpersonationLevel,
+    @Result.Value.Impersonation, SizeOf(Result.Value.Impersonation),
+    ReturnValue), 'GetTokenInformation:TokenImpersonationLevel');
 end;
 
-function TToken.GetUser: TSecurityIdentifier;
+function TToken.GetUser: CanFail<TSecurityIdentifier>;
 var
   Buffer: PSIDAndAttributes;
   BufferSize, ReturnValue: Cardinal;
 begin
+  Result.Init;
+
   BufferSize := 0;
   GetTokenInformation(hToken, TokenUser, nil, 0, BufferSize);
-  Win32CheckBuffer(BufferSize, 'TToken.GetUser#1');
+
+  if not Result.CheckBuffer(BufferSize, 'GetTokenInformation:TokenUser') then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
   try
-    Win32Check(GetTokenInformation(hToken, TokenUser, Buffer, BufferSize,
-      ReturnValue), 'TToken.GetUser#2');
-    Result := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+    if not Result.CheckError(GetTokenInformation(hToken, TokenUser, Buffer,
+      BufferSize, ReturnValue), 'GetTokenInformation:TokenUser') then
+      Exit;
+
+    Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
   finally
     FreeMem(Buffer);
   end;
@@ -499,26 +536,31 @@ begin
 end;
 
 function TToken.QueryGroups(InfoClass: TTokenInformationClass;
-  ErrorComment: String): TGroupArray;
+  ErrorComment: String): CanFail<TGroupArray>;
 var
   Buffer: PTokenGroups;
   BufferSize, ReturnLength: Cardinal;
   i: integer;
 begin
+  Result.Init;
+
   BufferSize := 0;
   GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
-  Win32CheckBuffer(BufferSize, ErrorComment + '#1');
+
+  if not Result.CheckBuffer(BufferSize, ErrorComment) then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
   try
-    Win32Check(GetTokenInformation(hToken, InfoClass, Buffer, BufferSize,
-      ReturnLength), ErrorComment + '#2');
+    if not Result.CheckError(GetTokenInformation(hToken, InfoClass, Buffer,
+      BufferSize, ReturnLength), ErrorComment) then
+      Exit;
 
-    SetLength(Result, Buffer.GroupCount);
+    SetLength(Result.Value, Buffer.GroupCount);
     for i := 0 to Buffer.GroupCount - 1 do
     begin
-      Result[i].SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
-      Result[i].Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
+      Result.Value[i].SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
+      Result.Value[i].Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
     end;
   finally
     FreeMem(Buffer);
@@ -526,35 +568,39 @@ begin
 end;
 
 function TToken.QuerySid(InfoClass: TTokenInformationClass;
-  ErrorComment: String): TSecurityIdentifier;
+  ErrorComment: String): CanFail<TSecurityIdentifier>;
 var
   Buffer: PTokenOwner; // aka TTokenPrimaryGroup
   BufferSize, ReturnValue: Cardinal;
 begin
+  Result.Init;
+
   BufferSize := 0;
   GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
-  Win32CheckBuffer(BufferSize, ErrorComment + '#1');
+
+  if not Result.CheckBuffer(BufferSize, ErrorComment) then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
   try
-    Win32Check(GetTokenInformation(hToken, InfoClass, Buffer,
-      BufferSize, ReturnValue), ErrorComment + '#2');
-    Result := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
+    if Result.CheckError(GetTokenInformation(hToken, InfoClass, Buffer,
+      BufferSize, ReturnValue), ErrorComment) then
+      Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Owner));
   finally
     FreeMem(Buffer);
   end;
 end;
 
-function TToken.SendHandleToProcess(PID: Cardinal): THandle;
+function TToken.SendHandleToProcess(PID: Cardinal): NativeUInt;
 var
   hTargetProcess: THandle;
 begin
   hTargetProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
-  Win32Check(LongBool(hTargetProcess), 'TToken.SendHandleToProcess#1');
+  Win32Check(LongBool(hTargetProcess), 'OpenProcess#PROCESS_DUP_HANDLE');
 
   if not DuplicateHandle(GetCurrentProcess, hToken, hTargetProcess, @Result, 0,
     False, DUPLICATE_SAME_ACCESS) then
-    Win32Check(False, 'TToken.SendHandleToProcess#2')
+    Win32Check(False, 'DuplicateHandle')
   else
     CloseHandle(hTargetProcess);
 end;
@@ -603,7 +649,7 @@ var
 begin
   SID := StringSID;
   if Win32Check(ConvertStringSidToSid(PWideChar(SID), Buffer),
-    'TSecurityIdentifier.CreateFromStringSid') then
+    'ConvertStringSidToSid') then
   try
     GetDomainAndUser(Buffer);
   finally
@@ -620,14 +666,14 @@ begin
   DomainChars := 0;
   LookupAccountName(nil, PWideChar(Name), nil, SidSize, nil,
     DomainChars, Reserved2);
-  Win32CheckBuffer(SidSize, 'TSecurityIdentifier.CreateFromUserName#1');
+  Win32CheckBuffer(SidSize, 'LookupAccountName');
 
   SidBuffer := AllocMem(SidSize);
   DomainBuffer := AllocMem(DomainChars * SizeOf(WideChar));
   try
     if Win32Check(LookupAccountName(nil, PWideChar(Name), SidBuffer, SidSize,
       DomainBuffer, DomainChars, Reserved2),
-      'TSecurityIdentifier.CreateFromUserName#2') then
+      'LookupAccountName') then
       CreateFromSid(SidBuffer);
   finally
     FreeMem(SidBuffer);
@@ -668,8 +714,7 @@ procedure TSecurityIdentifier.GetStringSid(SrcSid: PSID);
 var
   Buffer: PWideChar;
 begin
-  if Win32Check(ConvertSidToStringSid(SrcSid, Buffer),
-    'TSecurityIdentifier.GetStringSid') then
+  if ConvertSidToStringSid(SrcSid, Buffer) then
   begin
     SID := String(Buffer);
     LocalFree(NativeUInt(Buffer));
@@ -684,8 +729,10 @@ begin
     Result := User
   else if Domain <> '' then
     Result := Domain
-  else
+  else if SID <> '' then
     Result := SID
+  else
+    Result := 'Invalid SID';
 end;
 
 { TGroupAttributesHelper }

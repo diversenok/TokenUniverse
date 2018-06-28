@@ -77,20 +77,19 @@ end;
 
 procedure TDuplicateDialog.SetDefaults(Source: TToken);
 begin
-  try
-    with Source.TokenTypeAndImpersonation do
-      if TokenType = TokenImpersonation then
+  with Source.TokenTypeInfo do
+    if IsValid then
+    begin
+      if Value.TokenType = TokenImpersonation then
       begin
-        RadioButtonAnonymous.Checked := Impersonation = SecurityAnonymous;
-        RadioButtonIdentification.Checked := Impersonation = SecurityIdentification;
-        RadioButtonImpersonation.Checked := Impersonation = SecurityImpersonation;
-        RadioButtonDelegation.Checked := Impersonation = SecurityDelegation;
+        RadioButtonAnonymous.Checked := Value.Impersonation = SecurityAnonymous;
+        RadioButtonIdentification.Checked := Value.Impersonation = SecurityIdentification;
+        RadioButtonImpersonation.Checked := Value.Impersonation = SecurityImpersonation;
+        RadioButtonDelegation.Checked := Value.Impersonation = SecurityDelegation;
       end
       else
         RadioButtonPrimary.Checked := True;
-  except
-    on EOSError do;
-  end;
+    end;
 end;
 
 procedure TDuplicateDialog.FormClose(Sender: TObject;

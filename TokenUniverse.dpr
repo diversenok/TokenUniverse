@@ -13,7 +13,7 @@ uses
   UI.HandleSearch in 'UI\UI.HandleSearch.pas' {FormHandleSearch},
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
-  UI.Run in 'UI\UI.Run.pas' {RunDialog};
+  UI.Run in 'UI\UI.Run.pas' {RunDialog},
 
 {$R *.res}
 
