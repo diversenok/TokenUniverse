@@ -137,15 +137,13 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  try
-    with Frame.AddToken(TToken.CreateFromCurrent), Elevation do
-      if IsValid then
-        if Elevation.Value <> TokenElevationTypeDefault then
-          Frame.AddToken(LinkedToken);
-  except
-    on E: EOSError do;
-  end;
   ReportMemoryLeaksOnShutdown := True;
+  with Frame.AddToken(TToken.CreateFromCurrent), Elevation do
+    if IsValid then
+      if Elevation.Value <> TokenElevationTypeDefault then
+        with LinkedToken do
+          if IsValid then
+            Frame.AddToken(Value);
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);

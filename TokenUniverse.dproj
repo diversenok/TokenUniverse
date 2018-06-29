@@ -133,6 +133,7 @@
             <Form>RunDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Core\TU.Tokens.Winapi.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

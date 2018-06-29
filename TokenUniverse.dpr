@@ -14,6 +14,7 @@ uses
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
+  TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas';
 
 {$R *.res}
 

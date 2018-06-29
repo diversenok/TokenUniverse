@@ -10,7 +10,7 @@ interface
   on the same simple type. }
 
 uses
-  System.SysUtils, Winapi.Windows, TU.Handles, TU.Common;
+  System.SysUtils, Winapi.Windows, TU.Tokens.Winapi, TU.Handles, TU.Common;
 
 type
   TSecurityIdentifier = record
@@ -92,12 +92,22 @@ type
 
   TToken = class
   protected
+  type
+    TTokenHelper<ResultType> = class
+      class function GetFixedSize(Token: TToken;
+        InfoClass: TTokenInformationClass): CanFail<ResultType>; static;
+    end;
+  var
     hToken: THandle;
     Origin: THandleItem;
-    function QuerySid(InfoClass: TTokenInformationClass;
-      ErrorComment: String): CanFail<TSecurityIdentifier>;
-    function QueryGroups(InfoClass: TTokenInformationClass;
-      ErrorComment: String): CanFail<TGroupArray>;
+    /// <remarks> The bufer should be freed using FreeMem. </remarks>
+    function QueryVariableBuffer(InfoClass: TTokenInformationClass):
+      CanFail<Pointer>;
+    function QuerySid(InfoClass: TTokenInformationClass):
+      CanFail<TSecurityIdentifier>;
+    function QueryGroups(InfoClass: TTokenInformationClass):
+      CanFail<TGroupArray>;
+
     function GetAccess: CanFail<ACCESS_MASK>;
     function GetUser: CanFail<TSecurityIdentifier>;           // class 1
     function GetGroups: CanFail<TGroupArray>;                 // class 2
@@ -112,7 +122,7 @@ type
     function GetSandboxInert: CanFail<LongBool>;              // class 15
     function GetTokenOrigin: CanFail<Int64>;                  // class 17
     function GetElevation: CanFail<TTokenElevationType>;      // classes 18 & 20
-    function GetLinkedToken: TToken;                          // class 19
+    function GetLinkedToken: CanFail<TToken>;                 // class 19
     function GetHasRestrictions: CanFail<LongBool>;           // class 20
     function GetIntegrity: CanFail<TTokenIntegrity>;
   public
@@ -170,7 +180,7 @@ type
     // TODO -cEnhancement: class 16 TokenAuditPolicy
     property TokenOrigin: CanFail<Int64> read GetTokenOrigin;                   // class 17
     property Elevation: CanFail<TTokenElevationType> read GetElevation;         // classes 18 & 20
-    property LinkedToken: TToken read GetLinkedToken;                           // class 19
+    property LinkedToken: CanFail<TToken> read GetLinkedToken;                  // class 19
     property HasRestrictions: CanFail<LongBool> read GetHasRestrictions;        // class 21
     // TODO: class 22 AccessInformation
     // TODO: class 23 & 24 Virtualization
@@ -201,33 +211,6 @@ implementation
 uses
   TU.NativeAPI;
 
-type
-  TSIDAndAttributesHash = record
-    const SID_HASH_SIZE = 32;
-  var
-    SidCount: Cardinal;
-    SidAttr: PSIDAndAttributes;
-    Hash: array [0 .. SID_HASH_SIZE-1] of NativeUInt;
-  end;
-  PSIDAndAttributesHash = ^TSIDAndAttributesHash;
-
-  TTokenAccessInformation = record
-    SidHash: PSIDAndAttributesHash;
-    RestrictedSidHash: PSIDAndAttributesHash;
-    Privileges: PTokenPrivileges;
-    AuthenticationId: Int64;
-    TokenType: TTokenType;
-    ImpersonationLevel: TSecurityImpersonationLevel;
-    MandatoryPolicy: TOKEN_MANDATORY_POLICY;
-    Flags: DWORD;
-    AppContainerNumber: DWORD;
-    PackageSid: PSID;
-    CapabilitiesHash: PSIDAndAttributesHash;
-    TrustLevelSid: PSID;
-    SecurityAttributes: Pointer;
-  end;
-  PTokenAccessInformation = ^TTokenAccessInformation;
-
 { TToken }
 
 constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
@@ -253,7 +236,7 @@ begin
     GetCurrentProcess, @hToken, Access, False, Options),
     'DuplicateHandle');
 
-  if SrcToken.Origin.OwnerPID = GetCurrentProcessId then
+  if SrcToken.Origin.OwnerPID = 0 then
     Caption := SrcToken.Caption + ' (reference)'
   else
     Caption := Format('Referenced 0x%x from PID %d', [SrcToken.Origin.hToken,
@@ -307,174 +290,123 @@ begin
   if hToken = 0 then
     Exit(Result.Succeed(Origin.Access));
 
-  if Result.CheckNativeError(NtQueryObject(hToken, ObjectBasicInformation, @info,
-    SizeOf(info), nil), 'NtQueryObject') then
+  if Result.CheckNativeError(NtQueryObject(hToken, ObjectBasicInformation,
+    @info, SizeOf(info), nil), 'NtQueryObject') then
     Result.Succeed(info.GrantedAccess);
 end;
 
 function TToken.GetElevation: CanFail<TTokenElevationType>;
-var
-  ReturnValue: DWORD;
 begin
-  Result.Init;
-
-  Result.CheckError(GetTokenInformation(hToken, TokenElevationType,
-    @Result.Value, SizeOf(Result.Value), ReturnValue),
-    'GetTokenInformation:TokenElevationType');
+  Result := TTokenHelper<TTokenElevationType>.GetFixedSize(Self,
+    TokenElevationType);
 end;
 
 function TToken.GetGroups: CanFail<TGroupArray>;
 begin
-  Result := QueryGroups(TokenGroups, 'GetTokenInformation:TokenGroups');
+  Result := QueryGroups(TokenGroups);
 end;
 
 function TToken.GetHasRestrictions: CanFail<LongBool>;
-var
-  ReturnLength: Cardinal;
 begin
-  Result.Init;
-
-  Result.CheckError(GetTokenInformation(hToken, TokenHasRestrictions,
-    @Result.Value, SizeOf(Result.Value), ReturnLength),
-    'GetTokenInformation:TokenHasRestrictions');
+  Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenHasRestrictions);
 end;
 
 function TToken.GetIntegrity: CanFail<TTokenIntegrity>;
 var
   Buffer: PSIDAndAttributes;
-  BufferSize, ReturnValue: Cardinal;
+begin
+  with Result.CopyResult(QueryVariableBuffer(TokenIntegrityLevel)) do
+    if IsValid then
+    begin
+      Buffer := PSIDAndAttributes(Value);
+
+      Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+      Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(Buffer.Sid,
+        0)^);
+
+      FreeMem(Buffer);
+    end;
+end;
+
+function TToken.GetLinkedToken: CanFail<TToken>;
 begin
   Result.Init;
 
-  BufferSize := 0;
-  GetTokenInformation(hToken, TokenIntegrityLevel, nil, 0, BufferSize);
-  if not Result.CheckBuffer(BufferSize,
-    'GetTokenInformation:TokenIntegrityLevel') then
-    Exit;
-
-  Buffer := AllocMem(BufferSize);
-  try
-    if not Result.CheckError(GetTokenInformation(hToken, TokenIntegrityLevel,
-      Buffer, BufferSize, ReturnValue),
-      'GetTokenInformation:TokenIntegrityLevel') then
-      Exit;
-
-    Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
-    Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(Buffer.Sid, 0)^);
-    Result.Succeed;
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
-function TToken.GetLinkedToken: TToken;
-var
-  hLinkedToken: THandle;
-  ReturnValue: DWORD;
-begin
-  Win32Check(GetTokenInformation(hToken, TokenLinkedToken, @hLinkedToken,
-    SizeOf(hLinkedToken), ReturnValue), 'GetTokenInformation:TokenLinkedToken');
-  Result := TToken.Create;
-  Result.hToken := hLinkedToken;
-  Result.Caption := 'Linked token for ' + Caption;
+  with TTokenHelper<THandle>.GetFixedSize(Self, TokenLinkedToken) do
+    if IsValid then
+    begin
+      Result.Value := TToken.Create;
+      Result.Value.hToken := Value;
+      Result.Value.Caption := 'Linked token for ' + Caption;
+      Result.Succeed;
+    end
+    else
+    begin
+      Result.IsValid := False;
+      Result.ErrorCode := ErrorCode;
+      Result.ErrorOrigin := ErrorOrigin;
+    end;
 end;
 
 function TToken.GetOwner: CanFail<TSecurityIdentifier>;
 begin
-  Result := QuerySid(TokenOwner, 'GetTokenInformation:TokenOwner');
+  Result := QuerySid(TokenOwner);
 end;
 
 function TToken.GetPrimaryGroup: CanFail<TSecurityIdentifier>;
 begin
-  Result := QuerySid(TokenPrimaryGroup, 'GetTokenInformation:TokenPrimaryGroup');
+  Result := QuerySid(TokenPrimaryGroup);
 end;
 
 function TToken.GetPrivileges: CanFail<TPrivilegeArray>;
 var
   Buffer: PTokenPrivileges;
-  BufferSize, ReturnLength: Cardinal;
   i: integer;
 begin
-  Result.Init;
+  with Result.CopyResult(QueryVariableBuffer(TokenPrivileges)) do
+    if IsValid then
+    begin
+      try
+        Buffer := Value;
 
-  BufferSize := 0;
-  GetTokenInformation(hToken, TokenPrivileges, nil, 0, BufferSize);
-
-  if not Result.CheckBuffer(BufferSize, 'GetTokenInformation:TokenPrivileges')
-    then
-    Exit;
-
-  Buffer := AllocMem(BufferSize);
-  try
-    if not Result.CheckError(GetTokenInformation(hToken, TokenPrivileges,
-      Buffer, BufferSize, ReturnLength), 'GetTokenInformation:TokenPrivileges')
-      then
-      Exit;
-
-    SetLength(Result.Value, Buffer.PrivilegeCount);
-    for i := 0 to Buffer.PrivilegeCount - 1 do
-      Result.Value[i] := Buffer.Privileges[i];
-    Result.Succeed;
-  finally
-    FreeMem(Buffer);
-  end;
+        SetLength(Result.Value, Buffer.PrivilegeCount);
+        for i := 0 to Buffer.PrivilegeCount - 1 do
+          Result.Value[i] := Buffer.Privileges[i];
+      finally
+        FreeMem(Buffer);
+      end;
+    end;
 end;
 
 function TToken.GetRestrictedSids: CanFail<TGroupArray>;
 begin
-  Result := QueryGroups(TokenRestrictedSids,
-    'GetTokenInformation:TokenRestrictedSids');
+  Result := QueryGroups(TokenRestrictedSids);
 end;
 
 function TToken.GetSandboxInert: CanFail<LongBool>;
-var
-  ReturnLength: Cardinal;
 begin
-  Result.Init;
-
-  Result.CheckError(GetTokenInformation(hToken, TokenSandBoxInert,
-    @Result.Value, SizeOf(Result.Value), ReturnLength),
-    'GetTokenInformation:TokenSandBoxInert');
+  Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenSandBoxInert);
 end;
 
 function TToken.GetSession: CanFail<Cardinal>;
-var
-  ReturnValue: Cardinal;
 begin
-  Result.Init;
-
-  Result.CheckError(GetTokenInformation(hToken, TokenSessionId, @Result.Value,
-    SizeOf(Result.Value), ReturnValue), 'GetTokenInformation:TokenSessionId');
+  Result := TTokenHelper<Cardinal>.GetFixedSize(Self, TokenSessionId);
 end;
 
 function TToken.GetSource: CanFail<TTokenSource>;
-var
-  ReturnLength: Cardinal;
 begin
-  Result.Init;
-  Result.CheckError(GetTokenInformation(hToken, TokenSource, @Result.Value,
-    SizeOf(Result.Value), ReturnLength), 'GetTokenInformation:TokenSource');
+  Result := TTokenHelper<TTokenSource>.GetFixedSize(Self, TokenSource);
 end;
 
 function TToken.GetStatistics: CanFail<TTokenStatistics>;
-var
-  ReturnLength: Cardinal;
 begin
-  Result.Init;
-
-  Result.CheckError(GetTokenInformation(hToken, TokenStatistics, @Result.Value,
-    SizeOf(Result.Value), ReturnLength), 'GetTokenInformation:TokenStatistics');
+  Result := TTokenHelper<TTokenStatistics>.GetFixedSize(Self, TokenStatistics);
 end;
 
 function TToken.GetTokenOrigin: CanFail<Int64>;
-var
-  ReturnLength: Cardinal;
 begin
-  Result.Init;
-
-  Result.CheckError(GetTokenInformation(hToken,
-    TTokenInformationClass.TokenOrigin, @Result.Value, SizeOf(Result.Value),
-    ReturnLength), 'GetTokenInformation:TokenOrigin');
+  Result := TTokenHelper<Int64>.GetFixedSize(Self,
+    TTokenInformationClass.TokenOrigin);
 end;
 
 function TToken.GetTokenType: CanFail<TTokenTypeInfo>;
@@ -485,38 +417,26 @@ begin
 
   if not Result.CheckError(GetTokenInformation(hToken, TokenType,
     @Result.Value.TokenType, SizeOf(Result.Value.TokenType), ReturnValue),
-    'GetTokenInformation:TokenType') then
+    GetterMessage(TokenType)) then
     Exit;
 
   if Result.Value.TokenType = TokenImpersonation then
     Result.CheckError(GetTokenInformation(hToken, TokenImpersonationLevel,
     @Result.Value.Impersonation, SizeOf(Result.Value.Impersonation),
-    ReturnValue), 'GetTokenInformation:TokenImpersonationLevel');
+    ReturnValue), GetterMessage(TokenImpersonationLevel));
 end;
 
 function TToken.GetUser: CanFail<TSecurityIdentifier>;
 var
   Buffer: PSIDAndAttributes;
-  BufferSize, ReturnValue: Cardinal;
 begin
-  Result.Init;
-
-  BufferSize := 0;
-  GetTokenInformation(hToken, TokenUser, nil, 0, BufferSize);
-
-  if not Result.CheckBuffer(BufferSize, 'GetTokenInformation:TokenUser') then
-    Exit;
-
-  Buffer := AllocMem(BufferSize);
-  try
-    if not Result.CheckError(GetTokenInformation(hToken, TokenUser, Buffer,
-      BufferSize, ReturnValue), 'GetTokenInformation:TokenUser') then
-      Exit;
-
-    Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
-  finally
-    FreeMem(Buffer);
-  end;
+  with Result.CopyResult(QueryVariableBuffer(TokenUser)) do
+    if IsValid then
+    begin
+      Buffer := Value;
+      Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
+      FreeMem(Buffer);
+    end;
 end;
 
 function TToken.IsValidToken: Boolean;
@@ -524,59 +444,63 @@ begin
   Result := hToken <> 0;
 end;
 
-function TToken.QueryGroups(InfoClass: TTokenInformationClass;
-  ErrorComment: String): CanFail<TGroupArray>;
+function TToken.QueryGroups(InfoClass: TTokenInformationClass):
+  CanFail<TGroupArray>;
 var
   Buffer: PTokenGroups;
-  BufferSize, ReturnLength: Cardinal;
   i: integer;
 begin
-  Result.Init;
-
-  BufferSize := 0;
-  GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
-
-  if not Result.CheckBuffer(BufferSize, ErrorComment) then
-    Exit;
-
-  Buffer := AllocMem(BufferSize);
-  try
-    if not Result.CheckError(GetTokenInformation(hToken, InfoClass, Buffer,
-      BufferSize, ReturnLength), ErrorComment) then
-      Exit;
-
-    SetLength(Result.Value, Buffer.GroupCount);
-    for i := 0 to Buffer.GroupCount - 1 do
+  with Result.CopyResult(QueryVariableBuffer(InfoClass)) do
+    if IsValid then
     begin
-      Result.Value[i].SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
-      Result.Value[i].Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
+      try
+        Buffer := Value;
+
+        SetLength(Result.Value, Buffer.GroupCount);
+        for i := 0 to Buffer.GroupCount - 1 do
+        with Result.Value[i] do
+        begin
+          SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
+          Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
+        end;
+      finally
+        FreeMem(Buffer);
+      end;
     end;
-  finally
-    FreeMem(Buffer);
-  end;
 end;
 
-function TToken.QuerySid(InfoClass: TTokenInformationClass;
-  ErrorComment: String): CanFail<TSecurityIdentifier>;
+function TToken.QuerySid(InfoClass: TTokenInformationClass):
+  CanFail<TSecurityIdentifier>;
 var
-  Buffer: PTokenOwner; // aka TTokenPrimaryGroup
+  Buffer: PTokenOwner; // aka TTokenPrimaryGroup aka PPSID
+begin
+  with Result.CopyResult(QueryVariableBuffer(InfoClass)) do
+    if IsValid then
+    begin
+      Buffer := Value;
+      Result.Value := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
+      FreeMem(Buffer);
+    end;
+end;
+
+function TToken.QueryVariableBuffer(
+  InfoClass: TTokenInformationClass): CanFail<Pointer>;
+var
   BufferSize, ReturnValue: Cardinal;
 begin
   Result.Init;
 
   BufferSize := 0;
   GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
-
-  if not Result.CheckBuffer(BufferSize, ErrorComment) then
+  if not Result.CheckBuffer(BufferSize, GetterMessage(InfoClass)) then
     Exit;
 
-  Buffer := AllocMem(BufferSize);
-  try
-    if Result.CheckError(GetTokenInformation(hToken, InfoClass, Buffer,
-      BufferSize, ReturnValue), ErrorComment) then
-      Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Owner));
-  finally
-    FreeMem(Buffer);
+  Result.Value := AllocMem(BufferSize);
+  if not Result.CheckError(GetTokenInformation(hToken, InfoClass, Result.Value,
+    BufferSize, ReturnValue), GetterMessage(InfoClass)) then
+  begin
+    FreeMem(Result.Value);
+    Result.Value := nil
   end;
 end;
 
@@ -872,6 +796,18 @@ begin
   else
     Result := 'Intermediate';
   end;
+end;
+
+{ TToken.TTokenHelper<ResultType> }
+
+class function TToken.TTokenHelper<ResultType>.GetFixedSize(
+  Token: TToken; InfoClass: TTokenInformationClass): CanFail<ResultType>;
+var
+  ReturnLength: Cardinal;
+begin
+  Result.Init;
+  Result.CheckError(GetTokenInformation(Token.hToken, InfoClass, @Result.Value,
+    SizeOf(Result.Value), ReturnLength), GetterMessage(InfoClass));
 end;
 
 end. // CreateWellKnownSid

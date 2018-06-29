@@ -61,6 +61,12 @@ type
 
     /// <summary> Saves the last Win32 error. </summary>
     procedure SetLastError(Where: String);
+
+    /// <summary>
+    ///  Test the buffer wrapper for validity and copies it's error information.
+    /// </summary>
+    /// <returns> The buffer wrapper itself (<paramref name="Src"/>). </returns>
+    function CopyResult(Src: CanFail<Pointer>): CanFail<Pointer>;
   end;
 
 const
@@ -155,6 +161,15 @@ begin
     ErrorOrigin := Where;
   end;
   Result := IsValid;
+end;
+
+function CanFail<ResultType>.CopyResult(
+  Src: CanFail<Pointer>): CanFail<Pointer>;
+begin
+  Self.IsValid := Src.IsValid;
+  Self.ErrorCode := Src.ErrorCode;
+  Self.ErrorOrigin := Src.ErrorOrigin;
+  Result := Src;
 end;
 
 function CanFail<ResultType>.GetValueOrRaise: ResultType;
