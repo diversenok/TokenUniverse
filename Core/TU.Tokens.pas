@@ -198,17 +198,10 @@ function AccessToDetailedString(Access: Cardinal): String;
 
 implementation
 
+uses
+  TU.NativeAPI;
+
 type
-  TObjectInformationClass = (ObjectBasicInformation);
-
-  TObjectBasicInformaion = record
-    Attributes: Cardinal;
-    GrantedAccess: ACCESS_MASK;
-    HandleCount: Cardinal;
-    PointerCount: Cardinal;
-    Reserved: array [0..9] of Cardinal;
-  end;
-
   TSIDAndAttributesHash = record
     const SID_HASH_SIZE = 32;
   var
@@ -234,10 +227,6 @@ type
     SecurityAttributes: Pointer;
   end;
   PTokenAccessInformation = ^TTokenAccessInformation;
-
-function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
-  TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
-  Cardinal; ReturnLength: PCardinal): LongWord; stdcall; external 'ntdll.dll';
 
 { TToken }
 

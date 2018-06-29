@@ -11,6 +11,8 @@ type
   NTSTATUS = Cardinal;
 
 const
+  ntdll = 'ntdll.dll';
+
   STATUS_SUCCESS: NTSTATUS = $00000000;
   STATUS_UNSUCCESSFUL: NTSTATUS = $C0000001;
 
@@ -66,12 +68,29 @@ type
   end;
   PSystemHandleInformationEx = ^TSystemHandleInformationEx;
 
+  { ObjectInformation class }
+
+  TObjectInformationClass = (ObjectBasicInformation);
+
+  TObjectBasicInformaion = record
+    Attributes: Cardinal;
+    GrantedAccess: ACCESS_MASK;
+    HandleCount: Cardinal;
+    PointerCount: Cardinal;
+    Reserved: array [0..9] of Cardinal;
+  end;
+
+
   { Ntdll api calls }
 
 function NtQuerySystemInformation(SystemInformationClass
   : TSystemInformationClass; SystemInformation: Pointer;
   SystemInformationLength: Cardinal; out ReturnLength: Cardinal): NTSTATUS;
-  stdcall; external 'ntdll.dll';
+  stdcall; external ntdll;
+
+function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
+  TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
+  Cardinal; ReturnLength: PCardinal): LongWord; stdcall; external ntdll;
 
 type
   TByteArray = array [Word] of Byte;
