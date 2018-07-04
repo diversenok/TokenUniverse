@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, TU.Tokens,
   System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame;
+  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame, System.ImageList,
+  Vcl.ImgList;
 
 type
   TFormMain = class(TForm)
@@ -16,7 +17,7 @@ type
     View1: TMenuItem;
     Help1: TMenuItem;
     RunAsAdmin: TMenuItem;
-    RunasSYSTEM1: TMenuItem;
+    RunAsSystem: TMenuItem;
     RunasSYSTEM2: TMenuItem;
     PopupMenu: TPopupMenu;
     TokenDuplicate: TMenuItem;
@@ -52,6 +53,7 @@ type
     Displayallsearchresults1: TMenuItem;
     TokenOpenLinked: TMenuItem;
     TokenOpenInfo: TMenuItem;
+    SmallIcons: TImageList;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -68,6 +70,7 @@ type
     procedure ActionOpenLinked(Sender: TObject);
     procedure ActionOpen(Sender: TObject);
     procedure FrameListViewTokensDblClick(Sender: TObject);
+    procedure RunAsSystemClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   end;
 
@@ -78,7 +81,7 @@ implementation
 
 uses
   Winapi.ShellApi,
-  TU.Common, TU.Handles,
+  TU.Common, TU.Handles, TU.RestartSvc,
   UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch;
 
 {$R *.dfm}
@@ -87,7 +90,7 @@ uses
 
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
-  Frame.DeleteToken(Frame.ListViewTokens.Selected);
+  Frame.DeleteToken(Frame.ListViewTokens.Selected, True);
 end;
 
 procedure TFormMain.ActionDuplicate(Sender: TObject);
@@ -152,13 +155,13 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  ReportMemoryLeaksOnShutdown := True;
   with Frame.AddToken(TToken.CreateFromCurrent), Elevation do
     if IsValid then
       if Elevation.Value <> TokenElevationTypeDefault then
         with LinkedToken do
           if IsValid then
             Frame.AddToken(Value);
+  SetForegroundWindow(Handle);
 end;
 
 procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
@@ -178,23 +181,23 @@ begin
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
-var
-  ExecInfo: TShellExecuteInfoW;
 begin
-  FillChar(ExecInfo, SizeOf(ExecInfo), 0);
-  with ExecInfo do
-  begin
-    cbSize := SizeOf(ExecInfo);
-    Wnd := Handle;
-    lpVerb := PWideChar('runas');
-    lpFile := PWideChar(ParamStr(0));
-    fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_UNICODE or SEE_MASK_FLAG_NO_UI;
-    nShow := SW_SHOWNORMAL;
+  ReSvcDelegate(Handle, False);
+  Close;
+end;
+
+procedure TFormMain.RunAsSystemClick(Sender: TObject);
+begin
+  try
+    ReSvcCreateService;
+  except
+    on E: EOSError do
+      if E.ErrorCode = ERROR_ACCESS_DENIED then
+        ReSvcDelegate(Handle, True);
+      else
+        raise;
   end;
-  if not ShellExecuteExW(@ExecInfo) then
-    RaiseLastOSError
-  else
-    Close;
+  Close;
 end;
 
 procedure TFormMain.ListViewTokenSelectItem(Sender: TObject; Item: TListItem;

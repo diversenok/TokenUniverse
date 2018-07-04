@@ -14,11 +14,29 @@ uses
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
-  TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas';
+  TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas',
+  TU.RestartSvc in 'Core\TU.RestartSvc.pas',
+  TU.DebugLog in 'Core\TU.DebugLog.pas';
 
 {$R *.res}
 
 begin
+  // Running as a service
+  if ParamStr(1) = RESVC_PARAM then
+  begin
+    ReSvcServerMain;
+    Exit;
+  end;
+
+  // The user delegated us to create a service
+  if ParamStr(1) = DELEGATE_PARAM then
+  begin
+    ReSvcCreateService;
+    Exit;
+  end;
+
+  // Normal mode
+  ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Token Universe';

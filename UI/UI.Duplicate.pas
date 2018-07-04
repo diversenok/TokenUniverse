@@ -71,7 +71,7 @@ begin
         AccessMask := AccessMask or AccessValues[i];
 
     Result := TToken.CreateDuplicate(Source, AccessMask,
-      TokenTypeInfo);
+      TokenTypeInfo.Impersonation, TokenTypeInfo.TokenType);
   end;
 end;
 

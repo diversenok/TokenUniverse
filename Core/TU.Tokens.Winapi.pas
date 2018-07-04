@@ -96,6 +96,10 @@ function GetTokenInformation(TokenHandle: THandle;
   TokenInformationLength: Cardinal; var ReturnLength: Cardinal): LongBool;
   stdcall; external advapi32;
 
+function SetTokenInformation(TokenHandle: THandle;
+  TokenInformationClass: TTokenInformationClass; TokenInformation: Pointer;
+  TokenInformationLength: Cardinal): LongBool; stdcall; external advapi32;
+
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 function SetterMessage(InfoClass: TTokenInformationClass): String;
 

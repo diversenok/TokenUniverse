@@ -97,6 +97,8 @@ type
     TTokenHelper<ResultType> = class
       class function GetFixedSize(Token: TToken;
         InfoClass: TTokenInformationClass): CanFail<ResultType>; static;
+      class procedure SetFixedSize(Token: TToken;
+        InfoClass: TTokenInformationClass; Value: ResultType); static;
     end;
   var
     hToken: THandle;
@@ -119,13 +121,14 @@ type
     function GetStatistics: CanFail<TTokenStatistics>;        // class 9
     function GetSource: CanFail<TTokenSource>;                // class 10
     function GetRestrictedSids: CanFail<TGroupArray>;         // class 11
-    function GetSession: CanFail<Cardinal>;                   // class 12
     function GetSandboxInert: CanFail<LongBool>;              // class 15
     function GetTokenOrigin: CanFail<Int64>;                  // class 17
     function GetElevation: CanFail<TTokenElevationType>;      // classes 18 & 20
     function GetLinkedToken: CanFail<TToken>;                 // class 19
     function GetHasRestrictions: CanFail<LongBool>;           // class 20
-    function GetIntegrity: CanFail<TTokenIntegrity>;
+    function GetIntegrity: CanFail<TTokenIntegrity>;          // class 25
+    function GetSessionEx: Cardinal;
+    procedure SetSession(const Value: Cardinal);
   public
     /// <summary> Opens a token of current process. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
@@ -138,7 +141,7 @@ type
     /// <summary> Creates a duplicate of a token. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
-      TokenTypeInfo: TTokenTypeInfo);
+      TokenImpersonation: TSecurityImpersonationLevel; TokenType: TTokenType);
 
     /// <summary> Duplicates a handle. The result handle references for the same
     ///   token object as the source handle. </summary>
@@ -164,6 +167,8 @@ type
 
     { Token Information classes }
 
+    function TryGetSession: CanFail<Cardinal>;
+
     property User: CanFail<TSecurityIdentifier> read GetUser;                   // class 1
     property Groups: CanFail<TGroupArray> read GetGroups;                       // class 2
     property Privileges: CanFail<TPrivilegeArray> read GetPrivileges;           // class 3
@@ -174,7 +179,7 @@ type
     property TokenTypeInfo: CanFail<TTokenTypeInfo> read GetTokenType;          // class 9
     property Statistics: CanFail<TTokenStatistics> read GetStatistics;          // class 10
     property RestrictedSids: CanFail<TGroupArray> read GetRestrictedSids;       // class 11
-    property Session: CanFail<Cardinal> read GetSession;                        // class 12
+    property Session: Cardinal read GetSessionEx write SetSession;              // class 12
     // TODO: class 13 TokenGroupsAndPrivileges
     // TODO: class 14 SessionReference
     property SandboxInert: CanFail<LongBool> read GetSandboxInert;              // class 15
@@ -215,10 +220,10 @@ uses
 { TToken }
 
 constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
-      TokenTypeInfo: TTokenTypeInfo);
+  TokenImpersonation: TSecurityImpersonationLevel; TokenType: TTokenType);
 begin
   Win32Check(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
-    TokenTypeInfo.Impersonation, TokenTypeInfo.TokenType, hToken),
+    TokenImpersonation, TokenType, hToken),
     'DuplicateTokenEx');
   Caption := SrcToken.Caption + ' (copy)';
 end;
@@ -394,7 +399,7 @@ begin
   Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenSandBoxInert);
 end;
 
-function TToken.GetSession: CanFail<Cardinal>;
+function TToken.TryGetSession: CanFail<Cardinal>;
 begin
   Result := TTokenHelper<Cardinal>.GetFixedSize(Self, TokenSessionId);
 end;
@@ -443,6 +448,11 @@ begin
       Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
       FreeMem(Buffer);
     end;
+end;
+
+function TToken.GetSessionEx: Cardinal;
+begin
+  Result := TryGetSession.GetValueOrRaise;
 end;
 
 function TToken.IsValidToken: Boolean;
@@ -523,6 +533,11 @@ begin
     Win32Check(False, 'DuplicateHandle')
   else
     CloseHandle(hTargetProcess);
+end;
+
+procedure TToken.SetSession(const Value: Cardinal);
+begin
+  TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
 end;
 
 { TTokenAccess }
@@ -835,6 +850,14 @@ begin
   Result.Init;
   Result.CheckError(GetTokenInformation(Token.hToken, InfoClass, @Result.Value,
     SizeOf(Result.Value), ReturnLength), GetterMessage(InfoClass));
+end;
+
+class procedure TToken.TTokenHelper<ResultType>.SetFixedSize(Token: TToken;
+  InfoClass: TTokenInformationClass; Value: ResultType);
+begin
+  if not SetTokenInformation(Token.hToken, InfoClass, @Value, SizeOf(Value))
+    then
+    raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass));
 end;
 
 end. // CreateWellKnownSid

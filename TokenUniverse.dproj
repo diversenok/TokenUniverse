@@ -134,6 +134,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.Tokens.Winapi.pas"/>
+        <DCCReference Include="Core\TU.RestartSvc.pas"/>
+        <DCCReference Include="Core\TU.DebugLog.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

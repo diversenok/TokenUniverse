@@ -72,7 +72,7 @@ begin
         if IsValid then
           StringData[3] := Value.ToString;
 
-      with Token.Session do
+      with Token.TryGetSession  do
         if IsValid then
           StringData[4] := Value.ToString;
 
