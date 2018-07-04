@@ -31,8 +31,6 @@ object RunDialog: TRunDialog
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 11
-    ExplicitLeft = 317
-    ExplicitTop = 331
   end
   object GroupBoxAppName: TGroupBox
     Left = 8
@@ -41,7 +39,6 @@ object RunDialog: TRunDialog
     Height = 49
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
-    ExplicitWidth = 383
     DesignSize = (
       358
       49)
@@ -53,7 +50,7 @@ object RunDialog: TRunDialog
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
       TabOrder = 0
-      ExplicitWidth = 296
+      Text = 'C:\Windows\System32\cmd.exe'
     end
     object ButtonBrowseAppName: TButton
       Left = 288
@@ -64,7 +61,6 @@ object RunDialog: TRunDialog
       Caption = 'Browse'
       Enabled = False
       TabOrder = 1
-      ExplicitLeft = 313
     end
   end
   object CheckBoxAppName: TCheckBox
@@ -73,6 +69,8 @@ object RunDialog: TRunDialog
     Width = 102
     Height = 17
     Caption = 'Application name'
+    Checked = True
+    State = cbChecked
     TabOrder = 0
     OnClick = CheckBoxAppNameClick
   end
@@ -83,7 +81,6 @@ object RunDialog: TRunDialog
     Height = 49
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 3
-    ExplicitWidth = 383
     DesignSize = (
       358
       49)
@@ -95,7 +92,6 @@ object RunDialog: TRunDialog
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
       TabOrder = 0
-      ExplicitWidth = 296
     end
     object ButtonBrowseCmd: TButton
       Left = 288
@@ -106,7 +102,6 @@ object RunDialog: TRunDialog
       Caption = 'Browse'
       Enabled = False
       TabOrder = 1
-      ExplicitLeft = 313
     end
   end
   object CheckBoxCmd: TCheckBox
@@ -126,7 +121,6 @@ object RunDialog: TRunDialog
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Flags '
     TabOrder = 6
-    ExplicitWidth = 383
     object CheckBoxInherit: TCheckBox
       Left = 11
       Top = 24
@@ -167,7 +161,6 @@ object RunDialog: TRunDialog
     Height = 49
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 5
-    ExplicitWidth = 383
     DesignSize = (
       358
       49)
@@ -179,7 +172,6 @@ object RunDialog: TRunDialog
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
       TabOrder = 0
-      ExplicitWidth = 296
     end
     object ButtonBrowseDirectory: TButton
       Left = 288
@@ -190,7 +182,6 @@ object RunDialog: TRunDialog
       Caption = 'Browse'
       Enabled = False
       TabOrder = 1
-      ExplicitLeft = 313
     end
   end
   object CheckBoxDirectory: TCheckBox
@@ -210,7 +201,6 @@ object RunDialog: TRunDialog
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Desktop '
     TabOrder = 7
-    ExplicitWidth = 200
     DesignSize = (
       175
       59)
@@ -226,7 +216,6 @@ object RunDialog: TRunDialog
       Items.Strings = (
         'WinSta0\Default'
         'WinSta0\Winlogon')
-      ExplicitWidth = 173
     end
   end
   object ButtonAsUser: TButton
@@ -255,7 +244,6 @@ object RunDialog: TRunDialog
     Anchors = [akTop, akRight]
     Caption = 'Logon flags for method #2'
     TabOrder = 8
-    ExplicitLeft = 214
     object RadioButtonLogonZero: TRadioButton
       Left = 11
       Top = 20

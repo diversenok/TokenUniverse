@@ -21,6 +21,7 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  Application.Title := 'Token Universe';
   Application.CreateForm(TFormMain, FormMain);
   Application.Run;
 end.

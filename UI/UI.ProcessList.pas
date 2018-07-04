@@ -278,6 +278,9 @@ begin
       end;
   until LoopAdded = 0;
 
+  if ListView.Items.Count > 0 then
+    ListView.Items[0].Selected := True;
+
   ListView.Items.EndUpdate;
 end;
 

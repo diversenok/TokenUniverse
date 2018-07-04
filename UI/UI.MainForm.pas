@@ -68,6 +68,7 @@ type
     procedure ActionOpenLinked(Sender: TObject);
     procedure ActionOpen(Sender: TObject);
     procedure FrameListViewTokensDblClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   end;
 
 var
@@ -158,6 +159,16 @@ begin
         with LinkedToken do
           if IsValid then
             Frame.AddToken(Value);
+end;
+
+procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Shift = [ssCtrl]) and (Key = Ord('F')) then
+    Frame.SearchBox.SetFocus;
+
+  if Key = VK_ESCAPE then
+    Frame.SearchBox.Text := '';
 end;
 
 procedure TFormMain.FrameListViewTokensDblClick(Sender: TObject);

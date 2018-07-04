@@ -34,7 +34,7 @@ type
     destructor Destroy; override;
     procedure ClearAll;
     function AddToken(SrcToken: TToken; GroupID: Integer = -1): TToken;
-    procedure DeleteToken(Item: TListItem);
+    procedure DeleteToken(Item: TListItem; SelectNext: Boolean = False);
     procedure RenameToken(NewName: String; Item: TListItem);
     function GetSelectedToken: TToken;
     function GetToken(Item: TListItem): TToken;
@@ -139,7 +139,8 @@ begin
     ComboBoxColumn.Items.Add(ListViewTokens.Columns[i].Caption);
 end;
 
-procedure TFrameTokenList.DeleteToken(Item: TListItem);
+procedure TFrameTokenList.DeleteToken(Item: TListItem;
+  SelectNext: Boolean = False);
 var
   OriginalIndex, i: integer;
 begin
@@ -154,6 +155,9 @@ begin
 
   SetLength(TokenDB, Length(TokenDB) - 1);
   Item.Delete;
+
+  if SelectNext and (OriginalIndex < ListViewTokens.Items.Count) then
+    ListViewTokens.Items[OriginalIndex].Selected := True;
 end;
 
 destructor TFrameTokenList.Destroy;
@@ -199,6 +203,9 @@ begin
   for i := 0 to High(TokenDB) do
     if TokenMatchesSearch(SearchKey, i) then
       AddTokenToList(i);
+
+  if ListViewTokens.Items.Count > 0 then
+    ListViewTokens.Items[0].Selected := True;
 
   ListViewTokens.Items.EndUpdate;
 end;
