@@ -59,6 +59,12 @@ type
     MaxTokenInfoClass
   );
 
+  TTokenGroups = record
+    GroupCount: Integer;
+    Groups: array[Word] of TSIDAndAttributes;
+  end;
+  PTokenGroups = ^TTokenGroups;
+
   TSIDAndAttributesHash = record
     const SID_HASH_SIZE = 32;
   var

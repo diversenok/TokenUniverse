@@ -45,6 +45,7 @@ object FormMain: TFormMain
     inherited ListViewTokens: TListView
       Height = 242
       PopupMenu = PopupMenu
+      OnDblClick = FrameListViewTokensDblClick
       OnSelectItem = ListViewTokenSelectItem
       ExplicitHeight = 242
     end
@@ -358,14 +359,36 @@ object FormMain: TFormMain
   object PopupMenu: TPopupMenu
     Left = 168
     Top = 112
+    object TokenOpenInfo: TMenuItem
+      Caption = 'Open information'
+      Default = True
+      Enabled = False
+      ShortCut = 13
+      OnClick = ActionOpen
+    end
+    object TokenRename: TMenuItem
+      Caption = 'Rename'
+      Enabled = False
+      ShortCut = 113
+      OnClick = ActionRename
+    end
+    object TokenClose: TMenuItem
+      Caption = 'Close handle'
+      Enabled = False
+      ShortCut = 46
+      OnClick = ActionClose
+    end
+    object HLine1: TMenuItem
+      Caption = '-'
+    end
     object TokenDuplicate: TMenuItem
-      Caption = 'Duplicate token object'
+      Caption = 'Duplicate token'
       Enabled = False
       ShortCut = 16452
       OnClick = ActionDuplicate
     end
     object TokenDuplicateHandle: TMenuItem
-      Caption = 'Reference with new handle'
+      Caption = 'Duplicate handle'
       Enabled = False
       ShortCut = 24644
       OnClick = ActionDuplicateHandle
@@ -376,21 +399,6 @@ object FormMain: TFormMain
       ShortCut = 16453
       OnClick = ActionRunWithToken
     end
-    object TokenRename: TMenuItem
-      Caption = 'Rename'
-      Enabled = False
-      ShortCut = 113
-      OnClick = ActionRename
-    end
-    object TokenClose: TMenuItem
-      Caption = 'Close'
-      Enabled = False
-      ShortCut = 46
-      OnClick = ActionClose
-    end
-    object HLine1: TMenuItem
-      Caption = '-'
-    end
     object TokenRestrict: TMenuItem
       Caption = 'Create restricted token'
       Enabled = False
@@ -400,6 +408,7 @@ object FormMain: TFormMain
       Caption = 'Open linked token'
       Enabled = False
       ShortCut = 24652
+      OnClick = ActionOpenLinked
     end
     object TokenImpersonate: TMenuItem
       Caption = 'Impersonate'

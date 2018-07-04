@@ -52,6 +52,7 @@ type
 
   TPrivilegeHelper = record helper for TPrivilege
     function Name: String;
+    function Description: String;
     function AttributesToString: String;
     function AttributesToDetailedString: String;
   end;
@@ -368,10 +369,11 @@ begin
     begin
       try
         Buffer := Value;
-
+        {$R-}
         SetLength(Result.Value, Buffer.PrivilegeCount);
         for i := 0 to Buffer.PrivilegeCount - 1 do
           Result.Value[i] := Buffer.Privileges[i];
+        {$R+}
       finally
         FreeMem(Buffer);
       end;
@@ -455,7 +457,7 @@ begin
     begin
       try
         Buffer := Value;
-
+        {$R-}
         SetLength(Result.Value, Buffer.GroupCount);
         for i := 0 to Buffer.GroupCount - 1 do
         with Result.Value[i] do
@@ -463,6 +465,7 @@ begin
           SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
           Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
         end;
+        {$R+}
       finally
         FreeMem(Buffer);
       end;
@@ -709,6 +712,26 @@ begin
     end;
   SetLength(Strings, StrInd);
   Result := String.Join(', ', Strings);
+end;
+
+function TPrivilegeHelper.Description: String;
+var
+  Buffer: PWideChar;
+  BufferChars, LangId: Cardinal;
+begin
+  BufferChars := 0;
+  LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
+  WinCheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
+
+  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
+  try
+    WinCheck(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
+      LangId), 'LookupPrivilegeDisplayNameW');
+
+    SetString(Result, Buffer, BufferChars);
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
 function TPrivilegeHelper.Name: String;

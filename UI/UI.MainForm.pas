@@ -51,6 +51,7 @@ type
     TokenImpersonate: TMenuItem;
     Displayallsearchresults1: TMenuItem;
     TokenOpenLinked: TMenuItem;
+    TokenOpenInfo: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -64,6 +65,9 @@ type
     procedure ActionSendHandle(Sender: TObject);
     procedure ActionDuplicateHandle(Sender: TObject);
     procedure ActionSearch(Sender: TObject);
+    procedure ActionOpenLinked(Sender: TObject);
+    procedure ActionOpen(Sender: TObject);
+    procedure FrameListViewTokensDblClick(Sender: TObject);
   end;
 
 var
@@ -93,6 +97,16 @@ end;
 procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
 begin
   Frame.AddToken(TToken.CreateDuplicateHandle(Frame.GetSelectedToken, 0, True));
+end;
+
+procedure TFormMain.ActionOpen(Sender: TObject);
+begin
+  TInfoDialog.CreateFromToken(Self, Frame.GetSelectedToken);
+end;
+
+procedure TFormMain.ActionOpenLinked(Sender: TObject);
+begin
+  Frame.AddToken(Frame.GetSelectedToken.LinkedToken.GetValueOrRaise);
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
@@ -146,6 +160,12 @@ begin
             Frame.AddToken(Value);
 end;
 
+procedure TFormMain.FrameListViewTokensDblClick(Sender: TObject);
+begin
+  if Frame.ListViewTokens.SelCount <> 0 then
+    ActionOpen(Self);
+end;
+
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
 var
   ExecInfo: TShellExecuteInfoW;
@@ -168,13 +188,12 @@ end;
 
 procedure TFormMain.ListViewTokenSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
+var
+  Menu: TMenuItem;
 begin
-  TokenDuplicate.Enabled := Selected;
-  TokenDuplicateHandle.Enabled := Selected;
-  TokenRename.Enabled := Selected;
-  TokenClose.Enabled := Selected;
-  TokenSendHandle.Enabled := Selected;
-  TokenRun.Enabled := Selected;
+  for Menu in PopupMenu.Items do
+    if (Menu <> NewMenu) and (Menu <> ProgramRun)  then
+      Menu.Enabled := Selected;
 end;
 
 end.
