@@ -3,9 +3,15 @@ unit TU.Common;
 interface
 
 uses
-  TU.NativeAPI;
+  System.SysUtils, TU.NativeAPI;
 
 type
+  ELocatedOSError = class(EOSError)
+  public
+   ErrorOrigin: String;
+   constructor CreateLE(Code: Cardinal; Location: String);
+  end;
+
   /// <summary>
   ///   A generic wrapper for the result of a function that can fail but
   ///   is disigned not to raise exceptions.
@@ -74,50 +80,39 @@ const
 
 // TODO: What about ERROR_BUFFER_OVERFLOW and ERROR_INVALID_USER_BUFFER?
 
-procedure RaiseOsError(Code: Cardinal; Where: String);
-
-function Win32Check(RetVal: LongBool; Where: String): LongBool;
-procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String);
-function NativeCheck(Status: NTSTATUS; Where: String): Boolean;
+function Win32Check(RetVal: LongBool; Where: String): LongBool; inline;
+procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String); inline;
+function NativeCheck(Status: NTSTATUS; Where: String): Boolean; inline;
 
 implementation
 
 uses
-  System.SysUtils, Winapi.WIndows;
+  Winapi.Windows;
 
 resourcestring
   OSError = 'System Error in %s' + #$D#$A#$D#$A +
     'Code:  0x%x.' + #$D#$A#$D#$A + '%s';
 
-procedure RaiseOsError(Code: Cardinal; Where: String);
-begin
-  if Code < STATUS_UNSUCCESSFUL then
-    raise EOSError.CreateResFmt(@OSError, [Where, Code, SysErrorMessage(Code)])
-  else
-    raise EOSError.CreateResFmt(@OSError, [Where, Code,
-      SysErrorMessage(Code, GetModuleHandle('ntdll.dll'))]);
-end;
-
 function Win32Check(RetVal: LongBool; Where: String): LongBool;
 begin
   if not RetVal then
-    RaiseOsError(GetLastError, Where);
+    raise ELocatedOSError.CreateLE(GetLastError, Where);
   Result := True;
 end;
 
 procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String);
 begin
   if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferSize = 0) then
-    RaiseOsError(GetLastError, Where);
+    raise ELocatedOSError.CreateLE(GetLastError, Where);
 
   if BufferSize > BUFFER_LIMIT then
-    RaiseOsError(STATUS_IMPLEMENTATION_LIMIT, Where);
+    raise ELocatedOSError.CreateLE(STATUS_IMPLEMENTATION_LIMIT, Where);
 end;
 
 function NativeCheck(Status: NTSTATUS; Where: String): Boolean;
 begin
   if Status <> STATUS_SUCCESS then
-    RaiseOsError(Status, Where);
+    raise ELocatedOSError.CreateLE(Status, Where);
   Result := True;
 end;
 
@@ -175,7 +170,7 @@ end;
 function CanFail<ResultType>.GetValueOrRaise: ResultType;
 begin
   if not IsValid then
-    RaiseOsError(ErrorCode, ErrorOrigin);
+    raise ELocatedOSError.CreateLE(ErrorCode, ErrorOrigin);
 
   Result := Value;
 end;
@@ -204,6 +199,21 @@ begin
   IsValid := True;
   Value := ResultValue;
   Result := Self;
+end;
+
+{ ELocatedOSError }
+
+constructor ELocatedOSError.CreateLE(Code: Cardinal;
+  Location: String);
+begin
+  if Code < STATUS_UNSUCCESSFUL then
+    CreateResFmt(@OSError, [Location, Code, SysErrorMessage(Code)])
+  else
+    CreateResFmt(@OSError, [Location, Code, SysErrorMessage(Code,
+      GetModuleHandle('ntdll.dll'))]);
+
+  ErrorCode := Code;
+  ErrorOrigin := Location;
 end;
 
 end.

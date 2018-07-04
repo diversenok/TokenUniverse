@@ -277,7 +277,11 @@ end;
 destructor TToken.Destroy;
 begin
   if hToken <> 0 then
+  try
     CloseHandle(hToken);
+  except
+    ; // destructors should always succeed
+  end;
   inherited;
 end;
 
@@ -721,11 +725,11 @@ var
 begin
   BufferChars := 0;
   LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
-  WinCheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
+  Win32CheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
 
   Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
   try
-    WinCheck(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
+    Win32Check(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
       LangId), 'LookupPrivilegeDisplayNameW');
 
     SetString(Result, Buffer, BufferChars);
