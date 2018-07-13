@@ -80,7 +80,7 @@ begin
         if IsValid then
           StringData[5] := Value.ToString;
 
-      with Token.Integrity do
+      with Token.TryGetIntegrity do
         if IsValid then
           StringData[6] := Value.ToString;
     end;

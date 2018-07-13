@@ -624,17 +624,17 @@ var
 begin
   SidSize := 0;
   DomainChars := 0;
-  LookupAccountName(nil, PWideChar(Name), nil, SidSize, nil,
+  LookupAccountNameW(nil, PWideChar(Name), nil, SidSize, nil,
     DomainChars, Reserved2);
-  Win32CheckBuffer(SidSize, 'LookupAccountName');
+  Win32CheckBuffer(SidSize, 'LookupAccountNameW');
 
   SidBuffer := AllocMem(SidSize);
-  DomainBuffer := AllocMem(DomainChars * SizeOf(WideChar));
+  DomainBuffer := AllocMem((DomainChars + 1) * SizeOf(WideChar));
   try
-    if Win32Check(LookupAccountName(nil, PWideChar(Name), SidBuffer, SidSize,
-      DomainBuffer, DomainChars, Reserved2),
-      'LookupAccountName') then
-      CreateFromSid(SidBuffer);
+    Win32Check(LookupAccountNameW(nil, PWideChar(Name), SidBuffer, SidSize,
+      DomainBuffer, DomainChars, Reserved2), 'LookupAccountNameW');
+
+    CreateFromSid(SidBuffer);
   finally
     FreeMem(SidBuffer);
     FreeMem(DomainBuffer);
@@ -648,15 +648,15 @@ var
 begin
   UserChars := 0;
   DomainChars := 0;
-  LookupAccountSid(nil, SrcSid, nil, UserChars, nil, DomainChars, peUse);
+  LookupAccountSidW(nil, SrcSid, nil, UserChars, nil, DomainChars, peUse);
   if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or
     ((UserChars = 0) and (DomainChars = 0)) then
     Exit;
 
-  BufUser := AllocMem(UserChars * SizeOf(WideChar));
-  BufDomain := AllocMem(DomainChars * SizeOf(WideChar));
+  BufUser := AllocMem((UserChars + 1) * SizeOf(WideChar));
+  BufDomain := AllocMem((DomainChars + 1) * SizeOf(WideChar));
   try
-    if LookupAccountSid(nil, SrcSid, BufUser, UserChars, BufDomain,
+    if LookupAccountSidW(nil, SrcSid, BufUser, UserChars, BufDomain,
       DomainChars, peUse) then // We don't need exceptions
     begin
       if UserChars <> 0 then
@@ -769,8 +769,8 @@ begin
 
   Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
   try
-    Win32Check(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
-      LangId), 'LookupPrivilegeDisplayNameW');
+    Win32Check(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer,
+      BufferChars, LangId), 'LookupPrivilegeDisplayNameW');
 
     SetString(Result, Buffer, BufferChars);
   finally
@@ -784,14 +784,14 @@ var
   BufferChars: Cardinal;
 begin
   BufferChars := 0;
-  LookupPrivilegeName(nil, Self.Luid, nil, BufferChars);
+  LookupPrivilegeNameW(nil, Self.Luid, nil, BufferChars);
 
   if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferChars = 0) then
     Exit(Format('Unknown privilege %d', [Self.Luid]));
 
-  Buffer := AllocMem(BufferChars * SizeOf(WideChar));
+  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
   try
-    if LookupPrivilegeName(nil, Self.Luid, Buffer, BufferChars) then
+    if LookupPrivilegeNameW(nil, Self.Luid, Buffer, BufferChars) then
       SetString(Result, Buffer, BufferChars);
   finally
     FreeMem(Buffer);
