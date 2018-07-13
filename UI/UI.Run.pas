@@ -198,4 +198,7 @@ begin
   Result.lpDesktop := PWideChar(ComboBoxDesktop.Text);
 end;
 
+// TODO: Also add Cmd and Self buttons for app name
+// TODO: CreateProcessWithToken ignores the session in the token
+
 end.

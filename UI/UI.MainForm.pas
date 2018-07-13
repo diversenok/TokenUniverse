@@ -74,6 +74,7 @@ type
     procedure RunAsSystemClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ApplicationEventsException(Sender: TObject; E: Exception);
+    procedure ActionSteal(Sender: TObject);
   end;
 
 var
@@ -129,6 +130,7 @@ procedure TFormMain.ActionRename(Sender: TObject);
 var
   NewName: string;
 begin
+  // TODO: Strange bugs with OnEdited, enabled ReadOnly. Test and revert it.
   if InputQuery('Rename token', 'New token name: ', NewName) then
     Frame.RenameToken(NewName, Frame.ListViewTokens.Selected);
 end;
@@ -155,6 +157,11 @@ begin
     [mbOK], 0);
 end;
 
+procedure TFormMain.ActionSteal(Sender: TObject);
+begin
+  TProcessListDialog.Execute(Self);//TODO: Copy handle from process
+end;
+
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
 begin
   ShowErrorSuggestions(E);
@@ -174,7 +181,7 @@ end;
 procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if (Shift = [ssCtrl]) and (Key = Ord('F')) then
+  if Key = VK_F3 then
     Frame.SearchBox.SetFocus;
 
   if Key = VK_ESCAPE then

@@ -48,7 +48,6 @@ object RunDialog: TRunDialog
       Width = 271
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      Enabled = False
       TabOrder = 0
       Text = 'C:\Windows\System32\cmd.exe'
     end
@@ -59,7 +58,6 @@ object RunDialog: TRunDialog
       Height = 25
       Anchors = [akTop, akRight]
       Caption = 'Browse'
-      Enabled = False
       TabOrder = 1
     end
   end

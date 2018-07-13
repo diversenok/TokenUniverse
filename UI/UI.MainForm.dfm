@@ -46,6 +46,7 @@ object FormMain: TFormMain
     ExplicitHeight = 271
     inherited ListViewTokens: TListView
       Height = 242
+      ReadOnly = True
       PopupMenu = PopupMenu
       OnDblClick = FrameListViewTokensDblClick
       OnSelectItem = ListViewTokenSelectItem
@@ -475,8 +476,8 @@ object FormMain: TFormMain
       end
       object NewCopyHandle: TMenuItem
         Caption = 'Copy handle from other process'
-        Enabled = False
         ShortCut = 24643
+        OnClick = ActionSteal
       end
       object NewSearchHandle: TMenuItem
         Caption = 'Search for token handles'

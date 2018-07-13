@@ -234,7 +234,7 @@ constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
 begin
   Win32Check(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
     TokenImpersonation, TokenType, hToken),
-    'DuplicateTokenEx');
+    'DuplicateTokenEx', SrcToken);
   Caption := SrcToken.Caption + ' (copy)';
 end;
 
@@ -269,12 +269,13 @@ end;
 
 constructor TToken.CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
 begin
+  hToken := 0;
   Origin := Item;
   Caption := Format('0x%x', [Item.hToken]);
 
-  if not DuplicateHandle(hProcess, Item.hToken, GetCurrentProcess, @hToken, 0,
-    False, DUPLICATE_SAME_ACCESS) then
-    hToken := 0;
+  if hProcess <> 0 then
+    DuplicateHandle(hProcess, Item.hToken, GetCurrentProcess, @hToken, 0, False,
+      DUPLICATE_SAME_ACCESS);
 end;
 
 constructor TToken.CreateFromProcess(PID: Cardinal);
