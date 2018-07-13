@@ -103,6 +103,10 @@ type
   var
     hToken: THandle;
     Origin: THandleItem;
+    FCaption: String;
+
+    procedure SetCaption(const Value: String);
+
     /// <remarks> The bufer should be freed using FreeMem. </remarks>
     function QueryVariableBuffer(InfoClass: TTokenInformationClass):
       CanFail<Pointer>;
@@ -160,12 +164,13 @@ type
     /// </remarks>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
+
     destructor Destroy; override;
     function IsValidToken: Boolean;
-    var Caption: String;
     property Handle: THandle read hToken;
     property Access: CanFail<ACCESS_MASK> read GetAccess;
     property ObjAddress: NativeUInt read GetObjAddress;
+    property Caption: String read FCaption write SetCaption;
 
     { Token Information classes }
 
@@ -193,6 +198,9 @@ type
     // TODO: class 22 AccessInformation
     // TODO: class 23 & 24 Virtualization
     property Integrity: CanFail<TTokenIntegrity> read GetIntegrity;             // class 25
+
+    var OnCaptionChange: TNotifyEventHandler;
+    var OnSessionChange: TNotifyEventHandler;
 
     { Actions }
 
@@ -560,9 +568,16 @@ begin
     CloseHandle(hTargetProcess);
 end;
 
+procedure TToken.SetCaption(const Value: String);
+begin
+  FCaption := Value;
+  OnCaptionChange.Involve(Self);
+end;
+
 procedure TToken.SetSession(const Value: Cardinal);
 begin
   TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
+  OnSessionChange.Involve(Self);
 end;
 
 { TTokenAccess }

@@ -89,6 +89,7 @@ end;
 
 function TFrameTokenList.AddToken(SrcToken: TToken; GroupID: Integer = -1): TToken;
 begin
+  // TODO: Need a EventHandler's feedback with StringData
   Result := SrcToken;
   SetLength(TokenDB, Length(TokenDB) + 1);
   TokenDB[High(TokenDB)] := TTokenItem.Create;

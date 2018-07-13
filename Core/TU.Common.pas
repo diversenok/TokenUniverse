@@ -78,6 +78,33 @@ type
     function CopyResult(Src: CanFail<Pointer>): CanFail<Pointer>;
   end;
 
+  TEventListener<T> = procedure(Value: T) of object;
+
+  /// <summary> Multiple source event handler. </summary>
+  TEventHandler<T> = record
+    Listeners: array of TEventListener<T>;
+    procedure Add(EventListener: TEventListener<T>);
+    function Delete(EventListener: TEventListener<T>): Boolean;
+
+    /// <summary>
+    ///  Tries to call all event listeners. If an exception occures some of the
+    ///  listeners may not be notified.
+    /// </summary>
+    procedure Involve(Value: T);
+
+    /// <summary>
+    ///  Calls all event listeners regardless of any exceptions. This method
+    ///  always succeeds since it ignores and looses all raised exceptions.
+    /// </summary>
+    procedure InvolveIgnoringErrors(Value: T);
+  end;
+
+  /// <summary>
+  ///  Multiple source event handler compatible with TNotifyEvent from
+  ///  System.Classes.
+  /// </summary>
+  TNotifyEventHandler = TEventHandler<TObject>;
+
 const
   BUFFER_LIMIT = 1024 * 1024 * 64; // 64 MB
 
@@ -225,6 +252,61 @@ begin
   ErrorCode := Code;
   ErrorOrigin := Location;
   ErrorContext := Context;
+end;
+
+{ TEventHandler<T> }
+
+procedure TEventHandler<T>.Add(EventListener: TEventListener<T>);
+begin
+  SetLength(Listeners, Length(Listeners) + 1);
+  Listeners[High(Listeners)] := EventListener;
+end;
+
+function TEventHandler<T>.Delete(EventListener: TEventListener<T>): Boolean;
+var
+  i, position: integer;
+begin
+  position := -1;
+
+  // Note: we can't simply use @A = @B for procedure of object since we should
+  // distinguish methods linked to different object instances.
+  // Luckily, System.TMethod overrides equality operator just as we need.
+  for i := 0 to High(Listeners) do
+    if System.PMethod(@@Listeners[i])^ = System.PMethod(@@EventListener)^ then
+    begin
+      position := i;
+      Break;
+    end;
+
+  Result := position <> -1;
+
+  if Result then
+  begin
+    for i := position + 1 to High(Listeners) do
+      Listeners[i - 1] := Listeners[i];
+
+    SetLength(Listeners, Length(Listeners) - 1);
+  end;
+end;
+
+procedure TEventHandler<T>.Involve(Value: T);
+var
+  i: integer;
+begin
+  for i := 0 to High(Listeners) do
+    Listeners[i](Value);
+end;
+
+procedure TEventHandler<T>.InvolveIgnoringErrors(Value: T);
+var
+  i: integer;
+begin
+  for i := 0 to High(Listeners) do
+    try
+      Listeners[i](Value);
+    except
+      on Exception do;
+    end;
 end;
 
 end.
