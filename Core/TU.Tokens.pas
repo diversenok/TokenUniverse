@@ -297,7 +297,7 @@ function TToken.GetAccess: CanFail<ACCESS_MASK>;
 var
   info: TObjectBasicInformaion;
 begin
-  Result.Init;
+  Result.Init(Self);
 
   // Pseudo-token mode
   if hToken = 0 then
@@ -343,7 +343,7 @@ end;
 
 function TToken.GetLinkedToken: CanFail<TToken>;
 begin
-  Result.Init;
+  Result.Init(Self);
 
   with TTokenHelper<THandle>.GetFixedSize(Self, TokenLinkedToken) do
     if IsValid then
@@ -449,7 +449,7 @@ function TToken.GetTokenType: CanFail<TTokenTypeInfo>;
 var
  ReturnValue: Cardinal;
 begin
-  Result.Init;
+  Result.Init(Self);
 
   if not Result.CheckError(GetTokenInformation(hToken, TokenType,
     @Result.Value.TokenType, SizeOf(Result.Value.TokenType), ReturnValue),
@@ -530,7 +530,7 @@ function TToken.QueryVariableBuffer(
 var
   BufferSize, ReturnValue: Cardinal;
 begin
-  Result.Init;
+  Result.Init(Self);
 
   BufferSize := 0;
   GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
@@ -872,7 +872,8 @@ class function TToken.TTokenHelper<ResultType>.GetFixedSize(
 var
   ReturnLength: Cardinal;
 begin
-  Result.Init;
+  Result.Init(Token);
+
   Result.CheckError(GetTokenInformation(Token.hToken, InfoClass, @Result.Value,
     SizeOf(Result.Value), ReturnLength), GetterMessage(InfoClass));
 end;

@@ -647,4 +647,9 @@ object FormMain: TFormMain
       F00F000000000000FC3F00000000000000000000000000000000000000000000
       000000000000}
   end
+  object ApplicationEvents: TApplicationEvents
+    OnException = ApplicationEventsException
+    Left = 264
+    Top = 112
+  end
 end

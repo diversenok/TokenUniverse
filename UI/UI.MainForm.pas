@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, TU.Tokens,
   System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame, System.ImageList,
-  Vcl.ImgList;
+  Vcl.ImgList, Vcl.AppEvnts;
 
 type
   TFormMain = class(TForm)
@@ -54,6 +54,7 @@ type
     TokenOpenLinked: TMenuItem;
     TokenOpenInfo: TMenuItem;
     SmallIcons: TImageList;
+    ApplicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -72,6 +73,7 @@ type
     procedure FrameListViewTokensDblClick(Sender: TObject);
     procedure RunAsSystemClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure ApplicationEventsException(Sender: TObject; E: Exception);
   end;
 
 var
@@ -81,7 +83,7 @@ implementation
 
 uses
   Winapi.ShellApi,
-  TU.Common, TU.Handles, TU.RestartSvc,
+  TU.Common, TU.Handles, TU.RestartSvc, TU.Suggestions,
   UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch;
 
 {$R *.dfm}
@@ -151,6 +153,11 @@ begin
   MessageDlg(Format('The handle was successfully sent.'#$D#$A +
     'It''s value is %d (0x%0.6x)', [NewHandle, NewHandle]), mtInformation,
     [mbOK], 0);
+end;
+
+procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
+begin
+  ShowErrorSuggestions(E);
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);

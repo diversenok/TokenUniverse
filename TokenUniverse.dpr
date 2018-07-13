@@ -16,7 +16,8 @@ uses
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
   TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas',
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
-  TU.DebugLog in 'Core\TU.DebugLog.pas';
+  TU.DebugLog in 'Core\TU.DebugLog.pas',
+  TU.Suggestions in 'Core\TU.Suggestions.pas';
 
 {$R *.res}
 

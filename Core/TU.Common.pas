@@ -9,7 +9,9 @@ type
   ELocatedOSError = class(EOSError)
   public
    ErrorOrigin: String;
-   constructor CreateLE(Code: Cardinal; Location: String);
+   ErrorContext: TObject;
+   constructor CreateLE(Code: Cardinal; Location: String;
+     Context: TObject = nil);
   end;
 
   /// <summary>
@@ -21,9 +23,10 @@ type
     IsValid: Boolean;
     ErrorCode: Cardinal;
     ErrorOrigin: String;
+    ErrorContext: TObject;
 
     /// <summary> Initializes the wrapper and data with zeros. </summary>
-    procedure Init;
+    procedure Init(Context: TObject = nil);
 
     /// <returns> The value if it is valid. </returns>
     /// <exception cref="EOSError">
@@ -80,9 +83,12 @@ const
 
 // TODO: What about ERROR_BUFFER_OVERFLOW and ERROR_INVALID_USER_BUFFER?
 
-function Win32Check(RetVal: LongBool; Where: String): LongBool; inline;
-procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String); inline;
-function NativeCheck(Status: NTSTATUS; Where: String): Boolean; inline;
+function Win32Check(RetVal: LongBool; Where: String; Context: TObject = nil):
+  LongBool; inline;
+procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String;
+  Context: TObject = nil); inline;
+function NativeCheck(Status: NTSTATUS; Where: String;
+  Context: TObject = nil): Boolean; inline;
 
 implementation
 
@@ -90,29 +96,32 @@ uses
   Winapi.Windows;
 
 resourcestring
-  OSError = 'System Error in %s' + #$D#$A#$D#$A +
-    'Code:  0x%x.' + #$D#$A#$D#$A + '%s';
+  OSError = '%s failed.' + #$D#$A#$D#$A +
+    'Code 0x%x' + #$D#$A#$D#$A + '%s';
 
-function Win32Check(RetVal: LongBool; Where: String): LongBool;
+function Win32Check(RetVal: LongBool; Where: String; Context: TObject = nil):
+  LongBool;
 begin
   if not RetVal then
-    raise ELocatedOSError.CreateLE(GetLastError, Where);
+    raise ELocatedOSError.CreateLE(GetLastError, Where, Context);
   Result := True;
 end;
 
-procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String);
+procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String;
+  Context: TObject = nil);
 begin
   if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferSize = 0) then
-    raise ELocatedOSError.CreateLE(GetLastError, Where);
+    raise ELocatedOSError.CreateLE(GetLastError, Where, Context);
 
   if BufferSize > BUFFER_LIMIT then
-    raise ELocatedOSError.CreateLE(STATUS_IMPLEMENTATION_LIMIT, Where);
+    raise ELocatedOSError.CreateLE(STATUS_IMPLEMENTATION_LIMIT, Where, Context);
 end;
 
-function NativeCheck(Status: NTSTATUS; Where: String): Boolean;
+function NativeCheck(Status: NTSTATUS; Where: String; Context: TObject = nil):
+  Boolean;
 begin
   if Status <> STATUS_SUCCESS then
-    raise ELocatedOSError.CreateLE(Status, Where);
+    raise ELocatedOSError.CreateLE(Status, Where, Context);
   Result := True;
 end;
 
@@ -170,14 +179,15 @@ end;
 function CanFail<ResultType>.GetValueOrRaise: ResultType;
 begin
   if not IsValid then
-    raise ELocatedOSError.CreateLE(ErrorCode, ErrorOrigin);
+    raise ELocatedOSError.CreateLE(ErrorCode, ErrorOrigin, ErrorContext);
 
   Result := Value;
 end;
 
-procedure CanFail<ResultType>.Init;
+procedure CanFail<ResultType>.Init(Context: TObject = nil);
 begin
   FillChar(Self, SizeOf(Self), 0);
+  Self.ErrorContext := Context;
 end;
 
 procedure CanFail<ResultType>.SetLastError(Where: String);
@@ -204,7 +214,7 @@ end;
 { ELocatedOSError }
 
 constructor ELocatedOSError.CreateLE(Code: Cardinal;
-  Location: String);
+  Location: String; Context: TObject = nil);
 begin
   if Code < STATUS_UNSUCCESSFUL then
     CreateResFmt(@OSError, [Location, Code, SysErrorMessage(Code)])
@@ -214,6 +224,7 @@ begin
 
   ErrorCode := Code;
   ErrorOrigin := Location;
+  ErrorContext := Context;
 end;
 
 end.
