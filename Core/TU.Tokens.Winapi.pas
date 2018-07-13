@@ -8,6 +8,9 @@ uses
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 
+const
+  SE_GROUP_INTEGRITY = $20;
+
 type
   TTokenInformationClass = (
     TokenTPad, // The compiler wouldn't generate TypeInfo without it

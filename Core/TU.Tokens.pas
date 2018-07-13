@@ -82,11 +82,14 @@ type
     ilSystem = $4000
   );
 
+  TTokenIntegrityLevelHelper = record helper for TTokenIntegrityLevel
+    function IsWellKnown: Boolean;
+  end;
+
   TTokenIntegrity = record
     SID: TSecurityIdentifier;
     // TODO: Does TOKEN_MANDATORY_LABEL contain attributes?
     Level: TTokenIntegrityLevel;
-    function IsWellKnown: Boolean;
     function ToString: String;
     function ToDetailedString: String;
   end;
@@ -131,9 +134,10 @@ type
     function GetElevation: CanFail<TTokenElevationType>;      // classes 18 & 20
     function GetLinkedToken: CanFail<TToken>;                 // class 19
     function GetHasRestrictions: CanFail<LongBool>;           // class 20
-    function GetIntegrity: CanFail<TTokenIntegrity>;          // class 25
     function GetSessionEx: Cardinal;
     procedure SetSession(const Value: Cardinal);
+    function GetIntegrity: TTokenIntegrityLevel;
+    procedure SetIntegrity(const Value: TTokenIntegrityLevel);
   public
     /// <summary> Opens a token of current process. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
@@ -175,6 +179,7 @@ type
     { Token Information classes }
 
     function TryGetSession: CanFail<Cardinal>;
+    function TryGetIntegrity: CanFail<TTokenIntegrity>;
 
     property User: CanFail<TSecurityIdentifier> read GetUser;                   // class 1
     property Groups: CanFail<TGroupArray> read GetGroups;                       // class 2
@@ -197,10 +202,11 @@ type
     property HasRestrictions: CanFail<LongBool> read GetHasRestrictions;        // class 21
     // TODO: class 22 AccessInformation
     // TODO: class 23 & 24 Virtualization
-    property Integrity: CanFail<TTokenIntegrity> read GetIntegrity;             // class 25
+    property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25
 
     var OnCaptionChange: TNotifyEventHandler;
     var OnSessionChange: TNotifyEventHandler;
+    var OnIntegrityChange: TNotifyEventHandler;
 
     { Actions }
 
@@ -333,7 +339,7 @@ begin
   Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenHasRestrictions);
 end;
 
-function TToken.GetIntegrity: CanFail<TTokenIntegrity>;
+function TToken.TryGetIntegrity: CanFail<TTokenIntegrity>;
 var
   Buffer: PSIDAndAttributes;
 begin
@@ -348,6 +354,11 @@ begin
 
       FreeMem(Buffer);
     end;
+end;
+
+function TToken.GetIntegrity: TTokenIntegrityLevel;
+begin
+  Result := TryGetIntegrity.GetValueOrRaise.Level;
 end;
 
 function TToken.GetLinkedToken: CanFail<TToken>;
@@ -575,6 +586,27 @@ begin
   OnCaptionChange.Involve(Self);
 end;
 
+procedure TToken.SetIntegrity(const Value: TTokenIntegrityLevel);
+var
+  mandatoryLabelAuthority: SID_IDENTIFIER_AUTHORITY;
+  mandatoryLabel: TSIDAndAttributes;
+begin
+  FillChar(mandatoryLabelAuthority, SizeOf(mandatoryLabelAuthority), 0);
+  mandatoryLabelAuthority.Value[5] := 16; // SECURITY_MANDATORY_LABEL_AUTHORITY
+
+  mandatoryLabel.Sid := AllocMem(12);
+  try
+    InitializeSid(mandatoryLabel.Sid, mandatoryLabelAuthority, 1);
+    GetSidSubAuthority(mandatoryLabel.Sid, 0)^ := DWORD(Value);
+    mandatoryLabel.Attributes := SE_GROUP_INTEGRITY;
+    Win32Check(SetTokenInformation(hToken, TokenIntegrityLevel, @mandatoryLabel,
+      SizeOf(TSIDAndAttributes)), SetterMessage(TokenIntegrityLevel));
+  finally
+    FreeMem(mandatoryLabel.Sid);
+    OnIntegrityChange.Involve(Self);
+  end;
+end;
+
 procedure TToken.SetSession(const Value: Cardinal);
 begin
   TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
@@ -709,6 +741,7 @@ begin
     Result := SID
   else
     Result := 'Invalid SID';
+  // TODO: Convert unknown IL and Logon session
 end;
 
 { TGroupAttributesHelper }
@@ -847,17 +880,19 @@ begin
   end;
 end;
 
-{ TTokenIntegrity }
+{ TTokenIntegrityLevelHelper }
 
-function TTokenIntegrity.IsWellKnown: Boolean;
+function TTokenIntegrityLevelHelper.IsWellKnown: Boolean;
 begin
-  case Self.Level of
+  case Self of
     ilUntrusted, ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem:
       Result := True;
   else
     Result := False;
   end;
 end;
+
+{ TTokenIntegrity }
 
 function TTokenIntegrity.ToDetailedString: String;
 begin
