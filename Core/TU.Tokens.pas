@@ -112,6 +112,7 @@ type
       CanFail<TGroupArray>;
 
     function GetAccess: CanFail<ACCESS_MASK>;
+    function GetObjAddress: NativeUInt;
     function GetUser: CanFail<TSecurityIdentifier>;           // class 1
     function GetGroups: CanFail<TGroupArray>;                 // class 2
     function GetPrivileges: CanFail<TPrivilegeArray>;         // class 3
@@ -164,6 +165,7 @@ type
     var Caption: String;
     property Handle: THandle read hToken;
     property Access: CanFail<ACCESS_MASK> read GetAccess;
+    property ObjAddress: NativeUInt read GetObjAddress;
 
     { Token Information classes }
 
@@ -242,7 +244,8 @@ begin
     GetCurrentProcess, @hToken, Access, False, Options),
     'DuplicateHandle');
 
-  if SrcToken.Origin.OwnerPID = 0 then
+  if (SrcToken.Origin.OwnerPID = GetCurrentProcessId) or
+    (SrcToken.Origin.OwnerPID = 0) then
     Caption := SrcToken.Caption + ' (reference)'
   else
     Caption := Format('Referenced 0x%x from PID %d', [SrcToken.Origin.hToken,
@@ -356,6 +359,28 @@ begin
       Result.ErrorCode := ErrorCode;
       Result.ErrorOrigin := ErrorOrigin;
     end;
+end;
+
+function TToken.GetObjAddress: NativeUInt;
+var
+  HandleList: THandleList;
+  i: integer;
+begin
+  if Origin.KernelObjectAddress = 0 then // not yet obtained
+  begin
+    HandleList := THandleList.CreateOnly(GetCurrentProcessId);
+
+    for i := 0 to HandleList.Count do
+      if HandleList[i].hToken = hToken then
+      begin
+        Origin := HandleList[i];
+        Break;
+      end;
+
+    HandleList.Free;
+  end;
+
+  Result := Origin.KernelObjectAddress
 end;
 
 function TToken.GetOwner: CanFail<TSecurityIdentifier>;

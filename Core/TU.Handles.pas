@@ -16,7 +16,7 @@ type
     /// <remarks> Valid only in context of <c>OwnerPID</c>.</remarks>
     hToken: NativeUInt;
     Access: ACCESS_MASK;
-    KernelObjectAddress: Pointer;
+    KernelObjectAddress: NativeUInt;
   end;
 
   TNativeUIntArray = array of NativeUInt;
@@ -31,11 +31,19 @@ type
     function GetProcessHandles(PID: NativeUInt): THandleItemArray;
   public
     /// <summary>
-    ///  Creates a list of all handles on the system (excluding current process)
-    ///  that represent token objects.
+    ///  Creates a list of all handles on the system that represent
+    ///  token objects.
     /// </summary>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create;
+
+    /// <summary>
+    ///  Creates a list of all handles for token objects of the specified
+    ///  process.
+    /// </summary>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
+    constructor CreateOnly(PID: NativeUInt);
+
     property Handles[Ind: Integer]: THandleItem read GetItem; default;
     property Count: Integer read GetCount;
     /// <returns>
@@ -57,67 +65,59 @@ const
   // TODO: Is this value fixed or should be somehow obtained in runtime?
   TokenObjectTypeIndex = 5;
 
+type
+  THandleSnapshot = class
+    Buffer: PSystemHandleInformationEx;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
 { THandleList }
 
 constructor THandleList.Create;
-var
-  Buffer: PSystemHandleInformationEx;
-  BufferSize, ReturnLength: Cardinal;
-  Status: NTSTATUS;
-  i, Count: integer;
 begin
-  Buffer := nil;
-  BufferSize := 0;
+  CreateOnly(0); // It means: collect all processes
+end;
 
-  while True do
-  begin
-    Status := NtQuerySystemInformation(SystemExtendedHandleInformation, Buffer,
-      BufferSize, ReturnLength);
-    if (status = STATUS_BUFFER_TOO_SMALL) or
-      (status = STATUS_INFO_LENGTH_MISMATCH) then
-    begin
-      FreeMem(Buffer);
-      BufferSize := ReturnLength;
-      Buffer := AllocMem(BufferSize);
-    end
-    else
-      Break;
-  end;
-
-  if status <> STATUS_SUCCESS then
-  begin
-    FreeMem(Buffer);
-    Exit;
-  end;
-
+constructor THandleList.CreateOnly(PID: NativeUInt);
+var
+  Snap: THandleSnapshot;
+  i, TokenCount: integer;
+begin
+  Snap := THandleSnapshot.Create;
+  with Snap do
   try
-    // Count all token handles from other processes
-    Count := 0;
+    if Buffer = nil then
+      Exit;
+
+    // Count all token handles of the specified processs.
+    // Collect all processes if the specified PID is 0.
+    TokenCount := 0;
     for i := 0 to Buffer.NumberOfHandles - 1 do
     with Buffer.Handles[i] do
-      if (ObjectTypeIndex = TokenObjectTypeIndex) and
-        (UniqueProcessId <> GetCurrentProcessId) then
-        Inc(Count);
+      if ObjectTypeIndex = TokenObjectTypeIndex then
+        if (UniqueProcessId = PID) or (PID = 0) then
+          Inc(TokenCount);
 
     // Allocate memory
-    SetLength(FItems, Count);
+    SetLength(FItems, TokenCount);
 
     // Save all these handles and additional information
-    Count := 0;
+    TokenCount := 0;
     for i := 0 to Buffer.NumberOfHandles - 1 do
     with Buffer.Handles[i] do
-      if (ObjectTypeIndex = TokenObjectTypeIndex) and
-        (UniqueProcessId <> GetCurrentProcessId) then
-      with FItems[Count] do
-      begin
-        OwnerPID := UniqueProcessId;
-        hToken := HandleValue;
-        Access := GrantedAccess;
-        KernelObjectAddress := PObject;
-        Inc(Count);
-      end;
+      if ObjectTypeIndex = TokenObjectTypeIndex then
+        if (UniqueProcessId = PID) or (PID = 0) then
+        with FItems[TokenCount] do
+        begin
+          OwnerPID := UniqueProcessId;
+          hToken := HandleValue;
+          Access := GrantedAccess;
+          KernelObjectAddress := NativeUInt(PObject);
+          Inc(TokenCount);
+        end;
   finally
-    FreeMem(Buffer);
+    Snap.Free;
   end;
 end;
 
@@ -174,6 +174,45 @@ begin
       Result[Count] := FItems[i];
       Inc(Count);
     end;
+end;
+
+{ THandleSnapshot }
+
+constructor THandleSnapshot.Create;
+var
+  BufferSize, ReturnLength: Cardinal;
+  Status: NTSTATUS;
+begin
+  Buffer := nil;
+  BufferSize := 0;
+
+  while True do
+  begin
+    Status := NtQuerySystemInformation(SystemExtendedHandleInformation, Buffer,
+      BufferSize, ReturnLength);
+    if (status = STATUS_BUFFER_TOO_SMALL) or
+      (status = STATUS_INFO_LENGTH_MISMATCH) then // TODO: Use BUFFER_LIMIT
+    begin
+      FreeMem(Buffer);
+      BufferSize := ReturnLength;
+      Buffer := AllocMem(BufferSize);
+    end
+    else
+      Break;
+  end;
+
+  if status <> STATUS_SUCCESS then
+  begin
+    FreeMem(Buffer);
+    Buffer := nil;
+    Exit;
+  end;
+end;
+
+destructor THandleSnapshot.Destroy;
+begin
+  FreeMem(Buffer);
+  inherited;
 end;
 
 end.

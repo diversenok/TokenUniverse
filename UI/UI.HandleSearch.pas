@@ -78,21 +78,23 @@ begin
   Frame.ListViewTokens.Items.BeginUpdate;
 
   for PID in HandleSnapshot.Processes do
-  with Frame.ListViewTokens.Groups.Add do
-  begin
-    State := [lgsCollapsible];
-    Header := Format('%s (%d)', [ProcessSnapshot.FindName(PID), PID]);
-
-    hProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
-    if hProcess <> 0 then // or setting
+    if PID <> GetCurrentProcessId then
+    with Frame.ListViewTokens.Groups.Add do
     begin
-      for HandleItem in HandleSnapshot.ProcessHandles[PID] do
-        Frame.AddToken(TToken.CreateFromHandleItem(HandleItem, hProcess),
-          GroupID);
-      CloseHandle(hProcess);
-    end;
-  end;
+      State := [lgsCollapsible];
+      Header := Format('%s (%d)', [ProcessSnapshot.FindName(PID), PID]);
 
+      hProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
+      if hProcess <> 0 then // TODO: Or setting
+      begin
+        for HandleItem in HandleSnapshot.ProcessHandles[PID] do
+          Frame.AddToken(TToken.CreateFromHandleItem(HandleItem, hProcess),
+            GroupID);
+        CloseHandle(hProcess);
+      end;
+    end;
+
+  // TODO: Calculate handles and processes correctly
   LabelStatistics.Caption := Format('Found %d opened handles in %d processes',
     [Frame.ListViewTokens.Items.Count, Frame.ListViewTokens.Groups.Count]);
 

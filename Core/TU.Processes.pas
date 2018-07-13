@@ -59,7 +59,7 @@ begin
     status := NtQuerySystemInformation(SystemProcessInformation, Buffer,
       BufferSize, ReturnLength);
     if (status = STATUS_BUFFER_TOO_SMALL) or
-      (status = STATUS_INFO_LENGTH_MISMATCH) then
+      (status = STATUS_INFO_LENGTH_MISMATCH) then // TODO: Use BUFFER_LIMIT
     begin
       FreeMem(Buffer);
       BufferSize := ReturnLength;

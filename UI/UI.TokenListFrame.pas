@@ -58,15 +58,15 @@ begin
     for i := 1 to ListViewTokens.Columns.Count - 1 do
       StringData[i] := ERROR_MSG;
 
+    with Token.Access do
+      if IsValid then
+        StringData[2] := AccessToString(Value);
+
     if Token.IsValidToken then
     begin
       with Token.TokenTypeInfo do
         if IsValid then
           StringData[1] := Value.ToString;
-
-      with Token.Access do
-        if IsValid then
-          StringData[2] := AccessToString(Value);
 
       with Token.User do
         if IsValid then
