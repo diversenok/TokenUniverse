@@ -204,6 +204,7 @@ type
     // TODO: class 23 & 24 Virtualization
     property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25
 
+    var OnClose: TNotifyEventHandler;
     var OnCaptionChange: TNotifyEventHandler;
     var OnSessionChange: TNotifyEventHandler;
     var OnIntegrityChange: TNotifyEventHandler;
@@ -299,6 +300,8 @@ end;
 
 destructor TToken.Destroy;
 begin
+  // The event listener can abort this operation by raising EAbort
+  OnClose.Involve(Self);
   if hToken <> 0 then
   try
     CloseHandle(hToken);

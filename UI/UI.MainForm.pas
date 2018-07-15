@@ -3,7 +3,7 @@ unit UI.MainForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, TU.Tokens,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, TU.Common, TU.Tokens,
   System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame, System.ImageList,
   Vcl.ImgList, Vcl.AppEvnts;
@@ -75,6 +75,9 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ApplicationEventsException(Sender: TObject; E: Exception);
     procedure ActionSteal(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  public
+    var OnMainFormClose: TNotifyEventHandler;
   end;
 
 var
@@ -84,7 +87,7 @@ implementation
 
 uses
   Winapi.ShellApi,
-  TU.Common, TU.Handles, TU.RestartSvc, TU.Suggestions,
+  TU.Handles, TU.RestartSvc, TU.Suggestions,
   UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch;
 
 {$R *.dfm}
@@ -165,6 +168,11 @@ end;
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
 begin
   ShowErrorSuggestions(E);
+end;
+
+procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  OnMainFormClose.InvolveIgnoringErrors(Self);
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);

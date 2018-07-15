@@ -118,7 +118,7 @@ begin
     // The form wouldn't be actually destroyed until Application.ProcessMessages
 
     if (ModalResult <> mrOk) or (ListView.Selected = nil) then
-      raise EAbort.Create('');
+      Abort;
 
     Result := PProcessItemEx(ListView.Selected.Data).Process.PID;
   end;

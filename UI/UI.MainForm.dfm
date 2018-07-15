@@ -13,6 +13,7 @@ object FormMain: TFormMain
   KeyPreview = True
   Menu = MainMenu
   OldCreateOrder = False
+  OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96

@@ -40,10 +40,10 @@ type
     BtnSetIntegrity: TSpeedButton;
     BtnSetSession: TSpeedButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure ButtonCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
     procedure ChangedView(Sender: TObject);
+    procedure DoCloseForm(Sender: TObject);
   private
     Token: TToken; // TODO: What if we delete it from the list?
     procedure ChangedCaption(Sender: TObject);
@@ -59,7 +59,7 @@ uses
 
 {$R *.dfm}
 
-procedure TInfoDialog.ButtonCloseClick(Sender: TObject);
+procedure TInfoDialog.DoCloseForm(Sender: TObject);
 begin
   Close;
 end;
@@ -189,6 +189,19 @@ begin
   ListViewRestricted.Items.EndUpdate;
 end;
 
+procedure TInfoDialog.ConfirmTokenClose(Sender: TObject);
+const
+  CONFIRM_CLOSE = 'This token has an opened information window. Do you want ' +
+    'close it?';
+begin
+  // The main window should not close the token until any information windows
+  // are opened for it.
+  if MessageDlg(CONFIRM_CLOSE, mtConfirmation, mbYesNoCancel, 0) = IDYES then
+    Close
+  else
+    Abort;
+end;
+
 constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
 begin
   Token := SrcToken;
@@ -198,11 +211,10 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  // TODO: Test and clean
-  if not Token.OnCaptionChange.Delete(ChangedCaption) then
-    ShowMessage('Can''t delete OnCaptionChange event');
-  if not Token.OnIntegrityChange.Delete(ChangedIntegrity) then
-    ShowMessage('Can''t delete OnIntegrityChange event');
+  Token.OnIntegrityChange.Delete(ChangedIntegrity);
+  Token.OnCaptionChange.Delete(ChangedCaption);
+  Token.OnClose.Delete(ConfirmTokenClose);
+  FormMain.OnMainFormClose.Delete(DoCloseForm);
   Action := caFree;
 end;
 
@@ -210,6 +222,8 @@ procedure TInfoDialog.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
+  FormMain.OnMainFormClose.Add(DoCloseForm);
+  Token.OnClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnIntegrityChange.Add(ChangedIntegrity);
 

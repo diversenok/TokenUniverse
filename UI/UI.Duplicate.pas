@@ -52,7 +52,7 @@ begin
     // The form wouldn't be actually destroyed until Application.ProcessMessages
 
     if ModalResult <> mrOk then
-      raise EAbort.Create('');
+      Abort;
 
     if RadioButtonPrimary.Checked then
     begin

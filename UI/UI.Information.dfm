@@ -419,7 +419,7 @@ object InfoDialog: TInfoDialog
     Caption = 'Close'
     ModalResult = 2
     TabOrder = 1
-    OnClick = ButtonCloseClick
+    OnClick = DoCloseForm
   end
   object ComboBoxView: TComboBox
     Left = 3
