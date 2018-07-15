@@ -79,10 +79,20 @@ type
   end;
 
   TEventListener<T> = procedure(Value: T) of object;
+  TEventListenerArray<T> = array of TEventListener<T>;
 
   /// <summary> Multiple source event handler. </summary>
   TEventHandler<T> = record
-    Listeners: array of TEventListener<T>;
+    Listeners: TEventListenerArray<T>;
+
+    /// <summary>
+    ///  Adds an event listener. It can add and remove other event listeners,
+    ///  but all these changes will take effect only on the next call.
+    /// </summary>
+    /// <remarks>
+    ///  Be careful with exceptions since they break the loop of <c>Involve</c>
+    ///  method.
+    /// </remarks>
     procedure Add(EventListener: TEventListener<T>);
     function Delete(EventListener: TEventListener<T>): Boolean;
 
@@ -268,7 +278,7 @@ var
 begin
   position := -1;
 
-  // Note: we can't simply use @A = @B for procedure of object since we should
+  // Note: we can't simply use @A = @B for `procedure of object` since we should
   // distinguish methods linked to different object instances.
   // Luckily, System.TMethod overrides equality operator just as we need.
   for i := 0 to High(Listeners) do
@@ -287,23 +297,36 @@ begin
 
     SetLength(Listeners, Length(Listeners) - 1);
   end;
+
+  {$IFDEF DEBUG}
+    if not Result then
+      MessageBox(0, 'Cannot delete event listener', 'Assertion', MB_ICONERROR);
+  {$ENDIF}
 end;
 
 procedure TEventHandler<T>.Involve(Value: T);
 var
   i: integer;
+  ListenersCopy: TEventListenerArray<T>;
 begin
-  for i := 0 to High(Listeners) do
-    Listeners[i](Value);
+  // Event listeners can modify the list while we process it, so we should work
+  // with a copy. All modification would take effect only on the next call.
+  ListenersCopy := Copy(Listeners, 0, Length(Listeners));
+
+  for i := 0 to High(ListenersCopy) do
+    ListenersCopy[i](Value);
 end;
 
 procedure TEventHandler<T>.InvolveIgnoringErrors(Value: T);
 var
   i: integer;
+  ListenersCopy: TEventListenerArray<T>;
 begin
-  for i := 0 to High(Listeners) do
+  ListenersCopy := Copy(Listeners, 0, Length(Listeners));
+
+  for i := 0 to High(ListenersCopy) do
     try
-      Listeners[i](Value);
+      ListenersCopy[i](Value);
     except
       on Exception do;
     end;
