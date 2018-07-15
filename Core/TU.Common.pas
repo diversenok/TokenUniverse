@@ -127,6 +127,13 @@ procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String;
 function NativeCheck(Status: NTSTATUS; Where: String;
   Context: TObject = nil): Boolean; inline;
 
+/// <symmary>
+///  Converts a string that contains a decimal or a hexadecimal number to an
+///  integer.
+/// </summary>
+/// <exception cref="EConvertError"> Can raise EConvertError. </exception>
+function StrToIntEx(S: String; Comment: String): Cardinal;
+
 implementation
 
 uses
@@ -330,6 +337,22 @@ begin
     except
       on Exception do;
     end;
+end;
+
+{ Conversion functions }
+
+function StrToIntEx(S: String; Comment: String): Cardinal;
+const
+  E_CONV_DECHEX = 'Invalid %s. Please specify decimal or hexadecimal value.';
+var
+  E: Integer;
+begin
+  if S.StartsWith('0x') then
+    S := S.Replace('0x', '$', []);
+
+  Val(S, Result, E);
+  if E <> 0 then
+    raise EConvertError.Create(Format(E_CONV_DECHEX, [Comment]));
 end;
 
 end.

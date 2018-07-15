@@ -3,7 +3,7 @@ object InfoDialog: TInfoDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Information about'
-  ClientHeight = 339
+  ClientHeight = 354
   ClientWidth = 402
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,7 +16,7 @@ object InfoDialog: TInfoDialog
   OnCreate = FormCreate
   DesignSize = (
     402
-    339)
+    354)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -24,18 +24,18 @@ object InfoDialog: TInfoDialog
     Left = 3
     Top = 3
     Width = 396
-    Height = 306
+    Height = 321
     ActivePage = TabGeneral
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 0
+    TabOrder = 1
     object TabGeneral: TTabSheet
       Caption = 'General'
       DesignSize = (
         388
-        278)
+        293)
       object BtnSetIntegrity: TSpeedButton
         Left = 359
-        Top = 139
+        Top = 138
         Width = 23
         Height = 21
         Flat = True
@@ -86,7 +86,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetSession: TSpeedButton
         Left = 359
-        Top = 167
+        Top = 166
         Width = 23
         Height = 21
         Flat = True
@@ -133,18 +133,19 @@ object InfoDialog: TInfoDialog
           01FFFFFFFF011F102A03FFFFFFFF012301FFFFFFFF011A0F2A03FFFFFFFFFF01
           01FFFFFFFF012E2A2503FFFFFFFFFFFF17FFFFFFFFFF040403FFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+        OnClick = BtnSetSessionClick
       end
       object StaticUser: TStaticText
         Left = 7
-        Top = 89
+        Top = 115
         Width = 30
         Height = 17
         Caption = 'User:'
-        TabOrder = 0
+        TabOrder = 8
       end
       object EditUser: TEdit
         Left = 94
-        Top = 85
+        Top = 111
         Width = 288
         Height = 21
         Margins.Right = 6
@@ -152,29 +153,8 @@ object InfoDialog: TInfoDialog
         AutoSelect = False
         AutoSize = False
         ReadOnly = True
-        TabOrder = 1
-        Text = 'Unknown User'
-      end
-      object StaticSID: TStaticText
-        Left = 7
-        Top = 116
-        Width = 50
-        Height = 17
-        Caption = 'User SID:'
-        TabOrder = 2
-      end
-      object EditSID: TEdit
-        Left = 94
-        Top = 112
-        Width = 288
-        Height = 21
-        Margins.Right = 6
-        Anchors = [akLeft, akTop, akRight]
-        AutoSelect = False
-        AutoSize = False
-        ReadOnly = True
-        TabOrder = 3
-        Text = 'Unknown SID'
+        TabOrder = 4
+        Text = 'Unknown user'
       end
       object StaticObjAddr: TStaticText
         Left = 7
@@ -182,7 +162,7 @@ object InfoDialog: TInfoDialog
         Width = 81
         Height = 17
         Caption = 'Object address:'
-        TabOrder = 4
+        TabOrder = 9
       end
       object EditObjAddr: TEdit
         Left = 94
@@ -195,87 +175,76 @@ object InfoDialog: TInfoDialog
         AutoSize = False
         BorderStyle = bsNone
         ReadOnly = True
-        TabOrder = 5
+        TabOrder = 0
         Text = 'Unknown address'
       end
       object StaticSession: TStaticText
         Left = 7
-        Top = 170
+        Top = 169
         Width = 44
         Height = 17
         Caption = 'Session:'
-        TabOrder = 6
+        TabOrder = 10
       end
       object StaticElevation: TStaticText
-        Left = 248
-        Top = 17
+        Left = 7
+        Top = 195
         Width = 50
         Height = 17
         Caption = 'Elevated:'
-        TabOrder = 7
+        TabOrder = 11
       end
       object StaticVirtualization: TStaticText
-        Left = 248
-        Top = 63
+        Left = 7
+        Top = 268
         Width = 57
         Height = 17
         Caption = 'Virtualized:'
-        TabOrder = 8
+        TabOrder = 12
       end
       object StaticIntegrity: TStaticText
         Left = 7
-        Top = 143
+        Top = 142
         Width = 75
         Height = 17
         Caption = 'Integrity level:'
-        TabOrder = 9
+        TabOrder = 13
       end
       object StaticUIAccess: TStaticText
-        Left = 248
-        Top = 40
+        Left = 7
+        Top = 245
         Width = 52
         Height = 17
         Caption = 'UIAccess:'
-        TabOrder = 10
+        TabOrder = 14
       end
       object StaticType: TStaticText
         Left = 7
-        Top = 63
+        Top = 86
         Width = 62
         Height = 17
         Caption = 'Token type:'
-        TabOrder = 11
+        TabOrder = 15
       end
       object ComboSession: TComboBox
         Left = 94
-        Top = 167
+        Top = 166
         Width = 262
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        ItemIndex = 1
-        TabOrder = 12
-        Text = '1: Console (Domain\User)'
-        Items.Strings = (
-          '0: Services'
-          '1: Console (Domain\User)')
+        TabOrder = 6
+        Text = 'Unknown session'
       end
       object ComboIntegrity: TComboBox
         Left = 94
-        Top = 139
+        Top = 138
         Width = 262
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 13
+        TabOrder = 5
         Text = 'Unknown integrity level'
-        Items.Strings = (
-          'Untrusted (0x0000)'
-          'Low (0x1000)'
-          'Medium (0x2000)'
-          'Medium Plus (0x2100)'
-          'High (0x3000)'
-          'System (0x4000)')
       end
       object StaticHandle: TStaticText
         Left = 7
@@ -283,12 +252,12 @@ object InfoDialog: TInfoDialog
         Width = 70
         Height = 17
         Caption = 'Handle value:'
-        TabOrder = 14
+        TabOrder = 16
       end
       object EditHandle: TEdit
         Left = 94
         Top = 40
-        Width = 145
+        Width = 288
         Height = 17
         Margins.Right = 6
         Anchors = [akLeft, akTop, akRight]
@@ -296,13 +265,13 @@ object InfoDialog: TInfoDialog
         AutoSize = False
         BorderStyle = bsNone
         ReadOnly = True
-        TabOrder = 15
+        TabOrder = 1
         Text = 'Unknown handle'
       end
       object EditType: TEdit
         Left = 94
-        Top = 63
-        Width = 145
+        Top = 86
+        Width = 288
         Height = 17
         Margins.Right = 6
         Anchors = [akLeft, akTop, akRight]
@@ -310,23 +279,55 @@ object InfoDialog: TInfoDialog
         AutoSize = False
         BorderStyle = bsNone
         ReadOnly = True
-        TabOrder = 16
+        TabOrder = 3
         Text = 'Unknown token type'
+      end
+      object StaticAccess: TStaticText
+        Left = 7
+        Top = 63
+        Width = 82
+        Height = 17
+        Caption = 'Granted access:'
+        TabOrder = 17
+      end
+      object EditAccess: TEdit
+        Left = 94
+        Top = 63
+        Width = 288
+        Height = 17
+        Margins.Right = 6
+        Anchors = [akLeft, akTop, akRight]
+        AutoSelect = False
+        AutoSize = False
+        BorderStyle = bsNone
+        ReadOnly = True
+        TabOrder = 2
+        Text = 'Unknown access'
+      end
+      object EditElevation: TEdit
+        Left = 94
+        Top = 195
+        Width = 288
+        Height = 17
+        Margins.Right = 6
+        Anchors = [akLeft, akTop, akRight]
+        AutoSelect = False
+        AutoSize = False
+        BorderStyle = bsNone
+        ReadOnly = True
+        TabOrder = 7
+        Text = 'Unknown elevation'
       end
     end
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ListViewGroups: TListView
         AlignWithMargins = True
         Left = 3
         Top = 3
         Width = 382
-        Height = 272
+        Height = 287
         Align = alClient
         Columns = <
           item
@@ -347,16 +348,12 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ListViewPrivileges: TListView
         AlignWithMargins = True
         Left = 3
         Top = 3
         Width = 382
-        Height = 272
+        Height = 287
         Align = alClient
         Columns = <
           item
@@ -381,16 +378,12 @@ object InfoDialog: TInfoDialog
     object TabRestricted: TTabSheet
       Caption = 'Restricted SIDs'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object ListViewRestricted: TListView
         AlignWithMargins = True
         Left = 3
         Top = 3
         Width = 382
-        Height = 272
+        Height = 287
         Align = alClient
         Columns = <
           item
@@ -411,19 +404,19 @@ object InfoDialog: TInfoDialog
   end
   object ButtonClose: TButton
     Left = 323
-    Top = 311
+    Top = 326
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Close'
     ModalResult = 2
-    TabOrder = 1
+    TabOrder = 0
     OnClick = DoCloseForm
   end
   object ComboBoxView: TComboBox
     Left = 3
-    Top = 313
+    Top = 328
     Width = 158
     Height = 21
     Style = csDropDownList
@@ -437,7 +430,7 @@ object InfoDialog: TInfoDialog
       'Show SIDs')
   end
   object ImageList: TImageList
-    Left = 175
+    Left = 319
     Top = 235
   end
 end

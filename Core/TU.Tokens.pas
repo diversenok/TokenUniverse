@@ -620,7 +620,7 @@ end;
 
 function AccessToDetailedString(Access: Cardinal): String;
 begin
-  Result := Format('0x%0.8x: %s', [Access, AccessToString(Access)]);
+  Result := Format('%s (0x%0.6x)', [AccessToString(Access), Access]);
 end;
 
 function AccessToString(Access: Cardinal): String;

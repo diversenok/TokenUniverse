@@ -17,6 +17,7 @@ type
     Name: String;
     Domain: String;
     User: String;
+    function ToString: String;
   end;
 
   TSessionList = class
@@ -29,8 +30,14 @@ type
   public
     constructor Create(Server: String);
     constructor CreateCurrentServer;
-    property Sessions[ind: Integer]: TSessionItem read GetSession;
+    property Sessions[ind: Integer]: TSessionItem read GetSession; default;
     property Count: Integer read GetCount;
+    /// <summary> Searches for the specified session ID. </summary>
+    /// <returns>
+    ///  <para> The index of this session if it exists. </para>
+    ///  <para> <c>-1</c> otherwise </para>
+    ///</returns>
+    function Find(SessionId: Integer): Integer;
   end;
 
 function WTSQueryUserToken(SessionId: Cardinal; out hToken: THandle): LongBool;
@@ -39,7 +46,7 @@ function WTSQueryUserToken(SessionId: Cardinal; out hToken: THandle): LongBool;
 implementation
 
 uses
-  TU.Common;
+  System.SysUtils, TU.Common;
 
 const
   WTS_CURRENT_SERVER_HANDLE = 0;
@@ -135,6 +142,16 @@ begin
   WTSFreeMemory(SIA);
 end;
 
+function TSessionList.Find(SessionId: Integer): Integer;
+var
+  i: integer;
+begin
+  Result := -1;
+  for i := 0 to High(FSessions) do
+    if FSessions[i].SessionId = SessionId then
+      Exit(i);
+end;
+
 function TSessionList.GetCount: Integer;
 begin
   Result := Length(FSessions);
@@ -143,6 +160,16 @@ end;
 function TSessionList.GetSession(ind: Integer): TSessionItem;
 begin
   Result := FSessions[ind];
+end;
+
+{ TSessionItem }
+
+function TSessionItem.ToString: String;
+begin
+  if (User <> '') and (Domain <> '') then
+    Result := Format('%d: %s (%s/%s)', [SessionID, Name, Domain, User])
+  else
+    Result := Format('%d: %s', [SessionID, Name]);
 end;
 
 end.

@@ -5,10 +5,6 @@ interface
 uses
   System.SysUtils;
 
-const
-  E_CONV_DECHEX = 'Please specify decimal or hexadecimal value.';
-  E_CONV_INTEGRITY = 'Invalid integrity level. ' + E_CONV_DECHEX;
-
 procedure ShowErrorSuggestions(E: Exception);
 
 implementation
@@ -31,6 +27,9 @@ resourcestring
     'linked tokens you can obtain a primary linked token if you have ' +
     'SeTcbPrivilege privilege. Or, if you have SeCreateTokenPrivilege you can ' +
     'cheat by creating the required token by yourself =)';
+
+  SETTER_SESSION = 'To change the session of a token you need to ' +
+    'have SeTcbPrivilege and `Adjust SessionId` access right for the token.';
   SETTER_INTEGRITY = 'To raise the integrity level of a token you need to ' +
     'have SeTcbPrivilege.';
 
@@ -55,8 +54,17 @@ function SuggestSetter(E: ELocatedOSError): String;
 begin
   Result := '';
 
+  if E.ErrorCode = ERROR_ACCESS_DENIED then
+  begin
+    if E.ErrorOrigin = SetterMessage(TokenSessionId) then
+      Exit(SETTER_SESSION);
+  end;
+
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
   begin
+    if E.ErrorOrigin = SetterMessage(TokenSessionId) then
+      Exit(SETTER_SESSION);
+
     if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
       Exit(SETTER_INTEGRITY);
   end;

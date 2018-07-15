@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList;
+  Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
+  TU.WtsApi;
 
 type
   TInfoDialog = class(TForm)
@@ -15,10 +16,8 @@ type
     TabPrivileges: TTabSheet;
     StaticUser: TStaticText;
     EditUser: TEdit;
-    StaticSID: TStaticText;
     ButtonClose: TButton;
     ListViewGroups: TListView;
-    EditSID: TEdit;
     ListViewPrivileges: TListView;
     TabRestricted: TTabSheet;
     ListViewRestricted: TListView;
@@ -39,15 +38,23 @@ type
     ComboBoxView: TComboBox;
     BtnSetIntegrity: TSpeedButton;
     BtnSetSession: TSpeedButton;
+    StaticAccess: TStaticText;
+    EditAccess: TEdit;
+    EditElevation: TEdit;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
     procedure ChangedView(Sender: TObject);
+    procedure BtnSetSessionClick(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
   private
     Token: TToken; // TODO: What if we delete it from the list?
+    Sessions: TSessionList;
+    procedure InitSessionComboBox;
+    procedure ConfirmTokenClose(Sender: TObject);
     procedure ChangedCaption(Sender: TObject);
     procedure ChangedIntegrity(Sender: TObject);
+    procedure ChangedSession(Sender: TObject);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -55,7 +62,7 @@ type
 implementation
 
 uses
-  TU.Suggestions;
+  UI.MainForm, TU.Common;
 
 {$R *.dfm}
 
@@ -64,26 +71,34 @@ begin
   Close;
 end;
 
+procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
+begin
+  try
+    if ComboSession.ItemIndex <> -1 then
+      Token.Session := Sessions[ComboSession.ItemIndex].SessionId
+    else
+      Token.Session := StrToIntEx(ComboSession.Text, 'session');
+  except
+    on Exception do
+    begin
+      ChangedSession(Token);
+      raise;
+    end;
+  end;
+end;
+
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
 const
+  // TODO: It doesn't work if we have an intermediate level
   IndexToIntegrity: array [0 .. 5] of TTokenIntegrityLevel = (ilUntrusted,
     ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
-var
-  IL: Integer;
 begin
   try
     if ComboIntegrity.ItemIndex <> -1 then
       Token.Integrity := IndexToIntegrity[ComboIntegrity.ItemIndex]
     else
-    begin
-      if String(ComboIntegrity.Text).StartsWith('0x') then
-      ComboIntegrity.Text := String(ComboIntegrity.Text).Replace('0x', '$', []);
-
-      if TryStrToInt(ComboIntegrity.Text, IL) then
-        Token.Integrity := TTokenIntegrityLevel(IL)
-      else
-        raise EConvertError.Create(E_CONV_INTEGRITY);
-    end;
+      Token.Integrity := TTokenIntegrityLevel(StrToIntEx(ComboIntegrity.Text,
+        'integrity level'));
   except
     on Exception do
     begin
@@ -102,54 +117,99 @@ end;
 
 procedure TInfoDialog.ChangedIntegrity(Sender: TObject);
 var
-  IL: TTokenIntegrityLevel;
   index: integer;
 begin
+  ComboIntegrity.Items.BeginUpdate;
+  ComboIntegrity.Clear;
+
+  ComboIntegrity.Items.Add('Untrusted (0x0000)');
+  ComboIntegrity.Items.Add('Low (0x1000)');
+  ComboIntegrity.Items.Add('Medium (0x2000)');
+  ComboIntegrity.Items.Add('Medium Plus (0x2100)');
+  ComboIntegrity.Items.Add('High (0x3000)');
+  ComboIntegrity.Items.Add('System (0x4000)');
+
   with Token.TryGetIntegrity do
     if IsValid then
-      IL := Value.Level
+    begin
+      if not Value.Level.IsWellKnown then
+      begin
+        if Value.Level < ilLow then
+          index := 1
+        else if Value.Level < ilMedium then
+          index := 2
+        else if Value.Level < ilMediumPlus then
+          index := 3
+        else if Value.Level < ilHigh then
+          index := 4
+        else if Value.Level < ilSystem then
+          index := 5
+        else
+          index := 6;
+
+        ComboIntegrity.Items.Insert(index, Format('Itermediate (0x%.4x)',
+          [Cardinal(Value.Level)]));
+      end;
+
+      if Value.Level = ilUntrusted then
+        ComboIntegrity.ItemIndex := 0
+      else if Value.Level <= ilLow then
+        ComboIntegrity.ItemIndex := 1
+      else if Value.Level <= ilMedium then
+        ComboIntegrity.ItemIndex := 2
+      else if Value.Level <= ilMediumPlus then
+        ComboIntegrity.ItemIndex := 3
+      else if Value.Level <= ilHigh then
+        ComboIntegrity.ItemIndex := 4
+      else if Value.Level <= ilSystem then
+        ComboIntegrity.ItemIndex := 5
+      else
+        ComboIntegrity.ItemIndex := 6;
+    end
     else
-      Exit;
+    begin
+      ComboIntegrity.ItemIndex := -1;
+      ComboIntegrity.Text := 'Unknown integrity';
+    end;
 
-  if not IL.IsWellKnown then
-  begin
-    if IL < ilLow then
-      index := 1
-    else if IL < ilMedium then
-      index := 2
-    else if IL < ilMediumPlus then
-      index := 3
-    else if IL < ilHigh then
-      index := 4
-    else if IL < ilSystem then
-      index := 5
+  ComboIntegrity.Items.EndUpdate;
+end;
+
+procedure TInfoDialog.ChangedSession(Sender: TObject);
+var
+  i: integer;
+begin
+  ComboSession.Items.BeginUpdate;
+
+  with Token.TryGetSession do
+    if IsValid then
+    begin
+      ComboSession.ItemIndex := Sessions.Find(Value);
+      if ComboSession.ItemIndex = -1 then
+        ComboSession.Text := IntToStr(Value);
+    end
     else
-      index := 6;
+    begin
+      ComboSession.ItemIndex := -1;
+      ComboSession.Text := 'Unknown session';
+    end;
 
-    ComboIntegrity.Items.Insert(index, Format('Itermediate (0x%.4x)',
-      [Cardinal(IL)]));
-  end;
-
-  if IL = ilUntrusted then
-    ComboIntegrity.ItemIndex := 0
-  else if IL <= ilLow then
-    ComboIntegrity.ItemIndex := 1
-  else if IL <= ilMedium then
-    ComboIntegrity.ItemIndex := 2
-  else if IL <= ilMediumPlus then
-    ComboIntegrity.ItemIndex := 3
-  else if IL <= ilHigh then
-    ComboIntegrity.ItemIndex := 4
-  else if IL <= ilSystem then
-    ComboIntegrity.ItemIndex := 5
-  else
-    ComboIntegrity.ItemIndex := 6;
+  ComboSession.Items.EndUpdate;
 end;
 
 procedure TInfoDialog.ChangedView(Sender: TObject);
 var
   i: integer;
 begin
+  with Token.User do
+    if IsValid then
+    begin
+      if ComboBoxView.ItemIndex = 0 then
+        EditUser.Text := Value.ToString
+      else
+        EditUser.Text := Value.SID;
+    end;
+
   ListViewGroups.Items.BeginUpdate;
   ListViewGroups.Clear;
   with Token.Groups do
@@ -211,7 +271,9 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  Sessions.Free;
   Token.OnIntegrityChange.Delete(ChangedIntegrity);
+  Token.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
   Token.OnClose.Delete(ConfirmTokenClose);
   FormMain.OnMainFormClose.Delete(DoCloseForm);
@@ -225,25 +287,31 @@ begin
   FormMain.OnMainFormClose.Add(DoCloseForm);
   Token.OnClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
+  Token.OnSessionChange.Add(ChangedSession);
   Token.OnIntegrityChange.Add(ChangedIntegrity);
+
+  Sessions := TSessionList.CreateCurrentServer;
+  InitSessionComboBox;
 
   ChangedCaption(Token);
   ChangedIntegrity(Token);
+  ChangedSession(Token);
   ChangedView(Token);
 
   EditObjAddr.Text := '0x' + IntToHex(Token.ObjAddress, 8);
   EditHandle.Text := '0x' + IntToHex(Token.Handle, -1);
 
+  with Token.Access do
+    if IsValid then
+      EditAccess.Text := AccessToDetailedString(Value);
+
   with Token.TokenTypeInfo do
     if IsValid then
       EditType.Text := Value.ToString;
 
-  with Token.User do
+  with Token.Elevation do
     if IsValid then
-    begin
-      EditUser.Text := Value.Domain + '\' + Value.User;
-      EditSID.Text := Value.SID;
-    end;
+      EditElevation.Text := Value.ToString;
 
   ListViewPrivileges.Clear;
   ListViewPrivileges.Items.BeginUpdate;
@@ -261,6 +329,21 @@ begin
       end;
     end;
   ListViewPrivileges.Items.EndUpdate;
+end;
+
+procedure TInfoDialog.InitSessionComboBox;
+var
+  i: integer;
+begin
+  ComboSession.Items.BeginUpdate;
+  ComboSession.Clear;
+
+  for i := 0 to Sessions.Count - 1 do
+    ComboSession.Items.Add(Sessions[i].ToString);
+
+  ComboSession.ItemIndex := -1;
+  ComboSession.Text := 'Unknown session';
+  ComboSession.Items.EndUpdate;
 end;
 
 end.
