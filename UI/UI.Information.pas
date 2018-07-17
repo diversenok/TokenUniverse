@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  TU.WtsApi;
+  UI.SessionComboBox, TU.WtsApi;
 
 type
   TInfoDialog = class(TForm)
@@ -29,7 +29,7 @@ type
     StaticIntegrity: TStaticText;
     StaticUIAccess: TStaticText;
     StaticType: TStaticText;
-    ComboSession: TComboBox;
+    ComboSession: TSessionComboBox;
     ComboIntegrity: TComboBox;
     StaticHandle: TStaticText;
     EditHandle: TEdit;
@@ -50,8 +50,6 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     Token: TToken;
-    Sessions: TSessionList;
-    procedure InitSessionComboBox;
     procedure ConfirmTokenClose(Sender: TObject);
     procedure ChangedCaption(Sender: TObject);
     procedure ChangedIntegrity(Sender: TObject);
@@ -76,10 +74,7 @@ end;
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
   try
-    if ComboSession.ItemIndex <> -1 then
-      Token.Session := Sessions[ComboSession.ItemIndex].SessionId
-    else
-      Token.Session := StrToIntEx(ComboSession.Text, 'session');
+    Token.Session := ComboSession.SelectedSession;
   except
     on Exception do
     begin
@@ -185,11 +180,7 @@ begin
 
   with Token.TryGetSession do
     if IsValid then
-    begin
-      ComboSession.ItemIndex := Sessions.Find(Value);
-      if ComboSession.ItemIndex = -1 then
-        ComboSession.Text := IntToStr(Value);
-    end
+      ComboSession.SelectedSession := Value
     else
     begin
       ComboSession.ItemIndex := -1;
@@ -273,7 +264,6 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Sessions.Free;
   Token.OnIntegrityChange.Delete(ChangedIntegrity);
   Token.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
@@ -304,7 +294,7 @@ procedure TInfoDialog.Refresh;
 var
   i: integer;
 begin
-  InitSessionComboBox;
+  ComboSession.RefreshSessionList;
 
   ChangedCaption(Token);
   ChangedIntegrity(Token);
@@ -342,24 +332,6 @@ begin
       end;
     end;
   ListViewPrivileges.Items.EndUpdate;
-end;
-
-procedure TInfoDialog.InitSessionComboBox;
-var
-  i: integer;
-begin
-  Sessions.Free;
-  Sessions := TSessionList.CreateCurrentServer;
-
-  ComboSession.Items.BeginUpdate;
-  ComboSession.Clear;
-
-  for i := 0 to Sessions.Count - 1 do
-    ComboSession.Items.Add(Sessions[i].ToString);
-
-  ComboSession.ItemIndex := -1;
-  ComboSession.Text := 'Unknown session';
-  ComboSession.Items.EndUpdate;
 end;
 
 end.

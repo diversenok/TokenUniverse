@@ -228,7 +228,7 @@ object InfoDialog: TInfoDialog
         Caption = 'Token type:'
         TabOrder = 15
       end
-      object ComboSession: TComboBox
+      object ComboSession: TSessionComboBox
         Left = 94
         Top = 166
         Width = 262
@@ -324,6 +324,10 @@ object InfoDialog: TInfoDialog
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object ListViewGroups: TListView
         AlignWithMargins = True
         Left = 3
@@ -350,6 +354,10 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object ListViewPrivileges: TListView
         AlignWithMargins = True
         Left = 3
@@ -380,6 +388,10 @@ object InfoDialog: TInfoDialog
     object TabRestricted: TTabSheet
       Caption = 'Restricted SIDs'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object ListViewRestricted: TListView
         AlignWithMargins = True
         Left = 3
