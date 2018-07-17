@@ -76,6 +76,8 @@ type
     procedure ApplicationEventsException(Sender: TObject; E: Exception);
     procedure ActionSteal(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
+      var S: string);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -133,7 +135,6 @@ procedure TFormMain.ActionRename(Sender: TObject);
 var
   NewName: string;
 begin
-  // TODO: Strange bugs with OnEdited, enabled ReadOnly. Test and revert it.
   if InputQuery('Rename token', 'New token name: ', NewName) then
     Frame.RenameToken(NewName, Frame.ListViewTokens.Selected);
 end;
@@ -156,7 +157,7 @@ begin
     TProcessListDialog.Execute(Self));
 
   MessageDlg(Format('The handle was successfully sent.'#$D#$A +
-    'It''s value is %d (0x%0.6x)', [NewHandle, NewHandle]), mtInformation,
+    'It''s value is %d (0x%x)', [NewHandle, NewHandle]), mtInformation,
     [mbOK], 0);
 end;
 
@@ -200,6 +201,12 @@ procedure TFormMain.FrameListViewTokensDblClick(Sender: TObject);
 begin
   if Frame.ListViewTokens.SelCount <> 0 then
     ActionOpen(Self);
+end;
+
+procedure TFormMain.FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
+  var S: string);
+begin
+  Frame.RenameToken(S, Item);
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);

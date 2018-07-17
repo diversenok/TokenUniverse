@@ -47,9 +47,9 @@ object FormMain: TFormMain
     ExplicitHeight = 271
     inherited ListViewTokens: TListView
       Height = 242
-      ReadOnly = True
       PopupMenu = PopupMenu
       OnDblClick = FrameListViewTokensDblClick
+      OnEdited = FrameListViewTokensEdited
       OnSelectItem = ListViewTokenSelectItem
       ExplicitHeight = 242
     end

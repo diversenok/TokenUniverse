@@ -11,9 +11,11 @@ object InfoDialog: TInfoDialog
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  KeyPreview = True
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   DesignSize = (
     402
     354)

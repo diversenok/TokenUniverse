@@ -47,14 +47,16 @@ type
     procedure ChangedView(Sender: TObject);
     procedure BtnSetSessionClick(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    Token: TToken; // TODO: What if we delete it from the list?
+    Token: TToken;
     Sessions: TSessionList;
     procedure InitSessionComboBox;
     procedure ConfirmTokenClose(Sender: TObject);
     procedure ChangedCaption(Sender: TObject);
     procedure ChangedIntegrity(Sender: TObject);
     procedure ChangedSession(Sender: TObject);
+    procedure Refresh;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -281,8 +283,6 @@ begin
 end;
 
 procedure TInfoDialog.FormCreate(Sender: TObject);
-var
-  i: integer;
 begin
   FormMain.OnMainFormClose.Add(DoCloseForm);
   Token.OnClose.Add(ConfirmTokenClose);
@@ -290,7 +290,20 @@ begin
   Token.OnSessionChange.Add(ChangedSession);
   Token.OnIntegrityChange.Add(ChangedIntegrity);
 
-  Sessions := TSessionList.CreateCurrentServer;
+  Refresh;
+end;
+
+procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_F5 then
+    Refresh;
+end;
+
+procedure TInfoDialog.Refresh;
+var
+  i: integer;
+begin
   InitSessionComboBox;
 
   ChangedCaption(Token);
@@ -335,6 +348,9 @@ procedure TInfoDialog.InitSessionComboBox;
 var
   i: integer;
 begin
+  Sessions.Free;
+  Sessions := TSessionList.CreateCurrentServer;
+
   ComboSession.Items.BeginUpdate;
   ComboSession.Clear;
 
