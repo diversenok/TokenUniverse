@@ -78,6 +78,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
       var S: string);
+    procedure ActionWTSQuery(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -88,9 +89,10 @@ var
 implementation
 
 uses
-  TU.Handles, TU.RestartSvc, TU.Suggestions,
-  UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch;
   Winapi.ShellApi, System.UITypes,
+  TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
+  UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch,
+  UI.SessionDialog;
 
 {$R *.dfm}
 
@@ -164,6 +166,11 @@ end;
 procedure TFormMain.ActionSteal(Sender: TObject);
 begin
   TProcessListDialog.Execute(Self);//TODO: Copy handle from process
+end;
+
+procedure TFormMain.ActionWTSQuery(Sender: TObject);
+begin
+  Frame.AddToken(TToken.CreateQueryWts(TSessionDialog.Execute(Self)));
 end;
 
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);

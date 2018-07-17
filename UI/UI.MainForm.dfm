@@ -461,7 +461,8 @@ object FormMain: TFormMain
       end
       object NewQueryUserToken: TMenuItem
         Caption = 'WTSQueryUserToken'
-        Enabled = False
+        ShortCut = 24661
+        OnClick = ActionWTSQuery
       end
       object NewSaferApi: TMenuItem
         Caption = 'Create using Safer API'

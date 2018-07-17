@@ -29,6 +29,10 @@ resourcestring
     'SeTcbPrivilege privilege. Or, if you have SeCreateTokenPrivilege you can ' +
     'cheat by creating the required token by yourself =)';
 
+  WTS_QUERY_TOKEN_PRIV = 'WTSQueryUserToken requires SeTcbPrivilege.';
+  WTS_QUERY_TOKEN_NO_TOKEN = 'You can''t query a token of a session that ' +
+    'doesn''t belong to any user.';
+
   GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
     'from the token';
   GETTER_QUERY_SOURCE = 'You need `Query Source` access right to obtain ' +
@@ -48,6 +52,15 @@ begin
     with TToken(E.ErrorContext).TokenTypeInfo do
       if IsValid and (Value.Impersonation <= SecurityImpersonation) then
         Exit(DUPLICATE_IMP);
+
+  if E.ErrorOrigin = 'WTSQueryUserToken' then
+  begin
+    if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
+      Exit(WTS_QUERY_TOKEN_PRIV);
+
+    if E.ErrorCode = ERROR_NO_TOKEN then
+      Exit(WTS_QUERY_TOKEN_NO_TOKEN);
+  end;
 end;
 
 function SuggestGetter(E: ELocatedOSError): String;

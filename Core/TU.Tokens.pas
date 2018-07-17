@@ -169,6 +169,13 @@ type
     /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
 
+    /// <summary>
+    ///  Uses <c>WTSQueryUserToken</c> to obtain a token of the specified
+    //// session.
+    /// </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
+    constructor CreateQueryWts(SessionID: Cardinal);
+
     destructor Destroy; override;
     function IsValidToken: Boolean;
     property Handle: THandle read hToken;
@@ -232,7 +239,7 @@ function AccessToDetailedString(Access: Cardinal): String;
 implementation
 
 uses
-  TU.NativeAPI;
+  TU.NativeAPI, TU.WtsApi;
 
 { TToken }
 
@@ -296,6 +303,12 @@ begin
   Win32Check(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
     'OpenProcessToken');
   Caption := 'PID ' + IntToStr(PID);
+end;
+
+constructor TToken.CreateQueryWts(SessionID: Cardinal);
+begin
+  Win32Check(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
+  FCaption := Format('Token of session %d', [SessionID]);
 end;
 
 destructor TToken.Destroy;

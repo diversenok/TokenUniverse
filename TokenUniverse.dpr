@@ -19,6 +19,7 @@ uses
   TU.DebugLog in 'Core\TU.DebugLog.pas',
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
+  UI.SessionDialog in 'UI\UI.SessionDialog.pas' {SessionDialog},
   UI.SessionComboBox in 'UI\UI.SessionComboBox.pas';
 
 {$R *.res}
