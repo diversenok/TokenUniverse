@@ -28,6 +28,11 @@ resourcestring
     'SeTcbPrivilege privilege. Or, if you have SeCreateTokenPrivilege you can ' +
     'cheat by creating the required token by yourself =)';
 
+  GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
+    'from the token';
+  GETTER_QUERY_SOURCE = 'You need `Query Source` access right to obtain ' +
+    'this information from the token';
+
   SETTER_SESSION = 'To change the session of a token you need to ' +
     'have SeTcbPrivilege and `Adjust SessionId` access right for the token.';
   SETTER_INTEGRITY = 'To raise the integrity level of a token you need to ' +
@@ -47,7 +52,13 @@ end;
 function SuggestGetter(E: ELocatedOSError): String;
 begin
   if E.ErrorCode = ERROR_ACCESS_DENIED then
-  //
+  begin
+    if E.ErrorOrigin = GetterMessage(TokenSource) then
+      Exit(GETTER_QUERY_SOURCE);
+
+    if E.ErrorOrigin.StartsWith('GetTokenInformation:') then
+      Exit(GETTER_QUERY);
+  end;
 end;
 
 function SuggestSetter(E: ELocatedOSError): String;
@@ -72,10 +83,6 @@ end;
 
 function SuggestAll(E: ELocatedOSError): String;
 begin
-  Result := SuggestConstructor(ELocatedOSError(E));
-  if Result <> '' then
-    Exit(Format(SUGGEST_TEMPLATE, [Result]));
-
   Result := SuggestGetter(ELocatedOSError(E));
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
@@ -83,6 +90,11 @@ begin
   Result := SuggestSetter(ELocatedOSError(E));
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
+
+  Result := SuggestConstructor(ELocatedOSError(E));
+  if Result <> '' then
+    Exit(Format(SUGGEST_TEMPLATE, [Result]));
+
 end;
 
 procedure ShowErrorSuggestions(E: Exception);

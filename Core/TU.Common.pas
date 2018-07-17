@@ -12,6 +12,7 @@ type
    ErrorContext: TObject;
    constructor CreateLE(Code: Cardinal; Location: String;
      Context: TObject = nil);
+   class function FormatErrorMessage(Location: String; Code: Cardinal): String;
   end;
 
   /// <summary>
@@ -76,6 +77,8 @@ type
     /// </summary>
     /// <returns> The buffer wrapper itself (<paramref name="Src"/>). </returns>
     function CopyResult(Src: CanFail<Pointer>): CanFail<Pointer>;
+
+    function GetErrorMessage: String;
   end;
 
   TEventListener<T> = procedure(Value: T) of object;
@@ -220,6 +223,11 @@ begin
   Result := Src;
 end;
 
+function CanFail<ResultType>.GetErrorMessage: String;
+begin
+  Result := ELocatedOSError.FormatErrorMessage(ErrorOrigin, ErrorCode);
+end;
+
 function CanFail<ResultType>.GetValueOrRaise: ResultType;
 begin
   if not IsValid then
@@ -260,15 +268,20 @@ end;
 constructor ELocatedOSError.CreateLE(Code: Cardinal;
   Location: String; Context: TObject = nil);
 begin
-  if Code < STATUS_UNSUCCESSFUL then
-    CreateResFmt(@OSError, [Location, Code, SysErrorMessage(Code)])
-  else
-    CreateResFmt(@OSError, [Location, Code, SysErrorMessage(Code,
-      GetModuleHandle('ntdll.dll'))]);
-
+  inherited Create(FormatErrorMessage(Location, Code));
   ErrorCode := Code;
   ErrorOrigin := Location;
   ErrorContext := Context;
+end;
+
+class function ELocatedOSError.FormatErrorMessage(Location: String;
+  Code: Cardinal): String;
+begin
+  if Code < STATUS_UNSUCCESSFUL then
+    Result := Format(OSError, [Location, Code, SysErrorMessage(Code)])
+  else
+    Result := Format(OSError, [Location, Code, SysErrorMessage(Code,
+      GetModuleHandle('ntdll.dll'))]);
 end;
 
 { TEventHandler<T> }
