@@ -167,9 +167,14 @@ end;
 function TSessionItem.ToString: String;
 begin
   if (User <> '') and (Domain <> '') then
-    Result := Format('%d: %s (%s/%s)', [SessionID, Name, Domain, User])
+  begin
+    if Name <> '' then
+      Result := Format('%d: %s (%s/%s)', [SessionID, Name, Domain, User])
+    else
+      Result := Format('%d: (%s/%s)', [SessionID, Domain, User]);
+  end
   else
-    Result := Format('%d: %s', [SessionID, Name]);
+    Result := Format('%d: %s', [SessionID, Name])
 end;
 
 end.

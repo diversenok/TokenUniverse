@@ -18,7 +18,8 @@ uses
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.DebugLog in 'Core\TU.DebugLog.pas',
   TU.WtsApi in 'Core\TU.WtsApi.pas',
-  TU.Suggestions in 'Core\TU.Suggestions.pas';
+  TU.Suggestions in 'Core\TU.Suggestions.pas',
+  UI.SessionComboBox in 'UI\UI.SessionComboBox.pas';
 
 {$R *.res}
 
