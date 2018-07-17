@@ -37,7 +37,7 @@ type
     ///  <para> The index of this session if it exists. </para>
     ///  <para> <c>-1</c> otherwise </para>
     ///</returns>
-    function Find(SessionId: Integer): Integer;
+    function Find(SessionId: Cardinal): Integer;
   end;
 
 function WTSQueryUserToken(SessionId: Cardinal; out hToken: THandle): LongBool;
@@ -46,7 +46,7 @@ function WTSQueryUserToken(SessionId: Cardinal; out hToken: THandle): LongBool;
 implementation
 
 uses
-  System.SysUtils, TU.Common;
+  System.SysUtils;
 
 const
   WTS_CURRENT_SERVER_HANDLE = 0;
@@ -115,8 +115,8 @@ var
   Count, Returned: Cardinal;
   i: integer;
 begin
-  Win32Check(WTSEnumerateSessionsW(hServer, 0, 1, SIA, Count),
-    'WTSEnumerateSessionsW');
+  if not WTSEnumerateSessionsW(hServer, 0, 1, SIA, Count) then
+    Exit;
 
   SetLength(FSessions, Count);
   for i := 0 to Count - 1 do
@@ -142,7 +142,7 @@ begin
   WTSFreeMemory(SIA);
 end;
 
-function TSessionList.Find(SessionId: Integer): Integer;
+function TSessionList.Find(SessionId: Cardinal): Integer;
 var
   i: integer;
 begin

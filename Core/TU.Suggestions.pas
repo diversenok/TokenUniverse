@@ -10,7 +10,8 @@ procedure ShowErrorSuggestions(E: Exception);
 implementation
 
 uses
-  Winapi.Windows, Vcl.Dialogs, TU.Common, TU.Tokens.Winapi, TU.Tokens;
+  Winapi.Windows, System.UITypes, Vcl.Dialogs,
+  TU.Common, TU.Tokens.Winapi, TU.Tokens;
 
 resourcestring
   TITLE_OS_ERROR = 'System Error';
@@ -98,8 +99,6 @@ begin
 end;
 
 procedure ShowErrorSuggestions(E: Exception);
-var
-  Suggestion: String;
 begin
   if (E is EAccessViolation) or (E is EInvalidPointer) then
     TaskMessageDlg(TITLE_BUG, E.Message + BUGTRACKER, mtError, [mbOk], 0)

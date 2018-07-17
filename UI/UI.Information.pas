@@ -64,7 +64,7 @@ type
 implementation
 
 uses
-  UI.MainForm, TU.Common;
+  System.UITypes, UI.MainForm, TU.Common;
 
 {$R *.dfm}
 

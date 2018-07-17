@@ -32,7 +32,7 @@ var
 implementation
 
 uses
-  TU.Handles, TU.Processes, TU.Tokens, UI.MainForm;
+  System.UITypes, TU.Handles, TU.Processes, TU.Tokens, UI.MainForm;
 
 {$R *.dfm}
 

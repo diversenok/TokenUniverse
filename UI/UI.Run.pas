@@ -43,7 +43,7 @@ type
     procedure ButtonAsUserClick(Sender: TObject);
     procedure ButtonWithTokenClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    constructor Create(AOwner: TComponent; Token: TToken);
+    constructor Create(AOwner: TComponent; Token: TToken); reintroduce;
   private
     Token: TToken;
     function GetAppName: PWideChar;

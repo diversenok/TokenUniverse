@@ -88,9 +88,9 @@ var
 implementation
 
 uses
-  Winapi.ShellApi,
   TU.Handles, TU.RestartSvc, TU.Suggestions,
   UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch;
+  Winapi.ShellApi, System.UITypes,
 
 {$R *.dfm}
 
