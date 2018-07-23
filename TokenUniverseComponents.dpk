@@ -36,6 +36,7 @@ contains
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   UI.SessionComboBox in 'UI\UI.SessionComboBox.pas',
   TU.Common in 'Core\TU.Common.pas',
-  TU.NativeAPI in 'Core\TU.NativeAPI.pas';
+  TU.NativeAPI in 'Core\TU.NativeAPI.pas',
+  UI.ListViewEx in 'UI\UI.ListViewEx.pas';
 
 end.
