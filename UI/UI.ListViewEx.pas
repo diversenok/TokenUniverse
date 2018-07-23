@@ -5,6 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.Graphics;
 
+// TODO: Implement copying of selected items to clipboard
+
 type
   TListItemsEx = class;
   TListItemEx = class(TListItem)
@@ -23,16 +25,21 @@ type
   TListViewEx = class;
   TListItemsEx = class(TListItems)
   private
+    FSelectionSnapshot: array of Boolean;
     function GetOwnerListView: TListViewEx;
   protected
     function GetItem(Index: Integer): TListItemEx;
-  procedure SetItem(Index: Integer; Value: TListItemEx);
+    procedure SetItem(Index: Integer; Value: TListItemEx);
+    procedure CreateSelectionSnapshot;
+    function ApplySelectionSnapshot: Boolean;
   public
     function Add: TListItemEx;
     function AddItem(Item: TListItemEx; Index: Integer = -1): TListItemEx;
     function Insert(Index: Integer): TListItemEx;
     property Item[Index: Integer]: TListItemEx read GetItem write SetItem; default;
     property Owner: TListViewEx read GetOwnerListView;
+    procedure BeginUpdate(MakeSelectionSnapshot: Boolean = False);
+    procedure EndUpdate(ApplySnapshot: Boolean = False);
   end;
 
   TListViewEx = class(TListView)
@@ -48,6 +55,7 @@ type
       Stage: TCustomDrawStage): Boolean; override;
     function IsCustomDrawn(Target: TCustomDrawTarget; Stage: TCustomDrawStage):
       Boolean; override;
+    procedure Clear; override;
   public
     property Items: TListItemsEx read GetItems write SetItems;
   published
@@ -64,6 +72,14 @@ begin
 end;
 
 { TListViewEx }
+
+procedure TListViewEx.Clear;
+begin
+  // HACK: Clear doesn't deselect items before deleting them
+  // so we don't get OnSelectItem event.
+  ClearSelection;
+  inherited;
+end;
 
 function TListViewEx.CreateListItem: TListItem;
 var
@@ -129,6 +145,46 @@ end;
 function TListItemsEx.AddItem(Item: TListItemEx; Index: Integer): TListItemEx;
 begin
   Result := inherited AddItem(Item, Index) as TListItemEx;
+end;
+
+procedure TListItemsEx.CreateSelectionSnapshot;
+var
+  i: integer;
+begin
+  SetLength(FSelectionSnapshot, Count);
+  for i := 0 to High(FSelectionSnapshot) do
+    FSelectionSnapshot[i] := Item[i].Selected;
+end;
+
+function TListItemsEx.ApplySelectionSnapshot: Boolean;
+var
+  i: Integer;
+begin
+  Result := Length(FSelectionSnapshot) = Count;
+  if not Result then
+    Exit;
+
+  BeginUpdate;
+  for i := 0 to High(FSelectionSnapshot) do
+    Item[i].Selected := FSelectionSnapshot[i];
+  EndUpdate;
+end;
+
+procedure TListItemsEx.BeginUpdate(MakeSelectionSnapshot: Boolean);
+begin
+  if MakeSelectionSnapshot then
+    CreateSelectionSnapshot;
+  (Self as TListItems).BeginUpdate;
+end;
+
+procedure TListItemsEx.EndUpdate(ApplySnapshot: Boolean);
+begin
+  if ApplySnapshot then
+  begin
+    ApplySelectionSnapshot;
+    SetLength(FSelectionSnapshot, 0);
+  end;
+  (Self as TListItems).EndUpdate;
 end;
 
 function TListItemsEx.GetItem(Index: Integer): TListItemEx;
