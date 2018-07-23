@@ -29,6 +29,8 @@ object InfoDialog: TInfoDialog
     Height = 321
     ActivePage = TabGeneral
     Anchors = [akLeft, akTop, akRight, akBottom]
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
     TabOrder = 1
     object TabGeneral: TTabSheet
       Caption = 'General'
@@ -40,6 +42,7 @@ object InfoDialog: TInfoDialog
         Top = 138
         Width = 23
         Height = 21
+        Anchors = [akTop, akRight]
         Flat = True
         Glyph.Data = {
           36050000424D3605000000000000360400002800000010000000100000000100
@@ -91,6 +94,7 @@ object InfoDialog: TInfoDialog
         Top = 166
         Width = 23
         Height = 21
+        Anchors = [akTop, akRight]
         Flat = True
         Glyph.Data = {
           36050000424D3605000000000000360400002800000010000000100000000100
@@ -237,6 +241,7 @@ object InfoDialog: TInfoDialog
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 6
         Text = 'Unknown session'
+        OnChange = SetStaleColor
       end
       object ComboIntegrity: TComboBox
         Left = 94
@@ -247,6 +252,7 @@ object InfoDialog: TInfoDialog
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 5
         Text = 'Unknown integrity level'
+        OnChange = SetStaleColor
       end
       object StaticHandle: TStaticText
         Left = 7
@@ -324,11 +330,7 @@ object InfoDialog: TInfoDialog
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object ListViewGroups: TListView
+      object ListViewGroups: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -341,24 +343,25 @@ object InfoDialog: TInfoDialog
             Width = 220
           end
           item
+            Caption = 'State'
+            Width = 110
+          end
+          item
             Caption = 'Flags'
-            Width = 140
+            Width = 120
           end>
         GridLines = True
         ReadOnly = True
         RowSelect = True
         TabOrder = 0
         ViewStyle = vsReport
+        ColoringItems = True
       end
     end
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object ListViewPrivileges: TListView
+      object ListViewPrivileges: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -372,27 +375,24 @@ object InfoDialog: TInfoDialog
           end
           item
             Caption = 'Flags'
-            Width = 140
+            Width = 110
           end
           item
             Caption = 'Description'
-            Width = 230
+            Width = 220
           end>
         GridLines = True
         ReadOnly = True
         RowSelect = True
         TabOrder = 0
         ViewStyle = vsReport
+        ColoringItems = True
       end
     end
     object TabRestricted: TTabSheet
       Caption = 'Restricted SIDs'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object ListViewRestricted: TListView
+      object ListViewRestricted: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -405,14 +405,19 @@ object InfoDialog: TInfoDialog
             Width = 220
           end
           item
+            Caption = 'State'
+            Width = 110
+          end
+          item
             Caption = 'Flags'
-            Width = 140
+            Width = 120
           end>
         GridLines = True
         ReadOnly = True
         RowSelect = True
         TabOrder = 0
         ViewStyle = vsReport
+        ColoringItems = True
       end
     end
   end

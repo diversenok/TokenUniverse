@@ -133,16 +133,17 @@
             <Form>RunDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Core\TU.WtsApi.pas"/>
         <DCCReference Include="Core\TU.Tokens.Winapi.pas"/>
         <DCCReference Include="Core\TU.RestartSvc.pas"/>
         <DCCReference Include="Core\TU.DebugLog.pas"/>
+        <DCCReference Include="Core\TU.WtsApi.pas"/>
         <DCCReference Include="Core\TU.Suggestions.pas"/>
         <DCCReference Include="UI\UI.SessionDialog.pas">
             <Form>SessionDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="UI\UI.SessionComboBox.pas"/>
+        <DCCReference Include="UI\UI.ListViewEx.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

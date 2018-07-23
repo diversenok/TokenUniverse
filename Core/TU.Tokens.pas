@@ -38,7 +38,9 @@ type
   );
 
   TGroupAttributesHelper = record helper for TGroupAttributes
-    function ToString: String;
+    function StateToString: String;
+    function FlagsToString: String;
+    function Contain(Flag: TGroupAttributes): Boolean;
   end;
 
   TGroup = record
@@ -55,6 +57,7 @@ type
     function Description: String;
     function AttributesToString: String;
     function AttributesToDetailedString: String;
+    function AttributesContain(Flag: Cardinal): Boolean;
   end;
 
   TPrivilegeArray = array of TPrivilege;
@@ -762,16 +765,18 @@ end;
 
 { TGroupAttributesHelper }
 
-function TGroupAttributesHelper.ToString: String;
+function TGroupAttributesHelper.Contain(Flag: TGroupAttributes): Boolean;
+begin
+  Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
+end;
+
+function TGroupAttributesHelper.FlagsToString: String;
 const
-  GROUP_FLAGS_COUNT = 9;
+  GROUP_FLAGS_COUNT = 5;
   FlagValues: array [1 .. GROUP_FLAGS_COUNT] of TGroupAttributes = (
-    GroupMandatory, GroupEnabledByDefault, GroupEnabled, GroupOwner,
-    GroupUforDenyOnly, GroupIntegrity, GroupIntegrityEnabled, GroupResource,
-    GroupLogonId);
+    GroupMandatory, GroupOwner, GroupIntegrity, GroupResource, GroupLogonId);
   FlagStrings: array [1 .. GROUP_FLAGS_COUNT] of String = (
-    'Mandatory', 'Enabled by default', 'Enabled', 'Owner', 'Use for deny only',
-    'Integrity', 'Integrity enabled', 'Resource', 'Logon Id');
+    'Mandatory', 'Owner', 'Integrity', 'Resource', 'Logon Id');
 var
   Strings: array of string;
   FlagInd, StrInd: Integer;
@@ -789,7 +794,45 @@ begin
   Result := String.Join(', ', Strings);
 end;
 
+function TGroupAttributesHelper.StateToString: String;
+const
+  GROUP_STATE_COUNT = 4;
+  StateValues: array [1 .. GROUP_STATE_COUNT] of TGroupAttributes = (
+    GroupEnabledByDefault, GroupEnabled, GroupUforDenyOnly,
+    GroupIntegrityEnabled);
+  StateStrings: array [1 .. GROUP_STATE_COUNT] of String = (
+    'Enabled by default', 'Enabled', 'Use for deny only',
+    'Integrity enabled');
+var
+  Strings: array of string;
+  StateInd, StrInd: Integer;
+  FilteredAttributes: Cardinal;
+begin
+  // We don't need "Enabled by default" and "Enabled" at the same time
+  if Cardinal(Self) and Cardinal(GroupEnabledByDefault) <> 0 then
+    FilteredAttributes := Cardinal(Self) and not Cardinal(GroupEnabled)
+  else
+    FilteredAttributes := Cardinal(Self);
+
+  SetLength(Strings, GROUP_STATE_COUNT);
+  StrInd := 0;
+  for StateInd := 1 to GROUP_STATE_COUNT do
+    if FilteredAttributes and Cardinal(StateValues[StateInd]) =
+      Cardinal(StateValues[StateInd]) then
+    begin
+      Strings[StrInd] := StateStrings[StateInd];
+      Inc(StrInd);
+    end;
+  SetLength(Strings, StrInd);
+  Result := String.Join(', ', Strings);
+end;
+
 { TPrivilegeHelper }
+
+function TPrivilegeHelper.AttributesContain(Flag: Cardinal): Boolean;
+begin
+  Result := Self.Attributes and Flag = Flag;
+end;
 
 function TPrivilegeHelper.AttributesToDetailedString: String;
 begin
@@ -807,14 +850,21 @@ const
 var
   Strings: array of string;
   FlagInd, StrInd: Integer;
+  FilteredAttributes: Cardinal;
 begin
   if Self.Attributes = 0 then
     Exit('Disabled');
 
+  // We don't need "Enabled by default" and "Enabled" at the same time
+  if Self.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT <> 0 then
+    FilteredAttributes := Self.Attributes and not SE_PRIVILEGE_ENABLED
+  else
+    FilteredAttributes := Self.Attributes;
+
   SetLength(Strings, PRIV_FLAGS_COUNT);
   StrInd := 0;
   for FlagInd := 1 to PRIV_FLAGS_COUNT do
-    if Self.Attributes and FlagValues[FlagInd] = FlagValues[FlagInd] then
+    if FilteredAttributes and FlagValues[FlagInd] = FlagValues[FlagInd] then
     begin
       Strings[StrInd] := FlagStrings[FlagInd];
       Inc(StrInd);

@@ -51,7 +51,7 @@ type
   public
     property Items: TListItemsEx read GetItems write SetItems;
   published
-    property ColoringItems: Boolean read FColoringItems write SetItemsColoring;
+    property ColoringItems: Boolean read FColoringItems write SetItemsColoring default False;
   end;
 
 procedure Register;

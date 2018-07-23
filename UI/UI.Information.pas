@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.SessionComboBox, TU.WtsApi;
+  UI.SessionComboBox, UI.ListViewEx, TU.WtsApi;
 
 type
   TInfoDialog = class(TForm)
@@ -17,10 +17,10 @@ type
     StaticUser: TStaticText;
     EditUser: TEdit;
     ButtonClose: TButton;
-    ListViewGroups: TListView;
-    ListViewPrivileges: TListView;
+    ListViewGroups: TListViewEx;
+    ListViewPrivileges: TListViewEx;
     TabRestricted: TTabSheet;
-    ListViewRestricted: TListView;
+    ListViewRestricted: TListViewEx;
     StaticObjAddr: TStaticText;
     EditObjAddr: TEdit;
     StaticSession: TStaticText;
@@ -48,6 +48,7 @@ type
     procedure BtnSetSessionClick(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure SetStaleColor(Sender: TObject);
   private
     Token: TToken;
     procedure ConfirmTokenClose(Sender: TObject);
@@ -66,6 +67,13 @@ uses
 
 {$R *.dfm}
 
+const
+  clStale: TColor = $F0E4E4;
+  clEnabledByDefault: TColor = $C0F0C0;
+  clEnabled: TColor = $E0F0E0;
+  clUseForDenyOnly: TColor = $E0E0F0;
+  clIntegrity: TColor = $F0E0E0;
+
 procedure TInfoDialog.DoCloseForm(Sender: TObject);
 begin
   Close;
@@ -73,14 +81,12 @@ end;
 
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
+  ComboSession.Color := clWindow;
   try
     Token.Session := ComboSession.SelectedSession;
   except
-    on Exception do
-    begin
-      ChangedSession(Token);
-      raise;
-    end;
+    ChangedSession(Token);
+    raise;
   end;
 end;
 
@@ -90,6 +96,7 @@ const
   IndexToIntegrity: array [0 .. 5] of TTokenIntegrityLevel = (ilUntrusted,
     ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
 begin
+  ComboIntegrity.Color := clWindow;
   try
     if ComboIntegrity.ItemIndex <> -1 then
       Token.Integrity := IndexToIntegrity[ComboIntegrity.ItemIndex]
@@ -97,11 +104,8 @@ begin
       Token.Integrity := TTokenIntegrityLevel(StrToIntEx(ComboIntegrity.Text,
         'integrity level'));
   except
-    on Exception do
-    begin
-      ChangedIntegrity(Token);
-      raise;
-    end;
+    ChangedIntegrity(Token);
+    raise;
   end;
 end;
 
@@ -217,7 +221,17 @@ begin
           Caption := SecurityIdentifier.ToString
         else
           Caption := SecurityIdentifier.SID;
-        SubItems.Add(Attributes.ToString);
+        SubItems.Add(Attributes.StateToString);
+        SubItems.Add(Attributes.FlagsToString);
+
+        if Attributes.Contain(GroupEnabledByDefault) then
+          Color := clEnabledByDefault
+        else if Attributes.Contain(GroupEnabled) then
+          Color := clEnabled
+        else if Attributes.Contain(GroupUforDenyOnly) then
+          Color := clUseForDenyOnly
+        else if Attributes.Contain(GroupIntegrityEnabled) then
+          Color := clIntegrity;
       end;
     end;
   ListViewGroups.Items.EndUpdate;
@@ -236,7 +250,15 @@ begin
           Caption := SecurityIdentifier.ToString
         else
           Caption := SecurityIdentifier.SID;
-        SubItems.Add(Attributes.ToString);
+        SubItems.Add(Attributes.StateToString);
+        SubItems.Add(Attributes.FlagsToString);
+
+        if Attributes.Contain(GroupEnabledByDefault) then
+          Color := clEnabledByDefault
+        else if Attributes.Contain(GroupEnabled) then
+          Color := clEnabled
+        else if Attributes.Contain(GroupUforDenyOnly) then
+          Color := clUseForDenyOnly;
       end;
     end;
   ListViewRestricted.Items.EndUpdate;
@@ -329,9 +351,21 @@ begin
         Caption := Name;
         SubItems.Add(Value[i].AttributesToString);
         SubItems.Add(Value[i].Description);
+
+        if Value[i].AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+          Color := clEnabledByDefault
+        else if Value[i].AttributesContain(SE_PRIVILEGE_ENABLED) then
+          Color := clEnabled
+        else if Value[i].Attributes = 0 then
+          Color := clUseForDenyOnly;
       end;
     end;
   ListViewPrivileges.Items.EndUpdate;
+end;
+
+procedure TInfoDialog.SetStaleColor(Sender: TObject);
+begin
+  (Sender as TComboBox).Color := clStale;
 end;
 
 end.
