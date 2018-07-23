@@ -46,9 +46,6 @@ type
     constructor Create(AOwner: TComponent; Token: TToken); reintroduce;
   private
     Token: TToken;
-    function GetAppName: PWideChar;
-    function GetCmd: PWideChar;
-    function GetDir: PWideChar;
     function GetStartupInfo: TStartupInfoW;
     function GetFlags: Cardinal;
     function GetLogonFlags: Cardinal;
@@ -81,10 +78,23 @@ function CreateProcessWithTokenW(hToken: THandle; dwLogonFlags: Cardinal;
 procedure TRunDialog.ButtonAsUserClick(Sender: TObject);
 var
   PI: TProcessInformation;
+  AppName, Cmd, Dir: PWideChar;
 begin
+  AppName := nil;
+  if CheckBoxAppName.Checked then
+    AppName := PWideChar(EditAppName.Text);
+
+  Cmd := nil;
+  if CheckBoxCmd.Checked then
+    Cmd := PWideChar(EditCmd.Text);
+
+  Dir := nil;
+  if CheckBoxDirectory.Checked then
+    Dir := PWideChar(EditDirectory.Text);
+
   FillChar(PI, SizeOf(PI), 0);
-  Win32Check(CreateProcessAsUser(Token.Handle, GetAppName, GetCmd, nil, nil,
-    CheckBoxInherit.Checked, GetFlags, nil, GetDir, GetStartupInfo, PI));
+  Win32Check(CreateProcessAsUser(Token.Handle, AppName, Cmd, nil, nil,
+    CheckBoxInherit.Checked, GetFlags, nil, Dir, GetStartupInfo, PI));
 
   CloseHandle(PI.hProcess);
   CloseHandle(PI.hThread);
@@ -93,10 +103,23 @@ end;
 procedure TRunDialog.ButtonWithTokenClick(Sender: TObject);
 var
   PI: TProcessInformation;
+  AppName, Cmd, Dir: PWideChar;
 begin
+  AppName := nil;
+  if CheckBoxAppName.Checked then
+    AppName := PWideChar(EditAppName.Text);
+
+  Cmd := nil;
+  if CheckBoxCmd.Checked then
+    Cmd := PWideChar(EditCmd.Text);
+
+  Dir := nil;
+  if CheckBoxDirectory.Checked then
+    Dir := PWideChar(EditDirectory.Text);
+
   FillChar(PI, SizeOf(PI), 0);
-  Win32Check(CreateProcessWithTokenW(Token.Handle, GetLogonFlags, GetAppName,
-    GetCmd, GetFlags, nil, GetDir, GetStartupInfo, PI));
+  Win32Check(CreateProcessWithTokenW(Token.Handle, GetLogonFlags, AppName,
+    Cmd, GetFlags, nil, Dir, GetStartupInfo, PI));
 
   CloseHandle(PI.hProcess);
   CloseHandle(PI.hThread);
@@ -139,30 +162,6 @@ begin
   SHAutoComplete(EditAppName.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditCmd.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDirectory.Handle, SHACF_FILESYS_DIRS);
-end;
-
-function TRunDialog.GetAppName: PWideChar;
-begin
-  if CheckBoxAppName.Checked then
-    Result := PWideChar(EditAppName.Text)
-  else
-    Result := nil;
-end;
-
-function TRunDialog.GetCmd: PWideChar;
-begin
-  if CheckBoxCmd.Checked then
-    Result := PWideChar(EditCmd.Text)
-  else
-    Result := nil;
-end;
-
-function TRunDialog.GetDir: PWideChar;
-begin
-  if CheckBoxDirectory.Checked then
-    Result := PWideChar(EditDirectory.Text)
-  else
-    Result := nil;
 end;
 
 function TRunDialog.GetFlags: Cardinal;
