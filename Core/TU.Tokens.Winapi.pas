@@ -68,6 +68,12 @@ type
   end;
   PTokenGroups = ^TTokenGroups;
 
+  TTokenPrivileges = record
+    PrivilegeCount: Integer;
+    Privileges: array[Byte] of TLUIDAndAttributes;
+  end;
+  PTokenPrivileges = ^TTokenPrivileges;
+
   TSIDAndAttributesHash = record
     const SID_HASH_SIZE = 32;
   var
@@ -97,6 +103,11 @@ type
 function GetTokenInformation(TokenHandle: THandle;
   TokenInformationClass: TTokenInformationClass; TokenInformation: Pointer;
   TokenInformationLength: Cardinal; var ReturnLength: Cardinal): LongBool;
+  stdcall; external advapi32;
+
+function AdjustTokenPrivileges(TokenHandle: THandle; DisableAllPrivileges:
+  LongBool; NewState: PTokenPrivileges; BufferLength: Cardinal;
+  PreviousState: PTokenPrivileges; ReturnLength: PCardinal): LongBool;
   stdcall; external advapi32;
 
 function SetTokenInformation(TokenHandle: THandle;

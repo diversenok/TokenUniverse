@@ -61,6 +61,9 @@ type
   end;
 
   TPrivilegeArray = array of TPrivilege;
+  TPrivilegeLUIDArray = array of TLargeInteger;
+
+  TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
   TTokenSourceHelper = record helper for TTokenSource
     function ToString: String;
@@ -218,10 +221,15 @@ type
     var OnCaptionChange: TNotifyEventHandler;
     var OnSessionChange: TNotifyEventHandler;
     var OnIntegrityChange: TNotifyEventHandler;
+    var OnPrivilegesChange: TNotifyEventHandler;
 
     { Actions }
 
     function SendHandleToProcess(PID: Cardinal): NativeUInt;
+    procedure PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
+      Action: TPrivilegeAdjustAction); overload;
+    procedure PrivilegeAdjust(Privilege: TLargeInteger;
+      Action: TPrivilegeAdjustAction); overload;
   end;
 
 const
@@ -440,8 +448,8 @@ begin
   with Result.CopyResult(QueryVariableBuffer(TokenPrivileges)) do
     if IsValid then
     begin
+      Buffer := Value;
       try
-        Buffer := Value;
         {$R-}
         SetLength(Result.Value, Buffer.PrivilegeCount);
         for i := 0 to Buffer.PrivilegeCount - 1 do
@@ -524,6 +532,46 @@ begin
   Result := hToken <> 0;
 end;
 
+procedure TToken.PrivilegeAdjust(Privilege: TLargeInteger;
+  Action: TPrivilegeAdjustAction);
+var
+  PrivArray: TPrivilegeLUIDArray;
+begin
+  SetLength(PrivArray, 1);
+  PrivArray[0] := Privilege;
+  PrivilegeAdjust(PrivArray, Action);
+end;
+
+procedure TToken.PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
+  Action: TPrivilegeAdjustAction);
+const
+  ActionToAttribute: array [TPrivilegeAdjustAction] of Cardinal =
+    (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
+var
+  Buffer: PTokenPrivileges;
+  BufferSize: Cardinal;
+  i: integer;
+begin
+  BufferSize := SizeOf(Cardinal) + SizeOf(TLUIDAndAttributes) *
+    Length(PrivilegeArray);
+
+  Buffer := AllocMem(BufferSize);
+  try
+    Buffer.PrivilegeCount := Length(PrivilegeArray);
+    for i := 0 to High(PrivilegeArray) do
+    begin
+      Buffer.Privileges[i].Luid := PrivilegeArray[i];
+      Buffer.Privileges[i].Attributes := ActionToAttribute[Action];
+    end;
+
+    Win32Check(AdjustTokenPrivileges(hToken, False, Buffer, BufferSize, nil,
+      nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
+  finally
+    FreeMem(Buffer);
+  end;
+  OnPrivilegesChange.Involve(Self);
+end;
+
 function TToken.QueryGroups(InfoClass: TTokenInformationClass):
   CanFail<TGroupArray>;
 var
@@ -533,8 +581,8 @@ begin
   with Result.CopyResult(QueryVariableBuffer(InfoClass)) do
     if IsValid then
     begin
+      Buffer := Value;
       try
-        Buffer := Value;
         {$R-}
         SetLength(Result.Value, Buffer.GroupCount);
         for i := 0 to Buffer.GroupCount - 1 do

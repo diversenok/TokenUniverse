@@ -380,12 +380,20 @@ object InfoDialog: TInfoDialog
           item
             Caption = 'Description'
             Width = 220
+          end
+          item
+            Alignment = taCenter
+            Caption = 'LUID'
+            Width = 40
           end>
         GridLines = True
+        MultiSelect = True
         ReadOnly = True
         RowSelect = True
+        PopupMenu = PrivilegePopup
         TabOrder = 0
         ViewStyle = vsReport
+        OnContextPopup = ListViewPrivilegesContextPopup
         ColoringItems = True
       end
     end
@@ -451,5 +459,30 @@ object InfoDialog: TInfoDialog
   object ImageList: TImageList
     Left = 319
     Top = 235
+  end
+  object PrivilegePopup: TPopupMenu
+    Left = 247
+    Top = 235
+    object MenuPrivEnable: TMenuItem
+      Caption = 'Enable'
+      ShortCut = 16453
+      OnClick = ActionPrivilegeEnable
+    end
+    object MenuPrivDisable: TMenuItem
+      Caption = 'Disable'
+      ShortCut = 16452
+      OnClick = ActionPrivilegeDisable
+    end
+    object MenuPrivRemove: TMenuItem
+      Caption = 'Remove'
+      ShortCut = 46
+      OnClick = ActionPrivilegeRemove
+    end
+    object MenuPrivSelectAll: TMenuItem
+      Caption = 'Select All'
+      ShortCut = 16449
+      Visible = False
+      OnClick = ActionPrivilegeSelectAll
+    end
   end
 end
