@@ -568,8 +568,8 @@ begin
       nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
   finally
     FreeMem(Buffer);
+    OnPrivilegesChange.Involve(Self);
   end;
-  OnPrivilegesChange.Involve(Self);
 end;
 
 function TToken.QueryGroups(InfoClass: TTokenInformationClass):
@@ -670,8 +670,9 @@ begin
       SizeOf(TSIDAndAttributes)), SetterMessage(TokenIntegrityLevel));
   finally
     FreeMem(mandatoryLabel.Sid);
-    OnIntegrityChange.Involve(Self);
   end;
+  OnIntegrityChange.Involve(Self);
+  OnPrivilegesChange.Involve(Self); // Integrity can disable privileges
 end;
 
 procedure TToken.SetSession(const Value: Cardinal);

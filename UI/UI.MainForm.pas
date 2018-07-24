@@ -110,6 +110,7 @@ end;
 
 procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
 begin
+  // TODO: An option to grab maximum access forsibly
   Frame.AddToken(TToken.CreateDuplicateHandle(Frame.GetSelectedToken, 0, True));
 end;
 

@@ -95,7 +95,6 @@ end;
 
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
-  ComboSession.Color := clWindow;
   try
     Token.Session := ComboSession.SelectedSession;
   except
@@ -133,7 +132,6 @@ const
   IndexToIntegrity: array [0 .. 5] of TTokenIntegrityLevel = (ilUntrusted,
     ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
 begin
-  ComboIntegrity.Color := clWindow;
   try
     if ComboIntegrity.ItemIndex <> -1 then
       Token.Integrity := IndexToIntegrity[ComboIntegrity.ItemIndex]
@@ -157,6 +155,7 @@ procedure TInfoDialog.ChangedIntegrity(Sender: TObject);
 var
   index: integer;
 begin
+  ComboIntegrity.Color := clWindow;
   ComboIntegrity.Items.BeginUpdate;
   ComboIntegrity.Clear;
 
@@ -215,6 +214,7 @@ end;
 
 procedure TInfoDialog.ChangedSession(Sender: TObject);
 begin
+  ComboSession.Color := clWindow;
   ComboSession.Items.BeginUpdate;
 
   with Token.TryGetSession do

@@ -42,8 +42,10 @@ resourcestring
     'have SeTcbPrivilege and `Adjust SessionId` access right for the token.';
   SETTER_INTEGRITY = 'To raise the integrity level of a token you need to ' +
     'have SeTcbPrivilege.';
-  SETTER_PRIVILEGES = 'You need to have `Adjust privileges` access right for ' +
-    'the token.';
+  SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
+    'right for the token.';
+  SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
+   ' integrity level of the token is too small.';
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
@@ -85,9 +87,6 @@ begin
   begin
     if E.ErrorOrigin = SetterMessage(TokenSessionId) then
       Exit(SETTER_SESSION);
-
-    if E.ErrorOrigin = 'AdjustTokenPrivileges' then
-      Exit(SETTER_PRIVILEGES);
   end;
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
@@ -97,6 +96,15 @@ begin
 
     if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
       Exit(SETTER_INTEGRITY);
+  end;
+
+  if E.ErrorOrigin = 'AdjustTokenPrivileges' then
+  begin
+    if E.ErrorCode = ERROR_ACCESS_DENIED then
+      Exit(SETTER_PRIVILEGES_ACCESS);
+
+    if E.ErrorCode = ERROR_NOT_ALL_ASSIGNED then
+      Exit(SETTER_PRIVILEGES_OTHER);
   end;
 end;
 
