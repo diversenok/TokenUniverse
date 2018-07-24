@@ -144,6 +144,10 @@
         </DCCReference>
         <DCCReference Include="UI\UI.SessionComboBox.pas"/>
         <DCCReference Include="UI\UI.ListViewEx.pas"/>
+        <DCCReference Include="UI\UI.Restrict.pas">
+            <Form>DialogRestrictToken</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

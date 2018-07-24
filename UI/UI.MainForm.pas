@@ -79,6 +79,7 @@ type
     procedure FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
       var S: string);
     procedure ActionWTSQuery(Sender: TObject);
+    procedure ActionRestrict(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -92,7 +93,7 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch,
-  UI.SessionDialog;
+  UI.SessionDialog, UI.Restrict;
 
 {$R *.dfm}
 
@@ -140,6 +141,11 @@ var
 begin
   if InputQuery('Rename token', 'New token name: ', NewName) then
     Frame.RenameToken(NewName, Frame.ListViewTokens.Selected);
+end;
+
+procedure TFormMain.ActionRestrict(Sender: TObject);
+begin
+  TDialogRestrictToken.CreateFromToken(Self, Frame.GetSelectedToken);
 end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);

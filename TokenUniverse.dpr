@@ -20,6 +20,7 @@ uses
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.SessionDialog in 'UI\UI.SessionDialog.pas' {SessionDialog},
+  UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
   UI.SessionComboBox in 'UI\UI.SessionComboBox.pas',
   UI.ListViewEx in 'UI\UI.ListViewEx.pas';
 

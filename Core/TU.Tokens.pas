@@ -329,6 +329,7 @@ begin
   if hToken <> 0 then
   try
     CloseHandle(hToken);
+    hToken := 0;
   except
     ; // destructors should always succeed
   end;

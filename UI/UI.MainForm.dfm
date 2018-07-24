@@ -413,6 +413,7 @@ object FormMain: TFormMain
       Caption = 'Create restricted token'
       Enabled = False
       ShortCut = 16466
+      OnClick = ActionRestrict
     end
     object TokenOpenLinked: TMenuItem
       Caption = 'Open linked token'

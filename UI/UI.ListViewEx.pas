@@ -55,9 +55,9 @@ type
       Stage: TCustomDrawStage): Boolean; override;
     function IsCustomDrawn(Target: TCustomDrawTarget; Stage: TCustomDrawStage):
       Boolean; override;
-    procedure Clear; override;
   public
     property Items: TListItemsEx read GetItems write SetItems;
+    procedure Clear; override;
   published
     property ColoringItems: Boolean read FColoringItems write SetItemsColoring default False;
   end;
