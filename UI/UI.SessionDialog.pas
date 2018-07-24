@@ -13,10 +13,10 @@ type
     ButtonCancel: TButton;
     ButtonOK: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
-    constructor Create(AOwner: TComponent); override;
     class function Execute(AOwner: TComponent): Cardinal;
   end;
 
@@ -28,12 +28,6 @@ implementation
 {$R *.dfm}
 
 { TSessionDialog }
-
-constructor TSessionDialog.Create(AOwner: TComponent);
-begin
-  inherited;
-  SessionCombo.RefreshSessionList;
-end;
 
 class function TSessionDialog.Execute(AOwner: TComponent): Cardinal;
 begin
@@ -49,6 +43,11 @@ end;
 procedure TSessionDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
+end;
+
+procedure TSessionDialog.FormCreate(Sender: TObject);
+begin
+  SessionCombo.RefreshSessionList;
 end;
 
 end.

@@ -15,6 +15,7 @@ object SessionDialog: TSessionDialog
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
+  OnCreate = FormCreate
   DesignSize = (
     255
     66)
@@ -28,7 +29,6 @@ object SessionDialog: TSessionDialog
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
     Text = 'Unable to query. Insert it manually'
-    ExplicitWidth = 161
   end
   object ButtonCancel: TButton
     Left = 8
@@ -40,7 +40,6 @@ object SessionDialog: TSessionDialog
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
-    ExplicitTop = 37
   end
   object ButtonOK: TButton
     Left = 174
@@ -52,7 +51,5 @@ object SessionDialog: TSessionDialog
     Default = True
     ModalResult = 1
     TabOrder = 2
-    ExplicitLeft = 94
-    ExplicitTop = 37
   end
 end

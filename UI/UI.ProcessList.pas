@@ -190,9 +190,8 @@ begin
     end;
   finally
     FreeMem(Buffer);
+    ImageList.EndUpdate;
   end;
-
-  ImageList.EndUpdate;
 end;
 
 procedure TProcessListDialog.ReloadProcessList(Sender: TObject);
@@ -225,8 +224,11 @@ begin
         Break;
       end;
 
-  ReloadProcessIcons;
-  SearchBoxChange(Sender);
+  try
+    ReloadProcessIcons;
+  finally
+    SearchBoxChange(Sender);
+  end;
 end;
 
 procedure TProcessListDialog.SearchBoxChange(Sender: TObject);

@@ -41,7 +41,7 @@ type
   end;
 
 function WTSQueryUserToken(SessionId: Cardinal; out hToken: THandle): LongBool;
-  stdcall; external wtsapi delayed;
+  stdcall; external wtsapi;
 
 implementation
 
@@ -77,20 +77,20 @@ type
     WTSSessionAddressV4, WTSIsRemoteSession);
 
 function WTSOpenServerW(ServerName: PWideChar): THandle; stdcall;
-  external wtsapi delayed;
+  external wtsapi;
 
 procedure WTSCloseServer(hServer: THandle); stdcall;
-  external wtsapi delayed;
+  external wtsapi;
 
 function WTSEnumerateSessionsW(hServer: THandle; Reserved: Cardinal;
   Version: Cardinal; out SessionInfo: PWtsSessionInfoArrayW;
-  out Count: Cardinal): LongBool; stdcall; external wtsapi delayed;
+  out Count: Cardinal): LongBool; stdcall; external wtsapi;
 
 function WTSQuerySessionInformationW(hServer: THandle; SessionId: Cardinal;
   WTSInfoClass: TWtsInfoClass; out Buffer: PWideChar;
-  out BytesReturne: Cardinal): LongBool; stdcall; external wtsapi delayed;
+  out BytesReturne: Cardinal): LongBool; stdcall; external wtsapi;
 
-procedure WTSFreeMemory(Memory: Pointer); stdcall; external wtsapi delayed;
+procedure WTSFreeMemory(Memory: Pointer); stdcall; external wtsapi;
 
 { TSessionList }
 

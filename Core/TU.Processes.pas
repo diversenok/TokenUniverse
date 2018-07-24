@@ -34,7 +34,7 @@ type
 
 function QueryFullProcessImageNameW(hProcess: THandle; dwFlags: Cardinal;
   lpExeName: PWideChar; var lpdwSize: Cardinal): LongBool; stdcall;
-  external 'kernel32.dll' delayed;
+  external 'kernel32.dll';
 
 implementation
 
