@@ -24,9 +24,7 @@ type
     procedure DoCloseForm(Sender: TObject);
   private
     Token: TToken;
-    procedure ConfirmTokenClose(Sender: TObject);
-    procedure ChangedPrivileges(Sender: TObject);
-    procedure ChangedGroups(Sender: TObject);
+    procedure ConfirmTokenClose(Sender: TToken);
   public
     procedure Refresh;
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -41,17 +39,7 @@ uses
 
 { TDialogRestrictToken }
 
-procedure TDialogRestrictToken.ChangedGroups(Sender: TObject);
-begin
-
-end;
-
-procedure TDialogRestrictToken.ChangedPrivileges(Sender: TObject);
-begin
-
-end;
-
-procedure TDialogRestrictToken.ConfirmTokenClose(Sender: TObject);
+procedure TDialogRestrictToken.ConfirmTokenClose(Sender: TToken);
 const
   CONFIRM_CLOSE = 'This token has an opened "Create restricted token" ' +
     'dialog window for it. Do you want close it?';
@@ -79,7 +67,7 @@ end;
 procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  Token.OnPrivilegesChange.Delete(ChangedPrivileges);
+  Token.OnCanClose.Add(ConfirmTokenClose);
   FormMain.OnMainFormClose.Delete(DoCloseForm);
   Action := caFree;
 end;
@@ -87,14 +75,13 @@ end;
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 begin
   FormMain.OnMainFormClose.Add(DoCloseForm);
-  Token.OnPrivilegesChange.Add(ChangedPrivileges);
+  Token.OnCanClose.Add(ConfirmTokenClose);
   Refresh;
 end;
 
 procedure TDialogRestrictToken.Refresh;
 begin
-  ChangedPrivileges(Token);
-  ChangedGroups(Token);
+  //
 end;
 
 end.

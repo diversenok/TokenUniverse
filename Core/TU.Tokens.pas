@@ -217,11 +217,16 @@ type
     // TODO: class 23 & 24 Virtualization
     property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25
 
-    var OnClose: TNotifyEventHandler;
-    var OnCaptionChange: TNotifyEventHandler;
-    var OnSessionChange: TNotifyEventHandler;
-    var OnIntegrityChange: TNotifyEventHandler;
-    var OnPrivilegesChange: TNotifyEventHandler;
+    /// <summary>
+    ///  Asks all event listeners for confirmation before closing the token.
+    ///  Any event listener can call <c>Abort;</c> to prevent further actions.
+    /// </summary>
+    var OnCanClose: TEventHandler<TToken>;
+    var OnClose: TEventHandler<TToken>;
+    var OnCaptionChange: TEventHandler<String>;
+    var OnSessionChange: TEventHandler<CanFail<Cardinal>>;
+    var OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
+    var OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
 
     { Actions }
 
@@ -325,6 +330,8 @@ end;
 destructor TToken.Destroy;
 begin
   // The event listener can abort this operation by raising EAbort
+  OnCanClose.Involve(Self);
+
   OnClose.Involve(Self);
   if hToken <> 0 then
   try
@@ -569,7 +576,7 @@ begin
       nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
   finally
     FreeMem(Buffer);
-    OnPrivilegesChange.Involve(Self);
+    OnPrivilegesChange.Involve(GetPrivileges);
   end;
 end;
 
@@ -651,7 +658,7 @@ end;
 procedure TToken.SetCaption(const Value: String);
 begin
   FCaption := Value;
-  OnCaptionChange.Involve(Self);
+  OnCaptionChange.Involve(FCaption);
 end;
 
 procedure TToken.SetIntegrity(const Value: TTokenIntegrityLevel);
@@ -672,14 +679,14 @@ begin
   finally
     FreeMem(mandatoryLabel.Sid);
   end;
-  OnIntegrityChange.Involve(Self);
-  OnPrivilegesChange.Involve(Self); // Integrity can disable privileges
+  OnIntegrityChange.Involve(TryGetIntegrity);
+  OnPrivilegesChange.Involve(GetPrivileges); // Integrity can disable privileges
 end;
 
 procedure TToken.SetSession(const Value: Cardinal);
 begin
   TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
-  OnSessionChange.Involve(Self);
+  OnSessionChange.Involve(TryGetSession);
 end;
 
 { TTokenAccess }

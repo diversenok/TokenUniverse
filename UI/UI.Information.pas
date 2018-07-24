@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.SessionComboBox, UI.ListViewEx, TU.WtsApi;
+  UI.SessionComboBox, UI.ListViewEx, TU.Common, TU.WtsApi;
 
 type
   TInfoDialog = class(TForm)
@@ -63,11 +63,11 @@ type
   private
     Token: TToken;
     Privileges: TPrivilegeArray;
-    procedure ConfirmTokenClose(Sender: TObject);
-    procedure ChangedCaption(Sender: TObject);
-    procedure ChangedIntegrity(Sender: TObject);
-    procedure ChangedSession(Sender: TObject);
-    procedure ChangedPrivileges(Sender: TObject);
+    procedure ConfirmTokenClose(Sender: TToken);
+    procedure ChangedCaption(NewCaption: String);
+    procedure ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
+    procedure ChangedSession(NewSession: CanFail<Cardinal>);
+    procedure ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
     function GetSelectedPrivileges: TPrivilegeLUIDArray;
     procedure Refresh;
   public
@@ -77,7 +77,7 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, TU.Common;
+  System.UITypes, UI.MainForm;
 
 {$R *.dfm}
 
@@ -98,7 +98,7 @@ begin
   try
     Token.Session := ComboSession.SelectedSession;
   except
-    ChangedSession(Token);
+    ChangedSession(Token.TryGetSession);
     raise;
   end;
 end;
@@ -139,19 +139,19 @@ begin
       Token.Integrity := TTokenIntegrityLevel(StrToIntEx(ComboIntegrity.Text,
         'integrity level'));
   except
-    ChangedIntegrity(Token);
+    ChangedIntegrity(Token.TryGetIntegrity);
     raise;
   end;
 end;
 
-procedure TInfoDialog.ChangedCaption(Sender: TObject);
+procedure TInfoDialog.ChangedCaption(NewCaption: String);
 const
   Title = 'Token Information for "%s"';
 begin
-  Caption := Format(Title, [Token.Caption]);
+  Caption := Format(Title, [NewCaption]);
 end;
 
-procedure TInfoDialog.ChangedIntegrity(Sender: TObject);
+procedure TInfoDialog.ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
 var
   index: integer;
 begin
@@ -166,7 +166,7 @@ begin
   ComboIntegrity.Items.Add('High (0x3000)');
   ComboIntegrity.Items.Add('System (0x4000)');
 
-  with Token.TryGetIntegrity do
+  with NewIntegrity do
     if IsValid then
     begin
       if not Value.Level.IsWellKnown then
@@ -212,12 +212,12 @@ begin
   ComboIntegrity.Items.EndUpdate;
 end;
 
-procedure TInfoDialog.ChangedSession(Sender: TObject);
+procedure TInfoDialog.ChangedSession(NewSession: CanFail<Cardinal>);
 begin
   ComboSession.Color := clWindow;
   ComboSession.Items.BeginUpdate;
 
-  with Token.TryGetSession do
+  with NewSession do
     if IsValid then
       ComboSession.SelectedSession := Value
     else
@@ -299,13 +299,13 @@ begin
   ListViewRestricted.Items.EndUpdate(True);
 end;
 
-procedure TInfoDialog.ChangedPrivileges(Sender: TObject);
+procedure TInfoDialog.ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
 var
   i: integer;
 begin
   ListViewPrivileges.Items.BeginUpdate(True);
   ListViewPrivileges.Clear;
-  with Token.Privileges do
+  with NewPrivileges do
     if IsValid then
     begin
       TabPrivileges.Caption := Format('Privileges (%d)', [Length(Value)]);
@@ -332,7 +332,7 @@ begin
   ListViewPrivileges.Items.EndUpdate(True);
 end;
 
-procedure TInfoDialog.ConfirmTokenClose(Sender: TObject);
+procedure TInfoDialog.ConfirmTokenClose(Sender: TToken);
 const
   CONFIRM_CLOSE = 'This token has an opened information window. Do you want ' +
     'close it?';
@@ -358,7 +358,7 @@ begin
   Token.OnIntegrityChange.Delete(ChangedIntegrity);
   Token.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
-  Token.OnClose.Delete(ConfirmTokenClose);
+  Token.OnCanClose.Delete(ConfirmTokenClose);
   FormMain.OnMainFormClose.Delete(DoCloseForm);
   Action := caFree;
 end;
@@ -366,7 +366,7 @@ end;
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   FormMain.OnMainFormClose.Add(DoCloseForm);
-  Token.OnClose.Add(ConfirmTokenClose);
+  Token.OnCanClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnSessionChange.Add(ChangedSession);
   Token.OnIntegrityChange.Add(ChangedIntegrity);
@@ -406,11 +406,6 @@ procedure TInfoDialog.Refresh;
 begin
   ComboSession.RefreshSessionList;
 
-  ChangedCaption(Token);
-  ChangedIntegrity(Token);
-  ChangedSession(Token);
-  ChangedView(Token);
-
   EditObjAddr.Text := '0x' + IntToHex(Token.ObjAddress, 8);
   EditHandle.Text := '0x' + IntToHex(Token.Handle, -1);
 
@@ -426,7 +421,12 @@ begin
     if IsValid then
       EditElevation.Text := Value.ToString;
 
-  ChangedPrivileges(Token);
+  // TODO: Should we share the obtained information with other event listeners?
+  ChangedCaption(Token.Caption);
+  ChangedIntegrity(Token.TryGetIntegrity);
+  ChangedSession(Token.TryGetSession);
+  ChangedView(Token);
+  ChangedPrivileges(Token.Privileges);
 end;
 
 procedure TInfoDialog.SetStaleColor(Sender: TObject);

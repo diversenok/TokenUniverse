@@ -53,10 +53,6 @@ object DialogRestrictToken: TDialogRestrictToken
     object TabSheetSidRestict: TTabSheet
       Caption = 'SIDs to restrict'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         321
         224)
@@ -79,10 +75,6 @@ object DialogRestrictToken: TDialogRestrictToken
     object TabSheetPrivDelete: TTabSheet
       Caption = 'Privileges to delete'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         321
         224)
