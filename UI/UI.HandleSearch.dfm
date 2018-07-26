@@ -35,7 +35,7 @@ object FormHandleSearch: TFormHandleSearch
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     ExplicitWidth = 673
-    inherited ListViewTokens: TListView
+    inherited ListViewTokens: TListViewEx
       Width = 667
       Columns = <
         item

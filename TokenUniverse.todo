@@ -1,4 +1,7 @@
 {TODO : Event handlers should work for all TTokens with the same object address}
 {TODO -cUI : Hints everywhere}
-{TODO -cEnhancement : ImpersonateAnonymousToken}
-
+{TODO -cEnhancement :ImpersonateAnonymousToken
+ImpersonateLoggedOnUser
+ImpersonateSelf
+SetThreadToken}
+{TODO -cUI : Wait dialog}

@@ -7,7 +7,7 @@ object FrameTokenList: TFrameTokenList
   DesignSize = (
     750
     325)
-  object ListViewTokens: TListView
+  object ListViewTokens: TListViewEx
     Left = 3
     Top = 26
     Width = 744

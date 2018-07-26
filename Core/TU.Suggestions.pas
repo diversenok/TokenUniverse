@@ -45,7 +45,7 @@ resourcestring
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
     'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
-   ' integrity level of the token is too small.';
+   'integrity level of the token is too small.';
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin

@@ -45,7 +45,7 @@ object FormMain: TFormMain
     TabOrder = 1
     ExplicitTop = 32
     ExplicitHeight = 271
-    inherited ListViewTokens: TListView
+    inherited ListViewTokens: TListViewEx
       Height = 242
       PopupMenu = PopupMenu
       OnDblClick = FrameListViewTokensDblClick

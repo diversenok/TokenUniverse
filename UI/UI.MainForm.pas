@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, TU.Common, TU.Tokens,
   System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame, System.ImageList,
-  Vcl.ImgList, Vcl.AppEvnts;
+  Vcl.ImgList, Vcl.AppEvnts, UI.ListViewEx;
 
 type
   TFormMain = class(TForm)
@@ -220,7 +220,7 @@ end;
 procedure TFormMain.FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
   var S: string);
 begin
-  Frame.RenameToken(S, Item);
+  Frame.RenameToken(S, Item as TListItemEx);
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
