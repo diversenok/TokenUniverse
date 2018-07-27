@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.SessionComboBox, UI.ListViewEx, TU.Common, TU.WtsApi;
+  UI.ListViewEx, UI.Prototypes, TU.Common, TU.WtsApi;
 
 type
   TInfoDialog = class(TForm)
@@ -17,10 +17,10 @@ type
     StaticUser: TStaticText;
     EditUser: TEdit;
     ButtonClose: TButton;
-    ListViewGroups: TListViewEx;
-    ListViewPrivileges: TListViewEx;
+    ListViewGroups: TGroupListViewEx;
+    ListViewPrivileges: TPrivilegesListViewEx;
     TabRestricted: TTabSheet;
-    ListViewRestricted: TListViewEx;
+    ListViewRestricted: TGroupListViewEx;
     StaticObjAddr: TStaticText;
     EditObjAddr: TEdit;
     StaticSession: TStaticText;
@@ -62,13 +62,11 @@ type
     procedure ActionPrivilegeSelectAll(Sender: TObject);
   private
     Token: TToken;
-    Privileges: TPrivilegeArray;
     procedure ConfirmTokenClose(Sender: TToken);
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
     procedure ChangedSession(NewSession: CanFail<Cardinal>);
     procedure ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
-    function GetSelectedPrivileges: TPrivilegeLUIDArray;
     procedure Refresh;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -77,16 +75,9 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm;
+  System.UITypes, UI.MainForm, UI.Colors;
 
 {$R *.dfm}
-
-const
-  clStale: TColor = $F0E4E4;
-  clEnabledByDefault: TColor = $C0F0C0;
-  clEnabled: TColor = $E0F0E0;
-  clUseForDenyOnly: TColor = $E0E0F0;
-  clIntegrity: TColor = $F0E0E0;
 
 procedure TInfoDialog.DoCloseForm(Sender: TObject);
 begin
@@ -106,19 +97,19 @@ end;
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(GetSelectedPrivileges, paDisable);
+    Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paDisable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(GetSelectedPrivileges, paEnable);
+    Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paEnable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(GetSelectedPrivileges, paRemove);
+    Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paRemove);
 end;
 
 procedure TInfoDialog.ActionPrivilegeSelectAll(Sender: TObject);
@@ -212,6 +203,14 @@ begin
   ComboIntegrity.Items.EndUpdate;
 end;
 
+procedure TInfoDialog.ChangedPrivileges(
+  NewPrivileges: CanFail<TPrivilegeArray>);
+begin
+  with NewPrivileges do
+    if IsValid then
+      TabPrivileges.Caption := Format('Privileges (%d)', [Length(Value)]);
+end;
+
 procedure TInfoDialog.ChangedSession(NewSession: CanFail<Cardinal>);
 begin
   ComboSession.Color := clWindow;
@@ -230,8 +229,6 @@ begin
 end;
 
 procedure TInfoDialog.ChangedView(Sender: TObject);
-var
-  i: integer;
 begin
   with Token.User do
     if IsValid then
@@ -241,95 +238,8 @@ begin
       else
         EditUser.Text := Value.SID;
     end;
-
-  ListViewGroups.Items.BeginUpdate(True);
-  ListViewGroups.Clear;
-  with Token.Groups do
-    if IsValid then
-    begin
-      TabGroups.Caption := Format('Groups (%d)', [Length(Value)]);
-
-      for i := 0 to High(Value) do
-      with Value[i], ListViewGroups.Items.Add do
-      begin
-        if ComboBoxView.ItemIndex = 0 then
-          Caption := SecurityIdentifier.ToString
-        else
-          Caption := SecurityIdentifier.SID;
-        SubItems.Add(Attributes.StateToString);
-        SubItems.Add(Attributes.FlagsToString);
-
-        if Attributes.Contain(GroupEnabledByDefault) then
-          Color := clEnabledByDefault
-        else if Attributes.Contain(GroupEnabled) then
-          Color := clEnabled
-        else if Attributes.Contain(GroupUforDenyOnly) then
-          Color := clUseForDenyOnly
-        else if Attributes.Contain(GroupIntegrityEnabled) then
-          Color := clIntegrity;
-      end;
-    end;
-  ListViewGroups.Items.EndUpdate(True);
-
-  ListViewRestricted.Items.BeginUpdate(True);
-  ListViewRestricted.Clear;
-  with Token.RestrictedSids do
-    if IsValid then
-    begin
-      TabRestricted.Caption := Format('Restricted SIDs (%d)', [Length(Value)]);
-
-      for i := 0 to High(Value) do
-      with Value[i], ListViewRestricted.Items.Add do
-      begin
-        if ComboBoxView.ItemIndex = 0 then
-          Caption := SecurityIdentifier.ToString
-        else
-          Caption := SecurityIdentifier.SID;
-        SubItems.Add(Attributes.StateToString);
-        SubItems.Add(Attributes.FlagsToString);
-
-        if Attributes.Contain(GroupEnabledByDefault) then
-          Color := clEnabledByDefault
-        else if Attributes.Contain(GroupEnabled) then
-          Color := clEnabled
-        else if Attributes.Contain(GroupUforDenyOnly) then
-          Color := clUseForDenyOnly;
-      end;
-    end;
-  ListViewRestricted.Items.EndUpdate(True);
-end;
-
-procedure TInfoDialog.ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
-var
-  i: integer;
-begin
-  ListViewPrivileges.Items.BeginUpdate(True);
-  ListViewPrivileges.Clear;
-  with NewPrivileges do
-    if IsValid then
-    begin
-      TabPrivileges.Caption := Format('Privileges (%d)', [Length(Value)]);
-      Privileges := Value;
-
-      for i := 0 to High(Privileges) do
-      with Privileges[i], ListViewPrivileges.Items.Add do
-      begin
-        Caption := Name;
-        SubItems.Add(Privileges[i].AttributesToString);
-        SubItems.Add(Privileges[i].Description);
-        SubItems.Add(Privileges[i].Luid.ToString);
-
-        if Privileges[i].AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-          Color := clEnabledByDefault
-        else if Privileges[i].AttributesContain(SE_PRIVILEGE_ENABLED) then
-          Color := clEnabled
-        else if Privileges[i].Attributes = 0 then
-          Color := clUseForDenyOnly;
-      end;
-    end
-    else
-      SetLength(Privileges, 0);
-  ListViewPrivileges.Items.EndUpdate(True);
+  ListViewGroups.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
+  ListViewRestricted.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
 end;
 
 procedure TInfoDialog.ConfirmTokenClose(Sender: TToken);
@@ -366,6 +276,11 @@ end;
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   FormMain.OnMainFormClose.Add(DoCloseForm);
+
+  ListViewGroups.Token := Token;
+  ListViewPrivileges.Token := Token;
+  ListViewRestricted.Token := Token;
+
   Token.OnCanClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnSessionChange.Add(ChangedSession);
@@ -380,20 +295,6 @@ procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   if Key = VK_F5 then
     Refresh;
-end;
-
-function TInfoDialog.GetSelectedPrivileges: TPrivilegeLUIDArray;
-var
-  i, j: integer;
-begin
-  SetLength(Result, ListViewPrivileges.SelCount);
-  j := 0;
-  for i := 0 to ListViewPrivileges.Items.Count - 1 do
-    if ListViewPrivileges.Items[i].Selected then
-    begin
-      Result[j] := Privileges[i].Luid;
-      Inc(j);
-    end;
 end;
 
 procedure TInfoDialog.ListViewPrivilegesContextPopup(Sender: TObject;
@@ -426,7 +327,13 @@ begin
   ChangedIntegrity(Token.TryGetIntegrity);
   ChangedSession(Token.TryGetSession);
   ChangedView(Token);
-  ChangedPrivileges(Token.Privileges);
+  //TODO: It is now broken for groups, privileges, and restricted SIDs
+
+  TabGroups.Caption := Format('Groups (%d)', [ListViewGroups.Items.Count]);
+  TabPrivileges.Caption := Format('Privileges (%d)',
+    [ListViewPrivileges.Items.Count]);
+  TabRestricted.Caption := Format('Restricted SIDs (%d)',
+    [ListViewRestricted.Items.Count]);
 end;
 
 procedure TInfoDialog.SetStaleColor(Sender: TObject);

@@ -21,8 +21,9 @@ uses
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.SessionDialog in 'UI\UI.SessionDialog.pas' {SessionDialog},
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
-  UI.SessionComboBox in 'UI\UI.SessionComboBox.pas',
-  UI.ListViewEx in 'UI\UI.ListViewEx.pas';
+  UI.ListViewEx in 'UI\UI.ListViewEx.pas',
+  UI.Colors in 'UI\UI.Colors.pas',
+  UI.Prototypes in 'UI\UI.Prototypes.pas';
 
 {$R *.res}
 

@@ -114,6 +114,13 @@ type
     Origin: THandleItem;
     FCaption: String;
 
+    FOnCanClose: TEventHandler<TToken>;
+    FOnClose: TEventHandler<TToken>;
+    FOnCaptionChange: TEventHandler<String>;
+    FOnSessionChange: TEventHandler<CanFail<Cardinal>>;
+    FOnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
+    FOnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
+
     procedure SetCaption(const Value: String);
 
     /// <remarks> The bufer should be freed using FreeMem. </remarks>
@@ -221,12 +228,12 @@ type
     ///  Asks all event listeners for confirmation before closing the token.
     ///  Any event listener can call <c>Abort;</c> to prevent further actions.
     /// </summary>
-    var OnCanClose: TEventHandler<TToken>;
-    var OnClose: TEventHandler<TToken>;
-    var OnCaptionChange: TEventHandler<String>;
-    var OnSessionChange: TEventHandler<CanFail<Cardinal>>;
-    var OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
-    var OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
+    property OnCanClose: TEventHandler<TToken> read FOnCanClose;
+    property OnClose: TEventHandler<TToken> read FOnClose;
+    property OnCaptionChange: TEventHandler<String> read FOnCaptionChange;
+    property OnSessionChange: TEventHandler<CanFail<Cardinal>> read FOnSessionChange;
+    property OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>> read FOnIntegrityChange;
+    property OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>> read FOnPrivilegesChange;
 
     { Actions }
 

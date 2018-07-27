@@ -330,7 +330,7 @@ object InfoDialog: TInfoDialog
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      object ListViewGroups: TListViewEx
+      object ListViewGroups: TGroupListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -361,7 +361,7 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      object ListViewPrivileges: TListViewEx
+      object ListViewPrivileges: TPrivilegesListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -374,7 +374,7 @@ object InfoDialog: TInfoDialog
             Width = 180
           end
           item
-            Caption = 'Flags'
+            Caption = 'State'
             Width = 110
           end
           item
@@ -400,7 +400,7 @@ object InfoDialog: TInfoDialog
     object TabRestricted: TTabSheet
       Caption = 'Restricted SIDs'
       ImageIndex = 3
-      object ListViewRestricted: TListViewEx
+      object ListViewRestricted: TGroupListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -426,6 +426,7 @@ object InfoDialog: TInfoDialog
         TabOrder = 0
         ViewStyle = vsReport
         ColoringItems = True
+        Source = gsRestrictedSIDs
       end
     end
   end

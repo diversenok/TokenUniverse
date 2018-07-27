@@ -28,6 +28,7 @@ type
 
     /// <summary> Initializes the wrapper and data with zeros. </summary>
     procedure Init(Context: TObject = nil);
+    class function Fail: CanFail<ResultType>; static;
 
     /// <returns> The value if it is valid. </returns>
     /// <exception cref="EOSError">
@@ -40,6 +41,7 @@ type
     /// <returns> Self. </returns>
     function Succeed(ResultValue: ResultType): CanFail<ResultType>; overload;
     function Succeed: CanFail<ResultType>; overload;
+    class function SucceedWith(ResultValue: ResultType): CanFail<ResultType>; static;
 
     /// <summary> Checks and saves the last Win32 error. </summary>
     /// <returns>
@@ -223,6 +225,11 @@ begin
   Result := Src;
 end;
 
+class function CanFail<ResultType>.Fail: CanFail<ResultType>;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+end;
+
 function CanFail<ResultType>.GetErrorMessage: String;
 begin
   Result := ELocatedOSError.FormatErrorMessage(ErrorOrigin, ErrorCode);
@@ -253,6 +260,13 @@ function CanFail<ResultType>.Succeed: CanFail<ResultType>;
 begin
   IsValid := True;
   Result := Self;
+end;
+
+class function CanFail<ResultType>.SucceedWith(
+  ResultValue: ResultType): CanFail<ResultType>;
+begin
+  Result.IsValid := True;
+  Result.Value := ResultValue;
 end;
 
 function CanFail<ResultType>.Succeed(
