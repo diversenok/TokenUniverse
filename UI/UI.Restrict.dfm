@@ -5,6 +5,7 @@ object DialogRestrictToken: TDialogRestrictToken
   ClientHeight = 311
   ClientWidth = 337
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -27,6 +28,7 @@ object DialogRestrictToken: TDialogRestrictToken
     Caption = 'OK'
     Default = True
     TabOrder = 0
+    OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
     Left = 177
@@ -49,6 +51,34 @@ object DialogRestrictToken: TDialogRestrictToken
     TabOrder = 2
     object TabSheetSidDisable: TTabSheet
       Caption = 'SIDs to disable'
+      object ListViewDisableSID: TGroupListViewEx
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 315
+        Height = 218
+        Align = alClient
+        Checkboxes = True
+        Columns = <
+          item
+            Caption = 'SID'
+            Width = 220
+          end
+          item
+            Caption = 'State'
+            Width = 110
+          end
+          item
+            Caption = 'Flags'
+            Width = 120
+          end>
+        GridLines = True
+        ReadOnly = True
+        RowSelect = True
+        TabOrder = 0
+        ViewStyle = vsReport
+        ColoringItems = True
+      end
     end
     object TabSheetSidRestict: TTabSheet
       Caption = 'SIDs to restrict'
@@ -71,6 +101,35 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentFont = False
         TabOrder = 0
       end
+      object ListViewRestrictSID: TGroupListViewEx
+        AlignWithMargins = True
+        Left = 3
+        Top = 26
+        Width = 315
+        Height = 195
+        Margins.Top = 26
+        Align = alClient
+        Checkboxes = True
+        Columns = <
+          item
+            Caption = 'SID'
+            Width = 220
+          end
+          item
+            Caption = 'State'
+            Width = 110
+          end
+          item
+            Caption = 'Flags'
+            Width = 120
+          end>
+        GridLines = True
+        ReadOnly = True
+        RowSelect = True
+        TabOrder = 1
+        ViewStyle = vsReport
+        ColoringItems = True
+      end
     end
     object TabSheetPrivDelete: TTabSheet
       Caption = 'Privileges to delete'
@@ -92,6 +151,41 @@ object DialogRestrictToken: TDialogRestrictToken
         Font.Style = [fsBold]
         ParentFont = False
         TabOrder = 0
+      end
+      object ListViewPrivileges: TPrivilegesListViewEx
+        AlignWithMargins = True
+        Left = 3
+        Top = 26
+        Width = 315
+        Height = 195
+        Margins.Top = 26
+        Align = alClient
+        Checkboxes = True
+        Columns = <
+          item
+            Caption = 'Privilege name'
+            Width = 180
+          end
+          item
+            Caption = 'State'
+            Width = 110
+          end
+          item
+            Caption = 'Description'
+            Width = 220
+          end
+          item
+            Alignment = taCenter
+            Caption = 'LUID'
+            Width = 40
+          end>
+        GridLines = True
+        MultiSelect = True
+        ReadOnly = True
+        RowSelect = True
+        TabOrder = 1
+        ViewStyle = vsReport
+        ColoringItems = True
       end
     end
   end

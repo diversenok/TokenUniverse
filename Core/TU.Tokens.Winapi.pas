@@ -114,6 +114,12 @@ function SetTokenInformation(TokenHandle: THandle;
   TokenInformationClass: TTokenInformationClass; TokenInformation: Pointer;
   TokenInformationLength: Cardinal): LongBool; stdcall; external advapi32;
 
+function CreateRestrictedToken(ExistingTokenHandle: THandle; Flags: Cardinal;
+  DisableSidCount: Cardinal; SidsToDisable: PSIDAndAttributes;
+  DeletePrivilegeCount: Cardinal; PrivilegesToDelete: PLUIDAndAttributes;
+  RestrictedSidCount: Cardinal; SidsToRestrict: PSIDAndAttributes;
+  var NewTokenHandle: THandle): LongBool; stdcall; external advapi32;
+
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 function SetterMessage(InfoClass: TTokenInformationClass): String;
 

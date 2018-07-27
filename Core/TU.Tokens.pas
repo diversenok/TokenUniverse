@@ -94,7 +94,6 @@ type
 
   TTokenIntegrity = record
     SID: TSecurityIdentifier;
-    // TODO: Does TOKEN_MANDATORY_LABEL contain attributes?
     Level: TTokenIntegrityLevel;
     function ToString: String;
     function ToDetailedString: String;
@@ -184,10 +183,16 @@ type
 
     /// <summary>
     ///  Uses <c>WTSQueryUserToken</c> to obtain a token of the specified
-    //// session.
+    ///  session.
     /// </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateQueryWts(SessionID: Cardinal);
+
+    /// <summary> Uses <c>CreateRestrictedToken</c>. </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
+    constructor CreateRestricted(SrcToken: TToken; Flags: Cardinal;
+      SIDsToDisabe, SIDsToRestrict: TGroupArray;
+      PrivilegesToDelete: TPrivilegeArray);
 
     destructor Destroy; override;
     function IsValidToken: Boolean;
@@ -332,6 +337,20 @@ constructor TToken.CreateQueryWts(SessionID: Cardinal);
 begin
   Win32Check(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
   FCaption := Format('Token of session %d', [SessionID]);
+end;
+
+constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
+      SIDsToDisabe, SIDsToRestrict: TGroupArray;
+      PrivilegesToDelete: TPrivilegeArray);
+begin
+  // TODO: SIDsToDisabe & SIDsToRestrict
+  Win32Check(CreateRestrictedToken(SrcToken.hToken, Flags,
+    0, nil,
+    Length(PrivilegesToDelete), PLUIDAndAttributes(PrivilegesToDelete),
+    0, nil, hToken),
+    'CreateRestricted', SrcToken);
+
+  FCaption := 'Restricted ' + SrcToken.Caption;
 end;
 
 destructor TToken.Destroy;

@@ -29,7 +29,8 @@ type
     procedure UnsubscribeToken; override;
   public
     property Privileges: TPrivilegeArray read FPrivileges;
-    function SelectedPrivileges: TPrivilegeLUIDArray;    
+    function SelectedPrivileges: TPrivilegeLUIDArray;
+    function CheckedPrivileges: TPrivilegeArray;
   end;
 
   TGroupViewAs = (gvUser, gvSID);
@@ -52,6 +53,7 @@ type
   published
     property ViewAs: TGroupViewAs read FViewAs write SetViewAs default gvUser;
     property Source: TGroupSource read FSource write SetSource default gsGroups;
+    function CheckedGroups: TGroupArray;
   end;
 
   TSessionComboBox = class(TComboBox)
@@ -130,6 +132,18 @@ begin
   Items.EndUpdate(True);
 end;
 
+function TPrivilegesListViewEx.CheckedPrivileges: TPrivilegeArray;
+var
+  i: integer;
+begin
+  for i := 0 to Items.Count - 1 do
+    if Items[i].Checked then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := Privileges[i];
+    end;
+end;
+
 function TPrivilegesListViewEx.SelectedPrivileges: TPrivilegeLUIDArray;
 var
   i, j: integer;
@@ -182,6 +196,19 @@ begin
     else
       SetLength(FGroups, 0);
   Items.EndUpdate(True);
+end;
+
+function TGroupListViewEx.CheckedGroups: TGroupArray;
+var
+  i: integer;
+begin
+  SetLength(Result, 0);
+  for i := 0 to Items.Count - 1 do
+    if Items[i].Checked then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := Groups[i];
+    end;
 end;
 
 procedure TGroupListViewEx.InitChange;
