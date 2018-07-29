@@ -351,10 +351,13 @@ object InfoDialog: TInfoDialog
             Width = 120
           end>
         GridLines = True
+        MultiSelect = True
         ReadOnly = True
         RowSelect = True
+        PopupMenu = GroupPopup
         TabOrder = 0
         ViewStyle = vsReport
+        OnContextPopup = ListViewGroupsContextPopup
         ColoringItems = True
       end
     end
@@ -421,6 +424,7 @@ object InfoDialog: TInfoDialog
             Width = 120
           end>
         GridLines = True
+        MultiSelect = True
         ReadOnly = True
         RowSelect = True
         TabOrder = 0
@@ -479,11 +483,24 @@ object InfoDialog: TInfoDialog
       ShortCut = 46
       OnClick = ActionPrivilegeRemove
     end
-    object MenuPrivSelectAll: TMenuItem
-      Caption = 'Select All'
-      ShortCut = 16449
-      Visible = False
-      OnClick = ActionPrivilegeSelectAll
+  end
+  object GroupPopup: TPopupMenu
+    Left = 167
+    Top = 235
+    object MenuGroupEnable: TMenuItem
+      Caption = 'Enable'
+      ShortCut = 16453
+      OnClick = ActionGroupEnable
+    end
+    object MenuGroupDisable: TMenuItem
+      Caption = 'Disable'
+      ShortCut = 16452
+      OnClick = ActionGroupDisable
+    end
+    object MenuGroupReset: TMenuItem
+      Caption = 'Reset all'
+      ShortCut = 16466
+      OnClick = ActionGroupReset
     end
   end
 end

@@ -10,6 +10,7 @@ uses
 
 const
   SE_GROUP_INTEGRITY = $20;
+  ERROR_CANT_ENABLE_DENY_ONLY = $275;
 
 type
   TTokenInformationClass = (
@@ -62,13 +63,13 @@ type
     MaxTokenInfoClass
   );
 
+  TSIDAndAttributesArray = array of TSIDAndAttributes;
+
   TTokenGroups = record
     GroupCount: Integer;
     Groups: array[Word] of TSIDAndAttributes;
   end;
   PTokenGroups = ^TTokenGroups;
-
-  TSIDAndAttributesArray = array of TSIDAndAttributes;
 
   TTokenPrivileges = record
     PrivilegeCount: Integer;
@@ -110,6 +111,11 @@ function GetTokenInformation(TokenHandle: THandle;
 function AdjustTokenPrivileges(TokenHandle: THandle; DisableAllPrivileges:
   LongBool; NewState: PTokenPrivileges; BufferLength: Cardinal;
   PreviousState: PTokenPrivileges; ReturnLength: PCardinal): LongBool;
+  stdcall; external advapi32;
+
+function AdjustTokenGroups(TokenHandle: THandle; ResetToDefault: LongBool;
+  NewState: PTokenGroups; BufferLength: Cardinal;
+  PreviousState: PTokenGroups; ReturnLength: PCardinal): LongBool;
   stdcall; external advapi32;
 
 function SetTokenInformation(TokenHandle: THandle;

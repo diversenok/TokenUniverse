@@ -41,14 +41,22 @@ resourcestring
   GETTER_QUERY_SOURCE = 'You need `Query Source` access right to obtain ' +
     'this information from the token';
 
+  SETTER_DEFAULT = '`Adjust default` access right is required to change this ' +
+  'information class for the token';
   SETTER_SESSION = 'To change the session of a token you need to ' +
-    'have SeTcbPrivilege and `Adjust SessionId` access right for the token.';
-  SETTER_INTEGRITY = 'To raise the integrity level of a token you need to ' +
+    'have SeTcbPrivilege and also `Adjust SessionId` and `Adjust default` '+
+    'access rights for the token.';
+  SETTER_INTEGRITY_RAISE = 'To raise the integrity level of a token you need to ' +
     'have SeTcbPrivilege.';
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
     'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
    'integrity level of the token is too small.';
+  SETTER_GROUPS_ACCESS = 'This action requires `Adjust groups` access right.';
+  SETTER_GROUPS_DENY = 'And groups marked with `Mandatory` flag also cannot be disabled.';
+  SETTER_GROUPS_OTHER = 'You can''t disable groups with `Mandatory` flag ' +
+  'and you also can''t enable groups that are marked as ' +
+  '`Use for deny only`.';
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
@@ -90,6 +98,9 @@ begin
   begin
     if E.ErrorOrigin = SetterMessage(TokenSessionId) then
       Exit(SETTER_SESSION);
+
+    if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
+      Exit(SETTER_DEFAULT);
   end;
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
@@ -98,7 +109,7 @@ begin
       Exit(SETTER_SESSION);
 
     if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
-      Exit(SETTER_INTEGRITY);
+      Exit(SETTER_INTEGRITY_RAISE);
   end;
 
   if E.ErrorOrigin = 'AdjustTokenPrivileges' then
@@ -108,6 +119,18 @@ begin
 
     if E.ErrorCode = ERROR_NOT_ALL_ASSIGNED then
       Exit(SETTER_PRIVILEGES_OTHER);
+  end;
+
+  if E.ErrorOrigin = 'AdjustTokenGroups' then
+  begin
+    if E.ErrorCode = ERROR_ACCESS_DENIED then
+      Exit(SETTER_GROUPS_ACCESS);
+
+    if E.ErrorCode = ERROR_CANT_ENABLE_DENY_ONLY then
+      Exit(SETTER_GROUPS_DENY);
+
+    if E.ErrorCode = ERROR_CANT_DISABLE_MANDATORY then
+      Exit(SETTER_GROUPS_OTHER);
   end;
 end;
 

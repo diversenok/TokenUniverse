@@ -74,6 +74,7 @@ object DialogRestrictToken: TDialogRestrictToken
             Width = 120
           end>
         GridLines = True
+        MultiSelect = True
         ReadOnly = True
         RowSelect = True
         TabOrder = 0
@@ -126,6 +127,7 @@ object DialogRestrictToken: TDialogRestrictToken
             Width = 120
           end>
         GridLines = True
+        MultiSelect = True
         ReadOnly = True
         RowSelect = True
         TabOrder = 1

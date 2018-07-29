@@ -49,6 +49,7 @@ type
   end;
 
   TGroupArray = array of TGroup;
+  TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
 
   TPrivilege = TLUIDAndAttributes;
 
@@ -119,6 +120,7 @@ type
     FOnSessionChange: TEventHandler<CanFail<Cardinal>>;
     FOnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
     FOnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
+    FOnGroupsChange: TEventHandler<CanFail<TGroupArray>>;
 
     procedure SetCaption(const Value: String);
 
@@ -135,6 +137,7 @@ type
     /// </remarks>
     class function ConverGroupArrayToSIDs(Groups: TGroupArray):
       TSIDAndAttributesArray; static;
+    class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
 
     function GetAccess: CanFail<ACCESS_MASK>;
     function GetObjAddress: NativeUInt;
@@ -245,14 +248,14 @@ type
     property OnSessionChange: TEventHandler<CanFail<Cardinal>> read FOnSessionChange;
     property OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>> read FOnIntegrityChange;
     property OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>> read FOnPrivilegesChange;
+    property OnGroupsChange: TEventHandler<CanFail<TGroupArray>> read FOnGroupsChange;
 
     { Actions }
 
     function SendHandleToProcess(PID: Cardinal): NativeUInt;
     procedure PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
-      Action: TPrivilegeAdjustAction); overload;
-    procedure PrivilegeAdjust(Privilege: TLargeInteger;
-      Action: TPrivilegeAdjustAction); overload;
+      Action: TPrivilegeAdjustAction);
+    procedure GroupAdjust(GroupArray: TGroupArray; Action: TGroupAdjustAction);
   end;
 
 const
@@ -374,13 +377,8 @@ begin
 
     FCaption := 'Restricted ' + SrcToken.Caption;
   finally
-    for i := 0 to High(Disable) do
-      if Assigned(Disable[i].Sid) then
-        LocalFree(NativeUInt(Disable[i].Sid));
-
-    for i := 0 to High(Restrict) do
-      if Assigned(Restrict[i].Sid) then
-        LocalFree(NativeUInt(Restrict[i].Sid));
+    FreeSidArray(Disable);
+    FreeSidArray(Restrict);
   end;
 end;
 
@@ -398,6 +396,15 @@ begin
     ; // destructors should always succeed
   end;
   inherited;
+end;
+
+class procedure TToken.FreeSidArray(SIDs: TSIDAndAttributesArray);
+var
+  i: integer;
+begin
+  for i := 0 to High(SIDs) do
+    if Assigned(SIDs[i].Sid) then
+      LocalFree(NativeUInt(SIDs[i].Sid));
 end;
 
 function TToken.GetAccess: CanFail<ACCESS_MASK>;
@@ -587,6 +594,36 @@ begin
     end;
 end;
 
+procedure TToken.GroupAdjust(GroupArray: TGroupArray; Action:
+  TGroupAdjustAction);
+const
+  IsResetFlag: array [TGroupAdjustAction] of LongBool = (True, False, False);
+var
+  i: integer;
+  GroupsArray: TSIDAndAttributesArray;
+  NewState: PTokenGroups;
+begin
+  NewState := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
+    Length(GroupArray));
+  NewState.GroupCount := Length(GroupArray);
+
+  GroupsArray := ConverGroupArrayToSIDs(GroupArray);
+  for i := 0 to High(GroupsArray) do
+    NewState.Groups[i] := GroupsArray[i];
+
+  if Action = gaEnable then
+    for i := 0 to NewState.GroupCount - 1 do
+      NewState.Groups[i].Attributes := Cardinal(GroupEnabled);
+  try
+    Win32Check(AdjustTokenGroups(hToken, IsResetFlag[Action], NewState, 0, nil,
+      nil), 'AdjustTokenGroups', Self);
+    OnGroupsChange.Involve(Groups);
+  finally
+    FreeMem(NewState);
+    FreeSidArray(GroupsArray);
+  end;
+end;
+
 function TToken.GetSessionEx: Cardinal;
 begin
   Result := TryGetSession.GetValueOrRaise;
@@ -595,16 +632,6 @@ end;
 function TToken.IsValidToken: Boolean;
 begin
   Result := hToken <> 0;
-end;
-
-procedure TToken.PrivilegeAdjust(Privilege: TLargeInteger;
-  Action: TPrivilegeAdjustAction);
-var
-  PrivArray: TPrivilegeLUIDArray;
-begin
-  SetLength(PrivArray, 1);
-  PrivArray[0] := Privilege;
-  PrivilegeAdjust(PrivArray, Action);
 end;
 
 procedure TToken.PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;

@@ -45,7 +45,10 @@ type
     MenuPrivEnable: TMenuItem;
     MenuPrivDisable: TMenuItem;
     MenuPrivRemove: TMenuItem;
-    MenuPrivSelectAll: TMenuItem;
+    GroupPopup: TPopupMenu;
+    MenuGroupEnable: TMenuItem;
+    MenuGroupDisable: TMenuItem;
+    MenuGroupReset: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -59,7 +62,11 @@ type
     procedure ActionPrivilegeRemove(Sender: TObject);
     procedure ListViewPrivilegesContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
-    procedure ActionPrivilegeSelectAll(Sender: TObject);
+    procedure ActionGroupEnable(Sender: TObject);
+    procedure ActionGroupDisable(Sender: TObject);
+    procedure ActionGroupReset(Sender: TObject);
+    procedure ListViewGroupsContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
   private
     Token: TToken;
     procedure ConfirmTokenClose(Sender: TToken);
@@ -79,6 +86,24 @@ uses
 
 {$R *.dfm}
 
+procedure TInfoDialog.ActionGroupDisable(Sender: TObject);
+begin
+  if ListViewGroups.SelCount <> 0 then
+    Token.GroupAdjust(ListViewGroups.SelectedGroups, gaDisable);
+end;
+
+procedure TInfoDialog.ActionGroupEnable(Sender: TObject);
+begin
+  if ListViewGroups.SelCount <> 0 then
+    Token.GroupAdjust(ListViewGroups.SelectedGroups, gaEnable);
+end;
+
+procedure TInfoDialog.ActionGroupReset(Sender: TObject);
+begin
+  if ListViewGroups.SelCount <> 0 then
+    Token.GroupAdjust(ListViewGroups.SelectedGroups, gaResetDefault);
+end;
+
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
@@ -95,11 +120,6 @@ procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
     Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paRemove);
-end;
-
-procedure TInfoDialog.ActionPrivilegeSelectAll(Sender: TObject);
-begin
-  ListViewPrivileges.SelectAll;
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
@@ -232,6 +252,13 @@ begin
     Refresh;
 end;
 
+procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
+begin
+  MenuGroupEnable.Visible := ListViewGroups.SelCount <> 0;
+  MenuGroupDisable.Visible := ListViewGroups.SelCount <> 0;
+end;
+
 procedure TInfoDialog.ListViewPrivilegesContextPopup(Sender: TObject;
   MousePos: TPoint; var Handled: Boolean);
 begin
@@ -264,6 +291,7 @@ begin
   ChangedView(Token);
   //TODO: It is now broken for groups, privileges, and restricted SIDs
 
+  // TODO: Doesn't show zero count if we can't obtain it
   TabGroups.Caption := Format('Groups (%d)', [ListViewGroups.Items.Count]);
   TabPrivileges.Caption := Format('Privileges (%d)',
     [ListViewPrivileges.Items.Count]);

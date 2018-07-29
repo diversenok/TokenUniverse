@@ -44,7 +44,6 @@ type
     procedure ChangedGroups(NewGroups: CanFail<TGroupArray>);
     procedure SetSource(const Value: TGroupSource);
     procedure SetViewAs(const Value: TGroupViewAs);
-    procedure InitChange;
   protected
     procedure SubscribeToken; override;
     procedure UnsubscribeToken; override;
@@ -53,6 +52,7 @@ type
   published
     property ViewAs: TGroupViewAs read FViewAs write SetViewAs default gvUser;
     property Source: TGroupSource read FSource write SetSource default gsGroups;
+    function SelectedGroups: TGroupArray;
     function CheckedGroups: TGroupArray;
   end;
 
@@ -222,16 +222,25 @@ begin
     end;
 end;
 
-procedure TGroupListViewEx.InitChange;
+function TGroupListViewEx.SelectedGroups: TGroupArray;
+var
+  i, j: integer;
 begin
-  case FSource of
-    gsGroups: ChangedGroups(Token.Groups);
-    gsRestrictedSIDs: ChangedGroups(Token.RestrictedSids);
-  end;
+  SetLength(Result, SelCount);
+  j := 0;
+  for i := 0 to Items.Count - 1 do
+    if Items[i].Selected then
+    begin
+      Result[j] := Groups[i];
+      Inc(j);
+    end;
 end;
 
 procedure TGroupListViewEx.SetSource(const Value: TGroupSource);
 begin
+  if FSource = Value then
+    Exit;
+
   if Assigned(Token) then  
     UnsubscribeToken;
     
@@ -243,6 +252,9 @@ end;
 
 procedure TGroupListViewEx.SetViewAs(const Value: TGroupViewAs);
 begin
+  if FViewAs = Value then
+    Exit;
+
   FViewAs := Value;
   if Assigned(Token) then
     ChangedGroups(CanFail<TGroupArray>.SucceedWith(FGroups));
@@ -250,12 +262,19 @@ end;
 
 procedure TGroupListViewEx.SubscribeToken;
 begin
-  InitChange;
+  if FSource = gsGroups then
+    Token.OnGroupsChange.Add(ChangedGroups);
+
+  case FSource of
+    gsGroups: ChangedGroups(Token.Groups);
+    gsRestrictedSIDs: ChangedGroups(Token.RestrictedSids);
+  end;
 end;
 
 procedure TGroupListViewEx.UnsubscribeToken;
 begin
-
+  if FSource = gsGroups then
+    Token.OnGroupsChange.Delete(ChangedGroups);
 end;
 
 { TSessionComboBox }

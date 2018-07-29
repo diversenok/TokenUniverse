@@ -283,9 +283,13 @@ end;
 
 procedure TListViewEx.WMKeyDown(var Message: TWMKeyDown);
 begin
-  if (KeyDataToShiftState(Message.KeyData) = [ssCtrl]) and
-    (Message.CharCode = Ord('C')) then
-    CopySelectedToClipboard;
+  if KeyDataToShiftState(Message.KeyData) = [ssCtrl] then
+  begin
+    if Message.CharCode = Ord('C') then
+      CopySelectedToClipboard;
+    if (Message.CharCode = Ord('A')) and MultiSelect then
+      SelectAll;
+  end;
   inherited;
 end;
 
