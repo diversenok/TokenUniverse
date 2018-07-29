@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.CheckLst, TU.Common, TU.Tokens, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes;
+  TU.Common, TU.Tokens, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes;
 
 type
   TDialogRestrictToken = class(TForm)

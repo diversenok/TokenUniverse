@@ -30,7 +30,7 @@ type
     StaticUIAccess: TStaticText;
     StaticType: TStaticText;
     ComboSession: TSessionComboBox;
-    ComboIntegrity: TComboBox;
+    ComboIntegrity: TIntegrityComboBox;
     StaticHandle: TStaticText;
     EditHandle: TEdit;
     EditType: TEdit;
@@ -79,21 +79,6 @@ uses
 
 {$R *.dfm}
 
-procedure TInfoDialog.DoCloseForm(Sender: TObject);
-begin
-  Close;
-end;
-
-procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
-begin
-  try
-    Token.Session := ComboSession.SelectedSession;
-  except
-    ChangedSession(Token.TryGetSession);
-    raise;
-  end;
-end;
-
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
@@ -118,89 +103,34 @@ begin
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
-const
-  // TODO: It doesn't work if we have an intermediate level
-  IndexToIntegrity: array [0 .. 5] of TTokenIntegrityLevel = (ilUntrusted,
-    ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
 begin
   try
-    if ComboIntegrity.ItemIndex <> -1 then
-      Token.Integrity := IndexToIntegrity[ComboIntegrity.ItemIndex]
-    else
-      Token.Integrity := TTokenIntegrityLevel(StrToIntEx(ComboIntegrity.Text,
-        'integrity level'));
+    Token.Integrity := ComboIntegrity.SelectedIntegrity;
   except
     ChangedIntegrity(Token.TryGetIntegrity);
     raise;
   end;
 end;
 
-procedure TInfoDialog.ChangedCaption(NewCaption: String);
-const
-  Title = 'Token Information for "%s"';
+procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
-  Caption := Format(Title, [NewCaption]);
+  try
+    Token.Session := ComboSession.SelectedSession;
+  except
+    ChangedSession(Token.TryGetSession);
+    raise;
+  end;
+end;
+
+procedure TInfoDialog.ChangedCaption(NewCaption: String);
+begin
+  Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
 procedure TInfoDialog.ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
-var
-  index: integer;
 begin
   ComboIntegrity.Color := clWindow;
-  ComboIntegrity.Items.BeginUpdate;
-  ComboIntegrity.Clear;
-
-  ComboIntegrity.Items.Add('Untrusted (0x0000)');
-  ComboIntegrity.Items.Add('Low (0x1000)');
-  ComboIntegrity.Items.Add('Medium (0x2000)');
-  ComboIntegrity.Items.Add('Medium Plus (0x2100)');
-  ComboIntegrity.Items.Add('High (0x3000)');
-  ComboIntegrity.Items.Add('System (0x4000)');
-
-  with NewIntegrity do
-    if IsValid then
-    begin
-      if not Value.Level.IsWellKnown then
-      begin
-        if Value.Level < ilLow then
-          index := 1
-        else if Value.Level < ilMedium then
-          index := 2
-        else if Value.Level < ilMediumPlus then
-          index := 3
-        else if Value.Level < ilHigh then
-          index := 4
-        else if Value.Level < ilSystem then
-          index := 5
-        else
-          index := 6;
-
-        ComboIntegrity.Items.Insert(index, Format('Itermediate (0x%.4x)',
-          [Cardinal(Value.Level)]));
-      end;
-
-      if Value.Level = ilUntrusted then
-        ComboIntegrity.ItemIndex := 0
-      else if Value.Level <= ilLow then
-        ComboIntegrity.ItemIndex := 1
-      else if Value.Level <= ilMedium then
-        ComboIntegrity.ItemIndex := 2
-      else if Value.Level <= ilMediumPlus then
-        ComboIntegrity.ItemIndex := 3
-      else if Value.Level <= ilHigh then
-        ComboIntegrity.ItemIndex := 4
-      else if Value.Level <= ilSystem then
-        ComboIntegrity.ItemIndex := 5
-      else
-        ComboIntegrity.ItemIndex := 6;
-    end
-    else
-    begin
-      ComboIntegrity.ItemIndex := -1;
-      ComboIntegrity.Text := 'Unknown integrity';
-    end;
-
-  ComboIntegrity.Items.EndUpdate;
+  ComboIntegrity.SetIntegrity(NewIntegrity);
 end;
 
 procedure TInfoDialog.ChangedPrivileges(
@@ -260,6 +190,11 @@ begin
   Token := SrcToken;
   inherited Create(AOwner);
   Show;
+end;
+
+procedure TInfoDialog.DoCloseForm(Sender: TObject);
+begin
+  Close;
 end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);

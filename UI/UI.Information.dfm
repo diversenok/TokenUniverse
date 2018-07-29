@@ -243,7 +243,7 @@ object InfoDialog: TInfoDialog
         Text = 'Unknown session'
         OnChange = SetStaleColor
       end
-      object ComboIntegrity: TComboBox
+      object ComboIntegrity: TIntegrityComboBox
         Left = 94
         Top = 138
         Width = 262

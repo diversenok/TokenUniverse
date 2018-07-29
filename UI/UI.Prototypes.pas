@@ -67,6 +67,17 @@ type
     property SelectedSession: Cardinal read GetSession write SetSession;
   end;
 
+  TIntegrityComboBox = class(TComboBox)
+  private
+    FIsIntermediate: Boolean;
+    FIntermediateValue: TTokenIntegrityLevel;
+    FIntermediateIndex: Integer;
+    function GetIntegrityLevel: TTokenIntegrityLevel;
+  public
+    procedure SetIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
+    property SelectedIntegrity: TTokenIntegrityLevel read GetIntegrityLevel;
+  end;
+
 procedure Register;
 
 implementation
@@ -76,7 +87,7 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents('Token Universe', [TSessionComboBox,
+  RegisterComponents('Token Universe', [TSessionComboBox, TIntegrityComboBox,
     TPrivilegesListViewEx, TGroupListViewEx]);
 end;
 
@@ -286,6 +297,86 @@ begin
   ItemIndex := Sessions.Find(Value);
   if ItemIndex = -1 then
     Text := IntToStr(Value);
+end;
+
+{ TIntegrityComboBox }
+
+function TIntegrityComboBox.GetIntegrityLevel: TTokenIntegrityLevel;
+const
+  IndexToIntegrity: array [0 .. 5] of TTokenIntegrityLevel = (ilUntrusted,
+    ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
+begin
+  if ItemIndex = -1 then
+    Result := TTokenIntegrityLevel(StrToIntEx(Text, 'integrity'))
+  else if not FIsIntermediate or (ItemIndex < FIntermediateIndex) then
+    Result := IndexToIntegrity[ItemIndex]
+  else if ItemIndex > FIntermediateIndex then
+    Result := IndexToIntegrity[ItemIndex - 1]
+  else
+    Result := FIntermediateValue;
+end;
+
+procedure TIntegrityComboBox.SetIntegrity(
+  NewIntegrity: CanFail<TTokenIntegrity>);
+begin
+  Items.BeginUpdate;
+  Clear;
+
+  Items.Add('Untrusted (0x0000)');
+  Items.Add('Low (0x1000)');
+  Items.Add('Medium (0x2000)');
+  Items.Add('Medium Plus (0x2100)');
+  Items.Add('High (0x3000)');
+  Items.Add('System (0x4000)');
+
+  with NewIntegrity do
+    if IsValid then
+    begin
+      FIsIntermediate := not Value.Level.IsWellKnown;
+
+      if FIsIntermediate then
+      begin
+        FIntermediateValue := Value.Level;
+
+        if Value.Level < ilLow then
+          FIntermediateIndex := 1
+        else if Value.Level < ilMedium then
+          FIntermediateIndex := 2
+        else if Value.Level < ilMediumPlus then
+          FIntermediateIndex := 3
+        else if Value.Level < ilHigh then
+          FIntermediateIndex := 4
+        else if Value.Level < ilSystem then
+          FIntermediateIndex := 5
+        else
+          FIntermediateIndex := 6;
+
+        Items.Insert(FIntermediateIndex, Format('Itermediate (0x%.4x)',
+          [Cardinal(Value.Level)]));
+      end;
+
+      if Value.Level = ilUntrusted then
+        ItemIndex := 0
+      else if Value.Level <= ilLow then
+        ItemIndex := 1
+      else if Value.Level <= ilMedium then
+        ItemIndex := 2
+      else if Value.Level <= ilMediumPlus then
+        ItemIndex := 3
+      else if Value.Level <= ilHigh then
+        ItemIndex := 4
+      else if Value.Level <= ilSystem then
+        ItemIndex := 5
+      else
+        ItemIndex := 6;
+    end
+    else
+    begin
+      ItemIndex := -1;
+      Text := 'Unknown integrity';
+    end;
+
+  Items.EndUpdate;
 end;
 
 end.
