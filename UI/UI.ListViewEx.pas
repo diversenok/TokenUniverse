@@ -4,9 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.Graphics,
-  System.UITypes, System.Generics.Collections;
-
-// TODO: Implement copying of selected items to clipboard
+  System.UITypes, System.Generics.Collections, Vcl.Clipbrd, Winapi.Messages,
+  Vcl.Forms;
 
 type
   TListItemEx = class;
@@ -82,6 +81,7 @@ type
     procedure SetOwnedData(const Value: TObject);
   public
     constructor Create(AOwner: TListItems); override;
+    function ToString: String; override;
     property Color: TColor read FColor write SetColor;
     property ColorEnabled: Boolean read FColorEnabled write FColorEnabled;
     property OwnedData: TObject read FOwnedData write SetOwnedData;
@@ -127,6 +127,7 @@ type
     procedure SetItemsColoring(const Value: Boolean);
     function GetSelected: TListItemEx;
     procedure SetSelected(const Value: TListItemEx);
+    procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
   protected
     function CreateListItem: TListItem; override;
     function CreateListItems: TListItems; override;
@@ -134,6 +135,7 @@ type
       Stage: TCustomDrawStage): Boolean; override;
     function IsCustomDrawn(Target: TCustomDrawTarget; Stage: TCustomDrawStage):
       Boolean; override;
+    procedure CopySelectedToClipboard;
   public
     property Items: TListItemsEx read GetItems write SetItems;
     procedure Clear; override;
@@ -160,6 +162,33 @@ begin
   // so we don't get OnSelectItem event.
   ClearSelection;
   inherited;
+end;
+
+procedure TListViewEx.CopySelectedToClipboard;
+var
+  i, j: integer;
+  Texts: array of String;
+  Text: String;
+begin
+  if MultiSelect then
+  begin
+    SetLength(Texts, SelCount);
+    j := 0;
+    for i := 0 to Items.Count - 1 do
+    if Items[i].Selected then
+      begin
+        Texts[j] := Items[i].ToString;
+        Inc(j);
+      end;
+    Text := String.Join(#$D#$A, Texts);
+  end
+  else if Assigned(Selected) then
+  begin
+    Text := Selected.ToString;
+    UniqueString(Text);
+  end;
+
+  Clipboard.SetTextBuf(PWideChar(Text));
 end;
 
 function TListViewEx.CreateListItem: TListItem;
@@ -250,6 +279,14 @@ end;
 procedure TListViewEx.SetSelected(const Value: TListItemEx);
 begin
   inherited Selected := Value;
+end;
+
+procedure TListViewEx.WMKeyDown(var Message: TWMKeyDown);
+begin
+  if (KeyDataToShiftState(Message.KeyData) = [ssCtrl]) and
+    (Message.CharCode = Ord('C')) then
+    CopySelectedToClipboard;
+  inherited;
 end;
 
 { TListItemsEx }
@@ -445,6 +482,11 @@ procedure TListItemEx.SetOwnedData(const Value: TObject);
 begin
   FOwnedData := Value;
   Owner.FAllItems[Self.GlobalIndex].FOwnedData := Value;
+end;
+
+function TListItemEx.ToString: String;
+begin
+  Result := AnsiQuotedStr(Caption, '"') + ',' + SubItems.CommaText;
 end;
 
 { TListItemHolder }
