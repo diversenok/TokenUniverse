@@ -88,6 +88,8 @@ end;
 
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 begin
+  Caption := Format('Create restricted token for "%s"', [Token.Caption]);
+
   FormMain.OnMainFormClose.Add(DoCloseForm);
   Token.OnCanClose.Add(ConfirmTokenClose);
 

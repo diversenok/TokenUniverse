@@ -47,6 +47,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Token Universe';
+  Application.HintHidePause := 20000;
   Application.CreateForm(TFormMain, FormMain);
   Application.Run;
 end.

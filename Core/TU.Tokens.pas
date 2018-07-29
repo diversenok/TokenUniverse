@@ -130,6 +130,12 @@ type
     function QueryGroups(InfoClass: TTokenInformationClass):
       CanFail<TGroupArray>;
 
+    /// <remarks>
+    ///  The memory of each item should be freed with <c>LocalFree</c>.
+    /// </remarks>
+    class function ConverGroupArrayToSIDs(Groups: TGroupArray):
+      TSIDAndAttributesArray; static;
+
     function GetAccess: CanFail<ACCESS_MASK>;
     function GetObjAddress: NativeUInt;
     function GetUser: CanFail<TSecurityIdentifier>;           // class 1
@@ -271,6 +277,17 @@ uses
 
 { TToken }
 
+class function TToken.ConverGroupArrayToSIDs(
+  Groups: TGroupArray): TSIDAndAttributesArray;
+var
+  i: integer;
+begin
+  SetLength(Result, Length(Groups));
+  for i := 0 to High(Result) do
+    ConvertStringSidToSid(PWideChar(Groups[i].SecurityIdentifier.SID),
+      Result[i].Sid);
+end;
+
 constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
   TokenImpersonation: TSecurityImpersonationLevel; TokenType: TTokenType);
 begin
@@ -342,15 +359,29 @@ end;
 constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
       SIDsToDisabe, SIDsToRestrict: TGroupArray;
       PrivilegesToDelete: TPrivilegeArray);
+var
+  Disable, Restrict: TSIDAndAttributesArray;
+  i: Integer;
 begin
-  // TODO: SIDsToDisabe & SIDsToRestrict
-  Win32Check(CreateRestrictedToken(SrcToken.hToken, Flags,
-    0, nil,
-    Length(PrivilegesToDelete), PLUIDAndAttributes(PrivilegesToDelete),
-    0, nil, hToken),
-    'CreateRestricted', SrcToken);
+  Disable := ConverGroupArrayToSIDs(SIDsToDisabe);
+  Restrict := ConverGroupArrayToSIDs(SIDsToRestrict);
+  try
+    Win32Check(CreateRestrictedToken(SrcToken.hToken, Flags,
+      Length(Disable), Disable,
+      Length(PrivilegesToDelete), PLUIDAndAttributes(PrivilegesToDelete),
+      Length(Restrict), Restrict,
+      hToken), 'CreateRestricted', SrcToken);
 
-  FCaption := 'Restricted ' + SrcToken.Caption;
+    FCaption := 'Restricted ' + SrcToken.Caption;
+  finally
+    for i := 0 to High(Disable) do
+      if Assigned(Disable[i].Sid) then
+        LocalFree(NativeUInt(Disable[i].Sid));
+
+    for i := 0 to High(Restrict) do
+      if Assigned(Restrict[i].Sid) then
+        LocalFree(NativeUInt(Restrict[i].Sid));
+  end;
 end;
 
 destructor TToken.Destroy;

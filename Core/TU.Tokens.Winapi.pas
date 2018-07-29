@@ -68,6 +68,8 @@ type
   end;
   PTokenGroups = ^TTokenGroups;
 
+  TSIDAndAttributesArray = array of TSIDAndAttributes;
+
   TTokenPrivileges = record
     PrivilegeCount: Integer;
     Privileges: array[Byte] of TLUIDAndAttributes;
@@ -115,9 +117,9 @@ function SetTokenInformation(TokenHandle: THandle;
   TokenInformationLength: Cardinal): LongBool; stdcall; external advapi32;
 
 function CreateRestrictedToken(ExistingTokenHandle: THandle; Flags: Cardinal;
-  DisableSidCount: Cardinal; SidsToDisable: PSIDAndAttributes;
+  DisableSidCount: Cardinal; SidsToDisable: TSIDAndAttributesArray;
   DeletePrivilegeCount: Cardinal; PrivilegesToDelete: PLUIDAndAttributes;
-  RestrictedSidCount: Cardinal; SidsToRestrict: PSIDAndAttributes;
+  RestrictedSidCount: Cardinal; SidsToRestrict: TSIDAndAttributesArray;
   var NewTokenHandle: THandle): LongBool; stdcall; external advapi32;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;

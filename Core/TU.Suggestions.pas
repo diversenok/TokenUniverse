@@ -33,6 +33,9 @@ resourcestring
   WTS_QUERY_TOKEN_NO_TOKEN = 'You can''t query a token of a session that ' +
     'doesn''t belong to any user.';
 
+  RESTCICT_ACCESS = 'The hande need to grant `Duplicate` access to create ' +
+    ' resticted tokens.';
+
   GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
     'from the token';
   GETTER_QUERY_SOURCE = 'You need `Query Source` access right to obtain ' +
@@ -49,8 +52,6 @@ resourcestring
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
-  Result := '';
-
   if (E.ErrorOrigin = 'DuplicateTokenEx') and (E.ErrorContext is TToken) and
     (E.ErrorCode = ERROR_BAD_IMPERSONATION_LEVEL) then
     with TToken(E.ErrorContext).TokenTypeInfo do
@@ -65,6 +66,10 @@ begin
     if E.ErrorCode = ERROR_NO_TOKEN then
       Exit(WTS_QUERY_TOKEN_NO_TOKEN);
   end;
+
+  if (E.ErrorOrigin = 'CreateRestricted') and
+    (E.ErrorCode = ERROR_ACCESS_DENIED)  then
+    Exit(RESTCICT_ACCESS);
 end;
 
 function SuggestGetter(E: ELocatedOSError): String;
@@ -81,8 +86,6 @@ end;
 
 function SuggestSetter(E: ELocatedOSError): String;
 begin
-  Result := '';
-
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
     if E.ErrorOrigin = SetterMessage(TokenSessionId) then
