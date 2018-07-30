@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.Graphics,
   System.UITypes, System.Generics.Collections, Vcl.Clipbrd, Winapi.Messages,
-  Vcl.Forms;
+  Vcl.Forms, Winapi.Windows;
 
 type
   TListItemEx = class;
@@ -128,6 +128,7 @@ type
     function GetSelected: TListItemEx;
     procedure SetSelected(const Value: TListItemEx);
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
+    procedure SetSelectedCheckboxesState(State: Boolean);
   protected
     function CreateListItem: TListItem; override;
     function CreateListItems: TListItems; override;
@@ -281,15 +282,37 @@ begin
   inherited Selected := Value;
 end;
 
-procedure TListViewEx.WMKeyDown(var Message: TWMKeyDown);
+procedure TListViewEx.SetSelectedCheckboxesState(State: Boolean);
+var
+  i: integer;
 begin
-  if KeyDataToShiftState(Message.KeyData) = [ssCtrl] then
+  for i := 0 to Items.Count - 1 do
+    if Items[i].Selected then
+      Items[i].Checked := State;
+end;
+
+procedure TListViewEx.WMKeyDown(var Message: TWMKeyDown);
+var
+  State: TShiftState;
+begin
+  State := KeyDataToShiftState(Message.KeyData);
+
+  // Ctrl + A
+  if MultiSelect and (State = [ssCtrl]) and (Message.CharCode = Ord('A')) then
+    SelectAll
+
+  // Ctrl + C
+  else if (State = [ssCtrl]) and (Message.CharCode = Ord('C')) then
+    CopySelectedToClipboard
+
+  // Checking multiple checkboxes with space
+  else if Checkboxes and MultiSelect and Assigned(Selected) and
+      (State = []) and (Message.CharCode = VK_SPACE) then
   begin
-    if Message.CharCode = Ord('C') then
-      CopySelectedToClipboard;
-    if (Message.CharCode = Ord('A')) and MultiSelect then
-      SelectAll;
+    SetSelectedCheckboxesState(not Selected.Checked);
+    Exit; // doesn't call inherited;
   end;
+
   inherited;
 end;
 
