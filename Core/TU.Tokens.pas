@@ -203,6 +203,11 @@ type
       SIDsToDisabe, SIDsToRestrict: TGroupArray;
       PrivilegesToDelete: TPrivilegeArray);
 
+    /// <summary> Logons the user with the specified credentials. </summary>
+    /// <exception cref="EOSError"> Can raise EOSError. </exception>
+    constructor CreateWithLogon(LogonType, LogonProvider: Cardinal;
+      Domain, User: String; Password: PWideChar);
+
     destructor Destroy; override;
     function IsValidToken: Boolean;
     property Handle: THandle read hToken;
@@ -302,16 +307,11 @@ end;
 
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
   SameAccess: Boolean);
-var
-  Options: Cardinal;
+const
+  Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
 begin
-  if SameAccess then
-    Options := DUPLICATE_SAME_ACCESS
-  else
-    Options := 0;
-
   Win32Check(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
-    GetCurrentProcess, @hToken, Access, False, Options),
+    GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
     'DuplicateHandle');
 
   if (SrcToken.Origin.OwnerPID = GetCurrentProcessId) or
@@ -380,6 +380,14 @@ begin
     FreeSidArray(Disable);
     FreeSidArray(Restrict);
   end;
+end;
+
+constructor TToken.CreateWithLogon(LogonType, LogonProvider: Cardinal; Domain,
+  User: String; Password: PWideChar);
+begin
+  Win32Check(LogonUserW(PWideChar(User), PWideChar(Domain), Password, LogonType,
+    LogonProvider, hToken), 'LogonUserW');
+  FCaption := 'Logon of ' + User;
 end;
 
 destructor TToken.Destroy;
@@ -765,6 +773,7 @@ begin
   end;
   OnIntegrityChange.Involve(TryGetIntegrity);
   OnPrivilegesChange.Involve(GetPrivileges); // Integrity can disable privileges
+  OnGroupsChange.Involve(Groups); // And it has it's own record in group list
 end;
 
 procedure TToken.SetSession(const Value: Cardinal);

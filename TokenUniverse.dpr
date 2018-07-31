@@ -23,7 +23,9 @@ uses
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
   UI.ListViewEx in 'UI\UI.ListViewEx.pas',
   UI.Colors in 'UI\UI.Colors.pas',
-  UI.Prototypes in 'UI\UI.Prototypes.pas';
+  UI.Prototypes in 'UI\UI.Prototypes.pas',
+  TU.Credentials in 'Core\TU.Credentials.pas',
+  UI.Logon in 'UI\UI.Logon.pas' {LogonDialog};
 
 {$R *.res}
 

@@ -149,6 +149,11 @@
         <DCCReference Include="UI\UI.ListViewEx.pas"/>
         <DCCReference Include="UI\UI.Colors.pas"/>
         <DCCReference Include="UI\UI.Prototypes.pas"/>
+        <DCCReference Include="Core\TU.Credentials.pas"/>
+        <DCCReference Include="UI\UI.Logon.pas">
+            <Form>LogonDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

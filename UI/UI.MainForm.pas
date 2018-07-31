@@ -80,6 +80,7 @@ type
       var S: string);
     procedure ActionWTSQuery(Sender: TObject);
     procedure ActionRestrict(Sender: TObject);
+    procedure ActionLogon(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -93,7 +94,7 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch,
-  UI.SessionDialog, UI.Restrict;
+  UI.SessionDialog, UI.Restrict, UI.Logon;
 
 {$R *.dfm}
 
@@ -113,6 +114,11 @@ procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
 begin
   // TODO: An option to grab maximum access forsibly
   Frame.AddToken(TToken.CreateDuplicateHandle(Frame.GetSelectedToken, 0, True));
+end;
+
+procedure TFormMain.ActionLogon(Sender: TObject);
+begin
+  TLogonDialog.Create(Self).ShowModal;
 end;
 
 procedure TFormMain.ActionOpen(Sender: TObject);

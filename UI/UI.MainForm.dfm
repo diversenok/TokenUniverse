@@ -457,8 +457,8 @@ object FormMain: TFormMain
       end
       object NewLogonUser: TMenuItem
         Caption = 'Logon user'
-        Enabled = False
         ShortCut = 16460
+        OnClick = ActionLogon
       end
       object NewQueryUserToken: TMenuItem
         Caption = 'WTSQueryUserToken'
