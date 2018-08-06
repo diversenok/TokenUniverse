@@ -219,9 +219,9 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Token.OnPrivilegesChange.Delete(ChangedPrivileges);
-  Token.OnIntegrityChange.Delete(ChangedIntegrity);
-  Token.OnSessionChange.Delete(ChangedSession);
+  Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
+  Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
+  Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
   Token.OnCanClose.Delete(ConfirmTokenClose);
   FormMain.OnMainFormClose.Delete(DoCloseForm);
@@ -238,9 +238,9 @@ begin
 
   Token.OnCanClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
-  Token.OnSessionChange.Add(ChangedSession);
-  Token.OnIntegrityChange.Add(ChangedIntegrity);
-  Token.OnPrivilegesChange.Add(ChangedPrivileges);
+  Token.Events.OnSessionChange.Add(ChangedSession);
+  Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
+  Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
 
   Refresh;
 end;

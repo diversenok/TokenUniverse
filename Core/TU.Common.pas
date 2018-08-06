@@ -105,13 +105,13 @@ type
     ///  Tries to call all event listeners. If an exception occures some of the
     ///  listeners may not be notified.
     /// </summary>
-    procedure Involve(Value: T);
+    procedure Invoke(Value: T);
 
     /// <summary>
     ///  Calls all event listeners regardless of any exceptions. This method
     ///  always succeeds since it ignores and looses all raised exceptions.
     /// </summary>
-    procedure InvolveIgnoringErrors(Value: T);
+    procedure InvokeIgnoringErrors(Value: T);
   end;
 
   /// <summary>
@@ -332,13 +332,11 @@ begin
     SetLength(Listeners, Length(Listeners) - 1);
   end;
 
-  {$IFDEF DEBUG}
-    if not Result then
-      MessageBox(0, 'Cannot delete event listener', 'Assertion', MB_ICONERROR);
-  {$ENDIF}
+  if not Result then
+    OutputDebugString('Cannot delete event listener');
 end;
 
-procedure TEventHandler<T>.Involve(Value: T);
+procedure TEventHandler<T>.Invoke(Value: T);
 var
   i: integer;
   ListenersCopy: TEventListenerArray<T>;
@@ -351,7 +349,7 @@ begin
     ListenersCopy[i](Value);
 end;
 
-procedure TEventHandler<T>.InvolveIgnoringErrors(Value: T);
+procedure TEventHandler<T>.InvokeIgnoringErrors(Value: T);
 var
   i: integer;
   ListenersCopy: TEventListenerArray<T>;
@@ -362,7 +360,8 @@ begin
     try
       ListenersCopy[i](Value);
     except
-      on Exception do;
+      on E: Exception do
+        OutputDebugString(PWideChar('InvokeIgnoringErrors:: ' + E.ToString));
     end;
 end;
 
@@ -370,7 +369,7 @@ end;
 
 function StrToIntEx(S: String; Comment: String): Cardinal;
 const
-  E_CONV_DECHEX = 'Invalid %s. Please specify decimal or hexadecimal value.';
+  E_CONV_DECHEX = 'Invalid %s. Please specify a decimal or a hexadecimal value.';
 var
   E: Integer;
 begin

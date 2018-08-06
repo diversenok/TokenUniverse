@@ -10,7 +10,8 @@ interface
   on the same simple type. }
 
 uses
-  System.SysUtils, Winapi.Windows, TU.Tokens.Winapi, TU.Handles, TU.Common;
+  System.SysUtils, Winapi.Windows, System.Generics.Collections,
+  TU.Tokens.Winapi, TU.Handles, TU.Common;
 
 type
   TSecurityIdentifier = record
@@ -100,31 +101,57 @@ type
     function ToDetailedString: String;
   end;
 
-  TToken = class
+  TToken = class;
+
+  TTokenEvents = class
   protected
-  type
-    TTokenHelper<ResultType> = class
+    FTokenObjectAddress: NativeUInt;
+    FReferenceCount: Integer;
+    FOnSessionChange: TEventHandler<CanFail<Cardinal>>;
+    FOnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
+    FOnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
+    FOnGroupsChange: TEventHandler<CanFail<TGroupArray>>;
+  public
+    destructor Destroy; override;
+    property TokenObjectAddress: NativeUInt read FTokenObjectAddress;
+    property OnSessionChange: TEventHandler<CanFail<Cardinal>> read FOnSessionChange;
+    property OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>> read FOnIntegrityChange;
+    property OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>> read FOnPrivilegesChange;
+    property OnGroupsChange: TEventHandler<CanFail<TGroupArray>> read FOnGroupsChange;
+  end;
+
+  TToken = class
+  private
+    procedure SetCaption(const Value: String);
+    function GetAccess: CanFail<ACCESS_MASK>;
+    function GetObjAddress: NativeUInt;
+    function GetUser: CanFail<TSecurityIdentifier>;
+    function GetGroups: CanFail<TGroupArray>;
+    function GetPrivileges: CanFail<TPrivilegeArray>;
+    function GetOwner: CanFail<TSecurityIdentifier>;
+    function GetPrimaryGroup: CanFail<TSecurityIdentifier>;
+    function GetTokenType: CanFail<TTokenTypeInfo>;
+    function GetStatistics: CanFail<TTokenStatistics>;
+    function GetSource: CanFail<TTokenSource>;
+    function GetRestrictedSids: CanFail<TGroupArray>;
+    function GetSandboxInert: CanFail<LongBool>;
+    function GetTokenOrigin: CanFail<Int64>;
+    function GetElevation: CanFail<TTokenElevationType>;
+    function GetLinkedToken: CanFail<TToken>;
+    function GetHasRestrictions: CanFail<LongBool>;
+    function GetSession: Cardinal;
+    procedure SetSession(const Value: Cardinal);
+    function GetIntegrity: TTokenIntegrityLevel;
+    procedure SetIntegrity(const Value: TTokenIntegrityLevel);
+  protected
+    type TTokenHelper<ResultType> = class
       class function GetFixedSize(Token: TToken;
         InfoClass: TTokenInformationClass): CanFail<ResultType>; static;
       class procedure SetFixedSize(Token: TToken;
         InfoClass: TTokenInformationClass; Value: ResultType); static;
     end;
-  var
-    hToken: THandle;
-    Origin: THandleItem;
-    FCaption: String;
 
-    FOnCanClose: TEventHandler<TToken>;
-    FOnClose: TEventHandler<TToken>;
-    FOnCaptionChange: TEventHandler<String>;
-    FOnSessionChange: TEventHandler<CanFail<Cardinal>>;
-    FOnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
-    FOnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
-    FOnGroupsChange: TEventHandler<CanFail<TGroupArray>>;
-
-    procedure SetCaption(const Value: String);
-
-    /// <remarks> The bufer should be freed using FreeMem. </remarks>
+    /// <remarks> The buffer should be freed using FreeMem. </remarks>
     function QueryVariableBuffer(InfoClass: TTokenInformationClass):
       CanFail<Pointer>;
     function QuerySid(InfoClass: TTokenInformationClass):
@@ -138,27 +165,29 @@ type
     class function ConverGroupArrayToSIDs(Groups: TGroupArray):
       TSIDAndAttributesArray; static;
     class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
+  protected
+    var hToken: THandle;
+    var FOrigin: THandleItem;
+    var FCaption: String;
+    var FOnCanClose: TEventHandler<TToken>;
+    var FOnClose: TEventHandler<TToken>;
+    var FOnCaptionChange: TEventHandler<String>;
 
-    function GetAccess: CanFail<ACCESS_MASK>;
-    function GetObjAddress: NativeUInt;
-    function GetUser: CanFail<TSecurityIdentifier>;           // class 1
-    function GetGroups: CanFail<TGroupArray>;                 // class 2
-    function GetPrivileges: CanFail<TPrivilegeArray>;         // class 3
-    function GetOwner: CanFail<TSecurityIdentifier>;          // class 4
-    function GetPrimaryGroup: CanFail<TSecurityIdentifier>;   // class 5
-    function GetTokenType: CanFail<TTokenTypeInfo>;           // classes 7 & 8
-    function GetStatistics: CanFail<TTokenStatistics>;        // class 9
-    function GetSource: CanFail<TTokenSource>;                // class 10
-    function GetRestrictedSids: CanFail<TGroupArray>;         // class 11
-    function GetSandboxInert: CanFail<LongBool>;              // class 15
-    function GetTokenOrigin: CanFail<Int64>;                  // class 17
-    function GetElevation: CanFail<TTokenElevationType>;      // classes 18 & 20
-    function GetLinkedToken: CanFail<TToken>;                 // class 19
-    function GetHasRestrictions: CanFail<LongBool>;           // class 20
-    function GetSessionEx: Cardinal;
-    procedure SetSession(const Value: Cardinal);
-    function GetIntegrity: TTokenIntegrityLevel;
-    procedure SetIntegrity(const Value: TTokenIntegrityLevel);
+    /// <summary>
+    ///  Different handles pointing to the same kernel objects must be linked to
+    ///  the same event handlers. This value is a mapping of each opened kernel
+    ///  object address to an event associated with it.
+    /// </summary>
+    class var EventMapping: TDictionary<NativeUInt, TTokenEvents>;
+    class constructor CreateEventMapping;
+    class destructor DestroyEventMapping;
+    var FEvents: TTokenEvents;
+    /// <remarks>
+    ///  This procedure should be called after setting <c>hToken</c> field but
+    ///  before invoking any events.
+    /// </remarks>
+    procedure InitializeEvents;
+    procedure FinalizeEvents;
   public
     /// <summary> Opens a token of current process. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
@@ -208,12 +237,27 @@ type
     constructor CreateWithLogon(LogonType, LogonProvider: Cardinal;
       Domain, User: String; Password: PWideChar);
 
+    /// <summary>
+    ///  Asks all subscribed event listeners if the token can be freed.
+    /// </summary>
+    /// <exception cref="EAbort"> Can raise EAbort. </exception>
+    function CanBeFreed: Boolean;
     destructor Destroy; override;
+
     function IsValidToken: Boolean;
     property Handle: THandle read hToken;
     property Access: CanFail<ACCESS_MASK> read GetAccess;
     property ObjAddress: NativeUInt read GetObjAddress;
     property Caption: String read FCaption write SetCaption;
+
+    /// <summary>
+    ///  Asks all event listeners for confirmation before closing the token.
+    ///  Any event listener can call <c>Abort;</c> to prevent further actions.
+    /// </summary>
+    property OnCanClose: TEventHandler<TToken> read FOnCanClose;
+    property OnClose: TEventHandler<TToken> read FOnClose;
+    property OnCaptionChange: TEventHandler<String> read FOnCaptionChange;
+    property Events: TTokenEvents read FEvents write FEvents;
 
     { Token Information classes }
 
@@ -230,7 +274,7 @@ type
     property TokenTypeInfo: CanFail<TTokenTypeInfo> read GetTokenType;          // class 9
     property Statistics: CanFail<TTokenStatistics> read GetStatistics;          // class 10
     property RestrictedSids: CanFail<TGroupArray> read GetRestrictedSids;       // class 11
-    property Session: Cardinal read GetSessionEx write SetSession;              // class 12
+    property Session: Cardinal read GetSession write SetSession;              // class 12
     // TODO: class 13 TokenGroupsAndPrivileges
     // TODO: class 14 SessionReference
     property SandboxInert: CanFail<LongBool> read GetSandboxInert;              // class 15
@@ -242,18 +286,6 @@ type
     // TODO: class 22 AccessInformation
     // TODO: class 23 & 24 Virtualization
     property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25
-
-    /// <summary>
-    ///  Asks all event listeners for confirmation before closing the token.
-    ///  Any event listener can call <c>Abort;</c> to prevent further actions.
-    /// </summary>
-    property OnCanClose: TEventHandler<TToken> read FOnCanClose;
-    property OnClose: TEventHandler<TToken> read FOnClose;
-    property OnCaptionChange: TEventHandler<String> read FOnCaptionChange;
-    property OnSessionChange: TEventHandler<CanFail<Cardinal>> read FOnSessionChange;
-    property OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>> read FOnIntegrityChange;
-    property OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>> read FOnPrivilegesChange;
-    property OnGroupsChange: TEventHandler<CanFail<TGroupArray>> read FOnGroupsChange;
 
     { Actions }
 
@@ -285,6 +317,12 @@ uses
 
 { TToken }
 
+function TToken.CanBeFreed: Boolean;
+begin
+  OnCanClose.Invoke(Self);
+  Result := True;
+end;
+
 class function TToken.ConverGroupArrayToSIDs(
   Groups: TGroupArray): TSIDAndAttributesArray;
 var
@@ -302,7 +340,8 @@ begin
   Win32Check(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
     TokenImpersonation, TokenType, hToken),
     'DuplicateTokenEx', SrcToken);
-  Caption := SrcToken.Caption + ' (copy)';
+  FCaption := SrcToken.Caption + ' (copy)';
+  InitializeEvents;
 end;
 
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
@@ -314,30 +353,40 @@ begin
     GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
     'DuplicateHandle');
 
-  if (SrcToken.Origin.OwnerPID = GetCurrentProcessId) or
-    (SrcToken.Origin.OwnerPID = 0) then
-    Caption := SrcToken.Caption + ' (reference)'
+  if (SrcToken.FOrigin.OwnerPID = GetCurrentProcessId) or
+    (SrcToken.FOrigin.OwnerPID = 0) then
+    FCaption := SrcToken.Caption + ' (reference)'
   else
-    Caption := Format('Referenced 0x%x from PID %d', [SrcToken.Origin.hToken,
-      SrcToken.Origin.OwnerPID]);
+    FCaption := Format('Referenced 0x%x from PID %d', [SrcToken.FOrigin.hToken,
+      SrcToken.FOrigin.OwnerPID]);
+
+  InitializeEvents;
+end;
+
+class constructor TToken.CreateEventMapping;
+begin
+  EventMapping := TDictionary<NativeUInt, TTokenEvents>.Create;
 end;
 
 constructor TToken.CreateFromCurrent;
 begin
   Win32Check(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
     'OpenProcessToken');
-  Caption := 'Current process';
+  FCaption := 'Current process';
+  InitializeEvents;
 end;
 
 constructor TToken.CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
 begin
   hToken := 0;
-  Origin := Item;
-  Caption := Format('0x%x', [Item.hToken]);
+  FOrigin := Item;
+  FCaption := Format('0x%x', [Item.hToken]);
 
   if hProcess <> 0 then
     DuplicateHandle(hProcess, Item.hToken, GetCurrentProcess, @hToken, 0, False,
       DUPLICATE_SAME_ACCESS);
+
+  InitializeEvents;
 end;
 
 constructor TToken.CreateFromProcess(PID: Cardinal);
@@ -350,13 +399,16 @@ begin
 
   Win32Check(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
     'OpenProcessToken');
-  Caption := 'PID ' + IntToStr(PID);
+  FCaption := 'PID ' + IntToStr(PID);
+
+  InitializeEvents;
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal);
 begin
   Win32Check(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
   FCaption := Format('Token of session %d', [SessionID]);
+  InitializeEvents;
 end;
 
 constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
@@ -364,7 +416,6 @@ constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
       PrivilegesToDelete: TPrivilegeArray);
 var
   Disable, Restrict: TSIDAndAttributesArray;
-  i: Integer;
 begin
   Disable := ConverGroupArrayToSIDs(SIDsToDisabe);
   Restrict := ConverGroupArrayToSIDs(SIDsToRestrict);
@@ -380,6 +431,7 @@ begin
     FreeSidArray(Disable);
     FreeSidArray(Restrict);
   end;
+  InitializeEvents;
 end;
 
 constructor TToken.CreateWithLogon(LogonType, LogonProvider: Cardinal; Domain,
@@ -388,22 +440,47 @@ begin
   Win32Check(LogonUserW(PWideChar(User), PWideChar(Domain), Password, LogonType,
     LogonProvider, hToken), 'LogonUserW');
   FCaption := 'Logon of ' + User;
+  InitializeEvents;
 end;
 
 destructor TToken.Destroy;
 begin
-  // The event listener can abort this operation by raising EAbort
-  OnCanClose.Involve(Self);
-
-  OnClose.Involve(Self);
+  OnClose.Invoke(Self);
   if hToken <> 0 then
   try
     CloseHandle(hToken);
     hToken := 0;
   except
-    ; // destructors should always succeed
+    ; // destructor should always succeed
   end;
+  FinalizeEvents;
+
+  if Length(FOnCanClose.Listeners) > 0 then
+    OutputDebugString('Abandoned OnCanClose');
+  if Length(FOnClose.Listeners) > 0 then
+    OutputDebugString('Abandoned OnClose');
+  if Length(FOnCaptionChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnCaptionChange');
+
   inherited;
+end;
+
+class destructor TToken.DestroyEventMapping;
+begin
+  if EventMapping.Count > 0 then
+    OutputDebugString('DestroyEventMapping:: some element are still in the list');
+
+  EventMapping.Free;
+end;
+
+procedure TToken.FinalizeEvents;
+begin
+  Dec(FEvents.FReferenceCount);
+  if FEvents.FReferenceCount = 0 then
+  begin
+    EventMapping.Remove(FEvents.FTokenObjectAddress);
+    FEvents.Free;
+  end;
 end;
 
 class procedure TToken.FreeSidArray(SIDs: TSIDAndAttributesArray);
@@ -423,7 +500,7 @@ begin
 
   // Pseudo-token mode
   if hToken = 0 then
-    Exit(Result.Succeed(Origin.Access));
+    Exit(Result.Succeed(FOrigin.Access));
 
   if Result.CheckNativeError(NtQueryObject(hToken, ObjectBasicInformation,
     @info, SizeOf(info), nil), 'NtQueryObject') then
@@ -477,7 +554,8 @@ begin
     begin
       Result.Value := TToken.Create;
       Result.Value.hToken := Value;
-      Result.Value.Caption := 'Linked token for ' + Caption;
+      Result.Value.FCaption := 'Linked token for ' + Caption;
+      Result.Value.InitializeEvents;
       Result.Succeed;
     end
     else
@@ -493,21 +571,21 @@ var
   HandleList: THandleList;
   i: integer;
 begin
-  if Origin.KernelObjectAddress = 0 then // not yet obtained
+  if FOrigin.KernelObjectAddress = 0 then // not yet obtained
   begin
     HandleList := THandleList.CreateOnly(GetCurrentProcessId);
 
     for i := 0 to HandleList.Count do
       if HandleList[i].hToken = hToken then
       begin
-        Origin := HandleList[i];
+        FOrigin := HandleList[i];
         Break;
       end;
 
     HandleList.Free;
   end;
 
-  Result := Origin.KernelObjectAddress
+  Result := FOrigin.KernelObjectAddress
 end;
 
 function TToken.GetOwner: CanFail<TSecurityIdentifier>;
@@ -549,6 +627,11 @@ end;
 function TToken.GetSandboxInert: CanFail<LongBool>;
 begin
   Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenSandBoxInert);
+end;
+
+function TToken.GetSession: Cardinal;
+begin
+  Result := TryGetSession.GetValueOrRaise;
 end;
 
 function TToken.TryGetSession: CanFail<Cardinal>;
@@ -625,16 +708,24 @@ begin
   try
     Win32Check(AdjustTokenGroups(hToken, IsResetFlag[Action], NewState, 0, nil,
       nil), 'AdjustTokenGroups', Self);
-    OnGroupsChange.Involve(Groups);
+    Events.OnGroupsChange.Invoke(Groups);
   finally
     FreeMem(NewState);
     FreeSidArray(GroupsArray);
   end;
 end;
 
-function TToken.GetSessionEx: Cardinal;
+procedure TToken.InitializeEvents;
 begin
-  Result := TryGetSession.GetValueOrRaise;
+  if EventMapping.TryGetValue(ObjAddress, FEvents) then
+    Inc(FEvents.FReferenceCount)
+  else
+  begin
+    FEvents := TTokenEvents.Create;
+    FEvents.FTokenObjectAddress := ObjAddress;
+    FEvents.FReferenceCount := 1;
+    EventMapping.Add(ObjAddress, FEvents);
+  end;
 end;
 
 function TToken.IsValidToken: Boolean;
@@ -668,7 +759,7 @@ begin
       nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
   finally
     FreeMem(Buffer);
-    OnPrivilegesChange.Involve(GetPrivileges);
+    Events.OnPrivilegesChange.Invoke(GetPrivileges);
   end;
 end;
 
@@ -750,7 +841,7 @@ end;
 procedure TToken.SetCaption(const Value: String);
 begin
   FCaption := Value;
-  OnCaptionChange.Involve(FCaption);
+  OnCaptionChange.Invoke(FCaption);
 end;
 
 procedure TToken.SetIntegrity(const Value: TTokenIntegrityLevel);
@@ -771,15 +862,19 @@ begin
   finally
     FreeMem(mandatoryLabel.Sid);
   end;
-  OnIntegrityChange.Involve(TryGetIntegrity);
-  OnPrivilegesChange.Involve(GetPrivileges); // Integrity can disable privileges
-  OnGroupsChange.Involve(Groups); // And it has it's own record in group list
+  Events.OnIntegrityChange.Invoke(TryGetIntegrity);
+
+  // Integrity can disable privileges
+  Events.OnPrivilegesChange.Invoke(GetPrivileges);
+
+  // And has it's own record in group list
+  Events.OnGroupsChange.Invoke(Groups);
 end;
 
 procedure TToken.SetSession(const Value: Cardinal);
 begin
   TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
-  OnSessionChange.Involve(TryGetSession);
+  Events.OnSessionChange.Invoke(TryGetSession);
 end;
 
 { TTokenAccess }
@@ -1153,4 +1248,21 @@ begin
     raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass));
 end;
 
-end. // CreateWellKnownSid
+{ TTokenEvents }
+
+destructor TTokenEvents.Destroy;
+begin
+  if Length(FOnSessionChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnSessionChange');
+  if Length(FOnSessionChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnSessionChange');
+  if Length(FOnIntegrityChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnIntegrityChange');
+  if Length(FOnPrivilegesChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnPrivilegesChange');
+  if Length(FOnGroupsChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnGroupsChange');
+  inherited;
+end;
+
+end.

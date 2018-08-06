@@ -10,11 +10,11 @@ type
   TTokenedListViewEx = class(TListViewEx)
   private
     FToken: TToken;
-    procedure ReleaseToken;
+    procedure ReleaseToken(Sender: TToken);
     procedure SetToken(const Value: TToken);
   protected
-    procedure SubscribeToken; virtual; abstract;
-    procedure UnsubscribeToken; virtual; abstract;
+    procedure SubscribeToken; virtual;
+    procedure UnsubscribeToken; virtual;
   public
     destructor Destroy; override;
     property Token: TToken read FToken write SetToken;
@@ -95,11 +95,11 @@ end;
 
 destructor TTokenedListViewEx.Destroy;
 begin
-  ReleaseToken;
+  ReleaseToken(FToken);
   inherited;
 end;
 
-procedure TTokenedListViewEx.ReleaseToken;
+procedure TTokenedListViewEx.ReleaseToken(Sender: TToken);
 begin
   if Assigned(FToken) then
   begin
@@ -110,10 +110,20 @@ end;
 
 procedure TTokenedListViewEx.SetToken(const Value: TToken);
 begin
-  ReleaseToken;
+  ReleaseToken(FToken);
   FToken := Value;
   if Assigned(FToken) then  
     SubscribeToken;
+end;
+
+procedure TTokenedListViewEx.SubscribeToken;
+begin
+  Token.OnClose.Add(ReleaseToken);
+end;
+
+procedure TTokenedListViewEx.UnsubscribeToken;
+begin
+  Token.OnClose.Delete(ReleaseToken);
 end;
 
 { TPrivilegesListViewEx }
@@ -171,13 +181,15 @@ end;
 
 procedure TPrivilegesListViewEx.SubscribeToken;
 begin
-  Token.OnPrivilegesChange.Add(ChangedPrivileges);
+  inherited;
+  Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
   ChangedPrivileges(Token.Privileges);
 end;
 
 procedure TPrivilegesListViewEx.UnsubscribeToken;
 begin
-  Token.OnPrivilegesChange.Delete(ChangedPrivileges);
+  Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
+  inherited;
 end;
 
 { TGroupListViewEx }
@@ -262,8 +274,9 @@ end;
 
 procedure TGroupListViewEx.SubscribeToken;
 begin
+  inherited;
   if FSource = gsGroups then
-    Token.OnGroupsChange.Add(ChangedGroups);
+    Token.Events.OnGroupsChange.Add(ChangedGroups);
 
   case FSource of
     gsGroups: ChangedGroups(Token.Groups);
@@ -274,7 +287,8 @@ end;
 procedure TGroupListViewEx.UnsubscribeToken;
 begin
   if FSource = gsGroups then
-    Token.OnGroupsChange.Delete(ChangedGroups);
+    Token.Events.OnGroupsChange.Delete(ChangedGroups);
+  inherited;
 end;
 
 { TSessionComboBox }

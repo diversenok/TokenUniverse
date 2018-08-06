@@ -97,7 +97,8 @@ end;
 procedure TFrameTokenList.DeleteToken(Item: TListItemEx;
   SelectNext: Boolean = False);
 begin
-  Item.Delete;
+  if GetToken(Item).CanBeFreed then
+    Item.Delete;
 
   {if SelectNext and (OriginalIndex < ListViewTokens.Items.Count) then
     ListViewTokens.Items[OriginalIndex].Selected := True;}

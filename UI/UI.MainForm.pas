@@ -193,7 +193,7 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  OnMainFormClose.InvolveIgnoringErrors(Self);
+  OnMainFormClose.InvokeIgnoringErrors(Self);
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
