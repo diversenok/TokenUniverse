@@ -67,7 +67,7 @@ type
 
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
-  TTokenSourceHelper = record helper for TTokenSource
+  TLuidHelper = record helper for LUID
     function ToString: String;
   end;
 
@@ -101,14 +101,21 @@ type
     function ToDetailedString: String;
   end;
 
-  TToken = class;
+  TMandatoryPolicy = (
+    TokenMandatoryPolicyOff,
+    TokenMandatoryPolicyNoWriteUp,
+    TokenMandatoryPolicyNewProcessMin,
+    TokenMandatoryPolicyValidMask
+  );
 
+  TToken = class;
   TTokenEvents = class
   protected
     FTokenObjectAddress: NativeUInt;
     FReferenceCount: Integer;
-    FOnSessionChange: TEventHandler<CanFail<Cardinal>>;
+    FOnSessionChange, FOnUIAccessChange: TEventHandler<CanFail<Cardinal>>;
     FOnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
+    FOnPolicyChange: TEventHandler<CanFail<TMandatoryPolicy>>;
     FOnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
     FOnGroupsChange: TEventHandler<CanFail<TGroupArray>>;
   public
@@ -116,6 +123,8 @@ type
     property TokenObjectAddress: NativeUInt read FTokenObjectAddress;
     property OnSessionChange: TEventHandler<CanFail<Cardinal>> read FOnSessionChange;
     property OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>> read FOnIntegrityChange;
+    property OnUIAccessChange: TEventHandler<CanFail<Cardinal>> read FOnUIAccessChange;
+    property OnPolicyChange: TEventHandler<CanFail<TMandatoryPolicy>> read FOnPolicyChange;
     property OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>> read FOnPrivilegesChange;
     property OnGroupsChange: TEventHandler<CanFail<TGroupArray>> read FOnGroupsChange;
   end;
@@ -143,6 +152,10 @@ type
     procedure SetSession(const Value: Cardinal);
     function GetIntegrity: TTokenIntegrityLevel;
     procedure SetIntegrity(const Value: TTokenIntegrityLevel);
+    function GetUIAccess: Cardinal;
+    procedure SetUIAccess(const Value: Cardinal);
+    function GetMandatoryPolicy: TMandatoryPolicy;
+    procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
   protected
     type TTokenHelper<ResultType> = class
       class function GetFixedSize(Token: TToken;
@@ -263,29 +276,33 @@ type
 
     function TryGetSession: CanFail<Cardinal>;
     function TryGetIntegrity: CanFail<TTokenIntegrity>;
+    function TryGetUIAccess: CanFail<Cardinal>;
+    function TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
 
     property User: CanFail<TSecurityIdentifier> read GetUser;                   // class 1
     property Groups: CanFail<TGroupArray> read GetGroups;                       // class 2
     property Privileges: CanFail<TPrivilegeArray> read GetPrivileges;           // class 3
-    property Owner: CanFail<TSecurityIdentifier> read GetOwner;                 // class 4
-    property PrimaryGroup: CanFail<TSecurityIdentifier> read GetPrimaryGroup;   // class 5
-    // TODO: class 6: DefaultDacl
+    property Owner: CanFail<TSecurityIdentifier> read GetOwner;                 // class 4 #settable
+    property PrimaryGroup: CanFail<TSecurityIdentifier> read GetPrimaryGroup;   // class 5 #settable
+    // TODO: class 6: DefaultDacl #settable
     property Source: CanFail<TTokenSource> read GetSource;                      // classes 7 & 8
     property TokenTypeInfo: CanFail<TTokenTypeInfo> read GetTokenType;          // class 9
     property Statistics: CanFail<TTokenStatistics> read GetStatistics;          // class 10
     property RestrictedSids: CanFail<TGroupArray> read GetRestrictedSids;       // class 11
-    property Session: Cardinal read GetSession write SetSession;              // class 12
-    // TODO: class 13 TokenGroupsAndPrivileges
-    // TODO: class 14 SessionReference
+    property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
+    // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
+    // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: CanFail<LongBool> read GetSandboxInert;              // class 15
-    // TODO -cEnhancement: class 16 TokenAuditPolicy
-    property TokenOrigin: CanFail<Int64> read GetTokenOrigin;                   // class 17
+    // TODO -cEnhancement: class 16 TokenAuditPolicy #settable
+    property TokenOrigin: CanFail<Int64> read GetTokenOrigin;                   // class 17 #settable
     property Elevation: CanFail<TTokenElevationType> read GetElevation;         // classes 18 & 20
-    property LinkedToken: CanFail<TToken> read GetLinkedToken;                  // class 19
+    property LinkedToken: CanFail<TToken> read GetLinkedToken;                  // class 19 #settable
     property HasRestrictions: CanFail<LongBool> read GetHasRestrictions;        // class 21
-    // TODO: class 22 AccessInformation
-    // TODO: class 23 & 24 Virtualization
-    property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25
+    // TODO: class 22 AccessInformation (depends on OS version, duplicates most of info)
+    // TODO: class 23 & 24 Virtualization #settable (both)
+    property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25 #settable
+    property UIAccess: Cardinal read GetUIAccess write SetUIAccess;             // class 26 #settable
+    property MandatoryPolicy: TMandatoryPolicy read GetMandatoryPolicy write SetMandatoryPolicy; // class 27 #settable
 
     { Actions }
 
@@ -530,14 +547,21 @@ begin
   with Result.CopyResult(QueryVariableBuffer(TokenIntegrityLevel)) do
     if IsValid then
     begin
-      Buffer := PSIDAndAttributes(Value);
-
-      Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
-      Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(Buffer.Sid,
-        0)^);
-
-      FreeMem(Buffer);
+      Buffer := Value;
+      try
+        Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+        Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(
+          Buffer.Sid, 0)^);
+      finally
+        FreeMem(Buffer);
+      end;
     end;
+end;
+
+function TToken.TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
+begin
+  Result := TTokenHelper<TMandatoryPolicy>.GetFixedSize(Self,
+    TokenMandatoryPolicy);
 end;
 
 function TToken.GetIntegrity: TTokenIntegrityLevel;
@@ -564,6 +588,11 @@ begin
       Result.ErrorCode := ErrorCode;
       Result.ErrorOrigin := ErrorOrigin;
     end;
+end;
+
+function TToken.GetMandatoryPolicy: TMandatoryPolicy;
+begin
+  Result := TryGetMandatoryPolicy.GetValueOrRaise;
 end;
 
 function TToken.GetObjAddress: NativeUInt;
@@ -639,6 +668,11 @@ begin
   Result := TTokenHelper<Cardinal>.GetFixedSize(Self, TokenSessionId);
 end;
 
+function TToken.TryGetUIAccess: CanFail<Cardinal>;
+begin
+  Result := TTokenHelper<Cardinal>.GetFixedSize(Self, TokenUIAccess);
+end;
+
 function TToken.GetSource: CanFail<TTokenSource>;
 begin
   Result := TTokenHelper<TTokenSource>.GetFixedSize(Self, TokenSource);
@@ -672,6 +706,11 @@ begin
     ReturnValue), GetterMessage(TokenImpersonationLevel));
 end;
 
+function TToken.GetUIAccess: Cardinal;
+begin
+  Result := TryGetUIAccess.GetValueOrRaise;
+end;
+
 function TToken.GetUser: CanFail<TSecurityIdentifier>;
 var
   Buffer: PSIDAndAttributes;
@@ -680,8 +719,11 @@ begin
     if IsValid then
     begin
       Buffer := Value;
-      Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
-      FreeMem(Buffer);
+      try
+        Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
+      finally
+        FreeMem(Buffer);
+      end;
     end;
 end;
 
@@ -798,8 +840,11 @@ begin
     if IsValid then
     begin
       Buffer := Value;
-      Result.Value := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
-      FreeMem(Buffer);
+      try
+        Result.Value := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
+      finally
+        FreeMem(Buffer);
+      end;
     end;
 end;
 
@@ -820,7 +865,7 @@ begin
     BufferSize, ReturnValue), GetterMessage(InfoClass)) then
   begin
     FreeMem(Result.Value);
-    Result.Value := nil
+    Result.Value := nil;
   end;
 end;
 
@@ -871,10 +916,23 @@ begin
   Events.OnGroupsChange.Invoke(Groups);
 end;
 
+procedure TToken.SetMandatoryPolicy(const Value: TMandatoryPolicy);
+begin
+  TTokenHelper<TMandatoryPolicy>.SetFixedSize(Self, TokenMandatoryPolicy,
+    Value);
+  Events.OnPolicyChange.Invoke(TryGetMandatoryPolicy);
+end;
+
 procedure TToken.SetSession(const Value: Cardinal);
 begin
   TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
   Events.OnSessionChange.Invoke(TryGetSession);
+end;
+
+procedure TToken.SetUIAccess(const Value: Cardinal);
+begin
+  TTokenHelper<Cardinal>.SetFixedSize(Self, TokenUIAccess, Value);
+  Events.OnUIAccessChange.Invoke(TryGetUIAccess);
 end;
 
 { TTokenAccess }
@@ -1158,11 +1216,11 @@ begin
   end;
 end;
 
-{ TTokenSourceHelper }
+{ TLuidHelper }
 
-function TTokenSourceHelper.ToString: String;
+function TLuidHelper.ToString: String;
 begin
-  Result := String(Self.sourcename);
+  Result := Format('0x%x', [PInt64(@Self)^]);
 end;
 
 { TTokenTypeInfo }
@@ -1258,6 +1316,10 @@ begin
     OutputDebugString('Abandoned OnSessionChange');
   if Length(FOnIntegrityChange.Listeners) > 0 then
     OutputDebugString('Abandoned OnIntegrityChange');
+  if Length(FOnUIAccessChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnUIAccessChange');
+  if Length(FOnPolicyChange.Listeners) > 0 then
+    OutputDebugString('Abandoned OnPolicyChange');
   if Length(FOnPrivilegesChange.Listeners) > 0 then
     OutputDebugString('Abandoned OnPrivilegesChange');
   if Length(FOnGroupsChange.Listeners) > 0 then

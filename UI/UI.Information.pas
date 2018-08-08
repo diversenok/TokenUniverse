@@ -21,26 +21,14 @@ type
     ListViewPrivileges: TPrivilegesListViewEx;
     TabRestricted: TTabSheet;
     ListViewRestricted: TGroupListViewEx;
-    StaticObjAddr: TStaticText;
-    EditObjAddr: TEdit;
     StaticSession: TStaticText;
-    StaticElevation: TStaticText;
-    StaticVirtualization: TStaticText;
     StaticIntegrity: TStaticText;
-    StaticUIAccess: TStaticText;
-    StaticType: TStaticText;
     ComboSession: TSessionComboBox;
     ComboIntegrity: TIntegrityComboBox;
-    StaticHandle: TStaticText;
-    EditHandle: TEdit;
-    EditType: TEdit;
     ImageList: TImageList;
     ComboBoxView: TComboBox;
     BtnSetIntegrity: TSpeedButton;
     BtnSetSession: TSpeedButton;
-    StaticAccess: TStaticText;
-    EditAccess: TEdit;
-    EditElevation: TEdit;
     PrivilegePopup: TPopupMenu;
     MenuPrivEnable: TMenuItem;
     MenuPrivDisable: TMenuItem;
@@ -49,6 +37,21 @@ type
     MenuGroupEnable: TMenuItem;
     MenuGroupDisable: TMenuItem;
     MenuGroupReset: TMenuItem;
+    TabAdvanced: TTabSheet;
+    ListViewAdvanced: TListViewEx;
+    StaticOwner: TStaticText;
+    ComboOwner: TComboBox;
+    BtnSetOwner: TSpeedButton;
+    BtnSetPrimary: TSpeedButton;
+    ComboPrimary: TComboBox;
+    StaticPrimary: TStaticText;
+    StaticUIAccess: TStaticText;
+    ComboUIAccess: TComboBox;
+    BtnSetUIAccess: TSpeedButton;
+    StaticText1: TStaticText;
+    ComboPolicy: TComboBox;
+    SpeedButton1: TSpeedButton;
+    ListViewGeneral: TListViewEx;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -67,12 +70,16 @@ type
     procedure ActionGroupReset(Sender: TObject);
     procedure ListViewGroupsContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
+    procedure BtnSetUIAccessClick(Sender: TObject);
+    procedure BtnSetMandatoryPolicy(Sender: TObject);
   private
     Token: TToken;
     procedure ConfirmTokenClose(Sender: TToken);
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
     procedure ChangedSession(NewSession: CanFail<Cardinal>);
+    procedure ChangedUIAccess(NewUIAccess: CanFail<Cardinal>);
+    procedure ChangedPolicy(NewPolicy: CanFail<TMandatoryPolicy>);
     procedure ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
     procedure Refresh;
   public
@@ -132,12 +139,40 @@ begin
   end;
 end;
 
+procedure TInfoDialog.BtnSetMandatoryPolicy(Sender: TObject);
+begin
+  try
+    if ComboPolicy.ItemIndex = -1 then
+      Token.MandatoryPolicy := TMandatoryPolicy(StrToIntEx(ComboPolicy.Text,
+        'mandatory policy flag'))
+    else
+      Token.MandatoryPolicy := TMandatoryPolicy(ComboPolicy.ItemIndex);
+  except
+    ChangedPolicy(Token.TryGetMandatoryPolicy);
+    raise;
+  end;
+end;
+
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
   try
     Token.Session := ComboSession.SelectedSession;
   except
     ChangedSession(Token.TryGetSession);
+    raise;
+  end;
+end;
+
+procedure TInfoDialog.BtnSetUIAccessClick(Sender: TObject);
+begin
+  ComboUIAccess.Color := clWindow;
+  try
+    if ComboUIAccess.ItemIndex = -1 then
+      Token.UIAccess := StrToIntEx(ComboUIAccess.Text, 'UIAccess value')
+    else
+      Token.UIAccess := ComboUIAccess.ItemIndex;
+  except
+    ChangedUIAccess(Token.TryGetUIAccess);
     raise;
   end;
 end;
@@ -151,6 +186,29 @@ procedure TInfoDialog.ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
 begin
   ComboIntegrity.Color := clWindow;
   ComboIntegrity.SetIntegrity(NewIntegrity);
+end;
+
+procedure TInfoDialog.ChangedPolicy(NewPolicy: CanFail<TMandatoryPolicy>);
+begin
+  ComboPolicy.Color := clWindow;
+
+  with NewPolicy do
+    if IsValid then
+    begin
+      if (Value >= TokenMandatoryPolicyOff) and
+       (Value <= TokenMandatoryPolicyValidMask) then
+       ComboPolicy.ItemIndex := Integer(Value)
+      else
+      begin
+        ComboPolicy.ItemIndex := -1;
+        ComboPolicy.Text := IntToStr(Integer(Value));
+      end;
+    end
+    else
+    begin
+      ComboPolicy.ItemIndex := -1;
+      ComboPolicy.Text := 'Unknown policy';
+    end;
 end;
 
 procedure TInfoDialog.ChangedPrivileges(
@@ -178,6 +236,20 @@ begin
   ComboSession.Items.EndUpdate;
 end;
 
+procedure TInfoDialog.ChangedUIAccess(NewUIAccess: CanFail<Cardinal>);
+begin
+  with NewUIAccess do
+  begin
+    if IsValid then
+      ComboUIAccess.ItemIndex := Integer(Value <> 0)
+    else
+    begin
+      ComboUIAccess.ItemIndex := -1;
+      ComboUIAccess.Text := 'Unknown UIAccess';
+    end;
+  end;
+end;
+
 procedure TInfoDialog.ChangedView(Sender: TObject);
 begin
   with Token.User do
@@ -188,6 +260,25 @@ begin
       else
         EditUser.Text := Value.SID;
     end;
+
+  with Token.Owner do
+    if IsValid then
+    begin
+      if ComboBoxView.ItemIndex = 0 then
+        ComboOwner.Text := Value.ToString
+      else
+        ComboOwner.Text := Value.SID;
+    end;
+
+  with Token.PrimaryGroup do
+    if IsValid then
+    begin
+      if ComboBoxView.ItemIndex = 0 then
+        ComboPrimary.Text := Value.ToString
+      else
+        ComboPrimary.Text := Value.SID;
+    end;
+
   ListViewGroups.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
   ListViewRestricted.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
 end;
@@ -220,7 +311,9 @@ end;
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
+  Token.Events.OnPolicyChange.Delete(ChangedPolicy);
   Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
+  Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
   Token.OnCanClose.Delete(ConfirmTokenClose);
@@ -239,7 +332,9 @@ begin
   Token.OnCanClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.Events.OnSessionChange.Add(ChangedSession);
+  Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
+  Token.Events.OnPolicyChange.Add(ChangedPolicy);
   Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
 
   Refresh;
@@ -269,25 +364,59 @@ procedure TInfoDialog.Refresh;
 begin
   ComboSession.RefreshSessionList;
 
-  EditObjAddr.Text := '0x' + IntToHex(Token.ObjAddress, 8);
-  EditHandle.Text := '0x' + IntToHex(Token.Handle, -1);
+  with ListViewGeneral do
+  begin
+    Items[0].SubItems[0] := Format('0x%.8x', [Token.ObjAddress]);
+    Items[1].SubItems[0] := Format('0x%x', [Token.Handle]);
 
-  with Token.Access do
-    if IsValid then
-      EditAccess.Text := AccessToDetailedString(Value);
+    with Token.Access do
+      if IsValid then
+        Items[2].SubItems[0] := AccessToDetailedString(Value);
 
-  with Token.TokenTypeInfo do
-    if IsValid then
-      EditType.Text := Value.ToString;
+    with Token.TokenTypeInfo do
+      if IsValid then
+        Items[3].SubItems[0] := Value.ToString;
 
-  with Token.Elevation do
+    with Token.Elevation do
     if IsValid then
-      EditElevation.Text := Value.ToString;
+        Items[4].SubItems[0] := Value.ToString;
+  end;
+
+  with ListViewAdvanced do
+  begin
+    with Token.Source do
+      if IsValid then
+      begin
+        // sourcename field may or may not contain zero-termination byte
+        Items[0].SubItems[0] := PAnsiChar(AnsiString(Value.sourcename));
+        Items[1].SubItems[0] := Value.SourceIdentifier.ToString;
+      end;
+
+    with Token.Statistics do
+      if IsValid then
+      begin
+        Items[2].SubItems[0] := Value.TokenId.ToString;
+        Items[3].SubItems[0] := Value.AuthenticationId.ToString;
+        if Value.ExpirationTime.QuadPart = Int64.MaxValue then
+          Items[4].SubItems[0] := 'Infinite'
+        else
+          { X / [100ns by 1 day] - [day span since 01.01.1601] }
+          Items[4].SubItems[0] := DateTimeToStr(Value.ExpirationTime.QuadPart
+            / 8.64e11 - 109205) + ' UTC';
+        Items[5].SubItems[0] := Value.DynamicCharged.ToString + ' B';
+        Items[6].SubItems[0] := Value.DynamicAvailable.ToString + ' B';
+        Items[7].SubItems[0] := Value.GroupCount.ToString;
+        Items[8].SubItems[0] := Value.PrivilegeCount.ToString;
+        Items[9].SubItems[0] := Value.ModifiedId.ToString;
+      end;
+  end;
 
   // TODO: Should we share the obtained information with other event listeners?
   ChangedCaption(Token.Caption);
   ChangedIntegrity(Token.TryGetIntegrity);
   ChangedSession(Token.TryGetSession);
+  ChangedUIAccess(Token.TryGetUIAccess);
+  ChangedPolicy(Token.TryGetMandatoryPolicy);
   ChangedView(Token);
   //TODO: It is now broken for groups, privileges, and restricted SIDs
 

@@ -48,6 +48,8 @@ resourcestring
     'access rights for the token.';
   SETTER_INTEGRITY_RAISE = 'To raise the integrity level of a token you need to ' +
     'have SeTcbPrivilege.';
+  SETTER_UIACCESS_TCB = 'You need to have SeTcbPrivilege to enable UIAccess flag.';
+  SETTER_POLICY_TCB = 'Changing of mandatory integrity policy requires SeTcbPrivilege.';
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
     'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
@@ -110,6 +112,12 @@ begin
 
     if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
       Exit(SETTER_INTEGRITY_RAISE);
+
+    if E.ErrorOrigin = SetterMessage(TokenUIAccess) then
+      Exit(SETTER_UIACCESS_TCB);
+
+    if E.ErrorOrigin = SetterMessage(TokenMandatoryPolicy) then
+      Exit(SETTER_POLICY_TCB);
   end;
 
   if E.ErrorOrigin = 'AdjustTokenPrivileges' then

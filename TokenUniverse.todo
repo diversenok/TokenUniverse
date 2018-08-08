@@ -1,5 +1,5 @@
+{TODO : Add an event for modification ID}
 {TODO : CreateWellKnownSid (in form of a combobox?)}
-{TODO : Event handlers should work for all TTokens with the same object address}
 {TODO -cUI : Hints everywhere}
 {TODO -cEnhancement :ImpersonateAnonymousToken
 ImpersonateLoggedOnUser
