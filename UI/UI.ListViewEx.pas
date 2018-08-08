@@ -25,6 +25,7 @@ type
     FSubItems: TStringList;
     FColor: TColor;
     FColorEnabled: Boolean;
+    FHint: String;
     FVisible: Boolean;
     procedure SetVisible(const Value: Boolean);
     function GetCaption: String;
@@ -45,6 +46,8 @@ type
     function GetGroupID: Integer;
     procedure SetGroupID(const Value: Integer);
     procedure SetOwnedData(const Value: TObject);
+    function GetHint: String;
+    procedure SetHint(const Value: String);
   protected
     procedure AssignDataToItem(Item: TListItemEx);
     procedure RefreshItemInformation;
@@ -59,6 +62,7 @@ type
     property Checked: Boolean read GetChecked write SetChecked;
     property Color: TColor read GetColor write SetColor;
     property ColorEnabled: Boolean read GetColorEnabled write SetColorEnabled;
+    property Hint: String read GetHint write SetHint;
     property Data: TCustomData read GetData write SetData;
     property GroupID: Integer read GetGroupID write SetGroupID;
     property ImageIndex: TImageIndex read GetImageIndex write SetImageIndex;
@@ -73,6 +77,7 @@ type
   private
     FColor: TColor;
     FColorEnabled: Boolean;
+    FHint: String;
     FOwnedData: TObject;
     procedure SetColor(const Value: TColor);
     function GetOwnerItems: TListItemsEx;
@@ -84,6 +89,7 @@ type
     function ToString: String; override;
     property Color: TColor read FColor write SetColor;
     property ColorEnabled: Boolean read FColorEnabled write FColorEnabled;
+    property Hint: String read FHint write FHint;
     property OwnedData: TObject read FOwnedData write SetOwnedData;
     property Owner: TListItemsEx read GetOwnerItems;
     property GlobalIndex: Integer read GetGlobalIndex;
@@ -99,6 +105,7 @@ type
     function GetAllItem(GlobalIndex: Integer): TListItemHolder;
     function GetAllItemsCount: Integer;
   protected
+    procedure DefineProperties(Filer: TFiler); override;
     function GetItem(Index: Integer): TListItemEx;
     procedure SetItem(Index: Integer; Value: TListItemEx);
     procedure CreateSelectionSnapshot;
@@ -128,7 +135,9 @@ type
     function GetSelected: TListItemEx;
     procedure SetSelected(const Value: TListItemEx);
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
+    procedure CMHintShow(var Message: TCMHintShow); message CM_HINTSHOW;
     procedure SetSelectedCheckboxesState(State: Boolean);
+    procedure ShowItemsHint(Sender: TObject; Item: TListItem; var InfoTip: string);
   protected
     function CreateListItem: TListItem; override;
     function CreateListItems: TListItems; override;
@@ -163,6 +172,18 @@ begin
   // so we don't get OnSelectItem event.
   ClearSelection;
   inherited;
+end;
+
+procedure TListViewEx.CMHintShow(var Message: TCMHintShow);
+begin
+  if not Assigned(OnInfoTip) then
+  begin
+    OnInfoTip := ShowItemsHint;
+    inherited;
+    OnInfoTip := nil;
+  end
+  else
+    inherited;
 end;
 
 procedure TListViewEx.CopySelectedToClipboard;
@@ -291,6 +312,12 @@ begin
       Items[i].Checked := State;
 end;
 
+procedure TListViewEx.ShowItemsHint(Sender: TObject; Item: TListItem;
+  var InfoTip: string);
+begin
+  InfoTip := (Item as TListItemEx).Hint;
+end;
+
 procedure TListViewEx.WMKeyDown(var Message: TWMKeyDown);
 var
   State: TShiftState;
@@ -393,6 +420,22 @@ begin
   SetLength(FSelectionSnapshot, Count);
   for i := 0 to High(FSelectionSnapshot) do
     FSelectionSnapshot[i] := Item[i].Selected;
+end;
+
+procedure TListItemsEx.DefineProperties(Filer: TFiler);
+var
+  i: integer;
+begin
+  inherited;
+
+  // We need to rebuild FAllItems list
+  for i := 0 to FAllItems.Count - 1 do
+    FAllItems[i].Free;
+
+  FAllItems.Clear;
+
+  for i := 0 to Count - 1 do
+    FAllItems.Add(TListItemHolder.Create(Item[i]));
 end;
 
 destructor TListItemsEx.Destroy;
@@ -530,6 +573,7 @@ begin
   Item.SubItems.Assign(FSubItems);
   Item.Color := FColor;
   Item.ColorEnabled := FColorEnabled;
+  Item.Hint := FHint;
 end;
 
 constructor TListItemHolder.Create(Item: TListItemEx);
@@ -594,6 +638,14 @@ begin
     Result := FListItem.GroupID
   else
     Result := FGroupID;
+end;
+
+function TListItemHolder.GetHint: String;
+begin
+  if Assigned(FListItem) then
+    Result := FListItem.Hint
+  else
+    Result := FHint;
 end;
 
 function TListItemHolder.GetImageIndex: TImageIndex;
@@ -666,6 +718,7 @@ begin
   FSubItems.Assign(FListItem.SubItems);
   FColor := FListItem.Color;
   FColorEnabled := FListItem.ColorEnabled;
+  FHint := FListItem.Hint;
 end;
 
 procedure TListItemHolder.SetCaption(const Value: String);
@@ -714,6 +767,14 @@ begin
     FListItem.GroupID := Value
   else
     FGroupID := Value;
+end;
+
+procedure TListItemHolder.SetHint(const Value: String);
+begin
+  if Assigned(FListItem) then
+    FListItem.Hint := Value
+  else
+    FHint := Value;
 end;
 
 procedure TListItemHolder.SetImageIndex(const Value: TImageIndex);
