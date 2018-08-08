@@ -498,10 +498,11 @@ object InfoDialog: TInfoDialog
           'No write up & New process min')
       end
       object ListViewGeneral: TListViewEx
-        Left = 3
+        Left = 0
         Top = 0
-        Width = 382
+        Width = 388
         Height = 118
+        Align = alTop
         BorderStyle = bsNone
         Columns = <
           item

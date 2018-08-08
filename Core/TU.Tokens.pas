@@ -470,7 +470,8 @@ begin
   except
     ; // destructor should always succeed
   end;
-  FinalizeEvents;
+  if Assigned(FEvents) then
+    FinalizeEvents;
 
   if Length(FOnCanClose.Listeners) > 0 then
     OutputDebugString('Abandoned OnCanClose');
