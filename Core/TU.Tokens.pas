@@ -298,7 +298,7 @@ type
     property Elevation: CanFail<TTokenElevationType> read GetElevation;         // classes 18 & 20
     property LinkedToken: CanFail<TToken> read GetLinkedToken;                  // class 19 #settable
     property HasRestrictions: CanFail<LongBool> read GetHasRestrictions;        // class 21
-    // TODO: class 22 AccessInformation (depends on OS version, duplicates most of info)
+    // TODO: class 22 AccessInformation (depends on OS version, duplicates most of the info)
     // TODO: class 23 & 24 Virtualization #settable (both)
     property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25 #settable
     property UIAccess: Cardinal read GetUIAccess write SetUIAccess;             // class 26 #settable

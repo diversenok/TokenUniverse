@@ -72,6 +72,7 @@ type
       var Handled: Boolean);
     procedure BtnSetUIAccessClick(Sender: TObject);
     procedure BtnSetMandatoryPolicy(Sender: TObject);
+    procedure ListViewAdvancedResize(Sender: TObject);
   private
     Token: TToken;
     procedure ConfirmTokenClose(Sender: TToken);
@@ -89,7 +90,7 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors;
+  System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi;
 
 {$R *.dfm}
 
@@ -347,6 +348,13 @@ begin
     Refresh;
 end;
 
+procedure TInfoDialog.ListViewAdvancedResize(Sender: TObject);
+begin
+  // HACK: designs-time AutoSize causes horizontal scrollbar to appear
+  ListViewAdvanced.Columns[1].AutoSize := True;
+  ListViewRestricted.OnResize := nil;
+end;
+
 procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;
   MousePos: TPoint; var Handled: Boolean);
 begin
@@ -364,6 +372,7 @@ procedure TInfoDialog.Refresh;
 begin
   ComboSession.RefreshSessionList;
 
+  ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
   begin
     Items[0].SubItems[0] := Format('0x%.8x', [Token.ObjAddress]);
@@ -381,14 +390,16 @@ begin
     if IsValid then
         Items[4].SubItems[0] := Value.ToString;
   end;
+  ListViewGeneral.Items.EndUpdate;
 
+  ListViewAdvanced.Items.BeginUpdate;
   with ListViewAdvanced do
   begin
     with Token.Source do
       if IsValid then
       begin
         // sourcename field may or may not contain zero-termination byte
-        Items[0].SubItems[0] := PAnsiChar(AnsiString(Value.sourcename));
+        Items[0].SubItems[0] := String(PAnsiChar(AnsiString(Value.sourcename)));
         Items[1].SubItems[0] := Value.SourceIdentifier.ToString;
       end;
 
@@ -400,16 +411,49 @@ begin
         if Value.ExpirationTime.QuadPart = Int64.MaxValue then
           Items[4].SubItems[0] := 'Infinite'
         else
-          { X / [100ns by 1 day] - [day span since 01.01.1601] }
-          Items[4].SubItems[0] := DateTimeToStr(Value.ExpirationTime.QuadPart
-            / 8.64e11 - 109205) + ' UTC';
-        Items[5].SubItems[0] := Value.DynamicCharged.ToString + ' B';
+          Items[4].SubItems[0] := DateTimeToStr(NativeTimeToLocalDateTime(
+            Value.ExpirationTime.QuadPart));
+        if Value.DynamicCharged mod 1024 = 0 then
+         Items[5].SubItems[0] := (Value.DynamicCharged div 1024).ToString + ' kB'
+        else
+         Items[5].SubItems[0] := Value.DynamicCharged.ToString + ' B';
         Items[6].SubItems[0] := Value.DynamicAvailable.ToString + ' B';
         Items[7].SubItems[0] := Value.GroupCount.ToString;
         Items[8].SubItems[0] := Value.PrivilegeCount.ToString;
         Items[9].SubItems[0] := Value.ModifiedId.ToString;
+
+        Items[12].SubItems[0] := Value.AuthenticationId.ToString;
+        with GetLogonSessionInformation(Value.AuthenticationId) do
+          if IsValid then
+          begin
+            Items[13].SubItems[0] := Value.User.ToString;
+            Items[14].SubItems[0] := Value.AuthPackage;
+            Items[15].SubItems[0] := Value.LogonServer;
+            Items[16].SubItems[0] := Value.LogonType.ToString;
+            Items[17].SubItems[0] := Value.Session.ToString;
+            Items[18].SubItems[0] := DateTimeToStr(Value.LogonTime);
+          end;
+      end;
+
+    with Token.SandboxInert do
+      if IsValid then
+      begin
+        if Value then
+          Items[10].SubItems[0] := 'Yes'
+        else
+          Items[10].SubItems[0] := 'No';
+      end;
+
+    with Token.HasRestrictions do
+      if IsValid then
+      begin
+        if Value then
+          Items[11].SubItems[0] := 'Yes'
+        else
+          Items[11].SubItems[0] := 'No';
       end;
   end;
+  ListViewAdvanced.Items.EndUpdate;
 
   // TODO: Should we share the obtained information with other event listeners?
   ChangedCaption(Token.Caption);

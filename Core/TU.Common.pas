@@ -139,10 +139,16 @@ function NativeCheck(Status: NTSTATUS; Where: String;
 /// <exception cref="EConvertError"> Can raise EConvertError. </exception>
 function StrToIntEx(S: String; Comment: String): Cardinal;
 
+/// <symmary>
+///  Converts a number of 100ns intervals from 01.01.1601 to Delphi's
+///  <c>TDateTime</c> type.
+/// </summary>
+function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;
+
 implementation
 
 uses
-  Winapi.Windows;
+  Winapi.Windows, System.DateUtils;
 
 resourcestring
   OSError = '%s failed.' + #$D#$A#$D#$A +
@@ -379,6 +385,15 @@ begin
   Val(S, Result, E);
   if E <> 0 then
     raise EConvertError.Create(Format(E_CONV_DECHEX, [Comment]));
+end;
+
+function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;
+const
+  DAYS_FROM_1601 = 109205;
+  SCALE = 864000000000; // 100ns in 1 day
+begin
+  Result := NativeTime / SCALE - DAYS_FROM_1601;
+  Result := TTimeZone.Local.ToLocalTime(Result);
 end;
 
 end.
