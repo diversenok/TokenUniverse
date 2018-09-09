@@ -64,6 +64,7 @@ begin
     CredInfo.pszMessageText := 'Please enter the credentials:';
 
     AuthPackage := 0;
+    LastAuthError := 0;
     ErrorCode := CredUIPromptForWindowsCredentialsW(CredInfo, LastAuthError,
       AuthPackage, nil, 0, AuthBuffer, AuthBufferSize, nil, CREDUIWIN_GENERIC);
 

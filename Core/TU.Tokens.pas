@@ -1017,6 +1017,9 @@ var
   BufUser, BufDomain: PWideChar;
   UserChars, DomainChars, peUse: Cardinal;
 begin
+  Domain := '';
+  User := '';
+
   UserChars := 0;
   DomainChars := 0;
   LookupAccountSidW(nil, SrcSid, nil, UserChars, nil, DomainChars, peUse);
@@ -1045,7 +1048,9 @@ procedure TSecurityIdentifier.GetStringSid(SrcSid: PSID);
 var
   Buffer: PWideChar;
 begin
-  if ConvertSidToStringSid(SrcSid, Buffer) then
+  SID := '';
+  if Win32Check(ConvertSidToStringSidW(SrcSid, Buffer),
+    'ConvertSidToStringSidW') then
   begin
     SID := String(Buffer);
     LocalFree(NativeUInt(Buffer));

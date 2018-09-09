@@ -26,7 +26,10 @@ type
     ErrorOrigin: String;
     ErrorContext: TObject;
 
-    /// <summary> Initializes the wrapper and data with zeros. </summary>
+    /// <summary>
+    /// Initializes the wrapper. This is necessary since records are created on
+    /// the stack and can contain arbitrary data.
+    /// </summary>
     procedure Init(Context: TObject = nil);
     class function Fail: CanFail<ResultType>; static;
 
@@ -251,7 +254,13 @@ end;
 
 procedure CanFail<ResultType>.Init(Context: TObject = nil);
 begin
-  FillChar(Self, SizeOf(Self), 0);
+  // We can't use FillChar(Self, SizeOf(Self), 0) since we may accidentally
+  // overwrite a string reference (for example inside Self.Value record)
+  // and compiler wouldn't know about it. That leads to memory leaks since
+  // strings have reference counting mechanism.
+  Self.IsValid := False;
+  Self.ErrorCode := 0;
+  Self.ErrorOrigin := '';
   Self.ErrorContext := Context;
 end;
 
