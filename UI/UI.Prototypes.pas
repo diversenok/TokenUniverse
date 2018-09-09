@@ -44,6 +44,8 @@ type
     procedure ChangedGroups(NewGroups: CanFail<TGroupArray>);
     procedure SetSource(const Value: TGroupSource);
     procedure SetViewAs(const Value: TGroupViewAs);
+    function BuildHint(SID: TSecurityIdentifier; Attributes: TGroupAttributes)
+      : String;
   protected
     procedure SubscribeToken; override;
     procedure UnsubscribeToken; override;
@@ -83,7 +85,7 @@ procedure Register;
 implementation
 
 uses
-  UI.Colors;
+  System.Generics.Collections, UI.Colors;
 
 procedure Register;
 begin
@@ -194,6 +196,28 @@ end;
 
 { TGroupListViewEx }
 
+function TGroupListViewEx.BuildHint(SID: TSecurityIdentifier;
+  Attributes: TGroupAttributes): String;
+const
+  ITEM_FORMAT = '%s:'#$D#$A'  %s';
+var
+  Items: TList<String>;
+begin
+  Items := TList<String>.Create;;
+  try
+    if SID.HasPrettyName then
+      Items.Add(Format(ITEM_FORMAT, ['Pretty name', SID.ToString]));
+    Items.Add(Format(ITEM_FORMAT, ['SID', SID.SID]));
+    Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDType.ToString]));
+    Items.Add(Format(ITEM_FORMAT, ['State', Attributes.StateToString]));
+    if Attributes.ContainAnyFlags then
+      Items.Add(Format(ITEM_FORMAT, ['Flags', Attributes.FlagsToString]));
+    Result := String.Join(#$D#$A, Items.ToArray);
+  finally
+    Items.Free;
+  end;
+end;
+
 procedure TGroupListViewEx.ChangedGroups(NewGroups: CanFail<TGroupArray>);
 var
   i: Integer;
@@ -211,6 +235,7 @@ begin
           gvUser: Caption := SecurityIdentifier.ToString;
           gvSID: Caption := SecurityIdentifier.SID;
         end;
+        Hint := BuildHint(SecurityIdentifier, Attributes);
         SubItems.Add(Attributes.StateToString);
         SubItems.Add(Attributes.FlagsToString);
         Color := GroupAttributesToColor(Attributes);

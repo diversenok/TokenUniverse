@@ -14,16 +14,24 @@ uses
   TU.Tokens.Winapi, TU.Handles, TU.Common;
 
 type
+  TSIDNameUseHelper = record helper for TSIDNameUse
+    function ToString: string;
+  end;
+
   TSecurityIdentifier = record
   private
     procedure GetDomainAndUser(SrcSid: PSID);
     procedure GetStringSid(SrcSid: PSID);
   public
     SID, Domain, User: String;
+    SIDType: TSIDNameUse;
     constructor CreateFromSid(SrcSid: PSID);
     constructor CreateFromStringSid(StringSID: string);
     constructor CreateFromUserName(Name: string);
+    class function CreateWellKnown(WellKnownSidType: TWellKnownSidType):
+      CanFail<TSecurityIdentifier>; static;
     function ToString: String;
+    function HasPrettyName: Boolean;
   end;
 
   TGroupAttributes = (
@@ -41,6 +49,7 @@ type
   TGroupAttributesHelper = record helper for TGroupAttributes
     function StateToString: String;
     function FlagsToString: String;
+    function ContainAnyFlags: Boolean;
     function Contain(Flag: TGroupAttributes): Boolean;
   end;
 
@@ -966,6 +975,27 @@ begin
   Result := String.Join(', ', Granted);
 end;
 
+{ TSIDNameUseHelper }
+
+function TSIDNameUseHelper.ToString: string;
+begin
+  case Self of
+    SidTypeZero: Result := 'Undefined';
+    SidTypeUser: Result := 'User';
+    SidTypeGroup: Result := 'Group';
+    SidTypeDomain: Result := 'Domain';
+    SidTypeAlias: Result := 'Alias';
+    SidTypeWellKnownGroup:  Result := 'Well-known Group';
+    SidTypeDeletedAccount: Result := 'Deleted Account';
+    SidTypeInvalid: Result := 'Invalid';
+    SidTypeUnknown: Result := 'Unknown';
+    SidTypeComputer: Result := 'Computer';
+    SidTypeLabel: Result := 'Label';
+  else
+    Result := Format('%d (out of bound)', [Cardinal(Self)]);
+  end;
+end;
+
 { TSecurityIdentifier }
 
 constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSID);
@@ -1012,6 +1042,29 @@ begin
   end;
 end;
 
+class function TSecurityIdentifier.CreateWellKnown(
+  WellKnownSidType: TWellKnownSidType): CanFail<TSecurityIdentifier>;
+var
+  Buffer: PSID;
+  BufferSize: Cardinal;
+begin
+  Result.Init;
+
+  BufferSize := 0;
+  CreateWellKnownSid(WellKnownSidType, nil, nil, BufferSize);
+  if not Result.CheckBuffer(BufferSize, 'CreateWellKnownSid') then
+    Exit;
+
+  Buffer := AllocMem(BufferSize);
+  try
+    if Result.CheckError(CreateWellKnownSid(WellKnownSidType, nil, Buffer,
+      BufferSize), 'CreateWellKnownSid') then
+      Result.Value.CreateFromSid(Buffer);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
 procedure TSecurityIdentifier.GetDomainAndUser(SrcSid: PSID);
 var
   BufUser, BufDomain: PWideChar;
@@ -1019,6 +1072,7 @@ var
 begin
   Domain := '';
   User := '';
+  SIDType := SidTypeZero;
 
   UserChars := 0;
   DomainChars := 0;
@@ -1033,6 +1087,7 @@ begin
     if LookupAccountSidW(nil, SrcSid, BufUser, UserChars, BufDomain,
       DomainChars, peUse) then // We don't need exceptions
     begin
+      SIDType := TSIDNameUse(peUse);
       if UserChars <> 0 then
         SetString(User, BufUser, UserChars);
       if DomainChars <> 0 then
@@ -1057,6 +1112,11 @@ begin
   end;
 end;
 
+function TSecurityIdentifier.HasPrettyName: Boolean;
+begin
+  Result := (Domain <> '') or (User <> '');
+end;
+
 function TSecurityIdentifier.ToString: String;
 begin
  if (User <> '') and (Domain <> '') then
@@ -1079,6 +1139,15 @@ begin
   Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
 end;
 
+function TGroupAttributesHelper.ContainAnyFlags: Boolean;
+const
+  AllFlags = Cardinal(GroupMandatory) or Cardinal(GroupOwner) or
+    Cardinal(GroupIntegrity) or Cardinal(GroupResource) or
+    Cardinal(GroupLogonId);
+begin
+  Result := Cardinal(Self) and AllFlags <> 0;
+end;
+
 function TGroupAttributesHelper.FlagsToString: String;
 const
   GROUP_FLAGS_COUNT = 5;
@@ -1090,6 +1159,9 @@ var
   Strings: array of string;
   FlagInd, StrInd: Integer;
 begin
+  if not ContainAnyFlags then
+    Exit('');
+
   SetLength(Strings, GROUP_FLAGS_COUNT);
   StrInd := 0;
   for FlagInd := 1 to GROUP_FLAGS_COUNT do
@@ -1134,6 +1206,8 @@ begin
     end;
   SetLength(Strings, StrInd);
   Result := String.Join(', ', Strings);
+  if Result = '' then
+    Result := 'Disabled';
 end;
 
 { TPrivilegeHelper }

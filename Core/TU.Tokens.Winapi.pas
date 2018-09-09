@@ -63,6 +63,100 @@ type
     MaxTokenInfoClass
   );
 
+  TSIDNameUse = (
+    SidTypeZero,
+    SidTypeUser,
+    SidTypeGroup,
+    SidTypeDomain,
+    SidTypeAlias,
+    SidTypeWellKnownGroup,
+    SidTypeDeletedAccount,
+    SidTypeInvalid,
+    SidTypeUnknown,
+    SidTypeComputer,
+    SidTypeLabel
+  );
+
+  TWellKnownSidType = (
+    WinNullSid,
+    WinWorldSid,
+    WinLocalSid,
+    WinCreatorOwnerSid,
+    WinCreatorGroupSid,
+    WinCreatorOwnerServerSid,
+    WinCreatorGroupServerSid,
+    WinNtAuthoritySid,
+    WinDialupSid,
+    WinNetworkSid,
+    WinBatchSid,
+    WinInteractiveSid,
+    WinServiceSid,
+    WinAnonymousSid,
+    WinProxySid,
+    WinEnterpriseControllersSid,
+    WinSelfSid,
+    WinAuthenticatedUserSid,
+    WinRestrictedCodeSid,
+    WinTerminalServerSid,
+    WinRemoteLogonIdSid,
+    WinLogonIdsSid,
+    WinLocalSystemSid,
+    WinLocalServiceSid,
+    WinNetworkServiceSid,
+    WinBuiltinDomainSid,
+    WinBuiltinAdministratorsSid,
+    WinBuiltinUsersSid,
+    WinBuiltinGuestsSid,
+    WinBuiltinPowerUsersSid,
+    WinBuiltinAccountOperatorsSid,
+    WinBuiltinSystemOperatorsSid,
+    WinBuiltinPrintOperatorsSid,
+    WinBuiltinBackupOperatorsSid,
+    WinBuiltinReplicatorSid,
+    WinBuiltinPreWindows2000CompatibleAccessSid,
+    WinBuiltinRemoteDesktopUsersSid,
+    WinBuiltinNetworkConfigurationOperatorsSid,
+    WinAccountAdministratorSid,
+    WinAccountGuestSid,
+    WinAccountKrbtgtSid,
+    WinAccountDomainAdminsSid,
+    WinAccountDomainUsersSid,
+    WinAccountDomainGuestsSid,
+    WinAccountComputersSid,
+    WinAccountControllersSid,
+    WinAccountCertAdminsSid,
+    WinAccountSchemaAdminsSid,
+    WinAccountEnterpriseAdminsSid,
+    WinAccountPolicyAdminsSid,
+    WinAccountRasAndIasServersSid,
+    WinNTLMAuthenticationSid,
+    WinDigestAuthenticationSid,
+    WinSChannelAuthenticationSid,
+    WinThisOrganizationSid,
+    WinOtherOrganizationSid,
+    WinBuiltinIncomingForestTrustBuildersSid,
+    WinBuiltinPerfMonitoringUsersSid,
+    WinBuiltinPerfLoggingUsersSid,
+    WinBuiltinAuthorizationAccessSid,
+    WinBuiltinTerminalServerLicenseServersSid,
+    WinBuiltinDCOMUsersSid,
+    WinBuiltinIUsersSid,
+    WinIUserSid,
+    WinBuiltinCryptoOperatorsSid,
+    WinUntrustedLabelSid,
+    WinLowLabelSid,
+    WinMediumLabelSid,
+    WinHighLabelSid,
+    WinSystemLabelSid,
+    WinWriteRestrictedCodeSid,
+    WinCreatorOwnerRightsSid,
+    WinCacheablePrincipalsGroupSid,
+    WinNonCacheablePrincipalsGroupSid,
+    WinEnterpriseReadonlyControllersSid,
+    WinAccountReadonlyControllersSid,
+    WinBuiltinEventLogReadersGroup
+  );
+
   TSIDAndAttributesArray = array of TSIDAndAttributes;
 
   TTokenGroups = record
@@ -127,6 +221,10 @@ function CreateRestrictedToken(ExistingTokenHandle: THandle; Flags: Cardinal;
   DeletePrivilegeCount: Cardinal; PrivilegesToDelete: PLUIDAndAttributes;
   RestrictedSidCount: Cardinal; SidsToRestrict: TSIDAndAttributesArray;
   var NewTokenHandle: THandle): LongBool; stdcall; external advapi32;
+
+function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
+  DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
+  stdcall; external advapi32;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 function SetterMessage(InfoClass: TTokenInformationClass): String;
