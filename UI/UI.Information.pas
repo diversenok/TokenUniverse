@@ -398,8 +398,7 @@ begin
     with Token.Source do
       if IsValid then
       begin
-        // sourcename field may or may not contain zero-termination byte
-        Items[0].SubItems[0] := String(PAnsiChar(AnsiString(Value.sourcename)));
+        Items[0].SubItems[0] := TokeSourceNameToString(Value);
         Items[1].SubItems[0] := Value.SourceIdentifier.ToString;
       end;
 
@@ -408,16 +407,9 @@ begin
       begin
         Items[2].SubItems[0] := Value.TokenId.ToString;
         Items[3].SubItems[0] := Value.AuthenticationId.ToString;
-        if Value.ExpirationTime.QuadPart = Int64.MaxValue then
-          Items[4].SubItems[0] := 'Infinite'
-        else
-          Items[4].SubItems[0] := DateTimeToStr(NativeTimeToLocalDateTime(
-            Value.ExpirationTime.QuadPart));
-        if Value.DynamicCharged mod 1024 = 0 then
-         Items[5].SubItems[0] := (Value.DynamicCharged div 1024).ToString + ' kB'
-        else
-         Items[5].SubItems[0] := Value.DynamicCharged.ToString + ' B';
-        Items[6].SubItems[0] := Value.DynamicAvailable.ToString + ' B';
+        Items[4].SubItems[0] := NativeTimeToString(Value.ExpirationTime.QuadPart);
+        Items[5].SubItems[0] := BytesToString(Value.DynamicCharged);
+        Items[6].SubItems[0] := BytesToString(Value.DynamicAvailable);
         Items[7].SubItems[0] := Value.GroupCount.ToString;
         Items[8].SubItems[0] := Value.PrivilegeCount.ToString;
         Items[9].SubItems[0] := Value.ModifiedId.ToString;
@@ -437,21 +429,11 @@ begin
 
     with Token.SandboxInert do
       if IsValid then
-      begin
-        if Value then
-          Items[10].SubItems[0] := 'Yes'
-        else
-          Items[10].SubItems[0] := 'No';
-      end;
+        Items[10].SubItems[0] := YesNoToString(Value);
 
     with Token.HasRestrictions do
       if IsValid then
-      begin
-        if Value then
-          Items[11].SubItems[0] := 'Yes'
-        else
-          Items[11].SubItems[0] := 'No';
-      end;
+        Items[11].SubItems[0] := YesNoToString(Value);
   end;
   ListViewAdvanced.Items.EndUpdate;
 

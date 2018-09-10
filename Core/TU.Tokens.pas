@@ -166,12 +166,10 @@ type
     function GetMandatoryPolicy: TMandatoryPolicy;
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
   protected
-    type TTokenHelper<ResultType> = class
-      class function GetFixedSize(Token: TToken;
-        InfoClass: TTokenInformationClass): CanFail<ResultType>; static;
-      class procedure SetFixedSize(Token: TToken;
-        InfoClass: TTokenInformationClass; Value: ResultType); static;
-    end;
+    function GetFixedSize<ResultType>(InfoClass: TTokenInformationClass):
+      CanFail<ResultType>;
+    procedure SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
+      Value: ResultType);
 
     /// <remarks> The buffer should be freed using FreeMem. </remarks>
     function QueryVariableBuffer(InfoClass: TTokenInformationClass):
@@ -335,6 +333,10 @@ const
 
 function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
+function TokeSourceNameToString(TokenSource: TTokenSource): String;
+function NativeTimeToString(NativeTime: Int64): String;
+function BytesToString(Size: Cardinal): String;
+function YesNoToString(Value: LongBool): String;
 
 implementation
 
@@ -536,8 +538,17 @@ end;
 
 function TToken.GetElevation: CanFail<TTokenElevationType>;
 begin
-  Result := TTokenHelper<TTokenElevationType>.GetFixedSize(Self,
-    TokenElevationType);
+  Result := GetFixedSize<TTokenElevationType>(TokenElevationType);
+end;
+
+function TToken.GetFixedSize<ResultType>(
+  InfoClass: TTokenInformationClass): CanFail<ResultType>;
+var
+  ReturnLength: Cardinal;
+begin
+  Result.Init(Self);
+  Result.CheckError(GetTokenInformation(hToken, InfoClass, @Result.Value,
+    SizeOf(Result.Value), ReturnLength), GetterMessage(InfoClass));
 end;
 
 function TToken.GetGroups: CanFail<TGroupArray>;
@@ -547,31 +558,7 @@ end;
 
 function TToken.GetHasRestrictions: CanFail<LongBool>;
 begin
-  Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenHasRestrictions);
-end;
-
-function TToken.TryGetIntegrity: CanFail<TTokenIntegrity>;
-var
-  Buffer: PSIDAndAttributes;
-begin
-  with Result.CopyResult(QueryVariableBuffer(TokenIntegrityLevel)) do
-    if IsValid then
-    begin
-      Buffer := Value;
-      try
-        Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
-        Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(
-          Buffer.Sid, 0)^);
-      finally
-        FreeMem(Buffer);
-      end;
-    end;
-end;
-
-function TToken.TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
-begin
-  Result := TTokenHelper<TMandatoryPolicy>.GetFixedSize(Self,
-    TokenMandatoryPolicy);
+  Result := GetFixedSize<LongBool>(TokenHasRestrictions);
 end;
 
 function TToken.GetIntegrity: TTokenIntegrityLevel;
@@ -583,7 +570,7 @@ function TToken.GetLinkedToken: CanFail<TToken>;
 begin
   Result.Init(Self);
 
-  with TTokenHelper<THandle>.GetFixedSize(Self, TokenLinkedToken) do
+  with GetFixedSize<THandle>(TokenLinkedToken) do
     if IsValid then
     begin
       Result.Value := TToken.Create;
@@ -647,11 +634,9 @@ begin
     begin
       Buffer := Value;
       try
-        {$R-}
         SetLength(Result.Value, Buffer.PrivilegeCount);
         for i := 0 to Buffer.PrivilegeCount - 1 do
           Result.Value[i] := Buffer.Privileges[i];
-        {$R+}
       finally
         FreeMem(Buffer);
       end;
@@ -665,7 +650,7 @@ end;
 
 function TToken.GetSandboxInert: CanFail<LongBool>;
 begin
-  Result := TTokenHelper<LongBool>.GetFixedSize(Self, TokenSandBoxInert);
+  Result := GetFixedSize<LongBool>(TokenSandBoxInert);
 end;
 
 function TToken.GetSession: Cardinal;
@@ -673,30 +658,19 @@ begin
   Result := TryGetSession.GetValueOrRaise;
 end;
 
-function TToken.TryGetSession: CanFail<Cardinal>;
-begin
-  Result := TTokenHelper<Cardinal>.GetFixedSize(Self, TokenSessionId);
-end;
-
-function TToken.TryGetUIAccess: CanFail<Cardinal>;
-begin
-  Result := TTokenHelper<Cardinal>.GetFixedSize(Self, TokenUIAccess);
-end;
-
 function TToken.GetSource: CanFail<TTokenSource>;
 begin
-  Result := TTokenHelper<TTokenSource>.GetFixedSize(Self, TokenSource);
+  Result := GetFixedSize<TTokenSource>(TokenSource);
 end;
 
 function TToken.GetStatistics: CanFail<TTokenStatistics>;
 begin
-  Result := TTokenHelper<TTokenStatistics>.GetFixedSize(Self, TokenStatistics);
+  Result := GetFixedSize<TTokenStatistics>(TokenStatistics);
 end;
 
 function TToken.GetTokenOrigin: CanFail<Int64>;
 begin
-  Result := TTokenHelper<Int64>.GetFixedSize(Self,
-    TTokenInformationClass.TokenOrigin);
+  Result := GetFixedSize<Int64>(TTokenInformationClass.TokenOrigin);
 end;
 
 function TToken.GetTokenType: CanFail<TTokenTypeInfo>;
@@ -826,7 +800,6 @@ begin
     begin
       Buffer := Value;
       try
-        {$R-}
         SetLength(Result.Value, Buffer.GroupCount);
         for i := 0 to Buffer.GroupCount - 1 do
         with Result.Value[i] do
@@ -834,7 +807,6 @@ begin
           SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
           Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
         end;
-        {$R+}
       finally
         FreeMem(Buffer);
       end;
@@ -899,17 +871,24 @@ begin
   OnCaptionChange.Invoke(FCaption);
 end;
 
+procedure TToken.SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
+  Value: ResultType);
+begin
+  if not SetTokenInformation(hToken, InfoClass, @Value, SizeOf(Value))
+    then
+    raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass));
+end;
+
 procedure TToken.SetIntegrity(const Value: TTokenIntegrityLevel);
+const
+  SECURITY_MANDATORY_LABEL_AUTHORITY: TSIDIdentifierAuthority =
+    (Value: (0, 0, 0, 0, 0, 16));
 var
-  mandatoryLabelAuthority: SID_IDENTIFIER_AUTHORITY;
   mandatoryLabel: TSIDAndAttributes;
 begin
-  FillChar(mandatoryLabelAuthority, SizeOf(mandatoryLabelAuthority), 0);
-  mandatoryLabelAuthority.Value[5] := 16; // SECURITY_MANDATORY_LABEL_AUTHORITY
-
-  mandatoryLabel.Sid := AllocMem(12);
+  mandatoryLabel.Sid := AllocMem(GetSidLengthRequired(1));
   try
-    InitializeSid(mandatoryLabel.Sid, mandatoryLabelAuthority, 1);
+    InitializeSid(mandatoryLabel.Sid, SECURITY_MANDATORY_LABEL_AUTHORITY, 1);
     GetSidSubAuthority(mandatoryLabel.Sid, 0)^ := DWORD(Value);
     mandatoryLabel.Attributes := SE_GROUP_INTEGRITY;
     Win32Check(SetTokenInformation(hToken, TokenIntegrityLevel, @mandatoryLabel,
@@ -928,21 +907,53 @@ end;
 
 procedure TToken.SetMandatoryPolicy(const Value: TMandatoryPolicy);
 begin
-  TTokenHelper<TMandatoryPolicy>.SetFixedSize(Self, TokenMandatoryPolicy,
-    Value);
+  SetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy, Value);
   Events.OnPolicyChange.Invoke(TryGetMandatoryPolicy);
 end;
 
 procedure TToken.SetSession(const Value: Cardinal);
 begin
-  TTokenHelper<Cardinal>.SetFixedSize(Self, TokenSessionId, Value);
+  SetFixedSize<Cardinal>(TokenSessionId, Value);
   Events.OnSessionChange.Invoke(TryGetSession);
 end;
 
 procedure TToken.SetUIAccess(const Value: Cardinal);
 begin
-  TTokenHelper<Cardinal>.SetFixedSize(Self, TokenUIAccess, Value);
+  SetFixedSize<Cardinal>(TokenUIAccess, Value);
   Events.OnUIAccessChange.Invoke(TryGetUIAccess);
+end;
+
+function TToken.TryGetIntegrity: CanFail<TTokenIntegrity>;
+var
+  Buffer: PSIDAndAttributes;
+begin
+  with Result.CopyResult(QueryVariableBuffer(TokenIntegrityLevel)) do
+    if IsValid then
+    begin
+      Buffer := Value;
+      try
+        Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+        Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(
+          Buffer.Sid, 0)^);
+      finally
+        FreeMem(Buffer);
+      end;
+    end;
+end;
+
+function TToken.TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
+begin
+  Result := GetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy);
+end;
+
+function TToken.TryGetSession: CanFail<Cardinal>;
+begin
+  Result := GetFixedSize<Cardinal>(TokenSessionId);
+end;
+
+function TToken.TryGetUIAccess: CanFail<Cardinal>;
+begin
+  Result := GetFixedSize<Cardinal>(TokenUIAccess);
 end;
 
 { TTokenAccess }
@@ -1365,27 +1376,6 @@ begin
   end;
 end;
 
-{ TToken.TTokenHelper<ResultType> }
-
-class function TToken.TTokenHelper<ResultType>.GetFixedSize(
-  Token: TToken; InfoClass: TTokenInformationClass): CanFail<ResultType>;
-var
-  ReturnLength: Cardinal;
-begin
-  Result.Init(Token);
-
-  Result.CheckError(GetTokenInformation(Token.hToken, InfoClass, @Result.Value,
-    SizeOf(Result.Value), ReturnLength), GetterMessage(InfoClass));
-end;
-
-class procedure TToken.TTokenHelper<ResultType>.SetFixedSize(Token: TToken;
-  InfoClass: TTokenInformationClass; Value: ResultType);
-begin
-  if not SetTokenInformation(Token.hToken, InfoClass, @Value, SizeOf(Value))
-    then
-    raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass));
-end;
-
 { TTokenEvents }
 
 destructor TTokenEvents.Destroy;
@@ -1405,6 +1395,38 @@ begin
   if Length(FOnGroupsChange.Listeners) > 0 then
     OutputDebugString('Abandoned OnGroupsChange');
   inherited;
+end;
+
+{ Conversion functions }
+
+function TokeSourceNameToString(TokenSource: TTokenSource): String;
+begin
+  // sourcename field may or may not contain zero-termination byte
+  Result := String(PAnsiChar(AnsiString(TokenSource.sourcename)));
+end;
+
+function NativeTimeToString(NativeTime: Int64): String;
+begin
+  if NativeTime = Int64.MaxValue then
+    Result := 'Infinite'
+  else
+    Result := DateTimeToStr(NativeTimeToLocalDateTime(NativeTime));
+end;
+
+function BytesToString(Size: Cardinal): String;
+begin
+  if Size mod 1024 = 0 then
+    Result := (Size div 1024).ToString + ' kB'
+  else
+    Result := Size.ToString + ' B';
+end;
+
+function YesNoToString(Value: LongBool): String;
+begin
+  if Value then
+    Result := 'Yes'
+  else
+    Result := 'No';
 end;
 
 end.
