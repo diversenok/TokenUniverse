@@ -6,11 +6,12 @@ uses
   Vcl.Graphics, Winapi.Windows, TU.Tokens;
 
 const
-  clStale: TColor = $F0E4E4;
+  clStale: TColor = $F5DCC2;
   clEnabledByDefault: TColor = $C0F0C0;
   clEnabled: TColor = $E0F0E0;
-  clUseForDenyOnly: TColor = $E0E0F0;
-  clIntegrity: TColor = $F0E0E0;
+  clDisabled: TColor = $E0E0F0;
+  clUseForDenyOnly: TColor = $D0D0F0;
+  clIntegrity: TColor = $F0D0D0;
 
 function GroupAttributesToColor(Attributes: TGroupAttributes;
   Default: TColor = clWindow): TColor;
@@ -23,16 +24,16 @@ implementation
 function GroupAttributesToColor(Attributes: TGroupAttributes;
   Default: TColor = clWindow): TColor;
 begin
-  if Attributes.Contain(GroupEnabledByDefault) then
+  if Attributes.Contain(GroupIntegrityEnabled) then
+    Result := clIntegrity
+  else if Attributes.Contain(GroupEnabledByDefault) then
     Result := clEnabledByDefault
   else if Attributes.Contain(GroupEnabled) then
     Result := clEnabled
   else if Attributes.Contain(GroupUforDenyOnly) then
     Result := clUseForDenyOnly
-  else if Attributes.Contain(GroupIntegrityEnabled) then
-    Result := clIntegrity
   else
-    Result := Default;
+    Result := clDisabled;
 end;
 
 function PrivilegeToColor(Privilege: TPrivilege;
@@ -43,7 +44,7 @@ begin
   else if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED) then
     Result := clEnabled
   else if Privilege.Attributes = 0 then
-    Result := clUseForDenyOnly
+    Result := clDisabled
   else
     Result := Default;
 end;

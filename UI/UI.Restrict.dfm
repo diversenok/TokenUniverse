@@ -73,6 +73,7 @@ object DialogRestrictToken: TDialogRestrictToken
             Caption = 'Flags'
             Width = 120
           end>
+        FullDrag = True
         GridLines = True
         MultiSelect = True
         ReadOnly = True
@@ -126,6 +127,7 @@ object DialogRestrictToken: TDialogRestrictToken
             Caption = 'Flags'
             Width = 120
           end>
+        FullDrag = True
         GridLines = True
         MultiSelect = True
         ReadOnly = True
@@ -186,6 +188,7 @@ object DialogRestrictToken: TDialogRestrictToken
             Caption = 'LUID'
             Width = 40
           end>
+        FullDrag = True
         GridLines = True
         MultiSelect = True
         ReadOnly = True

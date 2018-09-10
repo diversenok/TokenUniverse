@@ -45,6 +45,7 @@ object FrameTokenList: TFrameTokenList
         Width = 70
       end>
     DoubleBuffered = True
+    FullDrag = True
     GridLines = True
     RowSelect = True
     ParentDoubleBuffered = False
