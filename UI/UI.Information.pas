@@ -6,10 +6,10 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.ListViewEx, UI.Prototypes, TU.Common, TU.WtsApi;
+  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, TU.Common, TU.WtsApi;
 
 type
-  TInfoDialog = class(TForm)
+  TInfoDialog = class(TChildForm)
     PageControl: TPageControl;
     TabGeneral: TTabSheet;
     TabGroups: TTabSheet;
@@ -75,7 +75,6 @@ type
     procedure ListViewAdvancedResize(Sender: TObject);
   private
     Token: TToken;
-    procedure ConfirmTokenClose(Sender: TToken);
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
     procedure ChangedSession(NewSession: CanFail<Cardinal>);
@@ -284,19 +283,6 @@ begin
   ListViewRestricted.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
 end;
 
-procedure TInfoDialog.ConfirmTokenClose(Sender: TToken);
-const
-  CONFIRM_CLOSE = 'This token has an opened information window. Do you want ' +
-    'close it?';
-begin
-  // The main window should not close the token until any information windows
-  // are opened for it.
-  if MessageDlg(CONFIRM_CLOSE, mtConfirmation, mbYesNoCancel, 0) = IDYES then
-    Close
-  else
-    Abort;
-end;
-
 constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
 begin
   Token := SrcToken;
@@ -317,20 +303,17 @@ begin
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
-  Token.OnCanClose.Delete(ConfirmTokenClose);
-  FormMain.OnMainFormClose.Delete(DoCloseForm);
-  Action := caFree;
+  UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
-  FormMain.OnMainFormClose.Add(DoCloseForm);
+  SubscribeTokenCanClose(Token, Caption);
 
   ListViewGroups.Token := Token;
   ListViewPrivileges.Token := Token;
   ListViewRestricted.Token := Token;
 
-  Token.OnCanClose.Add(ConfirmTokenClose);
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.Events.OnSessionChange.Add(ChangedSession);
   Token.Events.OnUIAccessChange.Add(ChangedUIAccess);

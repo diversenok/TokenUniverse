@@ -1,7 +1,7 @@
 object DialogRestrictToken: TDialogRestrictToken
   Left = 0
   Top = 0
-  Caption = 'Create restricted token'
+  Caption = 'Create Restricted Token'
   ClientHeight = 344
   ClientWidth = 355
   Color = clBtnFace

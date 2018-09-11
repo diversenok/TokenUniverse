@@ -5,10 +5,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  TU.Common, TU.Tokens, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes;
+  Vcl.ComCtrls, TU.Common, TU.Tokens, UI.ListViewEx, UI.Prototypes,
+  UI.Prototypes.ChildForm;
 
 type
-  TDialogRestrictToken = class(TForm)
+  TDialogRestrictToken = class(TChildForm)
     CheckBoxDisableMaxPriv: TCheckBox;
     CheckBoxSandboxInert: TCheckBox;
     CheckBoxLUA: TCheckBox;
@@ -28,7 +29,6 @@ type
     procedure ButtonOKClick(Sender: TObject);
   private
     Token: TToken;
-    procedure ConfirmTokenClose(Sender: TToken);
     function GetFlags: Cardinal;
   public
     procedure Refresh;
@@ -53,18 +53,6 @@ begin
   Close;
 end;
 
-procedure TDialogRestrictToken.ConfirmTokenClose(Sender: TToken);
-const
-  CONFIRM_CLOSE = 'This token has an opened "Create restricted token" ' +
-    'dialog window for it. Do you want close it?';
-begin
-  // The main window should not close the token until any windows are opened for it.
-  if MessageDlg(CONFIRM_CLOSE, mtConfirmation, mbYesNoCancel, 0) = IDYES then
-    Close
-  else
-    Abort;
-end;
-
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
   SrcToken: TToken);
 begin
@@ -81,17 +69,13 @@ end;
 procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  Token.OnCanClose.Delete(ConfirmTokenClose);
-  FormMain.OnMainFormClose.Delete(DoCloseForm);
-  Action := caFree;
+  UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 begin
+  SubscribeTokenCanClose(Token, Caption);
   Caption := Format('Create restricted token for "%s"', [Token.Caption]);
-
-  FormMain.OnMainFormClose.Add(DoCloseForm);
-  Token.OnCanClose.Add(ConfirmTokenClose);
 
   ListViewDisableSID.Token := Token;
   ListViewRestrictSID.Token := Token;

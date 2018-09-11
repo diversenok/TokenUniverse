@@ -1,7 +1,7 @@
 object InfoDialog: TInfoDialog
   Left = 0
   Top = 0
-  Caption = 'Information about'
+  Caption = 'Token Information'
   ClientHeight = 378
   ClientWidth = 402
   Color = clBtnFace

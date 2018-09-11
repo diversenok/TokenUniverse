@@ -155,6 +155,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.LsaApi.pas"/>
+        <DCCReference Include="UI\UI.Prototypes.ChildForm.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

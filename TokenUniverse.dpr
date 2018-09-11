@@ -26,7 +26,8 @@ uses
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Logon in 'UI\UI.Logon.pas' {LogonDialog},
-  TU.LsaApi in 'Core\TU.LsaApi.pas';
+  TU.LsaApi in 'Core\TU.LsaApi.pas',
+  UI.Prototypes.ChildForm in 'UI\UI.Prototypes.ChildForm.pas';
 
 {$R *.res}
 
