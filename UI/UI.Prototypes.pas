@@ -147,7 +147,7 @@ begin
         SubItems.Add(Value[i].AttributesToString);
         SubItems.Add(Value[i].Description);
         SubItems.Add(Value[i].Luid.ToString);
-        Color := PrivilegeToColor(Value[i], Self.Color);
+        Color := PrivilegeToColor(Value[i]);
       end;
     end
     else

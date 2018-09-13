@@ -465,6 +465,7 @@ end;
 constructor TToken.CreateWithLogon(LogonType, LogonProvider: Cardinal; Domain,
   User: String; Password: PWideChar);
 begin
+  // TODO: switch to LogonUserExExW, it can add groups to a new token
   Win32Check(LogonUserW(PWideChar(User), PWideChar(Domain), Password, LogonType,
     LogonProvider, hToken), 'LogonUserW');
   FCaption := 'Logon of ' + User;
@@ -1154,18 +1155,20 @@ function TGroupAttributesHelper.ContainAnyFlags: Boolean;
 const
   AllFlags = Cardinal(GroupMandatory) or Cardinal(GroupOwner) or
     Cardinal(GroupIntegrity) or Cardinal(GroupResource) or
-    Cardinal(GroupLogonId);
+    Cardinal(GroupLogonId) or Cardinal(GroupUforDenyOnly);
 begin
   Result := Cardinal(Self) and AllFlags <> 0;
 end;
 
 function TGroupAttributesHelper.FlagsToString: String;
 const
-  GROUP_FLAGS_COUNT = 5;
+  GROUP_FLAGS_COUNT = 6;
   FlagValues: array [1 .. GROUP_FLAGS_COUNT] of TGroupAttributes = (
-    GroupMandatory, GroupOwner, GroupIntegrity, GroupResource, GroupLogonId);
+    GroupMandatory, GroupOwner, GroupIntegrity, GroupResource, GroupLogonId,
+    GroupUforDenyOnly);
   FlagStrings: array [1 .. GROUP_FLAGS_COUNT] of String = (
-    'Mandatory', 'Owner', 'Integrity', 'Resource', 'Logon Id');
+    'Mandatory', 'Owner', 'Integrity', 'Resource', 'Logon Id',
+    'Use for deny only');
 var
   Strings: array of string;
   FlagInd, StrInd: Integer;
@@ -1187,38 +1190,24 @@ begin
 end;
 
 function TGroupAttributesHelper.StateToString: String;
-const
-  GROUP_STATE_COUNT = 4;
-  StateValues: array [1 .. GROUP_STATE_COUNT] of TGroupAttributes = (
-    GroupEnabledByDefault, GroupEnabled, GroupUforDenyOnly,
-    GroupIntegrityEnabled);
-  StateStrings: array [1 .. GROUP_STATE_COUNT] of String = (
-    'Enabled by default', 'Enabled', 'Use for deny only',
-    'Integrity enabled');
-var
-  Strings: array of string;
-  StateInd, StrInd: Integer;
-  FilteredAttributes: Cardinal;
 begin
-  // We don't need "Enabled by default" and "Enabled" at the same time
-  if Cardinal(Self) and Cardinal(GroupEnabledByDefault) <> 0 then
-    FilteredAttributes := Cardinal(Self) and not Cardinal(GroupEnabled)
-  else
-    FilteredAttributes := Cardinal(Self);
+  if Self.Contain(GroupIntegrityEnabled) then
+    Exit('Integrity Enabled');
 
-  SetLength(Strings, GROUP_STATE_COUNT);
-  StrInd := 0;
-  for StateInd := 1 to GROUP_STATE_COUNT do
-    if FilteredAttributes and Cardinal(StateValues[StateInd]) =
-      Cardinal(StateValues[StateInd]) then
-    begin
-      Strings[StrInd] := StateStrings[StateInd];
-      Inc(StrInd);
-    end;
-  SetLength(Strings, StrInd);
-  Result := String.Join(', ', Strings);
-  if Result = '' then
-    Result := 'Disabled';
+  if Self.Contain(GroupEnabled) then
+  begin
+    if Self.Contain(GroupEnabledByDefault) then
+      Result := 'Enabled'
+    else
+      Result := 'Enabled (modified)';
+  end
+  else
+  begin
+    if Self.Contain(GroupEnabledByDefault) then
+      Result := 'Disabled (modified)'
+    else
+      Result := 'Disabled';
+  end;
 end;
 
 { TPrivilegeHelper }
@@ -1234,37 +1223,27 @@ begin
 end;
 
 function TPrivilegeHelper.AttributesToString: String;
-const
-  PRIV_FLAGS_COUNT = 4;
-  FlagValues: array [1 .. PRIV_FLAGS_COUNT] of Cardinal = (
-    SE_PRIVILEGE_ENABLED_BY_DEFAULT, SE_PRIVILEGE_ENABLED,
-    SE_PRIVILEGE_REMOVED, SE_PRIVILEGE_USED_FOR_ACCESS);
-  FlagStrings: array [1 .. PRIV_FLAGS_COUNT] of String = (
-    'Enabled by default', 'Enabled', 'Removed', 'Used for access');
-var
-  Strings: array of string;
-  FlagInd, StrInd: Integer;
-  FilteredAttributes: Cardinal;
 begin
-  if Self.Attributes = 0 then
-    Exit('Disabled');
-
-  // We don't need "Enabled by default" and "Enabled" at the same time
-  if Self.Attributes and SE_PRIVILEGE_ENABLED_BY_DEFAULT <> 0 then
-    FilteredAttributes := Self.Attributes and not SE_PRIVILEGE_ENABLED
+  if Self.AttributesContain(SE_PRIVILEGE_ENABLED) then
+  begin
+    if Self.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := 'Enabled'
+    else
+      Result := 'Enabled (modified)';
+  end
   else
-    FilteredAttributes := Self.Attributes;
+  begin
+    if Self.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := 'Disabled (modified)'
+    else
+      Result := 'Disabled';
+  end;
 
-  SetLength(Strings, PRIV_FLAGS_COUNT);
-  StrInd := 0;
-  for FlagInd := 1 to PRIV_FLAGS_COUNT do
-    if FilteredAttributes and FlagValues[FlagInd] = FlagValues[FlagInd] then
-    begin
-      Strings[StrInd] := FlagStrings[FlagInd];
-      Inc(StrInd);
-    end;
-  SetLength(Strings, StrInd);
-  Result := String.Join(', ', Strings);
+  if Self.AttributesContain(SE_PRIVILEGE_REMOVED) then
+    Result := 'Removed, ' + Result;
+
+  if Self.AttributesContain(SE_PRIVILEGE_USED_FOR_ACCESS) then
+    Result := 'Used for access, ' + Result;
 end;
 
 function TPrivilegeHelper.Description: String;

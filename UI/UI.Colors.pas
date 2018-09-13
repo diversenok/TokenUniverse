@@ -7,46 +7,55 @@ uses
 
 const
   clStale: TColor = $F5DCC2;
-  clEnabledByDefault: TColor = $C0F0C0;
+  clEnabledModified: TColor = $C0F0C0;
   clEnabled: TColor = $E0F0E0;
   clDisabled: TColor = $E0E0F0;
-  clUseForDenyOnly: TColor = $D0D0F0;
-  clIntegrity: TColor = $F0D0D0;
+  clDisabledModified: TColor = $D0D0F0;
+  clIntegrity: TColor = $F0E0E0;
 
-function GroupAttributesToColor(Attributes: TGroupAttributes;
-  Default: TColor = clWindow): TColor;
+function GroupAttributesToColor(Attributes: TGroupAttributes): TColor;
 
-function PrivilegeToColor(Privilege: TPrivilege;
-  Default: TColor = clWindow): TColor;
+function PrivilegeToColor(Privilege: TPrivilege): TColor;
 
 implementation
 
-function GroupAttributesToColor(Attributes: TGroupAttributes;
-  Default: TColor = clWindow): TColor;
+function GroupAttributesToColor(Attributes: TGroupAttributes): TColor;
 begin
   if Attributes.Contain(GroupIntegrityEnabled) then
-    Result := clIntegrity
-  else if Attributes.Contain(GroupEnabledByDefault) then
-    Result := clEnabledByDefault
-  else if Attributes.Contain(GroupEnabled) then
-    Result := clEnabled
-  else if Attributes.Contain(GroupUforDenyOnly) then
-    Result := clUseForDenyOnly
+    Exit(clIntegrity);
+
+  if Attributes.Contain(GroupEnabled) then
+  begin
+    if Attributes.Contain(GroupEnabledByDefault) then
+      Result := clEnabled
+    else
+      Result := clEnabledModified;
+  end
   else
-    Result := clDisabled;
+  begin
+    if Attributes.Contain(GroupEnabledByDefault) then
+      Result := clDisabledModified
+    else
+      Result := clDisabled;
+  end;
 end;
 
-function PrivilegeToColor(Privilege: TPrivilege;
-  Default: TColor = clWindow): TColor;
+function PrivilegeToColor(Privilege: TPrivilege): TColor;
 begin
-  if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-    Result := clEnabledByDefault
-  else if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED) then
-    Result := clEnabled
-  else if Privilege.Attributes = 0 then
-    Result := clDisabled
+  if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED) then
+  begin
+    if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := clEnabled
+    else
+      Result := clEnabledModified;
+  end
   else
-    Result := Default;
+  begin
+    if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := clDisabledModified
+    else
+      Result := clDisabled;
+  end;
 end;
 
 end.
