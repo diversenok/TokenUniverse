@@ -80,10 +80,13 @@ type
     function ToString: String;
   end;
 
-  TTokenTypeInfo = record
-    TokenType: TTokenType;
-    Impersonation: TSecurityImpersonationLevel;
+  TTokenTypeEx = (ttAnonymous, ttIdentification, ttImpersonation, ttDelegation,
+   ttPrimary);
+
+  TTokenTypeExHelper = record helper for TTokenTypeEx
     function ToString: String;
+    function TokenTypeValue: TTokenType;
+    function SecurityImpersonationLevel: TSecurityImpersonationLevel;
   end;
 
   TTokenElevationTypeHelper = record helper for TTokenElevationType
@@ -148,7 +151,7 @@ type
     function GetPrivileges: CanFail<TPrivilegeArray>;
     function GetOwner: CanFail<TSecurityIdentifier>;
     function GetPrimaryGroup: CanFail<TSecurityIdentifier>;
-    function GetTokenType: CanFail<TTokenTypeInfo>;
+    function GetTokenType: CanFail<TTokenTypeEx>;
     function GetStatistics: CanFail<TTokenStatistics>;
     function GetSource: CanFail<TTokenSource>;
     function GetRestrictedSids: CanFail<TGroupArray>;
@@ -220,7 +223,7 @@ type
     /// <summary> Creates a duplicate of a token. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
-      TokenImpersonation: TSecurityImpersonationLevel; TokenType: TTokenType);
+      TokenTypeEx: TTokenTypeEx);
 
     /// <summary> Duplicates a handle. The result handle references for the same
     ///   token object as the source handle. </summary>
@@ -293,7 +296,7 @@ type
     property PrimaryGroup: CanFail<TSecurityIdentifier> read GetPrimaryGroup;   // class 5 #settable
     // TODO: class 6: DefaultDacl #settable
     property Source: CanFail<TTokenSource> read GetSource;                      // classes 7 & 8
-    property TokenTypeInfo: CanFail<TTokenTypeInfo> read GetTokenType;          // class 9
+    property TokenTypeInfo: CanFail<TTokenTypeEx> read GetTokenType;            // class 9
     property Statistics: CanFail<TTokenStatistics> read GetStatistics;          // class 10
     property RestrictedSids: CanFail<TGroupArray> read GetRestrictedSids;       // class 11
     property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
@@ -318,18 +321,6 @@ type
       Action: TPrivilegeAdjustAction);
     procedure GroupAdjust(GroupArray: TGroupArray; Action: TGroupAdjustAction);
   end;
-
-const
-  ACCESS_COUNT = 13;
-  AccessValues: array [0 .. ACCESS_COUNT - 1] of Cardinal = (
-    TOKEN_ASSIGN_PRIMARY, TOKEN_DUPLICATE, TOKEN_IMPERSONATE, TOKEN_QUERY,
-    TOKEN_QUERY_SOURCE, TOKEN_ADJUST_PRIVILEGES, TOKEN_ADJUST_GROUPS,
-    TOKEN_ADJUST_DEFAULT, TOKEN_ADJUST_SESSIONID, _DELETE, READ_CONTROL,
-    WRITE_DAC, WRITE_OWNER);
-  AccessStrings: array [0 .. ACCESS_COUNT - 1] of String = ('Assign primary',
-    'Duplicate', 'Impersonate', 'Query', 'Query source', 'Adjust privileges',
-    'Adjust groups', 'Adjust default', 'Adjust SessionId', 'Delete',
-    'Read control', 'Write DAC', 'Write owner');
 
 function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
@@ -363,10 +354,10 @@ begin
 end;
 
 constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
-  TokenImpersonation: TSecurityImpersonationLevel; TokenType: TTokenType);
+  TokenTypeEx: TTokenTypeEx);
 begin
   Win32Check(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
-    TokenImpersonation, TokenType, hToken),
+    TokenTypeEx.SecurityImpersonationLevel, TokenTypeEx.TokenTypeValue, hToken),
     'DuplicateTokenEx', SrcToken);
   FCaption := SrcToken.Caption + ' (copy)';
   InitializeEvents;
@@ -674,21 +665,28 @@ begin
   Result := GetFixedSize<Int64>(TTokenInformationClass.TokenOrigin);
 end;
 
-function TToken.GetTokenType: CanFail<TTokenTypeInfo>;
+function TToken.GetTokenType: CanFail<TTokenTypeEx>;
 var
- ReturnValue: Cardinal;
+  ReturnValue: Cardinal;
+  TokenTypeValue: TTokenType;
+  Impersonation: TSecurityImpersonationLevel;
 begin
   Result.Init(Self);
 
   if not Result.CheckError(GetTokenInformation(hToken, TokenType,
-    @Result.Value.TokenType, SizeOf(Result.Value.TokenType), ReturnValue),
+    @TokenTypeValue, SizeOf(TokenTypeValue), ReturnValue),
     GetterMessage(TokenType)) then
     Exit;
 
-  if Result.Value.TokenType = TokenImpersonation then
-    Result.CheckError(GetTokenInformation(hToken, TokenImpersonationLevel,
-    @Result.Value.Impersonation, SizeOf(Result.Value.Impersonation),
-    ReturnValue), GetterMessage(TokenImpersonationLevel));
+  if TokenTypeValue = TokenImpersonation then
+  begin
+    if Result.CheckError(GetTokenInformation(hToken, TokenImpersonationLevel,
+    @Impersonation, SizeOf(Impersonation), ReturnValue),
+    GetterMessage(TokenImpersonationLevel)) then
+      Result.Value := TTokenTypeEx(Impersonation);
+  end
+  else
+    Result.Value := ttPrimary;
 end;
 
 function TToken.GetUIAccess: Cardinal;
@@ -1298,19 +1296,34 @@ begin
   Result := Format('0x%x', [PInt64(@Self)^]);
 end;
 
-{ TTokenTypeInfo }
+{ TTokenTypeExHelper }
 
-function TTokenTypeInfo.ToString: String;
+function TTokenTypeExHelper.SecurityImpersonationLevel:
+  TSecurityImpersonationLevel;
 begin
-  if TokenType = TokenPrimary then
-    Result := 'Primary token'
+  if Self = ttPrimary then
+    Result := SecurityImpersonation
   else
-    case Impersonation of
-      SecurityAnonymous: Result :=  'Anonymous';
-      SecurityIdentification: Result := 'Identification';
-      SecurityImpersonation: Result := 'Impersonation';
-      SecurityDelegation: Result := 'Delegation';
-    end;
+    Result := TSecurityImpersonationLevel(Self);
+end;
+
+function TTokenTypeExHelper.TokenTypeValue: TTokenType;
+begin
+  if Self = ttPrimary then
+    Result := TokenPrimary
+  else
+    Result := TokenImpersonation;
+end;
+
+function TTokenTypeExHelper.ToString: String;
+begin
+  case Self of
+    ttAnonymous: Result :=  'Anonymous';
+    ttIdentification: Result := 'Identification';
+    ttImpersonation: Result := 'Impersonation';
+    ttDelegation: Result := 'Delegation';
+    ttPrimary: Result := 'Primary token';
+  end
 end;
 
 { TTokenElevationTypeHelper }

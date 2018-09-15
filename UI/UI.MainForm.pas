@@ -93,8 +93,8 @@ implementation
 uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
-  UI.Information, UI.Duplicate, UI.ProcessList, UI.Run, UI.HandleSearch,
-  UI.SessionDialog, UI.Restrict, UI.Logon;
+  UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.SessionDialog,
+  UI.Restrict, UI.Logon, UI.Modal.AccessAndType;
 
 {$R *.dfm}
 
@@ -107,7 +107,8 @@ end;
 
 procedure TFormMain.ActionDuplicate(Sender: TObject);
 begin
-  Frame.AddToken(TDuplicateDialog.Execute(Self, Frame.GetSelectedToken));
+  Frame.AddToken(TDialogAccessAndType.ExecuteDuplication(Self,
+    Frame.GetSelectedToken));
 end;
 
 procedure TFormMain.ActionDuplicateHandle(Sender: TObject);

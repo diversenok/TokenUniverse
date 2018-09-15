@@ -18,6 +18,7 @@ type
   public
     procedure SubscribeTokenCanClose(Token: TToken; ConfirmComment: String);
     procedure UnsubscribeTokenCanClose(Token: TToken);
+    function ShowModal: Integer; override;
   end;
 
 implementation
@@ -57,6 +58,14 @@ end;
 procedure TChildForm.OnMainFormClose(Sender: TObject);
 begin
   Close;
+end;
+
+function TChildForm.ShowModal: Integer;
+begin
+  Result := inherited;
+
+  if ModalResult <> mrOk then
+    Abort;
 end;
 
 procedure TChildForm.SubscribeTokenCanClose(Token: TToken;

@@ -65,7 +65,7 @@ begin
   if (E.ErrorOrigin = 'DuplicateTokenEx') and (E.ErrorContext is TToken) and
     (E.ErrorCode = ERROR_BAD_IMPERSONATION_LEVEL) then
     with TToken(E.ErrorContext).TokenTypeInfo do
-      if IsValid and (Value.Impersonation <= SecurityImpersonation) then
+      if IsValid and (Value <= ttImpersonation) then
         Exit(DUPLICATE_IMP);
 
   if E.ErrorOrigin = 'WTSQueryUserToken' then

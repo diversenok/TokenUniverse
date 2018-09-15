@@ -133,8 +133,7 @@ begin
 
     NewToken := TToken.CreateDuplicate(Token,
       TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID or
-      TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY,
-      SecurityImpersonation, TokenPrimary);
+      TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY, ttPrimary);
     NewToken.Session := Session;
 
     FillChar(PI, SizeOf(PI), 0);

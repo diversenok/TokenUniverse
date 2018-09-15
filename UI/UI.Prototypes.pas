@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.StdCtrls,
-  UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi;
+  Winapi.Windows, UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi;
 
 type
   TTokenedListViewEx = class(TListViewEx)
@@ -80,12 +80,17 @@ type
     property SelectedIntegrity: TTokenIntegrityLevel read GetIntegrityLevel;
   end;
 
+  TAccessMaskSource = class
+    class procedure InitAccessEntries(ListView: TListView; Access: ACCESS_MASK);
+    class function GetAccessMask(ListView: TListView): ACCESS_MASK;
+  end;
+
 procedure Register;
 
 implementation
 
 uses
-  System.Generics.Collections, UI.Colors;
+  System.Generics.Collections, UI.Colors, TU.Tokens.Winapi;
 
 procedure Register;
 begin
@@ -435,6 +440,47 @@ begin
     end;
 
   Items.EndUpdate;
+end;
+
+{ TAccessMaskSource }
+
+class function TAccessMaskSource.GetAccessMask(
+  ListView: TListView): ACCESS_MASK;
+var
+  i: integer;
+begin
+  Result := 0;
+  if ListView.Items.Count <> ACCESS_COUNT then
+    Abort;
+
+  for i := 0 to ACCESS_COUNT - 1 do
+    if ListView.Items[i].Checked then
+      Result := Result or AccessValues[i];
+end;
+
+class procedure TAccessMaskSource.InitAccessEntries(ListView: TListView;
+  Access: ACCESS_MASK);
+var
+  i: integer;
+  AccessGroup: TAccessGroup;
+begin
+  ListView.Groups.Clear;
+  ListView.Items.Clear;
+
+  for AccessGroup := Low(TAccessGroup) to High(TAccessGroup) do
+  with ListView.Groups.Add do
+  begin
+    Header := AccessGroupStrings[AccessGroup];
+    State := State + [lgsCollapsible];
+  end;
+
+  for i := 0 to ACCESS_COUNT - 1 do
+  with ListView.Items.Add do
+  begin
+    Caption := AccessStrings[i];
+    GroupID := Cardinal(AccessGroupValues[i]);
+    ListView.Items[i].Checked := (Access and AccessValues[i] = AccessValues[i]);
+  end;
 end;
 
 end.

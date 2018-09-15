@@ -9,7 +9,7 @@ uses
   TU.Tokens in 'Core\TU.Tokens.pas',
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
   UI.MainForm in 'UI\UI.MainForm.pas' {FormMain},
-  UI.Duplicate in 'UI\UI.Duplicate.pas' {DuplicateDialog},
+  UI.Modal.AccessAndType in 'UI\UI.Modal.AccessAndType.pas' {DialogAccessAndType},
   UI.HandleSearch in 'UI\UI.HandleSearch.pas' {FormHandleSearch},
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},

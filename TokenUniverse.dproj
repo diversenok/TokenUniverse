@@ -113,8 +113,8 @@
         <DCCReference Include="UI\UI.MainForm.pas">
             <Form>FormMain</Form>
         </DCCReference>
-        <DCCReference Include="UI\UI.Duplicate.pas">
-            <Form>DuplicateDialog</Form>
+        <DCCReference Include="UI\UI.Modal.AccessAndType.pas">
+            <Form>DialogAccessAndType</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="UI\UI.HandleSearch.pas">

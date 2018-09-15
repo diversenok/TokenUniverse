@@ -1,12 +1,12 @@
-object DuplicateDialog: TDuplicateDialog
+object DialogAccessAndType: TDialogAccessAndType
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsDialog
-  Caption = 'Duplication options'
-  ClientHeight = 183
-  ClientWidth = 360
+  Caption = 'Select access rights and token type'
+  ClientHeight = 196
+  ClientWidth = 351
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -14,28 +14,30 @@ object DuplicateDialog: TDuplicateDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
-  OnClose = FormClose
-  OnCreate = FormCreate
   DesignSize = (
-    360
-    183)
+    351
+    196)
   PixelsPerInch = 96
   TextHeight = 13
   object GroupBoxType: TGroupBox
-    Left = 214
-    Top = 2
+    Left = 205
+    Top = 3
     Width = 140
-    Height = 145
-    Anchors = [akTop, akRight]
+    Height = 156
+    Anchors = [akTop, akRight, akBottom]
     Caption = 'Token Type '
     TabOrder = 0
+    DesignSize = (
+      140
+      156)
     object RadioButtonPrimary: TRadioButton
       Tag = 4
       Left = 16
-      Top = 115
+      Top = 124
       Width = 113
       Height = 17
-      Caption = 'Primary token'
+      Anchors = [akLeft]
+      Caption = 'Primary Token'
       Checked = True
       TabOrder = 0
       TabStop = True
@@ -43,9 +45,10 @@ object DuplicateDialog: TDuplicateDialog
     end
     object RadioButtonAnonymous: TRadioButton
       Left = 16
-      Top = 23
+      Top = 25
       Width = 113
       Height = 17
+      Anchors = [akLeft]
       Caption = 'Anonymous'
       TabOrder = 1
       OnClick = RadioButtonClick
@@ -53,9 +56,10 @@ object DuplicateDialog: TDuplicateDialog
     object RadioButtonIdentification: TRadioButton
       Tag = 1
       Left = 16
-      Top = 46
+      Top = 50
       Width = 113
       Height = 17
+      Anchors = [akLeft]
       Caption = 'Identification'
       TabOrder = 2
       OnClick = RadioButtonClick
@@ -63,9 +67,10 @@ object DuplicateDialog: TDuplicateDialog
     object RadioButtonImpersonation: TRadioButton
       Tag = 2
       Left = 16
-      Top = 69
+      Top = 75
       Width = 113
       Height = 17
+      Anchors = [akLeft]
       Caption = 'Impersonation'
       TabOrder = 3
       OnClick = RadioButtonClick
@@ -73,9 +78,10 @@ object DuplicateDialog: TDuplicateDialog
     object RadioButtonDelegation: TRadioButton
       Tag = 3
       Left = 16
-      Top = 92
+      Top = 100
       Width = 113
       Height = 17
+      Anchors = [akLeft]
       Caption = 'Delegation'
       DoubleBuffered = False
       ParentDoubleBuffered = False
@@ -84,11 +90,11 @@ object DuplicateDialog: TDuplicateDialog
     end
   end
   object ButtonOK: TButton
-    Left = 214
-    Top = 153
+    Left = 205
+    Top = 165
     Width = 66
-    Height = 25
-    Anchors = [akTop, akRight]
+    Height = 24
+    Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
     ModalResult = 1
@@ -97,7 +103,7 @@ object DuplicateDialog: TDuplicateDialog
   object StaticTextAccess: TStaticText
     Left = 5
     Top = 3
-    Width = 203
+    Width = 194
     Height = 17
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight]
@@ -105,26 +111,34 @@ object DuplicateDialog: TDuplicateDialog
     Caption = 'Access rights'
     TabOrder = 2
   end
-  object ListBoxAccess: TCheckListBox
-    Left = 5
-    Top = 20
-    Width = 203
-    Height = 158
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Flat = False
-    ItemHeight = 18
-    Style = lbOwnerDrawFixed
-    TabOrder = 3
-  end
   object ButtonCancel: TButton
-    Left = 288
-    Top = 153
+    Left = 279
+    Top = 165
     Width = 66
-    Height = 25
-    Anchors = [akTop, akRight]
+    Height = 24
+    Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
+    TabOrder = 3
+  end
+  object ListViewAccess: TListViewEx
+    Left = 5
+    Top = 24
+    Width = 194
+    Height = 164
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Checkboxes = True
+    Columns = <
+      item
+        Width = 160
+      end>
+    MultiSelect = True
+    GroupView = True
+    ReadOnly = True
+    RowSelect = True
+    ShowColumnHeaders = False
     TabOrder = 4
+    ViewStyle = vsReport
   end
 end
