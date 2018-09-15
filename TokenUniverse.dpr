@@ -25,7 +25,7 @@ uses
   UI.Colors in 'UI\UI.Colors.pas',
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
-  UI.Logon in 'UI\UI.Logon.pas' {LogonDialog},
+  UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
   TU.LsaApi in 'Core\TU.LsaApi.pas',
   UI.Prototypes.ChildForm in 'UI\UI.Prototypes.ChildForm.pas';
 

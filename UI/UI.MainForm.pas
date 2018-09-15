@@ -94,7 +94,7 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.SessionDialog,
-  UI.Restrict, UI.Logon, UI.Modal.AccessAndType;
+  UI.Restrict, UI.Modal.Logon, UI.Modal.AccessAndType;
 
 {$R *.dfm}
 

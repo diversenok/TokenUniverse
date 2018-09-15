@@ -13,7 +13,6 @@ object LogonDialog: TLogonDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
-  OnClose = FormClose
   DesignSize = (
     196
     139)

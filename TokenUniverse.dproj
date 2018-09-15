@@ -150,7 +150,7 @@
         <DCCReference Include="UI\UI.Colors.pas"/>
         <DCCReference Include="UI\UI.Prototypes.pas"/>
         <DCCReference Include="Core\TU.Credentials.pas"/>
-        <DCCReference Include="UI\UI.Logon.pas">
+        <DCCReference Include="UI\UI.Modal.Logon.pas">
             <Form>LogonDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>

@@ -22,12 +22,13 @@ type
   private
     procedure GetDomainAndUser(SrcSid: PSID);
     procedure GetStringSid(SrcSid: PSID);
+    procedure CreateFromStringSid(StringSID: string);
+    constructor CreateFromUserName(Name: string);
   public
     SID, Domain, User: String;
     SIDType: TSIDNameUse;
     constructor CreateFromSid(SrcSid: PSID);
-    constructor CreateFromStringSid(StringSID: string);
-    constructor CreateFromUserName(Name: string);
+    constructor CreateFromString(UserOrSID: String);
     class function CreateWellKnown(WellKnownSidType: TWellKnownSidType):
       CanFail<TSecurityIdentifier>; static;
     function ToString: String;
@@ -1014,7 +1015,15 @@ begin
   GetDomainAndUser(SrcSid);
 end;
 
-constructor TSecurityIdentifier.CreateFromStringSid(StringSID: string);
+constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
+begin
+  if UserOrSID.StartsWith('S-1-') then
+    CreateFromStringSid(UserOrSID)
+  else
+    CreateFromUserName(UserOrSID);
+end;
+
+procedure TSecurityIdentifier.CreateFromStringSid(StringSID: string);
 var
   Buffer: PSID;
 begin

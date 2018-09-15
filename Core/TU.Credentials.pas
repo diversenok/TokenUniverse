@@ -99,7 +99,7 @@ begin
         RaiseLastOSError;
 
       try
-        with TSecurityIdentifier.CreateFromUserName(UserBuffer) do
+        with TSecurityIdentifier.CreateFromString(UserBuffer) do
         begin
           if Assigned(Payload) then
             Payload(Domain, User, PasswordBuffer);

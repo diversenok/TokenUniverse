@@ -1,13 +1,14 @@
-unit UI.Logon;
+unit UI.Modal.Logon;
 
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  UI.Prototypes.ChildForm;
 
 type
-  TLogonDialog = class(TForm)
+  TLogonDialog = class(TChildForm)
     ComboLogonType: TComboBox;
     ComboLogonProvider: TComboBox;
     LabelType: TLabel;
@@ -15,7 +16,6 @@ type
     ButtonCancel: TButton;
     ButtonContinue: TButton;
     procedure ButtonContinueClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: Cardinal;
@@ -34,12 +34,7 @@ uses
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
 begin
   PromptCredentialsUI(Handle, TokenCreationCallback);
-  Close;
-end;
-
-procedure TLogonDialog.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Action := caFree;
+  ModalResult := mrOk;
 end;
 
 function TLogonDialog.GetLogonProvider: Cardinal;
