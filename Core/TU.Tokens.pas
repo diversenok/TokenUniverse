@@ -1191,9 +1191,6 @@ end;
 
 function TGroupAttributesHelper.StateToString: String;
 begin
-  if Self.Contain(GroupIntegrityEnabled) then
-    Exit('Integrity Enabled');
-
   if Self.Contain(GroupEnabled) then
   begin
     if Self.Contain(GroupEnabledByDefault) then
@@ -1207,6 +1204,14 @@ begin
       Result := 'Disabled (modified)'
     else
       Result := 'Disabled';
+  end;
+
+  if Self.Contain(GroupIntegrityEnabled) then
+  begin
+    if Self.Contain(GroupEnabled) or Self.Contain(GroupEnabledByDefault) then
+      Result := 'Integrity Enabled, Group ' + Result
+    else
+      Exit('Integrity Enabled');
   end;
 end;
 
