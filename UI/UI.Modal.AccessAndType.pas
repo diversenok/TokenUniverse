@@ -35,9 +35,6 @@ type
       TToken;
   end;
 
-var
-  DialogAccessAndType: TDialogAccessAndType;
-
 implementation
 
 {$R *.dfm}

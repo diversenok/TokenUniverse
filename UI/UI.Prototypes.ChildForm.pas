@@ -24,7 +24,7 @@ type
 implementation
 
 uses
-  Vcl.Dialogs, UI.MainForm;
+  Vcl.Dialogs, System.UITypes, UI.MainForm;
 
 { TChildForm }
 
@@ -64,7 +64,7 @@ function TChildForm.ShowModal: Integer;
 begin
   Result := inherited;
 
-  if ModalResult <> mrOk then
+  if ModalResult = mrCancel then
     Abort;
 end;
 

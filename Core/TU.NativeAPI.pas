@@ -80,7 +80,6 @@ type
     Reserved: array [0..9] of Cardinal;
   end;
 
-
   { Ntdll api calls }
 
 function NtQuerySystemInformation(SystemInformationClass

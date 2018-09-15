@@ -55,6 +55,7 @@ var
   UserBuffer, DomainBuffer, PasswordBuffer: PWideChar;
   UserLength, DomainLength, PasswordLength: Cardinal;
 begin
+  LastAuthError := 0;
   while True do
   begin
     FillChar(CredInfo, SizeOf(CredInfo), 0);
@@ -64,7 +65,6 @@ begin
     CredInfo.pszMessageText := 'Please enter the credentials:';
 
     AuthPackage := 0;
-    LastAuthError := 0;
     ErrorCode := CredUIPromptForWindowsCredentialsW(CredInfo, LastAuthError,
       AuthPackage, nil, 0, AuthBuffer, AuthBufferSize, nil, CREDUIWIN_GENERIC);
 

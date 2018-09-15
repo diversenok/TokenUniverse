@@ -53,6 +53,7 @@ var
 begin
   Buffer := nil;
   BufferSize := 0;
+  status := STATUS_UNSUCCESSFUL;
 
   while True do
   begin
