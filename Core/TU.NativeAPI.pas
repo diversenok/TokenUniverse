@@ -91,6 +91,13 @@ function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
   TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
   Cardinal; ReturnLength: PCardinal): LongWord; stdcall; external ntdll;
 
+function NtCreateToken(var TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
+  ObjectAttributes: Pointer; TokenType: TTokenType; var AuthenticationId: LUID;
+  var ExpirationTime: Int64; var User: TTokenUser; var Groups: TTokenGroups;
+  var Privileges: TTokenPrivileges; var Owner: TTokenOwner;
+  var PrimaryGroup: TTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
+  var Source: TTokenSource): NTSTATUS; stdcall; external ntdll;
+
 type
   TByteArray = array [Word] of Byte;
   PByteArray = ^TByteArray;

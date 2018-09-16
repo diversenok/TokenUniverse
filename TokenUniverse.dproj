@@ -161,6 +161,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.ObjPicker.pas"/>
+        <DCCReference Include="UI\UI.CreateToken.pas">
+            <Form>DialogCreateToken</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

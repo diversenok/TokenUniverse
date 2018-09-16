@@ -84,6 +84,7 @@ type
     procedure ActionRestrict(Sender: TObject);
     procedure ActionLogon(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
+    procedure NewNtCreateTokenClick(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -97,7 +98,8 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.SessionDialog,
-  UI.Restrict, UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
+  UI.Restrict, UI.CreateToken,
+  UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
 
 {$R *.dfm}
 
@@ -266,6 +268,11 @@ end;
 procedure TFormMain.MenuExitClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFormMain.NewNtCreateTokenClick(Sender: TObject);
+begin
+  TDialogCreateToken.Create(Self).Show;
 end;
 
 end.

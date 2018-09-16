@@ -3,9 +3,9 @@ unit UI.Modal.PickUser;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.ImageList, Vcl.ImgList,
-  Vcl.StdCtrls, Vcl.ExtCtrls, TU.Common, TU.Tokens, UI.Prototypes.ChildForm;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  Vcl.ExtCtrls, UI.MainForm, TU.Common, TU.Tokens, UI.Prototypes.ChildForm;
 
 type
   TDialogPickUser = class(TChildForm)
@@ -13,7 +13,6 @@ type
     ButtonFilter: TButton;
     ButtonOK: TButton;
     ButtonCancel: TButton;
-    ImageList: TImageList;
     ButtonPick: TButton;
     GroupBoxAttributes: TGroupBox;
     CheckBoxMandatory: TCheckBox;
