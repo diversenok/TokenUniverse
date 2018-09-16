@@ -46,11 +46,29 @@ uses
 { TDialogRestrictToken }
 
 procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
+const
+  NO_SANBOX_INERT = 'The resulting token doesn''t contain SandboxInert flag ' +
+    'despite you tried to enable it. Looks like this action requires ' +
+    'SeTcbPrivilege on your system.';
+var
+  NewToken: TToken;
 begin
-  FormMain.Frame.AddToken(TToken.CreateRestricted(Token, GetFlags,
+  NewToken := TToken.CreateRestricted(Token, GetFlags,
     ListViewDisableSID.CheckedGroups,
     ListViewRestrictSID.CheckedGroups,
-    ListViewPrivileges.CheckedPrivileges));
+    ListViewPrivileges.CheckedPrivileges);
+
+  FormMain.Frame.AddToken(NewToken);
+
+  // Check whether SandboxInert was actually enabled
+  if CheckBoxSandboxInert.Checked then
+    with NewToken.SandboxInert do
+      if IsValid and not Value then
+      begin
+        Hide;
+        MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
+      end;
+
   Close;
 end;
 
