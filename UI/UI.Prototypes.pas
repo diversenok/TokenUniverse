@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.StdCtrls,
-  Winapi.Windows, UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi;
+  Winapi.Windows, UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi, TU.LsaApi;
 
 type
   TTokenedListViewEx = class(TListViewEx)
@@ -44,13 +44,14 @@ type
     procedure ChangedGroups(NewGroups: CanFail<TGroupArray>);
     procedure SetSource(const Value: TGroupSource);
     procedure SetViewAs(const Value: TGroupViewAs);
-    function BuildHint(SID: TSecurityIdentifier; Attributes: TGroupAttributes)
-      : String;
   protected
     procedure SubscribeToken; override;
     procedure UnsubscribeToken; override;
   public
     property Groups: TGroupArray read FGroups;
+    class function BuildHint(SID: TSecurityIdentifier;
+      Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
+      static;
   published
     property ViewAs: TGroupViewAs read FViewAs write SetViewAs default gvUser;
     property Source: TGroupSource read FSource write SetSource default gsGroups;
@@ -83,6 +84,18 @@ type
   TAccessMaskSource = class
     class procedure InitAccessEntries(ListView: TListView; Access: ACCESS_MASK);
     class function GetAccessMask(ListView: TListView): ACCESS_MASK;
+  end;
+
+  TLogonSessionSource = class
+  private
+    FLogonSessions: TLuidDynArray;
+    ComboBox: TComboBox;
+    function GetSelected: LUID;
+    procedure SetSelected(const Value: LUID);
+  public
+    constructor Create(OwnedComboBox: TComboBox);
+    procedure UpdateLogonSessions;
+    property SelectedLogonSession: LUID read GetSelected write SetSelected;
   end;
 
 procedure Register;
@@ -201,8 +214,8 @@ end;
 
 { TGroupListViewEx }
 
-function TGroupListViewEx.BuildHint(SID: TSecurityIdentifier;
-  Attributes: TGroupAttributes): String;
+class function TGroupListViewEx.BuildHint(SID: TSecurityIdentifier;
+  Attributes: TGroupAttributes; AttributesPresent: Boolean): String;
 const
   ITEM_FORMAT = '%s:'#$D#$A'  %s';
 var
@@ -214,9 +227,12 @@ begin
       Items.Add(Format(ITEM_FORMAT, ['Pretty name', SID.ToString]));
     Items.Add(Format(ITEM_FORMAT, ['SID', SID.SID]));
     Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDType.ToString]));
-    Items.Add(Format(ITEM_FORMAT, ['State', Attributes.StateToString]));
-    if Attributes.ContainAnyFlags then
-      Items.Add(Format(ITEM_FORMAT, ['Flags', Attributes.FlagsToString]));
+    if AttributesPresent then
+    begin
+      Items.Add(Format(ITEM_FORMAT, ['State', Attributes.StateToString]));
+      if Attributes.ContainAnyFlags then
+        Items.Add(Format(ITEM_FORMAT, ['Flags', Attributes.FlagsToString]));
+    end;
     Result := String.Join(#$D#$A, Items.ToArray);
   finally
     Items.Free;
@@ -449,10 +465,9 @@ class function TAccessMaskSource.GetAccessMask(
 var
   i: integer;
 begin
-  Result := 0;
-  if ListView.Items.Count <> ACCESS_COUNT then
-    Abort;
+  Assert(ListView.Items.Count = ACCESS_COUNT);
 
+  Result := 0;
   for i := 0 to ACCESS_COUNT - 1 do
     if ListView.Items[i].Checked then
       Result := Result or AccessValues[i];
@@ -480,6 +495,63 @@ begin
     Caption := AccessStrings[i];
     GroupID := Cardinal(AccessGroupValues[i]);
     ListView.Items[i].Checked := (Access and AccessValues[i] = AccessValues[i]);
+  end;
+end;
+
+{ TLogonSessionSource }
+
+constructor TLogonSessionSource.Create(OwnedComboBox: TComboBox);
+begin
+  ComboBox := OwnedComboBox;
+  UpdateLogonSessions;
+end;
+
+function TLogonSessionSource.GetSelected: LUID;
+var
+  LogonId: UInt64;
+begin
+  Assert(ComboBox.Items.Count = Length(FLogonSessions));
+
+  if ComboBox.ItemIndex = -1 then
+  begin
+    LogonId := StrToInt64Ex(ComboBox.Text, 'logon ID');
+    Result := PLUID(@LogonId)^;
+  end
+  else
+    Result := FLogonSessions[ComboBox.ItemIndex];
+end;
+
+procedure TLogonSessionSource.SetSelected(const Value: LUID);
+var
+  i: integer;
+begin
+  Assert(ComboBox.Items.Count = Length(FLogonSessions));
+
+  for i := 0 to High(FLogonSessions) do
+    if Value.ToInt64 = FLogonSessions[i].ToInt64 then
+    begin
+      ComboBox.ItemIndex := i;
+      Exit;
+    end;
+
+  ComboBox.ItemIndex := -1;
+  ComboBox.Text := Value.ToString;
+end;
+
+procedure TLogonSessionSource.UpdateLogonSessions;
+var
+  i: integer;
+  S: String;
+begin
+  FLogonSessions := EnumerateLogonSessions;
+  ComboBox.Items.Clear;
+  for i := 0 to High(FLogonSessions) do
+  begin
+    S := FLogonSessions[i].ToString;
+      with GetLogonSessionInformation(FLogonSessions[i]) do
+        if IsValid and Value.HasUser then
+          S := S + ' (' + Value.User.ToString + ')';
+    ComboBox.Items.Add(S);
   end;
 end;
 

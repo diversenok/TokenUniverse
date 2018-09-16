@@ -141,6 +141,7 @@ function NativeCheck(Status: NTSTATUS; Where: String;
 /// </summary>
 /// <exception cref="EConvertError"> Can raise EConvertError. </exception>
 function StrToIntEx(S: String; Comment: String): Cardinal;
+function StrToInt64Ex(S: String; Comment: String): UInt64;
 
 /// <symmary>
 ///  Converts a number of 100ns intervals from 01.01.1601 to Delphi's
@@ -382,7 +383,7 @@ end;
 
 { Conversion functions }
 
-function StrToIntEx(S: String; Comment: String): Cardinal;
+function StrToInt64Ex(S: String; Comment: String): UInt64;
 const
   E_CONV_DECHEX = 'Invalid %s. Please specify a decimal or a hexadecimal value.';
 var
@@ -394,6 +395,11 @@ begin
   Val(S, Result, E);
   if E <> 0 then
     raise EConvertError.Create(Format(E_CONV_DECHEX, [Comment]));
+end;
+
+function StrToIntEx(S: String; Comment: String): Cardinal;
+begin
+  Result := StrToInt64Ex(S, Comment);
 end;
 
 function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;

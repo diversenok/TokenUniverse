@@ -17,6 +17,7 @@ type
   end;
 
   TLogonSessionInfo = record
+    HasUser: Boolean;
     User: TSecurityIdentifier;
     AuthPackage, LogonServer: String;
     LogonType: TLogonType;
@@ -24,7 +25,10 @@ type
     LogonTime: TDateTime;
   end;
 
+  TLuidDynArray = array of LUID;
+
 function GetLogonSessionInformation(LogonId: LUID): CanFail<TLogonSessionInfo>;
+function EnumerateLogonSessions: TLuidDynArray;
 
 implementation
 
@@ -56,6 +60,9 @@ type
     Upn: TLsaUnicodeString;
   end;
 
+  TLuidArray = array [Word] of LUID;
+  PLuidArray = ^TLuidArray;
+
   PSecurityLogonSessionData = ^TSecurityLogonSessionData;
 
 function LsaFreeReturnBuffer(Buffer: Pointer): LongWord; stdcall;
@@ -64,6 +71,9 @@ function LsaFreeReturnBuffer(Buffer: Pointer): LongWord; stdcall;
 function LsaGetLogonSessionData(var LogonId: LUID;
   out ppLogonSessionData: PSecurityLogonSessionData): LongWord; stdcall;
   external secur32;
+
+function LsaEnumerateLogonSessions(out LogonSessionCount: Integer;
+  out LogonSessionList: PLuidArray): LongWord; stdcall; external secur32;
 
 function GetLogonSessionInformation(LogonId: LUID): CanFail<TLogonSessionInfo>;
 var
@@ -75,7 +85,9 @@ begin
     'LsaGetLogonSessionData') then
     with Result do
       try
-        Value.User := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+        Value.HasUser := Buffer.Sid <> nil;
+        if Value.HasUser then
+          Value.User := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
         SetString(Value.AuthPackage, Buffer.AuthenticationPackage.Buffer,
           Buffer.AuthenticationPackage.Length div SizeOf(WideChar));
         Value.LogonType := TLogonType(Buffer.LogonType);
@@ -86,6 +98,23 @@ begin
       finally
         LsaFreeReturnBuffer(Buffer);
       end;
+end;
+
+function EnumerateLogonSessions: TLuidDynArray;
+var
+  Count, i: Integer;
+  Sessions: PLuidArray;
+begin
+  SetLength(Result, 0);
+
+  if LsaEnumerateLogonSessions(Count, Sessions) = STATUS_SUCCESS then
+  try
+    SetLength(Result, Count);
+    for i := 0 to Count - 1 do
+      Result[i] := Sessions[i];
+  finally
+    LsaFreeReturnBuffer(Sessions);
+  end;
 end;
 
 { TSecurotyLogonTypeHelper }

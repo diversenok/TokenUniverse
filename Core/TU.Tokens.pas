@@ -78,6 +78,7 @@ type
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
   TLuidHelper = record helper for LUID
+    function ToInt64: Int64;
     function ToString: String;
   end;
 
@@ -1299,6 +1300,11 @@ begin
 end;
 
 { TLuidHelper }
+
+function TLuidHelper.ToInt64: Int64;
+begin
+  Result := PInt64(@Self)^;
+end;
 
 function TLuidHelper.ToString: String;
 begin

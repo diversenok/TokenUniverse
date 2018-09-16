@@ -352,6 +352,8 @@ begin
 end;
 
 procedure TInfoDialog.Refresh;
+var
+  i: Integer;
 begin
   ComboSession.RefreshSessionList;
 
@@ -401,12 +403,24 @@ begin
         with GetLogonSessionInformation(Value.AuthenticationId) do
           if IsValid then
           begin
-            Items[13].SubItems[0] := Value.User.ToString;
+            if Value.HasUser then
+            begin
+              Items[13].SubItems[0] := Value.User.ToString;
+              Items[13].Hint := TGroupListViewEx.BuildHint(Value.User,
+                TGroupAttributes(0), False);
+            end
+            else
+              Items[13].SubItems[0] := 'No linked user';
             Items[14].SubItems[0] := Value.AuthPackage;
             Items[15].SubItems[0] := Value.LogonServer;
             Items[16].SubItems[0] := Value.LogonType.ToString;
             Items[17].SubItems[0] := Value.Session.ToString;
             Items[18].SubItems[0] := DateTimeToStr(Value.LogonTime);
+          end
+          else
+          begin
+            for i := 13 to 18 do
+              Items[i].Hint := GetErrorMessage;
           end;
       end;
 
