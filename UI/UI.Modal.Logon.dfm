@@ -3,9 +3,12 @@ object LogonDialog: TLogonDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Logon user'
-  ClientHeight = 139
-  ClientWidth = 196
+  ClientHeight = 324
+  ClientWidth = 277
   Color = clBtnFace
+  Constraints.MinHeight = 320
+  Constraints.MinWidth = 266
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -14,8 +17,8 @@ object LogonDialog: TLogonDialog
   OldCreateOrder = False
   Position = poMainFormCenter
   DesignSize = (
-    196
-    139)
+    277
+    324)
   PixelsPerInch = 96
   TextHeight = 13
   object LabelType: TLabel
@@ -32,10 +35,20 @@ object LogonDialog: TLogonDialog
     Height = 13
     Caption = 'Logon provider:'
   end
+  object LabelGroups: TLabel
+    Left = 8
+    Top = 110
+    Width = 261
+    Height = 17
+    Alignment = taCenter
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
+    Caption = 'Additional groups (requires SeTcbPrivilege)'
+  end
   object ComboLogonType: TComboBox
     Left = 8
     Top = 27
-    Width = 180
+    Width = 261
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
@@ -53,7 +66,7 @@ object LogonDialog: TLogonDialog
   object ComboLogonProvider: TComboBox
     Left = 8
     Top = 76
-    Width = 180
+    Width = 261
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
@@ -68,7 +81,7 @@ object LogonDialog: TLogonDialog
   end
   object ButtonCancel: TButton
     Left = 8
-    Top = 107
+    Top = 291
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -78,8 +91,8 @@ object LogonDialog: TLogonDialog
     TabOrder = 2
   end
   object ButtonContinue: TButton
-    Left = 113
-    Top = 107
+    Left = 194
+    Top = 291
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -87,5 +100,61 @@ object LogonDialog: TLogonDialog
     Default = True
     TabOrder = 3
     OnClick = ButtonContinueClick
+  end
+  object ListViewRestrictSID: TGroupListViewEx
+    Left = 8
+    Top = 128
+    Width = 261
+    Height = 157
+    Margins.Top = 26
+    Margins.Bottom = 31
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Checkboxes = True
+    Columns = <
+      item
+        Caption = 'SID'
+        Width = 180
+      end
+      item
+        Caption = 'State'
+        Width = 110
+      end
+      item
+        Caption = 'Flags'
+        Width = 120
+      end>
+    FullDrag = True
+    GridLines = True
+    MultiSelect = True
+    ReadOnly = True
+    RowSelect = True
+    PopupMenu = PopupMenu
+    TabOrder = 4
+    ViewStyle = vsReport
+    ColoringItems = True
+  end
+  object ButtonAddSID: TButton
+    Left = 100
+    Top = 291
+    Width = 78
+    Height = 25
+    Anchors = [akBottom]
+    Caption = 'Add SID'
+    ImageIndex = 1
+    ImageMargins.Left = 3
+    ImageMargins.Top = 1
+    Images = FormMain.SmallIcons
+    TabOrder = 5
+    OnClick = ButtonAddSIDClick
+  end
+  object PopupMenu: TPopupMenu
+    Left = 136
+    Top = 168
+    object Edit1: TMenuItem
+      Caption = 'Edit'
+    end
+    object Remove1: TMenuItem
+      Caption = 'Remove'
+    end
   end
 end

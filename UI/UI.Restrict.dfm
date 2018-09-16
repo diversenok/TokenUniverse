@@ -110,8 +110,9 @@ object DialogRestrictToken: TDialogRestrictToken
         Left = 3
         Top = 26
         Width = 333
-        Height = 228
+        Height = 200
         Margins.Top = 26
+        Margins.Bottom = 31
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -135,6 +136,19 @@ object DialogRestrictToken: TDialogRestrictToken
         TabOrder = 1
         ViewStyle = vsReport
         ColoringItems = True
+      end
+      object ButtonAddSID: TButton
+        Left = 3
+        Top = 229
+        Width = 78
+        Height = 25
+        Hint = 'Add a new restricted SID that is not present in the list.'
+        Caption = 'Add SID'
+        ImageIndex = 1
+        ImageMargins.Left = 3
+        ImageMargins.Top = 1
+        Images = FormMain.SmallIcons
+        TabOrder = 2
       end
     end
     object TabSheetPrivDelete: TTabSheet
@@ -201,7 +215,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxLUA: TCheckBox
     Left = 14
-    Top = 299
+    Top = 297
     Width = 120
     Height = 15
     Hint = 
@@ -218,7 +232,8 @@ object DialogRestrictToken: TDialogRestrictToken
     Height = 17
     Hint = 
       'Does not check AppLocker rules or apply Software Restriction Pol' +
-      'icies for the process with this token.'
+      'icies for the process with this token.'#13#10#13#10'This action might requ' +
+      'ire SeTcbPrivilege to take effect.'
     Anchors = [akLeft, akBottom]
     Caption = 'Sandbox inert'
     TabOrder = 4

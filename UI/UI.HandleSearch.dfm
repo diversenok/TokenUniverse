@@ -34,7 +34,6 @@ object FormHandleSearch: TFormHandleSearch
     Height = 325
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
-    ExplicitWidth = 673
     inherited ListViewTokens: TListViewEx
       Width = 667
       Columns = <
@@ -73,15 +72,12 @@ object FormHandleSearch: TFormHandleSearch
       ReadOnly = True
       PopupMenu = PopupMenu
       OnContextPopup = FrameListViewTokensContextPopup
-      ExplicitWidth = 667
     end
     inherited SearchBox: TButtonedEdit
       Width = 520
-      ExplicitWidth = 520
     end
     inherited ComboBoxColumn: TComboBox
       Left = 527
-      ExplicitLeft = 527
     end
   end
   object ButtonClose: TButton

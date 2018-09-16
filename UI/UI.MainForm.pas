@@ -55,6 +55,8 @@ type
     TokenOpenInfo: TMenuItem;
     SmallIcons: TImageList;
     ApplicationEvents: TApplicationEvents;
+    N1: TMenuItem;
+    MenuExit: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -81,6 +83,7 @@ type
     procedure ActionWTSQuery(Sender: TObject);
     procedure ActionRestrict(Sender: TObject);
     procedure ActionLogon(Sender: TObject);
+    procedure MenuExitClick(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -94,7 +97,7 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.SessionDialog,
-  UI.Restrict, UI.Modal.Logon, UI.Modal.AccessAndType;
+  UI.Restrict, UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
 
 {$R *.dfm}
 
@@ -258,6 +261,11 @@ begin
   for Menu in PopupMenu.Items do
     if (Menu <> NewMenu) and (Menu <> ProgramRun)  then
       Menu.Enabled := Selected;
+end;
+
+procedure TFormMain.MenuExitClick(Sender: TObject);
+begin
+  Close;
 end;
 
 end.

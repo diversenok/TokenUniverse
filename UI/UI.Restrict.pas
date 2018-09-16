@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, TU.Common, TU.Tokens, UI.ListViewEx, UI.Prototypes,
-  UI.Prototypes.ChildForm;
+  UI.Prototypes.ChildForm, System.ImageList, Vcl.ImgList;
 
 type
   TDialogRestrictToken = class(TChildForm)
@@ -23,6 +23,7 @@ type
     ListViewPrivileges: TPrivilegesListViewEx;
     ListViewRestrictSID: TGroupListViewEx;
     ListViewDisableSID: TGroupListViewEx;
+    ButtonAddSID: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);

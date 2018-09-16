@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  UI.Prototypes.ChildForm;
+  UI.Prototypes.ChildForm, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes, Vcl.Menus;
 
 type
   TLogonDialog = class(TChildForm)
@@ -15,7 +15,14 @@ type
     LabelProvider: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
+    ListViewRestrictSID: TGroupListViewEx;
+    ButtonAddSID: TButton;
+    LabelGroups: TLabel;
+    PopupMenu: TPopupMenu;
+    Edit1: TMenuItem;
+    Remove1: TMenuItem;
     procedure ButtonContinueClick(Sender: TObject);
+    procedure ButtonAddSIDClick(Sender: TObject);
   private
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: Cardinal;
@@ -27,9 +34,14 @@ type
 implementation
 
 uses
-  TU.Common, TU.Credentials, TU.Tokens, UI.MainForm;
+  TU.Common, TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser;
 
 {$R *.dfm}
+
+procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
+begin
+   TDialogPickUser.ExecuteNew(Self);
+end;
 
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
 begin

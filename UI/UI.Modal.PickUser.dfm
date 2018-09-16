@@ -41,7 +41,6 @@ object DialogPickUser: TDialogPickUser
     ImageMargins.Top = 1
     Images = ImageList
     TabOrder = 1
-    ExplicitLeft = 316
   end
   object ButtonOK: TButton
     Left = 294
@@ -53,8 +52,6 @@ object DialogPickUser: TDialogPickUser
     Default = True
     TabOrder = 2
     OnClick = ButtonOKClick
-    ExplicitLeft = 297
-    ExplicitTop = 185
   end
   object ButtonCancel: TButton
     Left = 8
@@ -66,7 +63,6 @@ object DialogPickUser: TDialogPickUser
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 3
-    ExplicitTop = 185
   end
   object ButtonPick: TButton
     Left = 344
@@ -81,7 +77,6 @@ object DialogPickUser: TDialogPickUser
     Images = ImageList
     TabOrder = 4
     OnClick = ButtonPickClick
-    ExplicitLeft = 347
   end
   object GroupBoxAttributes: TGroupBox
     Left = 8
@@ -91,8 +86,6 @@ object DialogPickUser: TDialogPickUser
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'Group attributes '
     TabOrder = 5
-    ExplicitWidth = 362
-    ExplicitHeight = 144
     DesignSize = (
       359
       147)
@@ -104,7 +97,6 @@ object DialogPickUser: TDialogPickUser
       Anchors = [akTop]
       Caption = 'Mandatory'
       TabOrder = 0
-      ExplicitLeft = 200
     end
     object CheckBoxDenyOnly: TCheckBox
       Left = 198
@@ -114,7 +106,6 @@ object DialogPickUser: TDialogPickUser
       Anchors = [akTop]
       Caption = 'Use for deny only'
       TabOrder = 1
-      ExplicitLeft = 200
     end
     object CheckBoxOwner: TCheckBox
       Left = 198
@@ -124,7 +115,6 @@ object DialogPickUser: TDialogPickUser
       Anchors = [akTop]
       Caption = 'Owner'
       TabOrder = 2
-      ExplicitLeft = 200
     end
     object CheckBoxResource: TCheckBox
       Left = 198
@@ -134,7 +124,6 @@ object DialogPickUser: TDialogPickUser
       Anchors = [akTop]
       Caption = 'Resource'
       TabOrder = 3
-      ExplicitLeft = 200
     end
     object CheckBoxEnabled: TCheckBox
       Left = 16
@@ -180,7 +169,6 @@ object DialogPickUser: TDialogPickUser
       Anchors = [akTop]
       Caption = 'Logon ID'
       TabOrder = 8
-      ExplicitLeft = 200
     end
   end
   object ImageList: TImageList
