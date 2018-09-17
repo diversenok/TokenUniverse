@@ -18,7 +18,14 @@ implementation
 
 uses
   System.SysUtils, Winapi.Windows, Winapi.WinSvc, Winapi.ShellApi,
-  TU.Tokens, TU.DebugLog;
+  TU.Tokens;
+
+procedure DebugOut(DebugMessage: String); inline;
+begin
+  {$IFDEF DEBUG}
+  OutputDebugString(PChar(DebugMessage));
+  {$ENDIF}
+end;
 
 { Restart Service client functions }
 
@@ -124,6 +131,7 @@ var
   Token, NewToken: TToken;
   SI: TStartupInfoW;
   PI: TProcessInformation;
+  ExitCode: Cardinal;
 begin
   Token := nil;
   NewToken := nil;
@@ -139,10 +147,27 @@ begin
     FillChar(PI, SizeOf(PI), 0);
     FillChar(SI, SizeOf(SI), 0);
     SI.cb := SizeOf(SI);
+    SI.lpDesktop := 'WinSta0\Default';
 
     if not CreateProcessAsUserW(NewToken.Handle, PWideChar(ParamStr(0)), nil,
       nil, nil, False, 0, nil, nil, SI, PI) then
-      RaiseLastOSError;
+      RaiseLastOSError
+    else
+    begin
+      case WaitForSingleObject(PI.hProcess, 100) of
+        WAIT_FAILED: DebugOut('Wait for the new process failed');
+        WAIT_OBJECT_0:
+          begin
+            DebugOut('Abnormal process termination');
+            if not GetExitCodeProcess(PI.hProcess, ExitCode) then
+              DebugOut('Unable to determine the exit code')
+            else
+              DebugOut(PChar('Exit code: 0x' + IntToHex(ExitCode, 8)));
+          end;
+      end;
+      CloseHandle(PI.hProcess);
+      CloseHandle(PI.hThread);
+    end;
   finally
     Token.Free;
     NewToken.Free;
@@ -177,10 +202,12 @@ begin
   try
     if (dwNumServicesArgs = 2) and TryStrToInt(PServiceArgs(lpServiceArgVectors)
       [1], Session) then
-      ReSvcRunInSession(Session);
+      ReSvcRunInSession(Session)
+    else
+      ReSvcRunInSession(0);
   except
     on E: Exception do
-      TProcmonLogger.SendDbgMessage(E.ClassName + ': ' + E.Message);
+      DebugOut(E.ClassName + ': ' + E.Message);
   end;
 
   ReSvcStatus.dwCurrentState := SERVICE_STOPPED;

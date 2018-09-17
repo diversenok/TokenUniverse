@@ -16,7 +16,6 @@ uses
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
   TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas',
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
-  TU.DebugLog in 'Core\TU.DebugLog.pas',
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.SessionDialog in 'UI\UI.SessionDialog.pas' {SessionDialog},
