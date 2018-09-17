@@ -203,7 +203,16 @@ begin
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
+var
+  i: integer;
 begin
+  with THandleList.CreateOnly(GetCurrentProcessId) do
+  begin
+    for i := 0 to Count - 1 do
+      Frame.AddToken(TToken.CreateFromHandleItem(Handles[i], 0));
+    Free;
+  end;
+
   with Frame.AddToken(TToken.CreateFromCurrent), Elevation do
     if IsValid then
       if Elevation.Value <> TokenElevationTypeDefault then

@@ -401,11 +401,13 @@ constructor TToken.CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
 begin
   hToken := 0;
   FOrigin := Item;
-  FCaption := Format('0x%x', [Item.hToken]);
+  FCaption := Format('Handle 0x%x (%d)', [Item.hToken, Item.hToken]);
 
   if hProcess <> 0 then
     DuplicateHandle(hProcess, Item.hToken, GetCurrentProcess, @hToken, 0, False,
-      DUPLICATE_SAME_ACCESS);
+      DUPLICATE_SAME_ACCESS)
+  else
+    hToken := Item.hToken;
 
   InitializeEvents;
 end;
