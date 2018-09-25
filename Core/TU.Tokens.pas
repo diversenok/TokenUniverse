@@ -187,7 +187,7 @@ type
     /// <remarks>
     ///  The memory of each item should be freed with <c>LocalFree</c>.
     /// </remarks>
-    class function ConverGroupArrayToSIDs(Groups: TGroupArray):
+    class function ConvertGroupArrayToSIDs(Groups: TGroupArray):
       TSIDAndAttributesArray; static;
     class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
   protected
@@ -344,7 +344,7 @@ begin
   Result := True;
 end;
 
-class function TToken.ConverGroupArrayToSIDs(
+class function TToken.ConvertGroupArrayToSIDs(
   Groups: TGroupArray): TSIDAndAttributesArray;
 var
   i: integer;
@@ -440,8 +440,8 @@ constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
 var
   Disable, Restrict: TSIDAndAttributesArray;
 begin
-  Disable := ConverGroupArrayToSIDs(SIDsToDisabe);
-  Restrict := ConverGroupArrayToSIDs(SIDsToRestrict);
+  Disable := ConvertGroupArrayToSIDs(SIDsToDisabe);
+  Restrict := ConvertGroupArrayToSIDs(SIDsToRestrict);
   try
     Win32Check(CreateRestrictedToken(SrcToken.hToken, Flags,
       Length(Disable), Disable,
@@ -472,10 +472,10 @@ begin
   OnClose.Invoke(Self);
   if hToken <> 0 then
   try
-    CloseHandle(hToken);
+    CloseHandle(hToken); // A protected handle may cause an exception
     hToken := 0;
   except
-    ; // destructor should always succeed
+    ; // but destructor should always succeed
   end;
   if Assigned(FEvents) then
     FinalizeEvents;
@@ -727,7 +727,7 @@ begin
     Length(GroupArray));
   NewState.GroupCount := Length(GroupArray);
 
-  GroupsArray := ConverGroupArrayToSIDs(GroupArray);
+  GroupsArray := ConvertGroupArrayToSIDs(GroupArray);
   for i := 0 to High(GroupsArray) do
     NewState.Groups[i] := GroupsArray[i];
 

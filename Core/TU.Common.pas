@@ -94,11 +94,12 @@ type
     Listeners: TEventListenerArray<T>;
 
     /// <summary>
-    ///  Adds an event listener. It can add and remove other event listeners,
-    ///  but all these changes will take effect only on the next call.
+    ///  Adds an event listener. The event listener can add and remove other
+    ///  event listeners, but all these changes will take effect only on the
+    ///  next call.
     /// </summary>
     /// <remarks>
-    ///  Be careful with exceptions since they break the loop of <c>Involve</c>
+    ///  Be careful with exceptions since they break the loop of <c>Invoke</c>
     ///  method.
     /// </remarks>
     procedure Add(EventListener: TEventListener<T>);
@@ -119,7 +120,7 @@ type
 
   /// <summary>
   ///  Multiple source event handler compatible with TNotifyEvent from
-  ///  System.Classes.
+  ///  System.Classes
   /// </summary>
   TNotifyEventHandler = TEventHandler<TObject>;
 
@@ -357,8 +358,8 @@ var
   i: integer;
   ListenersCopy: TEventListenerArray<T>;
 begin
-  // Event listeners can modify the list while we process it, so we should work
-  // with a copy. All modification would take effect only on the next call.
+  // Event listeners can modify the list while we process it, so we should make
+  // a copy. All these modifications would take effect only on the next call.
   ListenersCopy := Copy(Listeners, 0, Length(Listeners));
 
   for i := 0 to High(ListenersCopy) do

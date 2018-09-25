@@ -53,7 +53,7 @@ resourcestring
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
     'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
-   'integrity level of the token is too small.';
+   'integrity level of the token is too low.';
   SETTER_GROUPS_ACCESS = 'This action requires `Adjust groups` access right.';
   SETTER_GROUPS_DENY = 'And groups marked with `Mandatory` flag also cannot be disabled.';
   SETTER_GROUPS_OTHER = 'You can''t disable groups with `Mandatory` flag ' +
