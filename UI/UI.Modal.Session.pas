@@ -37,7 +37,7 @@ end;
 
 procedure TSessionDialog.FormCreate(Sender: TObject);
 begin
-  SessionCombo.RefreshSessionList;
+  SessionCombo.RefreshSessionList(True);
 end;
 
 end.

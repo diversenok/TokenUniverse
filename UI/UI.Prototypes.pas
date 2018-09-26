@@ -23,7 +23,7 @@ type
   TPrivilegesListViewEx = class(TTokenedListViewEx)
   private
     FPrivileges: TPrivilegeArray;
-    procedure ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
+    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
   protected
     procedure SubscribeToken; override;
     procedure UnsubscribeToken; override;
@@ -41,7 +41,7 @@ type
     FGroups: TGroupArray;
     FViewAs: TGroupViewAs;
     FSource: TGroupSource;
-    procedure ChangedGroups(NewGroups: CanFail<TGroupArray>);
+    procedure ChangedGroups(NewGroups: TGroupArray);
     procedure SetSource(const Value: TGroupSource);
     procedure SetViewAs(const Value: TGroupViewAs);
   protected
@@ -66,7 +66,7 @@ type
     procedure SetSession(const Value: Cardinal);
   public
     destructor Destroy; override;
-    procedure RefreshSessionList;
+    procedure RefreshSessionList(SelectSomething: Boolean);
     property SelectedSession: Cardinal read GetSession write SetSession;
   end;
 
@@ -148,28 +148,23 @@ end;
 
 { TPrivilegesListViewEx }
 
-procedure TPrivilegesListViewEx.ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
+procedure TPrivilegesListViewEx.ChangedPrivileges(
+  NewPrivileges: TPrivilegeArray);
 var
   i: integer;
 begin
   Items.BeginUpdate(True);
   Clear;
-  with NewPrivileges do
-    if IsValid then
-    begin
-      FPrivileges := Value;
-      for i := 0 to High(Value) do
-      with Value[i], Items.Add do
-      begin
-        Caption := Name;
-        SubItems.Add(Value[i].AttributesToString);
-        SubItems.Add(Value[i].Description);
-        SubItems.Add(Value[i].Luid.ToString);
-        Color := PrivilegeToColor(Value[i]);
-      end;
-    end
-    else
-      SetLength(FPrivileges, 0);
+  FPrivileges := NewPrivileges;
+  for i := 0 to High(NewPrivileges) do
+  with NewPrivileges[i], Items.Add do
+  begin
+    Caption := Name;
+    SubItems.Add(NewPrivileges[i].AttributesToString);
+    SubItems.Add(NewPrivileges[i].Description);
+    SubItems.Add(NewPrivileges[i].Luid.ToString);
+    Color := PrivilegeToColor(NewPrivileges[i]);
+  end;
   Items.EndUpdate(True);
 end;
 
@@ -203,7 +198,6 @@ procedure TPrivilegesListViewEx.SubscribeToken;
 begin
   inherited;
   Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
-  ChangedPrivileges(Token.Privileges);
 end;
 
 procedure TPrivilegesListViewEx.UnsubscribeToken;
@@ -239,31 +233,25 @@ begin
   end;
 end;
 
-procedure TGroupListViewEx.ChangedGroups(NewGroups: CanFail<TGroupArray>);
+procedure TGroupListViewEx.ChangedGroups(NewGroups: TGroupArray);
 var
   i: Integer;
 begin
   Items.BeginUpdate(True);
   Clear;
-  with NewGroups do
-    if IsValid then
-    begin
-      FGroups := Value;
-      for i := 0 to High(Value) do
-      with Value[i], Items.Add do
-      begin
-        case FViewAs of
-          gvUser: Caption := SecurityIdentifier.ToString;
-          gvSID: Caption := SecurityIdentifier.SID;
-        end;
-        Hint := BuildHint(SecurityIdentifier, Attributes);
-        SubItems.Add(Attributes.StateToString);
-        SubItems.Add(Attributes.FlagsToString);
-        Color := GroupAttributesToColor(Attributes);
-      end;
-    end
-    else
-      SetLength(FGroups, 0);
+  FGroups := NewGroups;
+  for i := 0 to High(NewGroups) do
+  with NewGroups[i], Items.Add do
+  begin
+    case FViewAs of
+      gvUser: Caption := SecurityIdentifier.ToString;
+      gvSID: Caption := SecurityIdentifier.SID;
+    end;
+    Hint := BuildHint(SecurityIdentifier, Attributes);
+    SubItems.Add(Attributes.StateToString);
+    SubItems.Add(Attributes.FlagsToString);
+    Color := GroupAttributesToColor(Attributes);
+  end;
   Items.EndUpdate(True);
 end;
 
@@ -315,19 +303,18 @@ begin
 
   FViewAs := Value;
   if Assigned(Token) then
-    ChangedGroups(CanFail<TGroupArray>.SucceedWith(FGroups));
+    ChangedGroups(FGroups);
 end;
 
 procedure TGroupListViewEx.SubscribeToken;
 begin
   inherited;
   if FSource = gsGroups then
-    Token.Events.OnGroupsChange.Add(ChangedGroups);
-
-  case FSource of
-    gsGroups: ChangedGroups(Token.Groups);
-    gsRestrictedSIDs: ChangedGroups(Token.RestrictedSids);
-  end;
+    Token.Events.OnGroupsChange.Add(ChangedGroups)
+  else if FSource = gsRestrictedSIDs then
+    with Token.RestrictedSids do
+        if IsValid then
+          ChangedGroups(Value);
 end;
 
 procedure TGroupListViewEx.UnsubscribeToken;
@@ -353,7 +340,7 @@ begin
     Result := Sessions[ItemIndex].SessionId;
 end;
 
-procedure TSessionComboBox.RefreshSessionList;
+procedure TSessionComboBox.RefreshSessionList(SelectSomething: Boolean);
 var
   i: integer;
 begin
@@ -365,7 +352,7 @@ begin
   for i := 0 to Sessions.Count - 1 do
     Items.Add(Sessions[i].ToString);
 
-  if Sessions.Count > 0 then
+  if SelectSomething and (Sessions.Count > 0) then
     ItemIndex := 0;
 
   Items.EndUpdate;

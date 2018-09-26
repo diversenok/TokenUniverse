@@ -2,7 +2,7 @@ object DialogRestrictToken: TDialogRestrictToken
   Left = 0
   Top = 0
   Caption = 'Create Restricted Token'
-  ClientHeight = 344
+  ClientHeight = 363
   ClientWidth = 355
   Color = clBtnFace
   DoubleBuffered = True
@@ -17,12 +17,12 @@ object DialogRestrictToken: TDialogRestrictToken
   OnCreate = FormCreate
   DesignSize = (
     355
-    344)
+    363)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
     Left = 276
-    Top = 314
+    Top = 333
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -33,7 +33,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object ButtonCancel: TButton
     Left = 195
-    Top = 314
+    Top = 333
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -46,7 +46,7 @@ object DialogRestrictToken: TDialogRestrictToken
     Left = 4
     Top = 6
     Width = 347
-    Height = 285
+    Height = 304
     ActivePage = TabSheetSidDisable
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
@@ -57,7 +57,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Left = 3
         Top = 3
         Width = 333
-        Height = 251
+        Height = 270
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -88,7 +88,7 @@ object DialogRestrictToken: TDialogRestrictToken
       ImageIndex = 1
       DesignSize = (
         339
-        257)
+        276)
       object CheckBoxWriteRestrict: TCheckBox
         Left = 6
         Top = 4
@@ -110,7 +110,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Left = 3
         Top = 26
         Width = 333
-        Height = 200
+        Height = 219
         Margins.Top = 26
         Margins.Bottom = 31
         Align = alClient
@@ -139,10 +139,11 @@ object DialogRestrictToken: TDialogRestrictToken
       end
       object ButtonAddSID: TButton
         Left = 3
-        Top = 229
+        Top = 248
         Width = 78
         Height = 25
         Hint = 'Add a new restricted SID that is not present in the list.'
+        Anchors = [akLeft, akBottom]
         Caption = 'Add SID'
         ImageIndex = 1
         ImageMargins.Left = 3
@@ -156,7 +157,7 @@ object DialogRestrictToken: TDialogRestrictToken
       ImageIndex = 2
       DesignSize = (
         339
-        257)
+        276)
       object CheckBoxDisableMaxPriv: TCheckBox
         Left = 6
         Top = 4
@@ -180,7 +181,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Left = 3
         Top = 26
         Width = 333
-        Height = 228
+        Height = 247
         Margins.Top = 26
         Align = alClient
         Checkboxes = True
@@ -215,7 +216,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxLUA: TCheckBox
     Left = 14
-    Top = 297
+    Top = 316
     Width = 120
     Height = 15
     Hint = 
@@ -227,7 +228,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxSandboxInert: TCheckBox
     Left = 14
-    Top = 318
+    Top = 337
     Width = 120
     Height = 17
     Hint = 

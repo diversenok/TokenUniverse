@@ -31,6 +31,7 @@ type
   private
     Token: TToken;
     function GetFlags: Cardinal;
+    procedure ChangedCaption(NewCaption: String);
   public
     procedure Refresh;
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -72,6 +73,11 @@ begin
   Close;
 end;
 
+procedure TDialogRestrictToken.ChangedCaption(NewCaption: String);
+begin
+  Caption := Format('Create restricted token for "%s"', [NewCaption]);
+end;
+
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
   SrcToken: TToken);
 begin
@@ -88,19 +94,20 @@ end;
 procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
+  Token.OnCaptionChange.Delete(ChangedCaption);
   UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 begin
   SubscribeTokenCanClose(Token, Caption);
-  Caption := Format('Create restricted token for "%s"', [Token.Caption]);
+  Refresh;
 
+  Token.OnCaptionChange.Add(ChangedCaption);
+  Token.OnCaptionChange.Invoke(Token.Caption);
   ListViewDisableSID.Token := Token;
   ListViewRestrictSID.Token := Token;
   ListViewPrivileges.Token := Token;
-
-  Refresh;
 end;
 
 function TDialogRestrictToken.GetFlags: Cardinal;
@@ -123,7 +130,8 @@ end;
 
 procedure TDialogRestrictToken.Refresh;
 begin
-  //
+  Token.Groups;
+  Token.Privileges;
 end;
 
 end.

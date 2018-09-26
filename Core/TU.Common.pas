@@ -91,8 +91,9 @@ type
 
   /// <summary> Multiple source event handler. </summary>
   TEventHandler<T> = record
+  strict private
     Listeners: TEventListenerArray<T>;
-
+  public
     /// <summary>
     ///  Adds an event listener. The event listener can add and remove other
     ///  event listeners, but all these changes will take effect only on the
@@ -104,12 +105,14 @@ type
     /// </remarks>
     procedure Add(EventListener: TEventListener<T>);
     function Delete(EventListener: TEventListener<T>): Boolean;
+    function Count: Integer;
 
     /// <summary>
     ///  Tries to call all event listeners. If an exception occures some of the
     ///  listeners may not be notified.
     /// </summary>
     procedure Invoke(Value: T);
+    procedure InvokeIfValid(Value: CanFail<T>); inline;
 
     /// <summary>
     ///  Calls all event listeners regardless of any exceptions. This method
@@ -123,6 +126,39 @@ type
   ///  System.Classes
   /// </summary>
   TNotifyEventHandler = TEventHandler<TObject>;
+
+  TEqualityCheckFunc<T> = function(Value1, Value2: T): Boolean;
+
+  TValuedEventHandler<T> = record
+  strict private
+    Event: TEventHandler<T>;
+  public
+    ComparisonFunction: TEqualityCheckFunc<T>;
+    LastValuePresent: Boolean;
+    LastValue: T;
+
+    /// <summary>
+    ///  Adds an event listener and calls it with the last known value.
+    /// </summary>
+    /// <remarks>
+    ///  Be careful with exceptions since they break the loop of <c>Invoke</c>
+    ///  method.
+    /// </remarks>
+    procedure Add(EventListener: TEventListener<T>;
+      CallWithLastValue: Boolean = True);
+    function Delete(EventListener: TEventListener<T>): Boolean;
+    function Count: Integer; inline;
+
+    /// <summary>
+    ///  Notifies event listeners if the value differs from the previous one.
+    /// </summary>
+    /// <returns>
+    ///  <para><c>True</c> if the value has actually changed </para>
+    ///  <para><c>False</c> otherwise </para>
+    /// </returns>
+    function Invoke(Value: T): Boolean;
+    function InvokeIfValid(Value: CanFail<T>): Boolean; inline;
+  end;
 
 const
   BUFFER_LIMIT = 1024 * 1024 * 64; // 64 MB
@@ -323,6 +359,11 @@ begin
   Listeners[High(Listeners)] := EventListener;
 end;
 
+function TEventHandler<T>.Count: Integer;
+begin
+  Result := Length(Listeners);
+end;
+
 function TEventHandler<T>.Delete(EventListener: TEventListener<T>): Boolean;
 var
   i, position: integer;
@@ -366,6 +407,12 @@ begin
     ListenersCopy[i](Value);
 end;
 
+procedure TEventHandler<T>.InvokeIfValid(Value: CanFail<T>);
+begin
+  if Value.IsValid then
+    Invoke(Value.Value);
+end;
+
 procedure TEventHandler<T>.InvokeIgnoringErrors(Value: T);
 var
   i: integer;
@@ -380,6 +427,50 @@ begin
       on E: Exception do
         OutputDebugString(PWideChar('InvokeIgnoringErrors:: ' + E.ToString));
     end;
+end;
+
+{ TValuedEventHandler<T> }
+
+procedure TValuedEventHandler<T>.Add(EventListener: TEventListener<T>;
+  CallWithLastValue: Boolean);
+begin
+  Event.Add(EventListener);
+
+  if CallWithLastValue and LastValuePresent then
+    EventListener(LastValue);
+end;
+
+function TValuedEventHandler<T>.Count: Integer;
+begin
+  Result := Event.Count;
+end;
+
+function TValuedEventHandler<T>.Delete(
+  EventListener: TEventListener<T>): Boolean;
+begin
+  Result := Event.Delete(EventListener);
+end;
+
+function TValuedEventHandler<T>.Invoke(Value: T): Boolean;
+begin
+  // Do not invoke on the same value twise
+  if LastValuePresent and Assigned(ComparisonFunction) and
+    ComparisonFunction(LastValue, Value) then
+    Exit(False);
+
+  Result := LastValuePresent;
+  LastValuePresent := True;
+  LastValue := Value;
+
+  Event.Invoke(Value);
+end;
+
+function TValuedEventHandler<T>.InvokeIfValid(Value: CanFail<T>): Boolean;
+begin
+  if Value.IsValid then
+    Result := Invoke(Value.Value)
+  else
+    Result := False;
 end;
 
 { Conversion functions }

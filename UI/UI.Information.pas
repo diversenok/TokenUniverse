@@ -76,11 +76,13 @@ type
   private
     Token: TToken;
     procedure ChangedCaption(NewCaption: String);
-    procedure ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
-    procedure ChangedSession(NewSession: CanFail<Cardinal>);
-    procedure ChangedUIAccess(NewUIAccess: CanFail<Cardinal>);
-    procedure ChangedPolicy(NewPolicy: CanFail<TMandatoryPolicy>);
-    procedure ChangedPrivileges(NewPrivileges: CanFail<TPrivilegeArray>);
+    procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
+    procedure ChangedSession(NewSession: Cardinal);
+    procedure ChangedUIAccess(NewUIAccess: Cardinal);
+    procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
+    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
+    procedure ChangedGroups(NewGroups: TGroupArray);
+    procedure ChangedStatistics(NewStatistics: TTokenStatistics);
     procedure Refresh;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -134,7 +136,9 @@ begin
   try
     Token.Integrity := ComboIntegrity.SelectedIntegrity;
   except
-    ChangedIntegrity(Token.TryGetIntegrity);
+    with Token.TryGetIntegrity do
+      if IsValid then
+        ChangedIntegrity(Value);
     raise;
   end;
 end;
@@ -148,7 +152,9 @@ begin
     else
       Token.MandatoryPolicy := TMandatoryPolicy(ComboPolicy.ItemIndex);
   except
-    ChangedPolicy(Token.TryGetMandatoryPolicy);
+    with Token.TryGetMandatoryPolicy do
+      if IsValid then
+        ChangedPolicy(Value);
     raise;
   end;
 end;
@@ -158,21 +164,24 @@ begin
   try
     Token.Session := ComboSession.SelectedSession;
   except
-    ChangedSession(Token.TryGetSession);
+    with Token.TryGetSession do
+      if IsValid then
+        ChangedSession(Value);
     raise;
   end;
 end;
 
 procedure TInfoDialog.BtnSetUIAccessClick(Sender: TObject);
 begin
-  ComboUIAccess.Color := clWindow;
   try
     if ComboUIAccess.ItemIndex = -1 then
       Token.UIAccess := StrToIntEx(ComboUIAccess.Text, 'UIAccess value')
     else
       Token.UIAccess := ComboUIAccess.ItemIndex;
   except
-    ChangedUIAccess(Token.TryGetUIAccess);
+    with Token.TryGetUIAccess do
+      if IsValid then
+        ChangedUIAccess(Value);
     raise;
   end;
 end;
@@ -182,76 +191,93 @@ begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
-procedure TInfoDialog.ChangedIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
+procedure TInfoDialog.ChangedGroups(NewGroups: TGroupArray);
 begin
-  ComboIntegrity.Color := clWindow;
-  ComboIntegrity.SetIntegrity(NewIntegrity);
+  TabGroups.Caption := Format('Groups (%d)', [Length(NewGroups)]);
 end;
 
-procedure TInfoDialog.ChangedPolicy(NewPolicy: CanFail<TMandatoryPolicy>);
+procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TTokenIntegrity);
+begin
+  ComboIntegrity.Color := clWindow;
+  ComboIntegrity.SetIntegrity(CanFail<TTokenIntegrity>.SucceedWith(NewIntegrity));
+end;
+
+procedure TInfoDialog.ChangedPolicy(NewPolicy: TMandatoryPolicy);
 begin
   ComboPolicy.Color := clWindow;
 
-  with NewPolicy do
-    if IsValid then
-    begin
-      if (Value >= TokenMandatoryPolicyOff) and
-       (Value <= TokenMandatoryPolicyValidMask) then
-       ComboPolicy.ItemIndex := Integer(Value)
-      else
-      begin
-        ComboPolicy.ItemIndex := -1;
-        ComboPolicy.Text := IntToStr(Integer(Value));
-      end;
-    end
-    else
-    begin
-      ComboPolicy.ItemIndex := -1;
-      ComboPolicy.Text := 'Unknown policy';
-    end;
+  if (NewPolicy >= TokenMandatoryPolicyOff) and
+    (NewPolicy <= TokenMandatoryPolicyValidMask) then
+    ComboPolicy.ItemIndex := Integer(NewPolicy)
+  else
+  begin
+    ComboPolicy.ItemIndex := -1;
+    ComboPolicy.Text := IntToStr(Integer(NewPolicy));
+  end;
 end;
 
-procedure TInfoDialog.ChangedPrivileges(
-  NewPrivileges: CanFail<TPrivilegeArray>);
+procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TPrivilegeArray);
 begin
-  with NewPrivileges do
-    if IsValid then
-      TabPrivileges.Caption := Format('Privileges (%d)', [Length(Value)]);
+  TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
 end;
 
-procedure TInfoDialog.ChangedSession(NewSession: CanFail<Cardinal>);
+procedure TInfoDialog.ChangedSession(NewSession: Cardinal);
 begin
   ComboSession.Color := clWindow;
-  ComboSession.Items.BeginUpdate;
-
-  with NewSession do
-    if IsValid then
-      ComboSession.SelectedSession := Value
-    else
-    begin
-      ComboSession.ItemIndex := -1;
-      ComboSession.Text := 'Unknown session';
-    end;
-
-  ComboSession.Items.EndUpdate;
+  ComboSession.SelectedSession := NewSession
 end;
 
-procedure TInfoDialog.ChangedUIAccess(NewUIAccess: CanFail<Cardinal>);
+procedure TInfoDialog.ChangedStatistics(NewStatistics: TTokenStatistics);
+var
+  i: Integer;
 begin
-  with NewUIAccess do
+  with ListViewAdvanced do
   begin
-    if IsValid then
-      ComboUIAccess.ItemIndex := Integer(Value <> 0)
-    else
-    begin
-      ComboUIAccess.ItemIndex := -1;
-      ComboUIAccess.Text := 'Unknown UIAccess';
-    end;
+    Items[2].SubItems[0] := NewStatistics.TokenId.ToString;
+    Items[3].SubItems[0] := NewStatistics.AuthenticationId.ToString;
+    Items[4].SubItems[0] := NativeTimeToString(
+      NewStatistics.ExpirationTime.QuadPart);
+    Items[5].SubItems[0] := BytesToString(NewStatistics.DynamicCharged);
+    Items[6].SubItems[0] := BytesToString(NewStatistics.DynamicAvailable);
+    Items[7].SubItems[0] := NewStatistics.GroupCount.ToString;
+    Items[8].SubItems[0] := NewStatistics.PrivilegeCount.ToString;
+    Items[9].SubItems[0] := NewStatistics.ModifiedId.ToString;
+
+    Items[12].SubItems[0] := NewStatistics.AuthenticationId.ToString;
+    with GetLogonSessionInformation(NewStatistics.AuthenticationId) do
+      if IsValid then
+      begin
+        if Value.HasUser then
+        begin
+          Items[13].SubItems[0] := Value.User.ToString;
+          Items[13].Hint := TGroupListViewEx.BuildHint(Value.User,
+            TGroupAttributes(0), False);
+        end
+        else
+          Items[13].SubItems[0] := 'No linked user';
+        Items[14].SubItems[0] := Value.AuthPackage;
+        Items[15].SubItems[0] := Value.LogonServer;
+        Items[16].SubItems[0] := Value.LogonType.ToString;
+        Items[17].SubItems[0] := Value.Session.ToString;
+        Items[18].SubItems[0] := DateTimeToStr(Value.LogonTime);
+      end
+      else
+      begin
+        for i := 13 to 18 do
+          Items[i].Hint := GetErrorMessage;
+      end;
   end;
+end;
+
+procedure TInfoDialog.ChangedUIAccess(NewUIAccess: Cardinal);
+begin
+  ComboUIAccess.Color := clWhite;
+  ComboUIAccess.ItemIndex := Integer(NewUIAccess <> 0)
 end;
 
 procedure TInfoDialog.ChangedView(Sender: TObject);
 begin
+  // TODO: What about a new event for this?
   with Token.User do
     if IsValid then
     begin
@@ -285,6 +311,7 @@ end;
 
 constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
 begin
+  Assert(Assigned(SrcToken));
   Token := SrcToken;
   inherited Create(AOwner);
   Show;
@@ -297,6 +324,8 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  Token.Events.OnStatisticsChange.Delete(ChangedStatistics);
+  Token.Events.OnGroupsChange.Delete(ChangedGroups);
   Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
   Token.Events.OnPolicyChange.Delete(ChangedPolicy);
   Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
@@ -310,18 +339,32 @@ procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   SubscribeTokenCanClose(Token, Caption);
 
-  ListViewGroups.Token := Token;
-  ListViewPrivileges.Token := Token;
-  ListViewRestricted.Token := Token;
+  // "Refresh" queries all the information, stores changeble one in the event
+  // handler, and distributes changed one to every existing event listener
+  Refresh;
 
-  Token.OnCaptionChange.Add(ChangedCaption);
+  // Than subscribtion calls our event listeners with the latest availible
+  // information that is stored in the event handlers. By doing that in this
+  // order we avoid multiple calls while sharing the data between different
+  // tokens pointing the same kernel object.
+  Token.Events.BeginUpdate;
   Token.Events.OnSessionChange.Add(ChangedSession);
   Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
   Token.Events.OnPolicyChange.Add(ChangedPolicy);
   Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
+  Token.Events.OnGroupsChange.Add(ChangedGroups);
+  Token.Events.OnStatisticsChange.Add(ChangedStatistics);
+  ListViewGroups.Token := Token;
+  ListViewPrivileges.Token := Token;
+  ListViewRestricted.Token := Token;
+  Token.Events.EndUpdate;
 
-  Refresh;
+  Token.OnCaptionChange.Add(ChangedCaption);
+  Token.OnCaptionChange.Invoke(Token.Caption);
+
+  TabRestricted.Caption := Format('Restricted SIDs (%d)',
+    [ListViewRestricted.Items.Count]);
 end;
 
 procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
@@ -348,19 +391,17 @@ end;
 procedure TInfoDialog.ListViewPrivilegesContextPopup(Sender: TObject;
   MousePos: TPoint; var Handled: Boolean);
 begin
-  Handled := ListViewPrivileges.SelCount = 0;
+  Handled := (ListViewPrivileges.SelCount = 0);
 end;
 
 procedure TInfoDialog.Refresh;
-var
-  i: Integer;
 begin
-  ComboSession.RefreshSessionList;
+  ComboSession.RefreshSessionList(False);
 
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
   begin
-    Items[0].SubItems[0] := Format('0x%.8x', [Token.ObjAddress]);
+    Items[0].SubItems[0] := Format('0x%0.8x', [Token.ObjAddress]);
     Items[1].SubItems[0] := Format('0x%x', [Token.Handle]);
 
     with Token.Access do
@@ -387,43 +428,6 @@ begin
         Items[1].SubItems[0] := Value.SourceIdentifier.ToString;
       end;
 
-    with Token.Statistics do
-      if IsValid then
-      begin
-        Items[2].SubItems[0] := Value.TokenId.ToString;
-        Items[3].SubItems[0] := Value.AuthenticationId.ToString;
-        Items[4].SubItems[0] := NativeTimeToString(Value.ExpirationTime.QuadPart);
-        Items[5].SubItems[0] := BytesToString(Value.DynamicCharged);
-        Items[6].SubItems[0] := BytesToString(Value.DynamicAvailable);
-        Items[7].SubItems[0] := Value.GroupCount.ToString;
-        Items[8].SubItems[0] := Value.PrivilegeCount.ToString;
-        Items[9].SubItems[0] := Value.ModifiedId.ToString;
-
-        Items[12].SubItems[0] := Value.AuthenticationId.ToString;
-        with GetLogonSessionInformation(Value.AuthenticationId) do
-          if IsValid then
-          begin
-            if Value.HasUser then
-            begin
-              Items[13].SubItems[0] := Value.User.ToString;
-              Items[13].Hint := TGroupListViewEx.BuildHint(Value.User,
-                TGroupAttributes(0), False);
-            end
-            else
-              Items[13].SubItems[0] := 'No linked user';
-            Items[14].SubItems[0] := Value.AuthPackage;
-            Items[15].SubItems[0] := Value.LogonServer;
-            Items[16].SubItems[0] := Value.LogonType.ToString;
-            Items[17].SubItems[0] := Value.Session.ToString;
-            Items[18].SubItems[0] := DateTimeToStr(Value.LogonTime);
-          end
-          else
-          begin
-            for i := 13 to 18 do
-              Items[i].Hint := GetErrorMessage;
-          end;
-      end;
-
     with Token.SandboxInert do
       if IsValid then
         Items[10].SubItems[0] := YesNoToString(Value);
@@ -434,21 +438,16 @@ begin
   end;
   ListViewAdvanced.Items.EndUpdate;
 
-  // TODO: Should we share the obtained information with other event listeners?
-  ChangedCaption(Token.Caption);
-  ChangedIntegrity(Token.TryGetIntegrity);
-  ChangedSession(Token.TryGetSession);
-  ChangedUIAccess(Token.TryGetUIAccess);
-  ChangedPolicy(Token.TryGetMandatoryPolicy);
-  ChangedView(Token);
-  //TODO: It is now broken for groups, privileges, and restricted SIDs
+  // This triggers events if the value has changed
+  Token.TryGetIntegrity;
+  Token.TryGetSession;
+  Token.TryGetUIAccess;
+  Token.TryGetMandatoryPolicy;
+  Token.Privileges;
+  Token.Groups;
+  Token.Statistics;
 
-  // TODO: Doesn't show zero count if we can't obtain it
-  TabGroups.Caption := Format('Groups (%d)', [ListViewGroups.Items.Count]);
-  TabPrivileges.Caption := Format('Privileges (%d)',
-    [ListViewPrivileges.Items.Count]);
-  TabRestricted.Caption := Format('Restricted SIDs (%d)',
-    [ListViewRestricted.Items.Count]);
+  ChangedView(Token);
 end;
 
 procedure TInfoDialog.SetStaleColor(Sender: TObject);

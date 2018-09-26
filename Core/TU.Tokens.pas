@@ -19,7 +19,7 @@ type
   end;
 
   TSecurityIdentifier = record
-  private
+  strict private
     procedure GetDomainAndUser(SrcSid: PSID);
     procedure GetStringSid(SrcSid: PSID);
     procedure CreateFromStringSid(StringSID: string);
@@ -124,27 +124,42 @@ type
 
   TToken = class;
   TTokenEvents = class
-  protected
+  strict private
+    FOnSessionChange, FOnUIAccessChange: TValuedEventHandler<Cardinal>;
+    FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
+    FOnPolicyChange: TValuedEventHandler<TMandatoryPolicy>;
+    FOnPrivilegesChange: TValuedEventHandler<TPrivilegeArray>;
+    FOnGroupsChange: TValuedEventHandler<TGroupArray>;
+    FOnStatisticsChange: TValuedEventHandler<TTokenStatistics>;
+    class function CompareCardinals(Value1, Value2: Cardinal): Boolean; static;
+    class function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean; static;
+    class function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean; static;
+    class function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean; static;
+    class function CompareGroups(Value1, Value2: TGroupArray): Boolean; static;
+    class function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean; static;
+  private
     FTokenObjectAddress: NativeUInt;
     FReferenceCount: Integer;
-    FOnSessionChange, FOnUIAccessChange: TEventHandler<CanFail<Cardinal>>;
-    FOnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>>;
-    FOnPolicyChange: TEventHandler<CanFail<TMandatoryPolicy>>;
-    FOnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>>;
-    FOnGroupsChange: TEventHandler<CanFail<TGroupArray>>;
+    FUpdateFlag: Integer;
+    procedure UpdateStatistics(Token: TToken);
+    procedure UpdatePrivileges(Token: TToken);
   public
+    constructor Create;
     destructor Destroy; override;
+    procedure BeginUpdate;
+    procedure EndUpdate;
     property TokenObjectAddress: NativeUInt read FTokenObjectAddress;
-    property OnSessionChange: TEventHandler<CanFail<Cardinal>> read FOnSessionChange;
-    property OnIntegrityChange: TEventHandler<CanFail<TTokenIntegrity>> read FOnIntegrityChange;
-    property OnUIAccessChange: TEventHandler<CanFail<Cardinal>> read FOnUIAccessChange;
-    property OnPolicyChange: TEventHandler<CanFail<TMandatoryPolicy>> read FOnPolicyChange;
-    property OnPrivilegesChange: TEventHandler<CanFail<TPrivilegeArray>> read FOnPrivilegesChange;
-    property OnGroupsChange: TEventHandler<CanFail<TGroupArray>> read FOnGroupsChange;
+    property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
+    property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
+    property OnUIAccessChange: TValuedEventHandler<Cardinal> read FOnUIAccessChange;
+    property OnPolicyChange: TValuedEventHandler<TMandatoryPolicy> read FOnPolicyChange;
+    property OnPrivilegesChange: TValuedEventHandler<TPrivilegeArray> read FOnPrivilegesChange;
+    property OnGroupsChange: TValuedEventHandler<TGroupArray> read FOnGroupsChange;
+    property OnStatisticsChange: TValuedEventHandler<TTokenStatistics> read FOnStatisticsChange;
   end;
 
   TToken = class
-  private
+  strict private
     procedure SetCaption(const Value: String);
     function GetAccess: CanFail<ACCESS_MASK>;
     function GetObjAddress: NativeUInt;
@@ -170,7 +185,7 @@ type
     procedure SetUIAccess(const Value: Cardinal);
     function GetMandatoryPolicy: TMandatoryPolicy;
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
-  protected
+  strict protected
     function GetFixedSize<ResultType>(InfoClass: TTokenInformationClass):
       CanFail<ResultType>;
     procedure SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
@@ -196,7 +211,7 @@ type
     var FCaption: String;
     var FOnCanClose: TEventHandler<TToken>;
     var FOnClose: TEventHandler<TToken>;
-    var FOnCaptionChange: TEventHandler<String>;
+    var FOnCaptionChange: TValuedEventHandler<String>;
 
     /// <summary>
     ///  Different handles pointing to the same kernel objects must be linked to
@@ -281,7 +296,7 @@ type
     /// </summary>
     property OnCanClose: TEventHandler<TToken> read FOnCanClose;
     property OnClose: TEventHandler<TToken> read FOnClose;
-    property OnCaptionChange: TEventHandler<String> read FOnCaptionChange;
+    property OnCaptionChange: TValuedEventHandler<String> read FOnCaptionChange;
     property Events: TTokenEvents read FEvents write FEvents;
 
     { Token Information classes }
@@ -480,11 +495,11 @@ begin
   if Assigned(FEvents) then
     FinalizeEvents;
 
-  if Length(FOnCanClose.Listeners) > 0 then
+  if FOnCanClose.Count > 0 then
     OutputDebugString('Abandoned OnCanClose');
-  if Length(FOnClose.Listeners) > 0 then
+  if FOnClose.Count > 0 then
     OutputDebugString('Abandoned OnClose');
-  if Length(FOnCaptionChange.Listeners) > 0 then
+  if FOnCaptionChange.Count > 0 then
     OutputDebugString('Abandoned OnCaptionChange');
 
   inherited;
@@ -550,6 +565,8 @@ end;
 function TToken.GetGroups: CanFail<TGroupArray>;
 begin
   Result := QueryGroups(TokenGroups);
+  if Events.OnGroupsChange.InvokeIfValid(Result) then
+    Events.UpdateStatistics(Self);
 end;
 
 function TToken.GetHasRestrictions: CanFail<LongBool>;
@@ -637,6 +654,8 @@ begin
         FreeMem(Buffer);
       end;
     end;
+  if Events.OnPrivilegesChange.InvokeIfValid(Result) then
+    Events.UpdateStatistics(Self);
 end;
 
 function TToken.GetRestrictedSids: CanFail<TGroupArray>;
@@ -662,6 +681,7 @@ end;
 function TToken.GetStatistics: CanFail<TTokenStatistics>;
 begin
   Result := GetFixedSize<TTokenStatistics>(TokenStatistics);
+  Events.OnStatisticsChange.InvokeIfValid(Result);
 end;
 
 function TToken.GetTokenOrigin: CanFail<Int64>;
@@ -737,7 +757,7 @@ begin
   try
     Win32Check(AdjustTokenGroups(hToken, IsResetFlag[Action], NewState, 0, nil,
       nil), 'AdjustTokenGroups', Self);
-    Events.OnGroupsChange.Invoke(Groups);
+    GetGroups; // query and notify event listeners
   finally
     FreeMem(NewState);
     FreeSidArray(GroupsArray);
@@ -788,7 +808,7 @@ begin
       nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
   finally
     FreeMem(Buffer);
-    Events.OnPrivilegesChange.Invoke(GetPrivileges);
+    GetPrivileges; // query and notify event listeners
   end;
 end;
 
@@ -899,31 +919,25 @@ begin
   finally
     FreeMem(mandatoryLabel.Sid);
   end;
-  Events.OnIntegrityChange.Invoke(TryGetIntegrity);
-
-  // Integrity can disable privileges
-  Events.OnPrivilegesChange.Invoke(GetPrivileges);
-
-  // And has it's own record in group list
-  Events.OnGroupsChange.Invoke(Groups);
+  TryGetIntegrity; // query and notify event listeners
 end;
 
 procedure TToken.SetMandatoryPolicy(const Value: TMandatoryPolicy);
 begin
   SetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy, Value);
-  Events.OnPolicyChange.Invoke(TryGetMandatoryPolicy);
+  TryGetMandatoryPolicy; // query and notify event listeners
 end;
 
 procedure TToken.SetSession(const Value: Cardinal);
 begin
   SetFixedSize<Cardinal>(TokenSessionId, Value);
-  Events.OnSessionChange.Invoke(TryGetSession);
+  TryGetSession; // query and notify event listeners
 end;
 
 procedure TToken.SetUIAccess(const Value: Cardinal);
 begin
   SetFixedSize<Cardinal>(TokenUIAccess, Value);
-  Events.OnUIAccessChange.Invoke(TryGetUIAccess);
+  TryGetUIAccess; // query and notify event listeners
 end;
 
 function TToken.TryGetIntegrity: CanFail<TTokenIntegrity>;
@@ -942,21 +956,32 @@ begin
         FreeMem(Buffer);
       end;
     end;
+
+  // Lowering integrity can disable privileges
+  if Events.OnIntegrityChange.InvokeIfValid(Result) then
+    Events.UpdatePrivileges(Self);
 end;
 
 function TToken.TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
 begin
   Result := GetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy);
+
+  if Events.OnPolicyChange.InvokeIfValid(Result) then
+    Events.UpdateStatistics(Self);
 end;
 
 function TToken.TryGetSession: CanFail<Cardinal>;
 begin
   Result := GetFixedSize<Cardinal>(TokenSessionId);
+  if Events.OnSessionChange.InvokeIfValid(Result) then
+    Events.UpdateStatistics(Self);
 end;
 
 function TToken.TryGetUIAccess: CanFail<Cardinal>;
 begin
   Result := GetFixedSize<Cardinal>(TokenUIAccess);
+  if Events.OnUIAccessChange.InvokeIfValid(Result) then
+    Events.UpdateStatistics(Self);
 end;
 
 { TTokenAccess }
@@ -1392,23 +1417,114 @@ end;
 
 { TTokenEvents }
 
+procedure TTokenEvents.BeginUpdate;
+begin
+  Inc(FUpdateFlag);
+end;
+
+class function TTokenEvents.CompareCardinals(Value1, Value2: Cardinal): Boolean;
+begin
+  Result := Value1 = Value2;
+end;
+
+class function TTokenEvents.CompareGroups(Value1, Value2: TGroupArray): Boolean;
+var
+  i: integer;
+begin
+  Result := Length(Value1) = Length(Value2);
+  if Result then
+    for i := 0 to High(Value1) do
+      if (Value1[i].SecurityIdentifier.SID <> Value2[i].SecurityIdentifier.SID)
+        or (Value1[i].Attributes <> Value2[i].Attributes) then
+          Exit(False);
+end;
+
+class function TTokenEvents.CompareIntegrities(Value1,
+  Value2: TTokenIntegrity): Boolean;
+begin
+  Result := Value1.Level = Value2.Level;
+end;
+
+class function TTokenEvents.ComparePolicies(Value1,
+  Value2: TMandatoryPolicy): Boolean;
+begin
+  Result := Value1 = Value2;
+end;
+
+class function TTokenEvents.ComparePrivileges(Value1,
+  Value2: TPrivilegeArray): Boolean;
+var
+  i: integer;
+begin
+  Result := Length(Value1) = Length(Value2);
+  if Result then
+    for i := 0 to High(Value1) do
+      if (Value1[i].Attributes <> Value2[i].Attributes) or
+        (Value1[i].Luid <> Value2[i].Luid) then
+        Exit(False);
+end;
+
+class function TTokenEvents.CompareStatistics(Value1,
+  Value2: TTokenStatistics): Boolean;
+begin
+  Result := CompareMem(@Value1, @Value2, SizeOf(TTokenStatistics));
+end;
+
+constructor TTokenEvents.Create;
+begin
+  inherited;
+  FOnSessionChange.ComparisonFunction := CompareCardinals;
+  FOnUIAccessChange.ComparisonFunction := CompareCardinals;
+  FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
+  FOnPolicyChange.ComparisonFunction := ComparePolicies;
+  FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
+  FOnGroupsChange.ComparisonFunction := CompareGroups;
+  FOnStatisticsChange.ComparisonFunction := CompareStatistics;
+end;
+
 destructor TTokenEvents.Destroy;
 begin
-  if Length(FOnSessionChange.Listeners) > 0 then
+  if FOnSessionChange.Count > 0 then
     OutputDebugString('Abandoned OnSessionChange');
-  if Length(FOnSessionChange.Listeners) > 0 then
+  if FOnSessionChange.Count > 0 then
     OutputDebugString('Abandoned OnSessionChange');
-  if Length(FOnIntegrityChange.Listeners) > 0 then
+  if FOnIntegrityChange.Count > 0 then
     OutputDebugString('Abandoned OnIntegrityChange');
-  if Length(FOnUIAccessChange.Listeners) > 0 then
+  if FOnUIAccessChange.Count > 0 then
     OutputDebugString('Abandoned OnUIAccessChange');
-  if Length(FOnPolicyChange.Listeners) > 0 then
+  if FOnPolicyChange.Count > 0 then
     OutputDebugString('Abandoned OnPolicyChange');
-  if Length(FOnPrivilegesChange.Listeners) > 0 then
+  if FOnPrivilegesChange.Count > 0 then
     OutputDebugString('Abandoned OnPrivilegesChange');
-  if Length(FOnGroupsChange.Listeners) > 0 then
+  if FOnGroupsChange.Count > 0 then
     OutputDebugString('Abandoned OnGroupsChange');
+  if FOnStatisticsChange.Count > 0 then
+    OutputDebugString('Abandoned OnStatisticsChange');
   inherited;
+end;
+
+procedure TTokenEvents.EndUpdate;
+begin
+  Dec(FUpdateFlag);
+end;
+
+procedure TTokenEvents.UpdatePrivileges(Token: TToken);
+begin
+  if FUpdateFlag = 0 then
+  begin
+    BeginUpdate;
+    // Query privileges and share them with event listeners, but without
+    // update of dependent events
+    Token.Privileges;
+    Token.Statistics; // Query and notify event listeners separetly
+    EndUpdate;
+  end;
+end;
+
+procedure TTokenEvents.UpdateStatistics(Token: TToken);
+begin
+  if FUpdateFlag = 0 then
+    Token.Statistics; // Query and share with event listeners
 end;
 
 { Conversion functions }
