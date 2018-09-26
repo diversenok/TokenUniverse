@@ -97,7 +97,7 @@ implementation
 uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
-  UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.SessionDialog,
+  UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.Session,
   UI.Restrict, UI.CreateToken,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
 
