@@ -177,6 +177,7 @@ object DialogCreateToken: TDialogCreateToken
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
         TabOrder = 11
+        OnClick = ButtonPickUserClick
       end
       object ButtonLoad: TButton
         Left = 3
@@ -219,9 +220,11 @@ object DialogCreateToken: TDialogCreateToken
         MultiSelect = True
         ReadOnly = True
         RowSelect = True
+        PopupMenu = PopupMenuGroups
         TabOrder = 0
         ViewStyle = vsReport
         ColoringItems = True
+        PopupOnItemsOnly = True
       end
       object ButtonAddSID: TButton
         Left = 127
@@ -235,6 +238,7 @@ object DialogCreateToken: TDialogCreateToken
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
         TabOrder = 1
+        OnClick = ButtonAddSIDClick
       end
     end
     object TabPrivileges: TTabSheet
@@ -289,5 +293,15 @@ object DialogCreateToken: TDialogCreateToken
     Items.Strings = (
       'Resolve users and groups'
       'Show SIDs')
+  end
+  object PopupMenuGroups: TPopupMenu
+    Left = 168
+    Top = 128
+    object MenuEdit: TMenuItem
+      Caption = 'Edit'
+    end
+    object MenuRemove: TMenuItem
+      Caption = 'Remove'
+    end
   end
 end

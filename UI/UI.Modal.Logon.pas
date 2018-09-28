@@ -23,6 +23,8 @@ type
     MenuRemove: TMenuItem;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
+    procedure MenuRemoveClick(Sender: TObject);
+    procedure MenuEditClick(Sender: TObject);
   private
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: Cardinal;
@@ -40,7 +42,8 @@ uses
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
-  TDialogPickUser.Execute(Self);
+  ListViewGroups.AddGroup(TDialogPickUser.Execute(Self));
+  ButtonContinue.SetFocus;
 end;
 
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
@@ -70,11 +73,29 @@ begin
   Result := LogonType[ComboLogonType.ItemIndex];
 end;
 
+procedure TLogonDialog.MenuEditClick(Sender: TObject);
+var
+  Ind: Integer;
+begin
+  if Assigned(ListViewGroups.Selected) then
+  begin
+    Ind := ListViewGroups.Selected.Index;
+    ListViewGroups.Groups[Ind] := TDialogPickUser.Execute(Self,
+      ListViewGroups.Groups[Ind]);
+  end;
+end;
+
+procedure TLogonDialog.MenuRemoveClick(Sender: TObject);
+begin
+  if Assigned(ListViewGroups.Selected) then
+    ListViewGroups.RemoveGroup(ListViewGroups.Selected.Index);
+end;
+
 procedure TLogonDialog.TokenCreationCallback(Domain, User: String;
   Password: PWideChar);
 begin
   FormMain.Frame.AddToken(TToken.CreateWithLogon(GetLogonType, GetLogonProvider,
-    Domain, User, Password));
+    Domain, User, Password, ListViewGroups.AllGroups));
 end;
 
 end.

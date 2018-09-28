@@ -4,7 +4,7 @@ object LogonDialog: TLogonDialog
   BorderIcons = [biSystemMenu]
   Caption = 'Logon user'
   ClientHeight = 324
-  ClientWidth = 277
+  ClientWidth = 304
   Color = clBtnFace
   Constraints.MinHeight = 320
   Constraints.MinWidth = 266
@@ -17,7 +17,7 @@ object LogonDialog: TLogonDialog
   OldCreateOrder = False
   Position = poMainFormCenter
   DesignSize = (
-    277
+    304
     324)
   PixelsPerInch = 96
   TextHeight = 13
@@ -38,7 +38,7 @@ object LogonDialog: TLogonDialog
   object LabelGroups: TLabel
     Left = 8
     Top = 110
-    Width = 261
+    Width = 288
     Height = 17
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight]
@@ -48,7 +48,7 @@ object LogonDialog: TLogonDialog
   object ComboLogonType: TComboBox
     Left = 8
     Top = 27
-    Width = 261
+    Width = 288
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
@@ -66,7 +66,7 @@ object LogonDialog: TLogonDialog
   object ComboLogonProvider: TComboBox
     Left = 8
     Top = 76
-    Width = 261
+    Width = 288
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
@@ -91,7 +91,7 @@ object LogonDialog: TLogonDialog
     TabOrder = 2
   end
   object ButtonContinue: TButton
-    Left = 194
+    Left = 221
     Top = 291
     Width = 75
     Height = 25
@@ -104,7 +104,7 @@ object LogonDialog: TLogonDialog
   object ListViewGroups: TGroupListViewEx
     Left = 8
     Top = 128
-    Width = 261
+    Width = 288
     Height = 157
     Margins.Top = 26
     Margins.Bottom = 31
@@ -112,11 +112,11 @@ object LogonDialog: TLogonDialog
     Columns = <
       item
         Caption = 'SID'
-        Width = 180
+        Width = 160
       end
       item
         Caption = 'State'
-        Width = 110
+        Width = 90
       end
       item
         Caption = 'Flags'
@@ -134,7 +134,7 @@ object LogonDialog: TLogonDialog
     PopupOnItemsOnly = True
   end
   object ButtonAddSID: TButton
-    Left = 100
+    Left = 114
     Top = 291
     Width = 78
     Height = 25
@@ -152,9 +152,11 @@ object LogonDialog: TLogonDialog
     Top = 168
     object MenuEdit: TMenuItem
       Caption = 'Edit'
+      OnClick = MenuEditClick
     end
     object MenuRemove: TMenuItem
       Caption = 'Remove'
+      OnClick = MenuRemoveClick
     end
   end
 end

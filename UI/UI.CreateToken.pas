@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, UI.Prototypes.ChildForm, Vcl.StdCtrls,
-  UI.Prototypes, UI.ListViewEx, Vcl.ComCtrls, UI.MainForm, UI.Modal.PickUser;
+  UI.Prototypes, UI.ListViewEx, Vcl.ComCtrls, UI.MainForm, Vcl.Menus;
 
 type
   TDialogCreateToken = class(TChildForm)
@@ -32,11 +32,17 @@ type
     StaticUser: TStaticText;
     ButtonPickUser: TButton;
     ButtonLoad: TButton;
+    PopupMenuGroups: TPopupMenu;
+    MenuEdit: TMenuItem;
+    MenuRemove: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonCancelClick(Sender: TObject);
+    procedure ButtonAddSIDClick(Sender: TObject);
+    procedure ButtonPickUserClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
+    procedure ObjPickerCallback(UserName: String);
   public
     { Public declarations }
   end;
@@ -47,13 +53,23 @@ var
 implementation
 
 uses
-  TU.LsaApi;
+  TU.LsaApi, TU.Tokens, UI.Modal.PickUser, TU.ObjPicker;
 
 {$R *.dfm}
+
+procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
+begin
+  ListViewGroups.AddGroup(TDialogPickUser.Execute(Self));
+end;
 
 procedure TDialogCreateToken.ButtonCancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TDialogCreateToken.ButtonPickUserClick(Sender: TObject);
+begin
+  CallObjectPicker(Handle, ObjPickerCallback);
 end;
 
 procedure TDialogCreateToken.FormClose(Sender: TObject;
@@ -65,6 +81,11 @@ end;
 procedure TDialogCreateToken.FormCreate(Sender: TObject);
 begin
   LogonIDSource := TLogonSessionSource.Create(ComboLogonSession);
+end;
+
+procedure TDialogCreateToken.ObjPickerCallback(UserName: String);
+begin
+  ComboUser.Text := TSecurityIdentifier.CreateFromString(UserName).ToString;
 end;
 
 end.

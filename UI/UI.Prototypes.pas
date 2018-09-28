@@ -38,17 +38,22 @@ type
 
   TGroupListViewEx = class(TTokenedListViewEx)
   private
-    FGroups: TGroupArray;
+    FGroups, FAdditional: TGroupArray;
     FViewAs: TGroupViewAs;
     FSource: TGroupSource;
     procedure ChangedGroups(NewGroups: TGroupArray);
+    procedure SetGroupItem(Item: TListItemEx; Group: TGroup);
     procedure SetSource(const Value: TGroupSource);
     procedure SetViewAs(const Value: TGroupViewAs);
+    function GetGroup(Ind: Integer): TGroup;
+    procedure SetGroup(Ind: Integer; const Value: TGroup);
   protected
     procedure SubscribeToken; override;
     procedure UnsubscribeToken; override;
   public
-    property Groups: TGroupArray read FGroups;
+    property Groups[Ind: Integer]: TGroup read GetGroup write SetGroup;
+    function AddGroup(Group: TGroup): Integer;
+    procedure RemoveGroup(Index: Integer);
     class function BuildHint(SID: TSecurityIdentifier;
       Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
       static;
@@ -56,6 +61,7 @@ type
     property ViewAs: TGroupViewAs read FViewAs write SetViewAs default gvUser;
     property Source: TGroupSource read FSource write SetSource default gsGroups;
     function SelectedGroups: TGroupArray;
+    function AllGroups: TGroupArray;
     function CheckedGroups: TGroupArray;
   end;
 
@@ -208,6 +214,43 @@ end;
 
 { TGroupListViewEx }
 
+function TGroupListViewEx.AddGroup(Group: TGroup): Integer;
+begin
+  SetLength(FAdditional, Length(FAdditional) + 1);
+  FAdditional[High(FAdditional)] := Group;
+  SetGroupItem(Items.Add, Group);
+end;
+
+procedure TGroupListViewEx.SetGroup(Ind: Integer; const Value: TGroup);
+begin
+  if Ind >= Length(FGroups) then
+  begin
+    FAdditional[Ind - Length(FGroups)] := Value;
+    SetGroupItem(Items[Ind - Length(FGroups)], Value);
+  end;
+end;
+
+procedure TGroupListViewEx.SetGroupItem(Item: TListItemEx; Group: TGroup);
+begin
+  with Group, Item do
+  begin
+    case FViewAs of
+      gvUser: Caption := SecurityIdentifier.ToString;
+      gvSID: Caption := SecurityIdentifier.SID;
+    end;
+    Hint := BuildHint(SecurityIdentifier, Attributes);
+    SubItems.Clear;
+    SubItems.Add(Attributes.StateToString);
+    SubItems.Add(Attributes.FlagsToString);
+    Color := GroupAttributesToColor(Attributes);
+  end;
+end;
+
+function TGroupListViewEx.AllGroups: TGroupArray;
+begin
+  Result := Concat(FGroups, FAdditional);
+end;
+
 class function TGroupListViewEx.BuildHint(SID: TSecurityIdentifier;
   Attributes: TGroupAttributes; AttributesPresent: Boolean): String;
 const
@@ -237,21 +280,14 @@ procedure TGroupListViewEx.ChangedGroups(NewGroups: TGroupArray);
 var
   i: Integer;
 begin
+  FGroups := NewGroups;
+
   Items.BeginUpdate(True);
   Clear;
-  FGroups := NewGroups;
-  for i := 0 to High(NewGroups) do
-  with NewGroups[i], Items.Add do
-  begin
-    case FViewAs of
-      gvUser: Caption := SecurityIdentifier.ToString;
-      gvSID: Caption := SecurityIdentifier.SID;
-    end;
-    Hint := BuildHint(SecurityIdentifier, Attributes);
-    SubItems.Add(Attributes.StateToString);
-    SubItems.Add(Attributes.FlagsToString);
-    Color := GroupAttributesToColor(Attributes);
-  end;
+  for i := 0 to High(FGroups) do
+    SetGroupItem(Items.Add, FGroups[i]);
+  for i := 0 to High(FAdditional) do
+    SetGroupItem(Items.Add, FAdditional[i]);
   Items.EndUpdate(True);
 end;
 
@@ -264,8 +300,33 @@ begin
     if Items[i].Checked then
     begin
       SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := Groups[i];
+      if i < Length(FGroups) then
+        Result[High(Result)] := FGroups[i]
+      else
+        Result[High(Result)] := FAdditional[i - Length(FGroups)];
     end;
+end;
+
+function TGroupListViewEx.GetGroup(Ind: Integer): TGroup;
+begin
+  if Ind < Length(FGroups) then
+    Result := FGroups[Ind]
+  else
+    Result := FAdditional[Ind - Length(FGroups)];
+end;
+
+procedure TGroupListViewEx.RemoveGroup(Index: Integer);
+var
+  i: Integer;
+begin
+  // Groups from token should be immutable
+  if Index < Length(FGroups) then
+    Exit;
+
+  for i := Index - Length(FGroups) to High(FAdditional) - 1 do
+    FAdditional[i] := FAdditional[i + 1];
+
+  Items.Delete(Index);
 end;
 
 function TGroupListViewEx.SelectedGroups: TGroupArray;
@@ -277,7 +338,10 @@ begin
   for i := 0 to Items.Count - 1 do
     if Items[i].Selected then
     begin
-      Result[j] := Groups[i];
+      if i < Length(FGroups) then
+        Result[j] := FGroups[i]
+      else
+        Result[j] := FAdditional[i - Length(FGroups)];
       Inc(j);
     end;
 end;

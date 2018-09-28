@@ -176,6 +176,9 @@ object DialogPickUser: TDialogPickUser
     object TabIntegrity: TTabSheet
       Caption = 'Integrity'
       ImageIndex = 2
+      DesignSize = (
+        272
+        87)
       object CheckBoxIntegrity: TCheckBox
         Left = 16
         Top = 9
@@ -197,6 +200,7 @@ object DialogPickUser: TDialogPickUser
         Top = 55
         Width = 240
         Height = 21
+        Anchors = [akLeft, akTop, akRight]
         TabOrder = 2
         Text = 'Select an integrity level or enter it manually'
       end

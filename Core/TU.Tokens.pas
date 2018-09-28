@@ -275,7 +275,7 @@ type
     /// <summary> Logons the user with the specified credentials. </summary>
     /// <exception cref="EOSError"> Can raise EOSError. </exception>
     constructor CreateWithLogon(LogonType, LogonProvider: Cardinal;
-      Domain, User: String; Password: PWideChar);
+      Domain, User: String; Password: PWideChar; AddGroups: TGroupArray);
 
     /// <summary>
     ///  Asks all subscribed event listeners if the token can be freed.
@@ -473,11 +473,34 @@ begin
 end;
 
 constructor TToken.CreateWithLogon(LogonType, LogonProvider: Cardinal; Domain,
-  User: String; Password: PWideChar);
+  User: String; Password: PWideChar; AddGroups: TGroupArray);
+var
+  SIDs: TSIDAndAttributesArray;
+  pGroups: PTokenGroups;
+  i: integer;
 begin
-  // TODO: switch to LogonUserExExW, it can add groups to a new token
-  Win32Check(LogonUserW(PWideChar(User), PWideChar(Domain), Password, LogonType,
-    LogonProvider, hToken), 'LogonUserW');
+  if Length(AddGroups) = 0 then
+    Win32Check(LogonUserW(PWideChar(User), PWideChar(Domain), Password,
+      LogonType, LogonProvider, hToken), 'LogonUserW')
+  else
+  begin
+    SIDs := ConvertGroupArrayToSIDs(AddGroups);
+    pGroups := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
+      Length(AddGroups));
+    try
+      pGroups.GroupCount := Length(SIDs);
+      for i := 0 to High(SIDs) do
+        pGroups.Groups[i] := SIDs[i];
+
+      Win32Check(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
+        LogonType, LogonProvider, pGroups, hToken, nil, nil, nil, nil),
+        'LogonUserExExW');
+    finally
+      FreeMem(pGroups);
+      FreeSidArray(SIDs);
+    end;
+  end;
+
   FCaption := 'Logon of ' + User;
   InitializeEvents;
 end;
