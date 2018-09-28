@@ -335,7 +335,7 @@ end;
 function TSessionComboBox.GetSession: Cardinal;
 begin
   if ItemIndex = -1 then
-    Result := StrToIntEx(Text, 'session')
+    Result := StrToUIntEx(Text, 'session')
   else
     Result := Sessions[ItemIndex].SessionId;
 end;
@@ -373,7 +373,7 @@ const
     ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
 begin
   if ItemIndex = -1 then
-    Result := TTokenIntegrityLevel(StrToIntEx(Text, 'integrity'))
+    Result := TTokenIntegrityLevel(StrToUIntEx(Text, 'integrity'))
   else if not FIsIntermediate or (ItemIndex < FIntermediateIndex) then
     Result := IndexToIntegrity[ItemIndex]
   else if ItemIndex > FIntermediateIndex then
@@ -501,7 +501,7 @@ begin
 
   if ComboBox.ItemIndex = -1 then
   begin
-    LogonId := StrToInt64Ex(ComboBox.Text, 'logon ID');
+    LogonId := StrToUInt64Ex(ComboBox.Text, 'logon ID');
     Result := PLUID(@LogonId)^;
   end
   else
@@ -515,7 +515,7 @@ begin
   Assert(ComboBox.Items.Count = Length(FLogonSessions));
 
   for i := 0 to High(FLogonSessions) do
-    if Value.ToInt64 = FLogonSessions[i].ToInt64 then
+    if Value.ToUInt64 = FLogonSessions[i].ToUInt64 then
     begin
       ComboBox.ItemIndex := i;
       Exit;

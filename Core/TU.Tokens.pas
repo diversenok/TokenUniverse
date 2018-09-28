@@ -78,7 +78,7 @@ type
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
   TLuidHelper = record helper for LUID
-    function ToInt64: Int64;
+    function ToUInt64: UInt64;
     function ToString: String;
   end;
 
@@ -614,7 +614,7 @@ begin
   begin
     HandleList := THandleList.CreateOnly(GetCurrentProcessId);
 
-    for i := 0 to HandleList.Count do
+    for i := 0 to HandleList.Count - 1 do
       if HandleList[i].hToken = hToken then
       begin
         FOrigin := HandleList[i];
@@ -1328,9 +1328,9 @@ end;
 
 { TLuidHelper }
 
-function TLuidHelper.ToInt64: Int64;
+function TLuidHelper.ToUInt64: UInt64;
 begin
-  Result := PInt64(@Self)^;
+  Result := PUInt64(@Self)^;
 end;
 
 function TLuidHelper.ToString: String;

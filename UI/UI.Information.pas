@@ -145,7 +145,7 @@ procedure TInfoDialog.BtnSetMandatoryPolicy(Sender: TObject);
 begin
   try
     if ComboPolicy.ItemIndex = -1 then
-      Token.MandatoryPolicy := TMandatoryPolicy(StrToIntEx(ComboPolicy.Text,
+      Token.MandatoryPolicy := TMandatoryPolicy(StrToUIntEx(ComboPolicy.Text,
         'mandatory policy flag'))
     else
       Token.MandatoryPolicy := TMandatoryPolicy(ComboPolicy.ItemIndex);
@@ -173,7 +173,7 @@ procedure TInfoDialog.BtnSetUIAccessClick(Sender: TObject);
 begin
   try
     if ComboUIAccess.ItemIndex = -1 then
-      Token.UIAccess := StrToIntEx(ComboUIAccess.Text, 'UIAccess value')
+      Token.UIAccess := StrToUIntEx(ComboUIAccess.Text, 'UIAccess value')
     else
       Token.UIAccess := ComboUIAccess.ItemIndex;
   except

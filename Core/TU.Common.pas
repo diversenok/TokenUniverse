@@ -177,8 +177,9 @@ function NativeCheck(Status: NTSTATUS; Where: String;
 ///  integer.
 /// </summary>
 /// <exception cref="EConvertError"> Can raise EConvertError. </exception>
-function StrToIntEx(S: String; Comment: String): Cardinal;
-function StrToInt64Ex(S: String; Comment: String): UInt64;
+function TryStrToUInt64Ex(S: String; out Value: UInt64): Boolean;
+function StrToUIntEx(S: String; Comment: String): Cardinal; inline;
+function StrToUInt64Ex(S: String; Comment: String): UInt64; inline;
 
 /// <symmary>
 ///  Converts a number of 100ns intervals from 01.01.1601 to Delphi's
@@ -475,23 +476,30 @@ end;
 
 { Conversion functions }
 
-function StrToInt64Ex(S: String; Comment: String): UInt64;
-const
-  E_CONV_DECHEX = 'Invalid %s. Please specify a decimal or a hexadecimal value.';
+function TryStrToUInt64Ex(S: String; out Value: UInt64): Boolean;
 var
   E: Integer;
 begin
   if S.StartsWith('0x') then
     S := S.Replace('0x', '$', []);
 
-  Val(S, Result, E);
-  if E <> 0 then
+  Val(S, Value, E);
+  Result := (E = 0);
+end;
+
+function StrToUInt64Ex(S: String; Comment: String): UInt64;
+const
+  E_CONV_DECHEX = 'Invalid %s. Please specify a decimal or a hexadecimal value.';
+begin
+  if not TryStrToUInt64Ex(S, Result) then
     raise EConvertError.Create(Format(E_CONV_DECHEX, [Comment]));
 end;
 
-function StrToIntEx(S: String; Comment: String): Cardinal;
+function StrToUIntEx(S: String; Comment: String): Cardinal;
 begin
-  Result := StrToInt64Ex(S, Comment);
+  {$R-}
+  Result := StrToUInt64Ex(S, Comment);
+  {$R+}
 end;
 
 function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;
