@@ -71,7 +71,7 @@ object FormHandleSearch: TFormHandleSearch
       GroupView = True
       ReadOnly = True
       PopupMenu = PopupMenu
-      OnContextPopup = FrameListViewTokensContextPopup
+      PopupOnItemsOnly = True
     end
     inherited SearchBox: TButtonedEdit
       Width = 520

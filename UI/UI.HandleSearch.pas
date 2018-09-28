@@ -18,8 +18,6 @@ type
     procedure ButtonRefreshClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ActionObtain(Sender: TObject);
-    procedure FrameListViewTokensContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: Boolean);
   private
     { Private declarations }
   public
@@ -108,12 +106,6 @@ procedure TFormHandleSearch.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Action := caFree;
-end;
-
-procedure TFormHandleSearch.FrameListViewTokensContextPopup(Sender: TObject;
-  MousePos: TPoint; var Handled: Boolean);
-begin
-  Handled := Frame.ListViewTokens.SelCount = 0;
 end;
 
 end.

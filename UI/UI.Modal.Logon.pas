@@ -19,8 +19,8 @@ type
     ButtonAddSID: TButton;
     LabelGroups: TLabel;
     PopupMenu: TPopupMenu;
-    Edit1: TMenuItem;
-    Remove1: TMenuItem;
+    MenuEdit: TMenuItem;
+    MenuRemove: TMenuItem;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
   private

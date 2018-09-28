@@ -719,8 +719,8 @@ object InfoDialog: TInfoDialog
         PopupMenu = PrivilegePopup
         TabOrder = 0
         ViewStyle = vsReport
-        OnContextPopup = ListViewPrivilegesContextPopup
         ColoringItems = True
+        PopupOnItemsOnly = True
       end
     end
     object TabRestricted: TTabSheet

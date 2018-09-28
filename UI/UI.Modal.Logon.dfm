@@ -132,6 +132,7 @@ object LogonDialog: TLogonDialog
     TabOrder = 4
     ViewStyle = vsReport
     ColoringItems = True
+    PopupOnItemsOnly = True
   end
   object ButtonAddSID: TButton
     Left = 100
@@ -150,10 +151,10 @@ object LogonDialog: TLogonDialog
   object PopupMenu: TPopupMenu
     Left = 136
     Top = 168
-    object Edit1: TMenuItem
+    object MenuEdit: TMenuItem
       Caption = 'Edit'
     end
-    object Remove1: TMenuItem
+    object MenuRemove: TMenuItem
       Caption = 'Remove'
     end
   end

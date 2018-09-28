@@ -63,8 +63,6 @@ type
     procedure ActionPrivilegeEnable(Sender: TObject);
     procedure ActionPrivilegeDisable(Sender: TObject);
     procedure ActionPrivilegeRemove(Sender: TObject);
-    procedure ListViewPrivilegesContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: Boolean);
     procedure ActionGroupEnable(Sender: TObject);
     procedure ActionGroupDisable(Sender: TObject);
     procedure ActionGroupReset(Sender: TObject);
@@ -386,12 +384,6 @@ procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;
 begin
   MenuGroupEnable.Visible := ListViewGroups.SelCount <> 0;
   MenuGroupDisable.Visible := ListViewGroups.SelCount <> 0;
-end;
-
-procedure TInfoDialog.ListViewPrivilegesContextPopup(Sender: TObject;
-  MousePos: TPoint; var Handled: Boolean);
-begin
-  Handled := (ListViewPrivileges.SelCount = 0);
 end;
 
 procedure TInfoDialog.Refresh;

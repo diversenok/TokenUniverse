@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.Graphics,
   System.UITypes, System.Generics.Collections, Vcl.Clipbrd, Winapi.Messages,
-  Vcl.Forms, Winapi.Windows;
+  Vcl.Forms, Winapi.Windows, System.Types;
 
 type
   TListItemEx = class;
@@ -129,6 +129,7 @@ type
   TListViewEx = class(TListView)
   private
     FColoringItems: Boolean;
+    FPopupOnItemsOnly: Boolean;
     function GetItems: TListItemsEx;
     procedure SetItems(const Value: TListItemsEx);
     procedure SetItemsColoring(const Value: Boolean);
@@ -139,6 +140,7 @@ type
     procedure SetSelectedCheckboxesState(State: Boolean);
     procedure ShowItemsHint(Sender: TObject; Item: TListItem; var InfoTip: string);
   protected
+    procedure DoContextPopup(MousePos: TPoint; var Handled: Boolean); override;
     function CreateListItem: TListItem; override;
     function CreateListItems: TListItems; override;
     function CustomDrawItem(Item: TListItem; State: TCustomDrawState;
@@ -153,6 +155,7 @@ type
     property Selected: TListItemEx read GetSelected write SetSelected;
   published
     property ColoringItems: Boolean read FColoringItems write SetItemsColoring default False;
+    property PopupOnItemsOnly: Boolean read FPopupOnItemsOnly write FPopupOnItemsOnly default False;
   end;
 
 procedure Register;
@@ -239,6 +242,12 @@ begin
       Canvas.Brush.Color := Color;
   end;
   Result := inherited;
+end;
+
+procedure TListViewEx.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
+begin
+  Handled := FPopupOnItemsOnly and (SelCount = 0);
+  inherited;
 end;
 
 procedure TListViewEx.Filter(SearchPattern: String; Column: Integer = -1);
