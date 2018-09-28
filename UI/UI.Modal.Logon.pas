@@ -15,7 +15,7 @@ type
     LabelProvider: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
-    ListViewRestrictSID: TGroupListViewEx;
+    ListViewGroups: TGroupListViewEx;
     ButtonAddSID: TButton;
     LabelGroups: TLabel;
     PopupMenu: TPopupMenu;
@@ -40,7 +40,7 @@ uses
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
-   TDialogPickUser.ExecuteNew(Self);
+  TDialogPickUser.Execute(Self);
 end;
 
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);

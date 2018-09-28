@@ -101,7 +101,7 @@ object LogonDialog: TLogonDialog
     TabOrder = 3
     OnClick = ButtonContinueClick
   end
-  object ListViewRestrictSID: TGroupListViewEx
+  object ListViewGroups: TGroupListViewEx
     Left = 8
     Top = 128
     Width = 261
@@ -109,7 +109,6 @@ object LogonDialog: TLogonDialog
     Margins.Top = 26
     Margins.Bottom = 31
     Anchors = [akLeft, akTop, akRight, akBottom]
-    Checkboxes = True
     Columns = <
       item
         Caption = 'SID'
