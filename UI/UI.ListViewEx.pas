@@ -247,7 +247,8 @@ end;
 procedure TListViewEx.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
 begin
   Handled := FPopupOnItemsOnly and (SelCount = 0);
-  inherited;
+  if not Handled then
+    inherited;
 end;
 
 procedure TListViewEx.Filter(SearchPattern: String; Column: Integer = -1);

@@ -53,6 +53,7 @@ type
   public
     property Groups[Ind: Integer]: TGroup read GetGroup write SetGroup;
     function AddGroup(Group: TGroup): Integer;
+    function IsAdditional(Index: Integer): Boolean;
     procedure RemoveGroup(Index: Integer);
     class function BuildHint(SID: TSecurityIdentifier;
       Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
@@ -226,7 +227,7 @@ begin
   if Ind >= Length(FGroups) then
   begin
     FAdditional[Ind - Length(FGroups)] := Value;
-    SetGroupItem(Items[Ind - Length(FGroups)], Value);
+    SetGroupItem(Items[Ind], Value);
   end;
 end;
 
@@ -313,6 +314,11 @@ begin
     Result := FGroups[Ind]
   else
     Result := FAdditional[Ind - Length(FGroups)];
+end;
+
+function TGroupListViewEx.IsAdditional(Index: Integer): Boolean;
+begin
+  Result := Index >= Length(FGroups);
 end;
 
 procedure TGroupListViewEx.RemoveGroup(Index: Integer);

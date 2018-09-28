@@ -44,7 +44,8 @@ type
     GroupIntegrity = $00000020,
     GroupIntegrityEnabled = $00000040,
     GroupResource = $20000000,
-    GroupLogonId = Integer($C0000000)
+    GroupLogonId = Integer($C0000000),
+    GroupExUser = 6 // to display TOKEN_USER's attributes correctly
   );
 
   TGroupAttributesHelper = record helper for TGroupAttributes
@@ -163,7 +164,7 @@ type
     procedure SetCaption(const Value: String);
     function GetAccess: CanFail<ACCESS_MASK>;
     function GetObjAddress: NativeUInt;
-    function GetUser: CanFail<TSecurityIdentifier>;
+    function GetUser: CanFail<TGroup>;
     function GetGroups: CanFail<TGroupArray>;
     function GetPrivileges: CanFail<TPrivilegeArray>;
     function GetOwner: CanFail<TSecurityIdentifier>;
@@ -306,7 +307,7 @@ type
     function TryGetUIAccess: CanFail<Cardinal>;
     function TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
 
-    property User: CanFail<TSecurityIdentifier> read GetUser;                   // class 1
+    property User: CanFail<TGroup> read GetUser;                                // class 1
     property Groups: CanFail<TGroupArray> read GetGroups;                       // class 2
     property Privileges: CanFail<TPrivilegeArray> read GetPrivileges;           // class 3
     property Owner: CanFail<TSecurityIdentifier> read GetOwner;                 // class 4 #settable
@@ -741,7 +742,7 @@ begin
   Result := TryGetUIAccess.GetValueOrRaise;
 end;
 
-function TToken.GetUser: CanFail<TSecurityIdentifier>;
+function TToken.GetUser: CanFail<TGroup>;
 var
   Buffer: PSIDAndAttributes;
 begin
@@ -750,7 +751,13 @@ begin
     begin
       Buffer := Value;
       try
-        Result.Succeed(TSecurityIdentifier.CreateFromSid(Buffer.Sid));
+        Result.Value.SecurityIdentifier := TSecurityIdentifier.CreateFromSid(
+          Buffer.Sid);
+
+        if Buffer.Attributes = 0 then // 0 is default here and means "Enabled"
+          Result.Value.Attributes := GroupExUser
+        else // But it can also be "Use for deny only"
+          Result.Value.Attributes := TGroupAttributes(Buffer.Attributes);
       finally
         FreeMem(Buffer);
       end;

@@ -128,7 +128,7 @@ begin
   begin
     if DisableAttributes then
     begin
-      SetAttributes(GroupMandatory);
+      SetAttributes(GroupEnabled);
       DoDisableAttributes;
     end;
 

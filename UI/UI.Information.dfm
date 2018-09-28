@@ -724,7 +724,7 @@ object InfoDialog: TInfoDialog
       end
     end
     object TabRestricted: TTabSheet
-      Caption = 'Restricted SIDs'
+      Caption = 'Restricting SIDs'
       ImageIndex = 3
       object ListViewRestricted: TGroupListViewEx
         AlignWithMargins = True

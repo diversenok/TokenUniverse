@@ -2,7 +2,7 @@ object DialogRestrictToken: TDialogRestrictToken
   Left = 0
   Top = 0
   Caption = 'Create Restricted Token'
-  ClientHeight = 363
+  ClientHeight = 410
   ClientWidth = 355
   Color = clBtnFace
   DoubleBuffered = True
@@ -17,12 +17,12 @@ object DialogRestrictToken: TDialogRestrictToken
   OnCreate = FormCreate
   DesignSize = (
     355
-    363)
+    410)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
     Left = 276
-    Top = 333
+    Top = 380
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -33,7 +33,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object ButtonCancel: TButton
     Left = 195
-    Top = 333
+    Top = 380
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -46,7 +46,7 @@ object DialogRestrictToken: TDialogRestrictToken
     Left = 4
     Top = 6
     Width = 347
-    Height = 304
+    Height = 351
     ActivePage = TabSheetSidDisable
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
@@ -57,7 +57,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Left = 3
         Top = 3
         Width = 333
-        Height = 270
+        Height = 317
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -88,14 +88,14 @@ object DialogRestrictToken: TDialogRestrictToken
       ImageIndex = 1
       DesignSize = (
         339
-        276)
+        323)
       object CheckBoxWriteRestrict: TCheckBox
-        Left = 6
-        Top = 4
-        Width = 330
+        Left = 187
+        Top = 299
+        Width = 149
         Height = 17
         Hint = 'Consider restricting SIDs only when evaluating write access.'
-        Anchors = [akLeft, akTop, akRight]
+        Anchors = [akRight, akBottom]
         Caption = 'Write restricted'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -108,10 +108,9 @@ object DialogRestrictToken: TDialogRestrictToken
       object ListViewRestrictSID: TGroupListViewEx
         AlignWithMargins = True
         Left = 3
-        Top = 26
+        Top = 3
         Width = 333
-        Height = 219
-        Margins.Top = 26
+        Height = 289
         Margins.Bottom = 31
         Align = alClient
         Checkboxes = True
@@ -133,13 +132,16 @@ object DialogRestrictToken: TDialogRestrictToken
         MultiSelect = True
         ReadOnly = True
         RowSelect = True
+        PopupMenu = PopupMenu
         TabOrder = 1
         ViewStyle = vsReport
+        OnContextPopup = ListViewRestrictSIDContextPopup
         ColoringItems = True
+        PopupOnItemsOnly = True
       end
       object ButtonAddSID: TButton
         Left = 3
-        Top = 248
+        Top = 295
         Width = 78
         Height = 25
         Hint = 'Add a new restricted SID that is not present in the list.'
@@ -150,6 +152,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
         TabOrder = 2
+        OnClick = ButtonAddSIDClick
       end
     end
     object TabSheetPrivDelete: TTabSheet
@@ -157,7 +160,7 @@ object DialogRestrictToken: TDialogRestrictToken
       ImageIndex = 2
       DesignSize = (
         339
-        276)
+        323)
       object CheckBoxDisableMaxPriv: TCheckBox
         Left = 6
         Top = 4
@@ -181,7 +184,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Left = 3
         Top = 26
         Width = 333
-        Height = 247
+        Height = 294
         Margins.Top = 26
         Align = alClient
         Checkboxes = True
@@ -216,7 +219,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxLUA: TCheckBox
     Left = 14
-    Top = 316
+    Top = 363
     Width = 120
     Height = 15
     Hint = 
@@ -228,7 +231,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxSandboxInert: TCheckBox
     Left = 14
-    Top = 337
+    Top = 384
     Width = 120
     Height = 17
     Hint = 
@@ -238,5 +241,17 @@ object DialogRestrictToken: TDialogRestrictToken
     Anchors = [akLeft, akBottom]
     Caption = 'Sandbox inert'
     TabOrder = 4
+  end
+  object PopupMenu: TPopupMenu
+    Left = 232
+    Top = 128
+    object MenuEdit: TMenuItem
+      Caption = 'Edit'
+      OnClick = MenuEditClick
+    end
+    object MenuRemove: TMenuItem
+      Caption = 'Remove'
+      OnClick = MenuRemoveClick
+    end
   end
 end

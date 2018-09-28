@@ -61,7 +61,7 @@ begin
 
     with Token.User do
       if IsValid then
-        Item.SubItems[2] := Value.ToString;
+        Item.SubItems[2] := Value.SecurityIdentifier.ToString;
 
     with Token.TryGetSession  do
       if IsValid then

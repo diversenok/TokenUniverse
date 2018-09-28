@@ -276,13 +276,21 @@ end;
 procedure TInfoDialog.ChangedView(Sender: TObject);
 begin
   // TODO: What about a new event for this?
-  with Token.User do
+  with Token.User, EditUser do
     if IsValid then
     begin
       if ComboBoxView.ItemIndex = 0 then
-        EditUser.Text := Value.ToString
+        Text := Value.SecurityIdentifier.ToString
       else
-        EditUser.Text := Value.SID;
+        Text := Value.SecurityIdentifier.SID;
+
+      Hint := TGroupListViewEx.BuildHint(Value.SecurityIdentifier,
+        Value.Attributes);
+
+      if Value.Attributes.Contain(GroupUforDenyOnly) then
+        Color := clDisabled
+      else
+        Color := clEnabled;
     end;
 
   with Token.Owner do
@@ -361,7 +369,7 @@ begin
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);
 
-  TabRestricted.Caption := Format('Restricted SIDs (%d)',
+  TabRestricted.Caption := Format('Restricting SIDs (%d)',
     [ListViewRestricted.Items.Count]);
 end;
 
