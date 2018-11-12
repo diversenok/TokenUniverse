@@ -6,6 +6,10 @@ uses
   System.SysUtils, TU.NativeAPI;
 
 type
+  /// <summary>
+  ///  Exception class for an OS error for which exact unsuccessful call
+  ///  location is known.
+  /// </summary>
   ELocatedOSError = class(EOSError)
   public
    ErrorOrigin: String;
@@ -17,7 +21,7 @@ type
 
   /// <summary>
   ///   A generic wrapper for the result of a function that can fail but
-  ///   is disigned not to raise exceptions.
+  ///   is designed not to raise exceptions.
   /// </summary>
   CanFail<ResultType> = record
     Value: ResultType;
@@ -31,12 +35,11 @@ type
     /// the stack and can contain arbitrary data.
     /// </summary>
     procedure Init(Context: TObject = nil);
-    class function Fail: CanFail<ResultType>; static;
 
     /// <returns> The value if it is valid. </returns>
-    /// <exception cref="EOSError">
-    ///  Can raise EOSError with the code stored in the wrapper if the value
-    ///  is not valid.
+    /// <exception cref="TU.Common.ELocatedOSError">
+    ///  Can raise <see cref="TU.Common.ELocatedOSError"/> with the code stored
+    ///  in the wrapper if the value is not valid.
     /// </exception>
     function GetValueOrRaise: ResultType;
 
@@ -48,7 +51,7 @@ type
 
     /// <summary> Checks and saves the last Win32 error. </summary>
     /// <returns>
-    ///  The same value as <paramref name="Win32Ret"/> parameter
+    ///  The same value as <paramref name="Win32Ret"/> parameter.
     /// </returns>
     function CheckError(Win32Ret: LongBool; Where: String): LongBool;
 
@@ -57,25 +60,17 @@ type
     ///  call to obtain the buffer size. It checks the size and the last
     ///  Win32 error. </summary>
     /// <returns>
-    ///  <para>
-    ///   <c>True</c> if the buffer size is save to use.
-    ///  </para>
+    ///  <para><c>True</c> if the buffer size is save to use.</para>
     ///  <para><c>False</c> otherwise.</para>
     /// </returns>
     function CheckBuffer(BufferSize: Cardinal; Where: String): Boolean;
 
     /// <summary> Checks and saves NativeAPI status. </summary>
     /// <returns>
-    ///  <para>
-    ///   <c>True</c> if <paramref name="Status"/> is equal to
-    ///   <c>STATUS_SUCCESS</c>.
-    ///  </para>
+    ///  <para><c>True</c> if the call succeeded.</para>
     ///  <para><c>False</c> otherwise.</para>
     /// </returns>
     function CheckNativeError(Status: NTSTATUS; Where: String): Boolean;
-
-    /// <summary> Saves the last Win32 error. </summary>
-    procedure SetLastError(Where: String);
 
     /// <summary>
     ///  Test the buffer wrapper for validity and copies it's error information.
@@ -107,28 +102,28 @@ type
     function Delete(EventListener: TEventListener<T>): Boolean;
     function Count: Integer;
 
-    /// <summary>
-    ///  Tries to call all event listeners. If an exception occures some of the
-    ///  listeners may not be notified.
-    /// </summary>
+    /// <summary> Calls all event listeners. </summary>
+    /// <remarks>
+    ///  If an exception occurs some of the listeners may not be notified.
+    /// </remarks>
     procedure Invoke(Value: T);
-    procedure InvokeIfValid(Value: CanFail<T>); inline;
 
-    /// <summary>
-    ///  Calls all event listeners regardless of any exceptions. This method
-    ///  always succeeds since it ignores and looses all raised exceptions.
-    /// </summary>
-    procedure InvokeIgnoringErrors(Value: T);
+    /// <summary> Calls all event listeners if the value is valid. </summary>
+    /// <remarks>
+    ///  If an exception occurs some of the listeners may not be notified.
+    /// </remarks>
+    procedure InvokeIfValid(Value: CanFail<T>); inline;
   end;
 
   /// <summary>
   ///  Multiple source event handler compatible with TNotifyEvent from
-  ///  System.Classes
+  ///  <see cref="System.Classes"/>.
   /// </summary>
   TNotifyEventHandler = TEventHandler<TObject>;
 
   TEqualityCheckFunc<T> = function(Value1, Value2: T): Boolean;
 
+  /// <summary> Multiple source event handler with cache support. </summary>
   TValuedEventHandler<T> = record
   strict private
     Event: TEventHandler<T>;
@@ -141,11 +136,17 @@ type
     ///  Adds an event listener and calls it with the last known value.
     /// </summary>
     /// <remarks>
-    ///  Be careful with exceptions since they break the loop of <c>Invoke</c>
-    ///  method.
+    ///  Be careful with exceptions since they break the loop of
+    ///  <see cref="Invoke"/> method.
     /// </remarks>
     procedure Add(EventListener: TEventListener<T>;
       CallWithLastValue: Boolean = True);
+
+    /// <summary> Deletes the specified event listener. </summary>
+    /// <returns>
+    ///  <para><c>True</c> if the event listener was found and deleted; </para>
+    ///  <para><c>False</c> if there was no such event listener.</para>
+    /// </returns>
     function Delete(EventListener: TEventListener<T>): Boolean;
     function Count: Integer; inline;
 
@@ -153,21 +154,30 @@ type
     ///  Notifies event listeners if the value differs from the previous one.
     /// </summary>
     /// <returns>
-    ///  <para><c>True</c> if the value has actually changed </para>
-    ///  <para><c>False</c> otherwise </para>
+    ///  <para><c>True</c> if the value has actually changed; </para>
+    ///  <para><c>False</c> otherwise. </para>
     /// </returns>
     function Invoke(Value: T): Boolean;
+
+    /// <summary>
+    ///  Notifies event listeners if the value is valid and differs from the
+    ///  previous one.
+    /// </summary>
+    /// <returns>
+    ///  <para><c>True</c> if the value has actually changed; </para>
+    ///  <para><c>False</c> otherwise. </para>
+    /// </returns>
     function InvokeIfValid(Value: CanFail<T>): Boolean; inline;
   end;
 
 const
-  BUFFER_LIMIT = 1024 * 1024 * 64; // 64 MB
+  BUFFER_LIMIT = 1024 * 1024 * 256; // 256 MB
 
 // TODO: What about ERROR_BUFFER_OVERFLOW and ERROR_INVALID_USER_BUFFER?
 
-function Win32Check(RetVal: LongBool; Where: String; Context: TObject = nil):
+function WinCheck(RetVal: LongBool; Where: String; Context: TObject = nil):
   LongBool; inline;
-procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String;
+procedure WinCheckBuffer(BufferSize: Cardinal; Where: String;
   Context: TObject = nil); inline;
 function NativeCheck(Status: NTSTATUS; Where: String;
   Context: TObject = nil): Boolean; inline;
@@ -196,7 +206,7 @@ resourcestring
   OSError = '%s failed.' + #$D#$A#$D#$A +
     'Code 0x%x' + #$D#$A#$D#$A + '%s';
 
-function Win32Check(RetVal: LongBool; Where: String; Context: TObject = nil):
+function WinCheck(RetVal: LongBool; Where: String; Context: TObject = nil):
   LongBool;
 begin
   if not RetVal then
@@ -204,7 +214,7 @@ begin
   Result := True;
 end;
 
-procedure Win32CheckBuffer(BufferSize: Cardinal; Where: String;
+procedure WinCheckBuffer(BufferSize: Cardinal; Where: String;
   Context: TObject = nil);
 begin
   if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferSize = 0) then
@@ -217,7 +227,7 @@ end;
 function NativeCheck(Status: NTSTATUS; Where: String; Context: TObject = nil):
   Boolean;
 begin
-  if Status <> STATUS_SUCCESS then
+  if not NT_SUCCESS(Status) then
     raise ELocatedOSError.CreateLE(Status, Where, Context);
   Result := True;
 end;
@@ -255,7 +265,7 @@ end;
 function CanFail<ResultType>.CheckNativeError(Status: NTSTATUS;
   Where: String): Boolean;
 begin
-  IsValid := Status = STATUS_SUCCESS;
+  IsValid := NT_SUCCESS(Status);
   if not Result then
   begin
     ErrorCode := Status;
@@ -271,11 +281,6 @@ begin
   Self.ErrorCode := Src.ErrorCode;
   Self.ErrorOrigin := Src.ErrorOrigin;
   Result := Src;
-end;
-
-class function CanFail<ResultType>.Fail: CanFail<ResultType>;
-begin
-  FillChar(Result, SizeOf(Result), 0);
 end;
 
 function CanFail<ResultType>.GetErrorMessage: String;
@@ -301,13 +306,6 @@ begin
   Self.ErrorCode := 0;
   Self.ErrorOrigin := '';
   Self.ErrorContext := Context;
-end;
-
-procedure CanFail<ResultType>.SetLastError(Where: String);
-begin
-  IsValid := False;
-  ErrorCode := GetLastError;
-  ErrorOrigin := Where;
 end;
 
 function CanFail<ResultType>.Succeed: CanFail<ResultType>;
@@ -345,6 +343,9 @@ end;
 class function ELocatedOSError.FormatErrorMessage(Location: String;
   Code: Cardinal): String;
 begin
+  // Lucky guess: small errors are most likely Win32Api errors, big ones are
+  // most likely NativeApi errors.
+
   if Code < STATUS_UNSUCCESSFUL then
     Result := Format(OSError, [Location, Code, SysErrorMessage(Code)])
   else
@@ -414,22 +415,6 @@ begin
     Invoke(Value.Value);
 end;
 
-procedure TEventHandler<T>.InvokeIgnoringErrors(Value: T);
-var
-  i: integer;
-  ListenersCopy: TEventListenerArray<T>;
-begin
-  ListenersCopy := Copy(Listeners, 0, Length(Listeners));
-
-  for i := 0 to High(ListenersCopy) do
-    try
-      ListenersCopy[i](Value);
-    except
-      on E: Exception do
-        OutputDebugString(PWideChar('InvokeIgnoringErrors:: ' + E.ToString));
-    end;
-end;
-
 { TValuedEventHandler<T> }
 
 procedure TValuedEventHandler<T>.Add(EventListener: TEventListener<T>;
@@ -454,7 +439,7 @@ end;
 
 function TValuedEventHandler<T>.Invoke(Value: T): Boolean;
 begin
-  // Do not invoke on the same value twise
+  // Do not invoke on the same value twice
   if LastValuePresent and Assigned(ComparisonFunction) and
     ComparisonFunction(LastValue, Value) then
     Exit(False);
@@ -489,10 +474,10 @@ end;
 
 function StrToUInt64Ex(S: String; Comment: String): UInt64;
 const
-  E_CONV_DECHEX = 'Invalid %s. Please specify a decimal or a hexadecimal value.';
+  E_DECHEX = 'Invalid %s. Please specify a decimal or a hexadecimal value.';
 begin
   if not TryStrToUInt64Ex(S, Result) then
-    raise EConvertError.Create(Format(E_CONV_DECHEX, [Comment]));
+    raise EConvertError.Create(Format(E_DECHEX, [Comment]));
 end;
 
 function StrToUIntEx(S: String; Comment: String): Cardinal;

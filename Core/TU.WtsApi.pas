@@ -12,7 +12,10 @@ const
   wtsapi = 'wtsapi32.dll';
 
 type
-  TSessionItem = record
+  /// <summary>
+  ///  A record to hold information about a terminal server session.
+  /// </summary>
+  TSessionInformation = record
     SessionId: Cardinal;
     Name: String;
     Domain: String;
@@ -20,18 +23,28 @@ type
     function ToString: String;
   end;
 
+  /// <summary> Stores a snapshot of all sessions on the system. </summary>
   TSessionList = class
   private
     function GetCount: Integer;
-    function GetSession(ind: Integer): TSessionItem;
+    function GetSession(ind: Integer): TSessionInformation;
   protected
-    FSessions: array of TSessionItem;
+    FSessions: array of TSessionInformation;
     procedure CreateStage2(hServer: THandle);
   public
+    /// <summary>
+    ///  Captures a snapshot of sessions on the specified server.
+    /// </summary>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create(Server: String);
+
+    /// <summary> Captures a local snapshot of sessions. </summary>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor CreateCurrentServer;
-    property Sessions[ind: Integer]: TSessionItem read GetSession; default;
+
+    property Sessions[ind: Integer]: TSessionInformation read GetSession; default;
     property Count: Integer read GetCount;
+
     /// <summary> Searches for the specified session ID. </summary>
     /// <returns>
     ///  <para> The index of this session if it exists. </para>
@@ -115,15 +128,19 @@ var
   Count, Returned: Cardinal;
   i: integer;
 begin
+  // Try to enumerate the sessions
   if not WTSEnumerateSessionsW(hServer, 0, 1, SIA, Count) then
     Exit;
 
+  // Allocate memory
   SetLength(FSessions, Count);
+
   for i := 0 to Count - 1 do
   begin
     FSessions[i].SessionId := SIA.SessionInfo[i].SessionId;
-    FSessions[i].Name := String(SIA.SessionInfo[i].WinStationName);
+    FSessions[i].Name := WideCharToString(SIA.SessionInfo[i].WinStationName);
 
+    // Query owner's domain
     if WTSQuerySessionInformationW(hServer, FSessions[i].SessionId,
       WTSDomainName, StrBuf, Returned) then
     begin
@@ -131,6 +148,7 @@ begin
       WTSFreeMemory(StrBuf);
     end;
 
+    // Query owner's user name
     if WTSQuerySessionInformationW(hServer, FSessions[i].SessionId,
       WTSUserName, StrBuf, Returned) then
     begin
@@ -157,14 +175,14 @@ begin
   Result := Length(FSessions);
 end;
 
-function TSessionList.GetSession(ind: Integer): TSessionItem;
+function TSessionList.GetSession(ind: Integer): TSessionInformation;
 begin
   Result := FSessions[ind];
 end;
 
-{ TSessionItem }
+{ TSessionInformation }
 
-function TSessionItem.ToString: String;
+function TSessionInformation.ToString: String;
 begin
   if (User <> '') and (Domain <> '') then
   begin

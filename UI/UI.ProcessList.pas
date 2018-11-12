@@ -10,14 +10,14 @@ uses
 
 type
   TProcessItemEx = class
-    Process: TProcessItem;
+    Process: TProcessInformation;
     SearchKeyword: string;
     Enabled: Boolean; // by search
     Added: Boolean;
     Parent: TProcessItemEx;
     ListItemRef: TListItem;
     ImageIndex: Integer;
-    constructor Create(Src: TProcessItem);
+    constructor Create(Src: TProcessInformation);
   end;
   PProcessItemEx = ^TProcessItemEx;
 
@@ -293,7 +293,7 @@ end;
 
 { TProcessItemEx }
 
-constructor TProcessItemEx.Create(Src: TProcessItem);
+constructor TProcessItemEx.Create(Src: TProcessInformation);
 begin
   Process := Src;
 end;

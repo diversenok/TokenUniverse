@@ -80,7 +80,11 @@ type
     Reserved: array [0..9] of Cardinal;
   end;
 
+  // TODO: ObjectTypesInformation for token type
+
   { Ntdll api calls }
+
+function NT_SUCCESS(Status: NTSTATUS): Boolean; inline;
 
 function NtQuerySystemInformation(SystemInformationClass
   : TSystemInformationClass; SystemInformation: Pointer;
@@ -103,5 +107,10 @@ type
   PByteArray = ^TByteArray;
 
 implementation
+
+function NT_SUCCESS(Status: NTSTATUS): Boolean;
+begin
+  Result := Integer(Status) >= 0;
+end;
 
 end.

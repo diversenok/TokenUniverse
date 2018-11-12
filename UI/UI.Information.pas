@@ -245,7 +245,7 @@ begin
     with GetLogonSessionInformation(NewStatistics.AuthenticationId) do
       if IsValid then
       begin
-        if Value.HasUser then
+        if Value.UserPresent then
         begin
           Items[13].SubItems[0] := Value.User.ToString;
           Items[13].Hint := TGroupListViewEx.BuildHint(Value.User,
@@ -255,7 +255,7 @@ begin
           Items[13].SubItems[0] := 'No linked user';
         Items[14].SubItems[0] := Value.AuthPackage;
         Items[15].SubItems[0] := Value.LogonServer;
-        Items[16].SubItems[0] := Value.LogonType.ToString;
+        Items[16].SubItems[0] := LogonTypeToString(Value.LogonType);
         Items[17].SubItems[0] := Value.Session.ToString;
         Items[18].SubItems[0] := DateTimeToStr(Value.LogonTime);
       end

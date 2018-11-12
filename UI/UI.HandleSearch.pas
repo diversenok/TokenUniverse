@@ -67,7 +67,7 @@ var
   ProcessSnapshot: TProcessList;
   PID: NativeUInt;
   hProcess: THandle;
-  HandleItem: THandleItem;
+  HandleItem: THandleInformation;
 begin
   Frame.ClearAll;
   HandleSnapshot := THandleList.Create;

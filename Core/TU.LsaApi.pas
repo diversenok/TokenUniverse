@@ -8,17 +8,23 @@ uses
   Winapi.Windows, TU.Common, TU.Tokens;
 
 type
-  TLogonType = (UndefinedLogonType, Reserved, Interactive, Network, Batch,
-    Service, Proxy, Unlock, NetworkCleartext, NewCredentials, RemoteInteractive,
-    CachedInteractive, CachedRemoteInteractive, CachedUnlock);
+  TLogonType = (ltUndefined, ltReserved, ltInteractive, ltNetwork, ltBatch,
+    ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
+    ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
+    ltCachedUnlock);
 
-  TSecurotyLogonTypeHelper = record helper for TLogonType
-    function ToString: String;
-  end;
+  TLogonProvider = (lpDefault, lpWinNT50, lpWinNT40, lpWinNT35);
 
+  /// <summary>
+  ///  Stores the information about a logon session.
+  /// </summary>
   TLogonSessionInfo = record
-    HasUser: Boolean;
+    /// <remarks>
+    ///  This field is valid only if <see cref="UserPresent"/> is true.
+    /// </remarks>
     User: TSecurityIdentifier;
+    UserPresent: Boolean;
+
     AuthPackage, LogonServer: String;
     LogonType: TLogonType;
     Session: Cardinal;
@@ -27,6 +33,7 @@ type
 
   TLuidDynArray = array of LUID;
 
+function LogonTypeToString(LogonType: TLogonType): String;
 function GetLogonSessionInformation(LogonId: LUID): CanFail<TLogonSessionInfo>;
 function EnumerateLogonSessions: TLuidDynArray;
 
@@ -81,13 +88,16 @@ var
 begin
   Result.Init;
 
+  // Query the information
   if Result.CheckNativeError(LsaGetLogonSessionData(LogonId, Buffer),
     'LsaGetLogonSessionData') then
     with Result do
       try
-        Value.HasUser := Buffer.Sid <> nil;
-        if Value.HasUser then
+        // The Sid field might be null if we have no permissions to query it.
+        Value.UserPresent := Buffer.Sid <> nil;
+        if Value.UserPresent then
           Value.User := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
+
         SetString(Value.AuthPackage, Buffer.AuthenticationPackage.Buffer,
           Buffer.AuthenticationPackage.Length div SizeOf(WideChar));
         Value.LogonType := TLogonType(Buffer.LogonType);
@@ -107,7 +117,7 @@ var
 begin
   SetLength(Result, 0);
 
-  if LsaEnumerateLogonSessions(Count, Sessions) = STATUS_SUCCESS then
+  if NT_SUCCESS(LsaEnumerateLogonSessions(Count, Sessions)) then
   try
     SetLength(Result, Count);
     for i := 0 to Count - 1 do
@@ -117,17 +127,17 @@ begin
   end;
 end;
 
-{ TSecurotyLogonTypeHelper }
+{ Helper functions }
 
-function TSecurotyLogonTypeHelper.ToString: String;
+function LogonTypeToString(LogonType: TLogonType): String;
 const
   Mapping: array [TLogonType] of String = ('Undefined', 'Reserved',
     'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
-    'Network cleartext', 'New credentials', 'Remote interactive',
+    'Network clear text', 'New credentials', 'Remote interactive',
     'Cached interactive', 'Cached remote interactive', 'Cached unlock');
 begin
-  if (Self >= UndefinedLogonType) and (Self <= CachedUnlock) then
-    Result := Mapping[Self]
+  if (LogonType >= Low(TLogonType)) and (LogonType <= High(TLogonType)) then
+    Result := Mapping[LogonType]
   else
     Result := '(Out of bound)';
 end;
