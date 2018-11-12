@@ -53,7 +53,7 @@ var
 implementation
 
 uses
-  TU.LsaApi, TU.Tokens, UI.Modal.PickUser, TU.ObjPicker;
+  TU.LsaApi, TU.Tokens, TU.Tokens.Types, UI.Modal.PickUser, TU.ObjPicker;
 
 {$R *.dfm}
 

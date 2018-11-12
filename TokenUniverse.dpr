@@ -29,7 +29,8 @@ uses
   UI.Prototypes.ChildForm in 'UI\UI.Prototypes.ChildForm.pas',
   UI.Modal.PickUser in 'UI\UI.Modal.PickUser.pas' {DialogPickUser},
   TU.ObjPicker in 'Core\TU.ObjPicker.pas',
-  UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken};
+  UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken},
+  TU.Tokens.Types in 'Core\TU.Tokens.Types.pas';
 
 {$R *.res}
 

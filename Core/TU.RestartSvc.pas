@@ -18,7 +18,7 @@ implementation
 
 uses
   System.SysUtils, Winapi.Windows, Winapi.WinSvc, Winapi.ShellApi,
-  TU.Tokens;
+  TU.Tokens, TU.Tokens.Types;
 
 procedure DebugOut(DebugMessage: String); inline;
 begin

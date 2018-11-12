@@ -1,0 +1,591 @@
+unit TU.Tokens.Types;
+
+interface
+
+{$MINENUMSIZE 4}
+{$WARN SYMBOL_PLATFORM OFF}
+
+{ DONE: Staring from some point of complexity the compiler starts to confuse
+  record helpers for the same types even if they are declared as not alises.
+  So don't use the same names for methods in helpers for types that are based
+  on the same simple type. }
+
+uses
+  Winapi.Windows, TU.Tokens.Winapi, TU.Common;
+
+type
+  TSecurityIdentifier = record
+  strict private
+    procedure GetDomainAndUser(SrcSid: PSID);
+    procedure GetStringSid(SrcSid: PSID);
+    procedure CreateFromStringSid(StringSID: string);
+    constructor CreateFromUserName(Name: string);
+  public
+    SID, Domain, User: String;
+    SIDType: TSIDNameUse;
+    constructor CreateFromSid(SrcSid: PSID);
+    constructor CreateFromString(UserOrSID: String);
+    class function CreateWellKnown(WellKnownSidType: TWellKnownSidType):
+      CanFail<TSecurityIdentifier>; static;
+    function ToString: String;
+    function SIDTypeToString: String;
+    function HasPrettyName: Boolean;
+  end;
+
+  TGroupAttributes = (
+    GroupMandatory = $00000001,
+    GroupEnabledByDefault = $00000002,
+    GroupEnabled = $00000004,
+    GroupOwner = $00000008,
+    GroupUforDenyOnly = $00000010,
+    GroupIntegrity = $00000020,
+    GroupIntegrityEnabled = $00000040,
+    GroupResource = $20000000,
+    GroupLogonId = Integer($C0000000),
+    GroupExUser = 6 // to display TOKEN_USER's attributes correctly
+  );
+
+  TGroupAttributesHelper = record helper for TGroupAttributes
+    function StateToString: String;
+    function FlagsToString: String;
+    function ContainAnyFlags: Boolean;
+    function Contain(Flag: TGroupAttributes): Boolean;
+  end;
+
+  TGroup = record
+    SecurityIdentifier: TSecurityIdentifier;
+    Attributes: TGroupAttributes;
+  end;
+
+  TGroupArray = array of TGroup;
+  TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
+
+  TPrivilege = TLUIDAndAttributes;
+
+  TPrivilegeHelper = record helper for TPrivilege
+    function Name: String;
+    function Description: String;
+    function AttributesToString: String;
+    function AttributesToDetailedString: String;
+    function AttributesContain(Flag: Cardinal): Boolean;
+  end;
+
+  TPrivilegeArray = array of TPrivilege;
+  TPrivilegeLUIDArray = array of TLargeInteger;
+
+  TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
+
+  TLuidHelper = record helper for LUID
+    function ToUInt64: UInt64;
+    function ToString: String;
+  end;
+
+  TTokenTypeEx = (ttAnonymous, ttIdentification, ttImpersonation, ttDelegation,
+   ttPrimary);
+
+  TTokenTypeExHelper = record helper for TTokenTypeEx
+    function ToString: String;
+    function TokenTypeValue: TTokenType;
+    function SecurityImpersonationLevel: TSecurityImpersonationLevel;
+  end;
+
+  TTokenElevationTypeHelper = record helper for TTokenElevationType
+    function ToString: string;
+  end;
+
+  TTokenIntegrityLevel = (
+    ilUntrusted = $0000,
+    ilLow = $1000,
+    ilMedium = $2000,
+    ilMediumPlus = $2100,
+    ilHigh = $3000,
+    ilSystem = $4000
+  );
+
+  TTokenIntegrity = record
+    SID: TSecurityIdentifier;
+    Level: TTokenIntegrityLevel;
+    function IsWellKnown: Boolean;
+    function ToString: String;
+    function ToDetailedString: String;
+  end;
+
+  TMandatoryPolicy = (
+    TokenMandatoryPolicyOff,
+    TokenMandatoryPolicyNoWriteUp,
+    TokenMandatoryPolicyNewProcessMin,
+    TokenMandatoryPolicyValidMask
+  );
+
+function AccessToString(Access: Cardinal): String;
+function AccessToDetailedString(Access: Cardinal): String;
+function TokeSourceNameToString(TokenSource: TTokenSource): String;
+function NativeTimeToString(NativeTime: Int64): String;
+function BytesToString(Size: Cardinal): String;
+function YesNoToString(Value: LongBool): String;
+
+implementation
+
+uses
+  System.SysUtils;
+
+{ TTokenAccess }
+
+function AccessToDetailedString(Access: Cardinal): String;
+begin
+  Result := Format('%s (0x%0.6x)', [AccessToString(Access), Access]);
+end;
+
+function AccessToString(Access: Cardinal): String;
+var
+  Granted: array of string;
+  Right, StrInd: integer;
+begin
+  if Access = TOKEN_ALL_ACCESS then
+    Exit('Full access');
+
+  if Access = 0 then
+    Exit('No access');
+
+  SetLength(Granted, ACCESS_COUNT);
+  StrInd := 0;
+  for Right := 0 to ACCESS_COUNT - 1 do
+  if Access and AccessValues[Right] = AccessValues[Right] then
+    begin
+      Granted[StrInd] := AccessStrings[Right];
+      Inc(StrInd);
+    end;
+  SetLength(Granted, StrInd);
+  Result := String.Join(', ', Granted);
+end;
+
+{ TSecurityIdentifier }
+
+constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSID);
+begin
+  GetStringSid(SrcSid);
+  GetDomainAndUser(SrcSid);
+end;
+
+constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
+begin
+  if UserOrSID.StartsWith('S-1-') then
+    CreateFromStringSid(UserOrSID)
+  else
+    CreateFromUserName(UserOrSID);
+end;
+
+procedure TSecurityIdentifier.CreateFromStringSid(StringSID: string);
+var
+  Buffer: PSID;
+begin
+  SID := StringSID;
+  if WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
+    'ConvertStringSidToSid') then
+  try
+    GetDomainAndUser(Buffer);
+  finally
+    LocalFree(NativeUInt(Buffer));
+  end;
+end;
+
+constructor TSecurityIdentifier.CreateFromUserName(Name: string);
+var
+  SidBuffer, DomainBuffer: Pointer;
+  SidSize, DomainChars, Reserved2: Cardinal;
+begin
+  SidSize := 0;
+  DomainChars := 0;
+  LookupAccountNameW(nil, PWideChar(Name), nil, SidSize, nil,
+    DomainChars, Reserved2);
+  WinCheckBuffer(SidSize, 'LookupAccountNameW');
+
+  SidBuffer := AllocMem(SidSize);
+  DomainBuffer := AllocMem((DomainChars + 1) * SizeOf(WideChar));
+  try
+    WinCheck(LookupAccountNameW(nil, PWideChar(Name), SidBuffer, SidSize,
+      DomainBuffer, DomainChars, Reserved2), 'LookupAccountNameW');
+
+    CreateFromSid(SidBuffer);
+  finally
+    FreeMem(SidBuffer);
+    FreeMem(DomainBuffer);
+  end;
+end;
+
+class function TSecurityIdentifier.CreateWellKnown(
+  WellKnownSidType: TWellKnownSidType): CanFail<TSecurityIdentifier>;
+var
+  Buffer: PSID;
+  BufferSize: Cardinal;
+begin
+  Result.Init;
+
+  BufferSize := 0;
+  CreateWellKnownSid(WellKnownSidType, nil, nil, BufferSize);
+  if not Result.CheckBuffer(BufferSize, 'CreateWellKnownSid') then
+    Exit;
+
+  Buffer := AllocMem(BufferSize);
+  try
+    if Result.CheckError(CreateWellKnownSid(WellKnownSidType, nil, Buffer,
+      BufferSize), 'CreateWellKnownSid') then
+      Result.Value.CreateFromSid(Buffer);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+procedure TSecurityIdentifier.GetDomainAndUser(SrcSid: PSID);
+var
+  BufUser, BufDomain: PWideChar;
+  UserChars, DomainChars, peUse: Cardinal;
+begin
+  Domain := '';
+  User := '';
+  SIDType := SidTypeZero;
+
+  UserChars := 0;
+  DomainChars := 0;
+  LookupAccountSidW(nil, SrcSid, nil, UserChars, nil, DomainChars, peUse);
+  if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or
+    ((UserChars = 0) and (DomainChars = 0)) then
+    Exit;
+
+  BufUser := AllocMem((UserChars + 1) * SizeOf(WideChar));
+  BufDomain := AllocMem((DomainChars + 1) * SizeOf(WideChar));
+  try
+    if LookupAccountSidW(nil, SrcSid, BufUser, UserChars, BufDomain,
+      DomainChars, peUse) then // We don't need exceptions
+    begin
+      SIDType := TSIDNameUse(peUse);
+      if UserChars <> 0 then
+        SetString(User, BufUser, UserChars);
+      if DomainChars <> 0 then
+        SetString(Domain, BufDomain, DomainChars);
+    end;
+  finally
+    FreeMem(BufUser);
+    FreeMem(BufDomain);
+  end;
+end;
+
+procedure TSecurityIdentifier.GetStringSid(SrcSid: PSID);
+var
+  Buffer: PWideChar;
+begin
+  SID := '';
+  if WinCheck(ConvertSidToStringSidW(SrcSid, Buffer),
+    'ConvertSidToStringSidW') then
+  begin
+    SID := String(Buffer);
+    LocalFree(NativeUInt(Buffer));
+  end;
+end;
+
+function TSecurityIdentifier.HasPrettyName: Boolean;
+begin
+  Result := (Domain <> '') or (User <> '');
+end;
+
+function TSecurityIdentifier.SIDTypeToString: String;
+begin
+  case SIDType of
+    SidTypeZero: Result := 'Undefined';
+    SidTypeUser: Result := 'User';
+    SidTypeGroup: Result := 'Group';
+    SidTypeDomain: Result := 'Domain';
+    SidTypeAlias: Result := 'Alias';
+    SidTypeWellKnownGroup:  Result := 'Well-known Group';
+    SidTypeDeletedAccount: Result := 'Deleted Account';
+    SidTypeInvalid: Result := 'Invalid';
+    SidTypeUnknown: Result := 'Unknown';
+    SidTypeComputer: Result := 'Computer';
+    SidTypeLabel: Result := 'Label';
+  else
+    Result := Format('%d (out of bound)', [Cardinal(SIDType)]);
+  end;
+end;
+
+function TSecurityIdentifier.ToString: String;
+begin
+ if (User <> '') and (Domain <> '') then
+    Result := Domain + '\' + User
+  else if User <> '' then
+    Result := User
+  else if Domain <> '' then
+    Result := Domain
+  else if SID <> '' then
+    Result := SID
+  else
+    Result := 'Invalid SID';
+  // TODO: Convert unknown IL and Logon session
+end;
+
+{ TGroupAttributesHelper }
+
+function TGroupAttributesHelper.Contain(Flag: TGroupAttributes): Boolean;
+begin
+  Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
+end;
+
+function TGroupAttributesHelper.ContainAnyFlags: Boolean;
+const
+  AllFlags = Cardinal(GroupMandatory) or Cardinal(GroupOwner) or
+    Cardinal(GroupIntegrity) or Cardinal(GroupResource) or
+    Cardinal(GroupLogonId) or Cardinal(GroupUforDenyOnly);
+begin
+  Result := Cardinal(Self) and AllFlags <> 0;
+end;
+
+function TGroupAttributesHelper.FlagsToString: String;
+const
+  GROUP_FLAGS_COUNT = 6;
+  FlagValues: array [1 .. GROUP_FLAGS_COUNT] of TGroupAttributes = (
+    GroupMandatory, GroupOwner, GroupIntegrity, GroupResource, GroupLogonId,
+    GroupUforDenyOnly);
+  FlagStrings: array [1 .. GROUP_FLAGS_COUNT] of String = (
+    'Mandatory', 'Owner', 'Integrity', 'Resource', 'Logon Id',
+    'Use for deny only');
+var
+  Strings: array of string;
+  FlagInd, StrInd: Integer;
+begin
+  if not ContainAnyFlags then
+    Exit('');
+
+  SetLength(Strings, GROUP_FLAGS_COUNT);
+  StrInd := 0;
+  for FlagInd := 1 to GROUP_FLAGS_COUNT do
+    if Cardinal(Self) and Cardinal(FlagValues[FlagInd]) =
+      Cardinal(FlagValues[FlagInd]) then
+    begin
+      Strings[StrInd] := FlagStrings[FlagInd];
+      Inc(StrInd);
+    end;
+  SetLength(Strings, StrInd);
+  Result := String.Join(', ', Strings);
+end;
+
+function TGroupAttributesHelper.StateToString: String;
+begin
+  if Self.Contain(GroupEnabled) then
+  begin
+    if Self.Contain(GroupEnabledByDefault) then
+      Result := 'Enabled'
+    else
+      Result := 'Enabled (modified)';
+  end
+  else
+  begin
+    if Self.Contain(GroupEnabledByDefault) then
+      Result := 'Disabled (modified)'
+    else
+      Result := 'Disabled';
+  end;
+
+  if Self.Contain(GroupIntegrityEnabled) then
+  begin
+    if Self.Contain(GroupEnabled) or Self.Contain(GroupEnabledByDefault) then
+      Result := 'Integrity Enabled, Group ' + Result
+    else
+      Exit('Integrity Enabled');
+  end;
+end;
+
+{ TPrivilegeHelper }
+
+function TPrivilegeHelper.AttributesContain(Flag: Cardinal): Boolean;
+begin
+  Result := Self.Attributes and Flag = Flag;
+end;
+
+function TPrivilegeHelper.AttributesToDetailedString: String;
+begin
+  Result := Format('0x%0.4x: %s', [Self.Attributes, Self.AttributesToString]);
+end;
+
+function TPrivilegeHelper.AttributesToString: String;
+begin
+  if Self.AttributesContain(SE_PRIVILEGE_ENABLED) then
+  begin
+    if Self.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := 'Enabled'
+    else
+      Result := 'Enabled (modified)';
+  end
+  else
+  begin
+    if Self.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := 'Disabled (modified)'
+    else
+      Result := 'Disabled';
+  end;
+
+  if Self.AttributesContain(SE_PRIVILEGE_REMOVED) then
+    Result := 'Removed, ' + Result;
+
+  if Self.AttributesContain(SE_PRIVILEGE_USED_FOR_ACCESS) then
+    Result := 'Used for access, ' + Result;
+end;
+
+function TPrivilegeHelper.Description: String;
+var
+  Buffer: PWideChar;
+  BufferChars, LangId: Cardinal;
+begin
+  BufferChars := 0;
+  LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
+  WinCheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
+
+  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
+  try
+    WinCheck(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer,
+      BufferChars, LangId), 'LookupPrivilegeDisplayNameW');
+
+    SetString(Result, Buffer, BufferChars);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+function TPrivilegeHelper.Name: String;
+var
+  Buffer: PWideChar;
+  BufferChars: Cardinal;
+begin
+  BufferChars := 0;
+  LookupPrivilegeNameW(nil, Self.Luid, nil, BufferChars);
+
+  if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferChars = 0) then
+    Exit(Format('Unknown privilege %d', [Self.Luid]));
+
+  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
+  try
+    if LookupPrivilegeNameW(nil, Self.Luid, Buffer, BufferChars) then
+      SetString(Result, Buffer, BufferChars);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+{ TLuidHelper }
+
+function TLuidHelper.ToUInt64: UInt64;
+begin
+  Result := PUInt64(@Self)^;
+end;
+
+function TLuidHelper.ToString: String;
+begin
+  Result := Format('0x%x', [PInt64(@Self)^]);
+end;
+
+{ TTokenTypeExHelper }
+
+function TTokenTypeExHelper.SecurityImpersonationLevel:
+  TSecurityImpersonationLevel;
+begin
+  if Self = ttPrimary then
+    Result := SecurityImpersonation
+  else
+    Result := TSecurityImpersonationLevel(Self);
+end;
+
+function TTokenTypeExHelper.TokenTypeValue: TTokenType;
+begin
+  if Self = ttPrimary then
+    Result := TokenPrimary
+  else
+    Result := TokenImpersonation;
+end;
+
+function TTokenTypeExHelper.ToString: String;
+begin
+  case Self of
+    ttAnonymous: Result :=  'Anonymous';
+    ttIdentification: Result := 'Identification';
+    ttImpersonation: Result := 'Impersonation';
+    ttDelegation: Result := 'Delegation';
+    ttPrimary: Result := 'Primary token';
+  end
+end;
+
+{ TTokenElevationTypeHelper }
+
+function TTokenElevationTypeHelper.ToString: string;
+begin
+  case Self of
+    TokenElevationTypeDefault: Result := 'N/A';
+    TokenElevationTypeFull: Result := 'Yes';
+    TokenElevationTypeLimited: Result := 'No';
+  end;
+end;
+
+{ TTokenIntegrity }
+
+function TTokenIntegrity.IsWellKnown: Boolean;
+begin
+  case Self.Level of
+    ilUntrusted, ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function TTokenIntegrity.ToDetailedString: String;
+begin
+  if SID.User <> '' then
+    Result := SID.ToString
+  else
+    Result := Format('Intermediate Mandatory Level: 0x%0.4x', [Cardinal(Level)]);
+end;
+
+function TTokenIntegrity.ToString: String;
+begin
+  case Self.Level of
+    ilUntrusted: Result := 'Untrusted';
+    ilLow: Result := 'Low';
+    ilMedium: Result := 'Medium';
+    ilMediumPlus: Result := 'Medium +';
+    ilHigh: Result := 'High';
+    ilSystem: Result := 'System';
+  else
+    Result := 'Intermediate';
+  end;
+end;
+
+{ Conversion functions }
+
+function TokeSourceNameToString(TokenSource: TTokenSource): String;
+begin
+  // sourcename field may or may not contain zero-termination byte
+  Result := String(PAnsiChar(AnsiString(TokenSource.sourcename)));
+end;
+
+function NativeTimeToString(NativeTime: Int64): String;
+begin
+  if NativeTime = Int64.MaxValue then
+    Result := 'Infinite'
+  else
+    Result := DateTimeToStr(NativeTimeToLocalDateTime(NativeTime));
+end;
+
+function BytesToString(Size: Cardinal): String;
+begin
+  if Size mod 1024 = 0 then
+    Result := (Size div 1024).ToString + ' kB'
+  else
+    Result := Size.ToString + ' B';
+end;
+
+function YesNoToString(Value: LongBool): String;
+begin
+  if Value then
+    Result := 'Yes'
+  else
+    Result := 'No';
+end;
+
+end.

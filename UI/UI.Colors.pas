@@ -3,7 +3,7 @@ unit UI.Colors;
 interface
 
 uses
-  Vcl.Graphics, Winapi.Windows, TU.Tokens;
+  Vcl.Graphics, Winapi.Windows, TU.Tokens, TU.Tokens.Types;
 
 const
   clStale: TColor = $F5DCC2;

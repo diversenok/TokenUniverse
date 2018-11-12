@@ -28,6 +28,9 @@ type
 
 implementation
 
+uses
+  TU.Tokens.Types;
+
 {$R *.dfm}
 
 function TFrameTokenList.AddToken(Token: TToken; Group: Integer = -1): TToken;

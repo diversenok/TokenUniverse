@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Vcl.ExtCtrls, TU.Common, TU.Tokens,
+  Vcl.ComCtrls, Vcl.ExtCtrls, TU.Common, TU.Tokens, TU.Tokens.Types,
   UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm;
 
 type

@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.StdCtrls,
-  Winapi.Windows, UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi, TU.LsaApi;
+  Winapi.Windows, UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi, TU.LsaApi,
+  TU.Tokens.Types;
 
 type
   TTokenedListViewEx = class(TListViewEx)
@@ -264,7 +265,7 @@ begin
     if SID.HasPrettyName then
       Items.Add(Format(ITEM_FORMAT, ['Pretty name', SID.ToString]));
     Items.Add(Format(ITEM_FORMAT, ['SID', SID.SID]));
-    Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDType.ToString]));
+    Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDTypeToString]));
     if AttributesPresent then
     begin
       Items.Add(Format(ITEM_FORMAT, ['State', Attributes.StateToString]));
@@ -468,7 +469,7 @@ begin
   with NewIntegrity do
     if IsValid then
     begin
-      FIsIntermediate := not Value.Level.IsWellKnown;
+      FIsIntermediate := not Value.IsWellKnown;
 
       if FIsIntermediate then
       begin

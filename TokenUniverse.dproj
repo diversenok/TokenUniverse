@@ -164,6 +164,7 @@
             <Form>DialogCreateToken</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Core\TU.Tokens.Types.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

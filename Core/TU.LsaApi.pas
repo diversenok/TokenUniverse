@@ -5,7 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  Winapi.Windows, TU.Common, TU.Tokens;
+  Winapi.Windows, TU.Common, TU.Tokens.Types;
 
 type
   TLogonType = (ltUndefined, ltReserved, ltInteractive, ltNetwork, ltBatch,

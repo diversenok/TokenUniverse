@@ -11,7 +11,7 @@ implementation
 
 uses
   Winapi.Windows, System.UITypes, Vcl.Dialogs,
-  TU.Common, TU.Tokens.Winapi, TU.Tokens;
+  TU.Common, TU.Tokens.Winapi, TU.Tokens, TU.Tokens.Types;
 
 resourcestring
   TITLE_OS_ERROR = 'System Error';
