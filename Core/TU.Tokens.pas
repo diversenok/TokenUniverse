@@ -208,7 +208,7 @@ type
     class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
   protected
     var hToken: THandle;
-    var FOrigin: THandleItem;
+    var FOrigin: THandleInformation;
     var FCaption: String;
     var FOnCanClose: TEventHandler<TToken>;
     var FOnClose: TEventHandler<TToken>;
@@ -258,7 +258,7 @@ type
     ///   be successfully queried.
     /// </remarks>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
-    constructor CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
+    constructor CreateFromHandleItem(Item: THandleInformation; hProcess: THandle);
 
     /// <summary>
     ///  Uses <c>WTSQueryUserToken</c> to obtain a token of the specified
@@ -374,7 +374,7 @@ end;
 constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
   TokenTypeEx: TTokenTypeEx);
 begin
-  Win32Check(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
+  WinCheck(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
     TokenTypeEx.SecurityImpersonationLevel, TokenTypeEx.TokenTypeValue, hToken),
     'DuplicateTokenEx', SrcToken);
   FCaption := SrcToken.Caption + ' (copy)';
@@ -386,16 +386,16 @@ constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
 const
   Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
 begin
-  Win32Check(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
+  WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
     GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
     'DuplicateHandle');
 
-  if (SrcToken.FOrigin.OwnerPID = GetCurrentProcessId) or
-    (SrcToken.FOrigin.OwnerPID = 0) then
+  if (SrcToken.FOrigin.ContextPID = GetCurrentProcessId) or
+    (SrcToken.FOrigin.ContextPID = 0) then
     FCaption := SrcToken.Caption + ' (reference)'
   else
-    FCaption := Format('Referenced 0x%x from PID %d', [SrcToken.FOrigin.hToken,
-      SrcToken.FOrigin.OwnerPID]);
+    FCaption := Format('Referenced 0x%x from PID %d', [SrcToken.FOrigin.Handle,
+      SrcToken.FOrigin.ContextPID]);
 
   InitializeEvents;
 end;
@@ -407,23 +407,23 @@ end;
 
 constructor TToken.CreateFromCurrent;
 begin
-  Win32Check(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
+  WinCheck(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
     'OpenProcessToken');
   FCaption := 'Current process';
   InitializeEvents;
 end;
 
-constructor TToken.CreateFromHandleItem(Item: THandleItem; hProcess: THandle);
+constructor TToken.CreateFromHandleItem(Item: THandleInformation; hProcess: THandle);
 begin
   hToken := 0;
   FOrigin := Item;
-  FCaption := Format('Handle 0x%x (%d)', [Item.hToken, Item.hToken]);
+  FCaption := Format('Handle 0x%x (%d)', [Item.Handle, Item.Handle]);
 
   if hProcess <> 0 then
-    DuplicateHandle(hProcess, Item.hToken, GetCurrentProcess, @hToken, 0, False,
+    DuplicateHandle(hProcess, Item.Handle, GetCurrentProcess, @hToken, 0, False,
       DUPLICATE_SAME_ACCESS)
   else
-    hToken := Item.hToken;
+    hToken := Item.Handle;
 
   InitializeEvents;
 end;
@@ -434,9 +434,9 @@ var
 begin
   hProcess := OpenProcess(MAXIMUM_ALLOWED, False, PID);
   if hProcess = 0 then
-    Win32Check(False, 'OpenProcess');
+    WinCheck(False, 'OpenProcess');
 
-  Win32Check(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
+  WinCheck(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
     'OpenProcessToken');
   FCaption := 'PID ' + IntToStr(PID);
 
@@ -445,7 +445,7 @@ end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal);
 begin
-  Win32Check(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
+  WinCheck(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
   FCaption := Format('Token of session %d', [SessionID]);
   InitializeEvents;
 end;
@@ -459,7 +459,7 @@ begin
   Disable := ConvertGroupArrayToSIDs(SIDsToDisabe);
   Restrict := ConvertGroupArrayToSIDs(SIDsToRestrict);
   try
-    Win32Check(CreateRestrictedToken(SrcToken.hToken, Flags,
+    WinCheck(CreateRestrictedToken(SrcToken.hToken, Flags,
       Length(Disable), Disable,
       Length(PrivilegesToDelete), PLUIDAndAttributes(PrivilegesToDelete),
       Length(Restrict), Restrict,
@@ -481,7 +481,7 @@ var
   i: integer;
 begin
   if Length(AddGroups) = 0 then
-    Win32Check(LogonUserW(PWideChar(User), PWideChar(Domain), Password,
+    WinCheck(LogonUserW(PWideChar(User), PWideChar(Domain), Password,
       LogonType, LogonProvider, hToken), 'LogonUserW')
   else
   begin
@@ -493,7 +493,7 @@ begin
       for i := 0 to High(SIDs) do
         pGroups.Groups[i] := SIDs[i];
 
-      Win32Check(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
+      WinCheck(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
         LogonType, LogonProvider, pGroups, hToken, nil, nil, nil, nil),
         'LogonUserExExW');
     finally
@@ -639,7 +639,7 @@ begin
     HandleList := THandleList.CreateOnly(GetCurrentProcessId);
 
     for i := 0 to HandleList.Count - 1 do
-      if HandleList[i].hToken = hToken then
+      if HandleList[i].Handle = hToken then
       begin
         FOrigin := HandleList[i];
         Break;
@@ -785,7 +785,7 @@ begin
     for i := 0 to NewState.GroupCount - 1 do
       NewState.Groups[i].Attributes := Cardinal(GroupEnabled);
   try
-    Win32Check(AdjustTokenGroups(hToken, IsResetFlag[Action], NewState, 0, nil,
+    WinCheck(AdjustTokenGroups(hToken, IsResetFlag[Action], NewState, 0, nil,
       nil), 'AdjustTokenGroups', Self);
     GetGroups; // query and notify event listeners
   finally
@@ -834,7 +834,7 @@ begin
       Buffer.Privileges[i].Attributes := ActionToAttribute[Action];
     end;
 
-    Win32Check(AdjustTokenPrivileges(hToken, False, Buffer, BufferSize, nil,
+    WinCheck(AdjustTokenPrivileges(hToken, False, Buffer, BufferSize, nil,
       nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
   finally
     FreeMem(Buffer);
@@ -909,11 +909,11 @@ var
   hTargetProcess: THandle;
 begin
   hTargetProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
-  Win32Check(LongBool(hTargetProcess), 'OpenProcess#PROCESS_DUP_HANDLE');
+  WinCheck(LongBool(hTargetProcess), 'OpenProcess#PROCESS_DUP_HANDLE');
 
   if not DuplicateHandle(GetCurrentProcess, hToken, hTargetProcess, @Result, 0,
     False, DUPLICATE_SAME_ACCESS) then
-    Win32Check(False, 'DuplicateHandle')
+    WinCheck(False, 'DuplicateHandle')
   else
     CloseHandle(hTargetProcess);
 end;
@@ -944,7 +944,7 @@ begin
     InitializeSid(mandatoryLabel.Sid, SECURITY_MANDATORY_LABEL_AUTHORITY, 1);
     GetSidSubAuthority(mandatoryLabel.Sid, 0)^ := DWORD(Value);
     mandatoryLabel.Attributes := SE_GROUP_INTEGRITY;
-    Win32Check(SetTokenInformation(hToken, TokenIntegrityLevel, @mandatoryLabel,
+    WinCheck(SetTokenInformation(hToken, TokenIntegrityLevel, @mandatoryLabel,
       SizeOf(TSIDAndAttributes)), SetterMessage(TokenIntegrityLevel));
   finally
     FreeMem(mandatoryLabel.Sid);
@@ -1086,7 +1086,7 @@ var
   Buffer: PSID;
 begin
   SID := StringSID;
-  if Win32Check(ConvertStringSidToSid(PWideChar(SID), Buffer),
+  if WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
     'ConvertStringSidToSid') then
   try
     GetDomainAndUser(Buffer);
@@ -1104,12 +1104,12 @@ begin
   DomainChars := 0;
   LookupAccountNameW(nil, PWideChar(Name), nil, SidSize, nil,
     DomainChars, Reserved2);
-  Win32CheckBuffer(SidSize, 'LookupAccountNameW');
+  WinCheckBuffer(SidSize, 'LookupAccountNameW');
 
   SidBuffer := AllocMem(SidSize);
   DomainBuffer := AllocMem((DomainChars + 1) * SizeOf(WideChar));
   try
-    Win32Check(LookupAccountNameW(nil, PWideChar(Name), SidBuffer, SidSize,
+    WinCheck(LookupAccountNameW(nil, PWideChar(Name), SidBuffer, SidSize,
       DomainBuffer, DomainChars, Reserved2), 'LookupAccountNameW');
 
     CreateFromSid(SidBuffer);
@@ -1181,7 +1181,7 @@ var
   Buffer: PWideChar;
 begin
   SID := '';
-  if Win32Check(ConvertSidToStringSidW(SrcSid, Buffer),
+  if WinCheck(ConvertSidToStringSidW(SrcSid, Buffer),
     'ConvertSidToStringSidW') then
   begin
     SID := String(Buffer);
@@ -1323,11 +1323,11 @@ var
 begin
   BufferChars := 0;
   LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
-  Win32CheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
+  WinCheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
 
   Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
   try
-    Win32Check(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer,
+    WinCheck(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer,
       BufferChars, LangId), 'LookupPrivilegeDisplayNameW');
 
     SetString(Result, Buffer, BufferChars);

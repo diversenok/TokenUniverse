@@ -264,7 +264,7 @@ begin
     if SID.HasPrettyName then
       Items.Add(Format(ITEM_FORMAT, ['Pretty name', SID.ToString]));
     Items.Add(Format(ITEM_FORMAT, ['SID', SID.SID]));
-    Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDTypeToString]));
+    Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDType.ToString]));
     if AttributesPresent then
     begin
       Items.Add(Format(ITEM_FORMAT, ['State', Attributes.StateToString]));
@@ -468,7 +468,7 @@ begin
   with NewIntegrity do
     if IsValid then
     begin
-      FIsIntermediate := not Value.IsWellKnown;
+      FIsIntermediate := not Value.Level.IsWellKnown;
 
       if FIsIntermediate then
       begin
