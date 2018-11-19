@@ -67,6 +67,8 @@ var
   NextSibling, ParentIndent: Integer;
 begin
   ParentIndent := ListView.Items[ParentIndex].Indent;
+
+  NextSibling := ListView.Items.Count;
   for NextSibling := ParentIndex + 1 to ListView.Items.Count - 1 do
     if ListView.Items[NextSibling].Indent <= ParentIndent then
       Break;
