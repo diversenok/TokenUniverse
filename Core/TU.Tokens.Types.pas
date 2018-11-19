@@ -48,6 +48,7 @@ type
   TGroupAttributesHelper = record helper for TGroupAttributes
     function StateToString: String;
     function FlagsToString: String;
+    function ToString: String;
     function ContainAnyFlags: Boolean;
     function Contain(Flag: TGroupAttributes): Boolean;
   end;
@@ -99,7 +100,8 @@ type
     ilMedium = $2000,
     ilMediumPlus = $2100,
     ilHigh = $3000,
-    ilSystem = $4000
+    ilSystem = $4000,
+    ilProtected = $5000
   );
 
   TTokenIntegrity = record
@@ -117,17 +119,28 @@ type
     TokenMandatoryPolicyValidMask
   );
 
+{ Comparison function used by cached event handling system }
+function CompareCardinals(Value1, Value2: Cardinal): Boolean;
+function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
+function CompareLongBools(Value1, Value2: LongBool): Boolean;
+function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean;
+function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean;
+function CompareGroups(Value1, Value2: TGroupArray): Boolean;
+function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
+
+{ Conversion functions }
 function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function NativeTimeToString(NativeTime: Int64): String;
 function BytesToString(Size: Cardinal): String;
+function EnabledDisabledToString(Value: LongBool): String;
 function YesNoToString(Value: LongBool): String;
 
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, TU.NativeApi;
 
 { TTokenAccess }
 
@@ -393,6 +406,15 @@ begin
   end;
 end;
 
+function TGroupAttributesHelper.ToString: String;
+begin
+  Result := FlagsToString;
+  if Result = '' then
+    Result := StateToString
+  else
+    Result := StateToString + ', ' + Result;
+end;
+
 { TPrivilegeHelper }
 
 function TPrivilegeHelper.AttributesContain(Flag: Cardinal): Boolean;
@@ -517,8 +539,10 @@ function TTokenElevationTypeHelper.ToString: string;
 begin
   case Self of
     TokenElevationTypeDefault: Result := 'N/A';
-    TokenElevationTypeFull: Result := 'Yes';
-    TokenElevationTypeLimited: Result := 'No';
+    TokenElevationTypeFull: Result := 'Full';
+    TokenElevationTypeLimited: Result := 'Limited';
+  else
+    Result := '(out of bound)';
   end;
 end;
 
@@ -527,7 +551,7 @@ end;
 function TTokenIntegrity.IsWellKnown: Boolean;
 begin
   case Self.Level of
-    ilUntrusted, ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem:
+    ilUntrusted, ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem, ilProtected:
       Result := True;
   else
     Result := False;
@@ -551,9 +575,61 @@ begin
     ilMediumPlus: Result := 'Medium +';
     ilHigh: Result := 'High';
     ilSystem: Result := 'System';
+    ilProtected: Result := 'Protected';
   else
     Result := 'Intermediate';
   end;
+end;
+
+{ Comparison functions }
+
+function CompareCardinals(Value1, Value2: Cardinal): Boolean;
+begin
+  Result := Value1 = Value2;
+end;
+
+function CompareGroups(Value1, Value2: TGroupArray): Boolean;
+var
+  i: integer;
+begin
+  Result := Length(Value1) = Length(Value2);
+  if Result then
+    for i := 0 to High(Value1) do
+      if (Value1[i].SecurityIdentifier.SID <> Value2[i].SecurityIdentifier.SID)
+        or (Value1[i].Attributes <> Value2[i].Attributes) then
+          Exit(False);
+end;
+
+function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
+begin
+  Result := Value1.Level = Value2.Level;
+end;
+
+function CompareLongBools(Value1, Value2: LongBool): Boolean;
+begin
+  Result := Value1 = Value2;
+end;
+
+function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean;
+begin
+  Result := Value1 = Value2;
+end;
+
+function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean;
+var
+  i: integer;
+begin
+  Result := Length(Value1) = Length(Value2);
+  if Result then
+    for i := 0 to High(Value1) do
+      if (Value1[i].Attributes <> Value2[i].Attributes) or
+        (Value1[i].Luid <> Value2[i].Luid) then
+        Exit(False);
+end;
+
+function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
+begin
+  Result := CompareMem(@Value1, @Value2, SizeOf(TTokenStatistics));
 end;
 
 { Conversion functions }
@@ -578,6 +654,14 @@ begin
     Result := (Size div 1024).ToString + ' kB'
   else
     Result := Size.ToString + ' B';
+end;
+
+function EnabledDisabledToString(Value: LongBool): String;
+begin
+  if Value then
+    Result := 'Enabled'
+  else
+    Result := 'Disabled';
 end;
 
 function YesNoToString(Value: LongBool): String;

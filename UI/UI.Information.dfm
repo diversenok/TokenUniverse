@@ -770,21 +770,6 @@ object InfoDialog: TInfoDialog
     TabOrder = 0
     OnClick = DoCloseForm
   end
-  object ComboBoxView: TComboBox
-    Left = 3
-    Top = 352
-    Width = 158
-    Height = 21
-    Style = csDropDownList
-    Anchors = [akLeft, akBottom]
-    ItemIndex = 0
-    TabOrder = 2
-    Text = 'Resolve users and groups'
-    OnChange = ChangedView
-    Items.Strings = (
-      'Resolve users and groups'
-      'Show SIDs')
-  end
   object ImageList: TImageList
     Left = 167
     Top = 307

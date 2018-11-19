@@ -62,11 +62,9 @@ resourcestring
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
-  if (E.ErrorOrigin = 'DuplicateTokenEx') and (E.ErrorContext is TToken) and
+  if (E.ErrorOrigin = 'DuplicateTokenEx') and
     (E.ErrorCode = ERROR_BAD_IMPERSONATION_LEVEL) then
-    with TToken(E.ErrorContext).TokenTypeInfo do
-      if IsValid and (Value <= ttImpersonation) then
-        Exit(DUPLICATE_IMP);
+    Exit(DUPLICATE_IMP);
 
   if E.ErrorOrigin = 'WTSQueryUserToken' then
   begin

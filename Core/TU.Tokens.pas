@@ -6,236 +6,554 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
-  TU.Tokens.Winapi, TU.Tokens.Types,
-  TU.Handles, TU.Common;
+  TU.Tokens.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi;
 
 type
-  TToken = class;
-  TTokenEvents = class
-  strict private
-    FOnSessionChange, FOnUIAccessChange: TValuedEventHandler<Cardinal>;
+  /// <summary>
+  ///  A class of information for tokens that can be queried and cached.
+  /// </summary>
+  TTokenDataClass = (tdNone, tdTokenUser, tdTokenGroups, tdTokenPrivileges,
+    tdTokenOwner, tdTokenPrimaryGroup, tdTokenDefaultDacl, tdTokenSource,
+    tdTokenType, tdTokenStatistics, tdTokenRestrictedSids, tdTokenSessionId,
+    tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
+    tdTokenHasRestrictions, tdTokenVirtualization, tdTokenIntegrity,
+    tdTokenUIAccess, tdTokenMandatoryPolicy, tdLogonInfo);
+
+  /// <summary> A class of string information for tokens. </summary>
+  TTokenStringClass = (tsCaption, tsTokenType, tsAccess, tsUserName,
+    tsUserState, tsSession, tsElevation, tsIntegrity, tsObjectAddress, tsHandle,
+    tsNoWriteUpPolicy, tsNewProcessMinPolicy, tsUIAccess, tsOwner,
+    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsTokenID, tsExprires,
+    tsDynamicCharged, tsDynamicAvailable, tsGroupCount, tsPrivilegeCount,
+    tsModifiedID, tsLogonID, tsLogonAuthPackage, tsLogonServer,
+    tsLogonWtsSession, tsLogonTime, tsLogonType, tsLogonUserName, tsSourceLUID,
+    tsSourceName, tsOrigin);
+
+  /// <summary>
+  ///  A class that internally holds cache and publicly holds events. Suitable
+  ///  for all tokens pointing the same kernel object.
+  /// </summary>
+  TTokenCacheAndEvents = class
+  private
+    IsCached: array [TTokenDataClass] of Boolean;
+    User: TGroup;
+    Groups: TGroupArray;
+    Privileges: TPrivilegeArray;
+    Owner: TSecurityIdentifier;
+    PrimaryGroup: TSecurityIdentifier;
+    Source: TTokenSource;
+    TokenType: TTokenTypeEx;
+    Statistics: TTokenStatistics;
+    RestrictedSids: TGroupArray;
+    Session: Cardinal;
+    SandboxInert: LongBool;
+    Origin: LUID;
+    Elevation: TTokenElevationType;
+    HasRestrictions: LongBool;
+    Integrity: TTokenIntegrity;
+    UIAccess: LongBool;
+    MandatoryPolicy: TMandatoryPolicy;
+    LogonSessionInfo: TLogonSessionInfo;
+
+    FOnSessionChange: TValuedEventHandler<Cardinal>;
+    FOnUIAccessChange: TValuedEventHandler<LongBool>;
     FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
     FOnPolicyChange: TValuedEventHandler<TMandatoryPolicy>;
     FOnPrivilegesChange: TValuedEventHandler<TPrivilegeArray>;
     FOnGroupsChange: TValuedEventHandler<TGroupArray>;
     FOnStatisticsChange: TValuedEventHandler<TTokenStatistics>;
-    class function CompareCardinals(Value1, Value2: Cardinal): Boolean; static;
-    class function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean; static;
-    class function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean; static;
-    class function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean; static;
-    class function CompareGroups(Value1, Value2: TGroupArray): Boolean; static;
-    class function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean; static;
-  private
-    FTokenObjectAddress: NativeUInt;
-    FReferenceCount: Integer;
-    FUpdateFlag: Integer;
-    procedure UpdateStatistics(Token: TToken);
-    procedure UpdatePrivileges(Token: TToken);
+    OnStringDataChange: array [TTokenStringClass] of TEventHandler<String>;
+
+    ObjectAddress: NativeUInt;
+    ReferenceCount: Integer;
   public
     constructor Create;
     destructor Destroy; override;
-    procedure BeginUpdate;
-    procedure EndUpdate;
-    property TokenObjectAddress: NativeUInt read FTokenObjectAddress;
+
     property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
+    property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
-    property OnUIAccessChange: TValuedEventHandler<Cardinal> read FOnUIAccessChange;
     property OnPolicyChange: TValuedEventHandler<TMandatoryPolicy> read FOnPolicyChange;
     property OnPrivilegesChange: TValuedEventHandler<TPrivilegeArray> read FOnPrivilegesChange;
     property OnGroupsChange: TValuedEventHandler<TGroupArray> read FOnGroupsChange;
     property OnStatisticsChange: TValuedEventHandler<TTokenStatistics> read FOnStatisticsChange;
+
+    procedure SubscribeString(StringClass: TTokenStringClass;
+      Listener: TEventListener<String>);
+    procedure UnSubscribeString(StringClass: TTokenStringClass;
+      Listener: TEventListener<String>);
   end;
 
-  TToken = class
-  strict private
-    procedure SetCaption(const Value: String);
-    function GetAccess: CanFail<ACCESS_MASK>;
-    function GetObjAddress: NativeUInt;
-    function GetUser: CanFail<TGroup>;
-    function GetGroups: CanFail<TGroupArray>;
-    function GetPrivileges: CanFail<TPrivilegeArray>;
-    function GetOwner: CanFail<TSecurityIdentifier>;
-    function GetPrimaryGroup: CanFail<TSecurityIdentifier>;
-    function GetTokenType: CanFail<TTokenTypeEx>;
-    function GetStatistics: CanFail<TTokenStatistics>;
-    function GetSource: CanFail<TTokenSource>;
-    function GetRestrictedSids: CanFail<TGroupArray>;
-    function GetSandboxInert: CanFail<LongBool>;
-    function GetTokenOrigin: CanFail<Int64>;
-    function GetElevation: CanFail<TTokenElevationType>;
-    function GetLinkedToken: CanFail<TToken>;
-    function GetHasRestrictions: CanFail<LongBool>;
-    function GetSession: Cardinal;
-    procedure SetSession(const Value: Cardinal);
-    function GetIntegrity: TTokenIntegrityLevel;
-    procedure SetIntegrity(const Value: TTokenIntegrityLevel);
-    function GetUIAccess: Cardinal;
-    procedure SetUIAccess(const Value: Cardinal);
-    function GetMandatoryPolicy: TMandatoryPolicy;
+  TToken = class;
+
+  /// <summary>
+  ///  A structure that implements an interface of quering and setting token
+  ///  information classes.
+  /// </summary>
+  TTokenData = record
+  private
+    Token: TToken; // Owner
+    procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
-  strict protected
-    function GetFixedSize<ResultType>(InfoClass: TTokenInformationClass):
-      CanFail<ResultType>;
-    procedure SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
-      Value: ResultType);
+    procedure SetSession(const Value: Cardinal);
+    procedure SetUIAccess(const Value: LongBool);
+    function GetElevation: TTokenElevationType;
+    function GetGroups: TGroupArray;
+    function GetHasRestrictions: LongBool;
+    function GetIntegrity: TTokenIntegrity;
+    function GetMandatoryPolicy: TMandatoryPolicy;
+    function GetOrigin: LUID;
+    function GetOwner: TSecurityIdentifier;
+    function GetPrimaryGroup: TSecurityIdentifier;
+    function GetPrivileges: TPrivilegeArray;
+    function GetRestrictedSids: TGroupArray;
+    function GetSandboxInert: LongBool;
+    function GetSession: Cardinal;
+    function GetSource: TTokenSource;
+    function GetStatistics: TTokenStatistics;
+    function GetTokenType: TTokenTypeEx;
+    function GetUIAccess: LongBool;
+    function GetUser: TGroup;
+    function GetLogonSessionInfo: TLogonSessionInfo;
+    procedure InvokeStringEvent(StringClass: TTokenStringClass);
+  public
+    property User: TGroup read GetUser;                                         // class 1
+    property Groups: TGroupArray read GetGroups;                                // class 2
+    property Privileges: TPrivilegeArray read GetPrivileges;                    // class 3
+    property Owner: TSecurityIdentifier read GetOwner;                          // class 4 #settable
+    property PrimaryGroup: TSecurityIdentifier read GetPrimaryGroup;            // class 5 #settable
+    // TODO: class 6: DefaultDacl #settable
+    property Source: TTokenSource read GetSource;                               // classes 7 & 8
+    property TokenTypeInfo: TTokenTypeEx read GetTokenType;                     // class 9
+    property Statistics: TTokenStatistics read GetStatistics;                   // class 10
+    property RestrictedSids: TGroupArray read GetRestrictedSids;                // class 11
+    property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
+    // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
+    // TODO: class 14 SessionReference #settable (and not gettable?)
+    property SandboxInert: LongBool read GetSandboxInert;                       // class 15
+    // TODO -cEnhancement: class 16 TokenAuditPolicy #settable
+    property Origin: LUID read GetOrigin;                                       // class 17 #settable
+    property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
+    // LinkedToken (class 19 #settable) is exported directly by TToken
+    property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
+    // TODO: class 22 AccessInformation (depends on OS version, duplicates most of the info)
+    // TODO: class 23 & 24 Virtualization #settable (both)
+    property Integrity: TTokenIntegrity read GetIntegrity;                      // class 25 #settable
+    property IntegrityLevel: TTokenIntegrityLevel write SetIntegrityLevel;
+    property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
+    property MandatoryPolicy: TMandatoryPolicy read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
+    property LogonSessionInfo: TLogonSessionInfo read GetLogonSessionInfo;
 
-    /// <remarks> The buffer should be freed using FreeMem. </remarks>
-    function QueryVariableBuffer(InfoClass: TTokenInformationClass):
-      CanFail<Pointer>;
-    function QuerySid(InfoClass: TTokenInformationClass):
-      CanFail<TSecurityIdentifier>;
-    function QueryGroups(InfoClass: TTokenInformationClass):
-      CanFail<TGroupArray>;
+    /// <summary>
+    ///  Ensure that the required value is in the cache and retrieves it if
+    ///  necessary.
+    /// </summary>
+    function Query(DataClass: TTokenDataClass): Boolean;
 
-    /// <remarks>
-    ///  The memory of each item should be freed with <c>LocalFree</c>.
-    /// </remarks>
-    class function ConvertGroupArrayToSIDs(Groups: TGroupArray):
-      TSIDAndAttributesArray; static;
-    class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
-  protected
-    var hToken: THandle;
-    var FOrigin: THandleInformation;
-    var FCaption: String;
-    var FOnCanClose: TEventHandler<TToken>;
-    var FOnClose: TEventHandler<TToken>;
-    var FOnCaptionChange: TValuedEventHandler<String>;
+    /// <summary>
+    ///  Forcibly update the cache by retrieving it regardless of the cache
+    ///  state.
+    /// </summary>
+    function ReQuery(DataClass: TTokenDataClass): Boolean;
+
+    /// <summary> Get a string representation of an info class. </summary>
+    function QueryString(StringClass: TTokenStringClass;
+      Detailed: Boolean = False): String;
+  end;
+
+  /// <summary>
+  ///  A class to track all the tokens and to manage their cache and events.
+  /// </summary>
+  TTokenFactory = class
+    /// <summaty>
+    ///  We need to track all the handles to find out when new ones are sent to
+    ///  our process by other instances of Token Universe.
+    /// </summary>
+    class var HandleMapping: TDictionary<THandle,TToken>;
 
     /// <summary>
     ///  Different handles pointing to the same kernel objects must be linked to
-    ///  the same event handlers. This value is a mapping of each opened kernel
-    ///  object address to an event associated with it.
+    ///  the same cache/event system. This value maps each opened kernel object
+    ///  address to a cache/event system (that maitains reference counting).
     /// </summary>
-    class var EventMapping: TDictionary<NativeUInt, TTokenEvents>;
-    class constructor CreateEventMapping;
-    class destructor DestroyEventMapping;
-    var FEvents: TTokenEvents;
+    class var CacheMapping: TDictionary<NativeUInt, TTokenCacheAndEvents>;
+
+    class constructor CreateTokenFactory;
+    class destructor DestroyTokenFactory;
+
     /// <remarks>
-    ///  This procedure should be called after setting <c>hToken</c> field but
-    ///  before invoking any events.
+    ///  All tokens must register themselves at creation. The handle must be
+    ///  already valid at that point.
     /// </remarks>
-    procedure InitializeEvents;
-    procedure FinalizeEvents;
+    class procedure RegisterToken(Token: TToken); static;
+
+    /// <remarks>
+    ///  All tokens must call it on destruction.
+    /// </remarks>
+    class procedure UnRegisterToken(Token: TToken); static;
+  end;
+
+  {-------------------  TToken object definition  ---------------------------}
+
+  /// <summary>
+  ///  Token Universe representation of an opend token handle.
+  /// </summary>
+  TToken = class
+  private
+    procedure SetCaption(const Value: String);
+  protected
+    hToken: THandle;
+    FHandleInformation: THandleInformation;
+    FInfoClassData: TTokenData;
+    Cache: TTokenCacheAndEvents;
+
+    FCaption: String;
+    FOnCaptionChange: TValuedEventHandler<String>;
+    FOnCanClose: TEventHandler<TToken>;
+    FOnClose: TEventHandler<TToken>;
+  protected
+
+    {---  TToken routines to query / set data for token info classes  ---- }
+
+    /// <summary> Queries a fixed-size info class. </summary>
+    /// <remarks>
+    ///  The function doesn't write to <paramref name="Data"/> parameter
+    ///  if it fails.
+    /// </remarks>
+    function QueryFixedSize<ResultType>(InfoClass: TTokenInformationClass;
+      out Data: ResultType): Boolean;
+
+    /// <summary> Sets a fixed-size info class. </summary>
+    /// <exception cref="TU.Common.ELocatedOSError">
+    ///  Can raise <see cref="TU.Common.ELocatedOSError"/>.
+    /// </exception>
+    procedure SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
+      const Value: ResultType);
+
+    /// <summary> Queries a variable-size info class. </summary>
+    /// <param name="Status">
+    ///   Boolean that saves the result of the operation.
+    /// </param>
+    /// <remarks>
+    ///   The buffer that us returned as a function value must be freed after
+    ///   usege by calling <see cref="System.FreeMem"/>.
+    /// </remarks>
+    function QueryVariableSize(InfoClass: TTokenInformationClass;
+      out Status: Boolean): Pointer;
+
+    /// <summary> Queries a security identifier. </summary>
+    /// <remarks>
+    ///  The function doesn't write to <paramref name="Sid"/> parameter
+    ///  if it fails.
+    /// </remarks>
+    function QuerySid(InfoClass: TTokenInformationClass;
+      out Sid: TSecurityIdentifier): Boolean;
+
+    /// <summary> Queries a security identifier and attributes. </summary>
+    /// <remarks>
+    ///  The function doesn't write to <paramref name="Group"/> parameter
+    ///  if it fails.
+    /// </remarks>
+    function QuerySidAndAttributes(InfoClass: TTokenInformationClass;
+      out Group: TGroup): Boolean;
+
+    /// <summary> Queries a security identifier and attributes array. </summary>
+    /// <remarks>
+    ///  The function doesn't write to <paramref name="GroupArray"/> parameter
+    ///  if it fails.
+    /// </remarks>
+    function QueryGroups(InfoClass: TTokenInformationClass;
+      out GroupArray: TGroupArray): Boolean;
+
+    /// <summary>
+    ///  Converts an array of groups from our
+    ///  <see cref="TU.Tokens.Types.TSecurityIdentifier"/> format to Winapi's
+    ///  <see cref="Winapi.PSID"/> array.
+    /// </summary>
+    /// <remarks>
+    ///  The memory of each item should be freed by calling
+    ///  <see cref="FreeSidArray"/>.
+    /// </remarks>
+    class function ConvertGroupArrayToSIDs(Groups: TGroupArray):
+      TSIDAndAttributesArray; static;
+
+    /// <summary>
+    ///  Frees memory previously allocated by
+    ///  <see cref="ConvertGroupArrayToSIDs"/>.
+    /// </summary>
+    class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
   public
+
+    {--------------------  TToken public section ---------------------------}
+
+    property Handle: THandle read hToken;
+    property HandleInformation: THandleInformation read FHandleInformation;
+
+    property InfoClass: TTokenData read FInfoClassData;
+    property Events: TTokenCacheAndEvents read Cache;
+
+    property Caption: String read FCaption write SetCaption;
+    property OnCaptionChange: TValuedEventHandler<String> read FOnCaptionChange;
+
+    /// <summary>
+    ///  The event is called to test whether the token can be destroyed.
+    ///  The listener can deny object destruction by calling
+    ///  <see cref="System.SysUtils.EAbort"/>.
+    /// </summary>
+    property OnCanClose: TEventHandler<TToken> read FOnCanClose;
+
+    /// <summary>
+    ///  Asks all subscribed event listeners if the token can be freed.
+    /// </summary>
+    /// <exception cref="System.SysUtils.EAbort">
+    ///  Can raise <see cref="System.SysUtils.EAbort"/>.
+    /// </exception>
+    function CanBeFreed: Boolean;
+
+    /// <summary> The event is called on token destruction. </summary>
+    /// <remarks> Be aware of exceptions at this point. </remarks>
+    property OnClose: TEventHandler<TToken> read FOnClose;
+    destructor Destroy; override;
+
+    procedure PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
+      Action: TPrivilegeAdjustAction);
+    procedure GroupAdjust(GroupArray: TGroupArray; Action: TGroupAdjustAction);
+    function SendHandleToProcess(PID: Cardinal): NativeUInt;
+  public
+
+    {--------------------  TToken constructors  ----------------------------}
+
+    /// All the constructors can raise <see cref="TU.Common.ELocatedOSError"/>.
+
+    /// <summary>
+    ///  Registers in the factory and initializes cache.
+    /// </summary>
+    procedure AfterConstruction; override;
+
+    /// <summary> General purpuse constructor. </summary>
+    /// <exception> This constructor doesn't raise any exceptions. </exception>
+    constructor Create(Handle: THandle; Caption: String);
+
+    /// <summary>
+    ///  Create a TToken object using inherited handle.
+    /// </summary>
+    constructor CreateByHandle(HandleInfo: THandleInformation);
+
     /// <summary> Opens a token of current process. </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
-    constructor CreateFromCurrent;
+    constructor CreateOpenCurrent;
 
     /// <summary> Opens a token of another process. </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
-    constructor CreateFromProcess(PID: Cardinal);
+    constructor CreateOpenProcess(PID: Cardinal);
 
-    /// <summary> Creates a duplicate of a token. </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
-    constructor CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
+    /// <summary> Duplicates a token. </summary>
+    constructor CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
       TokenTypeEx: TTokenTypeEx);
 
-    /// <summary> Duplicates a handle. The result handle references for the same
-    ///   token object as the source handle. </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
+    /// <summary>
+    ///  Duplicates a handle. The result references for the same kernel object.
+    /// </summary>
     constructor CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
       SameAccess: Boolean);
 
     /// <summary>
-    ///   Tries to duplicate a token handle from another process.
+    ///  Queries a token of the specified Windows Terminal Session.
     /// </summary>
-    /// <remarks>
-    ///   If <paramref name="hProcess"/> is zero then the object represents
-    ///   a pseudo-token. In this case only access and kernel object pointer can
-    ///   be successfully queried.
-    /// </remarks>
-    /// <exception> This constructor doesn't raise any exceptions. </exception>
-    constructor CreateFromHandleItem(Item: THandleInformation; hProcess: THandle);
-
-    /// <summary>
-    ///  Uses <c>WTSQueryUserToken</c> to obtain a token of the specified
-    ///  session.
-    /// </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
+    /// <remarks> Requires SeTcbPrivilege. </remarks>
     constructor CreateQueryWts(SessionID: Cardinal);
 
-    /// <summary> Uses <c>CreateRestrictedToken</c>. </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
+    /// <summary> Creates a restricted version of the token. </summary>
     constructor CreateRestricted(SrcToken: TToken; Flags: Cardinal;
       SIDsToDisabe, SIDsToRestrict: TGroupArray;
       PrivilegesToDelete: TPrivilegeArray);
 
     /// <summary> Logons the user with the specified credentials. </summary>
-    /// <exception cref="EOSError"> Can raise EOSError. </exception>
-    constructor CreateWithLogon(LogonType, LogonProvider: Cardinal;
-      Domain, User: String; Password: PWideChar; AddGroups: TGroupArray);
+    constructor CreateWithLogon(LogonType: TLogonType;
+      LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
+      AddGroups: TGroupArray);
 
     /// <summary>
-    ///  Asks all subscribed event listeners if the token can be freed.
+    ///  Opens a linked token for the current token.
+    ///  Requires SeTcbPrivilege to open a primary token.
     /// </summary>
-    /// <exception cref="EAbort"> Can raise EAbort. </exception>
-    function CanBeFreed: Boolean;
-    destructor Destroy; override;
-
-    function IsValidToken: Boolean;
-    property Handle: THandle read hToken;
-    property Access: CanFail<ACCESS_MASK> read GetAccess;
-    property ObjAddress: NativeUInt read GetObjAddress;
-    property Caption: String read FCaption write SetCaption;
-
-    /// <summary>
-    ///  Asks all event listeners for confirmation before closing the token.
-    ///  Any event listener can call <c>Abort;</c> to prevent further actions.
-    /// </summary>
-    property OnCanClose: TEventHandler<TToken> read FOnCanClose;
-    property OnClose: TEventHandler<TToken> read FOnClose;
-    property OnCaptionChange: TValuedEventHandler<String> read FOnCaptionChange;
-    property Events: TTokenEvents read FEvents write FEvents;
-
-    { Token Information classes }
-
-    function TryGetSession: CanFail<Cardinal>;
-    function TryGetIntegrity: CanFail<TTokenIntegrity>;
-    function TryGetUIAccess: CanFail<Cardinal>;
-    function TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
-
-    property User: CanFail<TGroup> read GetUser;                                // class 1
-    property Groups: CanFail<TGroupArray> read GetGroups;                       // class 2
-    property Privileges: CanFail<TPrivilegeArray> read GetPrivileges;           // class 3
-    property Owner: CanFail<TSecurityIdentifier> read GetOwner;                 // class 4 #settable
-    property PrimaryGroup: CanFail<TSecurityIdentifier> read GetPrimaryGroup;   // class 5 #settable
-    // TODO: class 6: DefaultDacl #settable
-    property Source: CanFail<TTokenSource> read GetSource;                      // classes 7 & 8
-    property TokenTypeInfo: CanFail<TTokenTypeEx> read GetTokenType;            // class 9
-    property Statistics: CanFail<TTokenStatistics> read GetStatistics;          // class 10
-    property RestrictedSids: CanFail<TGroupArray> read GetRestrictedSids;       // class 11
-    property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
-    // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
-    // TODO: class 14 SessionReference #settable (and not gettable?)
-    property SandboxInert: CanFail<LongBool> read GetSandboxInert;              // class 15
-    // TODO -cEnhancement: class 16 TokenAuditPolicy #settable
-    property TokenOrigin: CanFail<Int64> read GetTokenOrigin;                   // class 17 #settable
-    property Elevation: CanFail<TTokenElevationType> read GetElevation;         // classes 18 & 20
-    property LinkedToken: CanFail<TToken> read GetLinkedToken;                  // class 19 #settable
-    property HasRestrictions: CanFail<LongBool> read GetHasRestrictions;        // class 21
-    // TODO: class 22 AccessInformation (depends on OS version, duplicates most of the info)
-    // TODO: class 23 & 24 Virtualization #settable (both)
-    property Integrity: TTokenIntegrityLevel read GetIntegrity write SetIntegrity; // class 25 #settable
-    property UIAccess: Cardinal read GetUIAccess write SetUIAccess;             // class 26 #settable
-    property MandatoryPolicy: TMandatoryPolicy read GetMandatoryPolicy write SetMandatoryPolicy; // class 27 #settable
-
-    { Actions }
-
-    function SendHandleToProcess(PID: Cardinal): NativeUInt;
-    procedure PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
-      Action: TPrivilegeAdjustAction);
-    procedure GroupAdjust(GroupArray: TGroupArray; Action: TGroupAdjustAction);
+    function OpenLinkedToken: CanFail<TToken>;
   end;
+
+{----------------------  End of interface section  ----------------------------}
 
 implementation
 
 uses
-  TU.NativeAPI, TU.WtsApi;
+  System.TypInfo, TU.NativeAPI, TU.WtsApi, TU.Processes;
+
+const
+  /// <summary> Stores which data class a string class depends on. </summary>
+  StringClassToDataClass: array [TTokenStringClass] of TTokenDataClass =
+    (tdNone, tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
+    tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
+    tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
+    tdTokenSandBoxInert,tdTokenHasRestrictions, tdTokenStatistics,
+    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
+    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdLogonInfo,
+    tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo,
+    tdTokenSource, tdTokenSource, tdTokenOrigin);
+
+{ TTokenCacheAndEvents }
+
+procedure CheckAbandoned(Value: Integer; Name: String);
+begin
+  if Value > 0 then
+    OutputDebugString(PChar('Abandoned ' + Name));
+end;
+
+constructor TTokenCacheAndEvents.Create;
+begin
+  inherited;
+  FOnSessionChange.ComparisonFunction := CompareCardinals;
+  FOnUIAccessChange.ComparisonFunction := CompareLongBools;
+  FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
+  FOnPolicyChange.ComparisonFunction := ComparePolicies;
+  FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
+  FOnGroupsChange.ComparisonFunction := CompareGroups;
+  FOnStatisticsChange.ComparisonFunction := CompareStatistics;
+end;
+
+destructor TTokenCacheAndEvents.Destroy;
+var
+  i: TTokenStringClass;
+begin
+  CheckAbandoned(FOnSessionChange.Count, 'OnSessionChange');
+  CheckAbandoned(FOnIntegrityChange.Count, 'OnIntegrityChange');
+  CheckAbandoned(FOnUIAccessChange.Count, 'OnUIAccessChange');
+  CheckAbandoned(FOnPolicyChange.Count, 'OnPolicyChange');
+  CheckAbandoned(FOnPrivilegesChange.Count, 'OnPrivilegesChange');
+  CheckAbandoned(FOnGroupsChange.Count, 'OnGroupsChange');
+  CheckAbandoned(FOnStatisticsChange.Count, 'OnStatisticsChange');
+
+  for i := Low(TTokenStringClass) to High(TTokenStringClass) do
+    CheckAbandoned(OnStringDataChange[i].Count,
+      GetEnumName(TypeInfo(TTokenStringClass), Integer(i)));
+
+  inherited;
+end;
+
+procedure TTokenCacheAndEvents.SubscribeString(StringClass: TTokenStringClass;
+  Listener: TEventListener<String>);
+begin
+  OnStringDataChange[StringClass].Add(Listener);
+end;
+
+procedure TTokenCacheAndEvents.UnSubscribeString(StringClass: TTokenStringClass;
+  Listener: TEventListener<String>);
+begin
+  OnStringDataChange[StringClass].Delete(Listener);
+end;
+
+{ TTokenFactory }
+
+class constructor TTokenFactory.CreateTokenFactory;
+begin
+  HandleMapping := TDictionary<THandle, TToken>.Create;
+  CacheMapping := TDictionary<NativeUInt, TTokenCacheAndEvents>.Create;
+end;
+
+class destructor TTokenFactory.DestroyTokenFactory;
+begin
+  CheckAbandoned(CacheMapping.Count, 'CacheMapping');
+  CheckAbandoned(HandleMapping.Count, 'HandleMapping');
+
+  CacheMapping.Destroy;
+  HandleMapping.Destroy;
+end;
+
+class procedure TTokenFactory.RegisterToken(Token: TToken);
+begin
+  // Save TToken object for the handle
+  HandleMapping.Add(Token.hToken, Token);
+
+  // Each token need an event handler to be assigned to it. These event handlers
+  // might be the same objects for different TToken instances. It happens so
+  // when we have several handles pointing the same kernel object.
+
+  // Assign an existing TTokenCacheAndEvents to the token and maintain reference
+  // counter
+  if CacheMapping.TryGetValue(Token.HandleInformation.KernelObjectAddress,
+      {out} Token.Cache) then
+    Inc(Token.Cache.ReferenceCount)
+  else
+  begin
+    // Or create a new one
+    Token.Cache := TTokenCacheAndEvents.Create;
+    Token.Cache.ObjectAddress := Token.HandleInformation.KernelObjectAddress;
+    Token.Cache.ReferenceCount := 1;
+    CacheMapping.Add(Token.HandleInformation.KernelObjectAddress, Token.Cache);
+  end;
+end;
+
+class procedure TTokenFactory.UnRegisterToken(Token: TToken);
+begin
+  // If the token initialization was not finished because of an exception in a
+  // constuctor then the token was not registered and the cleanup is not needed
+  if not Assigned(Token.Cache) then
+    Exit;  
+
+  // Dereference an event handler
+  Dec(Token.Cache.ReferenceCount);
+
+  // Delete it if no references are left
+  if Token.Cache.ReferenceCount = 0 then
+  begin
+    CacheMapping.Remove(Token.Cache.ObjectAddress);
+    Token.Cache.Free;
+  end;
+
+  // The handle is going to be closed
+  HandleMapping.Remove(Token.hToken);
+end;
 
 { TToken }
 
+procedure TToken.AfterConstruction;
+var
+  HandleList: THandleList;
+  i: integer;
+begin
+  inherited;
+
+  // Init ower of InfoClass field
+  FInfoClassData.Token := Self;
+
+  // Firstly we need to obtain a kernel object address to be able to link token
+  // cache. The only way I know to do so is to make a snapshot of all
+  // system/process handles and iterate through them.
+
+  // This information might be already known (from a constructor)
+  if HandleInformation.KernelObjectAddress = 0 then
+  begin
+    HandleList := THandleList.CreateOnly(GetCurrentProcessId);
+
+    for i := 0 to HandleList.Count - 1 do
+      if HandleList[i].Handle = hToken then
+      begin
+        FHandleInformation := HandleList[i];
+        Break;
+      end;
+
+    HandleList.Free;
+  end;
+  
+  // This should not happen and I do not know what to do here
+  if FHandleInformation.KernelObjectAddress = 0 then
+    raise Exception.Create('Can not obtain kernel object address of a token');
+
+  // TODO: Test cleanup
+
+  // Register in the factory and initialize token Cache
+  TTokenFactory.RegisterToken(Self);
+end;
+
 function TToken.CanBeFreed: Boolean;
 begin
+  // Check whether someone wants to raise EAbort to deny token destruction
   OnCanClose.Invoke(Self);
   Result := True;
 end;
@@ -245,20 +563,28 @@ class function TToken.ConvertGroupArrayToSIDs(
 var
   i: integer;
 begin
+  // Note that ConvertStringSidToSid allocates memory that we need to clean up
+  // by calling LocalFree. It is done inside FreeSidArray routine.
   SetLength(Result, Length(Groups));
   for i := 0 to High(Result) do
     ConvertStringSidToSid(PWideChar(Groups[i].SecurityIdentifier.SID),
       Result[i].Sid);
 end;
 
-constructor TToken.CreateDuplicate(SrcToken: TToken; Access: ACCESS_MASK;
-  TokenTypeEx: TTokenTypeEx);
+constructor TToken.Create(Handle: THandle; Caption: String);
 begin
-  WinCheck(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
-    TokenTypeEx.SecurityImpersonationLevel, TokenTypeEx.TokenTypeValue, hToken),
-    'DuplicateTokenEx', SrcToken);
-  FCaption := SrcToken.Caption + ' (copy)';
-  InitializeEvents;
+  hToken := Handle;
+  FCaption := Caption;;
+end;
+
+constructor TToken.CreateByHandle(HandleInfo: THandleInformation);
+begin
+  if HandleInfo.ContextPID <> GetCurrentProcessId then
+    raise ENotImplemented.Create('TODO');
+
+  hToken := HandleInfo.Handle;
+  FHandleInformation := HandleInfo;
+  FCaption := Format('Inherited %d [0x%x]', [hToken, hToken]);
 end;
 
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
@@ -266,76 +592,70 @@ constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
 const
   Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
 begin
+  { TODO: DuplicateHandle doesn't work well with MAXIMUM_ALLOWED access.
+    We need to implement it manually. }
+
   WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
     GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
     'DuplicateHandle');
 
-  if (SrcToken.FOrigin.ContextPID = GetCurrentProcessId) or
-    (SrcToken.FOrigin.ContextPID = 0) then
-    FCaption := SrcToken.Caption + ' (reference)'
-  else
-    FCaption := Format('Referenced 0x%x from PID %d', [SrcToken.FOrigin.Handle,
-      SrcToken.FOrigin.ContextPID]);
-
-  InitializeEvents;
+  FCaption := SrcToken.Caption + ' (ref)'
 end;
 
-class constructor TToken.CreateEventMapping;
+constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
+  TokenTypeEx: TTokenTypeEx);
 begin
-  EventMapping := TDictionary<NativeUInt, TTokenEvents>.Create;
+  // TODO: NtDuplicateToken with Effective flag
+  WinCheck(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
+    TokenTypeEx.SecurityImpersonationLevel, TokenTypeEx.TokenTypeValue, hToken),
+    'DuplicateTokenEx', SrcToken);
+
+  FCaption := SrcToken.Caption + ' (copy)';
 end;
 
-constructor TToken.CreateFromCurrent;
+constructor TToken.CreateOpenCurrent;
 begin
   WinCheck(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
     'OpenProcessToken');
+
   FCaption := 'Current process';
-  InitializeEvents;
 end;
 
-constructor TToken.CreateFromHandleItem(Item: THandleInformation; hProcess: THandle);
-begin
-  hToken := 0;
-  FOrigin := Item;
-  FCaption := Format('Handle 0x%x (%d)', [Item.Handle, Item.Handle]);
-
-  if hProcess <> 0 then
-    DuplicateHandle(hProcess, Item.Handle, GetCurrentProcess, @hToken, 0, False,
-      DUPLICATE_SAME_ACCESS)
-  else
-    hToken := Item.Handle;
-
-  InitializeEvents;
-end;
-
-constructor TToken.CreateFromProcess(PID: Cardinal);
+constructor TToken.CreateOpenProcess(PID: Cardinal);
 var
   hProcess: THandle;
+  ProcessList: TProcessList;
 begin
-  hProcess := OpenProcess(MAXIMUM_ALLOWED, False, PID);
+  hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, PID);
   if hProcess = 0 then
     WinCheck(False, 'OpenProcess');
 
-  WinCheck(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
-    'OpenProcessToken');
-  FCaption := 'PID ' + IntToStr(PID);
+  try
+    WinCheck(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
+      'OpenProcessToken');
+  finally
+    CloseHandle(hProcess);
+  end;
 
-  InitializeEvents;
+  // To obtain the executable's name we snapshot process list on the system
+  ProcessList := TProcessList.Create;
+  FCaption := Format('%s [%d]', [ProcessList.FindName(PID), PID]);
+  ProcessList.Free;
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal);
 begin
   WinCheck(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
-  FCaption := Format('Token of session %d', [SessionID]);
-  InitializeEvents;
+  FCaption := Format('Session %d token', [SessionID]);
 end;
 
 constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
-      SIDsToDisabe, SIDsToRestrict: TGroupArray;
-      PrivilegesToDelete: TPrivilegeArray);
+  SIDsToDisabe, SIDsToRestrict: TGroupArray;
+  PrivilegesToDelete: TPrivilegeArray);
 var
   Disable, Restrict: TSIDAndAttributesArray;
 begin
+  // Prepare SID arrays of the suitable format
   Disable := ConvertGroupArrayToSIDs(SIDsToDisabe);
   Restrict := ConvertGroupArrayToSIDs(SIDsToRestrict);
   try
@@ -350,32 +670,40 @@ begin
     FreeSidArray(Disable);
     FreeSidArray(Restrict);
   end;
-  InitializeEvents;
 end;
 
-constructor TToken.CreateWithLogon(LogonType, LogonProvider: Cardinal; Domain,
-  User: String; Password: PWideChar; AddGroups: TGroupArray);
+constructor TToken.CreateWithLogon(LogonType: TLogonType;
+  LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
+  AddGroups: TGroupArray);
 var
   SIDs: TSIDAndAttributesArray;
   pGroups: PTokenGroups;
   i: integer;
 begin
+  // If the user doesn't ask us to add some groups to the token we can use
+  // simplier LogonUserW routine. Otherwise we use LogonUserExExW (that
+  // requires SeTcbPrivilege to add group membership)
+
   if Length(AddGroups) = 0 then
     WinCheck(LogonUserW(PWideChar(User), PWideChar(Domain), Password,
-      LogonType, LogonProvider, hToken), 'LogonUserW')
+      Cardinal(LogonType), Cardinal(LogonProvider), hToken), 'LogonUserW')
   else
   begin
+    // Convert the specified groups to an array of PSIDs
     SIDs := ConvertGroupArrayToSIDs(AddGroups);
+
+    // Allocate the memory for PTokenGroups buffer
     pGroups := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
       Length(AddGroups));
     try
+      // Copy SIDs along with their attributes
       pGroups.GroupCount := Length(SIDs);
       for i := 0 to High(SIDs) do
         pGroups.Groups[i] := SIDs[i];
 
       WinCheck(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
-        LogonType, LogonProvider, pGroups, hToken, nil, nil, nil, nil),
-        'LogonUserExExW');
+        Cardinal(LogonType), Cardinal(LogonProvider), pGroups, hToken, nil,
+        nil, nil, nil), 'LogonUserExExW');
     finally
       FreeMem(pGroups);
       FreeSidArray(SIDs);
@@ -383,12 +711,25 @@ begin
   end;
 
   FCaption := 'Logon of ' + User;
-  InitializeEvents;
 end;
 
 destructor TToken.Destroy;
 begin
-  OnClose.Invoke(Self);
+  // Inform event listeners that we are closing the handle
+  try
+    OnClose.Invoke(Self);
+  except
+    on E: Exception do
+    begin
+      // This is really bad. At least inform the debugger...
+      OutputDebugString(PChar('Token.OnClose: ' + E.Message));
+      raise;
+    end;
+  end;
+
+  // Unregister from the factory before we close the handle
+  TTokenFactory.UnRegisterToken(Self);
+
   if hToken <> 0 then
   try
     CloseHandle(hToken); // A protected handle may cause an exception
@@ -396,8 +737,6 @@ begin
   except
     ; // but destructor should always succeed
   end;
-  if Assigned(FEvents) then
-    FinalizeEvents;
 
   if FOnCanClose.Count > 0 then
     OutputDebugString('Abandoned OnCanClose');
@@ -409,239 +748,14 @@ begin
   inherited;
 end;
 
-class destructor TToken.DestroyEventMapping;
-begin
-  if EventMapping.Count > 0 then
-    OutputDebugString('DestroyEventMapping:: some element are still in the list');
-
-  EventMapping.Free;
-end;
-
-procedure TToken.FinalizeEvents;
-begin
-  Dec(FEvents.FReferenceCount);
-  if FEvents.FReferenceCount = 0 then
-  begin
-    EventMapping.Remove(FEvents.FTokenObjectAddress);
-    FEvents.Free;
-  end;
-end;
-
 class procedure TToken.FreeSidArray(SIDs: TSIDAndAttributesArray);
 var
   i: integer;
 begin
+  // The memory was previously allocated by ConvertStringSidToSid.
   for i := 0 to High(SIDs) do
     if Assigned(SIDs[i].Sid) then
       LocalFree(NativeUInt(SIDs[i].Sid));
-end;
-
-function TToken.GetAccess: CanFail<ACCESS_MASK>;
-var
-  info: TObjectBasicInformaion;
-begin
-  Result.Init(Self);
-
-  // Pseudo-token mode
-  if hToken = 0 then
-    Exit(Result.Succeed(FOrigin.Access));
-
-  if Result.CheckNativeError(NtQueryObject(hToken, ObjectBasicInformation,
-    @info, SizeOf(info), nil), 'NtQueryObject') then
-    Result.Succeed(info.GrantedAccess);
-end;
-
-function TToken.GetElevation: CanFail<TTokenElevationType>;
-begin
-  Result := GetFixedSize<TTokenElevationType>(TokenElevationType);
-end;
-
-function TToken.GetFixedSize<ResultType>(
-  InfoClass: TTokenInformationClass): CanFail<ResultType>;
-var
-  ReturnLength: Cardinal;
-begin
-  Result.Init(Self);
-  Result.CheckError(GetTokenInformation(hToken, InfoClass, @Result.Value,
-    SizeOf(Result.Value), ReturnLength), GetterMessage(InfoClass));
-end;
-
-function TToken.GetGroups: CanFail<TGroupArray>;
-begin
-  Result := QueryGroups(TokenGroups);
-  if Events.OnGroupsChange.InvokeIfValid(Result) then
-    Events.UpdateStatistics(Self);
-end;
-
-function TToken.GetHasRestrictions: CanFail<LongBool>;
-begin
-  Result := GetFixedSize<LongBool>(TokenHasRestrictions);
-end;
-
-function TToken.GetIntegrity: TTokenIntegrityLevel;
-begin
-  Result := TryGetIntegrity.GetValueOrRaise.Level;
-end;
-
-function TToken.GetLinkedToken: CanFail<TToken>;
-begin
-  Result.Init(Self);
-
-  with GetFixedSize<THandle>(TokenLinkedToken) do
-    if IsValid then
-    begin
-      Result.Value := TToken.Create;
-      Result.Value.hToken := Value;
-      Result.Value.FCaption := 'Linked token for ' + Caption;
-      Result.Value.InitializeEvents;
-      Result.Succeed;
-    end
-    else
-    begin
-      Result.IsValid := False;
-      Result.ErrorCode := ErrorCode;
-      Result.ErrorOrigin := ErrorOrigin;
-    end;
-end;
-
-function TToken.GetMandatoryPolicy: TMandatoryPolicy;
-begin
-  Result := TryGetMandatoryPolicy.GetValueOrRaise;
-end;
-
-function TToken.GetObjAddress: NativeUInt;
-var
-  HandleList: THandleList;
-  i: integer;
-begin
-  if FOrigin.KernelObjectAddress = 0 then // not yet obtained
-  begin
-    HandleList := THandleList.CreateOnly(GetCurrentProcessId);
-
-    for i := 0 to HandleList.Count - 1 do
-      if HandleList[i].Handle = hToken then
-      begin
-        FOrigin := HandleList[i];
-        Break;
-      end;
-
-    HandleList.Free;
-  end;
-
-  Result := FOrigin.KernelObjectAddress
-end;
-
-function TToken.GetOwner: CanFail<TSecurityIdentifier>;
-begin
-  Result := QuerySid(TokenOwner);
-end;
-
-function TToken.GetPrimaryGroup: CanFail<TSecurityIdentifier>;
-begin
-  Result := QuerySid(TokenPrimaryGroup);
-end;
-
-function TToken.GetPrivileges: CanFail<TPrivilegeArray>;
-var
-  Buffer: PTokenPrivileges;
-  i: integer;
-begin
-  with Result.CopyResult(QueryVariableBuffer(TokenPrivileges)) do
-    if IsValid then
-    begin
-      Buffer := Value;
-      try
-        SetLength(Result.Value, Buffer.PrivilegeCount);
-        for i := 0 to Buffer.PrivilegeCount - 1 do
-          Result.Value[i] := Buffer.Privileges[i];
-      finally
-        FreeMem(Buffer);
-      end;
-    end;
-  if Events.OnPrivilegesChange.InvokeIfValid(Result) then
-    Events.UpdateStatistics(Self);
-end;
-
-function TToken.GetRestrictedSids: CanFail<TGroupArray>;
-begin
-  Result := QueryGroups(TokenRestrictedSids);
-end;
-
-function TToken.GetSandboxInert: CanFail<LongBool>;
-begin
-  Result := GetFixedSize<LongBool>(TokenSandBoxInert);
-end;
-
-function TToken.GetSession: Cardinal;
-begin
-  Result := TryGetSession.GetValueOrRaise;
-end;
-
-function TToken.GetSource: CanFail<TTokenSource>;
-begin
-  Result := GetFixedSize<TTokenSource>(TokenSource);
-end;
-
-function TToken.GetStatistics: CanFail<TTokenStatistics>;
-begin
-  Result := GetFixedSize<TTokenStatistics>(TokenStatistics);
-  Events.OnStatisticsChange.InvokeIfValid(Result);
-end;
-
-function TToken.GetTokenOrigin: CanFail<Int64>;
-begin
-  Result := GetFixedSize<Int64>(TTokenInformationClass.TokenOrigin);
-end;
-
-function TToken.GetTokenType: CanFail<TTokenTypeEx>;
-var
-  ReturnValue: Cardinal;
-  TokenTypeValue: TTokenType;
-  Impersonation: TSecurityImpersonationLevel;
-begin
-  Result.Init(Self);
-
-  if not Result.CheckError(GetTokenInformation(hToken, TokenType,
-    @TokenTypeValue, SizeOf(TokenTypeValue), ReturnValue),
-    GetterMessage(TokenType)) then
-    Exit;
-
-  if TokenTypeValue = TokenImpersonation then
-  begin
-    if Result.CheckError(GetTokenInformation(hToken, TokenImpersonationLevel,
-    @Impersonation, SizeOf(Impersonation), ReturnValue),
-    GetterMessage(TokenImpersonationLevel)) then
-      Result.Value := TTokenTypeEx(Impersonation);
-  end
-  else
-    Result.Value := ttPrimary;
-end;
-
-function TToken.GetUIAccess: Cardinal;
-begin
-  Result := TryGetUIAccess.GetValueOrRaise;
-end;
-
-function TToken.GetUser: CanFail<TGroup>;
-var
-  Buffer: PSIDAndAttributes;
-begin
-  with Result.CopyResult(QueryVariableBuffer(TokenUser)) do
-    if IsValid then
-    begin
-      Buffer := Value;
-      try
-        Result.Value.SecurityIdentifier := TSecurityIdentifier.CreateFromSid(
-          Buffer.Sid);
-
-        if Buffer.Attributes = 0 then // 0 is default here and means "Enabled"
-          Result.Value.Attributes := GroupExUser
-        else // But it can also be "Use for deny only"
-          Result.Value.Attributes := TGroupAttributes(Buffer.Attributes);
-      finally
-        FreeMem(Buffer);
-      end;
-    end;
 end;
 
 procedure TToken.GroupAdjust(GroupArray: TGroupArray; Action:
@@ -651,45 +765,45 @@ const
 var
   i: integer;
   GroupsArray: TSIDAndAttributesArray;
-  NewState: PTokenGroups;
+  Buffer: PTokenGroups;
 begin
-  NewState := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
+  // Allocate enought memory to hold all the groups
+  Buffer := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
     Length(GroupArray));
-  NewState.GroupCount := Length(GroupArray);
+  Buffer.GroupCount := Length(GroupArray);
 
+  // Allocate all PSIDs and copy them to the buffer
   GroupsArray := ConvertGroupArrayToSIDs(GroupArray);
   for i := 0 to High(GroupsArray) do
-    NewState.Groups[i] := GroupsArray[i];
+    Buffer.Groups[i] := GroupsArray[i];
 
+  // Set approriate attribes depending on action
   if Action = gaEnable then
-    for i := 0 to NewState.GroupCount - 1 do
-      NewState.Groups[i].Attributes := Cardinal(GroupEnabled);
+    for i := 0 to Buffer.GroupCount - 1 do
+      Buffer.Groups[i].Attributes := Cardinal(GroupEnabled);
+
   try
-    WinCheck(AdjustTokenGroups(hToken, IsResetFlag[Action], NewState, 0, nil,
+    WinCheck(AdjustTokenGroups(hToken, IsResetFlag[Action], Buffer, 0, nil,
       nil), 'AdjustTokenGroups', Self);
-    GetGroups; // query and notify event listeners
+
+    // Update the cache and notify event listeners
+    InfoClass.ReQuery(tdTokenGroups);
+    InfoClass.ReQuery(tdTokenStatistics);
   finally
-    FreeMem(NewState);
+    FreeMem(Buffer);
     FreeSidArray(GroupsArray);
   end;
 end;
 
-procedure TToken.InitializeEvents;
+function TToken.OpenLinkedToken: CanFail<TToken>;
+var
+  Handle: THandle;
 begin
-  if EventMapping.TryGetValue(ObjAddress, FEvents) then
-    Inc(FEvents.FReferenceCount)
-  else
-  begin
-    FEvents := TTokenEvents.Create;
-    FEvents.FTokenObjectAddress := ObjAddress;
-    FEvents.FReferenceCount := 1;
-    EventMapping.Add(ObjAddress, FEvents);
-  end;
-end;
+  Result.Init(Self);
 
-function TToken.IsValidToken: Boolean;
-begin
-  Result := hToken <> 0;
+  if Result.CheckError(QueryFixedSize<THandle>(TokenLinkedToken, Handle),
+    GetterMessage(TokenLinkedToken)) then
+    Result.Value := TToken.Create(Handle, 'Linked token for' + Caption);
 end;
 
 procedure TToken.PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
@@ -702,6 +816,7 @@ var
   BufferSize: Cardinal;
   i: integer;
 begin
+  // Allocate enought memory to hold all the privileges
   BufferSize := SizeOf(Cardinal) + SizeOf(TLUIDAndAttributes) *
     Length(PrivilegeArray);
 
@@ -718,84 +833,128 @@ begin
       nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
   finally
     FreeMem(Buffer);
-    GetPrivileges; // query and notify event listeners
+
+    // The function could modify privileges even without succeeding.
+    // Update the cache and notify event listeners.
+    InfoClass.ReQuery(tdTokenPrivileges);
+    InfoClass.ReQuery(tdTokenStatistics);
   end;
 end;
 
-function TToken.QueryGroups(InfoClass: TTokenInformationClass):
-  CanFail<TGroupArray>;
+function TToken.QueryFixedSize<ResultType>(InfoClass: TTokenInformationClass;
+  out Data: ResultType): Boolean;
+var
+  BufferData: ResultType;
+  ReturnLength: Cardinal;
+begin
+  // TODO: Save error code and error location
+  Result := GetTokenInformation(hToken, InfoClass, @BufferData,
+    SizeOf(ResultType), ReturnLength);
+
+  if Result then
+    Data := BufferData;
+end;
+
+function TToken.QueryGroups(InfoClass: TTokenInformationClass;
+  out GroupArray: TGroupArray): Boolean;
 var
   Buffer: PTokenGroups;
   i: integer;
 begin
-  with Result.CopyResult(QueryVariableBuffer(InfoClass)) do
-    if IsValid then
+  // PTokenGroups can point to a variable-sized memory
+  Buffer := QueryVariableSize(InfoClass, Result);
+
+  if Result then
+  try
+    SetLength(GroupArray, Buffer.GroupCount);
+
+    for i := 0 to Buffer.GroupCount - 1 do
     begin
-      Buffer := Value;
-      try
-        SetLength(Result.Value, Buffer.GroupCount);
-        for i := 0 to Buffer.GroupCount - 1 do
-        with Result.Value[i] do
-        begin
-          SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
-          Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
-        end;
-      finally
-        FreeMem(Buffer);
-      end;
+      // Each SID should be converted to a TSecurityIdentifier
+      GroupArray[i].SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
+      GroupArray[i].Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
     end;
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
-function TToken.QuerySid(InfoClass: TTokenInformationClass):
-  CanFail<TSecurityIdentifier>;
+function TToken.QuerySid(InfoClass: TTokenInformationClass;
+  out Sid: TSecurityIdentifier): Boolean;
 var
   Buffer: PTokenOwner; // aka TTokenPrimaryGroup aka PPSID
 begin
-  with Result.CopyResult(QueryVariableBuffer(InfoClass)) do
-    if IsValid then
-    begin
-      Buffer := Value;
-      try
-        Result.Value := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
-      finally
-        FreeMem(Buffer);
-      end;
-    end;
+  Buffer := QueryVariableSize(InfoClass, Result);
+  if Result then
+  try
+    Sid := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
-function TToken.QueryVariableBuffer(
-  InfoClass: TTokenInformationClass): CanFail<Pointer>;
+function TToken.QuerySidAndAttributes(InfoClass: TTokenInformationClass;
+  out Group: TGroup): Boolean;
+var
+  Buffer: PSIDAndAttributes;
+begin
+  Buffer := QueryVariableSize(InfoClass, Result);
+  if Result then
+  try
+    Group.SecurityIdentifier.CreateFromSid(Buffer.Sid);
+    Group.Attributes := TGroupAttributes(Buffer.Attributes);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+function TToken.QueryVariableSize(InfoClass: TTokenInformationClass;
+  out Status: Boolean): Pointer;
 var
   BufferSize, ReturnValue: Cardinal;
 begin
-  Result.Init(Self);
+  Status := False;
 
+  // Make a probe call to estimate a requied buffer size
   BufferSize := 0;
   GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
-  if not Result.CheckBuffer(BufferSize, GetterMessage(InfoClass)) then
+
+  // Check for errors and for too big buffers
+  if not WinTryCheckBuffer(BufferSize) then
     Exit;
 
-  Result.Value := AllocMem(BufferSize);
-  if not Result.CheckError(GetTokenInformation(hToken, InfoClass, Result.Value,
-    BufferSize, ReturnValue), GetterMessage(InfoClass)) then
+  // Allocate memory
+  Result := AllocMem(BufferSize);
+
+  // Query the info class again with a buffer enough to hold the data
+  Status := GetTokenInformation(hToken, InfoClass, Result, BufferSize,
+    ReturnValue);
+
+  // Clean up on failure
+  if not Status then
   begin
-    FreeMem(Result.Value);
-    Result.Value := nil;
+    FreeMem(Result);
+    Result := nil;
   end;
+
+  // Do not free the buffer on success. The caller must do it after use.
 end;
 
 function TToken.SendHandleToProcess(PID: Cardinal): NativeUInt;
 var
   hTargetProcess: THandle;
 begin
+  // Open target process
   hTargetProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
   WinCheck(LongBool(hTargetProcess), 'OpenProcess#PROCESS_DUP_HANDLE');
 
-  if not DuplicateHandle(GetCurrentProcess, hToken, hTargetProcess, @Result, 0,
-    False, DUPLICATE_SAME_ACCESS) then
-    WinCheck(False, 'DuplicateHandle')
-  else
+  try
+    // Send then handle
+    WinCheck(DuplicateHandle(GetCurrentProcess, hToken, hTargetProcess, @Result,
+      0, False, DUPLICATE_SAME_ACCESS), 'DuplicateHandle')
+  finally
     CloseHandle(hTargetProcess);
+  end;
 end;
 
 procedure TToken.SetCaption(const Value: String);
@@ -805,207 +964,475 @@ begin
 end;
 
 procedure TToken.SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
-  Value: ResultType);
+  const Value: ResultType);
 begin
   if not SetTokenInformation(hToken, InfoClass, @Value, SizeOf(Value))
-    then
-    raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass));
+    then raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass),
+      Self);
 end;
 
-procedure TToken.SetIntegrity(const Value: TTokenIntegrityLevel);
+{ TTokenData }
+
+function TTokenData.GetElevation: TTokenElevationType;
+begin
+  Result := Token.Cache.Elevation;
+end;
+
+function TTokenData.GetGroups: TGroupArray;
+begin
+  Result := Token.Cache.Groups;
+end;
+
+function TTokenData.GetHasRestrictions: LongBool;
+begin
+  Result := Token.Cache.HasRestrictions;
+end;
+
+function TTokenData.GetIntegrity: TTokenIntegrity;
+begin
+  Result := Token.Cache.Integrity;
+end;
+
+function TTokenData.GetLogonSessionInfo: TLogonSessionInfo;
+begin
+  Result := Token.Cache.LogonSessionInfo;
+end;
+
+function TTokenData.GetMandatoryPolicy: TMandatoryPolicy;
+begin
+  Result := Token.Cache.MandatoryPolicy;
+end;
+
+function TTokenData.GetOrigin: LUID;
+begin
+  Result := Token.Cache.Origin;
+end;
+
+function TTokenData.GetOwner: TSecurityIdentifier;
+begin
+  Result := Token.Cache.Owner;
+end;
+
+function TTokenData.GetPrimaryGroup: TSecurityIdentifier;
+begin
+  Result := Token.Cache.PrimaryGroup;
+end;
+
+function TTokenData.GetPrivileges: TPrivilegeArray;
+begin
+  Result := Token.Cache.Privileges;
+end;
+
+function TTokenData.GetRestrictedSids: TGroupArray;
+begin
+  Result := Token.Cache.RestrictedSids;
+end;
+
+function TTokenData.GetSandboxInert: LongBool;
+begin
+  Result := Token.Cache.SandboxInert;
+end;
+
+function TTokenData.GetSession: Cardinal;
+begin
+  Result := Token.Cache.Session;
+end;
+
+function TTokenData.GetSource: TTokenSource;
+begin
+  Result := Token.Cache.Source;
+end;
+
+function TTokenData.GetStatistics: TTokenStatistics;
+begin
+  Result := Token.Cache.Statistics;
+end;
+
+function TTokenData.GetTokenType: TTokenTypeEx;
+begin
+  Result := Token.Cache.TokenType;
+end;
+
+function TTokenData.GetUIAccess: LongBool;
+begin
+  Result := Token.Cache.UIAccess;
+end;
+
+function TTokenData.GetUser: TGroup;
+begin
+  Result := Token.Cache.User;
+end;
+
+procedure TTokenData.InvokeStringEvent(StringClass: TTokenStringClass);
+begin
+  Token.Events.OnStringDataChange[StringClass].Invoke(QueryString(StringClass));
+end;
+
+function TTokenData.Query(DataClass: TTokenDataClass): Boolean;
+begin
+  if Token.Cache.IsCached[DataClass] or ReQuery(DataClass) then
+    Result := True
+  else
+    Result := False;
+end;
+
+function TTokenData.QueryString(StringClass: TTokenStringClass;
+  Detailed: Boolean): String;
+begin
+  if not Query(StringClassToDataClass[StringClass]) then
+    Exit('Unknown');
+
+  {$REGION 'Converting cached data to string'}
+  case StringClass of
+    tsCaption:
+      Result := Token.Caption;
+
+    tsTokenType:
+      Result := Token.Cache.TokenType.ToString;
+
+    tsAccess:
+      if Detailed then
+        Result := AccessToDetailedString(Token.HandleInformation.Access)
+      else
+        Result := AccessToString(Token.HandleInformation.Access);
+
+    tsUserName:
+      Result := Token.Cache.User.SecurityIdentifier.ToString;
+
+    tsUserState:
+      Result := Token.Cache.User.Attributes.ToString;
+
+    tsSession: // Detailed?
+      Result := Token.Cache.Session.ToString;
+
+    tsElevation:
+      Result := Token.Cache.Elevation.ToString;
+
+    tsIntegrity:
+      if Detailed then
+        Result := Token.Cache.Integrity.ToDetailedString
+      else
+        Result := Token.Cache.Integrity.ToString;
+
+    tsObjectAddress:
+      Result := Format('0x%0.8x',
+        [Token.HandleInformation.KernelObjectAddress]);
+
+    tsHandle:
+      if Detailed then
+        Result := Format('0x%x (%d)', [Token.Handle, Token.Handle])
+      else
+        Result := Format('0x%x', [Token.Handle]);
+
+    tsNoWriteUpPolicy:
+      Result := EnabledDisabledToString(Cardinal(Token.Cache.MandatoryPolicy)
+        and Cardinal(TokenMandatoryPolicyNoWriteUp) <> 0);
+
+    tsNewProcessMinPolicy:
+      Result := EnabledDisabledToString(Cardinal(Token.Cache.MandatoryPolicy)
+        and Cardinal(TokenMandatoryPolicyNewProcessMin) <> 0);
+
+    tsUIAccess:
+      Result := EnabledDisabledToString(Token.Cache.UIAccess);
+
+    tsOwner:
+      Result := Token.Cache.Owner.ToString;
+
+    tsPrimaryGroup:
+      Result := Token.Cache.PrimaryGroup.ToString;
+
+    tsSandboxInert:
+      Result := YesNoToString(Token.Cache.SandboxInert);
+
+    tsHasRestrictions:
+      Result := YesNoToString(Token.Cache.HasRestrictions);
+
+    tsTokenID:
+      Result := Token.Cache.Statistics.TokenId.ToString;
+
+    tsExprires:
+      Result := NativeTimeToString(Token.Cache.Statistics.ExpirationTime.QuadPart);
+
+    tsDynamicCharged:
+      Result := BytesToString(Token.InfoClass.Statistics.DynamicCharged);
+
+    tsDynamicAvailable:
+      Result := BytesToString(Token.InfoClass.Statistics.DynamicAvailable);
+
+    tsGroupCount:
+      Result := Token.Cache.Statistics.GroupCount.ToString;
+
+    tsPrivilegeCount:
+      Result := Token.Cache.Statistics.PrivilegeCount.ToString;
+
+    tsModifiedID:
+      Result := Token.Cache.Statistics.ModifiedId.ToString;
+
+    tsLogonID:
+      Result := Token.Cache.Statistics.AuthenticationId.ToString;
+
+    tsLogonAuthPackage:
+      Result := Token.Cache.LogonSessionInfo.AuthPackage;
+
+    tsLogonServer:
+      Result := Token.Cache.LogonSessionInfo.LogonServer;
+
+    tsLogonWtsSession: // Detailed?
+      Result := Token.Cache.LogonSessionInfo.Session.ToString;
+
+    tsLogonTime:
+      Result := DateTimeToStr(Token.Cache.LogonSessionInfo.LogonTime);
+
+    tsLogonType:
+      Result := LogonTypeToString(Token.Cache.LogonSessionInfo.LogonType);
+
+    tsLogonUserName:
+      if Token.Cache.LogonSessionInfo.UserPresent then
+        Result := Token.Cache.LogonSessionInfo.User.ToString
+      else
+        Result := 'No user';
+
+    tsSourceLUID:
+      Result := Token.Cache.Source.SourceIdentifier.ToString;
+
+    tsSourceName:
+      Result := TokeSourceNameToString(Token.Cache.Source);
+
+    tsOrigin:
+      Result := Token.Cache.Origin.ToString;
+  end;
+  {$ENDREGION}
+end;
+
+function TTokenData.ReQuery(DataClass: TTokenDataClass): Boolean;
+var
+  pIntegrity: PSIDAndAttributes;
+  pPrivBuf: PTokenPrivileges;
+  lType: TTokenType;
+  lImpersonation: TSecurityImpersonationLevel;
+  i: Integer;
+begin
+  Result := False;
+
+  case DataClass of
+    tdNone:
+       Result := True;
+
+    tdTokenUser:
+    begin
+      Result := Token.QuerySidAndAttributes(TokenUser, Token.Cache.User);
+
+      // The default value of attributes for user is 0 and means "Enabled".
+      // In this case we replace it with this flag. However, it can also be
+      // "Use for deny only" and we shouldn't replace it in this case.
+
+      if Result and (Token.Cache.User.Attributes = TGroupAttributes(0)) then
+        Token.Cache.User.Attributes := GroupExUser;
+    end;
+
+    tdTokenGroups:
+    begin
+      Result := Token.QueryGroups(TokenGroups, Token.Cache.Groups);
+      if Result then
+        Token.Events.OnGroupsChange.Invoke(Token.Cache.Groups);
+    end;
+
+    tdTokenPrivileges:
+    begin
+      pPrivBuf := Token.QueryVariableSize(TokenPrivileges, Result);
+      if Result then
+      try
+        SetLength(Token.Cache.Privileges, pPrivBuf.PrivilegeCount);
+        for i := 0 to pPrivBuf.PrivilegeCount - 1 do
+          Token.Cache.Privileges[i] := pPrivBuf.Privileges[i];
+
+        Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges)
+      finally
+        FreeMem(pPrivBuf);
+      end;
+    end;
+
+    tdTokenOwner:
+      Result := Token.QuerySid(TokenOwner, Token.Cache.Owner);
+
+    tdTokenPrimaryGroup:
+     Result := Token.QuerySid(TokenPrimaryGroup, Token.Cache.PrimaryGroup);
+
+    tdTokenDefaultDacl: ; // Not implemented
+
+    tdTokenSource:
+      Result := Token.QueryFixedSize<TTokenSource>(TokenSource,
+        Token.Cache.Source);
+
+    tdTokenType:
+    begin
+      Result := Token.QueryFixedSize<TTokenType>(TokenType, lType);
+      if Result then
+      begin
+        if lType = TokenPrimary then
+          Token.Cache.TokenType := ttPrimary
+        else
+        begin
+          Result := Token.QueryFixedSize<TSecurityImpersonationLevel>(
+            TokenImpersonationLevel, lImpersonation);
+          if Result then
+            Token.Cache.TokenType := TTokenTypeEx(lImpersonation);
+        end;
+      end;
+    end;
+
+    tdTokenStatistics:
+    begin
+      Result := Token.QueryFixedSize<TTokenStatistics>(TokenStatistics,
+        Token.Cache.Statistics);
+
+      if Result then
+        if Token.Events.OnStatisticsChange.Invoke(Token.Cache.Statistics) then
+        begin
+          InvokeStringEvent(tsTokenID);
+          InvokeStringEvent(tsExprires);
+          InvokeStringEvent(tsDynamicCharged);
+          InvokeStringEvent(tsDynamicAvailable);
+          InvokeStringEvent(tsGroupCount);
+          InvokeStringEvent(tsPrivilegeCount);
+          InvokeStringEvent(tsModifiedID);
+          InvokeStringEvent(tsLogonID);
+        end;
+    end;
+
+    tdTokenRestrictedSids:
+      Result :=  Token.QueryGroups(TokenRestrictedSids,
+        Token.Cache.RestrictedSids);
+
+    tdTokenSessionId:
+    begin
+      Result := Token.QueryFixedSize<Cardinal>(TokenSessionId,
+        Token.Cache.Session);
+      if Result then
+        if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
+          InvokeStringEvent(tsSession);
+    end;
+
+    tdTokenSandBoxInert:
+      Result := Token.QueryFixedSize<LongBool>(TokenSandBoxInert,
+        Token.Cache.SandboxInert);
+
+    tdTokenOrigin:
+      Result := Token.QueryFixedSize<LUID>(TokenOrigin,
+        Token.Cache.Origin);
+
+    tdTokenElevation:
+      Result := Token.QueryFixedSize<TTokenElevationType>(TokenElevationType,
+        Token.Cache.Elevation);
+
+    tdTokenHasRestrictions:
+      Result := Token.QueryFixedSize<LongBool>(TokenHasRestrictions,
+        Token.Cache.HasRestrictions);
+
+    tdTokenVirtualization: ; // Not implemented
+
+    tdTokenIntegrity:
+    begin
+      pIntegrity := Token.QueryVariableSize(TokenIntegrityLevel, Result);
+      if Result then
+      try
+        Token.Cache.Integrity.SID.CreateFromSid(pIntegrity.Sid);
+        Token.Cache.Integrity.Level := TTokenIntegrityLevel(GetSidSubAuthority(
+          pIntegrity.Sid, 0)^);
+
+        if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
+          InvokeStringEvent(tsIntegrity);
+      finally
+        FreeMem(pIntegrity);
+      end;
+    end;
+
+    tdTokenUIAccess:
+    begin
+      Result := Token.QueryFixedSize<LongBool>(TokenUIAccess,
+        Token.Cache.UIAccess);
+      if Result then
+        if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
+          InvokeStringEvent(tsUIAccess);
+    end;
+
+    tdTokenMandatoryPolicy:
+    begin
+      Result := Token.QueryFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy,
+        Token.Cache.MandatoryPolicy);
+      if Result then
+        if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
+        begin
+          InvokeStringEvent(tsNoWriteUpPolicy);
+          InvokeStringEvent(tsNewProcessMinPolicy);
+        end;
+    end;
+
+    tdLogonInfo:
+    if Query(tdTokenStatistics) then
+      with QueryLogonSession(Token.Cache.Statistics.AuthenticationId) do
+        if IsValid then
+        begin
+          Result := True;
+          Token.Cache.LogonSessionInfo := Value;
+        end;
+  end;
+
+  Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
+end;
+
+procedure TTokenData.SetIntegrityLevel(const Value: TTokenIntegrityLevel);
 const
   SECURITY_MANDATORY_LABEL_AUTHORITY: TSIDIdentifierAuthority =
     (Value: (0, 0, 0, 0, 0, 16));
 var
   mandatoryLabel: TSIDAndAttributes;
 begin
+  // Wee need to prepare the SID for the integrity level.
+  // It contains 1 sub authority and looks like S-1-16-X.
   mandatoryLabel.Sid := AllocMem(GetSidLengthRequired(1));
   try
     InitializeSid(mandatoryLabel.Sid, SECURITY_MANDATORY_LABEL_AUTHORITY, 1);
     GetSidSubAuthority(mandatoryLabel.Sid, 0)^ := DWORD(Value);
     mandatoryLabel.Attributes := SE_GROUP_INTEGRITY;
-    WinCheck(SetTokenInformation(hToken, TokenIntegrityLevel, @mandatoryLabel,
-      SizeOf(TSIDAndAttributes)), SetterMessage(TokenIntegrityLevel));
+
+    Token.SetFixedSize<TSIDAndAttributes>(TokenIntegrityLevel, mandatoryLabel);
   finally
     FreeMem(mandatoryLabel.Sid);
   end;
-  TryGetIntegrity; // query and notify event listeners
+
+  // Update the cache and notify event listeners.
+  // Integrity is also stored in the group list, so update them too
+  ReQuery(tdTokenIntegrity);
+  ReQuery(tdTokenGroups);
+  ReQuery(tdTokenStatistics);
 end;
 
-procedure TToken.SetMandatoryPolicy(const Value: TMandatoryPolicy);
+procedure TTokenData.SetMandatoryPolicy(const Value: TMandatoryPolicy);
 begin
-  SetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy, Value);
-  TryGetMandatoryPolicy; // query and notify event listeners
+  Token.SetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy, Value);
+
+  // Update the cache and notify event listeners
+  ReQuery(tdTokenMandatoryPolicy);
+  ReQuery(tdTokenStatistics);
 end;
 
-procedure TToken.SetSession(const Value: Cardinal);
+procedure TTokenData.SetSession(const Value: Cardinal);
 begin
-  SetFixedSize<Cardinal>(TokenSessionId, Value);
-  TryGetSession; // query and notify event listeners
+  Token.SetFixedSize<Cardinal>(TokenSessionId, Value);
+
+  // Update the cache and notify event listeners
+  ReQuery(tdTokenSessionId);
+  ReQuery(tdTokenStatistics);
 end;
 
-procedure TToken.SetUIAccess(const Value: Cardinal);
+procedure TTokenData.SetUIAccess(const Value: LongBool);
 begin
-  SetFixedSize<Cardinal>(TokenUIAccess, Value);
-  TryGetUIAccess; // query and notify event listeners
+  Token.SetFixedSize<LongBool>(TokenUIAccess, Value);
+
+  // Update the cache and notify event listeners
+  ReQuery(tdTokenUIAccess);
+  ReQuery(tdTokenStatistics);
 end;
-
-function TToken.TryGetIntegrity: CanFail<TTokenIntegrity>;
-var
-  Buffer: PSIDAndAttributes;
-begin
-  with Result.CopyResult(QueryVariableBuffer(TokenIntegrityLevel)) do
-    if IsValid then
-    begin
-      Buffer := Value;
-      try
-        Result.Value.SID := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
-        Result.Value.Level := TTokenIntegrityLevel(GetSidSubAuthority(
-          Buffer.Sid, 0)^);
-      finally
-        FreeMem(Buffer);
-      end;
-    end;
-
-  // Lowering integrity can disable privileges
-  if Events.OnIntegrityChange.InvokeIfValid(Result) then
-    Events.UpdatePrivileges(Self);
-end;
-
-function TToken.TryGetMandatoryPolicy: CanFail<TMandatoryPolicy>;
-begin
-  Result := GetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy);
-
-  if Events.OnPolicyChange.InvokeIfValid(Result) then
-    Events.UpdateStatistics(Self);
-end;
-
-function TToken.TryGetSession: CanFail<Cardinal>;
-begin
-  Result := GetFixedSize<Cardinal>(TokenSessionId);
-  if Events.OnSessionChange.InvokeIfValid(Result) then
-    Events.UpdateStatistics(Self);
-end;
-
-function TToken.TryGetUIAccess: CanFail<Cardinal>;
-begin
-  Result := GetFixedSize<Cardinal>(TokenUIAccess);
-  if Events.OnUIAccessChange.InvokeIfValid(Result) then
-    Events.UpdateStatistics(Self);
-end;
-
-
-{ TTokenEvents }
-
-procedure TTokenEvents.BeginUpdate;
-begin
-  Inc(FUpdateFlag);
-end;
-
-class function TTokenEvents.CompareCardinals(Value1, Value2: Cardinal): Boolean;
-begin
-  Result := Value1 = Value2;
-end;
-
-class function TTokenEvents.CompareGroups(Value1, Value2: TGroupArray): Boolean;
-var
-  i: integer;
-begin
-  Result := Length(Value1) = Length(Value2);
-  if Result then
-    for i := 0 to High(Value1) do
-      if (Value1[i].SecurityIdentifier.SID <> Value2[i].SecurityIdentifier.SID)
-        or (Value1[i].Attributes <> Value2[i].Attributes) then
-          Exit(False);
-end;
-
-class function TTokenEvents.CompareIntegrities(Value1,
-  Value2: TTokenIntegrity): Boolean;
-begin
-  Result := Value1.Level = Value2.Level;
-end;
-
-class function TTokenEvents.ComparePolicies(Value1,
-  Value2: TMandatoryPolicy): Boolean;
-begin
-  Result := Value1 = Value2;
-end;
-
-class function TTokenEvents.ComparePrivileges(Value1,
-  Value2: TPrivilegeArray): Boolean;
-var
-  i: integer;
-begin
-  Result := Length(Value1) = Length(Value2);
-  if Result then
-    for i := 0 to High(Value1) do
-      if (Value1[i].Attributes <> Value2[i].Attributes) or
-        (Value1[i].Luid <> Value2[i].Luid) then
-        Exit(False);
-end;
-
-class function TTokenEvents.CompareStatistics(Value1,
-  Value2: TTokenStatistics): Boolean;
-begin
-  Result := CompareMem(@Value1, @Value2, SizeOf(TTokenStatistics));
-end;
-
-constructor TTokenEvents.Create;
-begin
-  inherited;
-  FOnSessionChange.ComparisonFunction := CompareCardinals;
-  FOnUIAccessChange.ComparisonFunction := CompareCardinals;
-  FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
-  FOnPolicyChange.ComparisonFunction := ComparePolicies;
-  FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
-  FOnGroupsChange.ComparisonFunction := CompareGroups;
-  FOnStatisticsChange.ComparisonFunction := CompareStatistics;
-end;
-
-destructor TTokenEvents.Destroy;
-begin
-  if FOnSessionChange.Count > 0 then
-    OutputDebugString('Abandoned OnSessionChange');
-  if FOnSessionChange.Count > 0 then
-    OutputDebugString('Abandoned OnSessionChange');
-  if FOnIntegrityChange.Count > 0 then
-    OutputDebugString('Abandoned OnIntegrityChange');
-  if FOnUIAccessChange.Count > 0 then
-    OutputDebugString('Abandoned OnUIAccessChange');
-  if FOnPolicyChange.Count > 0 then
-    OutputDebugString('Abandoned OnPolicyChange');
-  if FOnPrivilegesChange.Count > 0 then
-    OutputDebugString('Abandoned OnPrivilegesChange');
-  if FOnGroupsChange.Count > 0 then
-    OutputDebugString('Abandoned OnGroupsChange');
-  if FOnStatisticsChange.Count > 0 then
-    OutputDebugString('Abandoned OnStatisticsChange');
-  inherited;
-end;
-
-procedure TTokenEvents.EndUpdate;
-begin
-  Dec(FUpdateFlag);
-end;
-
-procedure TTokenEvents.UpdatePrivileges(Token: TToken);
-begin
-  if FUpdateFlag = 0 then
-  begin
-    BeginUpdate;
-    // Query privileges and share them with event listeners, but without
-    // update of dependent events
-    Token.Privileges;
-    Token.Statistics; // Query and notify event listeners separetly
-    EndUpdate;
-  end;
-end;
-
-procedure TTokenEvents.UpdateStatistics(Token: TToken);
-begin
-  if FUpdateFlag = 0 then
-    Token.Statistics; // Query and share with event listeners
-end;
-
 
 end.

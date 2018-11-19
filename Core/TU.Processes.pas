@@ -61,6 +61,8 @@ begin
   Buffer := nil;
   BufferSize := 0;
 
+  // TODO: Spanshot only processes of current session
+
   // Query the information or it's size until we pass a suitable buffer for a
   // system call or get an unexpected error
   while True do

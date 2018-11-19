@@ -219,6 +219,7 @@ end;
 function TGroupListViewEx.AddGroup(Group: TGroup): Integer;
 begin
   SetLength(FAdditional, Length(FAdditional) + 1);
+  Result := High(FAdditional);
   FAdditional[High(FAdditional)] := Group;
   SetGroupItem(Items.Add, Group);
 end;
@@ -358,7 +359,7 @@ begin
   if FSource = Value then
     Exit;
 
-  if Assigned(Token) then  
+  if Assigned(Token) then
     UnsubscribeToken;
     
   FSource := Value;
@@ -383,9 +384,8 @@ begin
   if FSource = gsGroups then
     Token.Events.OnGroupsChange.Add(ChangedGroups)
   else if FSource = gsRestrictedSIDs then
-    with Token.RestrictedSids do
-        if IsValid then
-          ChangedGroups(Value);
+    if Token.InfoClass.Query(tdTokenRestrictedSids) then
+      ChangedGroups(Token.InfoClass.RestrictedSids);
 end;
 
 procedure TGroupListViewEx.UnsubscribeToken;
@@ -606,7 +606,7 @@ begin
   for i := 0 to High(FLogonSessions) do
   begin
     S := FLogonSessions[i].ToString;
-      with GetLogonSessionInformation(FLogonSessions[i]) do
+      with QueryLogonSession(FLogonSessions[i]) do
         if IsValid and Value.UserPresent then
           S := S + ' (' + Value.User.ToString + ')';
     ComboBox.Items.Add(S);

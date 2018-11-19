@@ -34,11 +34,8 @@ uses
 {$R *.dfm}
 
 function TFrameTokenList.AddToken(Token: TToken; Group: Integer = -1): TToken;
-const
-  ERROR_MSG = 'Unknown';
 var
   Item: TListItemEx;
-  i: Integer;
 begin
   // TODO: Need EventHandler's feedback
   Result := Token;
@@ -49,35 +46,13 @@ begin
   Item.Caption := Token.Caption;
   Item.OwnedData := Token;
   Item.GroupID := Group;
-  for i := 1 to ListViewTokens.Columns.Count - 1 do
-    Item.SubItems.Add(ERROR_MSG);
 
-  with Token.Access do
-      if IsValid then
-        Item.SubItems[1] := AccessToString(Value);
-
-  if Token.IsValidToken then
-  begin
-    with Token.TokenTypeInfo do
-      if IsValid then
-        Item.SubItems[0] := Value.ToString;
-
-    with Token.User do
-      if IsValid then
-        Item.SubItems[2] := Value.SecurityIdentifier.ToString;
-
-    with Token.TryGetSession  do
-      if IsValid then
-        Item.SubItems[3] := Value.ToString;
-
-    with Token.Elevation do
-      if IsValid then
-        Item.SubItems[4] := Value.ToString;
-
-    with Token.TryGetIntegrity do
-      if IsValid then
-        Item.SubItems[5] := Value.ToString;
-  end;
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsTokenType));
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsAccess));
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsUserName));
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsSession));
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsElevation));
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsIntegrity));
 
   ListViewTokens.Items.EndUpdate;
 end;

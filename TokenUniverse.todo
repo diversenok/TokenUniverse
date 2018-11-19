@@ -1,10 +1,18 @@
+{TODO : CheckTokenCapability}
 {TODO : Changed logon sessions event}
 {TODO : Token comparison dialog (juxtaposition + NtCompareTokens)}
-{TODO : Add an event for modification ID}
+
 {TODO : CreateWellKnownSid (in form of a combobox?)}
 {TODO -cUI : Hints everywhere}
 {TODO -cEnhancement :ImpersonateAnonymousToken
 ImpersonateLoggedOnUser
 ImpersonateSelf
-SetThreadToken}
+SetThreadToken
+RpclmpersonateClient
+ColmpersonateClient
+ImpersonateNamedPipeClient
+ImpersonateDdeClientWindow
+ImpersonateSecurityContext}
 {TODO -cUI : Wait dialog}
+{TODO : LoadUserProfile}
+{TODO : Waiting via WaitForInputIdle and WaitForSingleObject}

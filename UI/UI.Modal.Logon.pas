@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  UI.Prototypes.ChildForm, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes, Vcl.Menus;
+  UI.Prototypes.ChildForm, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes,
+  Vcl.Menus, TU.LsaApi;
 
 type
   TLogonDialog = class(TChildForm)
@@ -27,8 +28,8 @@ type
     procedure MenuEditClick(Sender: TObject);
   private
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
-    function GetLogonType: Cardinal;
-    function GetLogonProvider: Cardinal;
+    function GetLogonType: TLogonType;
+    function GetLogonProvider: TLogonProvider;
   public
     { Public declarations }
   end;
@@ -52,25 +53,18 @@ begin
   ModalResult := mrOk;
 end;
 
-function TLogonDialog.GetLogonProvider: Cardinal;
-const
-  LogonProvider: array [0 .. 3] of Cardinal = (LOGON32_PROVIDER_DEFAULT,
-    LOGON32_PROVIDER_WINNT50, LOGON32_PROVIDER_WINNT40,
-    LOGON32_PROVIDER_WINNT35);
+function TLogonDialog.GetLogonProvider: TLogonProvider;
 begin
-  Result := LogonProvider[ComboLogonProvider.ItemIndex];
+  Result := TLogonProvider(ComboLogonProvider.ItemIndex);
 end;
 
-function TLogonDialog.GetLogonType: Cardinal;
+function TLogonDialog.GetLogonType: TLogonType;
 const
-  LOGON32_LOGON_NETWORK_CLEARTEXT = 8;
-  LOGON32_LOGON_NEW_CREDENTIALS = 9;
-  LogonType: array [0 .. 5] of Cardinal = (LOGON32_LOGON_INTERACTIVE,
-    LOGON32_LOGON_BATCH, LOGON32_LOGON_NETWORK,
-    LOGON32_LOGON_NETWORK_CLEARTEXT, LOGON32_LOGON_NEW_CREDENTIALS,
-    LOGON32_LOGON_SERVICE);
+  LogonTypeMapping: array [0 .. 5] of TLogonType = (ltInteractive, ltBatch,
+    ltNetwork, ltNetworkCleartext, ltNewCredentials, ltService);
 begin
-  Result := LogonType[ComboLogonType.ItemIndex];
+  // TODO: add Unlock logon type
+  Result := LogonTypeMapping[ComboLogonType.ItemIndex];
 end;
 
 procedure TLogonDialog.MenuEditClick(Sender: TObject);

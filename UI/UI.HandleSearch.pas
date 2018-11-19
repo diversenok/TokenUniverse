@@ -85,10 +85,10 @@ begin
       hProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
       if hProcess <> 0 then // TODO: Or setting
       begin
-        for HandleItem in HandleSnapshot.ProcessHandles[PID] do
-          Frame.AddToken(TToken.CreateFromHandleItem(HandleItem, hProcess),
+        {for HandleItem in HandleSnapshot.ProcessHandles[PID] do
+          Frame.AddToken(TToken.CreateByHandle(HandleItem, hProcess),
             GroupID);
-        CloseHandle(hProcess);
+        CloseHandle(hProcess);}
       end;
     end;
 

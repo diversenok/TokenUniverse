@@ -34,7 +34,7 @@ type
   TLuidDynArray = array of LUID;
 
 function LogonTypeToString(LogonType: TLogonType): String;
-function GetLogonSessionInformation(LogonId: LUID): CanFail<TLogonSessionInfo>;
+function QueryLogonSession(LogonId: LUID): CanFail<TLogonSessionInfo>;
 function EnumerateLogonSessions: TLuidDynArray;
 
 implementation
@@ -82,7 +82,7 @@ function LsaGetLogonSessionData(var LogonId: LUID;
 function LsaEnumerateLogonSessions(out LogonSessionCount: Integer;
   out LogonSessionList: PLuidArray): LongWord; stdcall; external secur32;
 
-function GetLogonSessionInformation(LogonId: LUID): CanFail<TLogonSessionInfo>;
+function QueryLogonSession(LogonId: LUID): CanFail<TLogonSessionInfo>;
 var
   Buffer: PSecurityLogonSessionData;
 begin

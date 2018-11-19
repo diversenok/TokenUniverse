@@ -27,7 +27,6 @@ type
     ComboSession: TSessionComboBox;
     ComboIntegrity: TIntegrityComboBox;
     ImageList: TImageList;
-    ComboBoxView: TComboBox;
     BtnSetIntegrity: TSpeedButton;
     BtnSetSession: TSpeedButton;
     PrivilegePopup: TPopupMenu;
@@ -77,7 +76,7 @@ type
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
-    procedure ChangedUIAccess(NewUIAccess: Cardinal);
+    procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
     procedure ChangedGroups(NewGroups: TGroupArray);
@@ -133,11 +132,10 @@ end;
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
 begin
   try
-    Token.Integrity := ComboIntegrity.SelectedIntegrity;
+    Token.InfoClass.IntegrityLevel := ComboIntegrity.SelectedIntegrity;
   except
-    with Token.TryGetIntegrity do
-      if IsValid then
-        ChangedIntegrity(Value);
+    if Token.InfoClass.Query(tdTokenIntegrity) then
+      ChangedIntegrity(Token.InfoClass.Integrity);
     raise;
   end;
 end;
@@ -146,14 +144,13 @@ procedure TInfoDialog.BtnSetMandatoryPolicy(Sender: TObject);
 begin
   try
     if ComboPolicy.ItemIndex = -1 then
-      Token.MandatoryPolicy := TMandatoryPolicy(StrToUIntEx(ComboPolicy.Text,
-        'mandatory policy flag'))
+      Token.InfoClass.MandatoryPolicy := TMandatoryPolicy(StrToUIntEx(
+        ComboPolicy.Text, 'mandatory policy flag'))
     else
-      Token.MandatoryPolicy := TMandatoryPolicy(ComboPolicy.ItemIndex);
+      Token.InfoClass.MandatoryPolicy := TMandatoryPolicy(ComboPolicy.ItemIndex);
   except
-    with Token.TryGetMandatoryPolicy do
-      if IsValid then
-        ChangedPolicy(Value);
+    if Token.InfoClass.Query(tdTokenMandatoryPolicy) then
+      ChangedPolicy(Token.InfoClass.MandatoryPolicy);
     raise;
   end;
 end;
@@ -161,11 +158,10 @@ end;
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
   try
-    Token.Session := ComboSession.SelectedSession;
+    Token.InfoClass.Session := ComboSession.SelectedSession;
   except
-    with Token.TryGetSession do
-      if IsValid then
-        ChangedSession(Value);
+    if Token.InfoClass.Query(tdTokenSessionId) then
+      ChangedSession(Token.InfoClass.Session);
     raise;
   end;
 end;
@@ -174,13 +170,13 @@ procedure TInfoDialog.BtnSetUIAccessClick(Sender: TObject);
 begin
   try
     if ComboUIAccess.ItemIndex = -1 then
-      Token.UIAccess := StrToUIntEx(ComboUIAccess.Text, 'UIAccess value')
+      Token.InfoClass.UIAccess := LongBool(StrToUIntEx(ComboUIAccess.Text,
+        'UIAccess value'))
     else
-      Token.UIAccess := ComboUIAccess.ItemIndex;
+      Token.InfoClass.UIAccess := LongBool(ComboUIAccess.ItemIndex);
   except
-    with Token.TryGetUIAccess do
-      if IsValid then
-        ChangedUIAccess(Value);
+    if Token.InfoClass.Query(tdTokenUIAccess) then
+        ChangedUIAccess(Token.InfoClass.UIAccess);
     raise;
   end;
 end;
@@ -227,93 +223,63 @@ begin
 end;
 
 procedure TInfoDialog.ChangedStatistics(NewStatistics: TTokenStatistics);
-var
-  i: Integer;
 begin
   with ListViewAdvanced do
   begin
-    Items[2].SubItems[0] := NewStatistics.TokenId.ToString;
-    Items[3].SubItems[0] := NewStatistics.AuthenticationId.ToString;
-    Items[4].SubItems[0] := NativeTimeToString(
-      NewStatistics.ExpirationTime.QuadPart);
-    Items[5].SubItems[0] := BytesToString(NewStatistics.DynamicCharged);
-    Items[6].SubItems[0] := BytesToString(NewStatistics.DynamicAvailable);
-    Items[7].SubItems[0] := NewStatistics.GroupCount.ToString;
-    Items[8].SubItems[0] := NewStatistics.PrivilegeCount.ToString;
-    Items[9].SubItems[0] := NewStatistics.ModifiedId.ToString;
+    Items[2].SubItems[0] := Token.InfoClass.QueryString(tsTokenID);
+    Items[3].SubItems[0] := Token.InfoClass.QueryString(tsLogonID);
+    Items[4].SubItems[0] := Token.InfoClass.QueryString(tsExprires);
+    Items[5].SubItems[0] := Token.InfoClass.QueryString(tsDynamicCharged);
+    Items[6].SubItems[0] := Token.InfoClass.QueryString(tsDynamicAvailable);
+    Items[7].SubItems[0] := Token.InfoClass.QueryString(tsGroupCount);
+    Items[8].SubItems[0] := Token.InfoClass.QueryString(tsPrivilegeCount);
+    Items[9].SubItems[0] := Token.InfoClass.QueryString(tsModifiedID);
 
-    Items[12].SubItems[0] := NewStatistics.AuthenticationId.ToString;
-    with GetLogonSessionInformation(NewStatistics.AuthenticationId) do
-      if IsValid then
-      begin
-        if Value.UserPresent then
-        begin
-          Items[13].SubItems[0] := Value.User.ToString;
-          Items[13].Hint := TGroupListViewEx.BuildHint(Value.User,
-            TGroupAttributes(0), False);
-        end
-        else
-          Items[13].SubItems[0] := 'No linked user';
-        Items[14].SubItems[0] := Value.AuthPackage;
-        Items[15].SubItems[0] := Value.LogonServer;
-        Items[16].SubItems[0] := LogonTypeToString(Value.LogonType);
-        Items[17].SubItems[0] := Value.Session.ToString;
-        Items[18].SubItems[0] := DateTimeToStr(Value.LogonTime);
-      end
-      else
-      begin
-        for i := 13 to 18 do
-          Items[i].Hint := GetErrorMessage;
-      end;
+    Items[12].SubItems[0] := Token.InfoClass.QueryString(tsLogonID);
+    Items[13].SubItems[0] := Token.InfoClass.QueryString(tsLogonUserName);
+
+    if Token.InfoClass.Query(tdLogonInfo) and
+      Token.InfoClass.LogonSessionInfo.UserPresent then
+      Items[13].Hint := TGroupListViewEx.BuildHint(
+        Token.InfoClass.LogonSessionInfo.User, TGroupAttributes(0), False);
+
+    Items[14].SubItems[0] := Token.InfoClass.QueryString(tsLogonAuthPackage);
+    Items[15].SubItems[0] := Token.InfoClass.QueryString(tsLogonServer);
+    Items[16].SubItems[0] := Token.InfoClass.QueryString(tsLogonType);
+    Items[17].SubItems[0] := Token.InfoClass.QueryString(tsLogonWtsSession);
+    Items[18].SubItems[0] := Token.InfoClass.QueryString(tsLogonTime);
+
+    // TODO: Error hints
   end;
 end;
 
-procedure TInfoDialog.ChangedUIAccess(NewUIAccess: Cardinal);
+procedure TInfoDialog.ChangedUIAccess(NewUIAccess: LongBool);
 begin
   ComboUIAccess.Color := clWhite;
-  ComboUIAccess.ItemIndex := Integer(NewUIAccess <> 0)
+  ComboUIAccess.ItemIndex := Integer(NewUIAccess = True);
 end;
 
 procedure TInfoDialog.ChangedView(Sender: TObject);
 begin
   // TODO: What about a new event for this?
-  with Token.User, EditUser do
-    if IsValid then
+  if Token.InfoClass.Query(tdTokenUser) then
+    with Token.InfoClass.User, EditUser do
     begin
-      if ComboBoxView.ItemIndex = 0 then
-        Text := Value.SecurityIdentifier.ToString
-      else
-        Text := Value.SecurityIdentifier.SID;
+      Text := SecurityIdentifier.ToString;
+      Hint := TGroupListViewEx.BuildHint(SecurityIdentifier,
+        Attributes);
 
-      Hint := TGroupListViewEx.BuildHint(Value.SecurityIdentifier,
-        Value.Attributes);
-
-      if Value.Attributes.Contain(GroupUforDenyOnly) then
+      if Attributes.Contain(GroupUforDenyOnly) then
         Color := clDisabled
       else
         Color := clEnabled;
     end;
 
-  with Token.Owner do
-    if IsValid then
-    begin
-      if ComboBoxView.ItemIndex = 0 then
-        ComboOwner.Text := Value.ToString
-      else
-        ComboOwner.Text := Value.SID;
-    end;
+  if Token.InfoClass.Query(tdTokenOwner) then
+    ComboOwner.Text := Token.InfoClass.Owner.ToString;
 
-  with Token.PrimaryGroup do
-    if IsValid then
-    begin
-      if ComboBoxView.ItemIndex = 0 then
-        ComboPrimary.Text := Value.ToString
-      else
-        ComboPrimary.Text := Value.SID;
-    end;
-
-  ListViewGroups.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
-  ListViewRestricted.ViewAs := TGroupViewAs(ComboBoxView.ItemIndex);
+  if Token.InfoClass.Query(tdTokenPrimaryGroup) then
+      ComboPrimary.Text := Token.InfoClass.PrimaryGroup.ToString;
 end;
 
 constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -354,7 +320,6 @@ begin
   // information that is stored in the event handlers. By doing that in this
   // order we avoid multiple calls while sharing the data between different
   // tokens pointing the same kernel object.
-  Token.Events.BeginUpdate;
   Token.Events.OnSessionChange.Add(ChangedSession);
   Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
@@ -365,7 +330,6 @@ begin
   ListViewGroups.Token := Token;
   ListViewPrivileges.Token := Token;
   ListViewRestricted.Token := Token;
-  Token.Events.EndUpdate;
 
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);
@@ -402,51 +366,32 @@ begin
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
   begin
-    Items[0].SubItems[0] := Format('0x%0.8x', [Token.ObjAddress]);
-    Items[1].SubItems[0] := Format('0x%x', [Token.Handle]);
-
-    with Token.Access do
-      if IsValid then
-        Items[2].SubItems[0] := AccessToDetailedString(Value);
-
-    with Token.TokenTypeInfo do
-      if IsValid then
-        Items[3].SubItems[0] := Value.ToString;
-
-    with Token.Elevation do
-    if IsValid then
-        Items[4].SubItems[0] := Value.ToString;
+    Items[0].SubItems[0] := Token.InfoClass.QueryString(tsObjectAddress);
+    Items[1].SubItems[0] := Token.InfoClass.QueryString(tsHandle);
+    Items[2].SubItems[0] := Token.InfoClass.QueryString(tsAccess, True);
+    Items[3].SubItems[0] := Token.InfoClass.QueryString(tsTokenType);
+    Items[4].SubItems[0] := Token.InfoClass.QueryString(tsElevation);
   end;
   ListViewGeneral.Items.EndUpdate;
 
   ListViewAdvanced.Items.BeginUpdate;
   with ListViewAdvanced do
   begin
-    with Token.Source do
-      if IsValid then
-      begin
-        Items[0].SubItems[0] := TokeSourceNameToString(Value);
-        Items[1].SubItems[0] := Value.SourceIdentifier.ToString;
-      end;
-
-    with Token.SandboxInert do
-      if IsValid then
-        Items[10].SubItems[0] := YesNoToString(Value);
-
-    with Token.HasRestrictions do
-      if IsValid then
-        Items[11].SubItems[0] := YesNoToString(Value);
+    Items[0].SubItems[0] := Token.InfoClass.QueryString(tsSourceName);
+    Items[1].SubItems[0] := Token.InfoClass.QueryString(tsSourceLUID);
+    Items[10].SubItems[0] := Token.InfoClass.QueryString(tsSandboxInert);
+    Items[11].SubItems[0] := Token.InfoClass.QueryString(tsHasRestrictions);
   end;
   ListViewAdvanced.Items.EndUpdate;
 
-  // This triggers events if the value has changed
-  Token.TryGetIntegrity;
-  Token.TryGetSession;
-  Token.TryGetUIAccess;
-  Token.TryGetMandatoryPolicy;
-  Token.Privileges;
-  Token.Groups;
-  Token.Statistics;
+  // This triggers InfoClass if the value has changed
+  Token.InfoClass.ReQuery(tdTokenIntegrity);
+  Token.InfoClass.ReQuery(tdTokenSessionId);
+  Token.InfoClass.ReQuery(tdTokenUIAccess);
+  Token.InfoClass.ReQuery(tdTokenMandatoryPolicy);
+  Token.InfoClass.ReQuery(tdTokenPrivileges);
+  Token.InfoClass.ReQuery(tdTokenGroups);
+  Token.InfoClass.ReQuery(tdTokenStatistics);
 
   ChangedView(Token);
 end;

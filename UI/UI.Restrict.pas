@@ -41,7 +41,6 @@ type
     function GetFlags: Cardinal;
     procedure ChangedCaption(NewCaption: String);
   public
-    procedure Refresh;
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
 
@@ -76,8 +75,8 @@ begin
 
   // Check whether SandboxInert was actually enabled
   if CheckBoxSandboxInert.Checked then
-    with NewToken.SandboxInert do
-      if IsValid and not Value then
+    if NewToken.InfoClass.Query(tdTokenSandBoxInert) and
+      not NewToken.InfoClass.SandboxInert then
       begin
         Hide;
         MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
@@ -124,14 +123,14 @@ begin
   ListViewRestrictSID.Token := Token;
   ListViewPrivileges.Token := Token;
 
-  with Token.User do // It can also be disabled and restricted
-    if IsValid then
-    begin
-      UserItem.SecurityIdentifier := Value.SecurityIdentifier;
-      UserItem.Attributes := Value.Attributes;
-      ListViewDisableSID.AddGroup(UserItem);
-      ListViewRestrictSID.AddGroup(UserItem);
-    end;
+  // The user can also be disabled and restricted
+  if Token.InfoClass.Query(tdTokenUser) then
+  begin
+    UserItem.SecurityIdentifier := Token.InfoClass.User.SecurityIdentifier;
+    UserItem.Attributes := Token.InfoClass.User.Attributes;
+    ListViewDisableSID.AddGroup(UserItem);
+    ListViewRestrictSID.AddGroup(UserItem);
+  end;
 end;
 
 function TDialogRestrictToken.GetFlags: Cardinal;
@@ -189,12 +188,6 @@ begin
       if Items[i].Selected and IsAdditional(i) then
         RemoveGroup(i);
   end;
-end;
-
-procedure TDialogRestrictToken.Refresh;
-begin
-  Token.Groups;
-  Token.Privileges;
 end;
 
 end.

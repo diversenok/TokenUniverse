@@ -50,9 +50,9 @@ begin
     RaiseLastOSError;
 
   try
-    with TToken.CreateFromCurrent do
+    with TToken.CreateOpenCurrent do
     begin
-      SessionParam := PWideChar(TryGetSession.GetValueOrRaise.ToString);
+      SessionParam := PWideChar(InfoClass.QueryString(tsSession));
       Free;
     end;
 
@@ -137,12 +137,12 @@ begin
   NewToken := nil;
 
   try
-    Token := TToken.CreateFromCurrent;
+    Token := TToken.CreateOpenCurrent;
 
-    NewToken := TToken.CreateDuplicate(Token,
+    NewToken := TToken.CreateDuplicateToken(Token,
       TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID or
       TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY, ttPrimary);
-    NewToken.Session := Session;
+    NewToken.InfoClass.Session := Session;
 
     FillChar(PI, SizeOf(PI), 0);
     FillChar(SI, SizeOf(SI), 0);

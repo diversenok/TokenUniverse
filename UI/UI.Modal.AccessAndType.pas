@@ -51,13 +51,13 @@ class function TDialogAccessAndType.ExecuteDuplication(AOwner: TComponent;
 begin
   with TDialogAccessAndType.Create(AOwner) do
   begin
-    with Source.TokenTypeInfo do
-      if IsValid then
-        SelectedTokenType := Value;
+    if Source.InfoClass.Query(tdTokenType) then
+      SelectedTokenType := Source.InfoClass.TokenTypeInfo;
 
     ShowModal;
 
-    Result := TToken.CreateDuplicate(Source, SelectedAccess, SelectedTokenType);
+    Result := TToken.CreateDuplicateToken(Source, SelectedAccess,
+      SelectedTokenType);
   end;
 end;
 

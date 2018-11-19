@@ -134,17 +134,17 @@ end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
 begin
-  Frame.AddToken(Frame.GetSelectedToken.LinkedToken.GetValueOrRaise);
+  Frame.AddToken(Frame.GetSelectedToken.OpenLinkedToken.GetValueOrRaise);
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 begin
-  Frame.AddToken(TToken.CreateFromProcess(TProcessListDialog.Execute(Self)));
+  Frame.AddToken(TToken.CreateOpenProcess(TProcessListDialog.Execute(Self)));
 end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
 begin
-  Frame.AddToken(TToken.CreateFromCurrent);
+  Frame.AddToken(TToken.CreateOpenCurrent);
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
@@ -209,16 +209,17 @@ begin
   with THandleList.CreateOnly(GetCurrentProcessId) do
   begin
     for i := 0 to Count - 1 do
-      Frame.AddToken(TToken.CreateFromHandleItem(Handles[i], 0));
+      Frame.AddToken(TToken.CreateFromHandleInfo(Handles[i]));
     Free;
   end;
 
-  with Frame.AddToken(TToken.CreateFromCurrent), Elevation do
-    if IsValid then
-      if Elevation.Value <> TokenElevationTypeDefault then
-        with LinkedToken do
-          if IsValid then
-            Frame.AddToken(Value);
+  with Frame.AddToken(TToken.CreateOpenCurrent) do
+    if InfoClass.Query(tdTokenElevation) and
+      (InfoClass.Elevation <> TokenElevationTypeDefault) then
+      with OpenLinkedToken do
+        if IsValid then
+          Frame.AddToken(Value);
+
   SetForegroundWindow(Handle);
 end;
 

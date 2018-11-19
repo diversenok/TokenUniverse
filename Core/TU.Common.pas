@@ -179,6 +179,7 @@ function WinCheck(RetVal: LongBool; Where: String; Context: TObject = nil):
   LongBool; inline;
 procedure WinCheckBuffer(BufferSize: Cardinal; Where: String;
   Context: TObject = nil); inline;
+function WinTryCheckBuffer(BufferSize: Cardinal): Boolean; inline;
 function NativeCheck(Status: NTSTATUS; Where: String;
   Context: TObject = nil): Boolean; inline;
 
@@ -212,6 +213,15 @@ begin
   if not RetVal then
     raise ELocatedOSError.CreateLE(GetLastError, Where, Context);
   Result := True;
+end;
+
+function WinTryCheckBuffer(BufferSize: Cardinal): Boolean;
+begin
+  Result := (GetLastError = ERROR_INSUFFICIENT_BUFFER) and (BufferSize > 0) and
+    (BufferSize <= BUFFER_LIMIT);
+
+  if not Result and (BufferSize > BUFFER_LIMIT) then
+    SetLastError(STATUS_IMPLEMENTATION_LIMIT);
 end;
 
 procedure WinCheckBuffer(BufferSize: Cardinal; Where: String;

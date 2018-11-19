@@ -28,7 +28,7 @@ object FrameTokenList: TFrameTokenList
       end
       item
         Caption = 'User'
-        Width = 170
+        Width = 160
       end
       item
         Alignment = taCenter
@@ -36,8 +36,8 @@ object FrameTokenList: TFrameTokenList
       end
       item
         Alignment = taCenter
-        Caption = 'Elevated'
-        Width = 55
+        Caption = 'Elevation'
+        Width = 65
       end
       item
         Alignment = taCenter

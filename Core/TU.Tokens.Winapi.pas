@@ -232,7 +232,16 @@ function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
   DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
   stdcall; external advapi32;
 
+/// <summary>
+///   Formats a string to use as a location of an error that might occur while
+///   quering token info class.
+/// </summary>
 function GetterMessage(InfoClass: TTokenInformationClass): String;
+
+/// <summary>
+///   Formats a string to use as a location of an error that might occur while
+///   setting token info class.
+/// </summary>
 function SetterMessage(InfoClass: TTokenInformationClass): String;
 
 type
@@ -263,12 +272,14 @@ uses
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
+  // We use a name of info class from the enumeration definition
   Result := 'GetTokenInformation:' +
     GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
 end;
 
 function SetterMessage(InfoClass: TTokenInformationClass): String;
 begin
+  // We use a name of info class from the enumeration definition
   Result := 'SetTokenInformation:' +
     GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
 end;
