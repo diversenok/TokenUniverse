@@ -209,7 +209,7 @@ begin
   with THandleList.CreateOnly(GetCurrentProcessId) do
   begin
     for i := 0 to Count - 1 do
-      Frame.AddToken(TToken.CreateFromHandleInfo(Handles[i]));
+      Frame.AddToken(TToken.CreateByHandle(Handles[i]));
     Free;
   end;
 
