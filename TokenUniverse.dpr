@@ -38,7 +38,7 @@ begin
   // Running as a service
   if ParamStr(1) = RESVC_PARAM then
   begin
-    ReSvcServerMain;
+    ReSvcMain;
     Exit;
   end;
 
