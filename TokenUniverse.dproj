@@ -165,6 +165,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.Tokens.Types.pas"/>
+        <DCCReference Include="UI\UI.Modal.Columns.pas">
+            <Form>DialogColumns</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="UI\UI.Settings.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -30,7 +30,9 @@ uses
   UI.Modal.PickUser in 'UI\UI.Modal.PickUser.pas' {DialogPickUser},
   TU.ObjPicker in 'Core\TU.ObjPicker.pas',
   UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken},
-  TU.Tokens.Types in 'Core\TU.Tokens.Types.pas';
+  TU.Tokens.Types in 'Core\TU.Tokens.Types.pas',
+  UI.Modal.Columns in 'UI\UI.Modal.Columns.pas' {DialogColumns},
+  UI.Settings in 'UI\UI.Settings.pas';
 
 {$R *.res}
 

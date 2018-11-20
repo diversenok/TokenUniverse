@@ -357,6 +357,10 @@ object FormMain: TFormMain
     end
     object View1: TMenuItem
       Caption = 'Settings'
+      object SelectColumns: TMenuItem
+        Caption = 'Select columns...'
+        OnClick = SelectColumnsClick
+      end
       object Propmtonhandleclose1: TMenuItem
         Caption = 'Propmt on handle close'
       end

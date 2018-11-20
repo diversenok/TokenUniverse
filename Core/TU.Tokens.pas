@@ -20,7 +20,7 @@ type
     tdTokenUIAccess, tdTokenMandatoryPolicy, tdLogonInfo);
 
   /// <summary> A class of string information for tokens. </summary>
-  TTokenStringClass = (tsCaption, tsTokenType, tsAccess, tsUserName,
+  TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
     tsUserState, tsSession, tsElevation, tsIntegrity, tsObjectAddress, tsHandle,
     tsNoWriteUpPolicy, tsNewProcessMinPolicy, tsUIAccess, tsOwner,
     tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsTokenID, tsExprires,
@@ -388,7 +388,7 @@ uses
 const
   /// <summary> Stores which data class a string class depends on. </summary>
   StringClassToDataClass: array [TTokenStringClass] of TTokenDataClass =
-    (tdNone, tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
+    (tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
     tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
     tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
     tdTokenSandBoxInert,tdTokenHasRestrictions, tdTokenStatistics,
@@ -1084,9 +1084,6 @@ begin
 
   {$REGION 'Converting cached data to string'}
   case StringClass of
-    tsCaption:
-      Result := Token.Caption;
-
     tsTokenType:
       Result := Token.Cache.TokenType.ToString;
 

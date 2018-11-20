@@ -57,6 +57,7 @@ type
     ApplicationEvents: TApplicationEvents;
     N1: TMenuItem;
     MenuExit: TMenuItem;
+    SelectColumns: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -85,6 +86,7 @@ type
     procedure ActionLogon(Sender: TObject);
     procedure MenuExitClick(Sender: TObject);
     procedure NewNtCreateTokenClick(Sender: TObject);
+    procedure SelectColumnsClick(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -98,7 +100,7 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.Session,
-  UI.Restrict, UI.CreateToken,
+  UI.Restrict, UI.CreateToken, UI.Modal.Columns,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
 
 {$R *.dfm}
@@ -263,6 +265,11 @@ begin
         raise;
   end;
   Close;
+end;
+
+procedure TFormMain.SelectColumnsClick(Sender: TObject);
+begin
+  TDialogColumns.Create(Self).ShowModal;
 end;
 
 procedure TFormMain.ListViewTokenSelectItem(Sender: TObject; Item: TListItem;
