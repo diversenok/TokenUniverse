@@ -2,6 +2,9 @@ unit TU.RestartSvc;
 
 interface
 
+uses
+  Winapi.Windows;
+
 const
   RESVC_PARAM = '/service';
   RESVC_NAME = 'TokenUniverseSvc';
@@ -9,16 +12,43 @@ const
 
   DELEGATE_PARAM = '/delegate';
 
+/// <summary>
+///  A routine to create and invoke TokenUniverse Run-As-System Service.
+/// </summary>
 procedure ReSvcCreateService;
-procedure ReSvcDelegate(Handle: THandle; StartService: Boolean);
 
-function ReSvcServerMain: Boolean;
+/// <summary>
+///  This function is elevate TokenUnivese. It is also capable of starting the
+///  service for a delegation (when then current instance doesn't have
+///  enough rights to create and start it).
+/// </summary>
+/// <param name="Handle">
+///   A window handle to show message boxes that the system might produce while
+///   executing this function.
+/// </param>
+/// <param name="StartService">
+///   A boolean that determines whether the elevated copy of should
+///   automatically call <see cref="ReSvcCreateService"/>.
+/// </param>
+procedure ReSvcDelegate(Handle: HWND; StartService: Boolean);
+
+/// <summary>
+///  Starts service control dispatcher. This function should be called only if
+///  the process was created by SCM.
+/// </summary>
+function ReSvcMain: Boolean;
 
 implementation
 
 uses
-  System.SysUtils, Winapi.Windows, Winapi.WinSvc, Winapi.ShellApi,
+  System.SysUtils, Winapi.WinSvc, Winapi.ShellApi,
   TU.Tokens, TU.Tokens.Types;
+
+type
+  TServiceDynArgsW = array of PWideChar;
+
+function StartServiceW(hService: SC_HANDLE; dwNumServiceArgs: Cardinal;
+  lpServiceArgVectors: TServiceDynArgsW): BOOL; stdcall; external advapi32;
 
 procedure DebugOut(DebugMessage: String); inline;
 begin
@@ -32,13 +62,17 @@ end;
 procedure ReSvcCreateService;
 var
   hSCM, hSvc: SC_HANDLE;
-  SessionParam: PWideChar;
+  SessionStr: String;
+  SI : TStartupInfoW;
+  Params: TServiceDynArgsW;
 begin
+  // Establish connection to the SCM
   hSCM := OpenSCManagerW(nil, nil, SC_MANAGER_CREATE_SERVICE);
 
   if hSCM = 0 then
     RaiseLastOsError;
 
+  // Create Run-as-system service
   hSvc := CreateServiceW(hSCM, RESVC_NAME, RESVC_DIPLAY_NAME,
     SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_DEMAND_START,
     SERVICE_ERROR_NORMAL, PWideChar('"' + ParamStr(0) + '" ' + RESVC_PARAM),
@@ -49,21 +83,33 @@ begin
   if hSvc = 0 then
     RaiseLastOSError;
 
+  // Pass the service parameters (session and desktop) so it would know who
+  // requested the restart action
   try
+    // Query current session
     with TToken.CreateOpenCurrent do
     begin
-      SessionParam := PWideChar(InfoClass.QueryString(tsSession));
+      SessionStr := InfoClass.QueryString(tsSession);
       Free;
     end;
 
-    if not StartServiceW(hSvc, 1, SessionParam) then
+    // Query startup info to get desktop. This function does not fail.
+    GetStartupInfoW(SI);
+
+    // Allocate memory for parameters
+    SetLength(Params, 2);
+    Params[0] := PWideChar(SessionStr);
+    Params[1] := SI.lpDesktop;
+
+    // Start the service
+    if not StartServiceW(hSvc, Length(Params), Params) then
       RaiseLastOSError;
   finally
     CloseServiceHandle(hSvc);
   end;
 end;
 
-procedure ReSvcDelegate(Handle: THandle; StartService: Boolean);
+procedure ReSvcDelegate(Handle: HWND; StartService: Boolean);
 var
   ExecInfo: TShellExecuteInfoW;
 begin
@@ -74,8 +120,11 @@ begin
     Wnd := Handle;
     lpVerb := PWideChar('runas');
     lpFile := PWideChar(ParamStr(0));
+
+    // The parameter states that the execution of the service was delegated
     if StartService then
       lpParameters := DELEGATE_PARAM;
+
     fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_UNICODE or SEE_MASK_FLAG_NO_UI;
     nShow := SW_SHOWNORMAL;
   end;
@@ -86,10 +135,10 @@ end;
 { Restart Service server functions }
 
 type
-  TServiceArgs = array [Byte] of PWideChar;
-  PServiceArgs = ^TServiceArgs;
+  TServiceArgsW = array [Byte] of PWideChar;
+  PServiceArgsW = ^TServiceArgsW;
 
-procedure ReSvcServiceMain(dwNumServicesArgs: DWORD;
+procedure ReSvcServiceMain(dwNumServicesArgs: Cardinal;
   lpServiceArgVectors: PLPWSTR) stdcall; forward;
 
 function StartServiceCtrlDispatcherW(lpServiceStartTable: PServiceTableEntryW):
@@ -112,13 +161,13 @@ var
       dwWaitHint:                5000
     );
 
-function ReSvcServerMain: Boolean;
+function ReSvcMain: Boolean;
 begin
   Result := StartServiceCtrlDispatcherW(@RESVC_SERVICE_TABLE);
 end;
 
-function ReSvcHandlerEx(dwControl: DWORD; dwEventType: DWORD;
-  lpEventData: LPVOID; lpContext: LPVOID): DWORD; stdcall;
+function ReSvcHandlerEx(dwControl: Cardinal; dwEventType: Cardinal;
+  lpEventData: Pointer; lpContext: Pointer): Cardinal; stdcall;
 begin
   if dwControl = SERVICE_CONTROL_INTERROGATE then
     Result := NO_ERROR
@@ -126,7 +175,13 @@ begin
     Result := ERROR_CALL_NOT_IMPLEMENTED;
 end;
 
-procedure ReSvcRunInSession(Session: Integer);
+/// <summary>
+///  This routine is called from a service and spawns a new instans of
+///  TokenUniverse in the specified session on the specified desktop.
+///  If the caller didn't pass us these parameters we use session 0 and
+///  WinSta0\Default.
+/// </summary>
+procedure ReSvcRunInSession(Session: Integer; Desktop: PWideChar);
 var
   Token, NewToken: TToken;
   SI: TStartupInfoW;
@@ -137,24 +192,36 @@ begin
   NewToken := nil;
 
   try
+    // Open current token so we can duplicate it and set session
     Token := TToken.CreateOpenCurrent;
 
+    // Duplicate
     NewToken := TToken.CreateDuplicateToken(Token,
       TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID or
       TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY, ttPrimary);
+
+    // Change session
     NewToken.InfoClass.Session := Session;
 
     FillChar(PI, SizeOf(PI), 0);
     FillChar(SI, SizeOf(SI), 0);
     SI.cb := SizeOf(SI);
-    SI.lpDesktop := 'WinSta0\Default';
 
+    // Use the specified desktop
+    if Assigned(Desktop) then
+      SI.lpDesktop := Desktop
+    else
+      SI.lpDesktop := 'WinSta0\Default';
+
+    // Launch
     if not CreateProcessAsUserW(NewToken.Handle, PWideChar(ParamStr(0)), nil,
       nil, nil, False, 0, nil, nil, SI, PI) then
       RaiseLastOSError
     else
     begin
-      case WaitForSingleObject(PI.hProcess, 100) of
+      // Check that the process didn't crash immediately
+      {$IFDEF DEBUG}
+      case WaitForSingleObject(PI.hProcess, 200) of
         WAIT_FAILED: DebugOut('Wait for the new process failed');
         WAIT_OBJECT_0:
           begin
@@ -165,6 +232,7 @@ begin
               DebugOut(PChar('Exit code: 0x' + IntToHex(ExitCode, 8)));
           end;
       end;
+      {$ENDIF}
       CloseHandle(PI.hProcess);
       CloseHandle(PI.hThread);
     end;
@@ -174,16 +242,22 @@ begin
   end;
 end;
 
-procedure ReSvcServiceMain(dwNumServicesArgs: DWORD;
+/// <summary>
+///  The main service routine.
+/// </summary>
+procedure ReSvcServiceMain(dwNumServicesArgs: Cardinal;
   lpServiceArgVectors: PLPWSTR) stdcall;
 var
   hSCM, hSvc: SC_HANDLE;
-  Session: Integer;
+  SeriveArgs: PServiceArgsW;
+  Session, i: Integer;
 begin
+  // Register service control handler
   ReSvcStatusHandle := RegisterServiceCtrlHandlerExW(RESVC_NAME,
     ReSvcHandlerEx, nil);
 
-  SetServiceStatus(ReSvcStatusHandle, ReSvcStatus); // Report running
+  // Report running status
+  SetServiceStatus(ReSvcStatusHandle, ReSvcStatus);
 
   // Delete self
   hSCM := OpenSCManager(nil, nil, SC_MANAGER_CONNECT);
@@ -200,16 +274,24 @@ begin
 
   // Start a copy in the specified session
   try
-    if (dwNumServicesArgs = 2) and TryStrToInt(PServiceArgs(lpServiceArgVectors)
-      [1], Session) then
-      ReSvcRunInSession(Session)
+    SeriveArgs := PServiceArgsW(lpServiceArgVectors);
+
+    {$IFDEF DEBUG}
+    OutputDebugString('Service parameters: ');
+    for i := 0 to dwNumServicesArgs - 1 do
+      OutputDebugString(SeriveArgs[i]);
+    {$ENDIF}
+
+    if (dwNumServicesArgs = 3) and TryStrToInt(SeriveArgs[1], Session) then
+      ReSvcRunInSession(Session, SeriveArgs[2])
     else
-      ReSvcRunInSession(0);
+      ReSvcRunInSession(0, nil);
   except
     on E: Exception do
       DebugOut(E.ClassName + ': ' + E.Message);
   end;
 
+  // Report that we have finished
   ReSvcStatus.dwCurrentState := SERVICE_STOPPED;
   SetServiceStatus(ReSvcStatusHandle, ReSvcStatus);
 end;
