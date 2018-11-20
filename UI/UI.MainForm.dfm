@@ -441,6 +441,11 @@ object FormMain: TFormMain
       Enabled = False
       OnClick = ActionSendHandle
     end
+    object AssignToProcess: TMenuItem
+      Caption = 'Assign to process'
+      Enabled = False
+      OnClick = AssignToProcessClick
+    end
     object HLine2: TMenuItem
       Caption = '-'
       Enabled = False

@@ -319,6 +319,7 @@ type
       Action: TPrivilegeAdjustAction);
     procedure GroupAdjust(GroupArray: TGroupArray; Action: TGroupAdjustAction);
     function SendHandleToProcess(PID: Cardinal): NativeUInt;
+    procedure AssignToProcess(PID: Cardinal);
   public
 
     {--------------------  TToken constructors  ----------------------------}
@@ -549,6 +550,42 @@ begin
 
   // Register in the factory and initialize token Cache
   TTokenFactory.RegisterToken(Self);
+end;
+
+procedure TToken.AssignToProcess(PID: Cardinal);
+var
+  hProcess: THandle;
+  AccessToken: TProcessAccessToken;
+  Status: NTSTATUS;
+begin
+  // Open the target process
+  hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or
+    PROCESS_SET_INFORMATION, False, PID);
+  WinCheck(hProcess <> 0, 'OpenProcess with PROCESS_QUERY_INFORMATION | ' +
+    'PROCESS_SET_INFORMATION', Self);
+
+  // Open it's first thread and store the handle inside AccessToken
+  Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_INFORMATION, 0, 0,
+    AccessToken.Thread);
+
+  if not NT_SUCCESS(Status) then
+  begin
+    CloseHandle(hProcess);
+    NativeCheck(Status, 'NtGetNextThread with THREAD_QUERY_INFORMATION', Self);
+  end;
+
+  // Prepare the token handle. The thread handle is already in here.
+  AccessToken.Token := hToken;
+
+  // Assign the token for the process
+  Status := NtSetInformationProcess(hProcess, ProcessAccessToken,
+    @AccessToken, SizeOf(AccessToken));
+
+  // Close the process and the thread but not the token
+  CloseHandle(hProcess);
+  CloseHandle(AccessToken.Thread);
+
+  NativeCheck(Status, 'NtSetInformationProcess#ProcessAccessToken', Self);
 end;
 
 function TToken.CanBeFreed: Boolean;
@@ -1334,8 +1371,11 @@ begin
       if Result then
       try
         Token.Cache.Integrity.SID.CreateFromSid(pIntegrity.Sid);
-        Token.Cache.Integrity.Level := TTokenIntegrityLevel(GetSidSubAuthority(
-          pIntegrity.Sid, 0)^);
+
+        // Get level value from the SID sub-authority
+        if GetSidSubAuthorityCount(pIntegrity.Sid)^ = 1 then
+          Token.Cache.Integrity.Level := TTokenIntegrityLevel(
+            GetSidSubAuthority(pIntegrity.Sid, 0)^);
 
         if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
           InvokeStringEvent(tsIntegrity);

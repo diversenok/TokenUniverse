@@ -93,6 +93,7 @@ var
 begin
   Snap := THandleSnapshot.Create;
 
+  {$R-}
   with Snap do
   try
     // Check if the snapshot is successful.
@@ -132,6 +133,7 @@ begin
   finally
     Snap.Free;
   end;
+  {$R+}
 end;
 
 function THandleList.GetCount: Integer;

@@ -232,6 +232,9 @@ function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
   DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
   stdcall; external advapi32;
 
+function OpenThread(dwDesiredAccess: Cardinal; bInheritHandle: LongBool;
+  dwThreadId: Cardinal): THandle; stdcall; external kernel32;
+
 /// <summary>
 ///   Formats a string to use as a location of an error that might occur while
 ///   quering token info class.

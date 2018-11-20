@@ -58,6 +58,7 @@ type
     N1: TMenuItem;
     MenuExit: TMenuItem;
     SelectColumns: TMenuItem;
+    AssignToProcess: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -87,6 +88,7 @@ type
     procedure MenuExitClick(Sender: TObject);
     procedure NewNtCreateTokenClick(Sender: TObject);
     procedure SelectColumnsClick(Sender: TObject);
+    procedure AssignToProcessClick(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -197,6 +199,14 @@ end;
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
 begin
   ShowErrorSuggestions(E);
+end;
+
+procedure TFormMain.AssignToProcessClick(Sender: TObject);
+begin
+  Frame.GetSelectedToken.AssignToProcess(TProcessListDialog.Execute(Self));
+
+  MessageDlg('The token was successfully assigned to the process.',
+    mtInformation, [mbOK], 0);
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);

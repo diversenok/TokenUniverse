@@ -10,7 +10,7 @@ procedure ShowErrorSuggestions(E: Exception);
 implementation
 
 uses
-  Winapi.Windows, System.UITypes, Vcl.Dialogs,
+  Winapi.Windows, System.UITypes, Vcl.Dialogs, TU.NativeApi,
   TU.Common, TU.Tokens.Winapi, TU.Tokens, TU.Tokens.Types;
 
 resourcestring
@@ -55,10 +55,15 @@ resourcestring
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
    'integrity level of the token is too low.';
   SETTER_GROUPS_ACCESS = 'This action requires `Adjust groups` access right.';
-  SETTER_GROUPS_DENY = 'And groups marked with `Mandatory` flag also cannot be disabled.';
-  SETTER_GROUPS_OTHER = 'You can''t disable groups with `Mandatory` flag ' +
-  'and you also can''t enable groups that are marked as ' +
-  '`Use for deny only`.';
+  SETTER_GROUPS_MODIFY = 'You can''t disable `Mandatory` groups ' +
+    'just like you can''t enable `Use for deny only` groups.';
+
+  ACTION_ASSIGN_NOT_SUPPORTED = 'A token can be assigned only on an early ' +
+    'stage of a process lifetime. Try this action on a newly created ' +
+    'suspended process.';
+  ACTION_ASSIGN_PRIVILEGE = '`SeAssignPrimaryTokenPrivilege` is required to ' +
+    'assign tokens that are not derived from your current token. ';
+  ACTION_ASSIGN_TYPE = 'Only primary token can be assigned to a process';
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
@@ -133,10 +138,22 @@ begin
       Exit(SETTER_GROUPS_ACCESS);
 
     if E.ErrorCode = ERROR_CANT_ENABLE_DENY_ONLY then
-      Exit(SETTER_GROUPS_DENY);
+      Exit(SETTER_GROUPS_MODIFY);
 
     if E.ErrorCode = ERROR_CANT_DISABLE_MANDATORY then
-      Exit(SETTER_GROUPS_OTHER);
+      Exit(SETTER_GROUPS_MODIFY);
+  end;
+
+  if E.ErrorOrigin = 'NtSetInformationProcess#ProcessAccessToken' then
+  begin
+   if E.ErrorCode = STATUS_NOT_SUPPORTED then
+     Exit(ACTION_ASSIGN_NOT_SUPPORTED);
+
+   if E.ErrorCode = STATUS_PRIVILEGE_NOT_HELD then
+     Exit(ACTION_ASSIGN_PRIVILEGE);
+
+   if E.ErrorCode = STATUS_BAD_IMPERSONATION_LEVEL then
+     Exit(ACTION_ASSIGN_TYPE);
   end;
 end;
 

@@ -18,6 +18,9 @@ const
 
   STATUS_INFO_LENGTH_MISMATCH: NTSTATUS = $C0000004;
   STATUS_BUFFER_TOO_SMALL: NTSTATUS = $C0000023;
+  STATUS_PRIVILEGE_NOT_HELD = $C0000061;
+  STATUS_BAD_IMPERSONATION_LEVEL = $C00000A5;
+  STATUS_NOT_SUPPORTED = $C00000BB;
   STATUS_IMPLEMENTATION_LIMIT = $C000042B;
 
 type
@@ -34,8 +37,7 @@ type
     SystemExtendedHandleInformation = 64 // q: TSystemHandleInformationEx
   );
 
-  { SystemProcessInformation = 5 }
-
+  // SystemProcessInformation
   TSystemProcessInformation = record
     NextEntryOffset: Cardinal;
     NumberOfThreads: Cardinal;
@@ -46,8 +48,6 @@ type
     InheritedFromProcessId: NativeUInt;
   end;
   PSystemProcessInformation = ^TSystemProcessInformation;
-
-  { SystemExtendedHandleInformation = 64 }
 
   TSystemHandleTableEntryInfoEx = record
     PObject: Pointer;
@@ -61,6 +61,7 @@ type
   end;
   PSystemHandleTableEntryInfoEx = ^TSystemHandleTableEntryInfoEx;
 
+  // SystemExtendedHandleInformation
   TSystemHandleInformationEx = record
     NumberOfHandles: NativeUInt;
     Reserved: NativeUInt;
@@ -72,12 +73,23 @@ type
 
   TObjectInformationClass = (ObjectBasicInformation);
 
+  // ObjectBasicInformation
   TObjectBasicInformaion = record
     Attributes: Cardinal;
     GrantedAccess: ACCESS_MASK;
     HandleCount: Cardinal;
     PointerCount: Cardinal;
     Reserved: array [0..9] of Cardinal;
+  end;
+
+  { ProcessInformation class }
+
+  TProcessInformationClass = (ProcessAccessToken = 9);
+
+  // ProcessAccessToken
+  TProcessAccessToken = record
+    Token: THandle; // needs TOKEN_ASSIGN_PRIMARY
+    Thread: THandle; // needs THREAD_QUERY_INFORMATION
   end;
 
   // TODO: ObjectTypesInformation for token type
@@ -94,6 +106,15 @@ function NtQuerySystemInformation(SystemInformationClass
 function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
   TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
   Cardinal; ReturnLength: PCardinal): LongWord; stdcall; external ntdll;
+
+function NtSetInformationProcess(ProcessHandle: THandle;
+  ProcessInformationClass: TProcessInformationClass;
+  ProcessInformation: Pointer; ProcessInformationLength: Cardinal): NTSTATUS;
+  stdcall; external ntdll;
+
+function NtGetNextThread(ProcessHandle: THandle; ThreadHandle: THandle;
+  DesiredAccess: ACCESS_MASK; HandleAttributes: Cardinal; Flags: Cardinal;
+  out NewThreadHandle: THandle): NTSTATUS; stdcall; external ntdll;
 
 function NtCreateToken(var TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
   ObjectAttributes: Pointer; TokenType: TTokenType; var AuthenticationId: LUID;
