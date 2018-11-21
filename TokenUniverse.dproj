@@ -170,6 +170,10 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="UI\UI.Settings.pas"/>
+        <DCCReference Include="UI\UI.Modal.Access.pas">
+            <Form>DialogAccess</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

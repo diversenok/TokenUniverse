@@ -32,7 +32,8 @@ uses
   UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken},
   TU.Tokens.Types in 'Core\TU.Tokens.Types.pas',
   UI.Modal.Columns in 'UI\UI.Modal.Columns.pas' {DialogColumns},
-  UI.Settings in 'UI\UI.Settings.pas';
+  UI.Settings in 'UI\UI.Settings.pas',
+  UI.Modal.Access in 'UI\UI.Modal.Access.pas' {DialogAccess};
 
 {$R *.res}
 

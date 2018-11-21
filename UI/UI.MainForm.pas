@@ -102,7 +102,7 @@ uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.Session,
-  UI.Restrict, UI.CreateToken, UI.Modal.Columns,
+  UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
 
 {$R *.dfm}
@@ -122,8 +122,7 @@ end;
 
 procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
 begin
-  // TODO: An option to grab maximum access forsibly
-  Frame.AddToken(TToken.CreateDuplicateHandle(Frame.GetSelectedToken, 0, True));
+  Frame.AddToken(TDialogAccess.ExecuteDuplication(Self, Frame.GetSelectedToken));
 end;
 
 procedure TFormMain.ActionLogon(Sender: TObject);

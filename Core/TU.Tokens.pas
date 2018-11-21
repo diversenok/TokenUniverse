@@ -634,13 +634,52 @@ constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
   SameAccess: Boolean);
 const
   Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
+var
+  i: Integer;
 begin
-  { TODO: DuplicateHandle doesn't work well with MAXIMUM_ALLOWED access.
-    We need to implement it manually. }
+  // DuplicateHandle does not support MAXIMUM_ALLOWED access and returns zero
+  // access instead. We should implement it on our own by probing additional
+  // access masks.
 
-  WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
-    GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
-    'DuplicateHandle');
+  if (Access = MAXIMUM_ALLOWED) and not SameAccess then
+  begin
+    // Lucky guess: try full access first
+    if DuplicateHandle(GetCurrentProcess, SrcToken.hToken, GetCurrentProcess,
+      @hToken, TOKEN_ALL_ACCESS, False, 0) then
+    begin
+      // The guess was correct, everything is done
+    end
+    else if GetLastError <> ERROR_ACCESS_DENIED then
+    begin
+      // Something else went wrong, raise an exception
+      WinCheck(False, 'DuplicateHandle', SrcToken);
+    end
+    else
+    begin
+      // Full access didn't work. Collect the access that is already granted
+      Access := SrcToken.HandleInformation.Access;
+
+      // Try each one that is not granted yet
+      for i := 0 to ACCESS_COUNT - 1 do
+        if (Access and AccessValues[i]) = 0 then
+          if DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
+            GetCurrentProcess, @hToken, AccessValues[i], False, 0) then
+          begin
+            // Yes, this access can be granted, add it
+            Access := Access or AccessValues[i];
+            CloseHandle(hToken);
+          end;
+
+      // Combine everything we have got
+      WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
+        GetCurrentProcess, @hToken, Access, False, 0),
+        'DuplicateHandle', SrcToken);
+    end;
+  end
+  else // Use ordinary duplication
+    WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
+      GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
+      'DuplicateHandle', SrcToken);
 
   FCaption := SrcToken.Caption + ' (ref)'
 end;

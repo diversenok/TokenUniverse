@@ -30,16 +30,12 @@ object DialogAccessAndType: TDialogAccessAndType
     Anchors = [akTop, akRight, akBottom]
     Caption = 'Token Type '
     TabOrder = 0
-    DesignSize = (
-      140
-      149)
     object RadioButtonPrimary: TRadioButton
       Tag = 4
       Left = 16
       Top = 118
       Width = 113
       Height = 17
-      Anchors = [akLeft]
       Caption = '&Primary Token'
       Checked = True
       TabOrder = 0
@@ -51,7 +47,6 @@ object DialogAccessAndType: TDialogAccessAndType
       Top = 24
       Width = 113
       Height = 17
-      Anchors = [akLeft]
       Caption = '&Anonymous'
       TabOrder = 1
       OnClick = RadioButtonClick
@@ -62,7 +57,6 @@ object DialogAccessAndType: TDialogAccessAndType
       Top = 48
       Width = 113
       Height = 17
-      Anchors = [akLeft]
       Caption = 'I&dentification'
       TabOrder = 2
       OnClick = RadioButtonClick
@@ -73,7 +67,6 @@ object DialogAccessAndType: TDialogAccessAndType
       Top = 71
       Width = 113
       Height = 17
-      Anchors = [akLeft]
       Caption = '&Impersonation'
       TabOrder = 3
       OnClick = RadioButtonClick
@@ -84,7 +77,6 @@ object DialogAccessAndType: TDialogAccessAndType
       Top = 95
       Width = 113
       Height = 17
-      Anchors = [akLeft]
       Caption = 'Dele&gation'
       DoubleBuffered = False
       ParentDoubleBuffered = False
