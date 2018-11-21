@@ -3,9 +3,11 @@ object DialogAccessAndType: TDialogAccessAndType
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Select access rights and token type'
-  ClientHeight = 196
-  ClientWidth = 351
+  ClientHeight = 212
+  ClientWidth = 354
   Color = clBtnFace
+  Constraints.MinHeight = 250
+  Constraints.MinWidth = 370
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,30 +16,31 @@ object DialogAccessAndType: TDialogAccessAndType
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  ShowHint = True
   DesignSize = (
-    351
-    196)
+    354
+    212)
   PixelsPerInch = 96
   TextHeight = 13
   object GroupBoxType: TGroupBox
-    Left = 205
+    Left = 208
     Top = 3
     Width = 140
-    Height = 156
+    Height = 149
     Anchors = [akTop, akRight, akBottom]
     Caption = 'Token Type '
     TabOrder = 0
     DesignSize = (
       140
-      156)
+      149)
     object RadioButtonPrimary: TRadioButton
       Tag = 4
       Left = 16
-      Top = 124
+      Top = 118
       Width = 113
       Height = 17
       Anchors = [akLeft]
-      Caption = 'Primary Token'
+      Caption = '&Primary Token'
       Checked = True
       TabOrder = 0
       TabStop = True
@@ -45,44 +48,44 @@ object DialogAccessAndType: TDialogAccessAndType
     end
     object RadioButtonAnonymous: TRadioButton
       Left = 16
-      Top = 25
+      Top = 24
       Width = 113
       Height = 17
       Anchors = [akLeft]
-      Caption = 'Anonymous'
+      Caption = '&Anonymous'
       TabOrder = 1
       OnClick = RadioButtonClick
     end
     object RadioButtonIdentification: TRadioButton
       Tag = 1
       Left = 16
-      Top = 50
+      Top = 48
       Width = 113
       Height = 17
       Anchors = [akLeft]
-      Caption = 'Identification'
+      Caption = 'I&dentification'
       TabOrder = 2
       OnClick = RadioButtonClick
     end
     object RadioButtonImpersonation: TRadioButton
       Tag = 2
       Left = 16
-      Top = 75
+      Top = 71
       Width = 113
       Height = 17
       Anchors = [akLeft]
-      Caption = 'Impersonation'
+      Caption = '&Impersonation'
       TabOrder = 3
       OnClick = RadioButtonClick
     end
     object RadioButtonDelegation: TRadioButton
       Tag = 3
       Left = 16
-      Top = 100
+      Top = 95
       Width = 113
       Height = 17
       Anchors = [akLeft]
-      Caption = 'Delegation'
+      Caption = 'Dele&gation'
       DoubleBuffered = False
       ParentDoubleBuffered = False
       TabOrder = 4
@@ -90,30 +93,30 @@ object DialogAccessAndType: TDialogAccessAndType
     end
   end
   object ButtonOK: TButton
-    Left = 205
-    Top = 165
+    Left = 208
+    Top = 181
     Width = 66
     Height = 24
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 1
+    TabOrder = 2
   end
   object StaticTextAccess: TStaticText
     Left = 5
     Top = 3
-    Width = 194
+    Width = 197
     Height = 17
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 'Access rights'
-    TabOrder = 2
+    TabOrder = 5
   end
   object ButtonCancel: TButton
-    Left = 279
-    Top = 165
+    Left = 282
+    Top = 181
     Width = 66
     Height = 24
     Anchors = [akRight, akBottom]
@@ -125,8 +128,8 @@ object DialogAccessAndType: TDialogAccessAndType
   object ListViewAccess: TListViewEx
     Left = 5
     Top = 24
-    Width = 194
-    Height = 164
+    Width = 197
+    Height = 180
     Anchors = [akLeft, akTop, akRight, akBottom]
     Checkboxes = True
     Columns = <
@@ -140,5 +143,15 @@ object DialogAccessAndType: TDialogAccessAndType
     ShowColumnHeaders = False
     TabOrder = 4
     ViewStyle = vsReport
+  end
+  object CheckBoxEffective: TCheckBox
+    Left = 216
+    Top = 158
+    Width = 132
+    Height = 17
+    Hint = 'Duplicate only currently enabled parts of the token.'
+    Anchors = [akRight, akBottom]
+    Caption = 'Copy &effective only'
+    TabOrder = 1
   end
 end

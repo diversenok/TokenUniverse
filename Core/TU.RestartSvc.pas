@@ -198,7 +198,7 @@ begin
     // Duplicate
     NewToken := TToken.CreateDuplicateToken(Token,
       TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID or
-      TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY, ttPrimary);
+      TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY, ttPrimary, False);
 
     // Change session
     NewToken.InfoClass.Session := Session;

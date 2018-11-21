@@ -23,11 +23,11 @@ resourcestring
 
   SUGGEST_TEMPLATE = #$D#$A#$D#$A'--- Suggestions ---'#$D#$A'%s';
 
-  DUPLICATE_IMP = 'You can''t raise a token from Anonymous and Identification ' +
-    'up to Impersonation, Delegation, or Primary one. If you are working with ' +
-    'linked tokens you can obtain a primary linked token if you have ' +
-    'SeTcbPrivilege privilege. Or, if you have SeCreateTokenPrivilege you can ' +
-    'cheat by creating the required token by yourself =)';
+  DUPLICATE_IMP = 'You can''t duplicate a token from a lower impersonation ' +
+    'level to a higher one. Although, you can create a primary token from ' +
+    'Impersonation and Delegation ones. If you are working with linked ' +
+    'tokens you can obtain a primary linked token if you have ' +
+    '`SeTcbPrivilege` privilege.';
 
   WTS_QUERY_TOKEN_PRIV = 'WTSQueryUserToken requires SeTcbPrivilege.';
   WTS_QUERY_TOKEN_NO_TOKEN = 'You can''t query a token of a session that ' +
@@ -67,8 +67,8 @@ resourcestring
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
-  if (E.ErrorOrigin = 'DuplicateTokenEx') and
-    (E.ErrorCode = ERROR_BAD_IMPERSONATION_LEVEL) then
+  if (E.ErrorOrigin = 'NtDuplicateToken') and
+    (E.ErrorCode = STATUS_BAD_IMPERSONATION_LEVEL) then
     Exit(DUPLICATE_IMP);
 
   if E.ErrorOrigin = 'WTSQueryUserToken' then

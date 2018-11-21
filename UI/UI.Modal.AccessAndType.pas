@@ -20,6 +20,7 @@ type
     StaticTextAccess: TStaticText;
     ButtonCancel: TButton;
     ListViewAccess: TListViewEx;
+    CheckBoxEffective: TCheckBox;
     procedure RadioButtonClick(Sender: TObject);
   private
     FSelectedType: TTokenTypeEx;
@@ -57,7 +58,7 @@ begin
     ShowModal;
 
     Result := TToken.CreateDuplicateToken(Source, SelectedAccess,
-      SelectedTokenType);
+      SelectedTokenType, CheckBoxEffective.Checked);
   end;
 end;
 

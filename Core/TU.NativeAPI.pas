@@ -29,6 +29,17 @@ type
     MaximumLength: Word;
     Buffer: PWideChar;
   end;
+  PUNICODE_STRING = ^UNICODE_STRING;
+
+  TObjectAttributes = record
+    Length: Cardinal;
+    RootDirectory: THandle;
+    ObjectName: PUNICODE_STRING;
+    Attributes: Cardinal;
+    SecurityDescriptor: PSecurityDescriptor;
+    SecurityQualityOfService: PSecurityQualityOfService;
+  end;
+  PObjectAttributes = ^TObjectAttributes;
 
   { SystemInformation class }
 
@@ -115,6 +126,11 @@ function NtSetInformationProcess(ProcessHandle: THandle;
 function NtGetNextThread(ProcessHandle: THandle; ThreadHandle: THandle;
   DesiredAccess: ACCESS_MASK; HandleAttributes: Cardinal; Flags: Cardinal;
   out NewThreadHandle: THandle): NTSTATUS; stdcall; external ntdll;
+
+function NtDuplicateToken(ExistingTokenHandle: THandle;
+  DesiredAccess: ACCESS_MASK; ObjectAttributes: PObjectAttributes;
+  EffectiveOnly: LongBool; TokenType: TTokenType; out NewTokenHandle: THandle)
+  : NTSTATUS; stdcall; external ntdll;
 
 function NtCreateToken(var TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
   ObjectAttributes: Pointer; TokenType: TTokenType; var AuthenticationId: LUID;

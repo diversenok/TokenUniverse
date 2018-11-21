@@ -352,7 +352,7 @@ type
 
     /// <summary> Duplicates a token. </summary>
     constructor CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
-      TokenTypeEx: TTokenTypeEx);
+      TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
 
     /// <summary>
     ///  Duplicates a handle. The result references for the same kernel object.
@@ -554,8 +554,6 @@ begin
   if FHandleInformation.KernelObjectAddress = 0 then
     raise Exception.Create('Can not obtain kernel object address of a token');
 
-  // TODO: Test cleanup
-
   // Register in the factory and initialize token Cache
   TTokenFactory.RegisterToken(Self);
 end;
@@ -648,14 +646,37 @@ begin
 end;
 
 constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
-  TokenTypeEx: TTokenTypeEx);
+  TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
+var
+  ObjAttr: TObjectAttributes;
+  SecQos: TSecurityQualityOfService;
+  TokenType: TTokenType;
 begin
-  // TODO: NtDuplicateToken with Effective flag
-  WinCheck(DuplicateTokenEx(SrcToken.hToken, Cardinal(Access), nil,
-    TokenTypeEx.SecurityImpersonationLevel, TokenTypeEx.TokenTypeValue, hToken),
-    'DuplicateTokenEx', SrcToken);
+  // Prepare Security QoS to store the impersonation level
+  FillChar(SecQos, SizeOf(SecQos), 0);
+  SecQos.Length := SizeOf(SecQos);
+  SecQos.EffectiveOnly := EffectiveOnly;
 
-  FCaption := SrcToken.Caption + ' (copy)';
+  if TokenTypeEx = ttPrimary then
+    TokenType := TokenPrimary
+  else
+  begin
+    TokenType := TokenImpersonation;
+    SecQos.ImpersonationLevel := TSecurityImpersonationLevel(TokenTypeEx);
+  end;
+
+  // Prepare Object Attributes to store Security QoS
+  FillChar(ObjAttr, SizeOf(ObjAttr), 0);
+  ObjAttr.Length := SizeOf(ObjAttr);
+  ObjAttr.SecurityQualityOfService := @SecQos;
+
+  NativeCheck(NtDuplicateToken(SrcToken.hToken, Access, @ObjAttr, EffectiveOnly,
+    TokenType, hToken), 'NtDuplicateToken', SrcToken);
+
+  if EffectiveOnly then
+    FCaption := SrcToken.Caption + ' (eff. copy)'
+  else
+    FCaption := SrcToken.Caption + ' (copy)'
 end;
 
 constructor TToken.CreateOpenCurrent;
