@@ -105,7 +105,7 @@ function NtQuerySystemInformation(SystemInformationClass
 
 function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
   TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
-  Cardinal; ReturnLength: PCardinal): LongWord; stdcall; external ntdll;
+  Cardinal; ReturnLength: PCardinal): NTSTATUS; stdcall; external ntdll;
 
 function NtSetInformationProcess(ProcessHandle: THandle;
   ProcessInformationClass: TProcessInformationClass;

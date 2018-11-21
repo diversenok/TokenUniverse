@@ -8,6 +8,7 @@ object ProcessListDialog: TProcessListDialog
   Color = clBtnFace
   Constraints.MinHeight = 240
   Constraints.MinWidth = 280
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11

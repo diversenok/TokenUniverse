@@ -29,6 +29,8 @@ type
     tsLogonWtsSession, tsLogonTime, tsLogonType, tsLogonUserName, tsSourceLUID,
     tsSourceName, tsOrigin);
 
+  TToken = class;
+
   /// <summary>
   ///  A class that internally holds cache and publicly holds events. Suitable
   ///  for all tokens pointing the same kernel object.
@@ -78,13 +80,15 @@ type
     property OnGroupsChange: TValuedEventHandler<TGroupArray> read FOnGroupsChange;
     property OnStatisticsChange: TValuedEventHandler<TTokenStatistics> read FOnStatisticsChange;
 
+    /// <summary>
+    ///  Calls the event listener with the newly obtained string and subscribes
+    ///  for future events.
+    /// </summary>
     procedure SubscribeString(StringClass: TTokenStringClass;
-      Listener: TEventListener<String>);
+      Listener: TEventListener<String>; TokenToQuery: TToken);
     procedure UnSubscribeString(StringClass: TTokenStringClass;
       Listener: TEventListener<String>);
   end;
-
-  TToken = class;
 
   /// <summary>
   ///  A structure that implements an interface of quering and setting token
@@ -438,8 +442,12 @@ begin
 end;
 
 procedure TTokenCacheAndEvents.SubscribeString(StringClass: TTokenStringClass;
-  Listener: TEventListener<String>);
+  Listener: TEventListener<String>; TokenToQuery: TToken);
 begin
+  // Query the string and call the new event listener with it
+  Listener(TokenToQuery.InfoClass.QueryString(StringClass));
+
+  // Subscribe for future events
   OnStringDataChange[StringClass].Add(Listener);
 end;
 

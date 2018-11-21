@@ -205,6 +205,7 @@ end;
 procedure TPrivilegesListViewEx.SubscribeToken;
 begin
   inherited;
+  Token.InfoClass.Query(tdTokenPrivileges);
   Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
 end;
 
@@ -382,7 +383,10 @@ procedure TGroupListViewEx.SubscribeToken;
 begin
   inherited;
   if FSource = gsGroups then
-    Token.Events.OnGroupsChange.Add(ChangedGroups)
+  begin
+    Token.InfoClass.Query(tdTokenGroups);
+    Token.Events.OnGroupsChange.Add(ChangedGroups);
+  end
   else if FSource = gsRestrictedSIDs then
     if Token.InfoClass.Query(tdTokenRestrictedSids) then
       ChangedGroups(Token.InfoClass.RestrictedSids);
