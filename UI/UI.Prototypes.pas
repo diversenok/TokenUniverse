@@ -30,7 +30,7 @@ type
     procedure UnsubscribeToken; override;
   public
     property Privileges: TPrivilegeArray read FPrivileges;
-    function SelectedPrivileges: TPrivilegeLUIDArray;
+    function SelectedPrivileges: TPrivilegeArray;
     function CheckedPrivileges: TPrivilegeArray;
   end;
 
@@ -111,7 +111,7 @@ procedure Register;
 implementation
 
 uses
-  System.Generics.Collections, UI.Colors, TU.Tokens.Winapi;
+  System.Generics.Collections, UI.Colors, TU.Winapi;
 
 procedure Register;
 begin
@@ -188,7 +188,7 @@ begin
     end;
 end;
 
-function TPrivilegesListViewEx.SelectedPrivileges: TPrivilegeLUIDArray;
+function TPrivilegesListViewEx.SelectedPrivileges: TPrivilegeArray;
 var
   i, j: integer;
 begin
@@ -197,7 +197,7 @@ begin
   for i := 0 to Items.Count - 1 do
     if Items[i].Selected then
     begin
-      Result[j] := Privileges[i].Luid;
+      Result[j] := Privileges[i];
       Inc(j);
     end;
 end;

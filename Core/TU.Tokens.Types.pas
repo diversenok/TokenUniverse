@@ -11,7 +11,7 @@ interface
   on the same simple type. }
 
 uses
-  Winapi.Windows, TU.Tokens.Winapi, TU.Common;
+  Winapi.Windows, TU.Winapi, TU.Common;
 
 type
   TSecurityIdentifier = record
@@ -30,6 +30,7 @@ type
     function ToString: String;
     function SIDTypeToString: String;
     function HasPrettyName: Boolean;
+    function AllocSid: PSID;
   end;
 
   TGroupAttributes = (
@@ -72,8 +73,7 @@ type
   end;
 
   TPrivilegeArray = array of TPrivilege;
-  TPrivilegeLUIDArray = array of TLargeInteger;
-
+  
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
   TLuidHelper = record helper for LUID
@@ -137,10 +137,36 @@ function BytesToString(Size: Cardinal): String;
 function EnabledDisabledToString(Value: LongBool): String;
 function YesNoToString(Value: LongBool): String;
 
+/// <summary>
+///   Formats a string to use as a location of an error that might occur while
+///   quering token info class.
+/// </summary>
+function GetterMessage(InfoClass: TTokenInformationClass): String;
+
+/// <summary>
+///   Formats a string to use as a location of an error that might occur while
+///   setting token info class.
+/// </summary>
+function SetterMessage(InfoClass: TTokenInformationClass): String;
+
 implementation
 
 uses
-  System.SysUtils, TU.NativeApi;
+  System.SysUtils, TU.NativeApi, System.TypInfo;
+
+function GetterMessage(InfoClass: TTokenInformationClass): String;
+begin
+  // We use a name of info class from the enumeration definition
+  Result := 'GetTokenInformation:' +
+    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
+end;
+
+function SetterMessage(InfoClass: TTokenInformationClass): String;
+begin
+  // We use a name of info class from the enumeration definition
+  Result := 'SetTokenInformation:' +
+    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
+end;
 
 { TTokenAccess }
 
@@ -173,6 +199,11 @@ begin
 end;
 
 { TSecurityIdentifier }
+
+function TSecurityIdentifier.AllocSid: PSID;
+begin
+  ConvertStringSidToSid(PWideChar(SID), Result);
+end;
 
 constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSID);
 begin

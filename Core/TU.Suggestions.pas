@@ -11,7 +11,7 @@ implementation
 
 uses
   Winapi.Windows, System.UITypes, Vcl.Dialogs, TU.NativeApi,
-  TU.Common, TU.Tokens.Winapi, TU.Tokens, TU.Tokens.Types;
+  TU.Common, TU.Winapi, TU.Tokens, TU.Tokens.Types;
 
 resourcestring
   TITLE_OS_ERROR = 'System Error';
@@ -33,8 +33,8 @@ resourcestring
   WTS_QUERY_TOKEN_NO_TOKEN = 'You can''t query a token of a session that ' +
     'doesn''t belong to any user.';
 
-  RESTCICT_ACCESS = 'The hande need to grant `Duplicate` access to create ' +
-    ' resticted tokens.';
+  RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
+    'resticted tokens.';
 
   GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
     'from the token';
@@ -44,12 +44,13 @@ resourcestring
   SETTER_DEFAULT = '`Adjust default` access right is required to change this ' +
   'information class for the token';
   SETTER_SESSION = 'To change the session of a token you need to ' +
-    'have SeTcbPrivilege and also `Adjust SessionId` and `Adjust default` '+
+    'have `SeTcbPrivilege` and also `Adjust SessionId` and `Adjust default` '+
     'access rights for the token.';
-  SETTER_INTEGRITY_RAISE = 'To raise the integrity level of a token you need to ' +
-    'have SeTcbPrivilege.';
-  SETTER_UIACCESS_TCB = 'You need to have SeTcbPrivilege to enable UIAccess flag.';
-  SETTER_POLICY_TCB = 'Changing of mandatory integrity policy requires SeTcbPrivilege.';
+  SETTER_INTEGRITY_TCB = 'To raise the integrity level of a token you need to ' +
+    'have `SeTcbPrivilege`.';
+  SETTER_UIACCESS_TCB = 'You need `SeTcbPrivilege` to enable UIAccess flag.';
+  SETTER_POLICY_TCB = 'Changing of mandatory integrity policy requires ' +
+    '`SeTcbPrivilege`.';
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
     'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
@@ -80,8 +81,8 @@ begin
       Exit(WTS_QUERY_TOKEN_NO_TOKEN);
   end;
 
-  if (E.ErrorOrigin = 'CreateRestricted') and
-    (E.ErrorCode = ERROR_ACCESS_DENIED)  then
+  if (E.ErrorOrigin = 'NtFilterToken') and
+    (E.ErrorCode = STATUS_ACCESS_DENIED)  then
     Exit(RESTCICT_ACCESS);
 end;
 
@@ -114,7 +115,7 @@ begin
       Exit(SETTER_SESSION);
 
     if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
-      Exit(SETTER_INTEGRITY_RAISE);
+      Exit(SETTER_INTEGRITY_TCB);
 
     if E.ErrorOrigin = SetterMessage(TokenUIAccess) then
       Exit(SETTER_UIACCESS_TCB);
@@ -175,7 +176,8 @@ end;
 
 procedure ShowErrorSuggestions(E: Exception);
 begin
-  if (E is EAccessViolation) or (E is EInvalidPointer) then
+  if (E is EAccessViolation) or (E is EInvalidPointer) or
+    (E is EAssertionFailed) then
     TaskMessageDlg(TITLE_BUG, E.Message + BUGTRACKER, mtError, [mbOk], 0)
   else if E is EConvertError then
     TaskMessageDlg(TITLE_CONVERT, E.Message, mtError, [mbOk], 0)

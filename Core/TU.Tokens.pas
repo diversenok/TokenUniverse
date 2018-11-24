@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
-  TU.Tokens.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi;
+  TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi;
 
 type
   /// <summary>
@@ -270,22 +270,21 @@ type
       out GroupArray: TGroupArray): Boolean;
 
     /// <summary>
-    ///  Converts an array of groups from our
-    ///  <see cref="TU.Tokens.Types.TSecurityIdentifier"/> format to Winapi's
-    ///  <see cref="Winapi.PSID"/> array.
+    ///  Allocates and fills <see cref="Winapi.PTokenGroups"/>.
     /// </summary>
-    /// <remarks>
-    ///  The memory of each item should be freed by calling
-    ///  <see cref="FreeSidArray"/>.
-    /// </remarks>
-    class function ConvertGroupArrayToSIDs(Groups: TGroupArray):
-      TSIDAndAttributesArray; static;
+    /// <remarks> Call <see cref="FreeGroups"/> after use. </remarks>
+    class function AllocGroups(Groups: TGroupArray;
+      ResetAttributes: Boolean = False): PTokenGroups; static;
 
     /// <summary>
-    ///  Frees memory previously allocated by
-    ///  <see cref="ConvertGroupArrayToSIDs"/>.
+    ///  Frees memory previously allocated by <see cref="AllocGroups"/>.
     /// </summary>
-    class procedure FreeSidArray(SIDs: TSIDAndAttributesArray); static;
+    class procedure FreeGroups(Groups: PTokenGroups); static;
+
+    /// <summary> Allocates <see cref="Winapi.PTokenPrivileges"/>. </summary>
+    /// <remarks> Call <see cref="System.FreeMem"/> after use. </remarks>
+    class function AllocPrivileges(Privileges: TPrivilegeArray;
+      pBufferSize: PCardinal = nil): PTokenPrivileges; static;
   public
 
     {--------------------  TToken public section ---------------------------}
@@ -319,9 +318,9 @@ type
     property OnClose: TEventHandler<TToken> read FOnClose;
     destructor Destroy; override;
 
-    procedure PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
+    procedure PrivilegeAdjust(Privileges: TPrivilegeArray;
       Action: TPrivilegeAdjustAction);
-    procedure GroupAdjust(GroupArray: TGroupArray; Action: TGroupAdjustAction);
+    procedure GroupAdjust(Groups: TGroupArray; Action: TGroupAdjustAction);
     function SendHandleToProcess(PID: Cardinal): NativeUInt;
     procedure AssignToProcess(PID: Cardinal);
   public
@@ -552,10 +551,53 @@ begin
   
   // This should not happen and I do not know what to do here
   if FHandleInformation.KernelObjectAddress = 0 then
-    raise Exception.Create('Can not obtain kernel object address of a token');
+    raise EAssertionFailed.Create('Can not obtain kernel object address of a ' +
+      'token.');
 
   // Register in the factory and initialize token Cache
   TTokenFactory.RegisterToken(Self);
+end;
+
+class function TToken.AllocGroups(Groups: TGroupArray;
+  ResetAttributes: Boolean): PTokenGroups;
+var
+  i: integer;
+begin
+  // The caller is responsible to free the result by calling FreeGroups.
+  Result := AllocMem(SizeOf(Integer) +
+    Length(Groups) * SizeOf(TSIDAndAttributes));
+
+  Result.GroupCount := Length(Groups);
+
+  for i := 0 to High(Groups) do
+  begin
+    // This function calls ConvertStringSidToSid to allocates memory that
+    // we need to clean up by calling LocalFree inside FreeGroups routine.
+    Result.Groups[i].Sid := Groups[i].SecurityIdentifier.AllocSid;
+
+    if not ResetAttributes then
+      Result.Groups[i].Attributes := Cardinal(Groups[i].Attributes);
+  end;
+end;
+
+class function TToken.AllocPrivileges(Privileges: TPrivilegeArray;
+  pBufferSize: PCardinal): PTokenPrivileges;
+var
+  i: Integer;
+  BufferSize: Cardinal;
+begin
+  BufferSize := SizeOf(Integer) +
+    Length(Privileges) * SizeOf(TLUIDAndAttributes);
+
+  if Assigned(pBufferSize) then
+    pBufferSize^ := BufferSize;
+
+  // Allocate memory for PTokenPrivileges
+  Result := AllocMem(BufferSize);
+
+  Result.PrivilegeCount := Length(Privileges);
+  for i := 0 to High(Privileges) do
+    Result.Privileges[i] := Privileges[i];
 end;
 
 procedure TToken.AssignToProcess(PID: Cardinal);
@@ -599,19 +641,6 @@ begin
   // Check whether someone wants to raise EAbort to deny token destruction
   OnCanClose.Invoke(Self);
   Result := True;
-end;
-
-class function TToken.ConvertGroupArrayToSIDs(
-  Groups: TGroupArray): TSIDAndAttributesArray;
-var
-  i: integer;
-begin
-  // Note that ConvertStringSidToSid allocates memory that we need to clean up
-  // by calling LocalFree. It is done inside FreeSidArray routine.
-  SetLength(Result, Length(Groups));
-  for i := 0 to High(Result) do
-    ConvertStringSidToSid(PWideChar(Groups[i].SecurityIdentifier.SID),
-      Result[i].Sid);
 end;
 
 constructor TToken.Create(Handle: THandle; Caption: String);
@@ -758,22 +787,25 @@ constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
   SIDsToDisabe, SIDsToRestrict: TGroupArray;
   PrivilegesToDelete: TPrivilegeArray);
 var
-  Disable, Restrict: TSIDAndAttributesArray;
+  DisableGroups, RestrictGroups: PTokenGroups;
+  DeletePrivileges: PTokenPrivileges;
 begin
-  // Prepare SID arrays of the suitable format
-  Disable := ConvertGroupArrayToSIDs(SIDsToDisabe);
-  Restrict := ConvertGroupArrayToSIDs(SIDsToRestrict);
+  // Prepare SIDs and LUIDs
+  DisableGroups := AllocGroups(SIDsToDisabe);
+  DeletePrivileges := AllocPrivileges(PrivilegesToDelete);
+
+  // Attributes for Restricting SIDs must be set to zero
+  RestrictGroups := AllocGroups(SIDsToRestrict, True);
   try
-    WinCheck(CreateRestrictedToken(SrcToken.hToken, Flags,
-      Length(Disable), Disable,
-      Length(PrivilegesToDelete), PLUIDAndAttributes(PrivilegesToDelete),
-      Length(Restrict), Restrict,
-      hToken), 'CreateRestricted', SrcToken);
+    // aka CreateRestrictedToken API
+    NativeCheck(NtFilterToken(SrcToken.hToken, Flags, DisableGroups,
+      DeletePrivileges, RestrictGroups, hToken), 'NtFilterToken', SrcToken);
 
     FCaption := 'Restricted ' + SrcToken.Caption;
   finally
-    FreeSidArray(Disable);
-    FreeSidArray(Restrict);
+    FreeGroups(RestrictGroups);
+    FreeMem(DeletePrivileges);
+    FreeGroups(DisableGroups);
   end;
 end;
 
@@ -781,8 +813,7 @@ constructor TToken.CreateWithLogon(LogonType: TLogonType;
   LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
   AddGroups: TGroupArray);
 var
-  SIDs: TSIDAndAttributesArray;
-  pGroups: PTokenGroups;
+  GroupArray: PTokenGroups;
   i: integer;
 begin
   // If the user doesn't ask us to add some groups to the token we can use
@@ -794,24 +825,14 @@ begin
       Cardinal(LogonType), Cardinal(LogonProvider), hToken), 'LogonUserW')
   else
   begin
-    // Convert the specified groups to an array of PSIDs
-    SIDs := ConvertGroupArrayToSIDs(AddGroups);
-
-    // Allocate the memory for PTokenGroups buffer
-    pGroups := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
-      Length(AddGroups));
+    // Allocate SIDs for groups
+    GroupArray := AllocGroups(AddGroups);
     try
-      // Copy SIDs along with their attributes
-      pGroups.GroupCount := Length(SIDs);
-      for i := 0 to High(SIDs) do
-        pGroups.Groups[i] := SIDs[i];
-
       WinCheck(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
-        Cardinal(LogonType), Cardinal(LogonProvider), pGroups, hToken, nil,
+        Cardinal(LogonType), Cardinal(LogonProvider), GroupArray, hToken, nil,
         nil, nil, nil), 'LogonUserExExW');
     finally
-      FreeMem(pGroups);
-      FreeSidArray(SIDs);
+      FreeGroups(GroupArray);
     end;
   end;
 
@@ -853,50 +874,47 @@ begin
   inherited;
 end;
 
-class procedure TToken.FreeSidArray(SIDs: TSIDAndAttributesArray);
+class procedure TToken.FreeGroups(Groups: PTokenGroups);
 var
-  i: integer;
+  i: Integer;
 begin
-  // The memory was previously allocated by ConvertStringSidToSid.
-  for i := 0 to High(SIDs) do
-    if Assigned(SIDs[i].Sid) then
-      LocalFree(NativeUInt(SIDs[i].Sid));
+  Assert(Assigned(Groups));
+
+  // The memory of each item was previously allocated by ConvertStringSidToSid.
+  for i := 0 to Groups.GroupCount - 1 do
+    if Assigned(Groups.Groups[i].Sid) then
+      LocalFree(NativeUInt(Groups.Groups[i].Sid));
+
+  FreeMem(Groups);
 end;
 
-procedure TToken.GroupAdjust(GroupArray: TGroupArray; Action:
+procedure TToken.GroupAdjust(Groups: TGroupArray; Action:
   TGroupAdjustAction);
 const
   IsResetFlag: array [TGroupAdjustAction] of LongBool = (True, False, False);
 var
   i: integer;
-  GroupsArray: TSIDAndAttributesArray;
-  Buffer: PTokenGroups;
+  GroupArray: PTokenGroups;
 begin
-  // Allocate enought memory to hold all the groups
-  Buffer := AllocMem(SizeOf(Integer) + SizeOf(TSIDAndAttributes) *
-    Length(GroupArray));
-  Buffer.GroupCount := Length(GroupArray);
+  // Allocate group SIDs
+  GroupArray := AllocGroups(Groups);
 
-  // Allocate all PSIDs and copy them to the buffer
-  GroupsArray := ConvertGroupArrayToSIDs(GroupArray);
-  for i := 0 to High(GroupsArray) do
-    Buffer.Groups[i] := GroupsArray[i];
-
-  // Set approriate attribes depending on action
-  if Action = gaEnable then
-    for i := 0 to Buffer.GroupCount - 1 do
-      Buffer.Groups[i].Attributes := Cardinal(GroupEnabled);
+  // Set approriate attribes depending on the action
+  for i := 0 to GroupArray.GroupCount - 1 do
+    if Action = gaEnable then
+      GroupArray.Groups[i].Attributes := Cardinal(GroupEnabled)
+    else
+      GroupArray.Groups[i].Attributes := 0;
 
   try
-    WinCheck(AdjustTokenGroups(hToken, IsResetFlag[Action], Buffer, 0, nil,
+    WinCheck(AdjustTokenGroups(hToken, IsResetFlag[Action], GroupArray, 0, nil,
       nil), 'AdjustTokenGroups', Self);
 
     // Update the cache and notify event listeners
     InfoClass.ReQuery(tdTokenGroups);
     InfoClass.ReQuery(tdTokenStatistics);
   finally
-    FreeMem(Buffer);
-    FreeSidArray(GroupsArray);
+    FreeGroups(GroupArray);
   end;
 end;
 
@@ -911,33 +929,27 @@ begin
     Result.Value := TToken.Create(Handle, 'Linked token for' + Caption);
 end;
 
-procedure TToken.PrivilegeAdjust(PrivilegeArray: TPrivilegeLUIDArray;
+procedure TToken.PrivilegeAdjust(Privileges: TPrivilegeArray;
   Action: TPrivilegeAdjustAction);
 const
   ActionToAttribute: array [TPrivilegeAdjustAction] of Cardinal =
     (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
 var
-  Buffer: PTokenPrivileges;
-  BufferSize: Cardinal;
+  PrivBufferSize: Cardinal;
+  PrivArray: PTokenPrivileges;
   i: integer;
 begin
-  // Allocate enought memory to hold all the privileges
-  BufferSize := SizeOf(Cardinal) + SizeOf(TLUIDAndAttributes) *
-    Length(PrivilegeArray);
-
-  Buffer := AllocMem(BufferSize);
+  // Allocate privileges
+  PrivArray := AllocPrivileges(Privileges, @PrivBufferSize);
   try
-    Buffer.PrivilegeCount := Length(PrivilegeArray);
-    for i := 0 to High(PrivilegeArray) do
-    begin
-      Buffer.Privileges[i].Luid := PrivilegeArray[i];
-      Buffer.Privileges[i].Attributes := ActionToAttribute[Action];
-    end;
+    for i := 0 to PrivArray.PrivilegeCount - 1 do
+      PrivArray.Privileges[i].Attributes := ActionToAttribute[Action];
 
-    WinCheck(AdjustTokenPrivileges(hToken, False, Buffer, BufferSize, nil,
-      nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges', Self);
+    WinCheck(AdjustTokenPrivileges(hToken, False, PrivArray, PrivBufferSize,
+      nil, nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges',
+      Self);
   finally
-    FreeMem(Buffer);
+    FreeMem(PrivArray);
 
     // The function could modify privileges even without succeeding.
     // Update the cache and notify event listeners.
@@ -1315,6 +1327,16 @@ var
   i: Integer;
 begin
   Result := False;
+
+  // TokenSource can't be queried without TOKEN_QUERY_SOURCE access
+  if (Token.HandleInformation.Access and TOKEN_QUERY_SOURCE = 0) and
+    (DataClass = tdTokenSource) then
+    Exit;
+
+  // And almost nothing can be queried without TOKEN_QUERY access
+  if (Token.HandleInformation.Access and TOKEN_QUERY = 0) and
+    not (DataClass in [tdNone, tdTokenSource]) then
+      Exit;
 
   case DataClass of
     tdNone:

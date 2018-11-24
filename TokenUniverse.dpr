@@ -14,7 +14,7 @@ uses
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
-  TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas',
+  TU.Winapi in 'Core\TU.Winapi.pas',
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',

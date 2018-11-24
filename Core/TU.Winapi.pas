@@ -1,4 +1,4 @@
-unit TU.Tokens.Winapi;
+unit TU.Winapi;
 
 interface
 
@@ -226,7 +226,7 @@ function CreateRestrictedToken(ExistingTokenHandle: THandle; Flags: Cardinal;
   DisableSidCount: Cardinal; SidsToDisable: TSIDAndAttributesArray;
   DeletePrivilegeCount: Cardinal; PrivilegesToDelete: PLUIDAndAttributes;
   RestrictedSidCount: Cardinal; SidsToRestrict: TSIDAndAttributesArray;
-  var NewTokenHandle: THandle): LongBool; stdcall; external advapi32;
+  out NewTokenHandle: THandle): LongBool; stdcall; external advapi32;
 
 function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
   DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
@@ -235,18 +235,6 @@ function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
 function OpenThread(dwDesiredAccess: Cardinal; bInheritHandle: LongBool;
   dwThreadId: Cardinal): THandle; stdcall; external kernel32;
 
-/// <summary>
-///   Formats a string to use as a location of an error that might occur while
-///   quering token info class.
-/// </summary>
-function GetterMessage(InfoClass: TTokenInformationClass): String;
-
-/// <summary>
-///   Formats a string to use as a location of an error that might occur while
-///   setting token info class.
-/// </summary>
-function SetterMessage(InfoClass: TTokenInformationClass): String;
-
 type
   TAccessGroup = (agRead, agWrite, agExecute, agStandard);
 
@@ -254,12 +242,12 @@ const
   ACCESS_COUNT = 13;
   AccessValues: array [0 .. ACCESS_COUNT - 1] of Cardinal = (
     TOKEN_ASSIGN_PRIMARY, TOKEN_DUPLICATE, TOKEN_IMPERSONATE, TOKEN_QUERY,
-    TOKEN_QUERY_SOURCE, TOKEN_ADJUST_PRIVILEGES, TOKEN_ADJUST_GROUPS,
-    TOKEN_ADJUST_DEFAULT, TOKEN_ADJUST_SESSIONID, _DELETE, READ_CONTROL,
+    TOKEN_QUERY_SOURCE, TOKEN_ADJUST_DEFAULT, TOKEN_ADJUST_PRIVILEGES,
+     TOKEN_ADJUST_GROUPS, TOKEN_ADJUST_SESSIONID, _DELETE, READ_CONTROL,
     WRITE_DAC, WRITE_OWNER);
   AccessStrings: array [0 .. ACCESS_COUNT - 1] of String = ('Assign primary',
-    'Duplicate', 'Impersonate', 'Query', 'Query source', 'Adjust privileges',
-    'Adjust groups', 'Adjust default', 'Adjust SessionId', 'Delete',
+    'Duplicate', 'Impersonate', 'Query', 'Query source', 'Adjust default',
+    'Adjust privileges', 'Adjust groups', 'Adjust session', 'Delete',
     'Read control', 'Write DAC', 'Write owner');
 
   AccessGroupValues: array [0 .. ACCESS_COUNT - 1] of TAccessGroup = (
@@ -269,22 +257,5 @@ const
     'Generic Write', 'Generic Execute', 'Standard');
 
 implementation
-
-uses
-  System.TypInfo;
-
-function GetterMessage(InfoClass: TTokenInformationClass): String;
-begin
-  // We use a name of info class from the enumeration definition
-  Result := 'GetTokenInformation:' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
-end;
-
-function SetterMessage(InfoClass: TTokenInformationClass): String;
-begin
-  // We use a name of info class from the enumeration definition
-  Result := 'SetTokenInformation:' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
-end;
 
 end.

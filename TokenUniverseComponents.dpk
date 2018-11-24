@@ -40,7 +40,7 @@ contains
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Handles in 'Core\TU.Handles.pas',
   TU.Tokens in 'Core\TU.Tokens.pas',
-  TU.Tokens.Winapi in 'Core\TU.Tokens.Winapi.pas',
+  TU.Winapi in 'Core\TU.Winapi.pas',
   UI.Colors in 'UI\UI.Colors.pas',
   TU.LsaApi in 'Core\TU.LsaApi.pas';
 

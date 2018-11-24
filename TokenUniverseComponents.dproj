@@ -120,7 +120,7 @@
         <DCCReference Include="UI\UI.Prototypes.pas"/>
         <DCCReference Include="Core\TU.Handles.pas"/>
         <DCCReference Include="Core\TU.Tokens.pas"/>
-        <DCCReference Include="Core\TU.Tokens.Winapi.pas"/>
+        <DCCReference Include="Core\TU.Winapi.pas"/>
         <DCCReference Include="UI\UI.Colors.pas"/>
         <DCCReference Include="Core\TU.LsaApi.pas"/>
         <BuildConfiguration Include="Release">

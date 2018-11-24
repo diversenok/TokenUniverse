@@ -3,7 +3,7 @@ unit TU.NativeAPI;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.Windows, TU.Winapi;
 
 {$MINENUMSIZE 4}
 
@@ -17,11 +17,12 @@ const
   STATUS_UNSUCCESSFUL: NTSTATUS = $C0000001;
 
   STATUS_INFO_LENGTH_MISMATCH: NTSTATUS = $C0000004;
+  STATUS_ACCESS_DENIED: NTSTATUS = $C0000022;
   STATUS_BUFFER_TOO_SMALL: NTSTATUS = $C0000023;
-  STATUS_PRIVILEGE_NOT_HELD = $C0000061;
-  STATUS_BAD_IMPERSONATION_LEVEL = $C00000A5;
-  STATUS_NOT_SUPPORTED = $C00000BB;
-  STATUS_IMPLEMENTATION_LIMIT = $C000042B;
+  STATUS_PRIVILEGE_NOT_HELD: NTSTATUS = $C0000061;
+  STATUS_BAD_IMPERSONATION_LEVEL: NTSTATUS = $C00000A5;
+  STATUS_NOT_SUPPORTED: NTSTATUS = $C00000BB;
+  STATUS_IMPLEMENTATION_LIMIT: NTSTATUS = $C000042B;
 
 type
   UNICODE_STRING = record
@@ -132,12 +133,18 @@ function NtDuplicateToken(ExistingTokenHandle: THandle;
   EffectiveOnly: LongBool; TokenType: TTokenType; out NewTokenHandle: THandle)
   : NTSTATUS; stdcall; external ntdll;
 
-function NtCreateToken(var TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
-  ObjectAttributes: Pointer; TokenType: TTokenType; var AuthenticationId: LUID;
-  var ExpirationTime: Int64; var User: TTokenUser; var Groups: TTokenGroups;
-  var Privileges: TTokenPrivileges; var Owner: TTokenOwner;
-  var PrimaryGroup: TTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
-  var Source: TTokenSource): NTSTATUS; stdcall; external ntdll;
+function NtFilterToken(ExistingTokenHandle: THandle; Flags: Cardinal;
+  SidsToDisable: PTokenGroups; PrivilegesToDelete: PTokenPrivileges;
+  RestrictedSids: PTokenGroups; out NewTokenHandle: THandle): NTSTATUS;
+  stdcall; external ntdll;
+
+function NtCreateToken(out TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
+  ObjectAttributes: Pointer; TokenType: TTokenType;
+  const AuthenticationId: LUID; const ExpirationTime: Int64;
+  const User: TTokenUser; Groups: PTokenGroups; Privileges: PTokenPrivileges;
+  const Owner: TTokenOwner; const PrimaryGroup: TTokenPrimaryGroup;
+  DefaultDacl: PTokenDefaultDacl; const Source: TTokenSource): NTSTATUS;
+  stdcall; external ntdll;
 
 type
   TByteArray = array [Word] of Byte;
