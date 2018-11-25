@@ -22,8 +22,12 @@ type
   end;
 
   TChildTaskbarForm = class(TChildForm)
+  private
+    const idOnTop = 10001;
+    procedure WMSysCommand(var Message: TWMSysCommand); message WM_SYSCOMMAND;
   protected
     procedure CreateParams(var Params: TCreateParams); override;
+    procedure DoCreate; override;
   end;
 
 implementation
@@ -91,6 +95,34 @@ procedure TChildTaskbarForm.CreateParams(var Params: TCreateParams);
 begin
   inherited;
   Params.WndParent := HWND_DESKTOP;
+end;
+
+procedure TChildTaskbarForm.DoCreate;
+begin
+  inherited;
+  InsertMenu(GetSystemMenu(Handle, False), 0, MF_STRING, idOnTop, 'Stay On Top');
+end;
+
+procedure TChildTaskbarForm.WMSysCommand(var Message: TWMSysCommand);
+var
+  hSysMenu: HMENU;
+begin
+  if Message.CmdType = idOnTop then
+  begin
+    hSysMenu := GetSystemMenu(Handle, False);
+    if FormStyle = fsNormal then
+    begin
+      FormStyle := fsStayOnTop;
+      CheckMenuItem(hSysMenu, idOnTop, MF_CHECKED);
+    end
+    else
+    begin
+      FormStyle := fsNormal;
+      CheckMenuItem(hSysMenu, idOnTop, MF_UNCHECKED);
+    end;
+  end
+  else
+    inherited;
 end;
 
 end.
