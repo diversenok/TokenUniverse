@@ -21,6 +21,11 @@ type
     function ShowModal: Integer; override;
   end;
 
+  TChildTaskbarForm = class(TChildForm)
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
+  end;
+
 implementation
 
 uses
@@ -78,6 +83,14 @@ end;
 procedure TChildForm.UnsubscribeTokenCanClose(Token: TToken);
 begin
   Token.OnCanClose.Delete(ConfirmTokenClose);
+end;
+
+{ TChildTaskbarForm }
+
+procedure TChildTaskbarForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.WndParent := HWND_DESKTOP;
 end;
 
 end.

@@ -10,7 +10,7 @@ uses
   TU.Tokens.Types;
 
 type
-  TInfoDialog = class(TChildForm)
+  TInfoDialog = class(TChildTaskbarForm)
     PageControl: TPageControl;
     TabGeneral: TTabSheet;
     TabGroups: TTabSheet;
