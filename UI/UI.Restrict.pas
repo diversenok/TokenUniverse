@@ -55,7 +55,8 @@ uses
 
 procedure TDialogRestrictToken.ButtonAddSIDClick(Sender: TObject);
 begin
-  ListViewRestrictSID.AddGroup(TDialogPickUser.Execute(Self, True));
+  ListViewRestrictSID.Items[ListViewRestrictSID.AddGroup(
+    TDialogPickUser.Execute(Self, True))].Checked := True;
 end;
 
 procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
@@ -113,6 +114,8 @@ end;
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 var
   UserItem: TGroup;
+  Found: Boolean;
+  RestrInd, ItemInd: Integer;
 begin
   SubscribeTokenCanClose(Token, Caption);
   Refresh;
@@ -131,6 +134,30 @@ begin
     ListViewDisableSID.AddGroup(UserItem);
     ListViewRestrictSID.AddGroup(UserItem);
   end;
+
+  // If the token has restricting SIDs then check them. It can also contain
+  // manually added items that are not part of the group list. Add them here.
+  if Token.InfoClass.Query(tdTokenRestrictedSids) then
+    with Token.InfoClass do
+      for RestrInd := 0 to High(RestrictedSids) do
+      begin
+        Found := False;
+
+        // Find and check it
+        for ItemInd := 0 to ListViewRestrictSID.Items.Count - 1 do
+          if RestrictedSids[RestrInd].SecurityIdentifier.SID =
+            ListViewRestrictSID.Groups[ItemInd].SecurityIdentifier.SID then
+          begin
+            ListViewRestrictSID.Items[ItemInd].Checked := True;
+            Found := True;
+            Break;
+          end;
+
+      // The restricting SID was not found in the list, add and check it
+      if not Found then
+        ListViewRestrictSID.Items[ListViewRestrictSID.AddGroup(
+          RestrictedSids[RestrInd])].Checked := True;
+    end;
 end;
 
 function TDialogRestrictToken.GetFlags: Cardinal;

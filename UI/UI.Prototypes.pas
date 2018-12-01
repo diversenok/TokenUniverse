@@ -220,9 +220,9 @@ end;
 function TGroupListViewEx.AddGroup(Group: TGroup): Integer;
 begin
   SetLength(FAdditional, Length(FAdditional) + 1);
-  Result := High(FAdditional);
   FAdditional[High(FAdditional)] := Group;
   SetGroupItem(Items.Add, Group);
+  Result := Length(FGroups) + High(FAdditional);
 end;
 
 procedure TGroupListViewEx.SetGroup(Ind: Integer; const Value: TGroup);
