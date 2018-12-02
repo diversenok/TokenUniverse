@@ -13,7 +13,7 @@ type
     CheckBoxDisableMaxPriv: TCheckBox;
     CheckBoxSandboxInert: TCheckBox;
     CheckBoxLUA: TCheckBox;
-    CheckBoxWriteRestrict: TCheckBox;
+    CheckBoxWriteOnly: TCheckBox;
     ButtonOK: TButton;
     ButtonCancel: TButton;
     PageControl1: TPageControl;
@@ -27,6 +27,7 @@ type
     PopupMenu: TPopupMenu;
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
+    CheckBoxUsual: TCheckBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
@@ -55,8 +56,8 @@ uses
 
 procedure TDialogRestrictToken.ButtonAddSIDClick(Sender: TObject);
 begin
-  ListViewRestrictSID.Items[ListViewRestrictSID.AddGroup(
-    TDialogPickUser.Execute(Self, True))].Checked := True;
+  ListViewRestrictSID.AddGroup(TDialogPickUser.Execute(Self, True)).Checked :=
+    True;
 end;
 
 procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
@@ -155,8 +156,7 @@ begin
 
       // The restricting SID was not found in the list, add and check it
       if not Found then
-        ListViewRestrictSID.Items[ListViewRestrictSID.AddGroup(
-          RestrictedSids[RestrInd])].Checked := True;
+        ListViewRestrictSID.AddGroup(RestrictedSids[RestrInd]).Checked := True;
     end;
 end;
 
@@ -174,7 +174,7 @@ begin
     Result := Result or SANDBOX_INERT;
   if CheckBoxLUA.Checked then
     Result := Result or LUA_TOKEN;
-  if CheckBoxWriteRestrict.Checked then
+  if not CheckBoxWriteOnly.Checked then
     Result := Result or WRITE_RESTRICTED;
 end;
 

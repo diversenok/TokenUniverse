@@ -2,9 +2,11 @@ object DialogRestrictToken: TDialogRestrictToken
   Left = 0
   Top = 0
   Caption = 'Create Restricted Token'
-  ClientHeight = 410
-  ClientWidth = 355
+  ClientHeight = 415
+  ClientWidth = 360
   Color = clBtnFace
+  Constraints.MinHeight = 300
+  Constraints.MinWidth = 340
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,13 +18,13 @@ object DialogRestrictToken: TDialogRestrictToken
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
-    355
-    410)
+    360
+    415)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
-    Left = 276
-    Top = 380
+    Left = 281
+    Top = 385
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -32,8 +34,8 @@ object DialogRestrictToken: TDialogRestrictToken
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
-    Left = 195
-    Top = 380
+    Left = 200
+    Top = 385
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -45,8 +47,8 @@ object DialogRestrictToken: TDialogRestrictToken
   object PageControl1: TPageControl
     Left = 4
     Top = 6
-    Width = 347
-    Height = 351
+    Width = 352
+    Height = 356
     ActivePage = TabSheetSidDisable
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
@@ -56,8 +58,8 @@ object DialogRestrictToken: TDialogRestrictToken
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 333
-        Height = 317
+        Width = 338
+        Height = 322
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -87,31 +89,39 @@ object DialogRestrictToken: TDialogRestrictToken
       Caption = 'SIDs to restrict'
       ImageIndex = 1
       DesignSize = (
-        339
-        323)
-      object CheckBoxWriteRestrict: TCheckBox
-        Left = 187
-        Top = 299
-        Width = 149
+        344
+        328)
+      object CheckBoxWriteOnly: TCheckBox
+        Left = 3
+        Top = 308
+        Width = 217
         Height = 17
-        Hint = 'Consider restricting SIDs only when evaluating write access.'
-        Anchors = [akRight, akBottom]
-        Caption = 'Write restricted'
+        Hint = 
+          'Restricting SIDs are always considered when evaluating write acc' +
+          'ess. Also consider them when evaluating read and execute access.' +
+          #13#10#13#10'Note: unchecking this item results in a less restrictive tok' +
+          'en since the checks against the list above will take effect ONLY' +
+          ' on attempts to perform write access. Such a token is also calle' +
+          'd a "write-restricted token".'
+        Anchors = [akLeft, akBottom]
+        Caption = 'Restrict read && execute access'
+        Checked = True
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = [fsBold]
         ParentFont = False
+        State = cbChecked
         TabOrder = 0
       end
       object ListViewRestrictSID: TGroupListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 333
-        Height = 289
-        Margins.Bottom = 31
+        Width = 338
+        Height = 284
+        Margins.Bottom = 41
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -140,31 +150,55 @@ object DialogRestrictToken: TDialogRestrictToken
         PopupOnItemsOnly = True
       end
       object ButtonAddSID: TButton
-        Left = 3
-        Top = 295
+        Left = 263
+        Top = 296
         Width = 78
         Height = 25
         Hint = 'Add a new restricted SID that is not present in the list.'
-        Anchors = [akLeft, akBottom]
+        Anchors = [akRight, akBottom]
         Caption = 'Add SID'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
         ImageIndex = 1
         ImageMargins.Left = 3
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
+        ParentFont = False
         TabOrder = 2
         OnClick = ButtonAddSIDClick
+      end
+      object CheckBoxUsual: TCheckBox
+        Left = 3
+        Top = 291
+        Width = 217
+        Height = 17
+        Anchors = [akLeft, akBottom]
+        Caption = 'Restrict write access'
+        Checked = True
+        Enabled = False
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        ParentFont = False
+        State = cbChecked
+        TabOrder = 3
       end
     end
     object TabSheetPrivDelete: TTabSheet
       Caption = 'Privileges to delete'
       ImageIndex = 2
       DesignSize = (
-        339
-        323)
+        344
+        328)
       object CheckBoxDisableMaxPriv: TCheckBox
         Left = 6
         Top = 4
-        Width = 330
+        Width = 335
         Height = 17
         Hint = 
           'Ignore the list below and disable all the privileges in the toke' +
@@ -183,8 +217,8 @@ object DialogRestrictToken: TDialogRestrictToken
         AlignWithMargins = True
         Left = 3
         Top = 26
-        Width = 333
-        Height = 294
+        Width = 338
+        Height = 299
         Margins.Top = 26
         Align = alClient
         Checkboxes = True
@@ -219,7 +253,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxLUA: TCheckBox
     Left = 14
-    Top = 363
+    Top = 368
     Width = 120
     Height = 15
     Hint = 
@@ -231,7 +265,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxSandboxInert: TCheckBox
     Left = 14
-    Top = 384
+    Top = 389
     Width = 120
     Height = 17
     Hint = 

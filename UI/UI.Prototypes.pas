@@ -53,7 +53,7 @@ type
     procedure UnsubscribeToken; override;
   public
     property Groups[Ind: Integer]: TGroup read GetGroup write SetGroup;
-    function AddGroup(Group: TGroup): Integer;
+    function AddGroup(Group: TGroup): TListItemEx;
     function IsAdditional(Index: Integer): Boolean;
     procedure RemoveGroup(Index: Integer);
     class function BuildHint(SID: TSecurityIdentifier;
@@ -217,12 +217,12 @@ end;
 
 { TGroupListViewEx }
 
-function TGroupListViewEx.AddGroup(Group: TGroup): Integer;
+function TGroupListViewEx.AddGroup(Group: TGroup): TListItemEx;
 begin
   SetLength(FAdditional, Length(FAdditional) + 1);
   FAdditional[High(FAdditional)] := Group;
-  SetGroupItem(Items.Add, Group);
-  Result := Length(FGroups) + High(FAdditional);
+  Result := Items.Add;
+  SetGroupItem(Result, Group);
 end;
 
 procedure TGroupListViewEx.SetGroup(Ind: Integer; const Value: TGroup);
