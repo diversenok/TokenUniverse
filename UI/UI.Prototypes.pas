@@ -67,25 +67,30 @@ type
     function CheckedGroups: TGroupArray;
   end;
 
-  TSessionComboBox = class(TComboBox)
+  TSessionSource = class
   private
-    Sessions: TSessionList;
+    SessionList: TSessionList;
+    ComboBox: TComboBox;
     function GetSession: Cardinal;
     procedure SetSession(const Value: Cardinal);
   public
     destructor Destroy; override;
-    procedure RefreshSessionList(SelectSomething: Boolean);
+    constructor Create(OwnedComboBox: TComboBox);
+    procedure RefreshSessionList(SelectCurrent: Boolean);
     property SelectedSession: Cardinal read GetSession write SetSession;
   end;
 
-  TIntegrityComboBox = class(TComboBox)
+  TIntegritySource = class
   private
-    FIsIntermediate: Boolean;
-    FIntermediateValue: TTokenIntegrityLevel;
-    FIntermediateIndex: Integer;
+    IsIntermediate: Boolean;
+    IntermediateValue: TTokenIntegrityLevel;
+    IntermediateIndex: Integer;
+    ComboBox: TComboBox;
     function GetIntegrityLevel: TTokenIntegrityLevel;
+    procedure RefreshList;
   public
-    procedure SetIntegrity(NewIntegrity: CanFail<TTokenIntegrity>);
+    constructor Create(OwnedComboBox: TComboBox);
+    procedure SetIntegrity(Value: TTokenIntegrity);
     property SelectedIntegrity: TTokenIntegrityLevel read GetIntegrityLevel;
   end;
 
@@ -111,12 +116,11 @@ procedure Register;
 implementation
 
 uses
-  System.Generics.Collections, UI.Colors, TU.Winapi;
+  System.Generics.Collections, UI.Colors, TU.Winapi, TU.NativeApi;
 
 procedure Register;
 begin
-  RegisterComponents('Token Universe', [TSessionComboBox, TIntegrityComboBox,
-    TPrivilegesListViewEx, TGroupListViewEx]);
+  RegisterComponents('Token Universe', [TPrivilegesListViewEx, TGroupListViewEx]);
 end;
 
 { TTokenedListViewEx }
@@ -399,125 +403,160 @@ begin
   inherited;
 end;
 
-{ TSessionComboBox }
+{ TSessionSource }
 
-destructor TSessionComboBox.Destroy;
+constructor TSessionSource.Create(OwnedComboBox: TComboBox);
 begin
-  Sessions.Free;
+  ComboBox := OwnedComboBox;
+  SessionList := TSessionList.CreateCurrentServer;
+end;
+
+destructor TSessionSource.Destroy;
+begin
+  SessionList.Free;
   inherited;
 end;
 
-function TSessionComboBox.GetSession: Cardinal;
+function TSessionSource.GetSession: Cardinal;
 begin
-  if ItemIndex = -1 then
-    Result := StrToUIntEx(Text, 'session')
+  Assert(Assigned(ComboBox));
+
+  if ComboBox.ItemIndex = -1 then
+    Result := StrToUIntEx(ComboBox.Text, 'session')
   else
-    Result := Sessions[ItemIndex].SessionId;
+    Result := SessionList[ComboBox.ItemIndex].SessionId;
 end;
 
-procedure TSessionComboBox.RefreshSessionList(SelectSomething: Boolean);
+procedure TSessionSource.RefreshSessionList(SelectCurrent: Boolean);
 var
-  i: integer;
+  i: Integer;
 begin
-  Sessions.Free;
-  Sessions := TSessionList.CreateCurrentServer;
-  Items.BeginUpdate;
-  Items.Clear;
+  Assert(Assigned(ComboBox));
 
-  for i := 0 to Sessions.Count - 1 do
-    Items.Add(Sessions[i].ToString);
+  ComboBox.Items.BeginUpdate;
+  ComboBox.Items.Clear;
 
-  if SelectSomething and (Sessions.Count > 0) then
-    ItemIndex := 0;
+  for i := 0 to SessionList.Count - 1 do
+    ComboBox.Items.Add(SessionList[i].ToString);
 
-  Items.EndUpdate;
+  if SelectCurrent and (SessionList.Count > 0) then
+    ComboBox.ItemIndex := SessionList.Find(NtGetCurrentSession);
+
+  ComboBox.Items.EndUpdate;
 end;
 
-procedure TSessionComboBox.SetSession(const Value: Cardinal);
+procedure TSessionSource.SetSession(const Value: Cardinal);
 begin
-  ItemIndex := Sessions.Find(Value);
-  if ItemIndex = -1 then
-    Text := IntToStr(Value);
+  Assert(Assigned(ComboBox));
+
+  ComboBox.ItemIndex := SessionList.Find(Value);
+  if ComboBox.ItemIndex = -1 then
+    ComboBox.Text := IntToStr(Value);
 end;
 
-{ TIntegrityComboBox }
+{ TIntegritySource }
 
-function TIntegrityComboBox.GetIntegrityLevel: TTokenIntegrityLevel;
+constructor TIntegritySource.Create(OwnedComboBox: TComboBox);
+begin
+  ComboBox := OwnedComboBox;
+  RefreshList;
+end;
+
+function TIntegritySource.GetIntegrityLevel: TTokenIntegrityLevel;
 const
-  IndexToIntegrity: array [0 .. 5] of TTokenIntegrityLevel = (ilUntrusted,
-    ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem);
+  IndexToIntegrity: array [0 .. 6] of TTokenIntegrityLevel = (ilUntrusted,
+    ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem, ilProtected);
 begin
-  if ItemIndex = -1 then
-    Result := TTokenIntegrityLevel(StrToUIntEx(Text, 'integrity'))
-  else if not FIsIntermediate or (ItemIndex < FIntermediateIndex) then
-    Result := IndexToIntegrity[ItemIndex]
-  else if ItemIndex > FIntermediateIndex then
-    Result := IndexToIntegrity[ItemIndex - 1]
-  else
-    Result := FIntermediateValue;
+  Assert(Assigned(ComboBox));
+
+  with ComboBox do
+  begin
+    if ItemIndex = -1 then
+      Result := TTokenIntegrityLevel(StrToUIntEx(Text, 'integrity'))
+    else if not IsIntermediate or (ItemIndex < IntermediateIndex) then
+      Result := IndexToIntegrity[ItemIndex]
+    else if ItemIndex > IntermediateIndex then
+      Result := IndexToIntegrity[ItemIndex - 1]
+    else
+      Result := IntermediateValue;
+  end;
 end;
 
-procedure TIntegrityComboBox.SetIntegrity(
-  NewIntegrity: CanFail<TTokenIntegrity>);
+procedure TIntegritySource.RefreshList;
 begin
-  Items.BeginUpdate;
-  Clear;
+  Assert(Assigned(ComboBox));
 
-  Items.Add('Untrusted (0x0000)');
-  Items.Add('Low (0x1000)');
-  Items.Add('Medium (0x2000)');
-  Items.Add('Medium Plus (0x2100)');
-  Items.Add('High (0x3000)');
-  Items.Add('System (0x4000)');
+  with ComboBox do
+  begin
+    Items.BeginUpdate;
+    Clear;
 
-  with NewIntegrity do
-    if IsValid then
+    Items.Add('Untrusted (0x0000)');
+    Items.Add('Low (0x1000)');
+    Items.Add('Medium (0x2000)');
+    Items.Add('Medium Plus (0x2100)');
+    Items.Add('High (0x3000)');
+    Items.Add('System (0x4000)');
+    Items.Add('Protected (0x5000)');
+
+    Items.EndUpdate;
+  end;
+end;
+
+procedure TIntegritySource.SetIntegrity(Value: TTokenIntegrity);
+begin
+  Assert(Assigned(ComboBox));
+
+  with ComboBox do
+  begin
+    Items.BeginUpdate;
+    RefreshList;
+
+    // If the value is not a well-known one insert it in between two well knowns
+    IsIntermediate := not Value.IsWellKnown;
+    if IsIntermediate then
     begin
-      FIsIntermediate := not Value.IsWellKnown;
+      IntermediateValue := Value.Level;
 
-      if FIsIntermediate then
-      begin
-        FIntermediateValue := Value.Level;
-
-        if Value.Level < ilLow then
-          FIntermediateIndex := 1
-        else if Value.Level < ilMedium then
-          FIntermediateIndex := 2
-        else if Value.Level < ilMediumPlus then
-          FIntermediateIndex := 3
-        else if Value.Level < ilHigh then
-          FIntermediateIndex := 4
-        else if Value.Level < ilSystem then
-          FIntermediateIndex := 5
-        else
-          FIntermediateIndex := 6;
-
-        Items.Insert(FIntermediateIndex, Format('Itermediate (0x%.4x)',
-          [Cardinal(Value.Level)]));
-      end;
-
-      if Value.Level = ilUntrusted then
-        ItemIndex := 0
-      else if Value.Level <= ilLow then
-        ItemIndex := 1
-      else if Value.Level <= ilMedium then
-        ItemIndex := 2
-      else if Value.Level <= ilMediumPlus then
-        ItemIndex := 3
-      else if Value.Level <= ilHigh then
-        ItemIndex := 4
-      else if Value.Level <= ilSystem then
-        ItemIndex := 5
+      if Value.Level < ilLow then
+        IntermediateIndex := 1
+      else if Value.Level < ilMedium then
+        IntermediateIndex := 2
+      else if Value.Level < ilMediumPlus then
+        IntermediateIndex := 3
+      else if Value.Level < ilHigh then
+        IntermediateIndex := 4
+      else if Value.Level < ilSystem then
+        IntermediateIndex := 5
+      else if Value.Level < ilProtected then
+        IntermediateIndex := 6
       else
-        ItemIndex := 6;
-    end
-    else
-    begin
-      ItemIndex := -1;
-      Text := 'Unknown integrity';
+        IntermediateIndex := 7;
+
+      Items.Insert(IntermediateIndex,
+        Format('Itermediate (0x%0.4x)', [Cardinal(Value.Level)]));
     end;
 
-  Items.EndUpdate;
+    // Select appropriate item
+    if Value.Level = ilUntrusted then
+      ItemIndex := 0
+    else if Value.Level <= ilLow then
+      ItemIndex := 1
+    else if Value.Level <= ilMedium then
+      ItemIndex := 2
+    else if Value.Level <= ilMediumPlus then
+      ItemIndex := 3
+    else if Value.Level <= ilHigh then
+      ItemIndex := 4
+    else if Value.Level <= ilSystem then
+      ItemIndex := 5
+    else if Value.Level <= ilProtected then
+      ItemIndex := 6
+    else
+      ItemIndex := 7;
+
+    Items.EndUpdate;
+  end;
 end;
 
 { TAccessMaskSource }

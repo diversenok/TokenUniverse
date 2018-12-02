@@ -24,8 +24,8 @@ type
     ListViewRestricted: TGroupListViewEx;
     StaticSession: TStaticText;
     StaticIntegrity: TStaticText;
-    ComboSession: TSessionComboBox;
-    ComboIntegrity: TIntegrityComboBox;
+    ComboSession: TComboBox;
+    ComboIntegrity: TComboBox;
     ImageList: TImageList;
     BtnSetIntegrity: TSpeedButton;
     BtnSetSession: TSpeedButton;
@@ -73,6 +73,8 @@ type
     procedure ListViewAdvancedResize(Sender: TObject);
   private
     Token: TToken;
+    SessionSource: TSessionSource;
+    IntegritySource: TIntegritySource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
@@ -132,7 +134,8 @@ end;
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
 begin
   try
-    Token.InfoClass.IntegrityLevel := ComboIntegrity.SelectedIntegrity;
+    Token.InfoClass.IntegrityLevel := IntegritySource.SelectedIntegrity;
+    ComboIntegrity.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenIntegrity) then
       ChangedIntegrity(Token.InfoClass.Integrity);
@@ -158,7 +161,7 @@ end;
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
 begin
   try
-    Token.InfoClass.Session := ComboSession.SelectedSession;
+    Token.InfoClass.Session := SessionSource.SelectedSession;
   except
     if Token.InfoClass.Query(tdTokenSessionId) then
       ChangedSession(Token.InfoClass.Session);
@@ -194,7 +197,7 @@ end;
 procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TTokenIntegrity);
 begin
   ComboIntegrity.Color := clWindow;
-  ComboIntegrity.SetIntegrity(CanFail<TTokenIntegrity>.SucceedWith(NewIntegrity));
+  IntegritySource.SetIntegrity(NewIntegrity);
 end;
 
 procedure TInfoDialog.ChangedPolicy(NewPolicy: TMandatoryPolicy);
@@ -219,7 +222,7 @@ end;
 procedure TInfoDialog.ChangedSession(NewSession: Cardinal);
 begin
   ComboSession.Color := clWindow;
-  ComboSession.SelectedSession := NewSession
+  SessionSource.SelectedSession := NewSession;
 end;
 
 procedure TInfoDialog.ChangedStatistics(NewStatistics: TTokenStatistics);
@@ -305,12 +308,16 @@ begin
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
+  IntegritySource.Free;
+  SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   SubscribeTokenCanClose(Token, Caption);
+  SessionSource := TSessionSource.Create(ComboSession);
+  IntegritySource := TIntegritySource.Create(ComboIntegrity);
 
   // "Refresh" queries all the information, stores changeble one in the event
   // handler, and distributes changed one to every existing event listener
@@ -361,7 +368,7 @@ end;
 
 procedure TInfoDialog.Refresh;
 begin
-  ComboSession.RefreshSessionList(False);
+  SessionSource.RefreshSessionList(False);
 
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do

@@ -384,7 +384,7 @@ object InfoDialog: TInfoDialog
         Caption = 'Integrity level:'
         TabOrder = 10
       end
-      object ComboSession: TSessionComboBox
+      object ComboSession: TComboBox
         Left = 112
         Top = 151
         Width = 244
@@ -395,7 +395,7 @@ object InfoDialog: TInfoDialog
         Text = 'Unknown session'
         OnChange = SetStaleColor
       end
-      object ComboIntegrity: TIntegrityComboBox
+      object ComboIntegrity: TComboBox
         Left = 112
         Top = 178
         Width = 244

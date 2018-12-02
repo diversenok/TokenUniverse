@@ -660,7 +660,8 @@ end;
 
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 begin
-  Result := CompareMem(@Value1, @Value2, SizeOf(TTokenStatistics));
+  Result := (Value1.ModifiedId.LowPart = Value2.ModifiedId.LowPart)
+    and (Value1.ModifiedId.HighPart = Value2.ModifiedId.HighPart);
 end;
 
 { Conversion functions }

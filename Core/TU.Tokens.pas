@@ -548,7 +548,7 @@ begin
 
     HandleList.Free;
   end;
-  
+
   // This should not happen and I do not know what to do here
   if FHandleInformation.KernelObjectAddress = 0 then
     raise EAssertionFailed.Create('Can not obtain kernel object address of a ' +
@@ -814,7 +814,6 @@ constructor TToken.CreateWithLogon(LogonType: TLogonType;
   AddGroups: TGroupArray);
 var
   GroupArray: PTokenGroups;
-  i: integer;
 begin
   // If the user doesn't ask us to add some groups to the token we can use
   // simplier LogonUserW routine. Otherwise we use LogonUserExExW (that
@@ -926,7 +925,7 @@ begin
 
   if Result.CheckError(QueryFixedSize<THandle>(TokenLinkedToken, Handle),
     GetterMessage(TokenLinkedToken)) then
-    Result.Value := TToken.Create(Handle, 'Linked token for' + Caption);
+    Result.Value := TToken.Create(Handle, 'Linked token for ' + Caption);
 end;
 
 procedure TToken.PrivilegeAdjust(Privileges: TPrivilegeArray;
@@ -1038,7 +1037,7 @@ begin
 
   // Check for errors and for too big buffers
   if not WinTryCheckBuffer(BufferSize) then
-    Exit;
+    Exit(nil);
 
   // Allocate memory
   Result := AllocMem(BufferSize);

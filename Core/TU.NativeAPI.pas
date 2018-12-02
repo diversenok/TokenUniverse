@@ -109,6 +109,7 @@ type
   { Ntdll api calls }
 
 function NT_SUCCESS(Status: NTSTATUS): Boolean; inline;
+function NtGetCurrentSession: Cardinal;
 
 function NtQuerySystemInformation(SystemInformationClass
   : TSystemInformationClass; SystemInformation: Pointer;
@@ -146,15 +147,31 @@ function NtCreateToken(out TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
   DefaultDacl: PTokenDefaultDacl; const Source: TTokenSource): NTSTATUS;
   stdcall; external ntdll;
 
-type
-  TByteArray = array [Word] of Byte;
-  PByteArray = ^TByteArray;
-
 implementation
 
 function NT_SUCCESS(Status: NTSTATUS): Boolean;
 begin
   Result := Integer(Status) >= 0;
+end;
+
+function RtlGetCurrentPeb: Pointer; stdcall; external ntdll;
+
+function NtGetCurrentSession: Cardinal;
+begin
+  // Current session ID is always stored in the PEB
+  {$POINTERMATH ON}
+  try
+    // We use hardcoded offsets of SessionID field from PPEB structure
+    {$IFDEF WIN64}
+      Result := PCardinal(PByte(RtlGetCurrentPeb) + $2C0)^;
+    {$ELSE}
+      Result := PCardinal(PByte(RtlGetCurrentPeb) + $1D4)^;
+    {$ENDIF}
+  except
+    Result := 0;
+    OutputDebugString('Exception while reading PEB');
+  end;
+  {$POINTERMATH OFF}
 end;
 
 end.

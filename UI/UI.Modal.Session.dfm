@@ -20,7 +20,7 @@ object SessionDialog: TSessionDialog
     66)
   PixelsPerInch = 96
   TextHeight = 13
-  object SessionCombo: TSessionComboBox
+  object SessionCombo: TComboBox
     Left = 8
     Top = 7
     Width = 239
