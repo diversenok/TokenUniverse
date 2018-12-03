@@ -68,7 +68,6 @@ type
     function Name: String;
     function Description: String;
     function AttributesToString: String;
-    function AttributesToDetailedString: String;
     function AttributesContain(Flag: Cardinal): Boolean;
   end;
 
@@ -453,11 +452,6 @@ begin
   Result := Self.Attributes and Flag = Flag;
 end;
 
-function TPrivilegeHelper.AttributesToDetailedString: String;
-begin
-  Result := Format('0x%0.4x: %s', [Self.Attributes, Self.AttributesToString]);
-end;
-
 function TPrivilegeHelper.AttributesToString: String;
 begin
   if Self.AttributesContain(SE_PRIVILEGE_ENABLED) then
@@ -487,22 +481,26 @@ var
   Buffer: PWideChar;
   BufferChars, LangId: Cardinal;
 begin
+  Result := '';
   BufferChars := 0;
   LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
-  WinCheckBuffer(BufferChars, 'LookupPrivilegeDisplayNameW');
+
+  if not WinTryCheckBuffer(BufferChars) then
+    Exit;
 
   Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
   try
-    WinCheck(LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer,
-      BufferChars, LangId), 'LookupPrivilegeDisplayNameW');
-
-    SetString(Result, Buffer, BufferChars);
+    if LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
+      LangId) then
+      SetString(Result, Buffer, BufferChars);
   finally
     FreeMem(Buffer);
   end;
 end;
 
 function TPrivilegeHelper.Name: String;
+const
+  UNKNOWN_PRIV_FMT = 'Unknown privilege %d';
 var
   Buffer: PWideChar;
   BufferChars: Cardinal;
@@ -510,13 +508,15 @@ begin
   BufferChars := 0;
   LookupPrivilegeNameW(nil, Self.Luid, nil, BufferChars);
 
-  if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferChars = 0) then
-    Exit(Format('Unknown privilege %d', [Self.Luid]));
+  if not WinTryCheckBuffer(BufferChars) then
+    Exit(Format(UNKNOWN_PRIV_FMT, [Self.Luid]));
 
   Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
   try
     if LookupPrivilegeNameW(nil, Self.Luid, Buffer, BufferChars) then
-      SetString(Result, Buffer, BufferChars);
+      SetString(Result, Buffer, BufferChars)
+    else
+      Result := Format(UNKNOWN_PRIV_FMT, [Self.Luid])
   finally
     FreeMem(Buffer);
   end;
