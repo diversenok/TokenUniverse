@@ -157,16 +157,10 @@ object DialogRestrictToken: TDialogRestrictToken
         Hint = 'Add a new restricted SID that is not present in the list.'
         Anchors = [akRight, akBottom]
         Caption = 'Add SID'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
         ImageIndex = 1
         ImageMargins.Left = 3
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
-        ParentFont = False
         TabOrder = 2
         OnClick = ButtonAddSIDClick
       end
@@ -201,10 +195,10 @@ object DialogRestrictToken: TDialogRestrictToken
         Width = 335
         Height = 17
         Hint = 
-          'Ignore the list below and disable all the privileges in the toke' +
-          'n except `SeChangeNotifyPrivilege`.'
+          'Ignore the list below and delete all the privileges except `SeCh' +
+          'angeNotifyPrivilege`.'
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'Disable maximum privileges'
+        Caption = 'Delete maximum privileges'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -213,7 +207,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentFont = False
         TabOrder = 0
       end
-      object ListViewPrivileges: TPrivilegesListViewEx
+      object ListViewPrivileges: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 26

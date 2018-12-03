@@ -19,7 +19,7 @@ type
     EditUser: TEdit;
     ButtonClose: TButton;
     ListViewGroups: TGroupListViewEx;
-    ListViewPrivileges: TPrivilegesListViewEx;
+    ListViewPrivileges: TListViewEx;
     TabRestricted: TTabSheet;
     ListViewRestricted: TGroupListViewEx;
     StaticSession: TStaticText;
@@ -75,6 +75,7 @@ type
     Token: TToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
+    PrivilegeSource: TPrivilegeSource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
@@ -116,19 +117,19 @@ end;
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paDisable);
+    Token.PrivilegeAdjust(PrivilegeSource.SelectedPrivileges, paDisable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paEnable);
+    Token.PrivilegeAdjust(PrivilegeSource.SelectedPrivileges, paEnable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(ListViewPrivileges.SelectedPrivileges, paRemove);
+    Token.PrivilegeAdjust(PrivilegeSource.SelectedPrivileges, paRemove);
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
@@ -308,6 +309,7 @@ begin
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
+  PrivilegeSource.Free;
   IntegritySource.Free;
   SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
@@ -318,6 +320,7 @@ begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
+  PrivilegeSource := TPrivilegeSource.Create(ListViewPrivileges);
 
   // "Refresh" queries all the information, stores changeble one in the event
   // handler, and distributes changed one to every existing event listener
@@ -335,7 +338,7 @@ begin
   Token.Events.OnGroupsChange.Add(ChangedGroups);
   Token.Events.OnStatisticsChange.Add(ChangedStatistics);
   ListViewGroups.Token := Token;
-  ListViewPrivileges.Token := Token;
+  PrivilegeSource.SubscribeToken(Token);
   ListViewRestricted.Token := Token;
 
   Token.OnCaptionChange.Add(ChangedCaption);

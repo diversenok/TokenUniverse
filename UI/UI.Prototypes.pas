@@ -21,17 +21,24 @@ type
     property Token: TToken read FToken write SetToken;
   end;
 
-  TPrivilegesListViewEx = class(TTokenedListViewEx)
+  TPrivilegeSource = class
   private
-    FPrivileges: TPrivilegeArray;
-    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
-  protected
-    procedure SubscribeToken; override;
-    procedure UnsubscribeToken; override;
+    ListView: TListViewEx;
+    Token: TToken;
+    FTokenPrivileges, FAdditionalPrivileges: TPrivilegeArray;
+    function GetPrivilege(Ind: Integer): TPrivilege;
+    procedure OnPrivilegeChange(NewPrivileges: TPrivilegeArray);
+    function AddToList(Privilege: TPrivilege): TListItemEx;
   public
-    property Privileges: TPrivilegeArray read FPrivileges;
+    constructor Create(OwnedListView: TListViewEx);
+    destructor Destroy; override;
+    procedure SubscribeToken(Token: TToken);
+    procedure UnsubscribeToken(Dummy: TToken = nil);
     function SelectedPrivileges: TPrivilegeArray;
     function CheckedPrivileges: TPrivilegeArray;
+    property Privilege[Ind: Integer]: TPrivilege read GetPrivilege;
+    function AddPrivilege(Privilege: TPrivilege): TListItemEx;
+    function DeletePrivilege(Index: Integer): Boolean;
   end;
 
   TGroupViewAs = (gvUser, gvSID);
@@ -120,7 +127,7 @@ uses
 
 procedure Register;
 begin
-  RegisterComponents('Token Universe', [TPrivilegesListViewEx, TGroupListViewEx]);
+  RegisterComponents('Token Universe', [TGroupListViewEx]);
 end;
 
 { TTokenedListViewEx }
@@ -158,65 +165,143 @@ begin
   Token.OnClose.Delete(ReleaseToken);
 end;
 
-{ TPrivilegesListViewEx }
+{ TPrivilegeSource }
 
-procedure TPrivilegesListViewEx.ChangedPrivileges(
-  NewPrivileges: TPrivilegeArray);
-var
-  i: integer;
+function TPrivilegeSource.AddPrivilege(Privilege: TPrivilege): TListItemEx;
 begin
-  Items.BeginUpdate(True);
-  Clear;
-  FPrivileges := NewPrivileges;
-  for i := 0 to High(NewPrivileges) do
-  with NewPrivileges[i], Items.Add do
-  begin
-    Caption := Name;
-    SubItems.Add(NewPrivileges[i].AttributesToString);
-    SubItems.Add(NewPrivileges[i].Description);
-    SubItems.Add(NewPrivileges[i].Luid.ToString);
-    Color := PrivilegeToColor(NewPrivileges[i]);
-  end;
-  Items.EndUpdate(True);
+  SetLength(FAdditionalPrivileges, Length(FAdditionalPrivileges) + 1);
+  FAdditionalPrivileges[High(FAdditionalPrivileges)] := Privilege;
+  Result := AddToList(Privilege);
 end;
 
-function TPrivilegesListViewEx.CheckedPrivileges: TPrivilegeArray;
-var
-  i: integer;
+function TPrivilegeSource.AddToList(Privilege: TPrivilege): TListItemEx;
 begin
-  for i := 0 to Items.Count - 1 do
-    if Items[i].Checked then
+  Assert(Assigned(ListView));
+
+  Result := ListView.Items.Add;
+  Result.Caption := Privilege.Name;
+  Result.SubItems.Add(Privilege.AttributesToString);
+  Result.SubItems.Add(Privilege.Description);
+  Result.SubItems.Add(Privilege.Luid.ToString);
+  Result.Color := PrivilegeToColor(Privilege);
+end;
+
+function TPrivilegeSource.CheckedPrivileges: TPrivilegeArray;
+var
+  i, Count: integer;
+begin
+  Assert(Assigned(ListView));
+
+  // Count all the checked items
+  Count := 0;
+  for i := 0 to ListView.Items.Count - 1 do
+    if ListView.Items[i].Checked then
+      Inc(Count);
+
+  SetLength(Result, Count);
+
+  // Collect them
+  Count := 0;
+  for i := 0 to ListView.Items.Count - 1 do
+    if ListView.Items[i].Checked then
     begin
-      SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := Privileges[i];
+      Result[Count] := GetPrivilege(i);
+      Inc(Count);
     end;
 end;
 
-function TPrivilegesListViewEx.SelectedPrivileges: TPrivilegeArray;
+constructor TPrivilegeSource.Create(OwnedListView: TListViewEx);
+begin
+  ListView := OwnedListView;
+end;
+
+function TPrivilegeSource.DeletePrivilege(Index: Integer): Boolean;
+begin
+  Result := (Index > High(FTokenPrivileges)) and
+    (Index <= Length(FTokenPrivileges) + High(FAdditionalPrivileges));
+
+  Assert(Assigned(ListView));
+
+  if Result then
+  begin
+    Delete(FAdditionalPrivileges, Index - Length(FTokenPrivileges), 1);
+    ListView.Items.Delete(Index);
+  end;
+end;
+
+destructor TPrivilegeSource.Destroy;
+begin
+  UnsubscribeToken;
+  inherited;
+end;
+
+function TPrivilegeSource.GetPrivilege(Ind: Integer): TPrivilege;
+begin
+  if Ind <= High(FTokenPrivileges) then
+    Result := FTokenPrivileges[Ind]
+  else
+    Result := FAdditionalPrivileges[Ind - Length(FTokenPrivileges)];
+end;
+
+procedure TPrivilegeSource.OnPrivilegeChange(NewPrivileges: TPrivilegeArray);
+var
+  i: integer;
+begin
+  Assert(Assigned(ListView));
+
+  with ListView do
+  begin
+    Items.BeginUpdate(True);
+    Clear;
+
+    // Update privileges from token
+    FTokenPrivileges := NewPrivileges;
+    for i := 0 to High(NewPrivileges) do
+      AddToList(NewPrivileges[i]);
+
+    // Also show preserve additional ones
+    for i := 0 to High(FAdditionalPrivileges) do
+      AddToList(FAdditionalPrivileges[i]);
+
+    Items.EndUpdate(True);
+  end;
+end;
+
+function TPrivilegeSource.SelectedPrivileges: TPrivilegeArray;
 var
   i, j: integer;
 begin
-  SetLength(Result, SelCount);
+  Assert(Assigned(ListView));
+
+  SetLength(Result, ListView.SelCount);
   j := 0;
-  for i := 0 to Items.Count - 1 do
-    if Items[i].Selected then
+  for i := 0 to ListView.Items.Count - 1 do
+    if ListView.Items[i].Selected then
     begin
-      Result[j] := Privileges[i];
+      Result[j] := GetPrivilege(i);
       Inc(j);
     end;
 end;
 
-procedure TPrivilegesListViewEx.SubscribeToken;
+procedure TPrivilegeSource.SubscribeToken(Token: TToken);
 begin
-  inherited;
+  UnsubscribeToken;
+
+  Self.Token := Token;
+  Token.OnClose.Add(UnsubscribeToken);
+
   Token.InfoClass.Query(tdTokenPrivileges);
-  Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
+  Token.Events.OnPrivilegesChange.Add(OnPrivilegeChange);
 end;
 
-procedure TPrivilegesListViewEx.UnsubscribeToken;
+procedure TPrivilegeSource.UnsubscribeToken(Dummy: TToken = nil);
 begin
-  Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
-  inherited;
+  if Assigned(Token) then
+  begin
+    Token.Events.OnPrivilegesChange.Delete(OnPrivilegeChange);
+    Token.OnClose.Delete(UnsubscribeToken);
+    Token := nil;
+  end;
 end;
 
 { TGroupListViewEx }

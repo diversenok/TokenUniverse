@@ -20,7 +20,7 @@ type
     TabSheetSidDisable: TTabSheet;
     TabSheetSidRestict: TTabSheet;
     TabSheetPrivDelete: TTabSheet;
-    ListViewPrivileges: TPrivilegesListViewEx;
+    ListViewPrivileges: TListViewEx;
     ListViewRestrictSID: TGroupListViewEx;
     ListViewDisableSID: TGroupListViewEx;
     ButtonAddSID: TButton;
@@ -39,6 +39,7 @@ type
     procedure MenuEditClick(Sender: TObject);
   private
     Token: TToken;
+    PrivilegeSource: TPrivilegeSource;
     function GetFlags: Cardinal;
     procedure ChangedCaption(NewCaption: String);
   public
@@ -71,7 +72,7 @@ begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
     ListViewDisableSID.CheckedGroups,
     ListViewRestrictSID.CheckedGroups,
-    ListViewPrivileges.CheckedPrivileges);
+    PrivilegeSource.CheckedPrivileges);
 
   FormMain.Frame.AddToken(NewToken);
 
@@ -109,6 +110,7 @@ procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Token.OnCaptionChange.Delete(ChangedCaption);
+  PrivilegeSource.Free;
   UnsubscribeTokenCanClose(Token);
 end;
 
@@ -119,13 +121,13 @@ var
   RestrInd, ItemInd: Integer;
 begin
   SubscribeTokenCanClose(Token, Caption);
-  Refresh;
+  PrivilegeSource := TPrivilegeSource.Create(ListViewPrivileges);
 
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);
   ListViewDisableSID.Token := Token;
   ListViewRestrictSID.Token := Token;
-  ListViewPrivileges.Token := Token;
+  PrivilegeSource.SubscribeToken(Token);
 
   // The user can also be disabled and restricted
   if Token.InfoClass.Query(tdTokenUser) then

@@ -686,7 +686,7 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      object ListViewPrivileges: TPrivilegesListViewEx
+      object ListViewPrivileges: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
