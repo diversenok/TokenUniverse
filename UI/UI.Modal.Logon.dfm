@@ -61,6 +61,7 @@ object LogonDialog: TLogonDialog
       'Network'
       'Network clear text'
       'New credentials'
+      'Unlock'
       'Service')
   end
   object ComboLogonProvider: TComboBox
@@ -75,9 +76,9 @@ object LogonDialog: TLogonDialog
     Text = 'Default'
     Items.Strings = (
       'Default'
-      'Negotiate'
+      'Windows NT 3.5'
       'NTLM'
-      'Windows NT 3.5')
+      'Negotiate')
   end
   object ButtonCancel: TButton
     Left = 8

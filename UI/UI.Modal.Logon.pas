@@ -60,10 +60,9 @@ end;
 
 function TLogonDialog.GetLogonType: TLogonType;
 const
-  LogonTypeMapping: array [0 .. 5] of TLogonType = (ltInteractive, ltBatch,
-    ltNetwork, ltNetworkCleartext, ltNewCredentials, ltService);
+  LogonTypeMapping: array [0 .. 6] of TLogonType = (ltInteractive, ltBatch,
+    ltNetwork, ltNetworkCleartext, ltNewCredentials, ltUnlock, ltService);
 begin
-  // TODO: add Unlock logon type
   Result := LogonTypeMapping[ComboLogonType.ItemIndex];
 end;
 

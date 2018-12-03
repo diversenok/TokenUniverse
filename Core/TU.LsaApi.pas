@@ -13,7 +13,7 @@ type
     ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
     ltCachedUnlock);
 
-  TLogonProvider = (lpDefault, lpWinNT50, lpWinNT40, lpWinNT35);
+  TLogonProvider = (lpDefault, lpWinNT35, lpWinNT40, lpWinNT50, lpVirtual);
 
   /// <summary>
   ///  Stores the information about a logon session.
