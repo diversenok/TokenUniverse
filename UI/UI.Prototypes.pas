@@ -8,27 +8,14 @@ uses
   TU.Tokens.Types;
 
 type
-  TTokenedListViewEx = class(TListViewEx)
-  private
-    FToken: TToken;
-    procedure ReleaseToken(Sender: TToken);
-    procedure SetToken(const Value: TToken);
-  protected
-    procedure SubscribeToken; virtual;
-    procedure UnsubscribeToken; virtual;
-  public
-    destructor Destroy; override;
-    property Token: TToken read FToken write SetToken;
-  end;
-
-  TPrivilegeSource = class
+  TPrivilegesSource = class
   private
     ListView: TListViewEx;
     Token: TToken;
     FTokenPrivileges, FAdditionalPrivileges: TPrivilegeArray;
     function GetPrivilege(Ind: Integer): TPrivilege;
     procedure OnPrivilegeChange(NewPrivileges: TPrivilegeArray);
-    function AddToList(Privilege: TPrivilege): TListItemEx;
+    function SetItem(Privilege: TPrivilege): TListItemEx;
   public
     constructor Create(OwnedListView: TListViewEx);
     destructor Destroy; override;
@@ -37,41 +24,38 @@ type
     function SelectedPrivileges: TPrivilegeArray;
     function CheckedPrivileges: TPrivilegeArray;
     property Privilege[Ind: Integer]: TPrivilege read GetPrivilege;
+    function Privileges: TPrivilegeArray;
     function AddPrivilege(Privilege: TPrivilege): TListItemEx;
-    function DeletePrivilege(Index: Integer): Boolean;
+    function RemovePrivilege(Index: Integer): Boolean;
   end;
 
-  TGroupViewAs = (gvUser, gvSID);
-  TGroupSource = (gsGroups, gsRestrictedSIDs);
+  TGroupsSourceMode = (gsGroups, gsRestrictedSIDs);
 
-  TGroupListViewEx = class(TTokenedListViewEx)
+  TGroupsSource = class
   private
-    FGroups, FAdditional: TGroupArray;
-    FViewAs: TGroupViewAs;
-    FSource: TGroupSource;
-    procedure ChangedGroups(NewGroups: TGroupArray);
-    procedure SetGroupItem(Item: TListItemEx; Group: TGroup);
-    procedure SetSource(const Value: TGroupSource);
-    procedure SetViewAs(const Value: TGroupViewAs);
+    ListView: TListViewEx;
+    Token: TToken;
+    FTokenGroups, FAdditionalGroups: TGroupArray;
+    Mode: TGroupsSourceMode;
+    procedure OnGroupsChange(NewGroups: TGroupArray);
+    function SetItem(Item: TListItemEx; Group: TGroup): TListItemEx;
     function GetGroup(Ind: Integer): TGroup;
     procedure SetGroup(Ind: Integer; const Value: TGroup);
-  protected
-    procedure SubscribeToken; override;
-    procedure UnsubscribeToken; override;
   public
-    property Groups[Ind: Integer]: TGroup read GetGroup write SetGroup;
+    constructor Create(OwnedListView: TListViewEx);
+    destructor Destroy; override;
+    procedure SubscribeToken(Token: TToken; Mode: TGroupsSourceMode);
+    procedure UnsubscribeToken(Dummy: TToken = nil);
+    property Group[Ind: Integer]: TGroup read GetGroup write SetGroup;
+    function Groups: TGroupArray;
+    function SelectedGroups: TGroupArray;
+    function CheckedGroups: TGroupArray;
     function AddGroup(Group: TGroup): TListItemEx;
     function IsAdditional(Index: Integer): Boolean;
     procedure RemoveGroup(Index: Integer);
     class function BuildHint(SID: TSecurityIdentifier;
       Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
       static;
-  published
-    property ViewAs: TGroupViewAs read FViewAs write SetViewAs default gvUser;
-    property Source: TGroupSource read FSource write SetSource default gsGroups;
-    function SelectedGroups: TGroupArray;
-    function AllGroups: TGroupArray;
-    function CheckedGroups: TGroupArray;
   end;
 
   TSessionSource = class
@@ -118,75 +102,21 @@ type
     property SelectedLogonSession: LUID read GetSelected write SetSelected;
   end;
 
-procedure Register;
-
 implementation
 
 uses
   System.Generics.Collections, UI.Colors, TU.Winapi, TU.NativeApi;
 
-procedure Register;
-begin
-  RegisterComponents('Token Universe', [TGroupListViewEx]);
-end;
+{ TPrivilegesSource }
 
-{ TTokenedListViewEx }
-
-destructor TTokenedListViewEx.Destroy;
-begin
-  ReleaseToken(FToken);
-  inherited;
-end;
-
-procedure TTokenedListViewEx.ReleaseToken(Sender: TToken);
-begin
-  if Assigned(FToken) then
-  begin
-    UnsubscribeToken;
-    FToken := nil;
-  end;
-end;
-
-procedure TTokenedListViewEx.SetToken(const Value: TToken);
-begin
-  ReleaseToken(FToken);
-  FToken := Value;
-  if Assigned(FToken) then  
-    SubscribeToken;
-end;
-
-procedure TTokenedListViewEx.SubscribeToken;
-begin
-  Token.OnClose.Add(ReleaseToken);
-end;
-
-procedure TTokenedListViewEx.UnsubscribeToken;
-begin
-  Token.OnClose.Delete(ReleaseToken);
-end;
-
-{ TPrivilegeSource }
-
-function TPrivilegeSource.AddPrivilege(Privilege: TPrivilege): TListItemEx;
+function TPrivilegesSource.AddPrivilege(Privilege: TPrivilege): TListItemEx;
 begin
   SetLength(FAdditionalPrivileges, Length(FAdditionalPrivileges) + 1);
   FAdditionalPrivileges[High(FAdditionalPrivileges)] := Privilege;
-  Result := AddToList(Privilege);
+  Result := SetItem(Privilege);
 end;
 
-function TPrivilegeSource.AddToList(Privilege: TPrivilege): TListItemEx;
-begin
-  Assert(Assigned(ListView));
-
-  Result := ListView.Items.Add;
-  Result.Caption := Privilege.Name;
-  Result.SubItems.Add(Privilege.AttributesToString);
-  Result.SubItems.Add(Privilege.Description);
-  Result.SubItems.Add(Privilege.Luid.ToString);
-  Result.Color := PrivilegeToColor(Privilege);
-end;
-
-function TPrivilegeSource.CheckedPrivileges: TPrivilegeArray;
+function TPrivilegesSource.CheckedPrivileges: TPrivilegeArray;
 var
   i, Count: integer;
 begin
@@ -210,12 +140,55 @@ begin
     end;
 end;
 
-constructor TPrivilegeSource.Create(OwnedListView: TListViewEx);
+constructor TPrivilegesSource.Create(OwnedListView: TListViewEx);
 begin
   ListView := OwnedListView;
 end;
 
-function TPrivilegeSource.DeletePrivilege(Index: Integer): Boolean;
+destructor TPrivilegesSource.Destroy;
+begin
+  UnsubscribeToken;
+  inherited;
+end;
+
+function TPrivilegesSource.GetPrivilege(Ind: Integer): TPrivilege;
+begin
+  if Ind <= High(FTokenPrivileges) then
+    Result := FTokenPrivileges[Ind]
+  else
+    Result := FAdditionalPrivileges[Ind - Length(FTokenPrivileges)];
+end;
+
+procedure TPrivilegesSource.OnPrivilegeChange(NewPrivileges: TPrivilegeArray);
+var
+  i: integer;
+begin
+  Assert(Assigned(ListView));
+
+  with ListView do
+  begin
+    Items.BeginUpdate(True);
+    Clear;
+
+    // Update privileges from the token
+    FTokenPrivileges := NewPrivileges;
+    for i := 0 to High(NewPrivileges) do
+      SetItem(NewPrivileges[i]);
+
+    // Also show preserve additional ones
+    for i := 0 to High(FAdditionalPrivileges) do
+      SetItem(FAdditionalPrivileges[i]);
+
+    Items.EndUpdate(True);
+  end;
+end;
+
+function TPrivilegesSource.Privileges: TPrivilegeArray;
+begin
+  Result := Concat(FTokenPrivileges, FAdditionalPrivileges);
+end;
+
+function TPrivilegesSource.RemovePrivilege(Index: Integer): Boolean;
 begin
   Result := (Index > High(FTokenPrivileges)) and
     (Index <= Length(FTokenPrivileges) + High(FAdditionalPrivileges));
@@ -229,45 +202,7 @@ begin
   end;
 end;
 
-destructor TPrivilegeSource.Destroy;
-begin
-  UnsubscribeToken;
-  inherited;
-end;
-
-function TPrivilegeSource.GetPrivilege(Ind: Integer): TPrivilege;
-begin
-  if Ind <= High(FTokenPrivileges) then
-    Result := FTokenPrivileges[Ind]
-  else
-    Result := FAdditionalPrivileges[Ind - Length(FTokenPrivileges)];
-end;
-
-procedure TPrivilegeSource.OnPrivilegeChange(NewPrivileges: TPrivilegeArray);
-var
-  i: integer;
-begin
-  Assert(Assigned(ListView));
-
-  with ListView do
-  begin
-    Items.BeginUpdate(True);
-    Clear;
-
-    // Update privileges from token
-    FTokenPrivileges := NewPrivileges;
-    for i := 0 to High(NewPrivileges) do
-      AddToList(NewPrivileges[i]);
-
-    // Also show preserve additional ones
-    for i := 0 to High(FAdditionalPrivileges) do
-      AddToList(FAdditionalPrivileges[i]);
-
-    Items.EndUpdate(True);
-  end;
-end;
-
-function TPrivilegeSource.SelectedPrivileges: TPrivilegeArray;
+function TPrivilegesSource.SelectedPrivileges: TPrivilegeArray;
 var
   i, j: integer;
 begin
@@ -283,7 +218,19 @@ begin
     end;
 end;
 
-procedure TPrivilegeSource.SubscribeToken(Token: TToken);
+function TPrivilegesSource.SetItem(Privilege: TPrivilege): TListItemEx;
+begin
+  Assert(Assigned(ListView));
+
+  Result := ListView.Items.Add;
+  Result.Caption := Privilege.Name;
+  Result.SubItems.Add(Privilege.AttributesToString);
+  Result.SubItems.Add(Privilege.Description);
+  Result.SubItems.Add(Privilege.Luid.ToString);
+  Result.Color := PrivilegeToColor(Privilege);
+end;
+
+procedure TPrivilegesSource.SubscribeToken(Token: TToken);
 begin
   UnsubscribeToken;
 
@@ -294,7 +241,7 @@ begin
   Token.Events.OnPrivilegesChange.Add(OnPrivilegeChange);
 end;
 
-procedure TPrivilegeSource.UnsubscribeToken(Dummy: TToken = nil);
+procedure TPrivilegesSource.UnsubscribeToken(Dummy: TToken = nil);
 begin
   if Assigned(Token) then
   begin
@@ -304,54 +251,26 @@ begin
   end;
 end;
 
-{ TGroupListViewEx }
+{ TGroupsSource }
 
-function TGroupListViewEx.AddGroup(Group: TGroup): TListItemEx;
+function TGroupsSource.AddGroup(Group: TGroup): TListItemEx;
 begin
-  SetLength(FAdditional, Length(FAdditional) + 1);
-  FAdditional[High(FAdditional)] := Group;
-  Result := Items.Add;
-  SetGroupItem(Result, Group);
+  Assert(Assigned(ListView));
+
+  SetLength(FAdditionalGroups, Length(FAdditionalGroups) + 1);
+  FAdditionalGroups[High(FAdditionalGroups)] := Group;
+
+  Result := SetItem(ListView.Items.Add, Group);
 end;
 
-procedure TGroupListViewEx.SetGroup(Ind: Integer; const Value: TGroup);
-begin
-  if Ind >= Length(FGroups) then
-  begin
-    FAdditional[Ind - Length(FGroups)] := Value;
-    SetGroupItem(Items[Ind], Value);
-  end;
-end;
-
-procedure TGroupListViewEx.SetGroupItem(Item: TListItemEx; Group: TGroup);
-begin
-  with Group, Item do
-  begin
-    case FViewAs of
-      gvUser: Caption := SecurityIdentifier.ToString;
-      gvSID: Caption := SecurityIdentifier.SID;
-    end;
-    Hint := BuildHint(SecurityIdentifier, Attributes);
-    SubItems.Clear;
-    SubItems.Add(Attributes.StateToString);
-    SubItems.Add(Attributes.FlagsToString);
-    Color := GroupAttributesToColor(Attributes);
-  end;
-end;
-
-function TGroupListViewEx.AllGroups: TGroupArray;
-begin
-  Result := Concat(FGroups, FAdditional);
-end;
-
-class function TGroupListViewEx.BuildHint(SID: TSecurityIdentifier;
+class function TGroupsSource.BuildHint(SID: TSecurityIdentifier;
   Attributes: TGroupAttributes; AttributesPresent: Boolean): String;
 const
   ITEM_FORMAT = '%s:'#$D#$A'  %s';
 var
   Items: TList<String>;
 begin
-  Items := TList<String>.Create;;
+  Items := TList<String>.Create;
   try
     if SID.HasPrettyName then
       Items.Add(Format(ITEM_FORMAT, ['Pretty name', SID.ToString]));
@@ -369,123 +288,168 @@ begin
   end;
 end;
 
-procedure TGroupListViewEx.ChangedGroups(NewGroups: TGroupArray);
+function TGroupsSource.CheckedGroups: TGroupArray;
 var
-  i: Integer;
+  i, Count: integer;
 begin
-  FGroups := NewGroups;
+  Assert(Assigned(ListView));
 
-  Items.BeginUpdate(True);
-  Clear;
-  for i := 0 to High(FGroups) do
-    SetGroupItem(Items.Add, FGroups[i]);
-  for i := 0 to High(FAdditional) do
-    SetGroupItem(Items.Add, FAdditional[i]);
-  Items.EndUpdate(True);
-end;
+  // Count all the checked items
+  Count := 0;
+  for i := 0 to ListView.Items.Count - 1 do
+    if ListView.Items[i].Checked then
+      Inc(Count);
 
-function TGroupListViewEx.CheckedGroups: TGroupArray;
-var
-  i: integer;
-begin
-  SetLength(Result, 0);
-  for i := 0 to Items.Count - 1 do
-    if Items[i].Checked then
+  SetLength(Result, Count);
+
+  // Collect them
+  Count := 0;
+  for i := 0 to ListView.Items.Count - 1 do
+    if ListView.Items[i].Checked then
     begin
-      SetLength(Result, Length(Result) + 1);
-      if i < Length(FGroups) then
-        Result[High(Result)] := FGroups[i]
-      else
-        Result[High(Result)] := FAdditional[i - Length(FGroups)];
+      Result[Count] := GetGroup(i);
+      Inc(Count);
     end;
 end;
 
-function TGroupListViewEx.GetGroup(Ind: Integer): TGroup;
+constructor TGroupsSource.Create(OwnedListView: TListViewEx);
 begin
-  if Ind < Length(FGroups) then
-    Result := FGroups[Ind]
+  ListView := OwnedListView;
+end;
+
+destructor TGroupsSource.Destroy;
+begin
+  UnsubscribeToken;
+  inherited;
+end;
+
+function TGroupsSource.GetGroup(Ind: Integer): TGroup;
+begin
+  if Ind < Length(FTokenGroups) then
+    Result := FTokenGroups[Ind]
   else
-    Result := FAdditional[Ind - Length(FGroups)];
+    Result := FAdditionalGroups[Ind - Length(FTokenGroups)];
 end;
 
-function TGroupListViewEx.IsAdditional(Index: Integer): Boolean;
+function TGroupsSource.Groups: TGroupArray;
 begin
-  Result := Index >= Length(FGroups);
+  Result := Concat(FTokenGroups, FAdditionalGroups);
 end;
 
-procedure TGroupListViewEx.RemoveGroup(Index: Integer);
+function TGroupsSource.IsAdditional(Index: Integer): Boolean;
+begin
+  Result := Index >= Length(FTokenGroups);
+end;
+
+procedure TGroupsSource.OnGroupsChange(NewGroups: TGroupArray);
 var
   i: Integer;
 begin
-  // Groups from token should be immutable
-  if Index < Length(FGroups) then
-    Exit;
+  Assert(Assigned(ListView));
 
-  for i := Index - Length(FGroups) to High(FAdditional) - 1 do
-    FAdditional[i] := FAdditional[i + 1];
+  FTokenGroups := NewGroups;
 
-  Items.Delete(Index);
+  with ListView do
+  begin
+    Items.BeginUpdate(True);
+    Items.Clear;
+
+    // Show groups from the token
+    for i := 0 to High(NewGroups) do
+      SetItem(Items.Add, NewGroups[i]);
+
+    // Show additional groups
+    for i := 0 to High(FAdditionalGroups) do
+      SetItem(Items.Add, FAdditionalGroups[i]);
+
+    Items.EndUpdate(True);
+  end;
 end;
 
-function TGroupListViewEx.SelectedGroups: TGroupArray;
+procedure TGroupsSource.RemoveGroup(Index: Integer);
+var
+  i: Integer;
+begin
+  Assert(Assigned(ListView));
+
+  if Index > Length(FTokenGroups) + High(FAdditionalGroups) then
+    raise EArgumentOutOfRangeException.Create('Index is out of range');
+
+  if not IsAdditional(Index) then
+    Exit;
+
+  Delete(FAdditionalGroups, Index - Length(FTokenGroups), 1);
+  ListView.Items.Delete(Index);
+end;
+
+function TGroupsSource.SelectedGroups: TGroupArray;
 var
   i, j: integer;
 begin
-  SetLength(Result, SelCount);
+  Assert(Assigned(ListView));
+
+  SetLength(Result, ListView.SelCount);
   j := 0;
-  for i := 0 to Items.Count - 1 do
-    if Items[i].Selected then
+  for i := 0 to ListView.Items.Count - 1 do
+    if ListView.Items[i].Selected then
     begin
-      if i < Length(FGroups) then
-        Result[j] := FGroups[i]
-      else
-        Result[j] := FAdditional[i - Length(FGroups)];
+      Result[j] := GetGroup(i);
       Inc(j);
     end;
 end;
 
-procedure TGroupListViewEx.SetSource(const Value: TGroupSource);
+procedure TGroupsSource.SetGroup(Ind: Integer; const Value: TGroup);
 begin
-  if FSource = Value then
-    Exit;
-
-  if Assigned(Token) then
-    UnsubscribeToken;
-    
-  FSource := Value;
-
-  if Assigned(Token) then  
-    SubscribeToken;
+  Assert(Assigned(ListView));
+  SetItem(ListView.Items[Ind], Value);
 end;
 
-procedure TGroupListViewEx.SetViewAs(const Value: TGroupViewAs);
+function TGroupsSource.SetItem(Item: TListItemEx; Group: TGroup): TListItemEx;
 begin
-  if FViewAs = Value then
-    Exit;
-
-  FViewAs := Value;
-  if Assigned(Token) then
-    ChangedGroups(FGroups);
+  Item.Caption := Group.SecurityIdentifier.ToString;
+  Item.Hint := BuildHint(Group.SecurityIdentifier, Group.Attributes);
+  Item.SubItems.Clear;
+  Item.SubItems.Add(Group.Attributes.StateToString);
+  Item.SubItems.Add(Group.Attributes.FlagsToString);
+  Item.Color := GroupAttributesToColor(Group.Attributes);
+  Result := Item;
 end;
 
-procedure TGroupListViewEx.SubscribeToken;
+procedure TGroupsSource.SubscribeToken(Token: TToken; Mode: TGroupsSourceMode);
 begin
-  inherited;
-  if FSource = gsGroups then
+  UnsubscribeToken;
+
+  Self.Mode := Mode;
+  Self.Token := Token;
+  Token.OnClose.Add(UnsubscribeToken);
+
+  if Mode = gsGroups then
   begin
+    // Query groups and subcribe for the event. The subscription will
+    // automatically invoke our event listener.
     Token.InfoClass.Query(tdTokenGroups);
-    Token.Events.OnGroupsChange.Add(ChangedGroups);
+    Token.Events.OnGroupsChange.Add(OnGroupsChange);
   end
-  else if FSource = gsRestrictedSIDs then
+  else if Mode = gsRestrictedSIDs then
+  begin
+    // Restricted SIDs do not have an associated event.
+    // Invoke the event listener manually.
     if Token.InfoClass.Query(tdTokenRestrictedSids) then
-      ChangedGroups(Token.InfoClass.RestrictedSids);
+      OnGroupsChange(Token.InfoClass.RestrictedSids);
+  end;
 end;
 
-procedure TGroupListViewEx.UnsubscribeToken;
+procedure TGroupsSource.UnsubscribeToken(Dummy: TToken);
 begin
-  if FSource = gsGroups then
-    Token.Events.OnGroupsChange.Delete(ChangedGroups);
-  inherited;
+  if Assigned(Token) then
+  begin
+    // Restricted SIDs do not have an event, but Groups do
+    if Mode = gsGroups then
+      Token.Events.OnGroupsChange.Delete(OnGroupsChange);
+
+    Token.OnClose.Delete(UnsubscribeToken);
+    Token := nil;
+  end;
 end;
 
 { TSessionSource }

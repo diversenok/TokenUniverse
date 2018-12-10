@@ -16,7 +16,7 @@ type
     LabelProvider: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
-    ListViewGroups: TGroupListViewEx;
+    ListViewGroups: TListViewEx;
     ButtonAddSID: TButton;
     LabelGroups: TLabel;
     PopupMenu: TPopupMenu;
@@ -26,12 +26,13 @@ type
     procedure ButtonAddSIDClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
     procedure MenuEditClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    GroupsSource: TGroupsSource;
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: TLogonType;
     function GetLogonProvider: TLogonProvider;
-  public
-    { Public declarations }
   end;
 
 implementation
@@ -43,7 +44,7 @@ uses
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
-  ListViewGroups.AddGroup(TDialogPickUser.Execute(Self));
+  GroupsSource.AddGroup(TDialogPickUser.Execute(Self));
   ButtonContinue.SetFocus;
 end;
 
@@ -53,6 +54,16 @@ begin
   ModalResult := mrOk;
 end;
 
+procedure TLogonDialog.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  GroupsSource.Free;
+end;
+
+procedure TLogonDialog.FormCreate(Sender: TObject);
+begin
+  GroupsSource := TGroupsSource.Create(ListViewGroups);
+end;
+
 function TLogonDialog.GetLogonProvider: TLogonProvider;
 begin
   Result := TLogonProvider(ComboLogonProvider.ItemIndex);
@@ -60,8 +71,8 @@ end;
 
 function TLogonDialog.GetLogonType: TLogonType;
 const
-  LogonTypeMapping: array [0 .. 6] of TLogonType = (ltInteractive, ltBatch,
-    ltNetwork, ltNetworkCleartext, ltNewCredentials, ltUnlock, ltService);
+  LogonTypeMapping: array [0 .. 6] of TLogonType = (ltInteractive, ltNetwork,
+    ltNetworkCleartext, ltNewCredentials, ltUnlock, ltBatch, ltService);
 begin
   Result := LogonTypeMapping[ComboLogonType.ItemIndex];
 end;
@@ -70,25 +81,26 @@ procedure TLogonDialog.MenuEditClick(Sender: TObject);
 var
   Ind: Integer;
 begin
+  // TODO: modifying attributes of multiple groups simultaneously
   if Assigned(ListViewGroups.Selected) then
   begin
     Ind := ListViewGroups.Selected.Index;
-    ListViewGroups.Groups[Ind] := TDialogPickUser.Execute(Self,
-      ListViewGroups.Groups[Ind]);
+    GroupsSource.Group[Ind] := TDialogPickUser.Execute(Self,
+      GroupsSource.Group[Ind]);
   end;
 end;
 
 procedure TLogonDialog.MenuRemoveClick(Sender: TObject);
 begin
   if Assigned(ListViewGroups.Selected) then
-    ListViewGroups.RemoveGroup(ListViewGroups.Selected.Index);
+    GroupsSource.RemoveGroup(ListViewGroups.Selected.Index);
 end;
 
 procedure TLogonDialog.TokenCreationCallback(Domain, User: String;
   Password: PWideChar);
 begin
   FormMain.Frame.AddToken(TToken.CreateWithLogon(GetLogonType, GetLogonProvider,
-    Domain, User, Password, ListViewGroups.AllGroups));
+    Domain, User, Password, GroupsSource.Groups));
 end;
 
 end.

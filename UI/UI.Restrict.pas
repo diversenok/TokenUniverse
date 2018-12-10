@@ -21,8 +21,8 @@ type
     TabSheetSidRestict: TTabSheet;
     TabSheetPrivDelete: TTabSheet;
     ListViewPrivileges: TListViewEx;
-    ListViewRestrictSID: TGroupListViewEx;
-    ListViewDisableSID: TGroupListViewEx;
+    ListViewRestrictSID: TListViewEx;
+    ListViewDisableSID: TListViewEx;
     ButtonAddSID: TButton;
     PopupMenu: TPopupMenu;
     MenuEdit: TMenuItem;
@@ -39,7 +39,8 @@ type
     procedure MenuEditClick(Sender: TObject);
   private
     Token: TToken;
-    PrivilegeSource: TPrivilegeSource;
+    DisableGoupsSource, RestrictGroupsSource: TGroupsSource;
+    PrivilegesSource: TPrivilegesSource;
     function GetFlags: Cardinal;
     procedure ChangedCaption(NewCaption: String);
   public
@@ -57,7 +58,7 @@ uses
 
 procedure TDialogRestrictToken.ButtonAddSIDClick(Sender: TObject);
 begin
-  ListViewRestrictSID.AddGroup(TDialogPickUser.Execute(Self, True)).Checked :=
+  RestrictGroupsSource.AddGroup(TDialogPickUser.Execute(Self, True)).Checked :=
     True;
 end;
 
@@ -70,9 +71,9 @@ var
   NewToken: TToken;
 begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
-    ListViewDisableSID.CheckedGroups,
-    ListViewRestrictSID.CheckedGroups,
-    PrivilegeSource.CheckedPrivileges);
+    DisableGoupsSource.CheckedGroups,
+    RestrictGroupsSource.CheckedGroups,
+    PrivilegesSource.CheckedPrivileges);
 
   FormMain.Frame.AddToken(NewToken);
 
@@ -110,7 +111,9 @@ procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Token.OnCaptionChange.Delete(ChangedCaption);
-  PrivilegeSource.Free;
+  PrivilegesSource.Free;
+  RestrictGroupsSource.Free;
+  DisableGoupsSource.Free;
   UnsubscribeTokenCanClose(Token);
 end;
 
@@ -121,21 +124,25 @@ var
   RestrInd, ItemInd: Integer;
 begin
   SubscribeTokenCanClose(Token, Caption);
-  PrivilegeSource := TPrivilegeSource.Create(ListViewPrivileges);
+
+  DisableGoupsSource := TGroupsSource.Create(ListViewDisableSID);
+  RestrictGroupsSource := TGroupsSource.Create(ListViewRestrictSID);
+  PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
+
+  DisableGoupsSource.SubscribeToken(Token, gsGroups);
+  RestrictGroupsSource.SubscribeToken(Token, gsGroups);
+  PrivilegesSource.SubscribeToken(Token);
 
   Token.OnCaptionChange.Add(ChangedCaption);
-  Token.OnCaptionChange.Invoke(Token.Caption);
-  ListViewDisableSID.Token := Token;
-  ListViewRestrictSID.Token := Token;
-  PrivilegeSource.SubscribeToken(Token);
+  ChangedCaption(Token.Caption);
 
   // The user can also be disabled and restricted
   if Token.InfoClass.Query(tdTokenUser) then
   begin
     UserItem.SecurityIdentifier := Token.InfoClass.User.SecurityIdentifier;
     UserItem.Attributes := Token.InfoClass.User.Attributes;
-    ListViewDisableSID.AddGroup(UserItem);
-    ListViewRestrictSID.AddGroup(UserItem);
+    DisableGoupsSource.AddGroup(UserItem);
+    RestrictGroupsSource.AddGroup(UserItem);
   end;
 
   // If the token has restricting SIDs then check them. It can also contain
@@ -149,7 +156,7 @@ begin
         // Find and check it
         for ItemInd := 0 to ListViewRestrictSID.Items.Count - 1 do
           if RestrictedSids[RestrInd].SecurityIdentifier.SID =
-            ListViewRestrictSID.Groups[ItemInd].SecurityIdentifier.SID then
+            RestrictGroupsSource.Group[ItemInd].SecurityIdentifier.SID then
           begin
             ListViewRestrictSID.Items[ItemInd].Checked := True;
             Found := True;
@@ -158,7 +165,7 @@ begin
 
       // The restricting SID was not found in the list, add and check it
       if not Found then
-        ListViewRestrictSID.AddGroup(RestrictedSids[RestrInd]).Checked := True;
+        RestrictGroupsSource.AddGroup(RestrictedSids[RestrInd]).Checked := True;
     end;
 end;
 
@@ -187,12 +194,13 @@ var
 begin
   with ListViewRestrictSID do
   begin
+    // Only one item can be edited at a time
     MenuEdit.Enabled := (SelCount = 1);
 
-    // Show context menu only if selection contains removable items
+    // Show context menu only if selection contains removable/editable items
     for i := 0 to Items.Count - 1 do
       if Items[i].Selected then
-        Handled := Handled or IsAdditional(i);
+        Handled := Handled or RestrictGroupsSource.IsAdditional(i);
 
     Handled := not Handled;
   end;
@@ -200,10 +208,10 @@ end;
 
 procedure TDialogRestrictToken.MenuEditClick(Sender: TObject);
 begin
-  with ListViewRestrictSID do
-    if Assigned(Selected) then
-      Groups[Selected.Index] := TDialogPickUser.Execute(Self,
-        Groups[Selected.Index]);
+  with ListViewRestrictSID, RestrictGroupsSource do
+    if Assigned(ListViewRestrictSID.Selected) then
+      Group[ListViewRestrictSID.Selected.Index] := TDialogPickUser.Execute(Self,
+        Group[Selected.Index]);
 end;
 
 procedure TDialogRestrictToken.MenuRemoveClick(Sender: TObject);
@@ -214,8 +222,8 @@ begin
   begin
     // deletion changes indexes, go downwards
     for i := Items.Count - 1 downto 0 do
-      if Items[i].Selected and IsAdditional(i) then
-        RemoveGroup(i);
+      if Items[i].Selected and RestrictGroupsSource.IsAdditional(i) then
+        RestrictGroupsSource.RemoveGroup(i);
   end;
 end;
 

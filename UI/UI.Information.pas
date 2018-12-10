@@ -18,10 +18,10 @@ type
     StaticUser: TStaticText;
     EditUser: TEdit;
     ButtonClose: TButton;
-    ListViewGroups: TGroupListViewEx;
+    ListViewGroups: TListViewEx;
     ListViewPrivileges: TListViewEx;
     TabRestricted: TTabSheet;
-    ListViewRestricted: TGroupListViewEx;
+    ListViewRestricted: TListViewEx;
     StaticSession: TStaticText;
     StaticIntegrity: TStaticText;
     ComboSession: TComboBox;
@@ -75,7 +75,8 @@ type
     Token: TToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
-    PrivilegeSource: TPrivilegeSource;
+    PrivilegesSource: TPrivilegesSource;
+    GroupsSource, RestrictedSIDsSource: TGroupsSource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
@@ -99,37 +100,37 @@ uses
 procedure TInfoDialog.ActionGroupDisable(Sender: TObject);
 begin
   if ListViewGroups.SelCount <> 0 then
-    Token.GroupAdjust(ListViewGroups.SelectedGroups, gaDisable);
+    Token.GroupAdjust(GroupsSource.SelectedGroups, gaDisable);
 end;
 
 procedure TInfoDialog.ActionGroupEnable(Sender: TObject);
 begin
   if ListViewGroups.SelCount <> 0 then
-    Token.GroupAdjust(ListViewGroups.SelectedGroups, gaEnable);
+    Token.GroupAdjust(GroupsSource.SelectedGroups, gaEnable);
 end;
 
 procedure TInfoDialog.ActionGroupReset(Sender: TObject);
 begin
   if ListViewGroups.SelCount <> 0 then
-    Token.GroupAdjust(ListViewGroups.SelectedGroups, gaResetDefault);
+    Token.GroupAdjust(GroupsSource.SelectedGroups, gaResetDefault);
 end;
 
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegeSource.SelectedPrivileges, paDisable);
+    Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paDisable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegeSource.SelectedPrivileges, paEnable);
+    Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paEnable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
   if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegeSource.SelectedPrivileges, paRemove);
+    Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paRemove);
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
@@ -244,7 +245,7 @@ begin
 
     if Token.InfoClass.Query(tdLogonInfo) and
       Token.InfoClass.LogonSessionInfo.UserPresent then
-      Items[13].Hint := TGroupListViewEx.BuildHint(
+      Items[13].Hint := TGroupsSource.BuildHint(
         Token.InfoClass.LogonSessionInfo.User, TGroupAttributes(0), False);
 
     Items[14].SubItems[0] := Token.InfoClass.QueryString(tsLogonAuthPackage);
@@ -270,7 +271,7 @@ begin
     with Token.InfoClass.User, EditUser do
     begin
       Text := SecurityIdentifier.ToString;
-      Hint := TGroupListViewEx.BuildHint(SecurityIdentifier,
+      Hint := TGroupsSource.BuildHint(SecurityIdentifier,
         Attributes);
 
       if Attributes.Contain(GroupUforDenyOnly) then
@@ -309,7 +310,9 @@ begin
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
-  PrivilegeSource.Free;
+  RestrictedSIDsSource.Free;
+  GroupsSource.Free;
+  PrivilegesSource.Free;
   IntegritySource.Free;
   SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
@@ -320,7 +323,9 @@ begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
-  PrivilegeSource := TPrivilegeSource.Create(ListViewPrivileges);
+  PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
+  GroupsSource := TGroupsSource.Create(ListViewGroups);
+  RestrictedSIDsSource := TGroupsSource.Create(ListViewRestricted);
 
   // "Refresh" queries all the information, stores changeble one in the event
   // handler, and distributes changed one to every existing event listener
@@ -337,9 +342,9 @@ begin
   Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
   Token.Events.OnGroupsChange.Add(ChangedGroups);
   Token.Events.OnStatisticsChange.Add(ChangedStatistics);
-  ListViewGroups.Token := Token;
-  PrivilegeSource.SubscribeToken(Token);
-  ListViewRestricted.Token := Token;
+  PrivilegesSource.SubscribeToken(Token);
+  GroupsSource.SubscribeToken(Token, gsGroups);
+  RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);
 
   Token.OnCaptionChange.Add(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);

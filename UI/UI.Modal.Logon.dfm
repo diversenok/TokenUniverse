@@ -16,6 +16,8 @@ object LogonDialog: TLogonDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
+  OnCreate = FormCreate
   DesignSize = (
     304
     324)
@@ -57,11 +59,11 @@ object LogonDialog: TLogonDialog
     Text = 'Interactive'
     Items.Strings = (
       'Interactive'
-      'Batch'
       'Network'
       'Network clear text'
       'New credentials'
       'Unlock'
+      'Batch'
       'Service')
   end
   object ComboLogonProvider: TComboBox
@@ -102,7 +104,7 @@ object LogonDialog: TLogonDialog
     TabOrder = 3
     OnClick = ButtonContinueClick
   end
-  object ListViewGroups: TGroupListViewEx
+  object ListViewGroups: TListViewEx
     Left = 8
     Top = 128
     Width = 288

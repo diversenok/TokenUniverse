@@ -194,7 +194,7 @@ object DialogCreateToken: TDialogCreateToken
       DesignSize = (
         334
         299)
-      object ListViewGroups: TGroupListViewEx
+      object ListViewGroups: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3

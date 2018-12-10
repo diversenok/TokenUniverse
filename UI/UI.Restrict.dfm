@@ -54,7 +54,7 @@ object DialogRestrictToken: TDialogRestrictToken
     TabOrder = 2
     object TabSheetSidDisable: TTabSheet
       Caption = 'SIDs to disable'
-      object ListViewDisableSID: TGroupListViewEx
+      object ListViewDisableSID: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -115,7 +115,7 @@ object DialogRestrictToken: TDialogRestrictToken
         State = cbChecked
         TabOrder = 0
       end
-      object ListViewRestrictSID: TGroupListViewEx
+      object ListViewRestrictSID: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3

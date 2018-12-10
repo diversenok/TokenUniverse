@@ -651,7 +651,7 @@ object InfoDialog: TInfoDialog
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      object ListViewGroups: TGroupListViewEx
+      object ListViewGroups: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -726,7 +726,7 @@ object InfoDialog: TInfoDialog
     object TabRestricted: TTabSheet
       Caption = 'Restricting SIDs'
       ImageIndex = 3
-      object ListViewRestricted: TGroupListViewEx
+      object ListViewRestricted: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -754,7 +754,6 @@ object InfoDialog: TInfoDialog
         TabOrder = 0
         ViewStyle = vsReport
         ColoringItems = True
-        Source = gsRestrictedSIDs
       end
     end
   end

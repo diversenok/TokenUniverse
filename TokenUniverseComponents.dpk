@@ -33,15 +33,6 @@ requires
   vcl;
 
 contains
-  TU.WtsApi in 'Core\TU.WtsApi.pas',
-  TU.Common in 'Core\TU.Common.pas',
-  TU.NativeAPI in 'Core\TU.NativeAPI.pas',
-  UI.ListViewEx in 'UI\UI.ListViewEx.pas',
-  UI.Prototypes in 'UI\UI.Prototypes.pas',
-  TU.Handles in 'Core\TU.Handles.pas',
-  TU.Tokens in 'Core\TU.Tokens.pas',
-  TU.Winapi in 'Core\TU.Winapi.pas',
-  UI.Colors in 'UI\UI.Colors.pas',
-  TU.LsaApi in 'Core\TU.LsaApi.pas';
+  UI.ListViewEx in 'UI\UI.ListViewEx.pas';
 
 end.

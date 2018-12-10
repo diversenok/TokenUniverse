@@ -15,7 +15,7 @@ type
     TabGeneral: TTabSheet;
     TabGroups: TTabSheet;
     TabPrivileges: TTabSheet;
-    ListViewGroups: TGroupListViewEx;
+    ListViewGroups: TListViewEx;
     ListViewPrivileges: TListViewEx;
     ButtonAddSID: TButton;
     ComboBoxView: TComboBox;

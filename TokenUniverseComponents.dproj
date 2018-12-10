@@ -113,16 +113,7 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="Core\TU.WtsApi.pas"/>
-        <DCCReference Include="Core\TU.Common.pas"/>
-        <DCCReference Include="Core\TU.NativeAPI.pas"/>
         <DCCReference Include="UI\UI.ListViewEx.pas"/>
-        <DCCReference Include="UI\UI.Prototypes.pas"/>
-        <DCCReference Include="Core\TU.Handles.pas"/>
-        <DCCReference Include="Core\TU.Tokens.pas"/>
-        <DCCReference Include="Core\TU.Winapi.pas"/>
-        <DCCReference Include="UI\UI.Colors.pas"/>
-        <DCCReference Include="Core\TU.LsaApi.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
