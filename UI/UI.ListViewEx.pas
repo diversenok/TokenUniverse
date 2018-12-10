@@ -147,7 +147,7 @@ type
       Stage: TCustomDrawStage): Boolean; override;
     function IsCustomDrawn(Target: TCustomDrawTarget; Stage: TCustomDrawStage):
       Boolean; override;
-    procedure CopySelectedToClipboard;
+    procedure CopySelectedToClipboard(AllColumns: Boolean);
   public
     property Items: TListItemsEx read GetItems write SetItems;
     procedure Clear; override;
@@ -189,27 +189,36 @@ begin
     inherited;
 end;
 
-procedure TListViewEx.CopySelectedToClipboard;
+procedure TListViewEx.CopySelectedToClipboard(AllColumns: Boolean);
 var
   i, j: integer;
   Texts: array of String;
   Text: String;
 begin
-  if MultiSelect then
+  if SelCount = 0 then
+    Exit;
+
+  if MultiSelect and (SelCount > 1) then
   begin
     SetLength(Texts, SelCount);
     j := 0;
     for i := 0 to Items.Count - 1 do
     if Items[i].Selected then
       begin
-        Texts[j] := Items[i].ToString;
+        if AllColumns then
+          Texts[j] := Items[i].ToString
+        else
+          Texts[j] := Items[i].Caption;
         Inc(j);
       end;
     Text := String.Join(#$D#$A, Texts);
   end
   else if Assigned(Selected) then
   begin
-    Text := Selected.ToString;
+    if AllColumns then
+      Text := Selected.ToString
+    else
+      Text := Selected.Caption;
     UniqueString(Text);
   end;
 
@@ -334,20 +343,24 @@ var
 begin
   State := KeyDataToShiftState(Message.KeyData);
 
-  // Ctrl + A
+  // <Ctrl + A> to select everyting
   if MultiSelect and (State = [ssCtrl]) and (Message.CharCode = Ord('A')) then
     SelectAll
 
-  // Ctrl + C
+  // <Ctrl + C> to copy only the main column
   else if (State = [ssCtrl]) and (Message.CharCode = Ord('C')) then
-    CopySelectedToClipboard
+    CopySelectedToClipboard(False)
 
-  // Checking multiple checkboxes with space
+  // <Ctrl + Shift + C> to copy everything
+  else if (State = [ssCtrl, ssShift]) and (Message.CharCode = Ord('C')) then
+    CopySelectedToClipboard(True)
+
+  // <Space> to check multiple items
   else if Checkboxes and MultiSelect and Assigned(Selected) and
       (State = []) and (Message.CharCode = VK_SPACE) then
   begin
     SetSelectedCheckboxesState(not Selected.Checked);
-    Exit; // doesn't call inherited;
+    Exit; // do not call inherited;
   end;
 
   inherited;
