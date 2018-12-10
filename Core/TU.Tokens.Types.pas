@@ -72,7 +72,7 @@ type
   end;
 
   TPrivilegeArray = array of TPrivilege;
-  
+
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
   TLuidHelper = record helper for LUID
@@ -201,7 +201,8 @@ end;
 
 function TSecurityIdentifier.AllocSid: PSID;
 begin
-  ConvertStringSidToSid(PWideChar(SID), Result);
+  WinCheck(ConvertStringSidToSid(PWideChar(SID), Result),
+    'ConvertStringSidToSid');
 end;
 
 constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSID);

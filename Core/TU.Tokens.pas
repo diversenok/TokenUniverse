@@ -1091,91 +1091,109 @@ end;
 
 function TTokenData.GetElevation: TTokenElevationType;
 begin
+  Assert(Token.Cache.IsCached[tdTokenElevation]);
   Result := Token.Cache.Elevation;
 end;
 
 function TTokenData.GetGroups: TGroupArray;
 begin
+  Assert(Token.Cache.IsCached[tdTokenGroups]);
   Result := Token.Cache.Groups;
 end;
 
 function TTokenData.GetHasRestrictions: LongBool;
 begin
+  Assert(Token.Cache.IsCached[tdTokenHasRestrictions]);
   Result := Token.Cache.HasRestrictions;
 end;
 
 function TTokenData.GetIntegrity: TTokenIntegrity;
 begin
+  Assert(Token.Cache.IsCached[tdTokenIntegrity]);
   Result := Token.Cache.Integrity;
 end;
 
 function TTokenData.GetLogonSessionInfo: TLogonSessionInfo;
 begin
+  Assert(Token.Cache.IsCached[tdLogonInfo]);
   Result := Token.Cache.LogonSessionInfo;
 end;
 
 function TTokenData.GetMandatoryPolicy: TMandatoryPolicy;
 begin
+  Assert(Token.Cache.IsCached[tdTokenMandatoryPolicy]);
   Result := Token.Cache.MandatoryPolicy;
 end;
 
 function TTokenData.GetOrigin: LUID;
 begin
+  Assert(Token.Cache.IsCached[tdTokenOrigin]);
   Result := Token.Cache.Origin;
 end;
 
 function TTokenData.GetOwner: TSecurityIdentifier;
 begin
+  Assert(Token.Cache.IsCached[tdTokenOwner]);
   Result := Token.Cache.Owner;
 end;
 
 function TTokenData.GetPrimaryGroup: TSecurityIdentifier;
 begin
+  Assert(Token.Cache.IsCached[tdTokenPrimaryGroup]);
   Result := Token.Cache.PrimaryGroup;
 end;
 
 function TTokenData.GetPrivileges: TPrivilegeArray;
 begin
+  Assert(Token.Cache.IsCached[tdTokenPrivileges]);
   Result := Token.Cache.Privileges;
 end;
 
 function TTokenData.GetRestrictedSids: TGroupArray;
 begin
+  Assert(Token.Cache.IsCached[tdTokenRestrictedSids]);
   Result := Token.Cache.RestrictedSids;
 end;
 
 function TTokenData.GetSandboxInert: LongBool;
 begin
+  Assert(Token.Cache.IsCached[tdTokenSandBoxInert]);
   Result := Token.Cache.SandboxInert;
 end;
 
 function TTokenData.GetSession: Cardinal;
 begin
+  Assert(Token.Cache.IsCached[tdTokenSessionId]);
   Result := Token.Cache.Session;
 end;
 
 function TTokenData.GetSource: TTokenSource;
 begin
+  Assert(Token.Cache.IsCached[tdTokenSource]);
   Result := Token.Cache.Source;
 end;
 
 function TTokenData.GetStatistics: TTokenStatistics;
 begin
+  Assert(Token.Cache.IsCached[tdTokenStatistics]);
   Result := Token.Cache.Statistics;
 end;
 
 function TTokenData.GetTokenType: TTokenTypeEx;
 begin
+  Assert(Token.Cache.IsCached[tdTokenType]);
   Result := Token.Cache.TokenType;
 end;
 
 function TTokenData.GetUIAccess: LongBool;
 begin
+  Assert(Token.Cache.IsCached[tdTokenUIAccess]);
   Result := Token.Cache.UIAccess;
 end;
 
 function TTokenData.GetUser: TGroup;
 begin
+  Assert(Token.Cache.IsCached[tdTokenUser]);
   Result := Token.Cache.User;
 end;
 

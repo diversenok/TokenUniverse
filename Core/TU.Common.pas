@@ -354,9 +354,10 @@ class function ELocatedOSError.FormatErrorMessage(Location: String;
   Code: Cardinal): String;
 begin
   // Lucky guess: small errors are most likely Win32Api errors, big ones are
-  // most likely NativeApi errors.
+  // most likely NativeApi errors. If we have an arror that is considered by
+  // NT_SUCCESS as a success then it is a Win32Api error.
 
-  if Code < STATUS_UNSUCCESSFUL then
+  if NT_SUCCESS(Code) then
     Result := Format(OSError, [Location, Code, SysErrorMessage(Code)])
   else
     Result := Format(OSError, [Location, Code, SysErrorMessage(Code,

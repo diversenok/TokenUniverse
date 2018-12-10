@@ -140,7 +140,7 @@ function NtFilterToken(ExistingTokenHandle: THandle; Flags: Cardinal;
   stdcall; external ntdll;
 
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
-  ObjectAttributes: Pointer; TokenType: TTokenType;
+  ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
   const AuthenticationId: LUID; const ExpirationTime: Int64;
   const User: TTokenUser; Groups: PTokenGroups; Privileges: PTokenPrivileges;
   const Owner: TTokenOwner; const PrimaryGroup: TTokenPrimaryGroup;
