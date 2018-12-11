@@ -57,6 +57,7 @@ type
     MandatoryPolicy: TMandatoryPolicy;
     LogonSessionInfo: TLogonSessionInfo;
 
+    FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
     FOnSessionChange: TValuedEventHandler<Cardinal>;
     FOnUIAccessChange: TValuedEventHandler<LongBool>;
     FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
@@ -72,6 +73,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    property OnOwnerChange: TValuedEventHandler<TSecurityIdentifier> read FOnOwnerChange;
+    property OnPrimaryChange: TValuedEventHandler<TSecurityIdentifier> read FOnPrimaryChange;
     property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
     property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
@@ -101,6 +104,8 @@ type
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
     procedure SetSession(const Value: Cardinal);
     procedure SetUIAccess(const Value: LongBool);
+    procedure SetOwner(const Value: TSecurityIdentifier);
+    procedure SetPrimaryGroup(const Value: TSecurityIdentifier);
     function GetElevation: TTokenElevationType;
     function GetGroups: TGroupArray;
     function GetHasRestrictions: LongBool;
@@ -124,8 +129,8 @@ type
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TGroupArray read GetGroups;                                // class 2
     property Privileges: TPrivilegeArray read GetPrivileges;                    // class 3
-    property Owner: TSecurityIdentifier read GetOwner;                          // class 4 #settable
-    property PrimaryGroup: TSecurityIdentifier read GetPrimaryGroup;            // class 5 #settable
+    property Owner: TSecurityIdentifier read GetOwner write SetOwner;           // class 4 #settable
+    property PrimaryGroup: TSecurityIdentifier read GetPrimaryGroup write SetPrimaryGroup; // class 5 #settable
     // TODO: class 6: DefaultDacl #settable
     property Source: TTokenSource read GetSource;                               // classes 7 & 8
     property TokenTypeInfo: TTokenTypeEx read GetTokenType;                     // class 9
@@ -419,6 +424,8 @@ end;
 constructor TTokenCacheAndEvents.Create;
 begin
   inherited;
+  FOnOwnerChange.ComparisonFunction := CompareSIDs;
+  FOnPrimaryChange.ComparisonFunction := CompareSIDs;
   FOnSessionChange.ComparisonFunction := CompareCardinals;
   FOnUIAccessChange.ComparisonFunction := CompareLongBools;
   FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
@@ -432,6 +439,8 @@ destructor TTokenCacheAndEvents.Destroy;
 var
   i: TTokenStringClass;
 begin
+  CheckAbandoned(FOnOwnerChange.Count, 'OnOwnerChange');
+  CheckAbandoned(FOnPrimaryChange.Count, 'OnPrimaryChange');
   CheckAbandoned(FOnSessionChange.Count, 'OnSessionChange');
   CheckAbandoned(FOnIntegrityChange.Count, 'OnIntegrityChange');
   CheckAbandoned(FOnUIAccessChange.Count, 'OnUIAccessChange');
@@ -1491,10 +1500,20 @@ begin
     end;
 
     tdTokenOwner:
+    begin
       Result := Token.QuerySid(TokenOwner, Token.Cache.Owner);
+      if Result then
+        if Token.Events.OnOwnerChange.Invoke(Token.Cache.Owner) then
+          InvokeStringEvent(tsOwner);
+    end;
 
     tdTokenPrimaryGroup:
+    begin
      Result := Token.QuerySid(TokenPrimaryGroup, Token.Cache.PrimaryGroup);
+     if Result then
+       if Token.Events.OnPrimaryChange.Invoke(Token.Cache.PrimaryGroup) then
+         InvokeStringEvent(tsPrimaryGroup);
+    end;
 
     tdTokenDefaultDacl: ; // Not implemented
 
@@ -1656,6 +1675,38 @@ begin
   // Update the cache and notify event listeners
   ReQuery(tdTokenMandatoryPolicy);
   ReQuery(tdTokenStatistics);
+end;
+
+procedure TTokenData.SetOwner(const Value: TSecurityIdentifier);
+var
+  NewOwner: TTokenOwner;
+begin
+  NewOwner.Owner := Value.AllocSid;
+  try
+    Token.SetFixedSize<TTokenOwner>(TokenOwner, NewOwner);
+
+    // Update the cache and notify event listeners
+    ReQuery(tdTokenOwner);
+    ReQuery(tdTokenStatistics);
+  finally
+    LocalFree(NewOwner.Owner);
+  end;
+end;
+
+procedure TTokenData.SetPrimaryGroup(const Value: TSecurityIdentifier);
+var
+  NewPrimaryGroup: TTokenPrimaryGroup;
+begin
+  NewPrimaryGroup.PrimaryGroup := Value.AllocSid;
+  try
+    Token.SetFixedSize<TTokenPrimaryGroup>(TokenPrimaryGroup, NewPrimaryGroup);
+
+    // Update the cache and notify event listeners
+    ReQuery(tdTokenPrimaryGroup);
+    ReQuery(tdTokenStatistics);
+  finally
+    LocalFree(NewPrimaryGroup.PrimaryGroup);
+  end;
 end;
 
 procedure TTokenData.SetSession(const Value: Cardinal);

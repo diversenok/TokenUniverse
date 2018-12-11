@@ -121,6 +121,7 @@ type
 function CreateTokenSource(SourceName: String; SourceLuid: LUID): TTokenSource;
 
 { Comparison function used by cached event handling system }
+function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
@@ -627,6 +628,11 @@ begin
 end;
 
 { Comparison functions }
+
+function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
+begin
+  Result := Value1.SID = Value2.SID;
+end;
 
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 begin
