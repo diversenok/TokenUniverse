@@ -9,8 +9,21 @@ uses
 {$WARN SYMBOL_PLATFORM OFF}
 
 const
-  SE_GROUP_INTEGRITY = $20;
+  SE_GROUP_MANDATORY = $00000001;
+  SE_GROUP_ENABLED_BY_DEFAULT = $00000002;
+  SE_GROUP_ENABLED = $00000004;
+  SE_GROUP_OWNER = $00000008;
+  SE_GROUP_USE_FOR_DENY_ONLY = $00000010;
+  SE_GROUP_INTEGRITY = $00000020;
+  SE_GROUP_INTEGRITY_ENABLED = $00000040;
+  SE_GROUP_RESOURCE = $20000000;
+  SE_GROUP_LOGON_ID = $C0000000;
+
   ERROR_CANT_ENABLE_DENY_ONLY = $275;
+
+  TOKEN_MANDATORY_POLICY_OFF = $0;
+  TOKEN_MANDATORY_POLICY_NO_WRITE_UP = $1;
+  TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN = $2;
 
 type
   TTokenInformationClass = (
@@ -234,6 +247,8 @@ function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
 
 function AllocateLocallyUniqueId(var Luid: LUID): LongBool; stdcall;
   external advapi32;
+
+function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
 
 function OpenThread(dwDesiredAccess: Cardinal; bInheritHandle: LongBool;
   dwThreadId: Cardinal): THandle; stdcall; external kernel32;

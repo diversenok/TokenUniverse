@@ -979,7 +979,7 @@ begin
   // The memory of each item was previously allocated by ConvertStringSidToSid.
   for i := 0 to Groups.GroupCount - 1 do
     if Assigned(Groups.Groups[i].Sid) then
-      LocalFree(NativeUInt(Groups.Groups[i].Sid));
+      LocalFree(Groups.Groups[i].Sid);
 
   FreeMem(Groups);
 end;
@@ -1362,12 +1362,12 @@ begin
         Result := Format('0x%x', [Token.Handle]);
 
     tsNoWriteUpPolicy:
-      Result := EnabledDisabledToString(Cardinal(Token.Cache.MandatoryPolicy)
-        and Cardinal(TokenMandatoryPolicyNoWriteUp) <> 0);
+      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy
+        and MandatoryPolicyNoWriteUp <> 0);
 
     tsNewProcessMinPolicy:
-      Result := EnabledDisabledToString(Cardinal(Token.Cache.MandatoryPolicy)
-        and Cardinal(TokenMandatoryPolicyNewProcessMin) <> 0);
+      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy
+        and MandatoryPolicyNewProcessMin <> 0);
 
     tsUIAccess:
       Result := EnabledDisabledToString(Token.Cache.UIAccess);

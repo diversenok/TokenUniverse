@@ -355,7 +355,7 @@ object InfoDialog: TInfoDialog
         Width = 30
         Height = 17
         Caption = 'User:'
-        TabOrder = 8
+        TabOrder = 9
       end
       object EditUser: TEdit
         Left = 112
@@ -376,7 +376,7 @@ object InfoDialog: TInfoDialog
         Width = 44
         Height = 17
         Caption = 'Session:'
-        TabOrder = 9
+        TabOrder = 10
       end
       object StaticIntegrity: TStaticText
         Left = 7
@@ -384,7 +384,7 @@ object InfoDialog: TInfoDialog
         Width = 75
         Height = 17
         Caption = 'Integrity level:'
-        TabOrder = 10
+        TabOrder = 11
       end
       object ComboSession: TComboBox
         Left = 112
@@ -414,7 +414,7 @@ object InfoDialog: TInfoDialog
         Width = 40
         Height = 17
         Caption = 'Owner:'
-        TabOrder = 11
+        TabOrder = 12
       end
       object ComboOwner: TComboBox
         Left = 112
@@ -422,7 +422,7 @@ object InfoDialog: TInfoDialog
         Width = 244
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 6
+        TabOrder = 7
         Text = 'Unknown Owner'
         OnChange = SetStaleColor
       end
@@ -432,7 +432,7 @@ object InfoDialog: TInfoDialog
         Width = 244
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 7
+        TabOrder = 8
         Text = 'Unknown Primary group'
         OnChange = SetStaleColor
       end
@@ -442,7 +442,7 @@ object InfoDialog: TInfoDialog
         Width = 75
         Height = 17
         Caption = 'Primary group:'
-        TabOrder = 12
+        TabOrder = 13
       end
       object StaticUIAccess: TStaticText
         Left = 7
@@ -450,7 +450,7 @@ object InfoDialog: TInfoDialog
         Width = 52
         Height = 17
         Caption = 'UIAccess:'
-        TabOrder = 13
+        TabOrder = 14
       end
       object ComboUIAccess: TComboBox
         Left = 112
@@ -476,28 +476,7 @@ object InfoDialog: TInfoDialog
         Width = 90
         Height = 17
         Caption = 'Mandatory policy:'
-        TabOrder = 14
-      end
-      object ComboPolicy: TComboBox
-        Left = 112
-        Top = 232
-        Width = 244
-        Height = 21
-        Hint = 
-          'No write up:'#13#10'    A process associated with the token cannot wri' +
-          'te to objects that have a greater mandatory integrity level.'#13#10#13#10 +
-          'New process min:'#13#10'    A process created with the token has an in' +
-          'tegrity level that is the lesser of the parent-process integrity' +
-          ' level and the executable-file integrity level.'
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 5
-        Text = 'Unknown policy'
-        OnChange = SetStaleColor
-        Items.Strings = (
-          'Off'
-          'No write up'
-          'New process min'
-          'No write up & New process min')
+        TabOrder = 15
       end
       object ListViewGeneral: TListViewEx
         Left = 0
@@ -542,6 +521,34 @@ object InfoDialog: TInfoDialog
         ShowColumnHeaders = False
         TabOrder = 0
         ViewStyle = vsReport
+      end
+      object CheckBoxNoWriteUp: TCheckBox
+        Left = 112
+        Top = 235
+        Width = 97
+        Height = 17
+        Hint = 
+          'A process associated with the token cannot write to objects that' +
+          ' have a greater mandatory integrity label.'
+        Caption = 'No Write Up'
+        State = cbGrayed
+        TabOrder = 5
+        OnClick = CheckBoxNoWriteUpClick
+      end
+      object CheckBoxNewProcessMin: TCheckBox
+        Left = 240
+        Top = 235
+        Width = 116
+        Height = 17
+        Hint = 
+          'A process created with the token has an integrity level that is ' +
+          'the lesser of the parent-process integrity level and the executa' +
+          'ble-file integrity label.'
+        Anchors = [akTop, akRight]
+        Caption = 'New Process Min'
+        State = cbGrayed
+        TabOrder = 6
+        OnClick = CheckBoxNewProcessMinClick
       end
     end
     object TabAdvanced: TTabSheet

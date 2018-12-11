@@ -34,16 +34,17 @@ type
   end;
 
   TGroupAttributes = (
-    GroupMandatory = $00000001,
-    GroupEnabledByDefault = $00000002,
-    GroupEnabled = $00000004,
-    GroupOwner = $00000008,
-    GroupUforDenyOnly = $00000010,
-    GroupIntegrity = $00000020,
-    GroupIntegrityEnabled = $00000040,
-    GroupResource = $20000000,
-    GroupLogonId = Integer($C0000000),
-    GroupExUser = 6 // to display TOKEN_USER's attributes correctly
+    GroupMandatory = SE_GROUP_MANDATORY,
+    GroupEnabledByDefault = SE_GROUP_ENABLED_BY_DEFAULT,
+    GroupEnabled = SE_GROUP_ENABLED,
+    GroupOwner = SE_GROUP_OWNER,
+    GroupUforDenyOnly = SE_GROUP_USE_FOR_DENY_ONLY,
+    GroupIntegrity = SE_GROUP_INTEGRITY,
+    GroupIntegrityEnabled = SE_GROUP_INTEGRITY_ENABLED,
+    GroupResource = SE_GROUP_RESOURCE,
+    GroupLogonId = Integer(SE_GROUP_LOGON_ID),
+    GroupExUser = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT
+    // Used to display TOKEN_USER's attributes correctly
   );
 
   TGroupAttributesHelper = record helper for TGroupAttributes
@@ -111,12 +112,12 @@ type
     function ToDetailedString: String;
   end;
 
-  TMandatoryPolicy = (
-    TokenMandatoryPolicyOff,
-    TokenMandatoryPolicyNoWriteUp,
-    TokenMandatoryPolicyNewProcessMin,
-    TokenMandatoryPolicyValidMask
-  );
+  TMandatoryPolicy = Cardinal;
+
+const
+  MandatoryPolicyOff: TMandatoryPolicy = $0;
+  MandatoryPolicyNoWriteUp: TMandatoryPolicy = $1;
+  MandatoryPolicyNewProcessMin: TMandatoryPolicy = $2;
 
 function CreateTokenSource(SourceName: String; SourceLuid: LUID): TTokenSource;
 
@@ -216,7 +217,7 @@ end;
 
 constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
 begin
-  if UserOrSID.StartsWith('S-1-') then
+  if UserOrSID.StartsWith('S-1-') or UserOrSID.StartsWith('s-1-') then
     CreateFromStringSid(UserOrSID)
   else
     CreateFromUserName(UserOrSID);
@@ -226,13 +227,13 @@ procedure TSecurityIdentifier.CreateFromStringSid(StringSID: string);
 var
   Buffer: PSID;
 begin
-  SID := StringSID;
+  SID := UpperCase(StringSID);
   if WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
     'ConvertStringSidToSid') then
   try
     GetDomainAndUser(Buffer);
   finally
-    LocalFree(NativeUInt(Buffer));
+    LocalFree(Buffer);
   end;
 end;
 
@@ -326,7 +327,7 @@ begin
     'ConvertSidToStringSidW') then
   begin
     SID := String(Buffer);
-    LocalFree(NativeUInt(Buffer));
+    LocalFree(Buffer);
   end;
 end;
 

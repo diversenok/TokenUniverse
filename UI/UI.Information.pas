@@ -49,9 +49,10 @@ type
     ComboUIAccess: TComboBox;
     BtnSetUIAccess: TSpeedButton;
     StaticText1: TStaticText;
-    ComboPolicy: TComboBox;
     SpeedButton1: TSpeedButton;
     ListViewGeneral: TListViewEx;
+    CheckBoxNoWriteUp: TCheckBox;
+    CheckBoxNewProcessMin: TCheckBox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -72,6 +73,8 @@ type
     procedure ListViewAdvancedResize(Sender: TObject);
     procedure BtnSetPrimaryClick(Sender: TObject);
     procedure BtnSetOwnerClick(Sender: TObject);
+    procedure CheckBoxNoWriteUpClick(Sender: TObject);
+    procedure CheckBoxNewProcessMinClick(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
@@ -149,13 +152,20 @@ begin
 end;
 
 procedure TInfoDialog.BtnSetMandatoryPolicy(Sender: TObject);
+var
+  Policy: TMandatoryPolicy;
 begin
   try
-    if ComboPolicy.ItemIndex = -1 then
-      Token.InfoClass.MandatoryPolicy := TMandatoryPolicy(StrToUIntEx(
-        ComboPolicy.Text, 'mandatory policy flag'))
-    else
-      Token.InfoClass.MandatoryPolicy := TMandatoryPolicy(ComboPolicy.ItemIndex);
+    Policy := MandatoryPolicyOff;
+    if CheckBoxNoWriteUp.Checked then
+      Policy := Policy or MandatoryPolicyNoWriteUp;
+    if CheckBoxNewProcessMin.Checked then
+      Policy := Policy or MandatoryPolicyNewProcessMin;
+
+    Token.InfoClass.MandatoryPolicy := Policy;
+
+    CheckBoxNoWriteUp.Font.Style := [];
+    CheckBoxNewProcessMin.Font.Style := [];
   except
     if Token.InfoClass.Query(tdTokenMandatoryPolicy) then
       ChangedPolicy(Token.InfoClass.MandatoryPolicy);
@@ -268,16 +278,13 @@ end;
 
 procedure TInfoDialog.ChangedPolicy(NewPolicy: TMandatoryPolicy);
 begin
-  ComboPolicy.Color := clWindow;
+  CheckBoxNoWriteUp.Checked := (NewPolicy and
+    MandatoryPolicyNoWriteUp <> 0);
+  CheckBoxNewProcessMin.Checked := (NewPolicy and
+    MandatoryPolicyNewProcessMin <> 0);
 
-  if (NewPolicy >= TokenMandatoryPolicyOff) and
-    (NewPolicy <= TokenMandatoryPolicyValidMask) then
-    ComboPolicy.ItemIndex := Integer(NewPolicy)
-  else
-  begin
-    ComboPolicy.ItemIndex := -1;
-    ComboPolicy.Text := IntToStr(Integer(NewPolicy));
-  end;
+  CheckBoxNoWriteUp.Font.Style := [];
+  CheckBoxNewProcessMin.Font.Style := [];
 end;
 
 procedure TInfoDialog.ChangedPrimaryGroup(NewPrimary: TSecurityIdentifier);
@@ -332,6 +339,16 @@ procedure TInfoDialog.ChangedUIAccess(NewUIAccess: LongBool);
 begin
   ComboUIAccess.Color := clWhite;
   ComboUIAccess.ItemIndex := Integer(NewUIAccess = True);
+end;
+
+procedure TInfoDialog.CheckBoxNewProcessMinClick(Sender: TObject);
+begin
+  CheckBoxNewProcessMin.Font.Style := [fsBold];
+end;
+
+procedure TInfoDialog.CheckBoxNoWriteUpClick(Sender: TObject);
+begin
+  CheckBoxNoWriteUp.Font.Style := [fsBold];
 end;
 
 constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
