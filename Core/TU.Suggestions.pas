@@ -46,6 +46,10 @@ resourcestring
   SETTER_SESSION = 'To change the session of a token you need to ' +
     'have `SeTcbPrivilege` and also `Adjust SessionId` and `Adjust default` '+
     'access rights for the token.';
+  SETTER_OWNER = 'Only those groups from the token that are marked with ' +
+    '`Owner` flag and the user itself can be set as an owner.';
+  SETTER_PRIMARY = 'The SID must present in the group list of the token to be ' +
+    'suitable as a primary group.';
   SETTER_INTEGRITY_TCB = 'To raise the integrity level of a token you need to ' +
     'have `SeTcbPrivilege`.';
   SETTER_UIACCESS_TCB = 'You need `SeTcbPrivilege` to enable UIAccess flag.';
@@ -105,9 +109,20 @@ begin
     if E.ErrorOrigin = SetterMessage(TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
+    if (E.ErrorOrigin = SetterMessage(TokenIntegrityLevel))
+      or (E.ErrorOrigin = SetterMessage(TokenUIAccess))
+      or (E.ErrorOrigin = SetterMessage(TokenOwner))
+      or (E.ErrorOrigin = SetterMessage(TokenPrimaryGroup)) then
       Exit(SETTER_DEFAULT);
   end;
+
+  if (E.ErrorCode = ERROR_INVALID_OWNER) and
+    (E.ErrorOrigin = SetterMessage(TokenOwner)) then
+    Exit(SETTER_OWNER);
+
+  if (E.ErrorCode = ERROR_INVALID_PRIMARY_GROUP) and
+    (E.ErrorOrigin = SetterMessage(TokenPrimaryGroup)) then
+    Exit(SETTER_PRIMARY);
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
   begin

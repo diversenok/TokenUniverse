@@ -349,7 +349,7 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Token.Events.OnPrimaryGroupChange.Delete(ChangedPrimaryGroup);
+  Token.Events.OnPrimaryChange.Delete(ChangedPrimaryGroup);
   Token.Events.OnOwnerChange.Delete(ChangedOwner);
   Token.Events.OnStatisticsChange.Delete(ChangedStatistics);
   Token.Events.OnGroupsChange.Delete(ChangedGroups);
@@ -392,7 +392,7 @@ begin
   Token.Events.OnGroupsChange.Add(ChangedGroups);
   Token.Events.OnStatisticsChange.Add(ChangedStatistics);
   Token.Events.OnOwnerChange.Add(ChangedOwner);
-  Token.Events.OnPrimaryGroupChange.Add(ChangedPrimaryGroup);
+  Token.Events.OnPrimaryChange.Add(ChangedPrimaryGroup);
   PrivilegesSource.SubscribeToken(Token);
   GroupsSource.SubscribeToken(Token, gsGroups);
   RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);

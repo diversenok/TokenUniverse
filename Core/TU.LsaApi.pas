@@ -8,7 +8,7 @@ uses
   Winapi.Windows, TU.Common, TU.Tokens.Types;
 
 type
-  TLogonType = (ltUndefined, ltReserved, ltInteractive, ltNetwork, ltBatch,
+  TLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
     ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
     ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
     ltCachedUnlock);
@@ -131,7 +131,7 @@ end;
 
 function LogonTypeToString(LogonType: TLogonType): String;
 const
-  Mapping: array [TLogonType] of String = ('Undefined', 'Reserved',
+  Mapping: array [TLogonType] of String = ('System', 'Reserved',
     'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
     'Network clear text', 'New credentials', 'Remote interactive',
     'Cached interactive', 'Cached remote interactive', 'Cached unlock');
