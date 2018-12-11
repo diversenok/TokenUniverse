@@ -58,7 +58,7 @@ uses
 
 procedure TDialogRestrictToken.ButtonAddSIDClick(Sender: TObject);
 begin
-  RestrictGroupsSource.AddGroup(TDialogPickUser.Execute(Self, True)).Checked :=
+  RestrictGroupsSource.AddGroup(TDialogPickUser.PickNew(Self, True)).Checked :=
     True;
 end;
 
@@ -208,10 +208,7 @@ end;
 
 procedure TDialogRestrictToken.MenuEditClick(Sender: TObject);
 begin
-  with ListViewRestrictSID, RestrictGroupsSource do
-    if Assigned(ListViewRestrictSID.Selected) then
-      Group[ListViewRestrictSID.Selected.Index] := TDialogPickUser.Execute(Self,
-        Group[Selected.Index]);
+  RestrictGroupsSource.UiEditSelected(Self, True);
 end;
 
 procedure TDialogRestrictToken.MenuRemoveClick(Sender: TObject);

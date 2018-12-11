@@ -9,51 +9,49 @@ uses
   UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm;
 
 type
+  TCheckBoxMapping = record
+    CheckBox: TCheckBox;
+    Attribute: TGroupAttributes;
+    procedure Create(CheckBox: TCheckBox; Attribute: TGroupAttributes);
+  end;
+
   TDialogPickUser = class(TChildForm)
     ComboBoxSID: TComboBox;
     ButtonFilter: TButton;
     ButtonOK: TButton;
     ButtonCancel: TButton;
     ButtonPick: TButton;
-    CheckBoxMandatory: TCheckBox;
-    CheckBoxDenyOnly: TCheckBox;
-    CheckBoxResource: TCheckBox;
+    GroupBoxMain: TGroupBox;
     CheckBoxEnabled: TCheckBox;
     CheckBoxEnabledByDafault: TCheckBox;
-    PageControl: TPageControl;
-    TabGeneral: TTabSheet;
-    TabLogon: TTabSheet;
-    TabIntegrity: TTabSheet;
-    CheckBoxLogon: TCheckBox;
-    CheckBoxIntegrity: TCheckBox;
-    CheckBoxIntegrityEnabled: TCheckBox;
+    CheckBoxMandatory: TCheckBox;
+    CheckBoxDenyOnly: TCheckBox;
     CheckBoxOwner: TCheckBox;
-    ComboBoxLogonId: TComboBox;
-    ComboBoxIntegrity: TComboBox;
+    GroupBoxAdditional: TGroupBox;
+    CheckBoxIntegrityEnabled: TCheckBox;
+    CheckBoxIntegrity: TCheckBox;
+    CheckBoxResource: TCheckBox;
+    CheckBoxLogon: TCheckBox;
     procedure ButtonPickClick(Sender: TObject);
     procedure ComboBoxSIDChange(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure PageControlChange(Sender: TObject);
-    procedure ComboBoxLogonIdChange(Sender: TObject);
-    procedure ComboBoxIntegrityChange(Sender: TObject);
   private
-    FSelectedGroup: TSecurityIdentifier;
-    FValidGroup: Boolean;
-    LogonIDSource: TLogonSessionSource;
+    SelectedGroup: TSecurityIdentifier;
+    IsValidGroup: Boolean;
+    Mapping: array of TCheckBoxMapping;
     procedure ObjPickerCallback(UserName: String);
     function GetAttributes: TGroupAttributes;
     procedure SetAttributes(const Value: TGroupAttributes);
-    procedure SetSID(const Value: TSecurityIdentifier);
+    procedure SetSelectedGroup(const Value: TSecurityIdentifier);
     procedure DoDisableAttributes;
-    function LuidToLogonIdString(Value: LUID): String;
   public
-    class function Execute(AOwner: TComponent;
-      DisableAttributes: Boolean = False): TGroup; overload;
-    class function Execute(AOwner: TComponent; Group: TGroup;
-      DisableAttributes: Boolean = False): TGroup; overload;
-    property Attributes: TGroupAttributes read GetAttributes write SetAttributes;
+    class function PickNew(AOwner: TComponent;
+      DisableAttributes: Boolean = False): TGroup;
+    class function PickEditOne(AOwner: TComponent; Group: TGroup;
+      DisableAttributes: Boolean = False): TGroup;
+    class procedure PickEditMultiple(AOwner: TComponent; Groups: TGroupArray;
+      out AttributesToAdd, AttributesToDelete: Cardinal);
   end;
 
 implementation
@@ -63,10 +61,21 @@ uses
 
 {$R *.dfm}
 
+{ TCheckBoxMapping }
+
+procedure TCheckBoxMapping.Create(CheckBox: TCheckBox;
+  Attribute: TGroupAttributes);
+begin
+  Self.CheckBox := CheckBox;
+  Self.Attribute := Attribute;
+end;
+
+{ TDialogPickUser }
+
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
 begin
-  if not FValidGroup then
-    FSelectedGroup := TSecurityIdentifier.CreateFromString(ComboBoxSID.Text);
+  if ComboBoxSID.Enabled and not IsValidGroup then
+    SelectedGroup := TSecurityIdentifier.CreateFromString(ComboBoxSID.Text);
   ModalResult := mrOk;
 end;
 
@@ -75,53 +84,124 @@ begin
   CallObjectPicker(Handle, ObjPickerCallback);
 end;
 
-procedure TDialogPickUser.ComboBoxLogonIdChange(Sender: TObject);
-var
-  Value: UInt64;
-begin
-  CheckBoxLogon.Checked := True;
-  if ComboBoxLogonId.ItemIndex <> -1 then
-    ComboBoxSID.Text := LuidToLogonIdString(LogonIDSource.SelectedLogonSession)
-  else if TryStrToUInt64Ex(ComboBoxLogonId.Text, Value) then
-    ComboBoxSID.Text := LuidToLogonIdString(PLUID(@Value)^);
-end;
-
 procedure TDialogPickUser.ComboBoxSIDChange(Sender: TObject);
 begin
-  FValidGroup := False;
+  IsValidGroup := False;
 end;
 
 procedure TDialogPickUser.DoDisableAttributes;
+var
+  i: Integer;
 begin
-  CheckBoxMandatory.Enabled := False;
-  CheckBoxEnabledByDafault.Enabled := False;
-  CheckBoxEnabled.Enabled := False;
-  CheckBoxOwner.Enabled := False;
-  CheckBoxDenyOnly.Enabled := False;
-  CheckBoxIntegrity.Enabled := False;
-  CheckBoxIntegrityEnabled.Enabled := False;
-  CheckBoxResource.Enabled := False;
-  CheckBoxLogon.Enabled := False;
+  for i := 0 to High(Mapping) do
+    Mapping[i].CheckBox.Enabled := False;
 end;
 
-class function TDialogPickUser.Execute(AOwner: TComponent;
-  Group: TGroup; DisableAttributes: Boolean): TGroup;
+procedure TDialogPickUser.FormCreate(Sender: TObject);
+begin
+  SetLength(Mapping, 9);
+  Mapping[0].Create(CheckBoxMandatory, GroupMandatory);
+  Mapping[1].Create(CheckBoxEnabledByDafault, GroupEnabledByDefault);
+  Mapping[2].Create(CheckBoxEnabled, GroupEnabled);
+  Mapping[3].Create(CheckBoxOwner, GroupOwner);
+  Mapping[4].Create(CheckBoxDenyOnly, GroupUforDenyOnly);
+  Mapping[5].Create(CheckBoxIntegrity, GroupIntegrity);
+  Mapping[6].Create(CheckBoxIntegrityEnabled, GroupIntegrityEnabled);
+  Mapping[7].Create(CheckBoxResource, GroupResource);
+  Mapping[8].Create(CheckBoxLogon, GroupLogonId);
+end;
+
+function TDialogPickUser.GetAttributes: TGroupAttributes;
+var
+  BitwiseResult, i: Integer;
+begin
+  BitwiseResult := 0;
+
+  for i := 0 to High(Mapping) do
+    if Mapping[i].CheckBox.Checked then
+      BitwiseResult := BitwiseResult or Integer(Mapping[i].Attribute);
+
+  Result := TGroupAttributes(BitwiseResult);
+end;
+
+procedure TDialogPickUser.ObjPickerCallback(UserName: String);
+begin
+  SetSelectedGroup(TSecurityIdentifier.CreateFromString(UserName));
+end;
+
+class procedure TDialogPickUser.PickEditMultiple(AOwner: TComponent;
+  Groups: TGroupArray; out AttributesToAdd, AttributesToDelete: Cardinal);
+var
+  BitwiseAnd, BitwiseOr: Cardinal;
+  i: Integer;
 begin
   with TDialogPickUser.Create(AOwner) do
   begin
-    SetSID(Group.SecurityIdentifier);
+    ComboBoxSID.Enabled := False;
+    ButtonFilter.Enabled := False;
+    ButtonPick.Enabled := False;
+    ComboBoxSID.Text := '< Multiple values >';
+
+    BitwiseOr := 0;
+    BitwiseAnd := Cardinal(not 0);
+
+    // Find out which flags present in all of the groups and which are only in
+    // some of them
+    for i := 0 to High(Groups) do
+    begin
+      BitwiseOr := BitwiseOr or Cardinal(Groups[i].Attributes);
+      BitwiseAnd := BitwiseAnd and Cardinal(Groups[i].Attributes);
+    end;
+
+    // Set appropriate checkbox states
+    for i := 0 to High(Mapping) do
+      if TGroupAttributes(BitwiseAnd).Contain(Mapping[i].Attribute) then
+        Mapping[i].CheckBox.State := cbChecked // All groups contain it
+      else if TGroupAttributes(BitwiseOr).Contain(Mapping[i].Attribute) then
+      begin
+        Mapping[i].CheckBox.AllowGrayed := True;
+        Mapping[i].CheckBox.State :=  cbGrayed; // Only some of then
+      end
+      else
+        Mapping[i].CheckBox.State := cbUnchecked; // None of them
+
+    // Show the dialog and wait
+    ShowModal;
+
+    AttributesToAdd := 0;
+    AttributesToDelete := 0;
+
+    // Collect the attributes
+    for i := 0 to High(Mapping) do
+      case Mapping[i].CheckBox.State of
+        cbUnchecked:
+          AttributesToDelete := AttributesToDelete or
+            Cardinal(Mapping[i].Attribute);
+        cbChecked:
+          AttributesToAdd := AttributesToAdd or
+            Cardinal(Mapping[i].Attribute);
+      end;
+  end;
+end;
+
+class function TDialogPickUser.PickEditOne(AOwner: TComponent; Group: TGroup;
+  DisableAttributes: Boolean): TGroup;
+begin
+  with TDialogPickUser.Create(AOwner) do
+  begin
+    SetSelectedGroup(Group.SecurityIdentifier);
     SetAttributes(Group.Attributes);
 
     if DisableAttributes then
       DoDisableAttributes;
 
     ShowModal;
-    Result.SecurityIdentifier := FSelectedGroup;
+    Result.SecurityIdentifier := SelectedGroup;
     Result.Attributes := GetAttributes;
   end;
 end;
 
-class function TDialogPickUser.Execute(AOwner: TComponent;
+class function TDialogPickUser.PickNew(AOwner: TComponent;
   DisableAttributes: Boolean): TGroup;
 begin
   with TDialogPickUser.Create(AOwner) do
@@ -133,92 +213,26 @@ begin
     end;
 
     ShowModal;
-    Result.SecurityIdentifier := FSelectedGroup;
+    Result.SecurityIdentifier := SelectedGroup;
     Result.Attributes := GetAttributes;
   end;
 end;
 
-procedure TDialogPickUser.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  LogonIDSource.Free;
-end;
-
-procedure TDialogPickUser.FormCreate(Sender: TObject);
-begin
-  LogonIDSource := TLogonSessionSource.Create(ComboBoxLogonId);
-end;
-
-function TDialogPickUser.GetAttributes: TGroupAttributes;
-var
-  BitwiseResult: Integer;
-begin
-  BitwiseResult := 0;
-
-  if CheckBoxMandatory.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupMandatory);
-  if CheckBoxEnabledByDafault.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupEnabledByDefault);
-  if CheckBoxEnabled.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupEnabled);
-  if CheckBoxOwner.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupOwner);
-  if CheckBoxDenyOnly.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupUforDenyOnly);
-  if CheckBoxIntegrity.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupIntegrity);
-  if CheckBoxIntegrityEnabled.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupIntegrityEnabled);
-  if CheckBoxResource.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupResource);
-  if CheckBoxLogon.Checked then
-    BitwiseResult := BitwiseResult or Integer(GroupLogonId);
-
-  Result := TGroupAttributes(BitwiseResult);
-end;
-
-procedure TDialogPickUser.ComboBoxIntegrityChange(Sender: TObject);
-begin
-  CheckBoxIntegrity.Checked := True;
-  CheckBoxIntegrityEnabled.Checked := True;
-end;
-
-function TDialogPickUser.LuidToLogonIdString(Value: LUID): String;
-begin
-  {$R-}
-  Result := 'S-1-5-5-' + UIntToStr(Value.HighPart) +'-' + UIntToStr(Value.LowPart);
-  {$R+}
-end;
-
-procedure TDialogPickUser.ObjPickerCallback(UserName: String);
-begin
-  SetSID(TSecurityIdentifier.CreateFromString(UserName));
-end;
-
-procedure TDialogPickUser.PageControlChange(Sender: TObject);
-begin
-  ComboBoxSID.Enabled := PageControl.ActivePageIndex = 0;
-  ButtonFilter.Enabled := ComboBoxSID.Enabled;
-  ButtonPick.Enabled := ComboBoxSID.Enabled;
-end;
-
 procedure TDialogPickUser.SetAttributes(const Value: TGroupAttributes);
+var
+  i: Integer;
 begin
-  CheckBoxMandatory.Checked := Value.Contain(GroupMandatory);
-  CheckBoxEnabledByDafault.Checked := Value.Contain(GroupEnabledByDefault);
-  CheckBoxEnabled.Checked := Value.Contain(GroupEnabled);
-  CheckBoxOwner.Checked := Value.Contain(GroupOwner);
-  CheckBoxDenyOnly.Checked := Value.Contain(GroupUforDenyOnly);
-  CheckBoxIntegrity.Checked := Value.Contain(GroupIntegrity);
-  CheckBoxIntegrityEnabled.Checked := Value.Contain(GroupIntegrityEnabled);
-  CheckBoxResource.Checked := Value.Contain(GroupResource);
-  CheckBoxLogon.Checked := Value.Contain(GroupLogonId);
+  for i := 0 to High(Mapping) do
+    Mapping[i].CheckBox.Checked := Value.Contain(Mapping[i].Attribute);
 end;
 
-procedure TDialogPickUser.SetSID(const Value: TSecurityIdentifier);
+procedure TDialogPickUser.SetSelectedGroup(const Value: TSecurityIdentifier);
 begin
-  FValidGroup := True;
-  FSelectedGroup := Value;
-  ComboBoxSID.Text := FSelectedGroup.ToString;
+  IsValidGroup := True;
+  SelectedGroup := Value;
+  ComboBoxSID.Text := SelectedGroup.ToString;
 end;
+
+// TODO: Checkbox OnClick events to enable dependent attributes
 
 end.

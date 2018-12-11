@@ -118,6 +118,8 @@ type
     TokenMandatoryPolicyValidMask
   );
 
+function CreateTokenSource(SourceName: String; SourceLuid: LUID): TTokenSource;
+
 { Comparison function used by cached event handling system }
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
@@ -611,6 +613,17 @@ begin
   else
     Result := 'Intermediate';
   end;
+end;
+
+{ TTokenSource }
+
+function CreateTokenSource(SourceName: String; SourceLuid: LUID): TTokenSource;
+var
+  i: integer;
+begin
+  for i := 1 to 8 do
+    Result.sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
+  Result.SourceIdentifier := SourceLuid;
 end;
 
 { Comparison functions }

@@ -44,7 +44,7 @@ uses
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
-  GroupsSource.AddGroup(TDialogPickUser.Execute(Self));
+  GroupsSource.AddGroup(TDialogPickUser.PickNew(Self));
   ButtonContinue.SetFocus;
 end;
 
@@ -78,16 +78,8 @@ begin
 end;
 
 procedure TLogonDialog.MenuEditClick(Sender: TObject);
-var
-  Ind: Integer;
 begin
-  // TODO: modifying attributes of multiple groups simultaneously
-  if Assigned(ListViewGroups.Selected) then
-  begin
-    Ind := ListViewGroups.Selected.Index;
-    GroupsSource.Group[Ind] := TDialogPickUser.Execute(Self,
-      GroupsSource.Group[Ind]);
-  end;
+  GroupsSource.UiEditSelected(Self);
 end;
 
 procedure TLogonDialog.MenuRemoveClick(Sender: TObject);

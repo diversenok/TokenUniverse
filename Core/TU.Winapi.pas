@@ -232,6 +232,9 @@ function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
   DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
   stdcall; external advapi32;
 
+function AllocateLocallyUniqueId(var Luid: LUID): LongBool; stdcall;
+  external advapi32;
+
 function OpenThread(dwDesiredAccess: Cardinal; bInheritHandle: LongBool;
   dwThreadId: Cardinal): THandle; stdcall; external kernel32;
 

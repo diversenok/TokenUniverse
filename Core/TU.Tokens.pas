@@ -375,6 +375,13 @@ type
       LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
       AddGroups: TGroupArray);
 
+    /// <summary> Creates a new token from the scratch. </summary>
+    /// <remarks> This action requires SeCreateTokenPrivilege. </remarks>
+    constructor CreateNtCreateToken(User: TSecurityIdentifier;
+      DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
+      LogonID: LUID; Owner: TSecurityIdentifier;
+      PrimaryGroup: TSecurityIdentifier; Source: TTokenSource);
+
     /// <summary>
     ///  Opens a linked token for the current token.
     ///  Requires SeTcbPrivilege to open a primary token.
@@ -446,6 +453,9 @@ begin
   // Query the string and call the new event listener with it
   Listener(TokenToQuery.InfoClass.QueryString(StringClass));
 
+  // Note: tsHandle and tsAccess should be per-handle events and should be
+  // stored inside TTokenData. They are currently not supported for invocation.
+
   // Subscribe for future events
   OnStringDataChange[StringClass].Add(Listener);
 end;
@@ -453,6 +463,9 @@ end;
 procedure TTokenCacheAndEvents.UnSubscribeString(StringClass: TTokenStringClass;
   Listener: TEventListener<String>);
 begin
+  // Note: tsHandle and tsAccess should be per-handle events and should be
+  // stored inside TTokenData. They are currently not supported for invocation.
+
   OnStringDataChange[StringClass].Delete(Listener);
 end;
 
@@ -745,6 +758,81 @@ begin
     FCaption := SrcToken.Caption + ' (eff. copy)'
   else
     FCaption := SrcToken.Caption + ' (copy)'
+end;
+
+constructor TToken.CreateNtCreateToken(User: TSecurityIdentifier;
+  DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
+  LogonID: LUID; Owner: TSecurityIdentifier; PrimaryGroup: TSecurityIdentifier;
+  Source: TTokenSource);
+var
+  TokenUser: TTokenUser;
+  TokenGroups: PTokenGroups;
+  TokenPrivileges: PTokenPrivileges;
+  TokenOwner: TTokenOwner;
+  TokenPrimaryGroup: TTokenPrimaryGroup;
+  TokenSource: TTokenSource;
+  Expiration: Int64;
+begin
+  Expiration := Int64.MaxValue;
+
+  // Fill user attributes. Zero value is default here and means "Enabled"
+  if DisableUser then
+    TokenUser.User.Attributes := SE_GROUP_USE_FOR_DENY_ONLY
+  else
+    TokenUser.User.Attributes := 0;
+
+  TokenGroups := nil;
+  TokenPrivileges := nil;
+  TokenUser.User.Sid := nil;
+  TokenUser.User.Sid := nil;
+  TokenOwner.Owner := nil;
+  TokenPrimaryGroup.PrimaryGroup := nil;
+
+  try
+    // Allocate groups. This memory should be freed with FreeGroups
+    TokenGroups := AllocGroups(Groups);
+
+    // Allocate privileges. This memory should be freed with FreeMem
+    TokenPrivileges := AllocPrivileges(Privileges);
+
+    // Allocate user, owner, and primary group SIDs.
+    // This memory should be freed with LocalFree.
+    TokenUser.User.Sid := User.AllocSid;
+    TokenOwner.Owner := Owner.AllocSid;
+    TokenPrimaryGroup.PrimaryGroup := PrimaryGroup.AllocSid;
+  except
+    // Free memory in case of abnormal termination
+    if Assigned(TokenGroups) then
+      FreeGroups(TokenGroups);
+    if Assigned(TokenPrivileges) then
+      FreeMem(TokenPrivileges);
+    if Assigned(TokenUser.User.Sid) then
+      LocalFree(TokenUser.User.Sid);
+    if Assigned(TokenOwner.Owner) then
+      LocalFree(TokenOwner.Owner);
+    if Assigned(TokenPrimaryGroup.PrimaryGroup) then
+      LocalFree(TokenPrimaryGroup.PrimaryGroup);
+    raise;
+  end;
+
+  // Call NtCreateToken.
+  try
+    NativeCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
+      @LogonID, @Expiration, @TokenUser, TokenGroups, TokenPrivileges,
+      @TokenOwner, @TokenPrimaryGroup, nil, @Source), 'NtCreateToken');
+  finally
+    LocalFree(TokenPrimaryGroup.PrimaryGroup);
+    LocalFree(TokenOwner.Owner);
+    LocalFree(TokenUser.User.Sid);
+    FreeMem(TokenPrivileges);
+    FreeGroups(TokenGroups);
+  end;
+
+  FCaption := 'New token: ';
+  if User.HasPrettyName then
+    FCaption := FCaption + User.User
+  else
+    FCaption := FCaption + User.SID;
 end;
 
 constructor TToken.CreateOpenCurrent;
@@ -1199,7 +1287,14 @@ end;
 
 procedure TTokenData.InvokeStringEvent(StringClass: TTokenStringClass);
 begin
-  Token.Events.OnStringDataChange[StringClass].Invoke(QueryString(StringClass));
+  // Note that tsHandle and tsAccess are per-handle events
+  case StringClass of
+    tsHandle: ; // Not supported yet
+    tsAccess: ; // Not supported yet
+  else
+    Token.Events.OnStringDataChange[StringClass].Invoke(
+      QueryString(StringClass));
+  end;
 end;
 
 function TTokenData.Query(DataClass: TTokenDataClass): Boolean;
@@ -1221,6 +1316,7 @@ begin
     tsTokenType:
       Result := Token.Cache.TokenType.ToString;
 
+    // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsAccess:
       if Detailed then
         Result := AccessToDetailedString(Token.HandleInformation.Access)
@@ -1249,6 +1345,7 @@ begin
       Result := Format('0x%0.8x',
         [Token.HandleInformation.KernelObjectAddress]);
 
+    // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsHandle:
       if Detailed then
         Result := Format('0x%x (%d)', [Token.Handle, Token.Handle])

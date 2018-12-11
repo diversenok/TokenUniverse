@@ -3,9 +3,8 @@ unit UI.Prototypes;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.StdCtrls,
-  Winapi.Windows, UI.ListViewEx, TU.Tokens, TU.Common, TU.WtsApi, TU.LsaApi,
-  TU.Tokens.Types;
+  System.SysUtils, System.Classes, Vcl.ComCtrls, Vcl.StdCtrls, Winapi.Windows,
+  UI.ListViewEx, TU.Tokens, TU.WtsApi, TU.LsaApi, TU.Tokens.Types;
 
 type
   TPrivilegesSource = class
@@ -53,6 +52,8 @@ type
     function AddGroup(Group: TGroup): TListItemEx;
     function IsAdditional(Index: Integer): Boolean;
     procedure RemoveGroup(Index: Integer);
+    procedure UiEditSelected(AOwner: TComponent; DisableAttributes: Boolean =
+      False);
     class function BuildHint(SID: TSecurityIdentifier;
       Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
       static;
@@ -105,7 +106,8 @@ type
 implementation
 
 uses
-  System.Generics.Collections, UI.Colors, TU.Winapi, TU.NativeApi;
+  System.Generics.Collections, UI.Colors, UI.Modal.PickUser,
+  TU.Winapi, TU.NativeApi, TU.Common;
 
 { TPrivilegesSource }
 
@@ -367,8 +369,6 @@ begin
 end;
 
 procedure TGroupsSource.RemoveGroup(Index: Integer);
-var
-  i: Integer;
 begin
   Assert(Assigned(ListView));
 
@@ -401,7 +401,12 @@ end;
 procedure TGroupsSource.SetGroup(Ind: Integer; const Value: TGroup);
 begin
   Assert(Assigned(ListView));
-  SetItem(ListView.Items[Ind], Value);
+
+  if IsAdditional(Ind) then
+  begin
+    FAdditionalGroups[Ind - Length(FTokenGroups)] := Value;
+    SetItem(ListView.Items[Ind], Value);
+  end;
 end;
 
 function TGroupsSource.SetItem(Item: TListItemEx; Group: TGroup): TListItemEx;
@@ -436,6 +441,42 @@ begin
     // Invoke the event listener manually.
     if Token.InfoClass.Query(tdTokenRestrictedSids) then
       OnGroupsChange(Token.InfoClass.RestrictedSids);
+  end;
+end;
+
+procedure TGroupsSource.UiEditSelected(AOwner: TComponent;
+  DisableAttributes: Boolean);
+var
+  AttributesToAdd, AttributesToDelete: Cardinal;
+  i: integer;
+  NewGroup: TGroup;
+begin
+  Assert(Assigned(ListView));
+
+  if ListView.SelCount = 0 then
+    Exit;
+
+  // Edit one group: SID and [optionaly] attributes
+  if (ListView.SelCount = 1) and Assigned(ListView.Selected) then
+    with ListView.Selected do
+      if IsAdditional(Index) then
+        Group[Index] := TDialogPickUser.PickEditOne(AOwner, Group[Index],
+          DisableAttributes);
+
+  // Edit several groups: only attributes
+  if not DisableAttributes and (ListView.SelCount > 1) then
+  begin
+    TDialogPickUser.PickEditMultiple(AOwner, SelectedGroups, AttributesToAdd,
+      AttributesToDelete);
+
+    for i := 0 to ListView.Items.Count - 1 do
+      if ListView.Items[i].Selected and IsAdditional(i) then
+      begin
+        NewGroup := Group[i];
+        NewGroup.Attributes := TGroupAttributes(Cardinal(NewGroup.Attributes)
+          and not AttributesToDelete or AttributesToAdd);
+        Group[i] := NewGroup;
+      end;
   end;
 end;
 

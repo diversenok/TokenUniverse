@@ -141,11 +141,10 @@ function NtFilterToken(ExistingTokenHandle: THandle; Flags: Cardinal;
 
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: ACCESS_MASK;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
-  const AuthenticationId: LUID; const ExpirationTime: Int64;
-  const User: TTokenUser; Groups: PTokenGroups; Privileges: PTokenPrivileges;
-  const Owner: TTokenOwner; const PrimaryGroup: TTokenPrimaryGroup;
-  DefaultDacl: PTokenDefaultDacl; const Source: TTokenSource): NTSTATUS;
-  stdcall; external ntdll;
+  AuthenticationId: PLUID; ExpirationTime: PInt64; User: PTokenUser;
+  Groups: PTokenGroups; Privileges: PTokenPrivileges; Owner: PTokenOwner;
+  PrimaryGroup: PTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
+  Source: PTokenSource): NTSTATUS; stdcall; external ntdll;
 
 implementation
 

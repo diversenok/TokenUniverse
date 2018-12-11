@@ -4,7 +4,7 @@ object DialogPickUser: TDialogPickUser
   Anchors = [akTop]
   BorderIcons = [biSystemMenu]
   Caption = 'Choose user or group'
-  ClientHeight = 187
+  ClientHeight = 262
   ClientWidth = 294
   Color = clBtnFace
   Constraints.MinHeight = 225
@@ -18,16 +18,15 @@ object DialogPickUser: TDialogPickUser
   OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
-  OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
     294
-    187)
+    262)
   PixelsPerInch = 96
   TextHeight = 13
   object ComboBoxSID: TComboBox
     Left = 8
-    Top = 8
+    Top = 10
     Width = 218
     Height = 21
     Anchors = [akLeft, akTop, akRight]
@@ -45,22 +44,22 @@ object DialogPickUser: TDialogPickUser
     ImageMargins.Left = 2
     ImageMargins.Top = 1
     Images = FormMain.SmallIcons
-    TabOrder = 1
+    TabOrder = 5
   end
   object ButtonOK: TButton
     Left = 213
-    Top = 156
+    Top = 231
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     Default = True
-    TabOrder = 5
+    TabOrder = 3
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
     Left = 8
-    Top = 156
+    Top = 231
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -80,130 +79,114 @@ object DialogPickUser: TDialogPickUser
     ImageMargins.Left = 2
     ImageMargins.Top = 1
     Images = FormMain.SmallIcons
-    TabOrder = 2
+    TabOrder = 6
     OnClick = ButtonPickClick
   end
-  object PageControl: TPageControl
+  object GroupBoxMain: TGroupBox
     Left = 8
-    Top = 35
-    Width = 280
-    Height = 115
-    ActivePage = TabGeneral
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    MultiLine = True
-    TabOrder = 3
-    OnChange = PageControlChange
-    object TabGeneral: TTabSheet
-      Caption = 'General attributes'
-      object CheckBoxDenyOnly: TCheckBox
-        Left = 152
-        Top = 32
-        Width = 120
-        Height = 17
-        Caption = 'Use for deny only'
-        TabOrder = 4
-      end
-      object CheckBoxEnabled: TCheckBox
-        Left = 16
-        Top = 9
-        Width = 130
-        Height = 17
-        Caption = 'Enabled'
-        Checked = True
-        State = cbChecked
-        TabOrder = 0
-      end
-      object CheckBoxEnabledByDafault: TCheckBox
-        Left = 16
-        Top = 32
-        Width = 130
-        Height = 17
-        Caption = 'Enabled by default'
-        Checked = True
-        State = cbChecked
-        TabOrder = 1
-      end
-      object CheckBoxMandatory: TCheckBox
-        Left = 152
-        Top = 9
-        Width = 120
-        Height = 17
-        Caption = 'Mandatory'
-        TabOrder = 3
-      end
-      object CheckBoxResource: TCheckBox
-        Left = 152
-        Top = 55
-        Width = 120
-        Height = 17
-        Caption = 'Resource'
-        TabOrder = 5
-      end
-      object CheckBoxOwner: TCheckBox
-        Left = 16
-        Top = 55
-        Width = 130
-        Height = 17
-        Caption = 'Owner'
-        TabOrder = 2
-      end
+    Top = 37
+    Width = 278
+    Height = 100
+    Caption = 'Main attributes '
+    TabOrder = 1
+    DesignSize = (
+      278
+      100)
+    object CheckBoxEnabled: TCheckBox
+      Left = 14
+      Top = 26
+      Width = 130
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Enabled'
+      Checked = True
+      State = cbChecked
+      TabOrder = 0
     end
-    object TabLogon: TTabSheet
-      Caption = 'Logon ID'
-      ImageIndex = 1
-      DesignSize = (
-        272
-        87)
-      object CheckBoxLogon: TCheckBox
-        Left = 16
-        Top = 9
-        Width = 150
-        Height = 17
-        Caption = 'Logon ID'
-        TabOrder = 0
-      end
-      object ComboBoxLogonId: TComboBox
-        Left = 16
-        Top = 40
-        Width = 240
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 1
-        Text = 'Choose a logon session or insert it manually'
-        OnChange = ComboBoxLogonIdChange
-      end
+    object CheckBoxEnabledByDafault: TCheckBox
+      Left = 14
+      Top = 49
+      Width = 130
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Enabled by default'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
     end
-    object TabIntegrity: TTabSheet
+    object CheckBoxMandatory: TCheckBox
+      Left = 150
+      Top = 26
+      Width = 120
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Mandatory'
+      TabOrder = 3
+    end
+    object CheckBoxDenyOnly: TCheckBox
+      Left = 150
+      Top = 49
+      Width = 120
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Use for deny only'
+      TabOrder = 4
+    end
+    object CheckBoxOwner: TCheckBox
+      Left = 14
+      Top = 72
+      Width = 130
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Owner'
+      TabOrder = 2
+    end
+  end
+  object GroupBoxAdditional: TGroupBox
+    Left = 8
+    Top = 143
+    Width = 278
+    Height = 82
+    Caption = 'Additional attributes '
+    TabOrder = 2
+    DesignSize = (
+      278
+      82)
+    object CheckBoxIntegrityEnabled: TCheckBox
+      Left = 14
+      Top = 48
+      Width = 150
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Integrity Enabled'
+      TabOrder = 1
+    end
+    object CheckBoxIntegrity: TCheckBox
+      Left = 14
+      Top = 25
+      Width = 150
+      Height = 17
+      Anchors = [akTop]
       Caption = 'Integrity'
-      ImageIndex = 2
-      DesignSize = (
-        272
-        87)
-      object CheckBoxIntegrity: TCheckBox
-        Left = 16
-        Top = 9
-        Width = 150
-        Height = 17
-        Caption = 'Integrity'
-        TabOrder = 0
-      end
-      object CheckBoxIntegrityEnabled: TCheckBox
-        Left = 16
-        Top = 32
-        Width = 150
-        Height = 17
-        Caption = 'Integrity Enabled'
-        TabOrder = 1
-      end
-      object ComboBoxIntegrity: TComboBox
-        Left = 16
-        Top = 55
-        Width = 240
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 2
-        Text = 'Select an integrity level or enter it manually'
-      end
+      TabOrder = 0
+    end
+    object CheckBoxResource: TCheckBox
+      Left = 142
+      Top = 48
+      Width = 120
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Resource'
+      TabOrder = 3
+    end
+    object CheckBoxLogon: TCheckBox
+      Left = 142
+      Top = 25
+      Width = 150
+      Height = 17
+      Anchors = [akTop]
+      Caption = 'Logon ID'
+      TabOrder = 2
     end
   end
 end
