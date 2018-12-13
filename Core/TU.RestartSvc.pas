@@ -7,15 +7,20 @@ uses
 
 const
   RESVC_PARAM = '/service';
+  RESVC_SYSPLUS_PARAM = '/plus';
   RESVC_NAME = 'TokenUniverseSvc';
   RESVC_DIPLAY_NAME = 'Token Universe Run-As-System Service';
 
   DELEGATE_PARAM = '/delegate';
+  DELEGATE_PARAM_SYSPLUS = DELEGATE_PARAM + ' ' + RESVC_SYSPLUS_PARAM;
 
 /// <summary>
 ///  A routine to create and invoke TokenUniverse Run-As-System Service.
 /// </summary>
-procedure ReSvcCreateService;
+/// <param name="IsSystemPlus">
+///  Determines whether the service should obtain a SYSTEM+ token.
+/// </param>
+procedure ReSvcCreateService(IsSystemPlus: Boolean);
 
 /// <summary>
 ///  This function is elevate TokenUnivese. It is also capable of starting the
@@ -30,7 +35,11 @@ procedure ReSvcCreateService;
 ///   A boolean that determines whether the elevated copy of should
 ///   automatically call <see cref="ReSvcCreateService"/>.
 /// </param>
-procedure ReSvcDelegate(Handle: HWND; StartService: Boolean);
+/// <param name="IsSystemPlus">
+///  Determines whether the service should obtain a SYSTEM+ token.
+/// </param>
+procedure ReSvcDelegate(Handle: HWND; StartService: Boolean;
+  IsSystemPlus: Boolean);
 
 /// <summary>
 ///  Starts service control dispatcher. This function should be called only if
@@ -42,7 +51,7 @@ implementation
 
 uses
   System.SysUtils, Winapi.WinSvc, Winapi.ShellApi,
-  TU.Tokens, TU.Tokens.Types;
+  TU.Tokens, TU.Tokens.Types, TU.Processes;
 
 type
   TServiceDynArgsW = array of PWideChar;
@@ -59,11 +68,12 @@ end;
 
 { Restart Service client functions }
 
-procedure ReSvcCreateService;
+procedure ReSvcCreateService(IsSystemPlus: Boolean);
 var
   hSCM, hSvc: SC_HANDLE;
   SessionStr: String;
   SI : TStartupInfoW;
+  CommandLine: String;
   Params: TServiceDynArgsW;
 begin
   // Establish connection to the SCM
@@ -72,11 +82,14 @@ begin
   if hSCM = 0 then
     RaiseLastOsError;
 
+  CommandLine := '"' + ParamStr(0) + '" ' + RESVC_PARAM;
+  if IsSystemPlus then
+    CommandLine := CommandLine + ' ' + RESVC_SYSPLUS_PARAM;
+
   // Create Run-as-system service
   hSvc := CreateServiceW(hSCM, RESVC_NAME, RESVC_DIPLAY_NAME,
     SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_DEMAND_START,
-    SERVICE_ERROR_NORMAL, PWideChar('"' + ParamStr(0) + '" ' + RESVC_PARAM),
-    nil, nil, nil, nil, nil);
+    SERVICE_ERROR_NORMAL, PWideChar(CommandLine), nil, nil, nil, nil, nil);
 
   CloseServiceHandle(hSCM);
 
@@ -109,7 +122,8 @@ begin
   end;
 end;
 
-procedure ReSvcDelegate(Handle: HWND; StartService: Boolean);
+procedure ReSvcDelegate(Handle: HWND; StartService: Boolean;
+  IsSystemPlus: Boolean);
 var
   ExecInfo: TShellExecuteInfoW;
 begin
@@ -123,7 +137,12 @@ begin
 
     // The parameter states that the execution of the service was delegated
     if StartService then
-      lpParameters := DELEGATE_PARAM;
+    begin
+      if IsSystemPlus then
+        lpParameters := DELEGATE_PARAM_SYSPLUS
+      else
+        lpParameters := DELEGATE_PARAM;
+    end;
 
     fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_UNICODE or SEE_MASK_FLAG_NO_UI;
     nShow := SW_SHOWNORMAL;
@@ -175,6 +194,19 @@ begin
     Result := ERROR_CALL_NOT_IMPLEMENTED;
 end;
 
+function TryGetCsrssToken: TToken;
+var
+  CsrssPID: Cardinal;
+  ProcessSnapshot: TProcessList;
+begin
+  ProcessSnapshot := TProcessList.Create;
+  CsrssPID := ProcessSnapshot.FindPID('csrss.exe');
+  if CsrssPID <> 0 then
+    Result := TToken.CreateOpenProcess(CsrssPID, TOKEN_DUPLICATE)
+  else
+    raise Exception.Create('csrss.exe is not found on the system.');
+end;
+
 /// <summary>
 ///  This routine is called from a service and spawns a new instans of
 ///  TokenUniverse in the specified session on the specified desktop.
@@ -192,8 +224,13 @@ begin
   NewToken := nil;
 
   try
-    // Open current token so we can duplicate it and set session
-    Token := TToken.CreateOpenCurrent;
+    // We are already running as SYSTEM, but if we want to obtain a rare
+    // `SeCreateTokenPrivilege` (aka SYSTEM+ token) we need to steal it from
+    // csrss.exe
+    if ParamStr(2) = RESVC_SYSPLUS_PARAM then
+      Token := TryGetCsrssToken
+    else
+      Token := TToken.CreateOpenCurrent;
 
     // Duplicate
     NewToken := TToken.CreateDuplicateToken(Token,

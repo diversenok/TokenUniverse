@@ -58,6 +58,8 @@ type
     BasePriority: Cardinal;
     ProcessId: NativeUInt;
     InheritedFromProcessId: NativeUInt;
+    HandleCount: Cardinal;
+    SessionId: Cardinal;
   end;
   PSystemProcessInformation = ^TSystemProcessInformation;
 

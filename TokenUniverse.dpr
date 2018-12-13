@@ -48,7 +48,7 @@ begin
   // The user delegated us to create a service
   if ParamStr(1) = DELEGATE_PARAM then
   begin
-    ReSvcCreateService;
+    ReSvcCreateService(ParamStr(2) = RESVC_SYSPLUS_PARAM);
     Exit;
   end;
 

@@ -15,29 +15,34 @@ const
 
 type
   /// <summary> A record to store process information. </summary>
-  TProcessInformation = record
+  TProcessItem = record
     ImageName: String;
     PID: Cardinal;
     ParentPID: Cardinal;
+    HandleCount: Cardinal;
+    SessionId: Cardinal;
   end;
-  PProcessItem = ^TProcessInformation;
+  PProcessItem = ^TProcessItem;
 
   /// <summary> Stores a snapshot of all processes on the system. </summary>
   TProcessList = class
   protected
     FCount: integer;
-    FItems: array of TProcessInformation;
-    function GetItem(i: integer): TProcessInformation;
+    FItems: array of TProcessItem;
+    function GetItem(i: integer): TProcessItem;
   public
     /// <summary> Create a snapshot of all processes on the system. </summary>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create;
 
-    property Items[i: integer]: TProcessInformation read GetItem; default;
+    property Items[i: integer]: TProcessItem read GetItem; default;
     property Count: integer read FCount;
 
     /// <summary> Obtains an executable name by a PID. </summary>
     function FindName(PID: Cardinal): String;
+
+    /// <summary> Obtains a PID by an executable name. </summary>
+    function FindPID(ImageName: String): Cardinal;
   end;
 
 function QueryFullProcessImageNameW(hProcess: THandle; dwFlags: Cardinal;
@@ -131,6 +136,8 @@ begin
 
       PID := SysInfo.ProcessId;
       ParentPID := SysInfo.InheritedFromProcessId;
+      HandleCount := SysInfo.HandleCount;
+      SessionId := SysInfo.SessionId;
 
       if SysInfo.NextEntryOffset = 0 then
         Break;
@@ -154,7 +161,18 @@ begin
   Result := 'Unknown process';
 end;
 
-function TProcessList.GetItem(i: integer): TProcessInformation;
+function TProcessList.FindPID(ImageName: String): Cardinal;
+var
+  i: integer;
+begin
+  for i := 0 to High(FItems) do
+    if FItems[i].ImageName = ImageName then
+      Exit(FItems[i].PID);
+
+  Result := 0;
+end;
+
+function TProcessList.GetItem(i: integer): TProcessItem;
 begin
   Result := FItems[i];
 end;

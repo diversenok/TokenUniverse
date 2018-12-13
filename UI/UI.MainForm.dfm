@@ -344,9 +344,10 @@ object FormMain: TFormMain
         ImageIndex = 0
         OnClick = RunAsSystemClick
       end
-      object RunasSYSTEM2: TMenuItem
+      object RunAsSystemPlus: TMenuItem
         Caption = 'Restart as SYSTEM+'
-        Enabled = False
+        ImageIndex = 0
+        OnClick = RunAsSystemPlusClick
       end
       object N1: TMenuItem
         Caption = '-'

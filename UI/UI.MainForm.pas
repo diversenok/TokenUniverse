@@ -18,7 +18,7 @@ type
     Help1: TMenuItem;
     RunAsAdmin: TMenuItem;
     RunAsSystem: TMenuItem;
-    RunasSYSTEM2: TMenuItem;
+    RunAsSystemPlus: TMenuItem;
     PopupMenu: TPopupMenu;
     TokenDuplicate: TMenuItem;
     TokenRestrict: TMenuItem;
@@ -89,6 +89,7 @@ type
     procedure NewNtCreateTokenClick(Sender: TObject);
     procedure SelectColumnsClick(Sender: TObject);
     procedure AssignToProcessClick(Sender: TObject);
+    procedure RunAsSystemPlusClick(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -258,18 +259,32 @@ end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
 begin
-  ReSvcDelegate(Handle, False);
+  ReSvcDelegate(Handle, False, False);
   Close;
 end;
 
 procedure TFormMain.RunAsSystemClick(Sender: TObject);
 begin
   try
-    ReSvcCreateService;
+    ReSvcCreateService(False);
   except
     on E: EOSError do
       if E.ErrorCode = ERROR_ACCESS_DENIED then
-        ReSvcDelegate(Handle, True);
+        ReSvcDelegate(Handle, True, False);
+      else
+        raise;
+  end;
+  Close;
+end;
+
+procedure TFormMain.RunAsSystemPlusClick(Sender: TObject);
+begin
+  try
+    ReSvcCreateService(True);
+  except
+    on E: EOSError do
+      if E.ErrorCode = ERROR_ACCESS_DENIED then
+        ReSvcDelegate(Handle, True, True);
       else
         raise;
   end;

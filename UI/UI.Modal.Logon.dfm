@@ -16,6 +16,7 @@ object LogonDialog: TLogonDialog
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   DesignSize = (
@@ -156,10 +157,12 @@ object LogonDialog: TLogonDialog
     Top = 168
     object MenuEdit: TMenuItem
       Caption = 'Edit'
+      ShortCut = 113
       OnClick = MenuEditClick
     end
     object MenuRemove: TMenuItem
       Caption = 'Remove'
+      ShortCut = 46
       OnClick = MenuRemoveClick
     end
   end

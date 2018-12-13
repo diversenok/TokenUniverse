@@ -349,10 +349,11 @@ type
     constructor CreateByHandle(HandleInfo: THandleInformation);
 
     /// <summary> Opens a token of current process. </summary>
-    constructor CreateOpenCurrent;
+    constructor CreateOpenCurrent(Access: ACCESS_MASK = MAXIMUM_ALLOWED);
 
     /// <summary> Opens a token of another process. </summary>
-    constructor CreateOpenProcess(PID: Cardinal);
+    constructor CreateOpenProcess(PID: Cardinal;
+      Access: ACCESS_MASK = MAXIMUM_ALLOWED);
 
     /// <summary> Duplicates a token. </summary>
     constructor CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
@@ -840,15 +841,15 @@ begin
     FCaption := FCaption + User.SID;
 end;
 
-constructor TToken.CreateOpenCurrent;
+constructor TToken.CreateOpenCurrent(Access: ACCESS_MASK);
 begin
-  WinCheck(OpenProcessToken(GetCurrentProcess, MAXIMUM_ALLOWED, hToken),
+  WinCheck(OpenProcessToken(GetCurrentProcess, Access, hToken),
     'OpenProcessToken');
 
   FCaption := 'Current process';
 end;
 
-constructor TToken.CreateOpenProcess(PID: Cardinal);
+constructor TToken.CreateOpenProcess(PID: Cardinal; Access: ACCESS_MASK);
 var
   hProcess: THandle;
   ProcessList: TProcessList;
@@ -858,7 +859,7 @@ begin
     WinCheck(False, 'OpenProcess');
 
   try
-    WinCheck(OpenProcessToken(hProcess, MAXIMUM_ALLOWED, hToken),
+    WinCheck(OpenProcessToken(hProcess, Access, hToken),
       'OpenProcessToken');
   finally
     CloseHandle(hProcess);

@@ -276,10 +276,12 @@ object DialogRestrictToken: TDialogRestrictToken
     Top = 128
     object MenuEdit: TMenuItem
       Caption = 'Edit'
+      ShortCut = 113
       OnClick = MenuEditClick
     end
     object MenuRemove: TMenuItem
       Caption = 'Remove'
+      ShortCut = 46
       OnClick = MenuRemoveClick
     end
   end
