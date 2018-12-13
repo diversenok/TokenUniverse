@@ -23,18 +23,17 @@ resourcestring
 
   SUGGEST_TEMPLATE = #$D#$A#$D#$A'--- Suggestions ---'#$D#$A'%s';
 
-  DUPLICATE_IMP = 'You can''t duplicate a token from a lower impersonation ' +
+  NEW_DUPLICATE_IMP = 'You can''t duplicate a token from a lower impersonation ' +
     'level to a higher one. Although, you can create a primary token from ' +
     'Impersonation and Delegation ones. If you are working with linked ' +
     'tokens you can obtain a primary linked token if you have ' +
     '`SeTcbPrivilege` privilege.';
-
-  WTS_QUERY_TOKEN_PRIV = 'WTSQueryUserToken requires SeTcbPrivilege.';
-  WTS_QUERY_TOKEN_NO_TOKEN = 'You can''t query a token of a session that ' +
+  NEW_WTS_PRIV = 'WTSQueryUserToken requires SeTcbPrivilege.';
+  NEW_WTS_NO_TOKEN = 'You can''t query a token of a session that ' +
     'doesn''t belong to any user.';
-
-  RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
+  NEW_RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
     'resticted tokens.';
+  NEW_NT_CREATE = 'Creation of a token from the scratch requires `SeCreateTokenPrivilege`';
 
   GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
     'from the token';
@@ -72,22 +71,23 @@ resourcestring
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
-  if (E.ErrorOrigin = 'NtDuplicateToken') and
-    (E.ErrorCode = STATUS_BAD_IMPERSONATION_LEVEL) then
-    Exit(DUPLICATE_IMP);
+  if E.ErrorIn('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
+    Exit(NEW_DUPLICATE_IMP);
 
   if E.ErrorOrigin = 'WTSQueryUserToken' then
   begin
     if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
-      Exit(WTS_QUERY_TOKEN_PRIV);
+      Exit(NEW_WTS_PRIV);
 
     if E.ErrorCode = ERROR_NO_TOKEN then
-      Exit(WTS_QUERY_TOKEN_NO_TOKEN);
+      Exit(NEW_WTS_NO_TOKEN);
   end;
 
-  if (E.ErrorOrigin = 'NtFilterToken') and
-    (E.ErrorCode = STATUS_ACCESS_DENIED)  then
-    Exit(RESTCICT_ACCESS);
+  if E.ErrorIn('NtFilterToken', STATUS_ACCESS_DENIED)  then
+    Exit(NEW_RESTCICT_ACCESS);
+
+  if E.ErrorIn('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
+    Exit(NEW_NT_CREATE);
 end;
 
 function SuggestGetter(E: ELocatedOSError): String;
@@ -116,12 +116,10 @@ begin
       Exit(SETTER_DEFAULT);
   end;
 
-  if (E.ErrorCode = ERROR_INVALID_OWNER) and
-    (E.ErrorOrigin = SetterMessage(TokenOwner)) then
+  if E.ErrorIn(SetterMessage(TokenOwner), ERROR_INVALID_OWNER) then
     Exit(SETTER_OWNER);
 
-  if (E.ErrorCode = ERROR_INVALID_PRIMARY_GROUP) and
-    (E.ErrorOrigin = SetterMessage(TokenPrimaryGroup)) then
+  if E.ErrorIn(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
     Exit(SETTER_PRIMARY);
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then

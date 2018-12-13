@@ -17,6 +17,7 @@ type
    constructor CreateLE(Code: Cardinal; Location: String;
      Context: TObject = nil);
    class function FormatErrorMessage(Location: String; Code: Cardinal): String;
+   function ErrorIn(Origin: String; Code: Cardinal): Boolean; inline;
   end;
 
   /// <summary>
@@ -198,6 +199,12 @@ function StrToUInt64Ex(S: String; Comment: String): UInt64; inline;
 /// </summary>
 function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;
 
+/// <symmary>
+///  Converts Delphi's <c>TDateTime</c> to a number of 100ns intervals from
+///  01.01.1601.
+/// </summary>
+function DateTimeToNative(LocalTime: TDateTime): Int64;
+
 implementation
 
 uses
@@ -350,6 +357,11 @@ begin
   ErrorContext := Context;
 end;
 
+function ELocatedOSError.ErrorIn(Origin: String; Code: Cardinal): Boolean;
+begin
+  Result := (ErrorOrigin = Origin) and (ErrorCode = Code);
+end;
+
 class function ELocatedOSError.FormatErrorMessage(Location: String;
   Code: Cardinal): String;
 begin
@@ -498,13 +510,20 @@ begin
   {$R+}
 end;
 
-function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;
 const
   DAYS_FROM_1601 = 109205;
-  SCALE = 864000000000; // 100ns in 1 day
+  NATIVE_TIME_SCALE = 864000000000; // 100ns in 1 day
+
+function NativeTimeToLocalDateTime(NativeTime: Int64): TDateTime;
 begin
-  Result := NativeTime / SCALE - DAYS_FROM_1601;
+  Result := NativeTime / NATIVE_TIME_SCALE - DAYS_FROM_1601;
   Result := TTimeZone.Local.ToLocalTime(Result);
+end;
+
+function DateTimeToNative(LocalTime: TDateTime): Int64;
+begin
+  Result := Trunc(NATIVE_TIME_SCALE * (DAYS_FROM_1601 +
+    TTimeZone.Local.ToUniversalTime(LocalTime)));
 end;
 
 end.

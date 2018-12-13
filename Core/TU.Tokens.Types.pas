@@ -119,7 +119,8 @@ const
   MandatoryPolicyNoWriteUp: TMandatoryPolicy = $1;
   MandatoryPolicyNewProcessMin: TMandatoryPolicy = $2;
 
-function CreateTokenSource(SourceName: String; SourceLuid: LUID): TTokenSource;
+function CreateTokenSource(SourceName: String; SourceLuid: UInt64):
+  TTokenSource;
 
 { Comparison function used by cached event handling system }
 function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
@@ -619,13 +620,21 @@ end;
 
 { TTokenSource }
 
-function CreateTokenSource(SourceName: String; SourceLuid: LUID): TTokenSource;
+function CreateTokenSource(SourceName: String; SourceLuid: UInt64):
+  TTokenSource;
 var
-  i: integer;
+  i, Count: integer;
 begin
-  for i := 1 to 8 do
+  FillChar(Result, SizeOf(Result), 0);
+
+  Count := Length(SourceName);
+  if Count > 8 then
+    Count := 8;
+
+  for i := 1 to Count do
     Result.sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
-  Result.SourceIdentifier := SourceLuid;
+
+  Result.SourceIdentifier := PLUID(@SourceLuid)^;
 end;
 
 { Comparison functions }

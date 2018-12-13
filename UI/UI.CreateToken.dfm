@@ -2,7 +2,7 @@ object DialogCreateToken: TDialogCreateToken
   Left = 0
   Top = 0
   Caption = 'Create new token'
-  ClientHeight = 403
+  ClientHeight = 367
   ClientWidth = 328
   Color = clBtnFace
   Constraints.MinHeight = 300
@@ -19,12 +19,12 @@ object DialogCreateToken: TDialogCreateToken
   OnCreate = FormCreate
   DesignSize = (
     328
-    403)
+    367)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
     Left = 169
-    Top = 372
+    Top = 336
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -36,7 +36,7 @@ object DialogCreateToken: TDialogCreateToken
   end
   object ButtonCancel: TButton
     Left = 250
-    Top = 373
+    Top = 337
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -44,13 +44,14 @@ object DialogCreateToken: TDialogCreateToken
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 1
+    OnClick = ButtonCancelClick
   end
   object PageControl: TPageControl
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 322
-    Height = 367
+    Height = 331
     Margins.Bottom = 33
     ActivePage = TabGeneral
     Align = alClient
@@ -59,7 +60,7 @@ object DialogCreateToken: TDialogCreateToken
       Caption = 'General'
       DesignSize = (
         314
-        339)
+        303)
       object StaticLogonID: TStaticText
         Left = 12
         Top = 88
@@ -85,83 +86,60 @@ object DialogCreateToken: TDialogCreateToken
         TabOrder = 2
       end
       object StaticDacl: TStaticText
-        Left = 12
-        Top = 200
+        Left = 165
+        Top = 283
         Width = 72
         Height = 17
         Caption = 'Default DACL:'
         TabOrder = 3
       end
-      object StaticSource: TStaticText
-        Left = 12
-        Top = 169
-        Width = 41
-        Height = 17
-        Caption = 'Source:'
-        TabOrder = 4
-      end
-      object EditSource: TEdit
-        Left = 114
-        Top = 165
-        Width = 84
-        Height = 21
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        MaxLength = 8
-        ParentFont = False
-        TabOrder = 5
-        Text = 'TOK_UNIV'
-      end
       object ComboLogonSession: TComboBox
         Left = 114
         Top = 84
-        Width = 197
+        Width = 195
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 6
+        TabOrder = 4
         Text = 'Choose a logon session'
       end
       object ButtonLoad: TButton
         Left = 3
-        Top = 309
+        Top = 273
         Width = 118
         Height = 27
         Anchors = [akLeft, akBottom]
         Caption = 'Load entries from...'
-        TabOrder = 7
+        TabOrder = 5
       end
       object ComboOwner: TComboBox
         Left = 114
         Top = 111
-        Width = 197
+        Width = 195
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 8
+        TabOrder = 6
       end
       object ComboPrimary: TComboBox
         Left = 114
         Top = 138
-        Width = 197
+        Width = 195
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 9
+        TabOrder = 7
       end
       object GroupBoxUser: TGroupBox
         Left = 3
         Top = 3
-        Width = 308
+        Width = 306
         Height = 70
         Anchors = [akLeft, akTop, akRight]
         Caption = 'User '
-        TabOrder = 10
+        TabOrder = 8
         DesignSize = (
-          308
+          306
           70)
         object ButtonPickUser: TButton
-          Left = 276
+          Left = 274
           Top = 15
           Width = 25
           Height = 25
@@ -177,7 +155,7 @@ object DialogCreateToken: TDialogCreateToken
         object ComboUser: TComboBox
           Left = 9
           Top = 17
-          Width = 261
+          Width = 259
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 1
@@ -185,7 +163,7 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxUserState: TCheckBox
           Left = 9
           Top = 44
-          Width = 261
+          Width = 259
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Use for deny only'
@@ -198,19 +176,19 @@ object DialogCreateToken: TDialogCreateToken
       ImageIndex = 1
       DesignSize = (
         314
-        339)
+        303)
       object ListViewGroups: TListViewEx
         AlignWithMargins = True
         Left = 3
         Top = 3
         Width = 308
-        Height = 306
+        Height = 270
         Margins.Bottom = 30
         Align = alClient
         Columns = <
           item
             Caption = 'Group name'
-            Width = 220
+            Width = 160
           end
           item
             Caption = 'State'
@@ -228,12 +206,13 @@ object DialogCreateToken: TDialogCreateToken
         PopupMenu = PopupMenuGroups
         TabOrder = 0
         ViewStyle = vsReport
+        OnDblClick = MenuEditClick
         ColoringItems = True
         PopupOnItemsOnly = True
       end
       object ButtonAddSID: TButton
         Left = 117
-        Top = 312
+        Top = 276
         Width = 78
         Height = 25
         Anchors = [akBottom]
@@ -254,7 +233,7 @@ object DialogCreateToken: TDialogCreateToken
         Left = 3
         Top = 3
         Width = 308
-        Height = 333
+        Height = 297
         Align = alClient
         Checkboxes = True
         Columns = <
@@ -290,17 +269,17 @@ object DialogCreateToken: TDialogCreateToken
       ImageIndex = 3
       DesignSize = (
         314
-        339)
+        303)
       object GroupBoxExpires: TGroupBox
         Left = 3
-        Top = 16
-        Width = 308
+        Top = 97
+        Width = 306
         Height = 82
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Expiration Time '
         TabOrder = 0
         DesignSize = (
-          308
+          306
           82)
         object CheckBoxInfinite: TCheckBox
           Left = 9
@@ -316,25 +295,86 @@ object DialogCreateToken: TDialogCreateToken
         object DateExpires: TDateTimePicker
           Left = 9
           Top = 47
-          Width = 198
+          Width = 181
           Height = 21
           Anchors = [akLeft, akTop, akRight]
-          Date = 401769.000706018600000000
-          Time = 401769.000706018600000000
+          Date = 401769.000000000000000000
+          Time = 401769.000000000000000000
           Enabled = False
           TabOrder = 1
         end
         object TimeExpires: TDateTimePicker
-          Left = 213
+          Left = 196
           Top = 47
-          Width = 88
+          Width = 103
           Height = 21
           Anchors = [akTop, akRight]
-          Date = 43444.500000000000000000
-          Time = 43444.500000000000000000
+          Date = 0.500000000000000000
+          Time = 0.500000000000000000
+          ShowCheckbox = True
           Enabled = False
           Kind = dtkTime
           TabOrder = 2
+        end
+      end
+      object GroupBoxSource: TGroupBox
+        Left = 3
+        Top = 15
+        Width = 190
+        Height = 76
+        Caption = 'Token Source '
+        TabOrder = 1
+        DesignSize = (
+          190
+          76)
+        object EditSourceName: TEdit
+          Left = 69
+          Top = 21
+          Width = 84
+          Height = 21
+          Anchors = [akLeft, akTop, akRight]
+          MaxLength = 8
+          TabOrder = 0
+          Text = 'TOK_UNIV'
+        end
+        object StaticSourceName: TStaticText
+          Left = 12
+          Top = 25
+          Width = 35
+          Height = 17
+          Caption = 'Name:'
+          TabOrder = 1
+        end
+        object StaticSourceLuid: TStaticText
+          Left = 12
+          Top = 52
+          Width = 31
+          Height = 17
+          Caption = 'LUID:'
+          TabOrder = 2
+        end
+        object EditSourceLuid: TEdit
+          Left = 69
+          Top = 48
+          Width = 84
+          Height = 21
+          Anchors = [akLeft, akTop, akRight]
+          TabOrder = 3
+          Text = '0'
+        end
+        object ButtonAllocLuid: TButton
+          Left = 159
+          Top = 46
+          Width = 25
+          Height = 23
+          Hint = 'Allocate new Locally Unique Identifier'
+          Anchors = [akLeft, akTop, akRight]
+          ImageIndex = 4
+          ImageMargins.Left = 2
+          ImageMargins.Top = 1
+          Images = FormMain.SmallIcons
+          TabOrder = 4
+          OnClick = ButtonAllocLuidClick
         end
       end
     end

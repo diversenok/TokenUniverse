@@ -133,6 +133,7 @@ object LogonDialog: TLogonDialog
     PopupMenu = PopupMenu
     TabOrder = 4
     ViewStyle = vsReport
+    OnDblClick = MenuEditClick
     ColoringItems = True
     PopupOnItemsOnly = True
   end

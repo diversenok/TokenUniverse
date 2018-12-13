@@ -385,7 +385,7 @@ type
     constructor CreateNtCreateToken(User: TSecurityIdentifier;
       DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
       LogonID: LUID; Owner: TSecurityIdentifier;
-      PrimaryGroup: TSecurityIdentifier; Source: TTokenSource);
+      PrimaryGroup: TSecurityIdentifier; Source: TTokenSource; Expires: Int64);
 
     /// <summary>
     ///  Opens a linked token for the current token.
@@ -772,18 +772,14 @@ end;
 constructor TToken.CreateNtCreateToken(User: TSecurityIdentifier;
   DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
   LogonID: LUID; Owner: TSecurityIdentifier; PrimaryGroup: TSecurityIdentifier;
-  Source: TTokenSource);
+  Source: TTokenSource; Expires: Int64);
 var
   TokenUser: TTokenUser;
   TokenGroups: PTokenGroups;
   TokenPrivileges: PTokenPrivileges;
   TokenOwner: TTokenOwner;
   TokenPrimaryGroup: TTokenPrimaryGroup;
-  TokenSource: TTokenSource;
-  Expiration: Int64;
 begin
-  Expiration := Int64.MaxValue;
-
   // Fill user attributes. Zero value is default here and means "Enabled"
   if DisableUser then
     TokenUser.User.Attributes := SE_GROUP_USE_FOR_DENY_ONLY
@@ -827,7 +823,7 @@ begin
   // Call NtCreateToken.
   try
     NativeCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
-      @LogonID, @Expiration, @TokenUser, TokenGroups, TokenPrivileges,
+      @LogonID, @Expires, @TokenUser, TokenGroups, TokenPrivileges,
       @TokenOwner, @TokenPrimaryGroup, nil, @Source), 'NtCreateToken');
   finally
     LocalFree(TokenPrimaryGroup.PrimaryGroup);

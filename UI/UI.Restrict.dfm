@@ -146,6 +146,7 @@ object DialogRestrictToken: TDialogRestrictToken
         TabOrder = 1
         ViewStyle = vsReport
         OnContextPopup = ListViewRestrictSIDContextPopup
+        OnDblClick = MenuEditClick
         ColoringItems = True
         PopupOnItemsOnly = True
       end

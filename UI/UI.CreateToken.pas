@@ -22,8 +22,6 @@ type
     StaticOwner: TStaticText;
     StaticPrimaryGroup: TStaticText;
     StaticDacl: TStaticText;
-    StaticSource: TStaticText;
-    EditSource: TEdit;
     ComboLogonSession: TComboBox;
     ComboUser: TComboBox;
     ButtonPickUser: TButton;
@@ -40,6 +38,12 @@ type
     CheckBoxInfinite: TCheckBox;
     DateExpires: TDateTimePicker;
     TimeExpires: TDateTimePicker;
+    GroupBoxSource: TGroupBox;
+    EditSourceName: TEdit;
+    StaticSourceName: TStaticText;
+    StaticSourceLuid: TStaticText;
+    EditSourceLuid: TEdit;
+    ButtonAllocLuid: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -48,6 +52,8 @@ type
     procedure CheckBoxInfiniteClick(Sender: TObject);
     procedure MenuEditClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
+    procedure ButtonAllocLuidClick(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
     GroupsSource: TGroupsSource;
@@ -61,7 +67,8 @@ var
 implementation
 
 uses
-  TU.LsaApi, TU.Tokens.Types, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi;
+  TU.LsaApi, TU.Tokens.Types, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
+  TU.Common;
 
 {$R *.dfm}
 
@@ -70,12 +77,30 @@ begin
   GroupsSource.AddGroup(TDialogPickUser.PickNew(Self));
 end;
 
+procedure TDialogCreateToken.ButtonAllocLuidClick(Sender: TObject);
+var
+  NewLuid: Int64;
+begin
+  if Winapi.Windows.AllocateLocallyUniqueId(NewLuid) then
+    EditSourceLuid.Text := Format('0x%x', [NewLuid]);
+end;
+
+procedure TDialogCreateToken.ButtonCancelClick(Sender: TObject);
+begin
+  Close;
+end;
+
 procedure TDialogCreateToken.ButtonOKClick(Sender: TObject);
 var
   Token: TToken;
-  SourceLuid: LUID;
+  Expires: Int64;
 begin
-  AllocateLocallyUniqueId(SourceLuid);
+  if CheckBoxInfinite.Checked then
+    Expires := Int64.MaxValue
+  else if TimeExpires.Checked then
+    Expires := DateTimeToNative(DateExpires.Date + TimeExpires.Time)
+  else
+    Expires := DateTimeToNative(DateExpires.Date);
 
   Token := TToken.CreateNtCreateToken(
     TSecurityIdentifier.CreateFromString(ComboUser.Text),
@@ -85,7 +110,9 @@ begin
     LogonIDSource.SelectedLogonSession,
     TSecurityIdentifier.CreateFromString(ComboOwner.Text),
     TSecurityIdentifier.CreateFromString(ComboPrimary.Text),
-    CreateTokenSource(EditSource.Text, SourceLuid)
+    CreateTokenSource(EditSourceName.Text,
+      StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID')),
+    Expires
   );
 
   FormMain.Frame.AddToken(Token);
@@ -116,6 +143,7 @@ begin
   LogonIDSource := TLogonSessionSource.Create(ComboLogonSession);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
+  ButtonAllocLuidClick(Self);
 end;
 
 procedure TDialogCreateToken.MenuEditClick(Sender: TObject);
