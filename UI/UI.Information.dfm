@@ -2,9 +2,11 @@ object InfoDialog: TInfoDialog
   Left = 0
   Top = 0
   Caption = 'Token Information'
-  ClientHeight = 378
+  ClientHeight = 399
   ClientWidth = 402
   Color = clBtnFace
+  Constraints.MinHeight = 437
+  Constraints.MinWidth = 400
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -18,7 +20,7 @@ object InfoDialog: TInfoDialog
   OnKeyDown = FormKeyDown
   DesignSize = (
     402
-    378)
+    399)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -26,24 +28,24 @@ object InfoDialog: TInfoDialog
     Left = 3
     Top = 3
     Width = 396
-    Height = 345
+    Height = 366
     ActivePage = TabGeneral
     Anchors = [akLeft, akTop, akRight, akBottom]
     DoubleBuffered = True
     ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 0
     object TabGeneral: TTabSheet
       Caption = 'General'
       DesignSize = (
         388
-        317)
+        338)
       object StaticUser: TStaticText
         Left = 7
         Top = 128
         Width = 30
         Height = 17
         Caption = 'User:'
-        TabOrder = 9
+        TabOrder = 19
       end
       object EditUser: TEdit
         Left = 112
@@ -64,7 +66,7 @@ object InfoDialog: TInfoDialog
         Width = 44
         Height = 17
         Caption = 'Session:'
-        TabOrder = 17
+        TabOrder = 20
       end
       object StaticIntegrity: TStaticText
         Left = 7
@@ -72,7 +74,7 @@ object InfoDialog: TInfoDialog
         Width = 75
         Height = 17
         Caption = 'Integrity level:'
-        TabOrder = 11
+        TabOrder = 21
       end
       object ComboSession: TComboBox
         Left = 112
@@ -92,47 +94,47 @@ object InfoDialog: TInfoDialog
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 19
+        TabOrder = 4
         Text = 'Unknown integrity level'
         OnChange = SetStaleColor
       end
       object StaticOwner: TStaticText
         Left = 9
-        Top = 263
+        Top = 290
         Width = 40
         Height = 17
         Caption = 'Owner:'
-        TabOrder = 12
+        TabOrder = 22
       end
       object ComboOwner: TComboBox
-        Left = 112
-        Top = 259
-        Width = 244
-        Height = 21
-        AutoComplete = False
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 20
-        Text = 'Unknown Owner'
-        OnChange = SetStaleColor
-      end
-      object ComboPrimary: TComboBox
         Left = 112
         Top = 286
         Width = 244
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 8
+        TabOrder = 15
+        Text = 'Unknown Owner'
+        OnChange = SetStaleColor
+      end
+      object ComboPrimary: TComboBox
+        Left = 112
+        Top = 313
+        Width = 244
+        Height = 21
+        AutoComplete = False
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 17
         Text = 'Unknown Primary group'
         OnChange = SetStaleColor
       end
       object StaticPrimary: TStaticText
         Left = 9
-        Top = 290
+        Top = 317
         Width = 75
         Height = 17
         Caption = 'Primary group:'
-        TabOrder = 13
+        TabOrder = 23
       end
       object StaticUIAccess: TStaticText
         Left = 7
@@ -140,7 +142,7 @@ object InfoDialog: TInfoDialog
         Width = 52
         Height = 17
         Caption = 'UIAccess:'
-        TabOrder = 14
+        TabOrder = 24
       end
       object ComboUIAccess: TComboBox
         Left = 112
@@ -154,7 +156,7 @@ object InfoDialog: TInfoDialog
           ' levels or installing global hooks.'
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 4
+        TabOrder = 6
         Text = 'Unknown UIAccess'
         OnChange = SetStaleColor
         Items.Strings = (
@@ -167,7 +169,7 @@ object InfoDialog: TInfoDialog
         Width = 90
         Height = 17
         Caption = 'Mandatory policy:'
-        TabOrder = 15
+        TabOrder = 25
       end
       object ListViewGeneral: TListViewEx
         Left = 0
@@ -216,7 +218,7 @@ object InfoDialog: TInfoDialog
       end
       object CheckBoxNoWriteUp: TCheckBox
         Left = 112
-        Top = 235
+        Top = 234
         Width = 97
         Height = 17
         Hint = 
@@ -224,12 +226,12 @@ object InfoDialog: TInfoDialog
           ' have a greater mandatory integrity label.'
         Caption = 'No Write Up'
         State = cbGrayed
-        TabOrder = 21
-        OnClick = CheckBoxNoWriteUpClick
+        TabOrder = 8
+        OnClick = CheckBoxClick
       end
       object CheckBoxNewProcessMin: TCheckBox
         Left = 240
-        Top = 235
+        Top = 234
         Width = 116
         Height = 17
         Hint = 
@@ -239,8 +241,37 @@ object InfoDialog: TInfoDialog
         Anchors = [akTop, akRight]
         Caption = 'New Process Min'
         State = cbGrayed
-        TabOrder = 6
-        OnClick = CheckBoxNewProcessMinClick
+        TabOrder = 9
+        OnClick = CheckBoxClick
+      end
+      object StaticVirtualization: TStaticText
+        Left = 7
+        Top = 263
+        Width = 69
+        Height = 17
+        Caption = 'Virtualization:'
+        TabOrder = 26
+      end
+      object CheckBoxVAllowed: TCheckBox
+        Left = 112
+        Top = 261
+        Width = 73
+        Height = 17
+        Caption = 'Allowed'
+        State = cbGrayed
+        TabOrder = 11
+        OnClick = CheckBoxClick
+      end
+      object CheckBoxVEnabled: TCheckBox
+        Left = 240
+        Top = 261
+        Width = 116
+        Height = 17
+        Anchors = [akTop, akRight]
+        Caption = 'Enabled'
+        State = cbGrayed
+        TabOrder = 13
+        OnClick = CheckBoxClick
       end
       object BtnSetSession: TButton
         Left = 360
@@ -280,7 +311,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetOwner: TButton
         Left = 360
-        Top = 258
+        Top = 285
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -304,7 +335,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetPrimary: TButton
         Left = 360
-        Top = 285
+        Top = 312
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -314,6 +345,29 @@ object InfoDialog: TInfoDialog
         TabOrder = 18
         OnClick = BtnSetPrimaryClick
       end
+      object BtnSetVEnabled: TButton
+        Left = 360
+        Top = 258
+        Width = 24
+        Height = 23
+        Anchors = [akTop, akRight]
+        ImageAlignment = iaCenter
+        ImageIndex = 5
+        Images = FormMain.SmallIcons
+        TabOrder = 14
+        OnClick = BtnSetVEnabledClick
+      end
+      object BtnSetAEnabled: TButton
+        Left = 188
+        Top = 258
+        Width = 24
+        Height = 23
+        ImageAlignment = iaCenter
+        ImageIndex = 5
+        Images = FormMain.SmallIcons
+        TabOrder = 12
+        OnClick = BtnSetVAllowedClick
+      end
     end
     object TabAdvanced: TTabSheet
       Caption = 'Advanced'
@@ -322,7 +376,7 @@ object InfoDialog: TInfoDialog
         Left = 0
         Top = 0
         Width = 388
-        Height = 317
+        Height = 338
         Align = alClient
         BorderStyle = bsNone
         Columns = <
@@ -430,7 +484,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 311
+        Height = 332
         Align = alClient
         Columns = <
           item
@@ -466,7 +520,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 311
+        Height = 332
         Align = alClient
         Columns = <
           item
@@ -507,7 +561,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 311
+        Height = 332
         Align = alClient
         Columns = <
           item
@@ -535,15 +589,15 @@ object InfoDialog: TInfoDialog
     end
   end
   object ButtonClose: TButton
-    Left = 323
-    Top = 350
+    Left = 324
+    Top = 371
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Close'
     ModalResult = 2
-    TabOrder = 0
+    TabOrder = 1
     OnClick = DoCloseForm
   end
   object ImageList: TImageList

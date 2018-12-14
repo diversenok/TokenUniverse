@@ -37,19 +37,20 @@ const
   DataClassToCategory: array [TTokenStringClass] of TUICategory = (uicGeneral,
     uicGeneral, uicGeneral, uicGeneral, uicGeneral, uicGeneral, uicGeneral,
     uicAdvanced, uicAdvanced, uicAdvanced, uicAdvanced, uicAdvanced,
-    uicAdvanced, uicAdvanced, uicAdvanced, uicAdvanced, uicStatistics,
+    uicAdvanced, uicAdvanced, uicAdvanced, uicAdvanced, uicAdvanced,
     uicStatistics, uicStatistics, uicStatistics, uicStatistics, uicStatistics,
-    uicStatistics, uicLogon, uicLogon, uicLogon, uicLogon, uicLogon, uicLogon,
-    uicLogon, uicSource, uicSource, uicAdvanced);
+    uicStatistics, uicStatistics, uicLogon, uicLogon, uicLogon, uicLogon,
+    uicLogon, uicLogon, uicLogon, uicSource, uicSource, uicAdvanced);
 
   DataClassCaption: array [TTokenStringClass] of String = ('Token Type',
     'Granted Access', 'User Name', 'User State', 'Session', 'Elevated',
     'Integrity', 'Object Address', 'Handle', 'No-write-up', 'New-process-min',
     'UIAccess', 'Owner', 'Primary Group', 'Sandbox Inert', 'Has Restrictions',
-    'Token ID', 'Exprires', 'Dynamic Charged', 'Dynamic Available',
-    'Group Count', 'Privilege Count', 'Modified ID', 'Logon ID',
-    'Logon Auth Package', 'Logon Server', 'Logon WTS Session', 'Logon Time',
-    'Logon Type', 'Logon User Name', 'Source LUID', 'Source Name', 'Origin');
+    'Virtualization', 'Token ID', 'Exprires', 'Dynamic Charged',
+    'Dynamic Available', 'Group Count', 'Privilege Count', 'Modified ID',
+    'Logon ID', 'Logon Auth Package', 'Logon Server', 'Logon WTS Session',
+    'Logon Time', 'Logon Type', 'Logon User Name', 'Source LUID', 'Source Name',
+    'Origin');
 
 procedure TDialogColumns.ButtonOKClick(Sender: TObject);
 var

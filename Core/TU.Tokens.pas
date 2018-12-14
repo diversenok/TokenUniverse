@@ -16,18 +16,19 @@ type
     tdTokenOwner, tdTokenPrimaryGroup, tdTokenDefaultDacl, tdTokenSource,
     tdTokenType, tdTokenStatistics, tdTokenRestrictedSids, tdTokenSessionId,
     tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
-    tdTokenHasRestrictions, tdTokenVirtualization, tdTokenIntegrity,
-    tdTokenUIAccess, tdTokenMandatoryPolicy, tdLogonInfo);
+    tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
+    tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
+    tdTokenMandatoryPolicy, tdLogonInfo);
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
     tsUserState, tsSession, tsElevation, tsIntegrity, tsObjectAddress, tsHandle,
     tsNoWriteUpPolicy, tsNewProcessMinPolicy, tsUIAccess, tsOwner,
-    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsTokenID, tsExprires,
-    tsDynamicCharged, tsDynamicAvailable, tsGroupCount, tsPrivilegeCount,
-    tsModifiedID, tsLogonID, tsLogonAuthPackage, tsLogonServer,
-    tsLogonWtsSession, tsLogonTime, tsLogonType, tsLogonUserName, tsSourceLUID,
-    tsSourceName, tsOrigin);
+    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsVirtualization,
+    tsTokenID, tsExprires, tsDynamicCharged, tsDynamicAvailable, tsGroupCount,
+    tsPrivilegeCount, tsModifiedID, tsLogonID, tsLogonAuthPackage,
+    tsLogonServer, tsLogonWtsSession, tsLogonTime, tsLogonType, tsLogonUserName,
+    tsSourceLUID, tsSourceName, tsOrigin);
 
   TToken = class;
 
@@ -52,6 +53,8 @@ type
     Origin: LUID;
     Elevation: TTokenElevationType;
     HasRestrictions: LongBool;
+    VirtualizationAllowed: LongBool;
+    VirtualizationEnabled: LongBool;
     Integrity: TTokenIntegrity;
     UIAccess: LongBool;
     MandatoryPolicy: TMandatoryPolicy;
@@ -61,6 +64,8 @@ type
     FOnSessionChange: TValuedEventHandler<Cardinal>;
     FOnUIAccessChange: TValuedEventHandler<LongBool>;
     FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
+    FOnVirtualizationAllowedChange: TValuedEventHandler<LongBool>;
+    FOnVirtualizationEnabledChange: TValuedEventHandler<LongBool>;
     FOnPolicyChange: TValuedEventHandler<TMandatoryPolicy>;
     FOnPrivilegesChange: TValuedEventHandler<TPrivilegeArray>;
     FOnGroupsChange: TValuedEventHandler<TGroupArray>;
@@ -78,6 +83,8 @@ type
     property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
     property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
+    property OnVirtualizationAllowedChange: TValuedEventHandler<LongBool> read FOnVirtualizationAllowedChange;
+    property OnVirtualizationEnabledChange: TValuedEventHandler<LongBool> read FOnVirtualizationEnabledChange;
     property OnPolicyChange: TValuedEventHandler<TMandatoryPolicy> read FOnPolicyChange;
     property OnPrivilegesChange: TValuedEventHandler<TPrivilegeArray> read FOnPrivilegesChange;
     property OnGroupsChange: TValuedEventHandler<TGroupArray> read FOnGroupsChange;
@@ -106,6 +113,8 @@ type
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(const Value: TSecurityIdentifier);
     procedure SetPrimaryGroup(const Value: TSecurityIdentifier);
+    function GetVirtualizationAllowed: LongBool;
+    function GetVirtualizationEnabled: LongBool;
     function GetElevation: TTokenElevationType;
     function GetGroups: TGroupArray;
     function GetHasRestrictions: LongBool;
@@ -125,6 +134,8 @@ type
     function GetUser: TGroup;
     function GetLogonSessionInfo: TLogonSessionInfo;
     procedure InvokeStringEvent(StringClass: TTokenStringClass);
+    procedure SetVirtualizationAllowed(const Value: LongBool);
+    procedure SetVirtualizationEnabled(const Value: LongBool);
   public
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TGroupArray read GetGroups;                                // class 2
@@ -146,7 +157,8 @@ type
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
     // TODO: class 22 AccessInformation (depends on OS version, duplicates most of the info)
-    // TODO: class 23 & 24 Virtualization #settable (both)
+    property VirtualizationAllowed: LongBool read GetVirtualizationAllowed write SetVirtualizationAllowed; // class 23 #settable
+    property VirtualizationEnabled: LongBool read GetVirtualizationEnabled write SetVirtualizationEnabled; // class 24 #settable
     property Integrity: TTokenIntegrity read GetIntegrity;                      // class 25 #settable
     property IntegrityLevel: TTokenIntegrityLevel write SetIntegrityLevel;
     property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
@@ -408,11 +420,11 @@ const
     (tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
     tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
     tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
-    tdTokenSandBoxInert,tdTokenHasRestrictions, tdTokenStatistics,
+    tdTokenSandBoxInert,tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdLogonInfo,
+    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
     tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo,
-    tdTokenSource, tdTokenSource, tdTokenOrigin);
+    tdLogonInfo, tdTokenSource, tdTokenSource, tdTokenOrigin);
 
 { TTokenCacheAndEvents }
 
@@ -1291,6 +1303,18 @@ begin
   Result := Token.Cache.User;
 end;
 
+function TTokenData.GetVirtualizationAllowed: LongBool;
+begin
+  Assert(Token.Cache.IsCached[tdTokenVirtualizationAllowed]);
+  Result := Token.Cache.VirtualizationAllowed;
+end;
+
+function TTokenData.GetVirtualizationEnabled: LongBool;
+begin
+  Assert(Token.Cache.IsCached[tdTokenVirtualizationEnabled]);
+  Result := Token.Cache.VirtualizationEnabled;
+end;
+
 procedure TTokenData.InvokeStringEvent(StringClass: TTokenStringClass);
 begin
   // Note that tsHandle and tsAccess are per-handle events
@@ -1380,6 +1404,17 @@ begin
 
     tsHasRestrictions:
       Result := YesNoToString(Token.Cache.HasRestrictions);
+
+    tsVirtualization:
+      if Query(tdTokenVirtualizationEnabled) then
+      begin
+        if VirtualizationAllowed  then
+          Result := EnabledDisabledToString(VirtualizationEnabled)
+        else if not VirtualizationEnabled then
+          Result := 'Not allowed'
+        else
+          Result := 'Disallowed & Enabled';
+      end;
 
     tsTokenID:
       Result := Token.Cache.Statistics.TokenId.ToString;
@@ -1583,7 +1618,25 @@ begin
       Result := Token.QueryFixedSize<LongBool>(TokenHasRestrictions,
         Token.Cache.HasRestrictions);
 
-    tdTokenVirtualization: ; // Not implemented
+    tdTokenVirtualizationAllowed:
+    begin
+      Result := Token.QueryFixedSize<LongBool>(TokenVirtualizationAllowed,
+        Token.Cache.VirtualizationAllowed);
+      if Result then
+        if Token.Events.OnVirtualizationAllowedChange.Invoke(
+          Token.Cache.VirtualizationAllowed) then
+          InvokeStringEvent(tsVirtualization);
+    end;
+
+    tdTokenVirtualizationEnabled:
+    begin
+      Result := Token.QueryFixedSize<LongBool>(TokenVirtualizationEnabled,
+        Token.Cache.VirtualizationEnabled);
+      if Result then
+        if Token.Events.OnVirtualizationEnabledChange.Invoke(
+          Token.Cache.VirtualizationEnabled) then
+          InvokeStringEvent(tsVirtualization);
+    end;
 
     tdTokenIntegrity:
     begin
@@ -1723,6 +1776,25 @@ begin
 
   // Update the cache and notify event listeners
   ReQuery(tdTokenUIAccess);
+  ReQuery(tdTokenStatistics);
+end;
+
+procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
+begin
+  Token.SetFixedSize<LongBool>(TokenVirtualizationAllowed, Value);
+
+  // Update the cache and notify event listeners
+  ReQuery(tdTokenVirtualizationAllowed);
+  ReQuery(tdTokenVirtualizationEnabled); // Just to be sure
+  ReQuery(tdTokenStatistics);
+end;
+
+procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
+begin
+  Token.SetFixedSize<LongBool>(TokenVirtualizationEnabled, Value);
+
+  // Update the cache and notify event listeners
+  ReQuery(tdTokenVirtualizationEnabled);
   ReQuery(tdTokenStatistics);
 end;
 

@@ -47,12 +47,17 @@ type
     ListViewGeneral: TListViewEx;
     CheckBoxNoWriteUp: TCheckBox;
     CheckBoxNewProcessMin: TCheckBox;
+    StaticVirtualization: TStaticText;
+    CheckBoxVAllowed: TCheckBox;
+    CheckBoxVEnabled: TCheckBox;
     BtnSetSession: TButton;
     BtnSetIntegrity: TButton;
     BtnSetUIAccess: TButton;
     BtnSetPolicy: TButton;
     BtnSetOwner: TButton;
     BtnSetPrimary: TButton;
+    BtnSetVEnabled: TButton;
+    BtnSetAEnabled: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -73,8 +78,9 @@ type
     procedure ListViewAdvancedResize(Sender: TObject);
     procedure BtnSetPrimaryClick(Sender: TObject);
     procedure BtnSetOwnerClick(Sender: TObject);
-    procedure CheckBoxNoWriteUpClick(Sender: TObject);
-    procedure CheckBoxNewProcessMinClick(Sender: TObject);
+    procedure CheckBoxClick(Sender: TObject);
+    procedure BtnSetVEnabledClick(Sender: TObject);
+    procedure BtnSetVAllowedClick(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
@@ -91,6 +97,8 @@ type
     procedure ChangedStatistics(NewStatistics: TTokenStatistics);
     procedure ChangedOwner(NewOwner: TSecurityIdentifier);
     procedure ChangedPrimaryGroup(NewPrimary: TSecurityIdentifier);
+    procedure ChangedVAllowed(NewVAllowed: LongBool);
+    procedure ChangedVEnabled(NewVEnabled: LongBool);
     procedure Refresh;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -226,6 +234,30 @@ begin
   end;
 end;
 
+procedure TInfoDialog.BtnSetVAllowedClick(Sender: TObject);
+begin
+  try
+    Token.InfoClass.VirtualizationAllowed := CheckBoxVAllowed.Checked;
+    CheckBoxVAllowed.Font.Style := [];
+  except
+    if Token.InfoClass.Query(tdTokenVirtualizationAllowed) then
+      ChangedVAllowed(Token.InfoClass.VirtualizationAllowed);
+    raise;
+  end;
+end;
+
+procedure TInfoDialog.BtnSetVEnabledClick(Sender: TObject);
+begin
+  try
+    Token.InfoClass.VirtualizationEnabled := CheckBoxVEnabled.Checked;
+    CheckBoxVEnabled.Font.Style := [];
+  except
+    if Token.InfoClass.Query(tdTokenVirtualizationEnabled) then
+      ChangedVEnabled(Token.InfoClass.VirtualizationEnabled);
+    raise;
+  end;
+end;
+
 procedure TInfoDialog.ChangedCaption(NewCaption: String);
 begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
@@ -341,14 +373,26 @@ begin
   ComboUIAccess.ItemIndex := Integer(NewUIAccess = True);
 end;
 
-procedure TInfoDialog.CheckBoxNewProcessMinClick(Sender: TObject);
+procedure TInfoDialog.ChangedVAllowed(NewVAllowed: LongBool);
 begin
-  CheckBoxNewProcessMin.Font.Style := [fsBold];
+  CheckBoxVAllowed.OnClick := nil;
+  CheckBoxVAllowed.Font.Style := [];
+  CheckBoxVAllowed.Checked := NewVAllowed;
+  CheckBoxVAllowed.OnClick := CheckBoxClick;
 end;
 
-procedure TInfoDialog.CheckBoxNoWriteUpClick(Sender: TObject);
+procedure TInfoDialog.ChangedVEnabled(NewVEnabled: LongBool);
 begin
-  CheckBoxNoWriteUp.Font.Style := [fsBold];
+  CheckBoxVEnabled.OnClick := nil;
+  CheckBoxVEnabled.Font.Style := [];
+  CheckBoxVEnabled.Checked := NewVEnabled;
+  CheckBoxVEnabled.OnClick := CheckBoxClick;
+end;
+
+procedure TInfoDialog.CheckBoxClick(Sender: TObject);
+begin
+  Assert(Sender is TCheckBox);
+  (Sender as TCheckBox).Font.Style := [fsBold];
 end;
 
 constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -366,6 +410,8 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  Token.Events.OnVirtualizationEnabledChange.Delete(ChangedVEnabled);
+  Token.Events.OnVirtualizationAllowedChange.Delete(ChangedVAllowed);
   Token.Events.OnPrimaryChange.Delete(ChangedPrimaryGroup);
   Token.Events.OnOwnerChange.Delete(ChangedOwner);
   Token.Events.OnStatisticsChange.Delete(ChangedStatistics);
@@ -410,6 +456,8 @@ begin
   Token.Events.OnStatisticsChange.Add(ChangedStatistics);
   Token.Events.OnOwnerChange.Add(ChangedOwner);
   Token.Events.OnPrimaryChange.Add(ChangedPrimaryGroup);
+  Token.Events.OnVirtualizationAllowedChange.Add(ChangedVAllowed);
+  Token.Events.OnVirtualizationEnabledChange.Add(ChangedVEnabled);
   PrivilegesSource.SubscribeToken(Token);
   GroupsSource.SubscribeToken(Token, gsGroups);
   RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);
@@ -475,6 +523,8 @@ begin
   Token.InfoClass.ReQuery(tdTokenStatistics);
   Token.InfoClass.ReQuery(tdTokenOwner);
   Token.InfoClass.ReQuery(tdTokenPrimaryGroup);
+  Token.InfoClass.ReQuery(tdTokenVirtualizationAllowed);
+  Token.InfoClass.ReQuery(tdTokenVirtualizationEnabled);
 
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass.User, EditUser do
