@@ -11,6 +11,8 @@ type
   TSettings = class
   class var
     SelectedColumns: TColumns;
+    PromptOnHandleClose: Boolean;
+    NoCloseCreationDialogs: Boolean;
     class constructor Create;
   end;
 

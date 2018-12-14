@@ -494,6 +494,7 @@ end;
 
 procedure TInfoDialog.SetStaleColor(Sender: TObject);
 begin
+  Assert(Sender is TComboBox);
   (Sender as TComboBox).Color := clStale;
 end;
 

@@ -421,6 +421,7 @@ object InfoDialog: TInfoDialog
         Top = 259
         Width = 244
         Height = 21
+        AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 7
         Text = 'Unknown Owner'
@@ -431,6 +432,7 @@ object InfoDialog: TInfoDialog
         Top = 286
         Width = 244
         Height = 21
+        AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 8
         Text = 'Unknown Primary group'
@@ -462,6 +464,7 @@ object InfoDialog: TInfoDialog
           'hem to bypass some UIPI (User Interface Privilege Isolation) res' +
           'trictions like sending messages to windows with higher integrity' +
           ' levels or installing global hooks.'
+        AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 4
         Text = 'Unknown UIAccess'

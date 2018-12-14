@@ -68,7 +68,7 @@ implementation
 
 uses
   TU.LsaApi, TU.Tokens.Types, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
-  TU.Common;
+  TU.Common, UI.Settings;
 
 {$R *.dfm}
 
@@ -116,7 +116,9 @@ begin
   );
 
   FormMain.Frame.AddToken(Token);
-  Close;
+
+  if not TSettings.NoCloseCreationDialogs then
+    Close;
 end;
 
 procedure TDialogCreateToken.ButtonPickUserClick(Sender: TObject);

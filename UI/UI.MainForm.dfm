@@ -363,15 +363,22 @@ object FormMain: TFormMain
         Caption = 'Select columns...'
         OnClick = SelectColumnsClick
       end
-      object Propmtonhandleclose1: TMenuItem
+      object MenuPromptHandleClose: TMenuItem
         Caption = 'Propmt on handle close'
+        OnClick = MenuPromptHandleCloseClick
+      end
+      object MenuCloseCreationDlg: TMenuItem
+        Caption = 'Do not close creation dialogs'
+        OnClick = MenuCloseCreationDlgClick
       end
       object Showiconsinprocesslist1: TMenuItem
         Caption = 'Show icons in process list'
         Checked = True
+        Enabled = False
       end
       object Displayallsearchresults1: TMenuItem
         Caption = 'Display all search results'
+        Enabled = False
       end
     end
     object Help1: TMenuItem

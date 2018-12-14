@@ -46,7 +46,7 @@ type
     HLine2: TMenuItem;
     RunTaskAsInteractiveUser1: TMenuItem;
     TokenDuplicateHandle: TMenuItem;
-    Propmtonhandleclose1: TMenuItem;
+    MenuPromptHandleClose: TMenuItem;
     Showiconsinprocesslist1: TMenuItem;
     Frame: TFrameTokenList;
     TokenImpersonate: TMenuItem;
@@ -59,6 +59,7 @@ type
     MenuExit: TMenuItem;
     SelectColumns: TMenuItem;
     AssignToProcess: TMenuItem;
+    MenuCloseCreationDlg: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -90,6 +91,8 @@ type
     procedure SelectColumnsClick(Sender: TObject);
     procedure AssignToProcessClick(Sender: TObject);
     procedure RunAsSystemPlusClick(Sender: TObject);
+    procedure MenuCloseCreationDlgClick(Sender: TObject);
+    procedure MenuPromptHandleCloseClick(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -104,7 +107,7 @@ uses
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.Session,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
-  UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser;
+  UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings;
 
 {$R *.dfm}
 
@@ -112,6 +115,11 @@ uses
 
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
+  if TSettings.PromptOnHandleClose then
+    if MessageDlg('Are you sure you want to close this handle?', mtConfirmation,
+      mbYesNoCancel, 0) <> IDYES then
+        Abort;
+
   Frame.DeleteToken(Frame.ListViewTokens.Selected, True);
 end;
 
@@ -306,9 +314,21 @@ begin
       Menu.Enabled := Selected;
 end;
 
+procedure TFormMain.MenuCloseCreationDlgClick(Sender: TObject);
+begin
+  TSettings.NoCloseCreationDialogs := not TSettings.NoCloseCreationDialogs;
+  MenuCloseCreationDlg.Checked := TSettings.NoCloseCreationDialogs;
+end;
+
 procedure TFormMain.MenuExitClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFormMain.MenuPromptHandleCloseClick(Sender: TObject);
+begin
+  TSettings.PromptOnHandleClose := not TSettings.PromptOnHandleClose;
+  MenuPromptHandleClose.Checked := TSettings.PromptOnHandleClose;
 end;
 
 procedure TFormMain.NewNtCreateTokenClick(Sender: TObject);

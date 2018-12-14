@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types;
+  UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings;
 
 {$R *.dfm}
 
@@ -82,11 +82,13 @@ begin
     if NewToken.InfoClass.Query(tdTokenSandBoxInert) and
       not NewToken.InfoClass.SandboxInert then
       begin
-        Hide;
+        if not TSettings.NoCloseCreationDialogs then
+          Hide;
         MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
       end;
 
-  Close;
+  if not TSettings.NoCloseCreationDialogs then
+    Close;
 end;
 
 procedure TDialogRestrictToken.ChangedCaption(NewCaption: String);
