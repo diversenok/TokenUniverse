@@ -387,7 +387,7 @@ end;
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   SubscribeTokenCanClose(Token, Caption);
-  SessionSource := TSessionSource.Create(ComboSession);
+  SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
@@ -444,8 +444,6 @@ end;
 
 procedure TInfoDialog.Refresh;
 begin
-  SessionSource.RefreshSessionList(False);
-
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
   begin

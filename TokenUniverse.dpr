@@ -18,7 +18,6 @@ uses
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
-  UI.Modal.Session in 'UI\UI.Modal.Session.pas' {SessionDialog},
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
   UI.ListViewEx in 'UI\UI.ListViewEx.pas',
   UI.Colors in 'UI\UI.Colors.pas',
@@ -33,7 +32,8 @@ uses
   TU.Tokens.Types in 'Core\TU.Tokens.Types.pas',
   UI.Modal.Columns in 'UI\UI.Modal.Columns.pas' {DialogColumns},
   UI.Settings in 'UI\UI.Settings.pas',
-  UI.Modal.Access in 'UI\UI.Modal.Access.pas' {DialogAccess};
+  UI.Modal.Access in 'UI\UI.Modal.Access.pas' {DialogAccess},
+  UI.Modal.ComboDlg in 'UI\UI.Modal.ComboDlg.pas' {ComboDialog};
 
 {$R *.res}
 

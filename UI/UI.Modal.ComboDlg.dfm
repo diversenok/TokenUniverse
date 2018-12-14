@@ -1,8 +1,7 @@
-object SessionDialog: TSessionDialog
+object ComboDialog: TComboDialog
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
-  Caption = 'Choose session'
   ClientHeight = 66
   ClientWidth = 255
   Color = clBtnFace
@@ -14,20 +13,19 @@ object SessionDialog: TSessionDialog
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  OnCreate = FormCreate
+  Position = poOwnerFormCenter
   DesignSize = (
     255
     66)
   PixelsPerInch = 96
   TextHeight = 13
-  object SessionCombo: TComboBox
+  object ComboBox: TComboBox
     Left = 8
     Top = 7
     Width = 239
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
-    Text = 'Unable to query. Insert it manually'
   end
   object ButtonCancel: TButton
     Left = 8

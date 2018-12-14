@@ -4,7 +4,7 @@ object DialogPickUser: TDialogPickUser
   Anchors = [akTop]
   BorderIcons = [biSystemMenu]
   Caption = 'Choose user or group'
-  ClientHeight = 262
+  ClientHeight = 288
   ClientWidth = 294
   Color = clBtnFace
   Constraints.MinHeight = 225
@@ -21,7 +21,7 @@ object DialogPickUser: TDialogPickUser
   OnCreate = FormCreate
   DesignSize = (
     294
-    262)
+    288)
   PixelsPerInch = 96
   TextHeight = 13
   object ComboBoxSID: TComboBox
@@ -48,7 +48,7 @@ object DialogPickUser: TDialogPickUser
   end
   object ButtonOK: TButton
     Left = 213
-    Top = 231
+    Top = 257
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -59,7 +59,7 @@ object DialogPickUser: TDialogPickUser
   end
   object ButtonCancel: TButton
     Left = 8
-    Top = 231
+    Top = 257
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -146,16 +146,16 @@ object DialogPickUser: TDialogPickUser
     Left = 8
     Top = 143
     Width = 278
-    Height = 82
+    Height = 106
     Caption = 'Additional attributes '
     TabOrder = 2
     DesignSize = (
       278
-      82)
+      106)
     object CheckBoxIntegrityEnabled: TCheckBox
       Left = 14
       Top = 48
-      Width = 150
+      Width = 130
       Height = 17
       Anchors = [akTop]
       Caption = 'Integrity Enabled'
@@ -164,15 +164,15 @@ object DialogPickUser: TDialogPickUser
     object CheckBoxIntegrity: TCheckBox
       Left = 14
       Top = 25
-      Width = 150
+      Width = 130
       Height = 17
       Anchors = [akTop]
       Caption = 'Integrity'
       TabOrder = 0
     end
     object CheckBoxResource: TCheckBox
-      Left = 142
-      Top = 48
+      Left = 150
+      Top = 25
       Width = 120
       Height = 17
       Anchors = [akTop]
@@ -180,13 +180,31 @@ object DialogPickUser: TDialogPickUser
       TabOrder = 3
     end
     object CheckBoxLogon: TCheckBox
-      Left = 142
-      Top = 25
+      Left = 150
+      Top = 48
       Width = 150
       Height = 17
       Anchors = [akTop]
       Caption = 'Logon ID'
+      TabOrder = 4
+    end
+    object ButtonIntegrity: TButton
+      Left = 14
+      Top = 71
+      Width = 105
+      Height = 25
+      Caption = 'Choose Intrgirty'
       TabOrder = 2
+      OnClick = ButtonIntegrityClick
+    end
+    object ButtonLogonID: TButton
+      Left = 150
+      Top = 71
+      Width = 105
+      Height = 25
+      Caption = 'Choose Logon ID'
+      Enabled = False
+      TabOrder = 5
     end
   end
 end

@@ -1595,7 +1595,9 @@ begin
         // Get level value from the SID sub-authority
         if GetSidSubAuthorityCount(pIntegrity.Sid)^ = 1 then
           Token.Cache.Integrity.Level := TTokenIntegrityLevel(
-            GetSidSubAuthority(pIntegrity.Sid, 0)^);
+            GetSidSubAuthority(pIntegrity.Sid, 0)^)
+        else
+          Token.Cache.Integrity.Level := ilUntrusted;
 
         if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
           InvokeStringEvent(tsIntegrity);

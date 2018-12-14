@@ -67,7 +67,7 @@ type
     procedure SetSession(const Value: Cardinal);
   public
     destructor Destroy; override;
-    constructor Create(OwnedComboBox: TComboBox);
+    constructor Create(OwnedComboBox: TComboBox; SelectCurrent: Boolean);
     procedure RefreshSessionList(SelectCurrent: Boolean);
     property SelectedSession: Cardinal read GetSession write SetSession;
   end;
@@ -495,10 +495,11 @@ end;
 
 { TSessionSource }
 
-constructor TSessionSource.Create(OwnedComboBox: TComboBox);
+constructor TSessionSource.Create(OwnedComboBox: TComboBox;
+  SelectCurrent: Boolean);
 begin
   ComboBox := OwnedComboBox;
-  SessionList := TSessionList.CreateCurrentServer;
+  RefreshSessionList(SelectCurrent);
 end;
 
 destructor TSessionSource.Destroy;
@@ -522,6 +523,12 @@ var
   i: Integer;
 begin
   Assert(Assigned(ComboBox));
+
+  // THINK: Should we preserve the selection? Note that Info window re-assigns
+  // the value on Refresh action because it re-queries it.
+
+  SessionList.Free;
+  SessionList := TSessionList.CreateCurrentServer;
 
   ComboBox.Items.BeginUpdate;
   ComboBox.Items.Clear;

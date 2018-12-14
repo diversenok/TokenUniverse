@@ -105,7 +105,7 @@ implementation
 uses
   Winapi.ShellApi, System.UITypes,
   TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
-  UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.Session,
+  UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings;
 
@@ -201,7 +201,7 @@ end;
 
 procedure TFormMain.ActionWTSQuery(Sender: TObject);
 begin
-  Frame.AddToken(TToken.CreateQueryWts(TSessionDialog.Execute(Self)));
+  Frame.AddToken(TToken.CreateQueryWts(TComboDialog.PickSession(Self)));
 end;
 
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);

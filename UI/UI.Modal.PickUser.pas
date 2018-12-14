@@ -32,10 +32,13 @@ type
     CheckBoxIntegrity: TCheckBox;
     CheckBoxResource: TCheckBox;
     CheckBoxLogon: TCheckBox;
+    ButtonIntegrity: TButton;
+    ButtonLogonID: TButton;
     procedure ButtonPickClick(Sender: TObject);
     procedure ComboBoxSIDChange(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ButtonIntegrityClick(Sender: TObject);
   private
     SelectedGroup: TSecurityIdentifier;
     IsValidGroup: Boolean;
@@ -57,7 +60,7 @@ type
 implementation
 
 uses
-  TU.ObjPicker;
+  TU.ObjPicker, UI.Modal.ComboDlg;
 
 {$R *.dfm}
 
@@ -71,6 +74,15 @@ begin
 end;
 
 { TDialogPickUser }
+
+procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
+begin
+  SetSelectedGroup(TSecurityIdentifier.CreateFromString(Format('S-1-16-%d',
+    [Cardinal(TComboDialog.PickIntegrity(Self))])));
+
+  SetAttributes(TGroupAttributes(Cardinal(GroupIntegrity) or
+    Cardinal(GroupIntegrityEnabled)));
+end;
 
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
 begin
@@ -140,6 +152,7 @@ begin
     ComboBoxSID.Enabled := False;
     ButtonFilter.Enabled := False;
     ButtonPick.Enabled := False;
+    ButtonIntegrity.Enabled := False;
     ComboBoxSID.Text := '< Multiple values >';
 
     BitwiseOr := 0;
