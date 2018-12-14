@@ -27,8 +27,6 @@ type
     ComboSession: TComboBox;
     ComboIntegrity: TComboBox;
     ImageList: TImageList;
-    BtnSetIntegrity: TSpeedButton;
-    BtnSetSession: TSpeedButton;
     PrivilegePopup: TPopupMenu;
     MenuPrivEnable: TMenuItem;
     MenuPrivDisable: TMenuItem;
@@ -41,18 +39,20 @@ type
     ListViewAdvanced: TListViewEx;
     StaticOwner: TStaticText;
     ComboOwner: TComboBox;
-    BtnSetOwner: TSpeedButton;
-    BtnSetPrimary: TSpeedButton;
     ComboPrimary: TComboBox;
     StaticPrimary: TStaticText;
     StaticUIAccess: TStaticText;
     ComboUIAccess: TComboBox;
-    BtnSetUIAccess: TSpeedButton;
     StaticText1: TStaticText;
-    SpeedButton1: TSpeedButton;
     ListViewGeneral: TListViewEx;
     CheckBoxNoWriteUp: TCheckBox;
     CheckBoxNewProcessMin: TCheckBox;
+    BtnSetSession: TButton;
+    BtnSetIntegrity: TButton;
+    BtnSetUIAccess: TButton;
+    BtnSetPolicy: TButton;
+    BtnSetOwner: TButton;
+    BtnSetPrimary: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -69,7 +69,7 @@ type
     procedure ListViewGroupsContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
     procedure BtnSetUIAccessClick(Sender: TObject);
-    procedure BtnSetMandatoryPolicy(Sender: TObject);
+    procedure BtnSetPolicyClick(Sender: TObject);
     procedure ListViewAdvancedResize(Sender: TObject);
     procedure BtnSetPrimaryClick(Sender: TObject);
     procedure BtnSetOwnerClick(Sender: TObject);
@@ -151,7 +151,20 @@ begin
   end;
 end;
 
-procedure TInfoDialog.BtnSetMandatoryPolicy(Sender: TObject);
+procedure TInfoDialog.BtnSetOwnerClick(Sender: TObject);
+begin
+  try
+    Token.InfoClass.Owner := TSecurityIdentifier.CreateFromString(
+      ComboOwner.Text);
+    ComboOwner.Color := clWindow;
+  except
+    if Token.InfoClass.Query(tdTokenOwner) then
+      ChangedOwner(Token.InfoClass.Owner);
+    raise;
+  end;
+end;
+
+procedure TInfoDialog.BtnSetPolicyClick(Sender: TObject);
 var
   Policy: TMandatoryPolicy;
 begin
@@ -169,19 +182,6 @@ begin
   except
     if Token.InfoClass.Query(tdTokenMandatoryPolicy) then
       ChangedPolicy(Token.InfoClass.MandatoryPolicy);
-    raise;
-  end;
-end;
-
-procedure TInfoDialog.BtnSetOwnerClick(Sender: TObject);
-begin
-  try
-    Token.InfoClass.Owner := TSecurityIdentifier.CreateFromString(
-      ComboOwner.Text);
-    ComboOwner.Color := clWindow;
-  except
-    if Token.InfoClass.Query(tdTokenOwner) then
-      ChangedOwner(Token.InfoClass.Owner);
     raise;
   end;
 end;
@@ -221,7 +221,7 @@ begin
     ComboUIAccess.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenUIAccess) then
-        ChangedUIAccess(Token.InfoClass.UIAccess);
+      ChangedUIAccess(Token.InfoClass.UIAccess);
     raise;
   end;
 end;
