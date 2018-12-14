@@ -130,6 +130,7 @@ type
   private
     FColoringItems: Boolean;
     FPopupOnItemsOnly: Boolean;
+    FClipboardColumn: Integer;
     function GetItems: TListItemsEx;
     procedure SetItems(const Value: TListItemsEx);
     procedure SetItemsColoring(const Value: Boolean);
@@ -139,6 +140,7 @@ type
     procedure CMHintShow(var Message: TCMHintShow); message CM_HINTSHOW;
     procedure SetSelectedCheckboxesState(State: Boolean);
     procedure ShowItemsHint(Sender: TObject; Item: TListItem; var InfoTip: string);
+    function ItemToStringEx(Item: TListItemEx; AllColumns: Boolean): String;
   protected
     procedure DoContextPopup(MousePos: TPoint; var Handled: Boolean); override;
     function CreateListItem: TListItem; override;
@@ -147,13 +149,15 @@ type
       Stage: TCustomDrawStage): Boolean; override;
     function IsCustomDrawn(Target: TCustomDrawTarget; Stage: TCustomDrawStage):
       Boolean; override;
-    procedure CopySelectedToClipboard(AllColumns: Boolean);
   public
+    constructor Create(AOwner: TComponent); override;
     property Items: TListItemsEx read GetItems write SetItems;
     procedure Clear; override;
     procedure Filter(SearchPattern: String; Column: Integer = -1);
     property Selected: TListItemEx read GetSelected write SetSelected;
+    procedure CopySelectedToClipboard(AllColumns: Boolean); virtual;
   published
+    property ClipboardSourceColumn: Integer read FClipboardColumn write FClipboardColumn default -1;
     property ColoringItems: Boolean read FColoringItems write SetItemsColoring default False;
     property PopupOnItemsOnly: Boolean read FPopupOnItemsOnly write FPopupOnItemsOnly default False;
   end;
@@ -205,24 +209,24 @@ begin
     for i := 0 to Items.Count - 1 do
     if Items[i].Selected then
       begin
-        if AllColumns then
-          Texts[j] := Items[i].ToString
-        else
-          Texts[j] := Items[i].Caption;
+        Texts[j] := ItemToStringEx(Items[i], AllColumns);
         Inc(j);
       end;
     Text := String.Join(#$D#$A, Texts);
   end
   else if Assigned(Selected) then
   begin
-    if AllColumns then
-      Text := Selected.ToString
-    else
-      Text := Selected.Caption;
+    Text := ItemToStringEx(Selected, AllColumns);
     UniqueString(Text);
   end;
 
   Clipboard.SetTextBuf(PWideChar(Text));
+end;
+
+constructor TListViewEx.Create(AOwner: TComponent);
+begin
+  inherited;
+  FClipboardColumn := -1;
 end;
 
 function TListViewEx.CreateListItem: TListItem;
@@ -303,6 +307,19 @@ begin
     Result := FColoringItems or inherited
   else
     Result := inherited;
+end;
+
+function TListViewEx.ItemToStringEx(Item: TListItemEx; AllColumns: Boolean):
+  String;
+begin
+  if AllColumns or (FClipboardColumn < 0) then
+    Result := Item.ToString
+  else if FClipboardColumn = 0 then
+    Result := Item.Caption
+  else if Item.SubItems.Count >= FClipboardColumn then
+    Result := Item.SubItems[FClipboardColumn - 1]
+  else
+    Result := '';
 end;
 
 procedure TListViewEx.SetItems(const Value: TListItemsEx);
@@ -579,7 +596,10 @@ end;
 
 function TListItemEx.ToString: String;
 begin
-  Result := AnsiQuotedStr(Caption, '"') + ',' + SubItems.CommaText;
+  if SubItems.Count = 0 then
+    Result := Caption
+  else
+    Result := AnsiQuotedStr(Caption, '"') + ',' + SubItems.CommaText;
 end;
 
 { TListItemHolder }
@@ -833,7 +853,9 @@ begin
   FVisible := Value;
   if FVisible then
   begin
+    // TODO: Fix compiler warning here. The following line is actually necessary
     g := FOwner.FAllItems.Count;
+
     for g := FOwner.FAllItems.IndexOf(Self) + 1 to FOwner.FAllItems.Count - 1 do
       if FOwner.FAllItems[g].FVisible then
         Break;

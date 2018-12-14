@@ -82,6 +82,7 @@ object DialogRestrictToken: TDialogRestrictToken
         RowSelect = True
         TabOrder = 0
         ViewStyle = vsReport
+        ClipboardSourceColumn = 0
         ColoringItems = True
       end
     end
@@ -147,6 +148,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ViewStyle = vsReport
         OnContextPopup = ListViewRestrictSIDContextPopup
         OnDblClick = MenuEditClick
+        ClipboardSourceColumn = 0
         ColoringItems = True
         PopupOnItemsOnly = True
       end
@@ -242,6 +244,7 @@ object DialogRestrictToken: TDialogRestrictToken
         RowSelect = True
         TabOrder = 1
         ViewStyle = vsReport
+        ClipboardSourceColumn = 0
         ColoringItems = True
       end
     end

@@ -207,6 +207,7 @@ object DialogCreateToken: TDialogCreateToken
         TabOrder = 0
         ViewStyle = vsReport
         OnDblClick = MenuEditClick
+        ClipboardSourceColumn = 0
         ColoringItems = True
         PopupOnItemsOnly = True
       end
@@ -261,6 +262,7 @@ object DialogCreateToken: TDialogCreateToken
         RowSelect = True
         TabOrder = 0
         ViewStyle = vsReport
+        ClipboardSourceColumn = 0
         ColoringItems = True
       end
     end

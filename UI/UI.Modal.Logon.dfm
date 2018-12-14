@@ -135,6 +135,7 @@ object LogonDialog: TLogonDialog
     TabOrder = 4
     ViewStyle = vsReport
     OnDblClick = MenuEditClick
+    ClipboardSourceColumn = 0
     ColoringItems = True
     PopupOnItemsOnly = True
   end

@@ -521,6 +521,7 @@ object InfoDialog: TInfoDialog
         ShowColumnHeaders = False
         TabOrder = 0
         ViewStyle = vsReport
+        ClipboardSourceColumn = 1
       end
       object CheckBoxNoWriteUp: TCheckBox
         Left = 112
@@ -655,6 +656,7 @@ object InfoDialog: TInfoDialog
         TabOrder = 0
         ViewStyle = vsReport
         OnResize = ListViewAdvancedResize
+        ClipboardSourceColumn = 1
       end
     end
     object TabGroups: TTabSheet
@@ -689,6 +691,7 @@ object InfoDialog: TInfoDialog
         TabOrder = 0
         ViewStyle = vsReport
         OnContextPopup = ListViewGroupsContextPopup
+        ClipboardSourceColumn = 0
         ColoringItems = True
       end
     end
@@ -728,6 +731,7 @@ object InfoDialog: TInfoDialog
         PopupMenu = PrivilegePopup
         TabOrder = 0
         ViewStyle = vsReport
+        ClipboardSourceColumn = 0
         ColoringItems = True
         PopupOnItemsOnly = True
       end
@@ -762,6 +766,7 @@ object InfoDialog: TInfoDialog
         RowSelect = True
         TabOrder = 0
         ViewStyle = vsReport
+        ClipboardSourceColumn = 0
         ColoringItems = True
       end
     end
