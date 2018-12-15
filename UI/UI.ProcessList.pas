@@ -198,7 +198,7 @@ end;
 
 procedure TProcessListDialog.ReloadProcessList(Sender: TObject);
 var
-  i, j: integer;
+  i, ChildInd, ParentInd: integer;
 begin
   for i := 0 to High(ProcessListEx) do
     ProcessListEx[i].Free;
@@ -217,12 +217,18 @@ begin
     Free;
   end;
 
-  // Check if parent still exists for each process
-  for i := 0 to High(ProcessListEx) do
-    for j := 0 to High(ProcessListEx) do
-      if (i <> j) and (ProcessListEx[i].Process.ParentPID = ProcessListEx[j].Process.PID) then
+  // Check if parent still exists for each process.
+  // NOTE: since PIDs can be reused we also need to
+  // check that the parent was created before the child.
+  for ChildInd := 0 to High(ProcessListEx) do
+    for ParentInd := 0 to High(ProcessListEx) do
+      if (ChildInd <> ParentInd) and
+        (ProcessListEx[ChildInd].Process.ParentPID =
+        ProcessListEx[ParentInd].Process.PID) and
+        (ProcessListEx[ChildInd].Process.CreateTime >=
+        ProcessListEx[ParentInd].Process.CreateTime) then
       begin
-        ProcessListEx[i].Parent := ProcessListEx[j];
+        ProcessListEx[ChildInd].Parent := ProcessListEx[ParentInd];
         Break;
       end;
 

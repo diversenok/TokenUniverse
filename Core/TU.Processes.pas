@@ -19,6 +19,7 @@ type
     ImageName: String;
     PID: Cardinal;
     ParentPID: Cardinal;
+    CreateTime: Int64;
     HandleCount: Cardinal;
     SessionId: Cardinal;
   end;
@@ -136,6 +137,7 @@ begin
 
       PID := SysInfo.ProcessId;
       ParentPID := SysInfo.InheritedFromProcessId;
+      CreateTime := SysInfo.CreateTime;
       HandleCount := SysInfo.HandleCount;
       SessionId := SysInfo.SessionId;
 

@@ -53,7 +53,10 @@ type
   TSystemProcessInformation = record
     NextEntryOffset: Cardinal;
     NumberOfThreads: Cardinal;
-    Reserved: array [0 .. 5] of Int64;
+    Reserved: array [0 .. 2] of Int64;
+    CreateTime: Int64;
+    UserTime: Int64;
+    KernelTime: Int64;
     ImageName: UNICODE_STRING;
     BasePriority: Cardinal;
     ProcessId: NativeUInt;
