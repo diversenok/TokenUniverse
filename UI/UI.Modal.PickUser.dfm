@@ -98,10 +98,11 @@ object DialogPickUser: TDialogPickUser
       Width = 130
       Height = 17
       Anchors = [akTop]
-      Caption = 'Enabled'
+      Caption = '&Enabled'
       Checked = True
       State = cbChecked
       TabOrder = 0
+      OnClick = CheckBoxEnabledClick
     end
     object CheckBoxEnabledByDafault: TCheckBox
       Left = 14
@@ -109,10 +110,11 @@ object DialogPickUser: TDialogPickUser
       Width = 130
       Height = 17
       Anchors = [akTop]
-      Caption = 'Enabled by default'
+      Caption = 'Enabled by &default'
       Checked = True
       State = cbChecked
       TabOrder = 1
+      OnClick = CheckBoxEnabledByDafaultClick
     end
     object CheckBoxMandatory: TCheckBox
       Left = 150
@@ -120,8 +122,9 @@ object DialogPickUser: TDialogPickUser
       Width = 120
       Height = 17
       Anchors = [akTop]
-      Caption = 'Mandatory'
+      Caption = '&Mandatory'
       TabOrder = 3
+      OnClick = CheckBoxMandatoryClick
     end
     object CheckBoxDenyOnly: TCheckBox
       Left = 150
@@ -129,8 +132,9 @@ object DialogPickUser: TDialogPickUser
       Width = 120
       Height = 17
       Anchors = [akTop]
-      Caption = 'Use for deny only'
+      Caption = '&Use for deny only'
       TabOrder = 4
+      OnClick = CheckBoxDenyOnlyClick
     end
     object CheckBoxOwner: TCheckBox
       Left = 14
@@ -138,7 +142,7 @@ object DialogPickUser: TDialogPickUser
       Width = 130
       Height = 17
       Anchors = [akTop]
-      Caption = 'Owner'
+      Caption = '&Owner'
       TabOrder = 2
     end
   end
@@ -193,7 +197,7 @@ object DialogPickUser: TDialogPickUser
       Top = 71
       Width = 105
       Height = 25
-      Caption = 'Choose Intrgirty'
+      Caption = 'Choose &Intrgirty'
       TabOrder = 2
       OnClick = ButtonIntegrityClick
     end
@@ -202,7 +206,7 @@ object DialogPickUser: TDialogPickUser
       Top = 71
       Width = 105
       Height = 25
-      Caption = 'Choose Logon ID'
+      Caption = 'Choose &Logon ID'
       Enabled = False
       TabOrder = 5
     end

@@ -15,6 +15,12 @@ type
     procedure Create(CheckBox: TCheckBox; Attribute: TGroupAttributes);
   end;
 
+  // HACK: Change of state should not issue OnClick event
+  TCheckBoxHack = class helper for TCheckBox
+    procedure SetStateEx(Value: TCheckBoxState);
+    procedure SetCheckedEx(Value: Boolean);
+  end;
+
   TDialogPickUser = class(TChildForm)
     ComboBoxSID: TComboBox;
     ButtonFilter: TButton;
@@ -39,6 +45,10 @@ type
     procedure ButtonOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonIntegrityClick(Sender: TObject);
+    procedure CheckBoxDenyOnlyClick(Sender: TObject);
+    procedure CheckBoxMandatoryClick(Sender: TObject);
+    procedure CheckBoxEnabledClick(Sender: TObject);
+    procedure CheckBoxEnabledByDafaultClick(Sender: TObject);
   private
     SelectedGroup: TSecurityIdentifier;
     IsValidGroup: Boolean;
@@ -73,6 +83,22 @@ begin
   Self.Attribute := Attribute;
 end;
 
+{ TCheckBoxHack }
+
+procedure TCheckBoxHack.SetCheckedEx(Value: Boolean);
+begin
+  ClicksDisabled := True;
+  Checked := Value;
+  ClicksDisabled := False;
+end;
+
+procedure TCheckBoxHack.SetStateEx(Value: TCheckBoxState);
+begin
+  ClicksDisabled := True;
+  State := Value;
+  ClicksDisabled := False;
+end;
+
 { TDialogPickUser }
 
 procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
@@ -96,6 +122,42 @@ begin
   CallObjectPicker(Handle, ObjPickerCallback);
 end;
 
+procedure TDialogPickUser.CheckBoxDenyOnlyClick(Sender: TObject);
+begin
+  if CheckBoxDenyOnly.Checked then
+  begin
+    CheckBoxMandatory.SetCheckedEx(False);
+    CheckBoxEnabled.SetCheckedEx(False);
+    CheckBoxEnabledByDafault.SetCheckedEx(False);
+  end;
+end;
+
+procedure TDialogPickUser.CheckBoxEnabledByDafaultClick(Sender: TObject);
+begin
+  if CheckBoxEnabledByDafault.Checked then
+    CheckBoxDenyOnly.SetCheckedEx(False)
+  else
+    CheckBoxMandatory.SetCheckedEx(False);
+end;
+
+procedure TDialogPickUser.CheckBoxEnabledClick(Sender: TObject);
+begin
+  if CheckBoxEnabled.Checked then
+    CheckBoxDenyOnly.SetCheckedEx(False)
+  else
+    CheckBoxMandatory.SetCheckedEx(False);
+end;
+
+procedure TDialogPickUser.CheckBoxMandatoryClick(Sender: TObject);
+begin
+  if CheckBoxMandatory.Checked then
+  begin
+    CheckBoxEnabled.SetCheckedEx(True);
+    CheckBoxEnabledByDafault.SetCheckedEx(True);
+    CheckBoxDenyOnly.SetCheckedEx(False);
+  end;
+end;
+
 procedure TDialogPickUser.ComboBoxSIDChange(Sender: TObject);
 begin
   IsValidGroup := False;
@@ -106,7 +168,7 @@ var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
-    Mapping[i].CheckBox.Enabled := False;
+    Mapping[i].CheckBox.SetCheckedEx(False);
 end;
 
 procedure TDialogPickUser.FormCreate(Sender: TObject);
@@ -169,14 +231,14 @@ begin
     // Set appropriate checkbox states
     for i := 0 to High(Mapping) do
       if TGroupAttributes(BitwiseAnd).Contain(Mapping[i].Attribute) then
-        Mapping[i].CheckBox.State := cbChecked // All groups contain it
+        Mapping[i].CheckBox.SetStateEx(cbChecked) // All groups contain it
       else if TGroupAttributes(BitwiseOr).Contain(Mapping[i].Attribute) then
       begin
         Mapping[i].CheckBox.AllowGrayed := True;
-        Mapping[i].CheckBox.State :=  cbGrayed; // Only some of then
+        Mapping[i].CheckBox.SetStateEx(cbGrayed); // Only some of them
       end
       else
-        Mapping[i].CheckBox.State := cbUnchecked; // None of them
+        Mapping[i].CheckBox.SetStateEx(cbUnchecked); // None of them
 
     // Show the dialog and wait
     ShowModal;
@@ -236,7 +298,7 @@ var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
-    Mapping[i].CheckBox.Checked := Value.Contain(Mapping[i].Attribute);
+    Mapping[i].CheckBox.SetCheckedEx(Value.Contain(Mapping[i].Attribute));
 end;
 
 procedure TDialogPickUser.SetSelectedGroup(const Value: TSecurityIdentifier);
@@ -245,7 +307,5 @@ begin
   SelectedGroup := Value;
   ComboBoxSID.Text := SelectedGroup.ToString;
 end;
-
-// TODO: Checkbox OnClick events to enable dependent attributes
 
 end.
