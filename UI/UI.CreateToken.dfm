@@ -117,7 +117,11 @@ object DialogCreateToken: TDialogCreateToken
         Width = 195
         Height = 21
         Anchors = [akLeft, akTop, akRight]
+        ItemIndex = 0
         TabOrder = 6
+        Text = '< Same as user >'
+        Items.Strings = (
+          '< Same as user >')
       end
       object ComboPrimary: TComboBox
         Left = 114
@@ -125,7 +129,11 @@ object DialogCreateToken: TDialogCreateToken
         Width = 195
         Height = 21
         Anchors = [akLeft, akTop, akRight]
+        ItemIndex = 0
         TabOrder = 7
+        Text = '< Same as user >'
+        Items.Strings = (
+          '< Same as user >')
       end
       object GroupBoxUser: TGroupBox
         Left = 3
@@ -159,6 +167,7 @@ object DialogCreateToken: TDialogCreateToken
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 1
+          OnChange = ComboUserChange
         end
         object CheckBoxUserState: TCheckBox
           Left = 9

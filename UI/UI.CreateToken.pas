@@ -54,11 +54,13 @@ type
     procedure MenuRemoveClick(Sender: TObject);
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
+    procedure ComboUserChange(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
     GroupsSource: TGroupsSource;
     PrivilegesSource: TPrivilegesSource;
     procedure ObjPickerUserCallback(UserName: String);
+    procedure UpdatePrimaryAndOwner;
   end;
 
 var
@@ -73,8 +75,17 @@ uses
 {$R *.dfm}
 
 procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
+var
+  NewGroup: TGroup;
 begin
-  GroupsSource.AddGroup(TDialogPickUser.PickNew(Self));
+  NewGroup := TDialogPickUser.PickNew(Self);
+
+  GroupsSource.AddGroup(NewGroup);
+
+  if NewGroup.Attributes.Contain(GroupOwner) then
+    ComboOwner.Items.Add(NewGroup.SecurityIdentifier.ToString);
+
+  ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.ToString);
 end;
 
 procedure TDialogCreateToken.ButtonAllocLuidClick(Sender: TObject);
@@ -94,6 +105,7 @@ procedure TDialogCreateToken.ButtonOKClick(Sender: TObject);
 var
   Token: TToken;
   Expires: Int64;
+  OwnerGroupName, PrimaryGroupName: String;
 begin
   if CheckBoxInfinite.Checked then
     Expires := Int64.MaxValue
@@ -102,14 +114,26 @@ begin
   else
     Expires := DateTimeToNative(DateExpires.Date);
 
+  // ComboOwner may contain '< Same as user >' value
+  if ComboOwner.ItemIndex = 0 then
+    OwnerGroupName := ComboUser.Text
+  else
+    OwnerGroupName := ComboOwner.Text;
+
+  // ComboPrimary may contain '< Same as user >' value
+  if ComboPrimary.ItemIndex = 0 then
+    PrimaryGroupName := ComboUser.Text
+  else
+    PrimaryGroupName := ComboPrimary.Text;
+
   Token := TToken.CreateNtCreateToken(
     TSecurityIdentifier.CreateFromString(ComboUser.Text),
     CheckBoxUserState.Checked,
     GroupsSource.Groups,
     PrivilegesSource.Privileges,
     LogonIDSource.SelectedLogonSession,
-    TSecurityIdentifier.CreateFromString(ComboOwner.Text),
-    TSecurityIdentifier.CreateFromString(ComboPrimary.Text),
+    TSecurityIdentifier.CreateFromString(OwnerGroupName),
+    TSecurityIdentifier.CreateFromString(PrimaryGroupName),
     CreateTokenSource(EditSourceName.Text,
       StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID')),
     Expires
@@ -132,6 +156,30 @@ begin
   TimeExpires.Enabled := not CheckBoxInfinite.Checked;
 end;
 
+procedure TDialogCreateToken.ComboUserChange(Sender: TObject);
+var
+  NewUser: String;
+  SavedOwnerIndex, SavedPrimaryIndex: Integer;
+begin
+  NewUser := ComboUser.Text;
+  if NewUser = '' then
+    NewUser := '< Same as user >';
+
+  // Save selected indexes since changes will reset it
+  SavedOwnerIndex := ComboOwner.ItemIndex;
+  SavedPrimaryIndex := ComboPrimary.ItemIndex;
+
+  if ComboOwner.Items.Count > 0 then
+    ComboOwner.Items[0] := NewUser;
+
+  if ComboPrimary.Items.Count > 0 then
+    ComboPrimary.Items[0] := NewUser;
+
+  // Forcibly update the Text field
+  ComboOwner.ItemIndex := SavedOwnerIndex;
+  ComboPrimary.ItemIndex := SavedPrimaryIndex;
+end;
+
 procedure TDialogCreateToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -151,17 +199,67 @@ end;
 procedure TDialogCreateToken.MenuEditClick(Sender: TObject);
 begin
   GroupsSource.UiEditSelected(Self);
+  UpdatePrimaryAndOwner;
 end;
 
 procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
 begin
   if Assigned(ListViewGroups.Selected) then
+  begin
+    ComboPrimary.Items.Delete(ListViewGroups.Selected.Index + 1);
     GroupsSource.RemoveGroup(ListViewGroups.Selected.Index);
+  end;
 end;
 
 procedure TDialogCreateToken.ObjPickerUserCallback(UserName: String);
 begin
   ComboUser.Text := TSecurityIdentifier.CreateFromString(UserName).ToString;
+  ComboUserChange(ButtonPickUser);
+end;
+
+procedure TDialogCreateToken.UpdatePrimaryAndOwner;
+var
+  i: Integer;
+  SavedPrimaryIndex: Integer;
+  SavedOwner: String;
+begin
+  SavedOwner := ComboOwner.Text;
+  SavedPrimaryIndex := ComboPrimary.ItemIndex;
+
+  // Refresh potential owners list
+  begin
+    ComboOwner.Items.BeginUpdate;
+
+    for i := ComboOwner.Items.Count - 1 downto 1 do
+      ComboOwner.Items.Delete(i);
+
+    // Only groups with Owner flag can be assigned as owners
+    for i := 0 to ListViewGroups.Items.Count - 1 do
+      if GroupsSource.Group[i].Attributes.Contain(GroupOwner) then
+        ComboOwner.Items.Add(ListViewGroups.Items[i].Caption);
+
+    // Restore selection
+    for i := 1 to ComboOwner.Items.Count - 1 do
+      if ComboOwner.Items[i] = SavedOwner then
+        ComboOwner.ItemIndex := i;
+
+    ComboOwner.Items.EndUpdate;
+  end;
+
+  // Refresh potential primary group list
+  begin
+    ComboPrimary.Items.BeginUpdate;
+    for i := ComboPrimary.Items.Count - 1 downto 1 do
+      ComboPrimary.Items.Delete(i);
+
+    // Any group present in the token can be assigned as a primary
+    for i := 0 to ListViewGroups.Items.Count - 1 do
+      ComboPrimary.Items.Add(ListViewGroups.Items[i].Caption);
+
+    // Restore selection using the fact that editing does not change their count
+    ComboPrimary.ItemIndex := SavedPrimaryIndex;
+    ComboPrimary.Items.EndUpdate;
+  end;
 end;
 
 end.

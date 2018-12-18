@@ -747,8 +747,8 @@ begin
   begin
     S := FLogonSessions[i].ToString;
       with QueryLogonSession(FLogonSessions[i]) do
-        if IsValid and Value.UserPresent then
-          S := S + ' (' + Value.User.ToString + ')';
+        if IsValid and Value.UserPresent and (Value.User.User <> '') then
+          S := Format('%s (%s #%d)', [S, Value.User.User, Value.Session]);
     ComboBox.Items.Add(S);
   end;
 end;
