@@ -218,8 +218,10 @@ end;
 
 constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
 begin
-  if UserOrSID.StartsWith('S-1-') or UserOrSID.StartsWith('s-1-') then
+  if UserOrSID.StartsWith('S-1-') then
     CreateFromStringSid(UserOrSID)
+  else if UserOrSID.StartsWith('s-1-') then
+    CreateFromStringSid(UpperCase(UserOrSID))
   else
     CreateFromUserName(UserOrSID);
 end;
@@ -228,7 +230,7 @@ procedure TSecurityIdentifier.CreateFromStringSid(StringSID: string);
 var
   Buffer: PSID;
 begin
-  SID := UpperCase(StringSID);
+  SID := StringSID;
   if WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
     'ConvertStringSidToSid') then
   try

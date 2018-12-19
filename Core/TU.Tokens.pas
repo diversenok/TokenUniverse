@@ -18,7 +18,7 @@ type
     tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
     tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
     tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
-    tdTokenMandatoryPolicy, tdLogonInfo);
+    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo);
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
@@ -58,6 +58,7 @@ type
     Integrity: TTokenIntegrity;
     UIAccess: LongBool;
     MandatoryPolicy: TMandatoryPolicy;
+    IsRestricted: LongBool;
     LogonSessionInfo: TLogonSessionInfo;
 
     FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
@@ -133,6 +134,7 @@ type
     function GetUIAccess: LongBool;
     function GetUser: TGroup;
     function GetLogonSessionInfo: TLogonSessionInfo;
+    function GetIsRestricted: LongBool;
     procedure InvokeStringEvent(StringClass: TTokenStringClass);
     procedure SetVirtualizationAllowed(const Value: LongBool);
     procedure SetVirtualizationEnabled(const Value: LongBool);
@@ -163,6 +165,8 @@ type
     property IntegrityLevel: TTokenIntegrityLevel write SetIntegrityLevel;
     property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
     property MandatoryPolicy: TMandatoryPolicy read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
+    // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
+    property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: TLogonSessionInfo read GetLogonSessionInfo;
 
     /// <summary>
@@ -420,7 +424,7 @@ const
     (tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
     tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
     tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
-    tdTokenSandBoxInert,tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
+    tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
     tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo,
@@ -1219,6 +1223,12 @@ begin
   Result := Token.Cache.Integrity;
 end;
 
+function TTokenData.GetIsRestricted: LongBool;
+begin
+  Assert(Token.Cache.IsCached[tdTokenIsRestricted]);
+  Result := Token.Cache.IsRestricted;
+end;
+
 function TTokenData.GetLogonSessionInfo: TLogonSessionInfo;
 begin
   Assert(Token.Cache.IsCached[tdLogonInfo]);
@@ -1679,6 +1689,10 @@ begin
           InvokeStringEvent(tsNewProcessMinPolicy);
         end;
     end;
+
+    tdTokenIsRestricted:
+      Result := Token.QueryFixedSize<LongBool>(TokenIsRestricted,
+        Token.Cache.IsRestricted);
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then

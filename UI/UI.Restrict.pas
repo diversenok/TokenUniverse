@@ -169,6 +169,9 @@ begin
       if not Found then
         RestrictGroupsSource.AddGroup(RestrictedSids[RestrInd]).Checked := True;
     end;
+
+  if Token.InfoClass.Query(tdTokenSandBoxInert) then
+    CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert
 end;
 
 function TDialogRestrictToken.GetFlags: Cardinal;
