@@ -3,9 +3,8 @@ unit UI.ListViewEx;
 interface
 
 uses
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.Graphics,
-  System.UITypes, System.Generics.Collections, Vcl.Clipbrd, Winapi.Messages,
-  Vcl.Forms, Winapi.Windows, System.Types, Winapi.CommCtrl;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls,
+  System.UITypes, Winapi.Messages, Winapi.Windows, Winapi.CommCtrl;
 
 type
   TListItemsEx = class;
@@ -18,7 +17,6 @@ type
     procedure SetColor(const Value: TColor);
     procedure SetColorEnabled(const Value: Boolean);
     function GetOwnerItems: TListItemsEx;
-    procedure InheritedDelete;
   public
     constructor Create(AOwner: TListItems); override;
     destructor Destroy; override;
@@ -102,6 +100,9 @@ type
 procedure Register;
 
 implementation
+
+uses
+  Vcl.Graphics, Vcl.Clipbrd, Vcl.Forms;
 
 procedure Register;
 begin
@@ -413,11 +414,6 @@ end;
 function TListItemEx.GetOwnerItems: TListItemsEx;
 begin
   Result := inherited Owner as TListItemsEx;
-end;
-
-procedure TListItemEx.InheritedDelete;
-begin
-  (Self as TListItem).Delete;
 end;
 
 function TListItemEx.Matches(SearchPattern: String;

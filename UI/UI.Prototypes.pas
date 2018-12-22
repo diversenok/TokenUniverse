@@ -103,10 +103,50 @@ type
     property SelectedLogonSession: LUID read GetSelected write SetSelected;
   end;
 
+  TTokenViewSource = class;
+  TRowSource = class;
+
+  TCellSource = class
+  private
+    Row: TRowSource;
+    ColumnIndex: Integer;
+    procedure SetTextCallback(Value: String);
+  public
+    constructor Create(Row: TRowSource; ColumnIndex: Integer);
+    destructor Destroy; override;
+  end;
+
+  TRowSource = class
+  private
+    Cells: array of TCellSource;
+    procedure TokenCaptionCallback(Value: String);
+  public
+    Token: TToken;
+    Item: TListItemEx;
+    Owner: TTokenViewSource;
+    constructor Create(Token: TToken; Owner: TTokenViewSource);
+    destructor Destroy; override;
+  end;
+
+  TTokenViewSource = class
+  private
+    ListView: TListViewEx;
+    DataClasses: array of TTokenStringClass;
+    function GetToken(Ind: Integer): TToken;
+  public
+    constructor Create(OwnedListView: TListViewEx);
+    function Add(Token: TToken): TToken;
+    procedure Delete(Index: Integer);
+    function Selected: TToken;
+    property Tokens[Ind: Integer]: TToken read GetToken;
+    destructor Destroy; override;
+  end;
+
 implementation
 
 uses
-  System.Generics.Collections, UI.Colors, UI.Modal.PickUser,
+  System.Generics.Collections,
+  UI.Colors, UI.Modal.PickUser, UI.Settings,
   TU.Winapi, TU.NativeApi, TU.Common;
 
 { TPrivilegesSource }
@@ -753,4 +793,160 @@ begin
   end;
 end;
 
+{ TCellSource }
+
+constructor TCellSource.Create(Row: TRowSource; ColumnIndex: Integer);
+begin
+  Self.Row := Row;
+  Self.ColumnIndex := ColumnIndex;
+
+  // Each cell subscribes corresponding string querying event
+  Row.Token.Events.SubscribeString(
+    Row.Owner.DataClasses[ColumnIndex], SetTextCallback, Row.Token);
+end;
+
+destructor TCellSource.Destroy;
+begin
+  Row.Token.Events.UnSubscribeString(
+    Row.Owner.DataClasses[ColumnIndex], SetTextCallback);
+  inherited;
+end;
+
+procedure TCellSource.SetTextCallback(Value: String);
+begin
+  Assert(Row.Item.SubItems.Count > ColumnIndex);
+  Row.Item.SubItems[ColumnIndex] := Value;
+end;
+
+{ TRowSource }
+
+constructor TRowSource.Create(Token: TToken; Owner: TTokenViewSource);
+var
+  i: integer;
+begin
+  Self.Token := Token; // TODO: Subscribe Token.OnClose
+  Self.Owner := Owner;
+
+  // Add ListView Item and store it
+  Item := Owner.ListView.Items.Add;
+  Item.OwnedData := Self;
+
+  // Subscribe main column updates
+  Token.OnCaptionChange.Add(TokenCaptionCallback, False);
+  TokenCaptionCallback(Token.Caption);
+
+  // Initialize sources for all other columns
+  SetLength(Cells, Length(Owner.DataClasses));
+  for i := 0 to High(Cells) do
+  begin
+    Item.SubItems.Add('Unknown');
+    Cells[i] := TCellSource.Create(Self, i);
+  end;
+end;
+
+destructor TRowSource.Destroy;
+var
+  i: Integer;
+begin
+  // Unsubscribe all column event listeners and free them
+  for i := 0 to High(Cells) do
+    Cells[i].Free;
+
+  Token.OnCaptionChange.Delete(TokenCaptionCallback);
+  Token.Free;
+
+  inherited;
+end;
+
+procedure TRowSource.TokenCaptionCallback(Value: String);
+begin
+  Item.Caption := Value;
+end;
+
+{ TTokenViewSource }
+
+function TTokenViewSource.Add(Token: TToken): TToken;
+begin
+  // This will create a new ListView Item and assign this object
+  // as it's OwnedData
+  TRowSource.Create(Token, Self);
+  Result := Token;
+end;
+
+constructor TTokenViewSource.Create(OwnedListView: TListViewEx);
+var
+  tsc: TTokenStringClass;
+  ColumnCount: Integer;
+begin
+  ListView := OwnedListView;
+
+  with ListView.Columns do
+  begin
+    BeginUpdate;
+    Clear;
+
+    // Add the main and editable column
+    with Add do
+    begin
+      Caption := 'Description';
+      Width := 170;
+    end;
+
+    // Count all the columns from the settings
+    ColumnCount := 0;
+    for tsc in TSettings.SelectedColumns do
+      Inc(ColumnCount);
+
+    // Prepare a place to store column meanings
+    SetLength(DataClasses, ColumnCount);
+
+    // Add all other columns according to the settings
+    ColumnCount := 0;
+    for tsc in TSettings.SelectedColumns do
+      with Add do
+      begin
+        Caption := ColumsInfo[tsc].Caption;
+        Width := ColumsInfo[tsc].Width;
+        Alignment := ColumsInfo[tsc].Alignment;
+        DataClasses[ColumnCount] := tsc;
+        Inc(ColumnCount);
+      end;
+
+    EndUpdate;
+  end;
+end;
+
+procedure TTokenViewSource.Delete(Index: Integer);
+begin
+  if GetToken(Index).CanBeFreed then
+  begin
+    // This will delete the item, the assiciated row object, unsubscribe
+    // all column events and close the token
+    ListView.Items.Delete(Index);
+  end;
+end;
+
+destructor TTokenViewSource.Destroy;
+begin
+  ListView.Items.Clear;
+  inherited;
+end;
+
+function TTokenViewSource.GetToken(Ind: Integer): TToken;
+begin
+  Result := (ListView.Items[Ind].OwnedData as TRowSource).Token;
+end;
+
+function TTokenViewSource.Selected: TToken;
+begin
+  if Assigned(ListView.Selected) then
+    Result := (ListView.Selected.OwnedData as TRowSource).Token
+  else
+  begin
+    Result := nil;
+    Abort;
+  end;
+end;
+
 end.
+
