@@ -93,6 +93,9 @@ type
     procedure RunAsSystemPlusClick(Sender: TObject);
     procedure MenuCloseCreationDlgClick(Sender: TObject);
     procedure MenuPromptHandleCloseClick(Sender: TObject);
+    procedure FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
+      var AllowEdit: Boolean);
+    procedure FrameListViewTokensEditingEnd(Sender: TObject);
   public
     var OnMainFormClose: TNotifyEventHandler;
   end;
@@ -160,11 +163,9 @@ begin
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
-var
-  NewName: string;
 begin
-  if InputQuery('Rename token', 'New token name: ', NewName) then
-    Frame.RenameToken(NewName, Frame.ListViewTokens.Selected);
+  if Assigned(Frame.ListViewTokens.Selected) then
+    Frame.ListViewTokens.Selected.EditCaption;
 end;
 
 procedure TFormMain.ActionRestrict(Sender: TObject);
@@ -263,6 +264,21 @@ procedure TFormMain.FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
   var S: string);
 begin
   Frame.RenameToken(S, Item as TListItemEx);
+end;
+
+procedure TFormMain.FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
+  var AllowEdit: Boolean);
+begin
+  // Disable the shortcut while editing item caption so that pressing <Enter>
+  // would not open the information window.
+  TokenOpenInfo.ShortCut := 0;
+end;
+
+procedure TFormMain.FrameListViewTokensEditingEnd(Sender: TObject);
+begin
+  // Editing is over. Restrore the shortcut back so that pressing <Enter>
+  // would open the information window.
+  TokenOpenInfo.ShortCut := VK_RETURN;
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);

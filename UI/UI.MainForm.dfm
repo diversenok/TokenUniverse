@@ -49,7 +49,9 @@ object FormMain: TFormMain
       PopupMenu = PopupMenu
       OnDblClick = FrameListViewTokensDblClick
       OnEdited = FrameListViewTokensEdited
-      OnSelectItem = ListViewTokenSelectItem
+      OnEditing = FrameListViewTokensEditing
+      OnEditingEnd = FrameListViewTokensEditingEnd
+      OnSelectItem = ListViewTokenSelectItem      
     end
   end
   object MainMenu: TMainMenu

@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.ComCtrls, Vcl.Graphics,
   System.UITypes, System.Generics.Collections, Vcl.Clipbrd, Winapi.Messages,
-  Vcl.Forms, Winapi.Windows, System.Types;
+  Vcl.Forms, Winapi.Windows, System.Types, Winapi.CommCtrl;
 
 type
   TListItemEx = class;
@@ -131,11 +131,13 @@ type
     FColoringItems: Boolean;
     FPopupOnItemsOnly: Boolean;
     FClipboardColumn: Integer;
+    FOnEditingEnd: TNotifyEvent;
     function GetItems: TListItemsEx;
     procedure SetItems(const Value: TListItemsEx);
     procedure SetItemsColoring(const Value: Boolean);
     function GetSelected: TListItemEx;
     procedure SetSelected(const Value: TListItemEx);
+    procedure CNNotify(var Message: TWMNotifyLV); message CN_NOTIFY;
     procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
     procedure CMHintShow(var Message: TCMHintShow); message CM_HINTSHOW;
     procedure SetSelectedCheckboxesState(State: Boolean);
@@ -160,6 +162,16 @@ type
     property ClipboardSourceColumn: Integer read FClipboardColumn write FClipboardColumn default -1;
     property ColoringItems: Boolean read FColoringItems write SetItemsColoring default False;
     property PopupOnItemsOnly: Boolean read FPopupOnItemsOnly write FPopupOnItemsOnly default False;
+
+    /// <summary>
+    ///  Each <see cref="OnEditing"/> event have a corresponding OnEditingEnd
+    ///  event.
+    /// </summary>
+    /// <remarks>
+    ///  Do not confuse this event with <see cref="OnEdited"/> that is called
+    ///  only if the caption has actually changed.
+    /// </remarks>
+    property OnEditingEnd: TNotifyEvent read FOnEditingEnd write FOnEditingEnd;
   end;
 
 procedure Register;
@@ -191,6 +203,20 @@ begin
   end
   else
     inherited;
+end;
+
+procedure TListViewEx.CNNotify(var Message: TWMNotifyLV);
+begin
+  inherited;
+
+  // Since there is no event that states that editing is over we introduce one.
+  // Note: do not confuse it with OnEdited that is called only if the caption
+  // has actually changed.
+  case Message.NMHdr.code of
+    LVN_ENDLABELEDITA, LVN_ENDLABELEDITW:
+      if Assigned(FOnEditingEnd) then
+        FOnEditingEnd(Self);
+  end;
 end;
 
 procedure TListViewEx.CopySelectedToClipboard(AllColumns: Boolean);
