@@ -75,7 +75,7 @@ begin
     RestrictGroupsSource.CheckedGroups,
     PrivilegesSource.CheckedPrivileges);
 
-  FormMain.Frame.AddToken(NewToken);
+  FormMain.TokenView.Add(NewToken);
 
   // Check whether SandboxInert was actually enabled
   if CheckBoxSandboxInert.Checked then

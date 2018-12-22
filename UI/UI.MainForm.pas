@@ -3,10 +3,10 @@ unit UI.MainForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, TU.Common, TU.Tokens,
-  System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, UI.TokenListFrame, System.ImageList,
-  Vcl.ImgList, Vcl.AppEvnts, UI.ListViewEx;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList, Vcl.AppEvnts,
+  Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
+  UI.ListViewEx, UI.Prototypes, TU.Common;
 
 type
   TFormMain = class(TForm)
@@ -48,7 +48,6 @@ type
     TokenDuplicateHandle: TMenuItem;
     MenuPromptHandleClose: TMenuItem;
     Showiconsinprocesslist1: TMenuItem;
-    Frame: TFrameTokenList;
     TokenImpersonate: TMenuItem;
     Displayallsearchresults1: TMenuItem;
     TokenOpenLinked: TMenuItem;
@@ -60,6 +59,10 @@ type
     SelectColumns: TMenuItem;
     AssignToProcess: TMenuItem;
     MenuCloseCreationDlg: TMenuItem;
+    ListViewTokens: TListViewEx;
+    SearchButtons: TImageList;
+    SearchBox: TButtonedEdit;
+    ComboBoxColumn: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -75,14 +78,11 @@ type
     procedure ActionSearch(Sender: TObject);
     procedure ActionOpenLinked(Sender: TObject);
     procedure ActionOpen(Sender: TObject);
-    procedure FrameListViewTokensDblClick(Sender: TObject);
     procedure RunAsSystemClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ApplicationEventsException(Sender: TObject; E: Exception);
     procedure ActionSteal(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
-      var S: string);
     procedure ActionWTSQuery(Sender: TObject);
     procedure ActionRestrict(Sender: TObject);
     procedure ActionLogon(Sender: TObject);
@@ -96,8 +96,12 @@ type
     procedure FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
       var AllowEdit: Boolean);
     procedure FrameListViewTokensEditingEnd(Sender: TObject);
+    procedure SearchBoxChange(Sender: TObject);
+    procedure ListViewTokensEdited(Sender: TObject; Item: TListItem;
+      var S: string);
   public
-    var OnMainFormClose: TNotifyEventHandler;
+    TokenView: TTokenViewSource;
+    OnMainFormClose: TNotifyEventHandler;
   end;
 
 var
@@ -106,15 +110,15 @@ var
 implementation
 
 uses
-  Winapi.ShellApi, System.UITypes,
-  TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi,
+  System.UITypes,
+  TU.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi, TU.Tokens,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings;
 
 {$R *.dfm}
 
-{ TForm1 }
+{ TFormMain }
 
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
@@ -123,18 +127,18 @@ begin
       mbYesNoCancel, 0) <> IDYES then
         Abort;
 
-  Frame.DeleteToken(Frame.ListViewTokens.Selected, True);
+  TokenView.Delete(ListViewTokens.Selected.Index);
 end;
 
 procedure TFormMain.ActionDuplicate(Sender: TObject);
 begin
-  Frame.AddToken(TDialogAccessAndType.ExecuteDuplication(Self,
-    Frame.GetSelectedToken));
+  TokenView.Add(TDialogAccessAndType.ExecuteDuplication(Self,
+    TokenView.Selected));
 end;
 
 procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
 begin
-  Frame.AddToken(TDialogAccess.ExecuteDuplication(Self, Frame.GetSelectedToken));
+  TokenView.Add(TDialogAccess.ExecuteDuplication(Self, TokenView.Selected));
 end;
 
 procedure TFormMain.ActionLogon(Sender: TObject);
@@ -144,38 +148,38 @@ end;
 
 procedure TFormMain.ActionOpen(Sender: TObject);
 begin
-  TInfoDialog.CreateFromToken(Self, Frame.GetSelectedToken);
+  TInfoDialog.CreateFromToken(Self, TokenView.Selected);
 end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
 begin
-  Frame.AddToken(Frame.GetSelectedToken.OpenLinkedToken.GetValueOrRaise);
+  TokenView.Add(TokenView.Selected.OpenLinkedToken.GetValueOrRaise);
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 begin
-  Frame.AddToken(TToken.CreateOpenProcess(TProcessListDialog.Execute(Self)));
+  TokenView.Add(TToken.CreateOpenProcess(TProcessListDialog.Execute(Self)));
 end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
 begin
-  Frame.AddToken(TToken.CreateOpenCurrent);
+  TokenView.Add(TToken.CreateOpenCurrent);
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
 begin
-  if Assigned(Frame.ListViewTokens.Selected) then
-    Frame.ListViewTokens.Selected.EditCaption;
+  if Assigned(ListViewTokens.Selected) then
+    ListViewTokens.Selected.EditCaption;
 end;
 
 procedure TFormMain.ActionRestrict(Sender: TObject);
 begin
-  TDialogRestrictToken.CreateFromToken(Self, Frame.GetSelectedToken);
+  TDialogRestrictToken.CreateFromToken(Self, TokenView.Selected);
 end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
 begin
-  TRunDialog.Execute(Self, Frame.GetSelectedToken);
+  TRunDialog.Execute(Self, TokenView.Selected);
 end;
 
 procedure TFormMain.ActionSearch(Sender: TObject);
@@ -187,7 +191,7 @@ procedure TFormMain.ActionSendHandle(Sender: TObject);
 var
   NewHandle: NativeUInt;
 begin
-  NewHandle := Frame.GetSelectedToken.SendHandleToProcess(
+  NewHandle := TokenView.Selected.SendHandleToProcess(
     TProcessListDialog.Execute(Self));
 
   MessageDlg(Format('The handle was successfully sent.'#$D#$A +
@@ -202,7 +206,7 @@ end;
 
 procedure TFormMain.ActionWTSQuery(Sender: TObject);
 begin
-  Frame.AddToken(TToken.CreateQueryWts(TComboDialog.PickSession(Self)));
+  TokenView.Add(TToken.CreateQueryWts(TComboDialog.PickSession(Self)));
 end;
 
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
@@ -212,7 +216,7 @@ end;
 
 procedure TFormMain.AssignToProcessClick(Sender: TObject);
 begin
-  Frame.GetSelectedToken.AssignToProcess(TProcessListDialog.Execute(Self));
+  TokenView.Selected.AssignToProcess(TProcessListDialog.Execute(Self));
 
   MessageDlg('The token was successfully assigned to the process.',
     mtInformation, [mbOK], 0);
@@ -221,25 +225,28 @@ end;
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   OnMainFormClose.Invoke(Self);
+  TokenView.Free;
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
+  TokenView := TTokenViewSource.Create(ListViewTokens);
+
   with THandleList.CreateOnly(GetCurrentProcessId) do
   begin
     for i := 0 to Count - 1 do
-      Frame.AddToken(TToken.CreateByHandle(Handles[i]));
+      TokenView.Add(TToken.CreateByHandle(Handles[i]));
     Free;
   end;
 
-  with Frame.AddToken(TToken.CreateOpenCurrent) do
+  with TokenView.Add(TToken.CreateOpenCurrent) do
     if InfoClass.Query(tdTokenElevation) and
       (InfoClass.Elevation <> TokenElevationTypeDefault) then
       with OpenLinkedToken do
         if IsValid then
-          Frame.AddToken(Value);
+          TokenView.Add(Value);
 
   SetForegroundWindow(Handle);
 end;
@@ -248,22 +255,10 @@ procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if Key = VK_F3 then
-    Frame.SearchBox.SetFocus;
+    SearchBox.SetFocus;
 
   if Key = VK_ESCAPE then
-    Frame.SearchBox.Text := '';
-end;
-
-procedure TFormMain.FrameListViewTokensDblClick(Sender: TObject);
-begin
-  if Frame.ListViewTokens.SelCount <> 0 then
-    ActionOpen(Self);
-end;
-
-procedure TFormMain.FrameListViewTokensEdited(Sender: TObject; Item: TListItem;
-  var S: string);
-begin
-  Frame.RenameToken(S, Item as TListItemEx);
+    SearchBox.Text := '';
 end;
 
 procedure TFormMain.FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
@@ -315,9 +310,34 @@ begin
   Close;
 end;
 
+procedure TFormMain.SearchBoxChange(Sender: TObject);
+var
+  SearchPattern: String;
+  i: Integer;
+begin
+  SearchPattern := String(SearchBox.Text).ToLower;
+
+  ListViewTokens.GroupView := SearchPattern <> '';
+  SearchBox.RightButton.Visible := SearchPattern <> '';
+
+  if ListViewTokens.GroupView then
+    for i := 0 to ListViewTokens.Items.Count - 1 do
+      with ListViewTokens.Items[i] do
+        if Matches(SearchPattern, ComboBoxColumn.ItemIndex - 1) then
+          GroupID := 0
+        else
+          GroupID := -1;
+end;
+
 procedure TFormMain.SelectColumnsClick(Sender: TObject);
 begin
   TDialogColumns.Create(Self).ShowModal;
+end;
+
+procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;
+  var S: string);
+begin
+  TokenView.Selected.Caption := S;
 end;
 
 procedure TFormMain.ListViewTokenSelectItem(Sender: TObject; Item: TListItem;

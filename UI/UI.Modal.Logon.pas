@@ -91,7 +91,7 @@ end;
 procedure TLogonDialog.TokenCreationCallback(Domain, User: String;
   Password: PWideChar);
 begin
-  FormMain.Frame.AddToken(TToken.CreateWithLogon(GetLogonType, GetLogonProvider,
+  FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType, GetLogonProvider,
     Domain, User, Password, GroupsSource.Groups));
 end;
 

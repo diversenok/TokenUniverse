@@ -139,7 +139,7 @@ begin
     Expires
   );
 
-  FormMain.Frame.AddToken(Token);
+  FormMain.TokenView.Add(Token);
 
   if not TSettings.NoCloseCreationDialogs then
     Close;

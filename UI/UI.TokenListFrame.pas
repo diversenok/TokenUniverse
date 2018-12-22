@@ -103,10 +103,10 @@ var
   SearchPattern: String;
   i: Integer;
 begin
-  SearchPattern := SearchBox.Text;
-  SearchPattern := SearchPattern.ToLower;
+  SearchPattern := String(SearchBox.Text).ToLower;
 
   ListViewTokens.GroupView := SearchPattern <> '';
+  SearchBox.RightButton.Visible := SearchPattern <> '';
 
   if ListViewTokens.GroupView then
     for i := 0 to ListViewTokens.Items.Count - 1 do

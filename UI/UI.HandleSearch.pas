@@ -45,12 +45,12 @@ begin
     if Frame.ListViewTokens.Items[i].Selected then
     begin
       Inc(Total);
-      try FormMain.Frame.AddToken(TToken.CreateDuplicateHandle(
+{      try FormMain.Frame.AddToken(TToken.CreateDuplicateHandle(
         Frame.GetToken(Frame.ListViewTokens.Items[i]), 0, True));
       except
         on E: EOSError do
           Inc(Failed);
-      end;
+      end;}
     end;
 
   if Failed = 0 then
