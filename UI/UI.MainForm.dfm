@@ -84,6 +84,7 @@ object FormMain: TFormMain
     TabOrder = 2
     TextHint = 'Search'
     OnChange = SearchBoxChange
+    OnRightButtonClick = SearchBoxRightButtonClick
   end
   object ComboBoxColumn: TComboBox
     Left = 604

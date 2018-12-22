@@ -99,6 +99,7 @@ type
     procedure SearchBoxChange(Sender: TObject);
     procedure ListViewTokensEdited(Sender: TObject; Item: TListItem;
       var S: string);
+    procedure SearchBoxRightButtonClick(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -327,6 +328,11 @@ begin
           GroupID := 0
         else
           GroupID := -1;
+end;
+
+procedure TFormMain.SearchBoxRightButtonClick(Sender: TObject);
+begin
+  SearchBox.Text := '';
 end;
 
 procedure TFormMain.SelectColumnsClick(Sender: TObject);
