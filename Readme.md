@@ -43,4 +43,12 @@
 I believe that such a program can become a very useful tool for researchers and those who want to learn more about the Windows security subsystem.
 
 ----
-![TokenUniverse](https://user-images.githubusercontent.com/30962924/50288295-91c88380-0476-11e9-9449-31e456434fee.png)
+#### Some random screenshots of the future program:
+
+![Info dialog](https://user-images.githubusercontent.com/30962924/50288295-91c88380-0476-11e9-9449-31e456434fee.png)
+
+![Restrict dialog](https://user-images.githubusercontent.com/30962924/50378932-dfe3af80-064d-11e9-85a9-95e87ef2f485.png)
+![Logon dialog](https://user-images.githubusercontent.com/30962924/50378937-eeca6200-064d-11e9-944a-f168d2bc71c2.png)
+
+![Access dialog](https://user-images.githubusercontent.com/30962924/50378940-06094f80-064e-11e9-8558-472062b290ef.png)
+
