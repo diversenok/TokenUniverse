@@ -46,12 +46,21 @@ object FormMain: TFormMain
     TabOrder = 1
     inherited ListViewTokens: TListViewEx
       Height = 242
+      Groups = <
+        item
+          Header = 'Search results:'
+          GroupID = 0
+          State = [lgsNormal]
+          HeaderAlign = taLeftJustify
+          FooterAlign = taLeftJustify
+          TitleImage = -1
+        end>
       PopupMenu = PopupMenu
       OnDblClick = FrameListViewTokensDblClick
       OnEdited = FrameListViewTokensEdited
       OnEditing = FrameListViewTokensEditing
+      OnSelectItem = ListViewTokenSelectItem
       OnEditingEnd = FrameListViewTokensEditingEnd
-      OnSelectItem = ListViewTokenSelectItem      
     end
   end
   object MainMenu: TMainMenu

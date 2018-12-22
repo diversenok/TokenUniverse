@@ -19,7 +19,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     procedure ClearAll;
-    function AddToken(Token: TToken; Group: Integer = -1): TToken;
+    function AddToken(Token: TToken; Group: Integer = 0): TToken;
     procedure DeleteToken(Item: TListItemEx; SelectNext: Boolean = False);
     procedure RenameToken(NewName: String; Item: TListItemEx);
     function GetSelectedToken: TToken;
@@ -33,7 +33,7 @@ uses
 
 {$R *.dfm}
 
-function TFrameTokenList.AddToken(Token: TToken; Group: Integer = -1): TToken;
+function TFrameTokenList.AddToken(Token: TToken; Group: Integer): TToken;
 var
   Item: TListItemEx;
 begin
@@ -99,8 +99,22 @@ begin
 end;
 
 procedure TFrameTokenList.SearchBoxChange(Sender: TObject);
+var
+  SearchPattern: String;
+  i: Integer;
 begin
-  ListViewTokens.Filter(SearchBox.Text, ComboBoxColumn.ItemIndex - 1);
+  SearchPattern := SearchBox.Text;
+  SearchPattern := SearchPattern.ToLower;
+
+  ListViewTokens.GroupView := SearchPattern <> '';
+
+  if ListViewTokens.GroupView then
+    for i := 0 to ListViewTokens.Items.Count - 1 do
+      with ListViewTokens.Items[i] do
+        if Matches(SearchPattern, ComboBoxColumn.ItemIndex - 1) then
+          GroupID := 0
+        else
+          GroupID := -1;
 end;
 
 procedure TFrameTokenList.SearchBoxRightButtonClick(Sender: TObject);
