@@ -11,7 +11,7 @@ uses
 const
   PROCESS_QUERY_LIMITED_INFORMATION = $1000;
   THREAD_QUERY_INFORMATION = $0040;
-  NT_FILENAME_MAX = 32768;
+  NT_FILENAME_MAX = 32767;
 
 type
   /// <summary> A record to store process information. </summary>
@@ -22,6 +22,8 @@ type
     CreateTime: Int64;
     HandleCount: Cardinal;
     SessionId: Cardinal;
+    function QueryFullName: string; overload;
+    class function QueryFullName(PID: Cardinal): string; overload; static;
   end;
   PProcessItem = ^TProcessItem;
 
@@ -54,6 +56,9 @@ implementation
 
 uses
   TU.NativeAPI, TU.Common, System.SysUtils;
+
+var
+  FilenameBuffer: PWideChar;
 
 { TProcessList }
 
@@ -179,4 +184,37 @@ begin
   Result := FItems[i];
 end;
 
+{ TProcessItem }
+
+function TProcessItem.QueryFullName: string;
+begin
+  Result := QueryFullName(PID);
+end;
+
+class function TProcessItem.QueryFullName(PID: Cardinal): string;
+var
+  hProcess: THandle;
+  BufferSize: Cardinal;
+begin
+  Result := '';
+
+  hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, PID);
+
+  if hProcess <> 0 then
+  begin
+    BufferSize := NT_FILENAME_MAX;
+
+    if QueryFullProcessImageNameW(hProcess, 0, FilenameBuffer, BufferSize) then
+      SetString(Result, FilenameBuffer, BufferSize);
+
+    CloseHandle(hProcess);
+  end;
+end;
+
+initialization
+  // We allocate the buffer for quering full process names only once to prevent
+  // intensive re-allocations if the amount of processes on the system is high.
+  GetMem(FilenameBuffer, (NT_FILENAME_MAX + 1) * SizeOf(WideChar));
+finalization
+  FreeMem(FilenameBuffer);
 end.

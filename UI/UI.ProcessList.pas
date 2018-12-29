@@ -3,12 +3,23 @@ unit UI.ProcessList;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ComCtrls, TU.Processes, Vcl.ExtCtrls, System.ImageList,
-  Vcl.ImgList;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls,
+  Vcl.ExtCtrls, Vcl.ImgList, System.Generics.Collections,
+  UI.ListViewEx, UI.Prototypes.ChildForm, TU.Processes;
 
 type
+  TProcessIcons = class
+  strict private
+    class var Images: TImageList;
+    class var Mapping: TDictionary<string,Integer>;
+  public
+    class constructor Create;
+    class destructor Destroy;
+    class property ImageList: TImageList read Images;
+    class function GetIcon(FileName: string): Integer; static;
+  end;
+
   TProcessItemEx = class
     Process: TProcessItem;
     SearchKeyword: string;
@@ -21,17 +32,14 @@ type
   end;
   PProcessItemEx = ^TProcessItemEx;
 
-  TProcessListDialog = class(TForm)
+  TProcessListDialog = class(TChildForm)
     ButtonOk: TButton;
     ButtonCancel: TButton;
     ButtonRefresh: TButton;
     SearchBox: TButtonedEdit;
-    ListView: TListView;
-    ImageList: TImageList;
-    SearchButtons: TImageList;
+    ListView: TListViewEx;
     procedure ReloadProcessList(Sender: TObject);
     procedure ReloadProcessIcons;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SearchBoxChange(Sender: TObject);
     procedure ListViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -45,7 +53,6 @@ type
   private
     ProcessListEx: array of TProcessItemEx;
     function AddChild(ParentIndex: Integer): TListItem;
-    function AddIcon(SrcFile: PWideChar; DefaultIcon: integer): Integer;
   public
     { Public declarations }
   end;
@@ -59,6 +66,60 @@ uses
   Winapi.ShellApi;
 
 {$R *.dfm}
+
+{ TProcessIcons }
+
+class constructor TProcessIcons.Create;
+begin
+  Mapping := TDictionary<string,Integer>.Create;
+
+  Images := TImageList.Create(nil);
+  Images.ColorDepth := cd32Bit;
+  Images.AllocBy := 32;
+
+  GetIcon(GetEnvironmentVariable('SystemRoot') + '\system32\user32.dll');
+end;
+
+class destructor TProcessIcons.Destroy;
+begin
+  Images.Free;
+  Mapping.Free;
+end;
+
+class function TProcessIcons.GetIcon(FileName: string): Integer;
+var
+  ObjIcon: TIcon;
+  LargeHIcon, SmallHIcon: HICON;
+begin
+  Result := 0; // Default icon. See the constructor.
+
+  // Unknown filename means defalut icon
+  if FileName = '' then
+    Exit;
+
+  // Check if the icon for this file is already here
+  if Mapping.TryGetValue(FileName, Result) then
+    Exit;
+
+  LargeHIcon := 0;
+  SmallHIcon := 0;
+
+  // Try to query the icon. Save it to our ImageList on success.
+  if (ExtractIconExW(PWideChar(FileName), 0, LargeHIcon, SmallHIcon, 1) <> 0)
+    and (SmallHIcon <> 0) then
+  begin
+    ObjIcon := TIcon.Create;
+    ObjIcon.Handle := SmallHIcon;
+    Result := Images.AddIcon(ObjIcon);
+    ObjIcon.Free;
+  end;
+
+  DestroyIcon(SmallHIcon);
+  DestroyIcon(LargeHIcon);
+
+  // Save the icon index for future use
+  Mapping.Add(FileName, Result);
+end;
 
 { TProcessListDialog }
 
@@ -81,27 +142,6 @@ begin
   Result.Indent := ParentIndent + 1;
 end;
 
-function TProcessListDialog.AddIcon(SrcFile: PWideChar;
-  DefaultIcon: integer): Integer;
-var
-  ObjIcon: TIcon;
-  LargeHIcon, SmallHIcon: HICON;
-begin
-  if (ExtractIconExW(SrcFile, 0, LargeHIcon, SmallHIcon, 1) <> 0) and
-    (SmallHIcon <> 0)  then
-  begin
-    ObjIcon := TIcon.Create;
-    ObjIcon.Handle := SmallHIcon;
-    Result := ImageList.AddIcon(ObjIcon);
-    ObjIcon.Free;
-  end
-  else
-    Result := DefaultIcon;
-
-  DestroyIcon(SmallHIcon);
-  DestroyIcon(LargeHIcon);
-end;
-
 destructor TProcessListDialog.Destroy;
 var
   i: integer;
@@ -115,21 +155,13 @@ class function TProcessListDialog.Execute(AOwner: TComponent): Cardinal;
 begin
   with TProcessListDialog.Create(AOwner) do
   begin
-    ShowModal; // And wait until the dialog closes
+    ShowModal;
 
-    // The form wouldn't be actually destroyed until Application.ProcessMessages
-
-    if (ModalResult <> mrOk) or (ListView.Selected = nil) then
+    if not Assigned(ListView.Selected) then
       Abort;
 
     Result := PProcessItemEx(ListView.Selected.Data).Process.PID;
   end;
-end;
-
-procedure TProcessListDialog.FormClose(Sender: TObject;
-  var Action: TCloseAction);
-begin
-  Action := caFree;
 end;
 
 procedure TProcessListDialog.FormKeyDown(Sender: TObject; var Key: Word;
@@ -157,49 +189,23 @@ end;
 procedure TProcessListDialog.ReloadProcessIcons;
 var
   i: integer;
-  hProcess: THandle;
-  Buffer: PWideChar;
-  BufferSize: Cardinal;
-  DefaultIcon: integer;
 begin
   // TODO: Setting for disabling process icons on slow systems
+  TProcessIcons.ImageList.BeginUpdate;
 
-  ImageList.BeginUpdate;
-  ImageList.Clear;
+  for i := 0 to High(ProcessListEx) do
+    ProcessListEx[i].ImageIndex := TProcessIcons.GetIcon(
+      ProcessListEx[i].Process.QueryFullName);
 
-  DefaultIcon := AddIcon(PWideChar(GetEnvironmentVariable('SystemRoot')
-    + '\system32\user32.dll'), -1);
-
-  Buffer := AllocMem(NT_FILENAME_MAX);
-  try
-    for i := 0 to High(ProcessListEx) do
-    with ProcessListEx[i] do
-    begin
-      ImageIndex := DefaultIcon;
-
-      BufferSize := NT_FILENAME_MAX;
-      hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False,
-        Process.PID);
-
-      if hProcess = 0 then
-        Continue;
-
-      if QueryFullProcessImageNameW(hProcess, 0, Buffer, BufferSize) then
-      begin
-        ImageIndex := AddIcon(Buffer, DefaultIcon);
-        CloseHandle(hProcess);
-      end;
-    end;
-  finally
-    FreeMem(Buffer);
-    ImageList.EndUpdate;
-  end;
+  TProcessIcons.ImageList.EndUpdate;
 end;
 
 procedure TProcessListDialog.ReloadProcessList(Sender: TObject);
 var
   i, ChildInd, ParentInd: integer;
 begin
+  ListView.SmallImages := TProcessIcons.ImageList;
+
   for i := 0 to High(ProcessListEx) do
     ProcessListEx[i].Free;
 
@@ -232,11 +238,8 @@ begin
         Break;
       end;
 
-  try
-    ReloadProcessIcons;
-  finally
-    SearchBoxChange(Sender);
-  end;
+  ReloadProcessIcons;
+  SearchBoxChange(Sender);
 end;
 
 procedure TProcessListDialog.SearchBoxChange(Sender: TObject);
