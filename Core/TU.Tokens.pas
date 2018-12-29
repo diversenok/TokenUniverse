@@ -517,18 +517,18 @@ begin
   // Save TToken object for the handle
   HandleMapping.Add(Token.hToken, Token);
 
-  // Each token need an event handler to be assigned to it. These event handlers
-  // might be the same objects for different TToken instances. It happens so
-  // when we have several handles pointing the same kernel object.
+  // Each token needs an event handler (which is also a cahce) to be assigned
+  // to it. If several TToken objects point to the same kernel object
+  // then the same instance of event handler will be assigned to all of them.
 
-  // Assign an existing TTokenCacheAndEvents to the token and maintain reference
-  // counter
+  // Try to assign an existing TTokenCacheAndEvents to the token and
+  // maintain reference counter for it.
   if CacheMapping.TryGetValue(Token.HandleInformation.KernelObjectAddress,
       {out} Token.Cache) then
     Inc(Token.Cache.ReferenceCount)
   else
   begin
-    // Or create a new one
+    // Or create a new instance
     Token.Cache := TTokenCacheAndEvents.Create;
     Token.Cache.ObjectAddress := Token.HandleInformation.KernelObjectAddress;
     Token.Cache.ReferenceCount := 1;
@@ -551,6 +551,7 @@ begin
   begin
     CacheMapping.Remove(Token.Cache.ObjectAddress);
     Token.Cache.Free;
+    Token.Cache := nil;
   end;
 
   // The handle is going to be closed
@@ -673,6 +674,13 @@ begin
   CloseHandle(AccessToken.Thread);
 
   NativeCheck(Status, 'NtSetInformationProcess#ProcessAccessToken', Self);
+
+  // Assigning primary token to a process migh change token's Session ID
+  InfoClass.ReQuery(tdTokenSessionId);
+
+  // Although changing session does not usually change Modified ID it is good to
+  // update it
+  InfoClass.ReQuery(tdTokenStatistics);
 end;
 
 function TToken.CanBeFreed: Boolean;
@@ -1781,6 +1789,9 @@ begin
 
   // Update the cache and notify event listeners
   ReQuery(tdTokenSessionId);
+
+  // Although changing session does not usually change Modified ID it is good to
+  // update it
   ReQuery(tdTokenStatistics);
 end;
 
