@@ -57,7 +57,7 @@ var
 implementation
 
 uses
-  UI.ProcessList;
+  UI.ProcessList, TU.Common;
 
 {$R *.dfm}
 
@@ -93,8 +93,9 @@ begin
     Dir := PWideChar(EditDirectory.Text);
 
   FillChar(PI, SizeOf(PI), 0);
-  Win32Check(CreateProcessAsUser(Token.Handle, AppName, Cmd, nil, nil,
-    CheckBoxInherit.Checked, GetFlags, nil, Dir, GetStartupInfo, PI));
+  WinCheck(CreateProcessAsUserW(Token.Handle, AppName, Cmd, nil, nil,
+    CheckBoxInherit.Checked, GetFlags, nil, Dir, GetStartupInfo, PI),
+    'CreateProcessAsUserW');
 
   CloseHandle(PI.hProcess);
   CloseHandle(PI.hThread);
@@ -118,8 +119,9 @@ begin
     Dir := PWideChar(EditDirectory.Text);
 
   FillChar(PI, SizeOf(PI), 0);
-  Win32Check(CreateProcessWithTokenW(Token.Handle, GetLogonFlags, AppName,
-    Cmd, GetFlags, nil, Dir, GetStartupInfo, PI));
+  WinCheck(CreateProcessWithTokenW(Token.Handle, GetLogonFlags, AppName,
+    Cmd, GetFlags, nil, Dir, GetStartupInfo, PI),
+    'CreateProcessWithTokenW');
 
   CloseHandle(PI.hProcess);
   CloseHandle(PI.hThread);

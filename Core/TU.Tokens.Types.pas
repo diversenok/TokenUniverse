@@ -19,7 +19,7 @@ type
     procedure GetDomainAndUser(SrcSid: PSID);
     procedure GetStringSid(SrcSid: PSID);
     procedure CreateFromStringSid(StringSID: string);
-    constructor CreateFromUserName(Name: string);
+    constructor CreateFromUserName(Name: string; Dummy: Integer = 0);
   public
     SID, Domain, User: String;
     SIDType: TSIDNameUse;
@@ -240,7 +240,8 @@ begin
   end;
 end;
 
-constructor TSecurityIdentifier.CreateFromUserName(Name: string);
+constructor TSecurityIdentifier.CreateFromUserName(Name: string;
+  Dummy: Integer = 0);
 var
   SidBuffer, DomainBuffer: Pointer;
   SidSize, DomainChars, Reserved2: Cardinal;

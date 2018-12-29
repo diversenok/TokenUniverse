@@ -385,7 +385,7 @@ type
     ///  Queries a token of the specified Windows Terminal Session.
     /// </summary>
     /// <remarks> Requires SeTcbPrivilege. </remarks>
-    constructor CreateQueryWts(SessionID: Cardinal);
+    constructor CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
 
     /// <summary> Creates a restricted version of the token. </summary>
     constructor CreateRestricted(SrcToken: TToken; Flags: Cardinal;
@@ -887,7 +887,7 @@ begin
   ProcessList.Free;
 end;
 
-constructor TToken.CreateQueryWts(SessionID: Cardinal);
+constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
 begin
   WinCheck(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
   FCaption := Format('Session %d token', [SessionID]);
