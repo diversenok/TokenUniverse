@@ -1518,7 +1518,7 @@ begin
 
   // And almost nothing can be queried without TOKEN_QUERY access
   if (Token.HandleInformation.Access and TOKEN_QUERY = 0) and
-    not (DataClass in [tdNone, tdTokenSource]) then
+    not (DataClass in [tdNone, tdTokenSource, tdObjectInfo]) then
       Exit;
 
   case DataClass of

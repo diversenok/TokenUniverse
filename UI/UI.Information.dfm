@@ -36,6 +36,7 @@ object InfoDialog: TInfoDialog
     MultiLine = True
     ParentDoubleBuffered = False
     TabOrder = 0
+    OnChange = PageControlChange
     object TabGeneral: TTabSheet
       Caption = 'General'
       DesignSize = (
@@ -484,10 +485,10 @@ object InfoDialog: TInfoDialog
       object ListViewProcesses: TListViewEx
         AlignWithMargins = True
         Left = 3
-        Top = 197
+        Top = 191
         Width = 382
-        Height = 144
-        Align = alBottom
+        Height = 150
+        Anchors = [akLeft, akTop, akRight, akBottom]
         Columns = <
           item
             Caption = 'Process name'
@@ -584,7 +585,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 332
+        Height = 338
         Align = alClient
         Columns = <
           item
@@ -620,7 +621,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 332
+        Height = 338
         Align = alClient
         Columns = <
           item
@@ -661,7 +662,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 332
+        Height = 338
         Align = alClient
         Columns = <
           item

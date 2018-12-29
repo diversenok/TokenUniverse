@@ -87,6 +87,7 @@ type
     procedure CheckBoxClick(Sender: TObject);
     procedure BtnSetVEnabledClick(Sender: TObject);
     procedure BtnSetVAllowedClick(Sender: TObject);
+    procedure PageControlChange(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
@@ -106,6 +107,7 @@ type
     procedure ChangedVAllowed(NewVAllowed: LongBool);
     procedure ChangedVEnabled(NewVEnabled: LongBool);
     procedure Refresh;
+    procedure UpdateObjectTab;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -113,7 +115,12 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi;
+  System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, TU.Handles, UI.ProcessList,
+  TU.Processes;
+
+const
+  TAB_INVALIDATED = 0;
+  TAB_UPDATED = 1;
 
 {$R *.dfm}
 
@@ -496,6 +503,12 @@ begin
   MenuGroupDisable.Visible := ListViewGroups.SelCount <> 0;
 end;
 
+procedure TInfoDialog.PageControlChange(Sender: TObject);
+begin
+  if PageControl.ActivePageIndex = TabObject.TabIndex then
+    UpdateObjectTab;
+end;
+
 procedure TInfoDialog.Refresh;
 begin
   ListViewGeneral.Items.BeginUpdate;
@@ -546,6 +559,28 @@ begin
         Color := clEnabled;
     end;
 
+  TabObject.Tag := TAB_INVALIDATED;
+  PageControlChange(Self);
+end;
+
+procedure TInfoDialog.SetStaleColor(Sender: TObject);
+begin
+  Assert(Sender is TComboBox);
+  (Sender as TComboBox).Color := clStale;
+end;
+
+procedure TInfoDialog.UpdateObjectTab;
+var
+  Handles: THandleList;
+  DoSnapshotProcesses: Boolean;
+  Processes: TProcessList;
+  ProcessItem: TProcessItem;
+  i: Integer;
+begin
+  if TabObject.Tag = TAB_UPDATED then
+    Exit;
+
+  // Update basic object information
   if Token.InfoClass.ReQuery(tdObjectInfo) then
     with ListViewObject, Token.InfoClass.ObjectInformation do
     begin
@@ -555,12 +590,59 @@ begin
       Items[4].SubItems[0] := IntToStr(PointerCount);
       Items[5].SubItems[0] := IntToStr(HandleCount);
     end;
-end;
 
-procedure TInfoDialog.SetStaleColor(Sender: TObject);
-begin
-  Assert(Sender is TComboBox);
-  (Sender as TComboBox).Color := clStale;
+  ListViewProcesses.Items.BeginUpdate;
+  ListViewProcesses.Items.Clear;
+  ListViewProcesses.SmallImages := TProcessIcons.ImageList;
+  Handles := THandleList.Create;
+
+  DoSnapshotProcesses := False;
+
+  // Add current process
+  for i := 0 to Handles.Count - 1 do
+    if (Handles[i].KernelObjectAddress =
+      Token.HandleInformation.KernelObjectAddress) then
+    begin
+      // Add handles from current process
+      if Handles[i].ContextPID = GetCurrentProcessId then
+        with ListViewProcesses.Items.Add do
+        begin
+          Caption := 'Current process';
+          SubItems.Add(IntToStr(GetCurrentProcessId));
+          SubItems.Add(Format('0x%x', [Handles[i].Handle]));
+          SubItems.Add(AccessToString(Handles[i].Access));
+          ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
+        end
+      else
+        DoSnapshotProcesses := True;
+    end;
+
+  // Add handles from other processes
+  if DoSnapshotProcesses then
+  begin
+    Processes := TProcessList.Create;
+
+    for i := 0 to Handles.Count - 1 do
+    if (Handles[i].KernelObjectAddress =
+      Token.HandleInformation.KernelObjectAddress)
+      and (Handles[i].ContextPID <> GetCurrentProcessId) then
+      with ListViewProcesses.Items.Add do
+      begin
+        Caption := Processes.FindName(Handles[i].ContextPID);
+        SubItems.Add(IntToStr(Handles[i].ContextPID));
+        SubItems.Add(Format('0x%x', [Handles[i].Handle]));
+        SubItems.Add(AccessToString(Handles[i].Access));
+        ImageIndex := TProcessIcons.GetIcon(TProcessItem.QueryFullName(
+          Handles[i].ContextPID));
+      end;
+
+    Processes.Free;
+  end;
+
+  Handles.Free;
+  ListViewProcesses.Items.EndUpdate;
+
+  TabObject.Tag := TAB_UPDATED;
 end;
 
 end.
