@@ -58,6 +58,12 @@ type
     BtnSetPrimary: TButton;
     BtnSetVEnabled: TButton;
     BtnSetAEnabled: TButton;
+    TabObject: TTabSheet;
+    ListViewProcesses: TListViewEx;
+    ListViewObject: TListViewEx;
+    TabSecurity: TTabSheet;
+    TabDefaultDacl: TTabSheet;
+    TabAudit: TTabSheet;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -496,6 +502,7 @@ begin
   with ListViewGeneral do
   begin
     Items[0].SubItems[0] := Token.InfoClass.QueryString(tsObjectAddress);
+    ListViewObject.Items[0].SubItems[0] := Items[0].SubItems[0];
     Items[1].SubItems[0] := Token.InfoClass.QueryString(tsHandle);
     Items[2].SubItems[0] := Token.InfoClass.QueryString(tsAccess, True);
     Items[3].SubItems[0] := Token.InfoClass.QueryString(tsTokenType);
@@ -537,6 +544,16 @@ begin
         Color := clDisabled
       else
         Color := clEnabled;
+    end;
+
+  if Token.InfoClass.ReQuery(tdObjectInfo) then
+    with ListViewObject, Token.InfoClass.ObjectInformation do
+    begin
+      Items[1].SubItems[0] := ObjectAttributesToString(Attributes);
+      Items[2].SubItems[0] := BytesToString(PagedPoolCharge);
+      Items[3].SubItems[0] := BytesToString(NonPagedPoolCharge);
+      Items[4].SubItems[0] := IntToStr(PointerCount);
+      Items[5].SubItems[0] := IntToStr(HandleCount);
     end;
 end;
 

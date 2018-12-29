@@ -2,7 +2,7 @@ object InfoDialog: TInfoDialog
   Left = 0
   Top = 0
   Caption = 'Token Information'
-  ClientHeight = 399
+  ClientHeight = 423
   ClientWidth = 402
   Color = clBtnFace
   Constraints.MinHeight = 437
@@ -20,7 +20,7 @@ object InfoDialog: TInfoDialog
   OnKeyDown = FormKeyDown
   DesignSize = (
     402
-    399)
+    423)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -28,17 +28,19 @@ object InfoDialog: TInfoDialog
     Left = 3
     Top = 3
     Width = 396
-    Height = 366
+    Height = 390
+    Margins.Bottom = 30
     ActivePage = TabGeneral
-    Anchors = [akLeft, akTop, akRight, akBottom]
+    Align = alClient
     DoubleBuffered = True
+    MultiLine = True
     ParentDoubleBuffered = False
     TabOrder = 0
     object TabGeneral: TTabSheet
       Caption = 'General'
       DesignSize = (
         388
-        338)
+        344)
       object StaticUser: TStaticText
         Left = 7
         Top = 128
@@ -376,7 +378,7 @@ object InfoDialog: TInfoDialog
         Left = 0
         Top = 0
         Width = 388
-        Height = 338
+        Height = 344
         Align = alClient
         BorderStyle = bsNone
         Columns = <
@@ -473,6 +475,104 @@ object InfoDialog: TInfoDialog
         TabOrder = 0
         ViewStyle = vsReport
         OnResize = ListViewAdvancedResize
+        ClipboardSourceColumn = 1
+      end
+    end
+    object TabObject: TTabSheet
+      Caption = 'Object'
+      ImageIndex = 5
+      object ListViewProcesses: TListViewEx
+        AlignWithMargins = True
+        Left = 3
+        Top = 197
+        Width = 382
+        Height = 144
+        Align = alBottom
+        Columns = <
+          item
+            Caption = 'Process name'
+            Width = 130
+          end
+          item
+            Alignment = taCenter
+            Caption = 'PID'
+          end
+          item
+            Alignment = taCenter
+            Caption = 'Handle'
+            Width = 60
+          end
+          item
+            AutoSize = True
+            Caption = 'Access'
+          end>
+        GridLines = True
+        MultiSelect = True
+        ReadOnly = True
+        RowSelect = True
+        TabOrder = 1
+        ViewStyle = vsReport
+      end
+      object ListViewObject: TListViewEx
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 185
+        Align = alTop
+        BorderStyle = bsNone
+        Columns = <
+          item
+            Width = 140
+          end
+          item
+            Width = 220
+          end>
+        Groups = <
+          item
+            Header = 'Kernel object'
+            GroupID = 0
+            State = [lgsNormal]
+            HeaderAlign = taLeftJustify
+            FooterAlign = taLeftJustify
+            TitleImage = -1
+          end
+          item
+            Header = 'Quota charges'
+            GroupID = 1
+            State = [lgsNormal]
+            HeaderAlign = taLeftJustify
+            FooterAlign = taLeftJustify
+            TitleImage = -1
+          end
+          item
+            Header = 'References'
+            GroupID = 2
+            State = [lgsNormal]
+            HeaderAlign = taLeftJustify
+            FooterAlign = taLeftJustify
+            TitleImage = -1
+          end>
+        Items.ItemData = {
+          05940100000600000000000000FFFFFFFFFFFFFFFF0100000000000000000000
+          000E4F0062006A00650063007400200061006400640072006500730073000755
+          006E006B006E006F0077006E00085B811600000000FFFFFFFFFFFFFFFF010000
+          000000000000000000125300700065006300690061006C002000610074007400
+          72006900620075007400650073000755006E006B006E006F0077006E00387981
+          1600000000FFFFFFFFFFFFFFFF01000000010000000000000005500061006700
+          650064000755006E006B006E006F0077006E0090359C1C00000000FFFFFFFFFF
+          FFFFFF010000000100000000000000094E006F006E0020005000610067006500
+          64000755006E006B006E006F0077006E0018069C1C00000000FFFFFFFFFFFFFF
+          FF0100000002000000000000000850006F0069006E0074006500720073000755
+          006E006B006E006F0077006E00200B9C1C00000000FFFFFFFFFFFFFFFF010000
+          00020000000000000007480061006E0064006C00650073000755006E006B006E
+          006F0077006E0078189C1CFFFFFFFFFFFFFFFFFFFFFFFF}
+        MultiSelect = True
+        GroupView = True
+        ReadOnly = True
+        RowSelect = True
+        ShowColumnHeaders = False
+        TabOrder = 0
+        ViewStyle = vsReport
         ClipboardSourceColumn = 1
       end
     end
@@ -587,10 +687,22 @@ object InfoDialog: TInfoDialog
         ColoringItems = True
       end
     end
+    object TabSecurity: TTabSheet
+      Caption = 'Security'
+      ImageIndex = 6
+    end
+    object TabDefaultDacl: TTabSheet
+      Caption = 'Default DACL'
+      ImageIndex = 7
+    end
+    object TabAudit: TTabSheet
+      Caption = 'Auditing'
+      ImageIndex = 8
+    end
   end
   object ButtonClose: TButton
     Left = 324
-    Top = 371
+    Top = 395
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

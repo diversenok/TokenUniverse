@@ -24,6 +24,12 @@ const
   STATUS_NOT_SUPPORTED: NTSTATUS = $C00000BB;
   STATUS_IMPLEMENTATION_LIMIT: NTSTATUS = $C000042B;
 
+  OBJ_PROTECT_CLOSE = $00000001;
+  OBJ_INHERIT = $00000002;
+  OBJ_AUDIT_OBJECT_CLOSE = $00000004;
+  OBJ_PERMANENT = $00000010;
+  OBJ_EXCLUSIVE = $00000020;
+
 type
   UNICODE_STRING = record
     Length: Word;
@@ -96,8 +102,11 @@ type
     GrantedAccess: ACCESS_MASK;
     HandleCount: Cardinal;
     PointerCount: Cardinal;
-    Reserved: array [0..9] of Cardinal;
+    PagedPoolCharge: Cardinal;
+    NonPagedPoolCharge: Cardinal;
+    Reserved: array [0..7] of Cardinal;
   end;
+  PObjectBasicInformaion = ^TObjectBasicInformaion;
 
   { ProcessInformation class }
 

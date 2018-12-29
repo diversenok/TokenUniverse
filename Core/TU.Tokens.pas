@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
-  TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi;
+  TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi, TU.NativeApi;
 
 type
   /// <summary>
@@ -18,7 +18,7 @@ type
     tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
     tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
     tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
-    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo);
+    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo, tdObjectInfo);
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
@@ -60,6 +60,7 @@ type
     MandatoryPolicy: TMandatoryPolicy;
     IsRestricted: LongBool;
     LogonSessionInfo: TLogonSessionInfo;
+    ObjectInformation: TObjectBasicInformaion;
 
     FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
     FOnSessionChange: TValuedEventHandler<Cardinal>;
@@ -138,6 +139,7 @@ type
     procedure InvokeStringEvent(StringClass: TTokenStringClass);
     procedure SetVirtualizationAllowed(const Value: LongBool);
     procedure SetVirtualizationEnabled(const Value: LongBool);
+    function GetObjectInfo: TObjectBasicInformaion;
   public
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TGroupArray read GetGroups;                                // class 2
@@ -168,6 +170,7 @@ type
     // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: TLogonSessionInfo read GetLogonSessionInfo;
+    property ObjectInformation: TObjectBasicInformaion read GetObjectInfo;
 
     /// <summary>
     ///  Ensure that the required value is in the cache and retrieves it if
@@ -416,7 +419,7 @@ type
 implementation
 
 uses
-  System.TypInfo, TU.NativeAPI, TU.WtsApi, TU.Processes;
+  System.TypInfo, TU.WtsApi, TU.Processes;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -1249,6 +1252,12 @@ begin
   Result := Token.Cache.MandatoryPolicy;
 end;
 
+function TTokenData.GetObjectInfo: TObjectBasicInformaion;
+begin
+  Assert(Token.Cache.IsCached[tdObjectInfo]);
+  Result := Token.Cache.ObjectInformation;
+end;
+
 function TTokenData.GetOrigin: LUID;
 begin
   Assert(Token.Cache.IsCached[tdTokenOrigin]);
@@ -1497,6 +1506,7 @@ var
   pPrivBuf: PTokenPrivileges;
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
+  lObjInfo: TObjectBasicInformaion;
   i: Integer;
 begin
   Result := False;
@@ -1710,6 +1720,15 @@ begin
           Result := True;
           Token.Cache.LogonSessionInfo := Value;
         end;
+
+    tdObjectInfo:
+    begin
+      Result := NT_SUCCESS(NtQueryObject(Token.hToken, ObjectBasicInformation,
+        @lObjInfo, SizeOf(lObjInfo), nil));
+
+      if Result then
+        Token.Cache.ObjectInformation := lObjInfo;
+    end;
   end;
 
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;

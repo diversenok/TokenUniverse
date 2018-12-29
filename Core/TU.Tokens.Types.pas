@@ -136,6 +136,7 @@ function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
+function ObjectAttributesToString(ObjAttributes: Cardinal): String;
 function NativeTimeToString(NativeTime: Int64): String;
 function BytesToString(Size: Cardinal): String;
 function EnabledDisabledToString(Value: LongBool): String;
@@ -703,6 +704,19 @@ function TokeSourceNameToString(TokenSource: TTokenSource): String;
 begin
   // sourcename field may or may not contain zero-termination byte
   Result := String(PAnsiChar(AnsiString(TokenSource.sourcename)));
+end;
+
+function ObjectAttributesToString(ObjAttributes: Cardinal): String;
+begin
+  if ObjAttributes and (OBJ_PERMANENT or OBJ_EXCLUSIVE) =
+    (OBJ_PERMANENT or OBJ_EXCLUSIVE) then
+    Result := 'Permanent, Exclusive'
+  else if ObjAttributes and OBJ_PERMANENT <> 0 then
+    Result := 'Permanent'
+  else if ObjAttributes and OBJ_EXCLUSIVE <> 0 then
+    Result := 'Exclusive'
+  else
+    Result := 'None';
 end;
 
 function NativeTimeToString(NativeTime: Int64): String;
