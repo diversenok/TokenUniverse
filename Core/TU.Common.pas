@@ -3,7 +3,7 @@ unit TU.Common;
 interface
 
 uses
-  System.SysUtils, TU.NativeAPI;
+  System.SysUtils, Ntapi.ntdef, Ntapi.ntstatus;
 
 type
   /// <summary>

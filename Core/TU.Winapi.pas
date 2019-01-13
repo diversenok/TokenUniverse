@@ -250,6 +250,9 @@ function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
 function OpenThread(dwDesiredAccess: Cardinal; bInheritHandle: LongBool;
   dwThreadId: Cardinal): THandle; stdcall; external kernel32;
 
+function RtlGetCurrentPeb: Pointer; stdcall; external 'ntdll.dll';
+function GetCurrentSession: Cardinal; inline;
+
 type
   TAccessGroup = (agRead, agWrite, agExecute, agStandard);
 
@@ -272,5 +275,23 @@ const
     'Generic Write', 'Generic Execute', 'Standard');
 
 implementation
+
+function GetCurrentSession: Cardinal;
+begin
+  // Current session ID is always stored in the PEB
+  {$POINTERMATH ON}
+  try
+    // We use hardcoded offsets of SessionID field from PPEB structure
+    {$IFDEF WIN64}
+      Result := PCardinal(PByte(RtlGetCurrentPeb) + $2C0)^;
+    {$ELSE}
+      Result := PCardinal(PByte(RtlGetCurrentPeb) + $1D4)^;
+    {$ENDIF}
+  except
+    Result := 0;
+    OutputDebugStringW('Exception while reading PEB');
+  end;
+  {$POINTERMATH OFF}
+end;
 
 end.

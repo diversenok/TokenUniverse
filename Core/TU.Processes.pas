@@ -55,7 +55,7 @@ function QueryFullProcessImageNameW(hProcess: THandle; dwFlags: Cardinal;
 implementation
 
 uses
-  TU.NativeAPI, TU.Common, System.SysUtils;
+  TU.Common, System.SysUtils, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntexapi;
 
 var
   FilenameBuffer: PWideChar;
@@ -80,7 +80,7 @@ begin
   while True do
   begin
     Status := NtQuerySystemInformation(SystemProcessInformation, Buffer,
-      BufferSize, ReturnLength);
+      BufferSize, @ReturnLength);
     if (Status = STATUS_BUFFER_TOO_SMALL) or
       (Status = STATUS_INFO_LENGTH_MISMATCH) then
     begin

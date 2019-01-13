@@ -10,7 +10,7 @@ procedure ShowErrorSuggestions(E: Exception);
 implementation
 
 uses
-  Winapi.Windows, System.UITypes, Vcl.Dialogs, TU.NativeApi,
+  Winapi.Windows, System.UITypes, Vcl.Dialogs, Ntapi.ntstatus,
   TU.Common, TU.Winapi, TU.Tokens, TU.Tokens.Types;
 
 resourcestring

@@ -40,17 +40,13 @@ function EnumerateLogonSessions: TLuidDynArray;
 implementation
 
 uses
-  TU.NativeApi;
+  Ntapi.ntdef;
 
 const
   secur32 = 'secur32.dll';
 
 type
-  TLsaUnicodeString = record
-    Length: Word;
-    MaximumLength: Word;
-    Buffer: PWideChar;
-  end;
+  TLsaUnicodeString = UNICODE_STRING;
 
   TSecurityLogonSessionData = record
     Size: Cardinal;

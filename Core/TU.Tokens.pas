@@ -6,7 +6,8 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
-  TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi, TU.NativeApi;
+  TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi,
+  Ntapi.ntdef, Ntapi.ntobapi, Ntapi.ntpsapi, Ntapi.ntseapi;
 
 type
   /// <summary>

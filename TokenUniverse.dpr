@@ -4,7 +4,6 @@ uses
   Vcl.Forms,
   TU.Common in 'Core\TU.Common.pas',
   TU.Handles in 'Core\TU.Handles.pas',
-  TU.NativeAPI in 'Core\TU.NativeAPI.pas',
   TU.Processes in 'Core\TU.Processes.pas',
   TU.Tokens in 'Core\TU.Tokens.pas',
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
@@ -14,7 +13,6 @@ uses
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
-  TU.Winapi in 'Core\TU.Winapi.pas',
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
@@ -33,7 +31,16 @@ uses
   UI.Modal.Columns in 'UI\UI.Modal.Columns.pas' {DialogColumns},
   UI.Settings in 'UI\UI.Settings.pas',
   UI.Modal.Access in 'UI\UI.Modal.Access.pas' {DialogAccess},
-  UI.Modal.ComboDlg in 'UI\UI.Modal.ComboDlg.pas' {ComboDialog};
+  UI.Modal.ComboDlg in 'UI\UI.Modal.ComboDlg.pas' {ComboDialog},
+  Ntapi.ntdef in 'Headers\Ntapi.ntdef.pas',
+  Ntapi.ntstatus in 'Headers\Ntapi.ntstatus.pas',
+  Ntapi.ntexapi in 'Headers\Ntapi.ntexapi.pas',
+  Ntapi.ntobapi in 'Headers\Ntapi.ntobapi.pas',
+  Ntapi.ntpsapi in 'Headers\Ntapi.ntpsapi.pas',
+  Ntapi.ntseapi in 'Headers\Ntapi.ntseapi.pas',
+  Ntapi.ntrtl in 'Headers\Ntapi.ntrtl.pas',
+  Ntapi.ntpebteb in 'Headers\Ntapi.ntpebteb.pas',
+  TU.Winapi in 'Core\TU.Winapi.pas';
 
 {$R *.res}
 

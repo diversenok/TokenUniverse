@@ -102,7 +102,6 @@
         </DelphiCompile>
         <DCCReference Include="Core\TU.Common.pas"/>
         <DCCReference Include="Core\TU.Handles.pas"/>
-        <DCCReference Include="Core\TU.NativeAPI.pas"/>
         <DCCReference Include="Core\TU.Processes.pas"/>
         <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="UI\UI.TokenListFrame.pas">
@@ -133,7 +132,6 @@
             <Form>RunDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Core\TU.Winapi.pas"/>
         <DCCReference Include="Core\TU.RestartSvc.pas"/>
         <DCCReference Include="Core\TU.WtsApi.pas"/>
         <DCCReference Include="Core\TU.Suggestions.pas"/>
@@ -174,6 +172,15 @@
             <Form>ComboDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Headers\Ntapi.ntdef.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntstatus.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntexapi.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntobapi.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntpsapi.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntseapi.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntrtl.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntpebteb.pas"/>
+        <DCCReference Include="Core\TU.Winapi.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

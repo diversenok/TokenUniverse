@@ -65,7 +65,7 @@ type
 implementation
 
 uses
-  System.SysUtils, TU.Common, TU.NativeAPI;
+  System.SysUtils, TU.Common, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntexapi;
 
 type
   /// <summary>
@@ -210,7 +210,7 @@ begin
   while True do
   begin
     Status := NtQuerySystemInformation(SystemExtendedHandleInformation, Buffer,
-      BufferSize, ReturnLength);
+      BufferSize, @ReturnLength);
 
     if (Status = STATUS_BUFFER_TOO_SMALL) or
       (Status = STATUS_INFO_LENGTH_MISMATCH) then

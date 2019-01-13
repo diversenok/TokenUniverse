@@ -147,7 +147,7 @@ implementation
 uses
   System.Generics.Collections,
   UI.Colors, UI.Modal.PickUser, UI.Settings,
-  TU.Winapi, TU.NativeApi, TU.Common;
+  TU.Winapi, TU.Common;
 
 { TPrivilegesSource }
 
@@ -577,7 +577,7 @@ begin
     ComboBox.Items.Add(SessionList[i].ToString);
 
   if SelectCurrent and (SessionList.Count > 0) then
-    ComboBox.ItemIndex := SessionList.Find(NtGetCurrentSession);
+    ComboBox.ItemIndex := SessionList.Find(GetCurrentSession);
 
   ComboBox.Items.EndUpdate;
 end;
