@@ -51,8 +51,8 @@ function NT_WARNING(Status: NTSTATUS): Boolean; inline;
 function NT_ERROR(Status: NTSTATUS): Boolean; inline;
 
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;
-  ObjectName: PUNICODE_STRING; Attributes: Cardinal; RootDirectory: THandle = 0;
-  QoS: PSecurityQualityOfService = nil); inline;
+  ObjectName: PUNICODE_STRING = nil; Attributes: Cardinal = 0;
+  RootDirectory: THandle = 0; QoS: PSecurityQualityOfService = nil); inline;
 
 implementation
 

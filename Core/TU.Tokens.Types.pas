@@ -157,7 +157,7 @@ function SetterMessage(InfoClass: TTokenInformationClass): String;
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, Ntapi.ntdef;
+  System.SysUtils, System.TypInfo, Ntapi.ntdef, Ntapi.ntstatus;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin

@@ -7,7 +7,7 @@ interface
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
   TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi,
-  Ntapi.ntdef, Ntapi.ntobapi, Ntapi.ntpsapi, Ntapi.ntseapi;
+  Ntapi.ntdef, Ntapi.ntobapi;
 
 type
   /// <summary>
@@ -308,8 +308,8 @@ type
 
     /// <summary> Allocates <see cref="Winapi.PTokenPrivileges"/>. </summary>
     /// <remarks> Call <see cref="System.FreeMem"/> after use. </remarks>
-    class function AllocPrivileges(Privileges: TPrivilegeArray;
-      pBufferSize: PCardinal = nil): PTokenPrivileges; static;
+    class function AllocPrivileges(Privileges: TPrivilegeArray):
+      PTokenPrivileges; static;
   public
 
     {--------------------  TToken public section ---------------------------}
@@ -371,9 +371,9 @@ type
     /// <summary> Opens a token of current process. </summary>
     constructor CreateOpenCurrent(Access: ACCESS_MASK = MAXIMUM_ALLOWED);
 
-    /// <summary> Opens a token of another process. </summary>
-    constructor CreateOpenProcess(PID: Cardinal;
-      Access: ACCESS_MASK = MAXIMUM_ALLOWED);
+    /// <summary> Opens a token of a process. </summary>
+    constructor CreateOpenProcess(PID: Cardinal; ImageName: String;
+      Access: ACCESS_MASK = MAXIMUM_ALLOWED; Attributes: Cardinal = 0);
 
     /// <summary> Duplicates a token. </summary>
     constructor CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
@@ -383,7 +383,7 @@ type
     ///  Duplicates a handle. The result references for the same kernel object.
     /// </summary>
     constructor CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
-      SameAccess: Boolean);
+      SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 
     /// <summary>
     ///  Queries a token of the specified Windows Terminal Session.
@@ -420,7 +420,8 @@ type
 implementation
 
 uses
-  System.TypInfo, TU.WtsApi, TU.Processes;
+  System.TypInfo, TU.WtsApi, TU.Processes,
+  Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -439,7 +440,7 @@ const
 procedure CheckAbandoned(Value: Integer; Name: String);
 begin
   if Value > 0 then
-    OutputDebugString(PChar('Abandoned ' + Name));
+    OutputDebugStringW(PChar('Abandoned ' + Name));
 end;
 
 constructor TTokenCacheAndEvents.Create;
@@ -624,17 +625,14 @@ begin
   end;
 end;
 
-class function TToken.AllocPrivileges(Privileges: TPrivilegeArray;
-  pBufferSize: PCardinal): PTokenPrivileges;
+class function TToken.AllocPrivileges(Privileges: TPrivilegeArray):
+  PTokenPrivileges;
 var
   i: Integer;
   BufferSize: Cardinal;
 begin
   BufferSize := SizeOf(Integer) +
     Length(Privileges) * SizeOf(TLUIDAndAttributes);
-
-  if Assigned(pBufferSize) then
-    pBufferSize^ := BufferSize;
 
   // Allocate memory for PTokenPrivileges
   Result := AllocMem(BufferSize);
@@ -647,14 +645,19 @@ end;
 procedure TToken.AssignToProcess(PID: Cardinal);
 var
   hProcess: THandle;
+  ClientId: TClientId;
+  ObjAttr: TObjectAttributes;
   AccessToken: TProcessAccessToken;
   Status: NTSTATUS;
 begin
+  InitializeObjectAttributes(ObjAttr);
+  ClientId.UniqueProcess := PID;
+  ClientId.UniqueThread := 0;
+
   // Open the target process
-  hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or
-    PROCESS_SET_INFORMATION, False, PID);
-  WinCheck(hProcess <> 0, 'OpenProcess with PROCESS_QUERY_INFORMATION | ' +
-    'PROCESS_SET_INFORMATION', Self);
+  NativeCheck(NtOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
+    PROCESS_SET_INFORMATION, ObjAttr, ClientId), 'NtOpenProcess with ' +
+    'PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION');
 
   // Open it's first thread and store the handle inside AccessToken
   Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_INFORMATION, 0, 0,
@@ -662,7 +665,7 @@ begin
 
   if not NT_SUCCESS(Status) then
   begin
-    CloseHandle(hProcess);
+    NtClose(hProcess);
     NativeCheck(Status, 'NtGetNextThread with THREAD_QUERY_INFORMATION', Self);
   end;
 
@@ -674,8 +677,8 @@ begin
     @AccessToken, SizeOf(AccessToken));
 
   // Close the process and the thread but not the token
-  CloseHandle(hProcess);
-  CloseHandle(AccessToken.Thread);
+  NtClose(hProcess);
+  NtClose(AccessToken.Thread);
 
   NativeCheck(Status, 'NtSetInformationProcess#ProcessAccessToken', Self);
 
@@ -711,57 +714,58 @@ begin
 end;
 
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
-  SameAccess: Boolean);
+  SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 const
   Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
 var
+  Status: NTSTATUS;
   i: Integer;
+label
+  Done;
 begin
   // DuplicateHandle does not support MAXIMUM_ALLOWED access and returns zero
   // access instead. We should implement it on our own by probing additional
   // access masks.
 
+  // Make a lucky guess for MAXIMUM_ALLOWED: try full access first
   if (Access = MAXIMUM_ALLOWED) and not SameAccess then
   begin
-    // Lucky guess: try full access first
-    if DuplicateHandle(GetCurrentProcess, SrcToken.hToken, GetCurrentProcess,
-      @hToken, TOKEN_ALL_ACCESS, False, 0) then
-    begin
-      // The guess was correct, everything is done
-    end
-    else if GetLastError <> ERROR_ACCESS_DENIED then
-    begin
-      // Something else went wrong, raise an exception
-      WinCheck(False, 'DuplicateHandle', SrcToken);
-    end
-    else
-    begin
-      // Full access didn't work. Collect the access that is already granted
-      Access := SrcToken.HandleInformation.Access;
+    Status := NtDuplicateObject(GetCurrentProcess, SrcToken.hToken,
+      GetCurrentProcess, hToken, TOKEN_ALL_ACCESS, HandleAttributes,
+      Options[SameAccess]);
 
-      // Try each one that is not granted yet
-      for i := 0 to ACCESS_COUNT - 1 do
-        if (Access and AccessValues[i]) = 0 then
-          if DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
-            GetCurrentProcess, @hToken, AccessValues[i], False, 0) then
-          begin
-            // Yes, this access can be granted, add it
-            Access := Access or AccessValues[i];
-            CloseHandle(hToken);
-          end;
+    // Check for errors different than access problems
+    if Status <> STATUS_ACCESS_DENIED then
+      NativeCheck(Status, 'NtDuplicateObject', SrcToken);
 
-      // Combine everything we have got
-      WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
-        GetCurrentProcess, @hToken, Access, False, 0),
-        'DuplicateHandle', SrcToken);
-    end;
-  end
-  else // Use ordinary duplication
-    WinCheck(DuplicateHandle(GetCurrentProcess, SrcToken.hToken,
-      GetCurrentProcess, @hToken, Access, False, Options[SameAccess]),
-      'DuplicateHandle', SrcToken);
+    // If the guess was correct no further processing required
+    if NT_SUCCESS(Status) then
+      goto Done;
 
-  FCaption := SrcToken.Caption + ' (ref)'
+    // Full access didn't work. Collect the access that is already granted
+    Access := SrcToken.HandleInformation.Access;
+
+    // Try each one that is not granted yet
+    for i := 0 to ACCESS_COUNT - 1 do
+      if (Access and AccessValues[i]) = 0 then
+        if NT_SUCCESS(NtDuplicateObject(GetCurrentProcess, SrcToken.hToken,
+          GetCurrentProcess, hToken, AccessValues[i], 0, 0)) then
+        begin
+          // Yes, this access can be granted, add it
+          Access := Access or AccessValues[i];
+          NtClose(hToken);
+        end;
+
+    // At this point Access variable contains expanded MAXIMUM_ALLOWED
+  end;
+
+  // Finally, duplicate the handle
+  NativeCheck(NtDuplicateObject(GetCurrentProcess, SrcToken.hToken,
+    GetCurrentProcess, hToken, Access, HandleAttributes,
+    Options[SameAccess]), 'NtDuplicateObject', SrcToken);
+
+  Done: FCaption := SrcToken.Caption + ' (ref)'
+  // TODO: No need to snapshot handles, object address is already known
 end;
 
 constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
@@ -871,32 +875,37 @@ end;
 
 constructor TToken.CreateOpenCurrent(Access: ACCESS_MASK);
 begin
-  WinCheck(OpenProcessToken(GetCurrentProcess, Access, hToken),
-    'OpenProcessToken');
-
-  FCaption := 'Current process';
+  CreateOpenProcess(GetCurrentProcessId, 'Current process');
 end;
 
-constructor TToken.CreateOpenProcess(PID: Cardinal; Access: ACCESS_MASK);
+constructor TToken.CreateOpenProcess(PID: Cardinal; ImageName: String;
+  Access: ACCESS_MASK; Attributes: Cardinal);
 var
   hProcess: THandle;
-  ProcessList: TProcessList;
+  ClientId: TClientId;
+  ObjAttr: TObjectAttributes;
 begin
-  hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, PID);
-  if hProcess = 0 then
-    WinCheck(False, 'OpenProcess');
+  if PID = GetCurrentProcessId then
+    hProcess := GetCurrentProcess
+  else
+  begin
+    InitializeObjectAttributes(ObjAttr);
+    ClientId.UniqueProcess := PID;
+    ClientId.UniqueThread := 0;
 
-  try
-    WinCheck(OpenProcessToken(hProcess, Access, hToken),
-      'OpenProcessToken');
-  finally
-    CloseHandle(hProcess);
+    NativeCheck(NtOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+      ObjAttr, ClientId),
+      'NtOpenProcess with PROCESS_QUERY_LIMITED_INFORMATION');
   end;
 
-  // To obtain the executable's name we snapshot process list on the system
-  ProcessList := TProcessList.Create;
-  FCaption := Format('%s [%d]', [ProcessList.FindName(PID), PID]);
-  ProcessList.Free;
+  try
+    NativeCheck(NtOpenProcessTokenEx(hProcess, Access, Attributes, hToken),
+      'NtOpenProcessTokenEx');
+  finally
+    NtClose(hProcess);
+  end;
+
+  FCaption := Format('%s [%d]', [ImageName, PID]);
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
@@ -969,7 +978,7 @@ begin
     on E: Exception do
     begin
       // This is really bad. At least inform the debugger...
-      OutputDebugString(PChar('Token.OnClose: ' + E.Message));
+      OutputDebugStringW(PChar('Token.OnClose: ' + E.Message));
       raise;
     end;
   end;
@@ -979,18 +988,18 @@ begin
 
   if hToken <> 0 then
   try
-    CloseHandle(hToken); // A protected handle may cause an exception
+    NtClose(hToken); // A protected handle may cause an exception
     hToken := 0;
   except
     ; // but destructor should always succeed
   end;
 
   if FOnCanClose.Count > 0 then
-    OutputDebugString('Abandoned OnCanClose');
+    OutputDebugStringW('Abandoned OnCanClose');
   if FOnClose.Count > 0 then
-    OutputDebugString('Abandoned OnClose');
+    OutputDebugStringW('Abandoned OnClose');
   if FOnCaptionChange.Count > 0 then
-    OutputDebugString('Abandoned OnCaptionChange');
+    OutputDebugStringW('Abandoned OnCaptionChange');
 
   inherited;
 end;
@@ -1028,8 +1037,8 @@ begin
       GroupArray.Groups[i].Attributes := 0;
 
   try
-    WinCheck(AdjustTokenGroups(hToken, IsResetFlag[Action], GroupArray, 0, nil,
-      nil), 'AdjustTokenGroups', Self);
+    NativeCheck(NtAdjustGroupsToken(hToken, IsResetFlag[Action], GroupArray, 0,
+      nil, nil), 'NtAdjustGroupsToken', Self);
 
     // Update the cache and notify event listeners
     InfoClass.ReQuery(tdTokenGroups);
@@ -1056,19 +1065,17 @@ const
   ActionToAttribute: array [TPrivilegeAdjustAction] of Cardinal =
     (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
 var
-  PrivBufferSize: Cardinal;
   PrivArray: PTokenPrivileges;
   i: integer;
 begin
   // Allocate privileges
-  PrivArray := AllocPrivileges(Privileges, @PrivBufferSize);
+  PrivArray := AllocPrivileges(Privileges);
   try
     for i := 0 to PrivArray.PrivilegeCount - 1 do
       PrivArray.Privileges[i].Attributes := ActionToAttribute[Action];
 
-    WinCheck(AdjustTokenPrivileges(hToken, False, PrivArray, PrivBufferSize,
-      nil, nil) and (GetLastError = ERROR_SUCCESS), 'AdjustTokenPrivileges',
-      Self);
+    NativeCheck(NtAdjustPrivilegesToken(hToken, False, PrivArray, 0, nil, nil),
+      'NtAdjustPrivilegesToken', Self);
   finally
     FreeMem(PrivArray);
 
@@ -1089,6 +1096,7 @@ begin
   Result := GetTokenInformation(hToken, InfoClass, @BufferData,
     SizeOf(ResultType), ReturnLength);
 
+  // Modify the specified Data parameter only on success
   if Result then
     Data := BufferData;
 end;
@@ -1181,17 +1189,24 @@ end;
 function TToken.SendHandleToProcess(PID: Cardinal): NativeUInt;
 var
   hTargetProcess: THandle;
+  ClientId: TClientId;
+  ObjAttr: TObjectAttributes;
 begin
-  // Open target process
-  hTargetProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
-  WinCheck(LongBool(hTargetProcess), 'OpenProcess#PROCESS_DUP_HANDLE');
+  InitializeObjectAttributes(ObjAttr);
+  ClientId.UniqueProcess := PID;
+  ClientId.UniqueThread := 0;
+
+  // Open the target process
+  NativeCheck(NtOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, ObjAttr,
+    ClientId), 'NtOpenProcess with PROCESS_DUP_HANDLE', Self);
 
   try
-    // Send then handle
-    WinCheck(DuplicateHandle(GetCurrentProcess, hToken, hTargetProcess, @Result,
-      0, False, DUPLICATE_SAME_ACCESS), 'DuplicateHandle')
+    // Send the handle
+    NativeCheck(NtDuplicateObject(GetCurrentProcess, hToken, hTargetProcess,
+      Result, 0, 0, DUPLICATE_SAME_ACCESS or DUPLICATE_SAME_ATTRIBUTES),
+      'NtDuplicateObject', Self);
   finally
-    CloseHandle(hTargetProcess);
+    NtClose(hTargetProcess);
   end;
 end;
 
@@ -1675,9 +1690,9 @@ begin
         Token.Cache.Integrity.SID.CreateFromSid(pIntegrity.Sid);
 
         // Get level value from the SID sub-authority
-        if GetSidSubAuthorityCount(pIntegrity.Sid)^ = 1 then
+        if RtlSubAuthorityCountSid(pIntegrity.Sid)^ = 1 then
           Token.Cache.Integrity.Level := TTokenIntegrityLevel(
-            GetSidSubAuthority(pIntegrity.Sid, 0)^)
+            RtlSubAuthoritySid(pIntegrity.Sid, 0)^)
         else
           Token.Cache.Integrity.Level := ilUntrusted;
 
@@ -1744,10 +1759,12 @@ var
 begin
   // Wee need to prepare the SID for the integrity level.
   // It contains 1 sub authority and looks like S-1-16-X.
-  mandatoryLabel.Sid := AllocMem(GetSidLengthRequired(1));
+  mandatoryLabel.Sid := AllocMem(RtlLengthRequiredSid(1));
   try
-    InitializeSid(mandatoryLabel.Sid, SECURITY_MANDATORY_LABEL_AUTHORITY, 1);
-    GetSidSubAuthority(mandatoryLabel.Sid, 0)^ := DWORD(Value);
+    NativeCheck(RtlInitializeSid(mandatoryLabel.Sid,
+      SECURITY_MANDATORY_LABEL_AUTHORITY, 1), 'RtlInitializeSid');
+
+    RtlSubAuthoritySid(mandatoryLabel.Sid, 0)^ := Cardinal(Value);
     mandatoryLabel.Attributes := SE_GROUP_INTEGRITY;
 
     Token.SetFixedSize<TSIDAndAttributes>(TokenIntegrityLevel, mandatoryLabel);

@@ -158,8 +158,11 @@ begin
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
+var
+  ImageName: String;
 begin
-  TokenView.Add(TToken.CreateOpenProcess(TProcessListDialog.Execute(Self)));
+  TokenView.Add(TToken.CreateOpenProcess(
+    TProcessListDialog.Execute(Self, ImageName), ImageName));
 end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);

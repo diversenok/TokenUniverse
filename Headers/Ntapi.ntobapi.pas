@@ -25,6 +25,11 @@ type
   end;
   PObjectBasicInformaion = ^TObjectBasicInformaion;
 
+const
+  DUPLICATE_CLOSE_SOURCE = $00000001;
+  DUPLICATE_SAME_ACCESS = $00000002;
+  DUPLICATE_SAME_ATTRIBUTES = $00000004;
+
 function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
   TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
   Cardinal; ReturnLength: PCardinal): NTSTATUS; stdcall; external ntdll;

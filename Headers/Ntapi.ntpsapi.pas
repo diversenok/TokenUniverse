@@ -18,7 +18,7 @@ type
   end;
 
 function NtOpenProcess(out ProcessHandle: THandle; DesiredAccess: TAccessMask;
-  ObjectAttributes: PObjectAttributes; const ClientId: TClientId):
+  const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
   NTSTATUS; stdcall; external ntdll;
 
 function NtGetNextProcess(ProcessHandle: THandle; DesiredAccess: TAccessMask;

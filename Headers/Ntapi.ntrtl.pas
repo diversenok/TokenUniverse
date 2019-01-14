@@ -4,9 +4,23 @@ unit Ntapi.ntrtl;
 interface
 
 uses
-  Ntapi.ntdef, NtApi.ntpebteb;
+  Winapi.Windows, Ntapi.ntdef, NtApi.ntpebteb;
 
 function RtlGetCurrentPeb: PPEB; stdcall; external ntdll;
+
+function RtlLengthRequiredSid(SubAuthorityCount: Cardinal): Cardinal;
+  stdcall; external ntdll;
+
+function RtlSubAuthoritySid(Sid: PSid; SubAuthority: Cardinal): PCardinal;
+  stdcall; external ntdll;
+
+function RtlSubAuthorityCountSid(Sid: PSid): PByte; stdcall; external ntdll;
+
+procedure RtlFreeSid(Sid: PSid); stdcall; external ntdll;
+
+function RtlInitializeSid(Sid: PSid; const IdentifierAuthority:
+  TSidIdentifierAuthority; SubAuthorityCount: Byte): NTSTATUS; stdcall;
+  external ntdll;
 
 implementation
 

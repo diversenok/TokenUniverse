@@ -44,17 +44,15 @@ type
     procedure ListViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    /// <summary>
-    ///  Displays the dialog and returns PID of the selected process.
-    /// </summary>
-    class function Execute(AOwner: TComponent): Cardinal;
     destructor Destroy; override;
     procedure SearchBoxRightButtonClick(Sender: TObject);
   private
     ProcessListEx: array of TProcessItemEx;
     function AddChild(ParentIndex: Integer): TListItem;
   public
-    { Public declarations }
+    class function Execute(AOwner: TComponent): Cardinal; overload;
+    class function Execute(AOwner: TComponent; out ImgName: string): Cardinal;
+      overload;
   end;
 
 var
@@ -161,6 +159,24 @@ begin
       Abort;
 
     Result := PProcessItemEx(ListView.Selected.Data).Process.PID;
+  end;
+end;
+
+class function TProcessListDialog.Execute(AOwner: TComponent;
+  out ImgName: string): Cardinal;
+begin
+  with TProcessListDialog.Create(AOwner) do
+  begin
+    ShowModal;
+
+    if not Assigned(ListView.Selected) then
+      Abort;
+
+    with PProcessItemEx(ListView.Selected.Data).Process do
+    begin
+      Result := PID;
+      ImgName := ImageName;
+    end;
   end;
 end;
 
