@@ -174,16 +174,20 @@ type
     property ObjectInformation: TObjectBasicInformaion read GetObjectInfo;
 
     /// <summary>
-    ///  Ensure that the required value is in the cache and retrieves it if
+    ///  Ensure that the requested value is in the cache and retrieve it if
     ///  necessary.
     /// </summary>
     function Query(DataClass: TTokenDataClass): Boolean;
 
     /// <summary>
-    ///  Forcibly update the cache by retrieving it regardless of the cache
-    ///  state.
+    ///  Forcibly update the cache by retrieving the required data class.
     /// </summary>
     function ReQuery(DataClass: TTokenDataClass): Boolean;
+
+    /// <summary>
+    ///  Make sure that a cached value (if present) is up-to-date.
+    /// </summary>
+    procedure ValidateCache(DataClass: TTokenDataClass);
 
     /// <summary> Get a string representation of an info class. </summary>
     function QueryString(StringClass: TTokenStringClass;
@@ -683,11 +687,11 @@ begin
   NativeCheck(Status, 'NtSetInformationProcess#ProcessAccessToken', Self);
 
   // Assigning primary token to a process migh change token's Session ID
-  InfoClass.ReQuery(tdTokenSessionId);
+  InfoClass.ValidateCache(tdTokenSessionId);
 
   // Although changing session does not usually change Modified ID it is good to
   // update it
-  InfoClass.ReQuery(tdTokenStatistics);
+  InfoClass.ValidateCache(tdTokenStatistics);
 end;
 
 function TToken.CanBeFreed: Boolean;
@@ -1041,8 +1045,8 @@ begin
       nil, nil), 'NtAdjustGroupsToken', Self);
 
     // Update the cache and notify event listeners
-    InfoClass.ReQuery(tdTokenGroups);
-    InfoClass.ReQuery(tdTokenStatistics);
+    InfoClass.ValidateCache(tdTokenGroups);
+    InfoClass.ValidateCache(tdTokenStatistics);
   finally
     FreeGroups(GroupArray);
   end;
@@ -1081,8 +1085,8 @@ begin
 
     // The function could modify privileges even without succeeding.
     // Update the cache and notify event listeners.
-    InfoClass.ReQuery(tdTokenPrivileges);
-    InfoClass.ReQuery(tdTokenStatistics);
+    InfoClass.ValidateCache(tdTokenPrivileges);
+    InfoClass.ValidateCache(tdTokenStatistics);
   end;
 end;
 
@@ -1773,10 +1777,21 @@ begin
   end;
 
   // Update the cache and notify event listeners.
-  // Integrity is also stored in the group list, so update them too
-  ReQuery(tdTokenIntegrity);
-  ReQuery(tdTokenGroups);
-  ReQuery(tdTokenStatistics);
+  ValidateCache(tdTokenIntegrity);
+  ValidateCache(tdTokenStatistics);
+
+  // Integrity SID is also stored in the group list. So, update groups too.
+  ValidateCache(tdTokenGroups);
+
+  // Sometimes the integrity level SID might be assigned as the token owner.
+  // Since the owner is internally stored as an index in the group table,
+  // changing it, in this case, also changes the owner.
+  if Token.Cache.IsCached[tdTokenOwner] and
+    (Token.Cache.Owner.SIDType = SidTypeLabel) then
+    ValidateCache(tdTokenOwner);
+
+  // Note: this logic does not apply to the primary group since it is stored
+  // as a separate SID, not as a reference.
 end;
 
 procedure TTokenData.SetMandatoryPolicy(const Value: TMandatoryPolicy);
@@ -1784,8 +1799,8 @@ begin
   Token.SetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy, Value);
 
   // Update the cache and notify event listeners
-  ReQuery(tdTokenMandatoryPolicy);
-  ReQuery(tdTokenStatistics);
+  ValidateCache(tdTokenMandatoryPolicy);
+  ValidateCache(tdTokenStatistics);
 end;
 
 procedure TTokenData.SetOwner(const Value: TSecurityIdentifier);
@@ -1797,8 +1812,8 @@ begin
     Token.SetFixedSize<TTokenOwner>(TokenOwner, NewOwner);
 
     // Update the cache and notify event listeners
-    ReQuery(tdTokenOwner);
-    ReQuery(tdTokenStatistics);
+    ValidateCache(tdTokenOwner);
+    ValidateCache(tdTokenStatistics);
   finally
     LocalFree(NewOwner.Owner);
   end;
@@ -1813,8 +1828,8 @@ begin
     Token.SetFixedSize<TTokenPrimaryGroup>(TokenPrimaryGroup, NewPrimaryGroup);
 
     // Update the cache and notify event listeners
-    ReQuery(tdTokenPrimaryGroup);
-    ReQuery(tdTokenStatistics);
+    ValidateCache(tdTokenPrimaryGroup);
+    ValidateCache(tdTokenStatistics);
   finally
     LocalFree(NewPrimaryGroup.PrimaryGroup);
   end;
@@ -1825,11 +1840,11 @@ begin
   Token.SetFixedSize<Cardinal>(TokenSessionId, Value);
 
   // Update the cache and notify event listeners
-  ReQuery(tdTokenSessionId);
+  ValidateCache(tdTokenSessionId);
 
   // Although changing session does not usually change Modified ID it is good to
   // update it
-  ReQuery(tdTokenStatistics);
+  ValidateCache(tdTokenStatistics);
 end;
 
 procedure TTokenData.SetUIAccess(const Value: LongBool);
@@ -1837,8 +1852,8 @@ begin
   Token.SetFixedSize<LongBool>(TokenUIAccess, Value);
 
   // Update the cache and notify event listeners
-  ReQuery(tdTokenUIAccess);
-  ReQuery(tdTokenStatistics);
+  ValidateCache(tdTokenUIAccess);
+  ValidateCache(tdTokenStatistics);
 end;
 
 procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
@@ -1846,9 +1861,9 @@ begin
   Token.SetFixedSize<LongBool>(TokenVirtualizationAllowed, Value);
 
   // Update the cache and notify event listeners
-  ReQuery(tdTokenVirtualizationAllowed);
-  ReQuery(tdTokenVirtualizationEnabled); // Just to be sure
-  ReQuery(tdTokenStatistics);
+  ValidateCache(tdTokenVirtualizationAllowed);
+  ValidateCache(tdTokenVirtualizationEnabled); // Just to be sure
+  ValidateCache(tdTokenStatistics);
 end;
 
 procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
@@ -1856,8 +1871,14 @@ begin
   Token.SetFixedSize<LongBool>(TokenVirtualizationEnabled, Value);
 
   // Update the cache and notify event listeners
-  ReQuery(tdTokenVirtualizationEnabled);
-  ReQuery(tdTokenStatistics);
+  ValidateCache(tdTokenVirtualizationEnabled);
+  ValidateCache(tdTokenStatistics);
+end;
+
+procedure TTokenData.ValidateCache(DataClass: TTokenDataClass);
+begin
+  if Token.Cache.IsCached[DataClass] then
+    ReQuery(DataClass);
 end;
 
 end.
