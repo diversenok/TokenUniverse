@@ -28,7 +28,7 @@ type
     function RemovePrivilege(Index: Integer): Boolean;
   end;
 
-  TGroupsSourceMode = (gsGroups, gsRestrictedSIDs);
+  TGroupsSourceMode = (gsGroups, gsRestrictedSIDs, gsGroupsEnabledOnly);
 
   TGroupsSource = class
   private
@@ -391,14 +391,25 @@ begin
 
   FTokenGroups := NewGroups;
 
+  // Remove disabled groups if necessary
+  if Mode = gsGroupsEnabledOnly then
+  begin
+    // Make a copy since we don't want to change the original array
+    FTokenGroups := Copy(FTokenGroups, 0, Length(FTokenGroups));
+
+    for i := High(FTokenGroups) downto 0 do
+      if not FTokenGroups[i].Attributes.Contain(GroupEnabled) then
+        Delete(FTokenGroups, i, 1);
+  end;
+
   with ListView do
   begin
     Items.BeginUpdate(True);
     Items.Clear;
 
     // Show groups from the token
-    for i := 0 to High(NewGroups) do
-      SetItem(Items.Add, NewGroups[i]);
+    for i := 0 to High(FTokenGroups) do
+      SetItem(Items.Add, FTokenGroups[i]);
 
     // Show additional groups
     for i := 0 to High(FAdditionalGroups) do
@@ -468,7 +479,7 @@ begin
   Self.Token := Token;
   Token.OnClose.Add(UnsubscribeToken);
 
-  if Mode = gsGroups then
+  if (Mode = gsGroups) or (Mode = gsGroupsEnabledOnly) then
   begin
     // Query groups and subcribe for the event. The subscription will
     // automatically invoke our event listener.
@@ -525,7 +536,7 @@ begin
   if Assigned(Token) then
   begin
     // Restricted SIDs do not have an event, but Groups do
-    if Mode = gsGroups then
+    if (Mode = gsGroups) or (Mode = gsGroupsEnabledOnly) then
       Token.Events.OnGroupsChange.Delete(OnGroupsChange);
 
     Token.OnClose.Delete(UnsubscribeToken);

@@ -50,7 +50,8 @@ type
 implementation
 
 uses
-  UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings;
+  UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
+  TU.Winapi;
 
 {$R *.dfm}
 
@@ -121,7 +122,7 @@ end;
 
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 var
-  UserItem: TGroup;
+  Group: TGroup;
   Found: Boolean;
   RestrInd, ItemInd: Integer;
 begin
@@ -132,8 +133,10 @@ begin
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
 
   DisableGoupsSource.SubscribeToken(Token, gsGroups);
-  RestrictGroupsSource.SubscribeToken(Token, gsGroups);
   PrivilegesSource.SubscribeToken(Token);
+
+  // Show only enabled groups to make things clear when using restictions
+  RestrictGroupsSource.SubscribeToken(Token, gsGroupsEnabledOnly);
 
   Token.OnCaptionChange.Add(ChangedCaption);
   ChangedCaption(Token.Caption);
@@ -141,10 +144,16 @@ begin
   // The user can also be disabled and restricted
   if Token.InfoClass.Query(tdTokenUser) then
   begin
-    UserItem.SecurityIdentifier := Token.InfoClass.User.SecurityIdentifier;
-    UserItem.Attributes := Token.InfoClass.User.Attributes;
-    DisableGoupsSource.AddGroup(UserItem);
-    RestrictGroupsSource.AddGroup(UserItem);
+    DisableGoupsSource.AddGroup(Token.InfoClass.User);
+    RestrictGroupsSource.AddGroup(Token.InfoClass.User);
+  end;
+
+  // RESTRICTED also is useful to provide access to WinSta0 and Default desktop
+  with TSecurityIdentifier.CreateWellKnown(WinRestrictedCodeSid) do
+  begin
+    Group.SecurityIdentifier := Value;
+    Group.Attributes := GroupExUser;
+    RestrictGroupsSource.AddGroup(Group);
   end;
 
   // If the token has restricting SIDs then check them. It can also contain
