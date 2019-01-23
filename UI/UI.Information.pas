@@ -99,14 +99,13 @@ type
     procedure ChangedSession(NewSession: Cardinal);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
-    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
     procedure ChangedGroups(NewGroups: TGroupArray);
     procedure ChangedStatistics(NewStatistics: TTokenStatistics);
     procedure ChangedOwner(NewOwner: TSecurityIdentifier);
     procedure ChangedPrimaryGroup(NewPrimary: TSecurityIdentifier);
     procedure ChangedVAllowed(NewVAllowed: LongBool);
     procedure ChangedVEnabled(NewVEnabled: LongBool);
-    procedure Refresh;
+    procedure Refresh(Force: Boolean);
     procedure UpdateObjectTab;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -116,7 +115,7 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, TU.Handles, UI.ProcessList,
-  TU.Processes;
+  TU.Processes, UI.Settings;
 
 const
   TAB_INVALIDATED = 0;
@@ -280,8 +279,6 @@ procedure TInfoDialog.ChangedGroups(NewGroups: TGroupArray);
 var
   i: Integer;
 begin
-  TabGroups.Caption := Format('Groups (%d)', [Length(NewGroups)]);
-
   // Update suggestions for Owner and Primary Group
   ComboOwner.Items.BeginUpdate;
   ComboPrimary.Items.BeginUpdate;
@@ -339,11 +336,6 @@ begin
   ComboPrimary.Text := NewPrimary.ToString;
 end;
 
-procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TPrivilegeArray);
-begin
-  TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
-end;
-
 procedure TInfoDialog.ChangedSession(NewSession: Cardinal);
 begin
   ComboSession.Color := clWindow;
@@ -379,6 +371,10 @@ begin
 
     // TODO: Error hints
   end;
+
+  TabGroups.Caption := Format('Groups (%d)', [NewStatistics.GroupCount]);
+  TabPrivileges.Caption := Format('Privileges (%d)',
+    [NewStatistics.PrivilegeCount]);
 end;
 
 procedure TInfoDialog.ChangedUIAccess(NewUIAccess: LongBool);
@@ -430,42 +426,50 @@ begin
   Token.Events.OnOwnerChange.Delete(ChangedOwner);
   Token.Events.OnStatisticsChange.Delete(ChangedStatistics);
   Token.Events.OnGroupsChange.Delete(ChangedGroups);
-  Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
   Token.Events.OnPolicyChange.Delete(ChangedPolicy);
   Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
+
   RestrictedSIDsSource.Free;
   GroupsSource.Free;
   PrivilegesSource.Free;
   IntegritySource.Free;
   SessionSource.Free;
+
   UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
+  // The token should not be destroyed until the dialog is closed
   SubscribeTokenCanClose(Token, Caption);
+
+  // Manage the dialog caption
+  ChangedCaption(Token.Caption);
+  Token.OnCaptionChange.Add(ChangedCaption);
+
+  // Create objects that control UI components which dynamically
+  // display token-related information
   SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
   RestrictedSIDsSource := TGroupsSource.Create(ListViewRestricted);
 
-  // "Refresh" queries all the information, stores changeble one in the event
-  // handler, and distributes changed one to every existing event listener
-  Refresh;
+  // Query every changable info class to make sure it is in the cache for
+  // future use.
+  Refresh(False);
 
-  // Than subscribtion calls our event listeners with the latest availible
-  // information that is stored in the event handlers. By doing that in this
-  // order we avoid multiple calls while sharing the data between different
-  // tokens pointing the same kernel object.
+  // Subscribe event listeners. Since the information is already queried inside
+  // Refresh it also calls our event listeners with the latest availible data.
+  // By doing this in such order we avoid multiple calls while sharing the data
+  // between different tokens pointing the same kernel object.
   Token.Events.OnSessionChange.Add(ChangedSession);
   Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
   Token.Events.OnPolicyChange.Add(ChangedPolicy);
-  Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
   Token.Events.OnGroupsChange.Add(ChangedGroups);
   Token.Events.OnStatisticsChange.Add(ChangedStatistics);
   Token.Events.OnOwnerChange.Add(ChangedOwner);
@@ -475,19 +479,13 @@ begin
   PrivilegesSource.SubscribeToken(Token);
   GroupsSource.SubscribeToken(Token, gsGroups);
   RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);
-
-  Token.OnCaptionChange.Add(ChangedCaption);
-  Token.OnCaptionChange.Invoke(Token.Caption);
-
-  TabRestricted.Caption := Format('Restricting SIDs (%d)',
-    [ListViewRestricted.Items.Count]);
 end;
 
 procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if Key = VK_F5 then
-    Refresh;
+    Refresh(True);
 end;
 
 procedure TInfoDialog.ListViewAdvancedResize(Sender: TObject);
@@ -510,8 +508,11 @@ begin
     UpdateObjectTab;
 end;
 
-procedure TInfoDialog.Refresh;
+procedure TInfoDialog.Refresh(Force: Boolean);
 begin
+  if Force or TSettings.ForceUpdateOnInfoDialog then
+    Token.InfoClass.InvalidateAll;
+
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
   begin
@@ -534,18 +535,17 @@ begin
   end;
   ListViewAdvanced.Items.EndUpdate;
 
-  // This triggers InfoClass if the value has changed
-  Token.InfoClass.ReQuery(tdTokenIntegrity);
-  Token.InfoClass.ReQuery(tdTokenSessionId);
-  Token.InfoClass.ReQuery(tdTokenUIAccess);
-  Token.InfoClass.ReQuery(tdTokenMandatoryPolicy);
-  Token.InfoClass.ReQuery(tdTokenPrivileges);
-  Token.InfoClass.ReQuery(tdTokenGroups);
-  Token.InfoClass.ReQuery(tdTokenStatistics);
-  Token.InfoClass.ReQuery(tdTokenOwner);
-  Token.InfoClass.ReQuery(tdTokenPrimaryGroup);
-  Token.InfoClass.ReQuery(tdTokenVirtualizationAllowed);
-  Token.InfoClass.ReQuery(tdTokenVirtualizationEnabled);
+  // This triggers event if the value has changed
+  Token.InfoClass.Query(tdTokenIntegrity);
+  Token.InfoClass.Query(tdTokenSessionId);
+  Token.InfoClass.Query(tdTokenUIAccess);
+  Token.InfoClass.Query(tdTokenMandatoryPolicy);
+  Token.InfoClass.Query(tdTokenGroups);
+  Token.InfoClass.Query(tdTokenStatistics);
+  Token.InfoClass.Query(tdTokenOwner);
+  Token.InfoClass.Query(tdTokenPrimaryGroup);
+  Token.InfoClass.Query(tdTokenVirtualizationAllowed);
+  Token.InfoClass.Query(tdTokenVirtualizationEnabled);
 
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass.User, EditUser do
@@ -559,6 +559,10 @@ begin
       else
         Color := clEnabled;
     end;
+
+  if Token.InfoClass.Query(tdTokenRestrictedSids) then
+    TabRestricted.Caption := Format('Restricting SIDs (%d)',
+      [Length(Token.InfoClass.RestrictedSids)]);
 
   TabObject.Tag := TAB_INVALIDATED;
   PageControlChange(Self);
@@ -581,7 +585,7 @@ begin
     Exit;
 
   // Update basic object information
-  if Token.InfoClass.ReQuery(tdObjectInfo) then
+  if Token.InfoClass.Query(tdObjectInfo) then
     with ListViewObject, Token.InfoClass.ObjectInformation do
     begin
       Items[1].SubItems[0] := ObjectAttributesToString(Attributes);

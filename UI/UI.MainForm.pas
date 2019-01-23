@@ -63,6 +63,7 @@ type
     SearchButtons: TImageList;
     SearchBox: TButtonedEdit;
     ComboBoxColumn: TComboBox;
+    MenuForceRefresh: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -100,6 +101,7 @@ type
     procedure ListViewTokensEdited(Sender: TObject; Item: TListItem;
       var S: string);
     procedure SearchBoxRightButtonClick(Sender: TObject);
+    procedure MenuForceRefreshClick(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -368,6 +370,12 @@ end;
 procedure TFormMain.MenuExitClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TFormMain.MenuForceRefreshClick(Sender: TObject);
+begin
+  TSettings.ForceUpdateOnInfoDialog := not TSettings.ForceUpdateOnInfoDialog;
+  MenuPromptHandleClose.Checked := TSettings.ForceUpdateOnInfoDialog;
 end;
 
 procedure TFormMain.MenuPromptHandleCloseClick(Sender: TObject);

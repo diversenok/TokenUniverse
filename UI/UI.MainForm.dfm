@@ -142,6 +142,10 @@ object FormMain: TFormMain
         Caption = 'Do not close creation dialogs'
         OnClick = MenuCloseCreationDlgClick
       end
+      object MenuForceRefresh: TMenuItem
+        Caption = 'Force refresh on opening info dialog'
+        OnClick = MenuForceRefreshClick
+      end
       object Showiconsinprocesslist1: TMenuItem
         Caption = 'Show icons in process list'
         Checked = True

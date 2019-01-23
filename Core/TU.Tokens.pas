@@ -189,6 +189,12 @@ type
     /// </summary>
     procedure ValidateCache(DataClass: TTokenDataClass);
 
+    /// <summary> Mark a cache entry as outdated. </summary>
+    procedure InvalidateCache(DataClass: TTokenDataClass);
+
+    /// <summary> Mark all cached data as outdated. </summary>
+    procedure InvalidateAll;
+
     /// <summary> Get a string representation of an info class. </summary>
     function QueryString(StringClass: TTokenStringClass;
       Detailed: Boolean = False): String;
@@ -1365,6 +1371,19 @@ begin
   Result := Token.Cache.VirtualizationEnabled;
 end;
 
+procedure TTokenData.InvalidateAll;
+var
+  i: TTokenDataClass;
+begin
+  for i := Low(TTokenDataClass) to High(TTokenDataClass) do
+    Token.Cache.IsCached[i] := False;
+end;
+
+procedure TTokenData.InvalidateCache(DataClass: TTokenDataClass);
+begin
+  Token.Cache.IsCached[DataClass] := False;
+end;
+
 procedure TTokenData.InvokeStringEvent(StringClass: TTokenStringClass);
 begin
   // Note that tsHandle and tsAccess are per-handle events
@@ -1541,6 +1560,8 @@ begin
     not (DataClass in [tdNone, tdTokenSource, tdObjectInfo]) then
       Exit;
 
+  // Perform actual quetying. Do NOT invoke any events at this point since it
+  // may cause recursion. We need to mark the cache as valid first.
   case DataClass of
     tdNone:
        Result := True;
@@ -1558,11 +1579,7 @@ begin
     end;
 
     tdTokenGroups:
-    begin
       Result := Token.QueryGroups(TokenGroups, Token.Cache.Groups);
-      if Result then
-        Token.Events.OnGroupsChange.Invoke(Token.Cache.Groups);
-    end;
 
     tdTokenPrivileges:
     begin
@@ -1572,28 +1589,16 @@ begin
         SetLength(Token.Cache.Privileges, pPrivBuf.PrivilegeCount);
         for i := 0 to pPrivBuf.PrivilegeCount - 1 do
           Token.Cache.Privileges[i] := pPrivBuf.Privileges[i];
-
-        Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges)
       finally
         FreeMem(pPrivBuf);
       end;
     end;
 
     tdTokenOwner:
-    begin
       Result := Token.QuerySid(TokenOwner, Token.Cache.Owner);
-      if Result then
-        if Token.Events.OnOwnerChange.Invoke(Token.Cache.Owner) then
-          InvokeStringEvent(tsOwner);
-    end;
 
     tdTokenPrimaryGroup:
-    begin
      Result := Token.QuerySid(TokenPrimaryGroup, Token.Cache.PrimaryGroup);
-     if Result then
-       if Token.Events.OnPrimaryChange.Invoke(Token.Cache.PrimaryGroup) then
-         InvokeStringEvent(tsPrimaryGroup);
-    end;
 
     tdTokenDefaultDacl: ; // Not implemented
 
@@ -1619,36 +1624,16 @@ begin
     end;
 
     tdTokenStatistics:
-    begin
       Result := Token.QueryFixedSize<TTokenStatistics>(TokenStatistics,
         Token.Cache.Statistics);
-
-      if Result then
-        if Token.Events.OnStatisticsChange.Invoke(Token.Cache.Statistics) then
-        begin
-          InvokeStringEvent(tsTokenID);
-          InvokeStringEvent(tsExprires);
-          InvokeStringEvent(tsDynamicCharged);
-          InvokeStringEvent(tsDynamicAvailable);
-          InvokeStringEvent(tsGroupCount);
-          InvokeStringEvent(tsPrivilegeCount);
-          InvokeStringEvent(tsModifiedID);
-          InvokeStringEvent(tsLogonID);
-        end;
-    end;
 
     tdTokenRestrictedSids:
       Result :=  Token.QueryGroups(TokenRestrictedSids,
         Token.Cache.RestrictedSids);
 
     tdTokenSessionId:
-    begin
       Result := Token.QueryFixedSize<Cardinal>(TokenSessionId,
         Token.Cache.Session);
-      if Result then
-        if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
-          InvokeStringEvent(tsSession);
-    end;
 
     tdTokenSandBoxInert:
       Result := Token.QueryFixedSize<LongBool>(TokenSandBoxInert,
@@ -1667,24 +1652,12 @@ begin
         Token.Cache.HasRestrictions);
 
     tdTokenVirtualizationAllowed:
-    begin
       Result := Token.QueryFixedSize<LongBool>(TokenVirtualizationAllowed,
         Token.Cache.VirtualizationAllowed);
-      if Result then
-        if Token.Events.OnVirtualizationAllowedChange.Invoke(
-          Token.Cache.VirtualizationAllowed) then
-          InvokeStringEvent(tsVirtualization);
-    end;
 
     tdTokenVirtualizationEnabled:
-    begin
       Result := Token.QueryFixedSize<LongBool>(TokenVirtualizationEnabled,
         Token.Cache.VirtualizationEnabled);
-      if Result then
-        if Token.Events.OnVirtualizationEnabledChange.Invoke(
-          Token.Cache.VirtualizationEnabled) then
-          InvokeStringEvent(tsVirtualization);
-    end;
 
     tdTokenIntegrity:
     begin
@@ -1702,34 +1675,18 @@ begin
               subAuthCount - 1)^)
           else
             Level := ilUntrusted;
-
-          if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
-            InvokeStringEvent(tsIntegrity);
         finally
          FreeMem(pIntegrity);
         end;
     end;
 
     tdTokenUIAccess:
-    begin
       Result := Token.QueryFixedSize<LongBool>(TokenUIAccess,
         Token.Cache.UIAccess);
-      if Result then
-        if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
-          InvokeStringEvent(tsUIAccess);
-    end;
 
     tdTokenMandatoryPolicy:
-    begin
       Result := Token.QueryFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy,
         Token.Cache.MandatoryPolicy);
-      if Result then
-        if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
-        begin
-          InvokeStringEvent(tsNoWriteUpPolicy);
-          InvokeStringEvent(tsNewProcessMinPolicy);
-        end;
-    end;
 
     tdTokenIsRestricted:
       Result := Token.QueryFixedSize<LongBool>(TokenIsRestricted,
@@ -1754,7 +1711,68 @@ begin
     end;
   end;
 
-  Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
+  // Mark the cache state
+  Token.Cache.IsCached[DataClass] := Result;
+
+  // Invoke events it the query was successful.
+  if Result then
+    case DataClass of
+      tdTokenGroups:
+        Token.Events.OnGroupsChange.Invoke(Token.Cache.Groups);
+
+      tdTokenPrivileges:
+        Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges);
+
+      tdTokenOwner:
+        if Token.Events.OnOwnerChange.Invoke(Token.Cache.Owner) then
+          InvokeStringEvent(tsOwner);
+
+      tdTokenPrimaryGroup:
+        if Token.Events.OnPrimaryChange.Invoke(Token.Cache.PrimaryGroup) then
+         InvokeStringEvent(tsPrimaryGroup);
+
+      tdTokenStatistics:
+        if Token.Events.OnStatisticsChange.Invoke(Token.Cache.Statistics) then
+        begin
+          InvokeStringEvent(tsTokenID);
+          InvokeStringEvent(tsExprires);
+          InvokeStringEvent(tsDynamicCharged);
+          InvokeStringEvent(tsDynamicAvailable);
+          InvokeStringEvent(tsGroupCount);
+          InvokeStringEvent(tsPrivilegeCount);
+          InvokeStringEvent(tsModifiedID);
+          InvokeStringEvent(tsLogonID);
+        end;
+
+      tdTokenSessionId:
+        if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
+          InvokeStringEvent(tsSession);
+
+      tdTokenVirtualizationAllowed:
+        if Token.Events.OnVirtualizationAllowedChange.Invoke(
+          Token.Cache.VirtualizationAllowed) then
+          InvokeStringEvent(tsVirtualization);
+
+      tdTokenVirtualizationEnabled:
+        if Token.Events.OnVirtualizationEnabledChange.Invoke(
+          Token.Cache.VirtualizationEnabled) then
+          InvokeStringEvent(tsVirtualization);
+
+      tdTokenIntegrity:
+        if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
+            InvokeStringEvent(tsIntegrity);
+
+      tdTokenUIAccess:
+        if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
+          InvokeStringEvent(tsUIAccess);
+
+      tdTokenMandatoryPolicy:
+        if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
+        begin
+          InvokeStringEvent(tsNoWriteUpPolicy);
+          InvokeStringEvent(tsNewProcessMinPolicy);
+        end;
+    end;
 end;
 
 procedure TTokenData.SetIntegrityLevel(const Value: TTokenIntegrityLevel);
