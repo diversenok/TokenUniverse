@@ -313,6 +313,7 @@ procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TTokenIntegrity);
 begin
   ComboIntegrity.Color := clWindow;
   IntegritySource.SetIntegrity(NewIntegrity);
+  ComboIntegrity.Hint := TGroupsSource.BuildHint(NewIntegrity.Group);
 end;
 
 procedure TInfoDialog.ChangedOwner(NewOwner: TSecurityIdentifier);

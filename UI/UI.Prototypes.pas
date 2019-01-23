@@ -56,7 +56,8 @@ type
       False);
     class function BuildHint(SID: TSecurityIdentifier;
       Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
-      static;
+      overload; static;
+    class function BuildHint(Group: TGroup): String; overload; static;
   end;
 
   TSessionSource = class
@@ -328,6 +329,11 @@ begin
   finally
     Items.Free;
   end;
+end;
+
+class function TGroupsSource.BuildHint(Group: TGroup): String;
+begin
+  Result := BuildHint(Group.SecurityIdentifier, Group.Attributes, True);
 end;
 
 function TGroupsSource.CheckedGroups: TGroupArray;

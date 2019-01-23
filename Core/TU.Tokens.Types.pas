@@ -105,11 +105,10 @@ type
   );
 
   TTokenIntegrity = record
-    SID: TSecurityIdentifier;
+    Group: TGroup;
     Level: TTokenIntegrityLevel;
     function IsWellKnown: Boolean;
     function ToString: String;
-    function ToDetailedString: String;
   end;
 
   TMandatoryPolicy = Cardinal;
@@ -591,7 +590,7 @@ end;
 
 function TTokenIntegrity.IsWellKnown: Boolean;
 begin
-  case Self.Level of
+  case Level of
     ilUntrusted, ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem, ilProtected:
       Result := True;
   else
@@ -599,17 +598,9 @@ begin
   end;
 end;
 
-function TTokenIntegrity.ToDetailedString: String;
-begin
-  if SID.User <> '' then
-    Result := SID.ToString
-  else
-    Result := Format('Intermediate Mandatory Level: 0x%0.4x', [Cardinal(Level)]);
-end;
-
 function TTokenIntegrity.ToString: String;
 begin
-  case Self.Level of
+  case Level of
     ilUntrusted: Result := 'Untrusted';
     ilLow: Result := 'Low';
     ilMedium: Result := 'Medium';
@@ -618,7 +609,7 @@ begin
     ilSystem: Result := 'System';
     ilProtected: Result := 'Protected';
   else
-    Result := 'Intermediate';
+    Result := Format('0x%0.4x', [Cardinal(Level)]);
   end;
 end;
 
@@ -667,7 +658,9 @@ end;
 
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 begin
-  Result := Value1.Level = Value2.Level;
+  Result := (Value1.Group.SecurityIdentifier.SID =
+    Value2.Group.SecurityIdentifier.SID ) and
+    (Value1.Group.Attributes = Value2.Group.Attributes);
 end;
 
 function CompareLongBools(Value1, Value2: LongBool): Boolean;

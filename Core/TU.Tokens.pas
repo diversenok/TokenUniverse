@@ -1047,6 +1047,9 @@ begin
     // Update the cache and notify event listeners
     InfoClass.ValidateCache(tdTokenGroups);
     InfoClass.ValidateCache(tdTokenStatistics);
+
+    // Adjusting groups may change integrity attributes
+    InfoClass.ValidateCache(tdTokenIntegrity);
   finally
     FreeGroups(GroupArray);
   end;
@@ -1413,10 +1416,7 @@ begin
       Result := Token.Cache.Elevation.ToString;
 
     tsIntegrity:
-      if Detailed then
-        Result := Token.Cache.Integrity.ToDetailedString
-      else
-        Result := Token.Cache.Integrity.ToString;
+      Result := Token.Cache.Integrity.ToString;
 
     tsObjectAddress:
       Result := Format('0x%0.8x',
@@ -1527,7 +1527,7 @@ var
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
   lObjInfo: TObjectBasicInformaion;
-  i: Integer;
+  i, subAuthCount: Integer;
 begin
   Result := False;
 
@@ -1690,21 +1690,24 @@ begin
     begin
       pIntegrity := Token.QueryVariableSize(TokenIntegrityLevel, Result);
       if Result then
-      try
-        Token.Cache.Integrity.SID.CreateFromSid(pIntegrity.Sid);
+        with Token.Cache.Integrity do
+        try
+          Group.SecurityIdentifier.CreateFromSid(pIntegrity.Sid);
+          Group.Attributes := TGroupAttributes(pIntegrity.Attributes);
 
-        // Get level value from the SID sub-authority
-        if RtlSubAuthorityCountSid(pIntegrity.Sid)^ = 1 then
-          Token.Cache.Integrity.Level := TTokenIntegrityLevel(
-            RtlSubAuthoritySid(pIntegrity.Sid, 0)^)
-        else
-          Token.Cache.Integrity.Level := ilUntrusted;
+          // Get level value from the last sub-authority
+          subAuthCount := RtlSubAuthorityCountSid(pIntegrity.Sid)^;
+          if subAuthCount > 0 then
+            Level := TTokenIntegrityLevel(RtlSubAuthoritySid(pIntegrity.Sid,
+              subAuthCount - 1)^)
+          else
+            Level := ilUntrusted;
 
-        if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
-          InvokeStringEvent(tsIntegrity);
-      finally
-        FreeMem(pIntegrity);
-      end;
+          if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
+            InvokeStringEvent(tsIntegrity);
+        finally
+         FreeMem(pIntegrity);
+        end;
     end;
 
     tdTokenUIAccess:
@@ -1769,7 +1772,7 @@ begin
       SECURITY_MANDATORY_LABEL_AUTHORITY, 1), 'RtlInitializeSid');
 
     RtlSubAuthoritySid(mandatoryLabel.Sid, 0)^ := Cardinal(Value);
-    mandatoryLabel.Attributes := SE_GROUP_INTEGRITY;
+    mandatoryLabel.Attributes := SE_GROUP_INTEGRITY_ENABLED;
 
     Token.SetFixedSize<TSIDAndAttributes>(TokenIntegrityLevel, mandatoryLabel);
   finally
