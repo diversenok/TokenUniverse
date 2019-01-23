@@ -32,7 +32,7 @@ type
   TListViewEx = class;
   TListItemsEx = class(TListItems)
   private
-    FSelectionSnapshot: array of Boolean;
+    FSelectionSnapshot, FCheckStateSnapshot: array of Boolean;
     function GetOwnerListView: TListViewEx;
   protected
     function GetItem(Index: Integer): TListItemEx;
@@ -339,10 +339,21 @@ begin
   if not Result then
     Exit;
 
-  BeginUpdate;
-  for i := 0 to High(FSelectionSnapshot) do
-    Item[i].Selected := FSelectionSnapshot[i];
-  EndUpdate;
+  if Owner.Checkboxes then
+    Assert(Length(FCheckStateSnapshot) = Count);
+
+  begin
+    BeginUpdate;
+
+    for i := 0 to High(FSelectionSnapshot) do
+      Item[i].Selected := FSelectionSnapshot[i];
+
+    if Owner.Checkboxes then
+      for i := 0 to High(FCheckStateSnapshot) do
+        Item[i].Checked := FCheckStateSnapshot[i];
+
+    EndUpdate;
+  end;
 end;
 
 procedure TListItemsEx.BeginUpdate(MakeSelectionSnapshot: Boolean);
@@ -359,6 +370,13 @@ begin
   SetLength(FSelectionSnapshot, Count);
   for i := 0 to High(FSelectionSnapshot) do
     FSelectionSnapshot[i] := Item[i].Selected;
+
+  if Owner.Checkboxes then
+  begin
+    SetLength(FCheckStateSnapshot, Count);
+    for i := 0 to High(FCheckStateSnapshot) do
+      FCheckStateSnapshot[i] := Item[i].Checked;
+  end;
 end;
 
 procedure TListItemsEx.EndUpdate(ApplySnapshot: Boolean);
@@ -367,6 +385,7 @@ begin
   begin
     ApplySelectionSnapshot;
     SetLength(FSelectionSnapshot, 0);
+    SetLength(FCheckStateSnapshot, 0);
   end;
   (Self as TListItems).EndUpdate;
 end;
