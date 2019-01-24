@@ -44,13 +44,16 @@ type
     constructor Create(Value: Int64);
   end;
 
+  TPrivilegeRecArray = array of TPrivilegeRec;
+
   TPrivilegeCache = class
   private
     class var Cache: array [SE_MIN_WELL_KNOWN_PRIVILEGE ..
       SE_MAX_WELL_KNOWN_PRIVILEGE] of TPrivilegeRec;
-    class var CacheEx: array of TPrivilegeRec;
+    class var CacheEx: TPrivilegeRecArray;
   public
     class function Lookup(Value: Int64): TPrivilegeRec; static;
+    class function AllPrivileges: TPrivilegeRecArray;
   end;
 
 function LogonTypeToString(LogonType: TLogonType): String;
@@ -230,6 +233,35 @@ begin
   end;
 end;
 
+class function TPrivilegeCache.AllPrivileges: TPrivilegeRecArray;
+var
+  i, j, Count: Integer;
+begin
+  // Make sure that all privileges in the cache are already looked up
+  for i := Low(Cache) to High(Cache) do
+    if not Cache[i].IsChecked then
+      Cache[i].Create(i);
+
+  // Count availible privileges in usual cache
+  Count := 0;
+  for i := Low(Cache) to High(Cache) do
+    if Cache[i].IsValid then
+      Inc(Count);
+
+  // Save valid privileges
+  j := 0;
+  SetLength(Result, Count);
+  for i := Low(Cache) to High(Cache) do
+    if Cache[i].IsValid then
+    begin
+      Result[j] := Cache[i];
+      Inc(j);
+    end;
+
+  // And add custom ones
+  Result := Concat(Result, CacheEx);
+end;
+
 class function TPrivilegeCache.Lookup(Value: Int64): TPrivilegeRec;
 var
   i: Integer;
@@ -239,7 +271,7 @@ begin
   // that will hold all custom privileges.
 
   // If the privilege is in the range then use the usual cache.
-  if (Low(Cache) <= Value) and (Value >= High(Cache)) then
+  if (Low(Cache) <= Value) and (Value <= High(Cache)) then
   begin
     // Lookup the privilege if necessary
     if not Cache[Value].IsChecked then

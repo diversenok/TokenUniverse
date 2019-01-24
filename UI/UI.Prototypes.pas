@@ -14,7 +14,8 @@ type
     FTokenPrivileges, FAdditionalPrivileges: TPrivilegeArray;
     function GetPrivilege(Ind: Integer): TPrivilege;
     procedure OnPrivilegeChange(NewPrivileges: TPrivilegeArray);
-    function SetItem(Privilege: TPrivilege): TListItemEx;
+    function SetItem(Item: TListItemEx; Privilege: TPrivilege): TListItemEx;
+    procedure SetPrivilege(Ind: Integer; const Value: TPrivilege);
   public
     constructor Create(OwnedListView: TListViewEx);
     destructor Destroy; override;
@@ -22,9 +23,10 @@ type
     procedure UnsubscribeToken(Dummy: TToken = nil);
     function SelectedPrivileges: TPrivilegeArray;
     function CheckedPrivileges: TPrivilegeArray;
-    property Privilege[Ind: Integer]: TPrivilege read GetPrivilege;
+    property Privilege[Ind: Integer]: TPrivilege read GetPrivilege write SetPrivilege;
     function Privileges: TPrivilegeArray;
     function AddPrivilege(Privilege: TPrivilege): TListItemEx;
+    procedure AddAllPrivileges;
     function RemovePrivilege(Index: Integer): Boolean;
   end;
 
@@ -152,11 +154,41 @@ uses
 
 { TPrivilegesSource }
 
+procedure TPrivilegesSource.AddAllPrivileges;
+var
+  PrivArray: TPrivilegeRecArray;
+  Privilege: TPrivilege;
+  i: Integer;
+begin
+  Assert(Assigned(ListView));
+
+  PrivArray := TPrivilegeCache.AllPrivileges;
+
+  ListView.Items.BeginUpdate;
+  for i := 0 to High(PrivArray) do
+  begin
+    Privilege.Luid := PrivArray[i].Value;
+
+    if PrivArray[i].Name = 'SeChangeNotifyPrivilege' then
+    begin
+      Privilege.Attributes := SE_PRIVILEGE_ENABLED_BY_DEFAULT or
+        SE_PRIVILEGE_ENABLED;
+      AddPrivilege(Privilege).Checked := True;
+    end
+    else
+    begin
+      Privilege.Attributes := 0;
+      AddPrivilege(Privilege);
+    end;
+  end;
+  ListView.Items.EndUpdate;
+end;
+
 function TPrivilegesSource.AddPrivilege(Privilege: TPrivilege): TListItemEx;
 begin
   SetLength(FAdditionalPrivileges, Length(FAdditionalPrivileges) + 1);
   FAdditionalPrivileges[High(FAdditionalPrivileges)] := Privilege;
-  Result := SetItem(Privilege);
+  Result := SetItem(ListView.Items.Add, Privilege);
 end;
 
 function TPrivilegesSource.CheckedPrivileges: TPrivilegeArray;
@@ -216,11 +248,11 @@ begin
     // Update privileges from the token
     FTokenPrivileges := NewPrivileges;
     for i := 0 to High(NewPrivileges) do
-      SetItem(NewPrivileges[i]);
+      SetItem(ListView.Items.Add, NewPrivileges[i]);
 
     // Also show preserve additional ones
     for i := 0 to High(FAdditionalPrivileges) do
-      SetItem(FAdditionalPrivileges[i]);
+      SetItem(ListView.Items.Add, FAdditionalPrivileges[i]);
 
     Items.EndUpdate(True);
   end;
@@ -261,16 +293,25 @@ begin
     end;
 end;
 
-function TPrivilegesSource.SetItem(Privilege: TPrivilege): TListItemEx;
+function TPrivilegesSource.SetItem(Item: TListItemEx;
+  Privilege: TPrivilege): TListItemEx;
 begin
-  Assert(Assigned(ListView));
+  Item.Caption := Privilege.Name;
+  Item.SubItems.Clear;
+  Item.SubItems.Add(Privilege.AttributesToString);
+  Item.SubItems.Add(Privilege.Description);
+  Item.SubItems.Add(Privilege.Luid.ToString);
+  Item.Color := PrivilegeToColor(Privilege);
+  Result := Item;
+end;
 
-  Result := ListView.Items.Add;
-  Result.Caption := Privilege.Name;
-  Result.SubItems.Add(Privilege.AttributesToString);
-  Result.SubItems.Add(Privilege.Description);
-  Result.SubItems.Add(Privilege.Luid.ToString);
-  Result.Color := PrivilegeToColor(Privilege);
+procedure TPrivilegesSource.SetPrivilege(Ind: Integer; const Value: TPrivilege);
+begin
+  if Ind > High(FTokenPrivileges) then
+  begin
+    FAdditionalPrivileges[Ind - Length(FTokenPrivileges)] := Value;
+    SetItem(ListView.Items[Ind], Value);
+  end;
 end;
 
 procedure TPrivilegesSource.SubscribeToken(Token: TToken);

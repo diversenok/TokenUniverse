@@ -245,6 +245,7 @@ object DialogCreateToken: TDialogCreateToken
         Width = 308
         Height = 297
         Align = alClient
+        AllocBy = 40
         Checkboxes = True
         Columns = <
           item
@@ -269,8 +270,10 @@ object DialogCreateToken: TDialogCreateToken
         MultiSelect = True
         ReadOnly = True
         RowSelect = True
+        PopupMenu = PopupMenuPrivileges
         TabOrder = 0
         ViewStyle = vsReport
+        OnContextPopup = ListViewPrivilegesContextPopup
         ClipboardSourceColumn = 0
         ColoringItems = True
       end
@@ -402,6 +405,30 @@ object DialogCreateToken: TDialogCreateToken
       Caption = 'Remove'
       ShortCut = 46
       OnClick = MenuRemoveClick
+    end
+  end
+  object PopupMenuPrivileges: TPopupMenu
+    Left = 143
+    Top = 251
+    object MenuDisabled: TMenuItem
+      Caption = 'Disabled'
+      ShortCut = 16452
+      OnClick = MenuDisabledClick
+    end
+    object MenuDisabledModif: TMenuItem
+      Caption = 'Disabled (modified)'
+      ShortCut = 24644
+      OnClick = MenuDisabledModifClick
+    end
+    object MenuEnabled: TMenuItem
+      Caption = 'Enabled'
+      ShortCut = 16453
+      OnClick = MenuEnabledClick
+    end
+    object MenuEnabledModif: TMenuItem
+      Caption = 'Enabled (modified)'
+      ShortCut = 24645
+      OnClick = MenuEnabledModifClick
     end
   end
 end

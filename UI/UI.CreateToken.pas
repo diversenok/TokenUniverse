@@ -44,6 +44,11 @@ type
     StaticSourceLuid: TStaticText;
     EditSourceLuid: TEdit;
     ButtonAllocLuid: TButton;
+    PopupMenuPrivileges: TPopupMenu;
+    MenuDisabled: TMenuItem;
+    MenuDisabledModif: TMenuItem;
+    MenuEnabled: TMenuItem;
+    MenuEnabledModif: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -55,12 +60,19 @@ type
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure ComboUserChange(Sender: TObject);
+    procedure ListViewPrivilegesContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
+    procedure MenuDisabledClick(Sender: TObject);
+    procedure MenuDisabledModifClick(Sender: TObject);
+    procedure MenuEnabledClick(Sender: TObject);
+    procedure MenuEnabledModifClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
     GroupsSource: TGroupsSource;
     PrivilegesSource: TPrivilegesSource;
     procedure ObjPickerUserCallback(UserName: String);
     procedure UpdatePrimaryAndOwner;
+    procedure SetPrivilegesAttributes(NewValue: Cardinal);
   end;
 
 var
@@ -193,13 +205,41 @@ begin
   LogonIDSource := TLogonSessionSource.Create(ComboLogonSession);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
+  PrivilegesSource.AddAllPrivileges;
   ButtonAllocLuidClick(Self);
+end;
+
+procedure TDialogCreateToken.ListViewPrivilegesContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
+begin
+  Handled := (ListViewPrivileges.SelCount = 0);
+end;
+
+procedure TDialogCreateToken.MenuDisabledClick(Sender: TObject);
+begin
+  SetPrivilegesAttributes(0);
+end;
+
+procedure TDialogCreateToken.MenuDisabledModifClick(Sender: TObject);
+begin
+  SetPrivilegesAttributes(SE_PRIVILEGE_ENABLED_BY_DEFAULT);
 end;
 
 procedure TDialogCreateToken.MenuEditClick(Sender: TObject);
 begin
   GroupsSource.UiEditSelected(Self);
   UpdatePrimaryAndOwner;
+end;
+
+procedure TDialogCreateToken.MenuEnabledClick(Sender: TObject);
+begin
+ SetPrivilegesAttributes(SE_PRIVILEGE_ENABLED_BY_DEFAULT or
+   SE_PRIVILEGE_ENABLED);
+end;
+
+procedure TDialogCreateToken.MenuEnabledModifClick(Sender: TObject);
+begin
+  SetPrivilegesAttributes(SE_PRIVILEGE_ENABLED);
 end;
 
 procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
@@ -215,6 +255,22 @@ procedure TDialogCreateToken.ObjPickerUserCallback(UserName: String);
 begin
   ComboUser.Text := TSecurityIdentifier.CreateFromString(UserName).ToString;
   ComboUserChange(ButtonPickUser);
+end;
+
+procedure TDialogCreateToken.SetPrivilegesAttributes(NewValue: Cardinal);
+var
+  Priv: TPrivilege;
+  i: Integer;
+begin
+  ListViewPrivileges.Items.BeginUpdate;
+  for i := 0 to ListViewPrivileges.Items.Count - 1 do
+    if ListViewPrivileges.Items[i].Selected then
+    begin
+      Priv := PrivilegesSource.Privilege[i];
+      Priv.Attributes := NewValue;
+      PrivilegesSource.Privilege[i] := Priv;
+    end;
+  ListViewPrivileges.Items.EndUpdate;
 end;
 
 procedure TDialogCreateToken.UpdatePrimaryAndOwner;
