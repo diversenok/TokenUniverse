@@ -5,7 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  Winapi.Windows, TU.Common, TU.Tokens.Types;
+  Winapi.Windows, TU.Common, TU.Tokens.Types, Ntapi.ntseapi;
 
 type
   TLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
@@ -33,6 +33,26 @@ type
 
   TLuidDynArray = array of LUID;
 
+  TPrivilegeRec = record
+  private
+    IsChecked: Boolean;
+  public
+    Value: Int64;
+    IsValid: Boolean;
+    Name: String;
+    DisplayName: String;
+    constructor Create(Value: Int64);
+  end;
+
+  TPrivilegeCache = class
+  private
+    class var Cache: array [SE_MIN_WELL_KNOWN_PRIVILEGE ..
+      SE_MAX_WELL_KNOWN_PRIVILEGE] of TPrivilegeRec;
+    class var CacheEx: array of TPrivilegeRec;
+  public
+    class function Lookup(Value: Int64): TPrivilegeRec; static;
+  end;
+
 function LogonTypeToString(LogonType: TLogonType): String;
 function QueryLogonSession(LogonId: LUID): CanFail<TLogonSessionInfo>;
 function EnumerateLogonSessions: TLuidDynArray;
@@ -40,7 +60,7 @@ function EnumerateLogonSessions: TLuidDynArray;
 implementation
 
 uses
-  Ntapi.ntdef;
+  Ntapi.ntdef, Ntapi.ntstatus, System.SysUtils;
 
 const
   secur32 = 'secur32.dll';
@@ -136,6 +156,117 @@ begin
     Result := Mapping[LogonType]
   else
     Result := '(Out of bound)';
+end;
+
+{ TPrivilegeCache }
+
+function DoLookupDisplayName(Name: String; out DisplayName: String): Boolean;
+var
+  Buffer: PWideChar;
+  BufferChars: Cardinal;
+  LangId: Cardinal;
+begin
+  Result := False;
+  BufferChars := 0;
+  LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
+
+  if not WinTryCheckBuffer(BufferChars) then
+    Exit;
+
+  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
+  try
+    if LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
+      LangId) then
+    begin
+      SetString(DisplayName, Buffer, BufferChars);
+      Result := True;
+    end;
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+function DoLookupName(Value: Int64; out Name: String): Boolean;
+var
+  Buffer: PWideChar;
+  BufferChars: Cardinal;
+begin
+  Result := False;
+  BufferChars := 0;
+  LookupPrivilegeNameW(nil, Value, nil, BufferChars);
+
+  if not WinTryCheckBuffer(BufferChars) then
+    Exit;
+
+  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
+  try
+    if LookupPrivilegeNameW(nil, Value, Buffer, BufferChars) then
+    begin
+      SetString(Name, Buffer, BufferChars);
+      Result := True;
+    end;
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+constructor TPrivilegeRec.Create(Value: Int64);
+const
+  UNKNOWN_PRIV_FMT = 'Unknown privilege %d';
+begin
+  Self.Value := Value;
+  IsChecked := True;
+  DisplayName := '';
+
+  if DoLookupName(Value, Name) then
+  begin
+    IsValid := True;
+    DoLookupDisplayName(Name, DisplayName);
+  end
+  else
+  begin
+    IsValid := False;
+    Name := Format(UNKNOWN_PRIV_FMT, [Value]);
+  end;
+end;
+
+class function TPrivilegeCache.Lookup(Value: Int64): TPrivilegeRec;
+var
+  i: Integer;
+begin
+  // Normally all privileges on the system should be within the range of Cache
+  // array. However, as a backup plan we have a dynamically allocated CacheEx
+  // that will hold all custom privileges.
+
+  // If the privilege is in the range then use the usual cache.
+  if (Low(Cache) <= Value) and (Value >= High(Cache)) then
+  begin
+    // Lookup the privilege if necessary
+    if not Cache[Value].IsChecked then
+      Cache[Value].Create(Value);
+
+    Result := Cache[Value];
+  end
+  else
+  begin
+    // Preferably, this code should never be called since it is a backup plan
+    // for encounting a strange privilege that is not in the usual system range.
+    // This also migh happen if Microsoft adds a new privilege. In this case
+    // increase SE_MAX_WELL_KNOWN_PRIVILEGE to place it in the usual cache.
+
+    // Try to find it in the custom list
+    for i := 0 to High(CacheEx) do
+      if CacheEx[i].Value = Value then
+      begin
+        Result := CacheEx[i];
+        Exit;
+      end;
+
+    // Allocate a new entry and lookup this privilege
+    SetLength(CacheEx, Length(CacheEx) + 1);
+    CacheEx[High(CacheEx)].Create(Value);
+    Result := CacheEx[High(CacheEx)];
+  end;
 end;
 
 end.

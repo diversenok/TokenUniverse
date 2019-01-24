@@ -156,7 +156,7 @@ function SetterMessage(InfoClass: TTokenInformationClass): String;
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, Ntapi.ntdef, Ntapi.ntstatus;
+  System.SysUtils, System.TypInfo, Ntapi.ntdef, Ntapi.ntstatus, TU.LsaApi;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -486,49 +486,13 @@ begin
 end;
 
 function TPrivilegeHelper.Description: String;
-var
-  Buffer: PWideChar;
-  BufferChars, LangId: Cardinal;
 begin
-  Result := '';
-  BufferChars := 0;
-  LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
-
-  if not WinTryCheckBuffer(BufferChars) then
-    Exit;
-
-  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
-  try
-    if LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
-      LangId) then
-      SetString(Result, Buffer, BufferChars);
-  finally
-    FreeMem(Buffer);
-  end;
+  Result := TPrivilegeCache.Lookup(Luid).DisplayName;
 end;
 
 function TPrivilegeHelper.Name: String;
-const
-  UNKNOWN_PRIV_FMT = 'Unknown privilege %d';
-var
-  Buffer: PWideChar;
-  BufferChars: Cardinal;
 begin
-  BufferChars := 0;
-  LookupPrivilegeNameW(nil, Self.Luid, nil, BufferChars);
-
-  if not WinTryCheckBuffer(BufferChars) then
-    Exit(Format(UNKNOWN_PRIV_FMT, [Self.Luid]));
-
-  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
-  try
-    if LookupPrivilegeNameW(nil, Self.Luid, Buffer, BufferChars) then
-      SetString(Result, Buffer, BufferChars)
-    else
-      Result := Format(UNKNOWN_PRIV_FMT, [Self.Luid])
-  finally
-    FreeMem(Buffer);
-  end;
+  Result := TPrivilegeCache.Lookup(Luid).Name;
 end;
 
 { TLuidHelper }

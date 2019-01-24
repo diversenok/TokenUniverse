@@ -6,6 +6,10 @@ interface
 uses
   Winapi.Windows, TU.Winapi, Ntapi.ntdef, Ntapi.ntrtl;
 
+const
+  SE_MIN_WELL_KNOWN_PRIVILEGE = 2;
+  SE_MAX_WELL_KNOWN_PRIVILEGE = 35;
+
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
   AuthenticationId: PLUID; ExpirationTime: PInt64; User: PTokenUser;
