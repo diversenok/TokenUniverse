@@ -13,7 +13,6 @@ type
     SelectedColumns: TColumns;
     PromptOnHandleClose: Boolean;
     NoCloseCreationDialogs: Boolean;
-    ForceUpdateOnInfoDialog: Boolean;
     class constructor Create;
   end;
 
