@@ -142,7 +142,7 @@ begin
     TSecurityIdentifier.CreateFromString(ComboUser.Text),
     CheckBoxUserState.Checked,
     GroupsSource.Groups,
-    PrivilegesSource.Privileges,
+    PrivilegesSource.CheckedPrivileges,
     LogonIDSource.SelectedLogonSession,
     TSecurityIdentifier.CreateFromString(OwnerGroupName),
     TSecurityIdentifier.CreateFromString(PrimaryGroupName),

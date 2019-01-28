@@ -1783,6 +1783,9 @@ begin
   ValidateCache(tdTokenIntegrity);
   ValidateCache(tdTokenStatistics);
 
+  // Lowering integrity might disable sensitive privileges
+  ValidateCache(tdTokenPrivileges);
+
   // Integrity SID is also stored in the group list. So, update groups too.
   ValidateCache(tdTokenGroups);
 
