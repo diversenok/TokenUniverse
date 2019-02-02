@@ -350,8 +350,8 @@ type
     procedure PrivilegeAdjust(Privileges: TPrivilegeArray;
       Action: TPrivilegeAdjustAction);
     procedure GroupAdjust(Groups: TGroupArray; Action: TGroupAdjustAction);
-    function SendHandleToProcess(PID: Cardinal): NativeUInt;
-    procedure AssignToProcess(PID: Cardinal);
+    function SendHandleToProcess(PID: NativeUInt): NativeUInt;
+    procedure AssignToProcess(PID: NativeUInt);
   public
 
     {--------------------  TToken constructors  ----------------------------}
@@ -376,7 +376,7 @@ type
     constructor CreateOpenCurrent(Access: ACCESS_MASK = MAXIMUM_ALLOWED);
 
     /// <summary> Opens a token of a process. </summary>
-    constructor CreateOpenProcess(PID: Cardinal; ImageName: String;
+    constructor CreateOpenProcess(PID: NativeUInt; ImageName: String;
       Access: ACCESS_MASK = MAXIMUM_ALLOWED; Attributes: Cardinal = 0);
 
     /// <summary> Duplicates a token. </summary>
@@ -646,7 +646,7 @@ begin
     Result.Privileges[i] := Privileges[i];
 end;
 
-procedure TToken.AssignToProcess(PID: Cardinal);
+procedure TToken.AssignToProcess(PID: NativeUInt);
 var
   hProcess: THandle;
   ClientId: TClientId;
@@ -655,8 +655,7 @@ var
   Status: NTSTATUS;
 begin
   InitializeObjectAttributes(ObjAttr);
-  ClientId.UniqueProcess := PID;
-  ClientId.UniqueThread := 0;
+  ClientId.Create(PID, 0);
 
   // Open the target process
   NativeCheck(NtOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
@@ -882,7 +881,7 @@ begin
   CreateOpenProcess(GetCurrentProcessId, 'Current process');
 end;
 
-constructor TToken.CreateOpenProcess(PID: Cardinal; ImageName: String;
+constructor TToken.CreateOpenProcess(PID: NativeUInt; ImageName: String;
   Access: ACCESS_MASK; Attributes: Cardinal);
 var
   hProcess: THandle;
@@ -894,8 +893,7 @@ begin
   else
   begin
     InitializeObjectAttributes(ObjAttr);
-    ClientId.UniqueProcess := PID;
-    ClientId.UniqueThread := 0;
+    ClientId.Create(PID, 0);
 
     NativeCheck(NtOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
       ObjAttr, ClientId),
@@ -1193,15 +1191,14 @@ begin
   // Do not free the buffer on success. The caller must do it after use.
 end;
 
-function TToken.SendHandleToProcess(PID: Cardinal): NativeUInt;
+function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;
 var
   hTargetProcess: THandle;
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
 begin
   InitializeObjectAttributes(ObjAttr);
-  ClientId.UniqueProcess := PID;
-  ClientId.UniqueThread := 0;
+  ClientId.Create(PID, 0);
 
   // Open the target process
   NativeCheck(NtOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, ObjAttr,

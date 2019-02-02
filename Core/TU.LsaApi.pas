@@ -117,13 +117,11 @@ begin
         if Value.UserPresent then
           Value.User := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
 
-        SetString(Value.AuthPackage, Buffer.AuthenticationPackage.Buffer,
-          Buffer.AuthenticationPackage.Length div SizeOf(WideChar));
+        Value.AuthPackage := Buffer.AuthenticationPackage.ToString;
         Value.LogonType := TLogonType(Buffer.LogonType);
         Value.Session := Buffer.Session;
         Value.LogonTime := NativeTimeToLocalDateTime(Buffer.LogonTime);
-        SetString(Value.LogonServer, Buffer.LogonServer.Buffer,
-          Buffer.LogonServer.Length div SizeOf(WideChar));
+        Value.LogonServer := Buffer.LogonServer.ToString;
       finally
         LsaFreeReturnBuffer(Buffer);
       end;

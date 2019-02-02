@@ -14,6 +14,7 @@ type
     Length: Word;
     MaximumLength: Word;
     Buffer: PWideChar;
+    function ToString: String;
   end;
   PUNICODE_STRING = ^UNICODE_STRING;
 
@@ -28,8 +29,9 @@ type
   PObjectAttributes = ^TObjectAttributes;
 
   TClientId = record
-    UniqueProcess: THandle;
-    UniqueThread: THandle;
+    UniqueProcess: NativeUInt;
+    UniqueThread: NativeUInt;
+    procedure Create(PID, TID: NativeUInt); inline;
   end;
   PClientId = ^TClientId;
 
@@ -85,6 +87,21 @@ begin
   ObjAttr.Attributes := Attributes;
   ObjAttr.RootDirectory := RootDirectory;
   ObjAttr.SecurityQualityOfService := QoS;
+end;
+
+{ UNICODE_STRING }
+
+function UNICODE_STRING.ToString: String;
+begin
+  SetString(Result, Buffer, Length div SizeOf(WideChar));
+end;
+
+{ TClientId }
+
+procedure TClientId.Create(PID, TID: NativeUInt);
+begin
+  UniqueProcess := PID;
+  UniqueThread := TID;
 end;
 
 end.
