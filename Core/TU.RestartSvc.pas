@@ -198,15 +198,21 @@ function TryGetCsrssToken: TToken;
 const
   SrcProcess = 'csrss.exe';
 var
-  CsrssPID: Cardinal;
-  ProcessSnapshot: TProcessList;
+  Csrss: PSystemProcessInformation;
 begin
-  ProcessSnapshot := TProcessList.Create;
-  CsrssPID := ProcessSnapshot.FindPID(SrcProcess);
-  if CsrssPID <> 0 then
-    Result := TToken.CreateOpenProcess(CsrssPID, SrcProcess, TOKEN_DUPLICATE)
-  else
-    raise Exception.Create(SrcProcess + ' is not found on the system.');
+  with TProcessSnapshot.Create do
+  begin
+    Csrss := FindByName(SrcProcess);
+    try
+      if Assigned(Csrss) then
+        Result := TToken.CreateOpenProcess(Csrss.ProcessId, SrcProcess,
+          TOKEN_DUPLICATE)
+      else
+        raise Exception.Create(SrcProcess + ' is not found on the system.');
+    finally
+      Free;
+    end;
+  end;
 end;
 
 /// <summary>

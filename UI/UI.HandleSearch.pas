@@ -64,14 +64,14 @@ end;
 procedure TFormHandleSearch.ButtonRefreshClick(Sender: TObject);
 var
   HandleSnapshot: THandleList;
-  ProcessSnapshot: TProcessList;
+  ProcessSnapshot: TProcessSnapshot;
   PID: NativeUInt;
   hProcess: THandle;
   //HandleItem: THandleInformation;
 begin
   Frame.ClearAll;
   HandleSnapshot := THandleList.Create;
-  ProcessSnapshot := TProcessList.Create;
+  ProcessSnapshot := TProcessSnapshot.Create;
   Frame.ListViewTokens.Groups.BeginUpdate;
   Frame.ListViewTokens.Items.BeginUpdate;
 
@@ -80,7 +80,7 @@ begin
     with Frame.ListViewTokens.Groups.Add do
     begin
       State := [lgsCollapsible];
-      Header := Format('%s (%d)', [ProcessSnapshot.FindName(PID), PID]);
+//      Header := Format('%s (%d)', [ProcessSnapshot.FindByPID(PID), PID]);
 
       hProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
       if hProcess <> 0 then // TODO: Or setting

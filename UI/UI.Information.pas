@@ -574,7 +574,8 @@ procedure TInfoDialog.UpdateObjectTab;
 var
   Handles: THandleList;
   DoSnapshotProcesses: Boolean;
-  Processes: TProcessList;
+  ProcSnapshot: TProcessSnapshot;
+  Process: PSystemProcessInformation;
   i: Integer;
 begin
   if TabObject.Tag = TAB_UPDATED then
@@ -620,7 +621,7 @@ begin
   // Add handles from other processes
   if DoSnapshotProcesses then
   begin
-    Processes := TProcessList.Create;
+    ProcSnapshot := TProcessSnapshot.Create;
 
     for i := 0 to Handles.Count - 1 do
     if (Handles[i].KernelObjectAddress =
@@ -628,15 +629,15 @@ begin
       and (Handles[i].ContextPID <> GetCurrentProcessId) then
       with ListViewProcesses.Items.Add do
       begin
-        Caption := Processes.FindName(Handles[i].ContextPID);
+        Process := ProcSnapshot.FindByPID(Handles[i].ContextPID);
+        Caption := Process.GetImageName;
         SubItems.Add(IntToStr(Handles[i].ContextPID));
         SubItems.Add(Format('0x%x', [Handles[i].Handle]));
         SubItems.Add(AccessToString(Handles[i].Access));
-        ImageIndex := TProcessIcons.GetIcon(TProcessItem.QueryFullName(
-          Handles[i].ContextPID));
+        ImageIndex := TProcessIcons.GetIcon(Process.QueryFullImageName);
       end;
 
-    Processes.Free;
+    ProcSnapshot.Free;
   end;
 
   Handles.Free;

@@ -180,6 +180,7 @@
         <DCCReference Include="Headers\Ntapi.ntseapi.pas"/>
         <DCCReference Include="Headers\Ntapi.ntrtl.pas"/>
         <DCCReference Include="Headers\Ntapi.ntpebteb.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntkeapi.pas"/>
         <DCCReference Include="Core\TU.Winapi.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">

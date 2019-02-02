@@ -40,6 +40,7 @@ uses
   Ntapi.ntseapi in 'Headers\Ntapi.ntseapi.pas',
   Ntapi.ntrtl in 'Headers\Ntapi.ntrtl.pas',
   Ntapi.ntpebteb in 'Headers\Ntapi.ntpebteb.pas',
+  Ntapi.ntkeapi in 'Headers\Ntapi.ntkeapi.pas',
   TU.Winapi in 'Core\TU.Winapi.pas';
 
 {$R *.res}
