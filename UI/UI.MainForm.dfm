@@ -216,20 +216,30 @@ object FormMain: TFormMain
       Enabled = False
       ShortCut = 16457
     end
+    object N2: TMenuItem
+      Caption = '-'
+    end
     object TokenSendHandle: TMenuItem
       Caption = 'Copy handle to another process'
       Enabled = False
       OnClick = ActionSendHandle
     end
     object AssignToProcess: TMenuItem
-      Caption = 'Assign to process'
+      Caption = 'Assign token to process (Primary)'
       Enabled = False
-      OnClick = AssignToProcessClick
+      OnClick = ActionAssignToProcess
     end
-    object HLine2: TMenuItem
-      Caption = '-'
+    object AssignToThread: TMenuItem
+      Caption = 'Assign token to thread (Impersonation)'
       Enabled = False
-      Visible = False
+      OnClick = ActionAssignToThread
+    end
+    object RevertThread: TMenuItem
+      Caption = 'Revoke token from thread'
+      OnClick = ActionRevertThread
+    end
+    object N3: TMenuItem
+      Caption = '-'
     end
     object NewMenu: TMenuItem
       Caption = 'New'
@@ -239,13 +249,14 @@ object FormMain: TFormMain
         OnClick = ActionOpenSelf
       end
       object NewOpenProcess: TMenuItem
-        Caption = 'Open other process'
+        Caption = 'Open process'
         ShortCut = 16463
         OnClick = ActionOpenProcess
       end
       object NewOpenThread: TMenuItem
-        Caption = 'Open other thread'
-        Enabled = False
+        Caption = 'Open thread'
+        ShortCut = 49231
+        OnClick = ActionOpenThread
       end
       object HLine3: TMenuItem
         Caption = '-'

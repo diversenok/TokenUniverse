@@ -575,7 +575,7 @@ var
   Handles: THandleList;
   DoSnapshotProcesses: Boolean;
   ProcSnapshot: TProcessSnapshot;
-  Process: PSystemProcessInformation;
+  Process: PProcessInfo;
   i: Integer;
 begin
   if TabObject.Tag = TAB_UPDATED then

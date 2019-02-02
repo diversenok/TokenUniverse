@@ -1,8 +1,24 @@
 unit Ntapi.ntkeapi;
 
+{$MINENUMSIZE 4}
+
 interface
 
 type
+  KTHREAD_STATE = (
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated,
+    Waiting,
+    Transition,
+    DeferredReady,
+    GateWaitObsolete,
+    WaitingForProcessInSwap,
+    MaximumThreadState
+  );
+
   KWAIT_REASON = (
     Executive,
     FreePage,

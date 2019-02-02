@@ -314,6 +314,9 @@ type
     /// <remarks> Call <see cref="System.FreeMem"/> after use. </remarks>
     class function AllocPrivileges(Privileges: TPrivilegeArray):
       PTokenPrivileges; static;
+
+    /// <summary> Sets thread token to the specified handle. </summary>
+    class procedure AssignTokenToThread(hToken: THandle; TID: NativeUInt);
   public
 
     {--------------------  TToken public section ---------------------------}
@@ -351,7 +354,15 @@ type
       Action: TPrivilegeAdjustAction);
     procedure GroupAdjust(Groups: TGroupArray; Action: TGroupAdjustAction);
     function SendHandleToProcess(PID: NativeUInt): NativeUInt;
+
+    /// <summary> Assignes primary token to a process. </summary>
     procedure AssignToProcess(PID: NativeUInt);
+
+    /// <summary> Assigned impersonation token to a thread. </summary>
+    procedure AssignToThread(TID: NativeUInt);
+
+    /// <summary> Removes the thread impersonation token. </summary>
+    class procedure RevertThreadToken(TID: NativeUInt);
   public
 
     {--------------------  TToken constructors  ----------------------------}
@@ -378,6 +389,11 @@ type
     /// <summary> Opens a token of a process. </summary>
     constructor CreateOpenProcess(PID: NativeUInt; ImageName: String;
       Access: ACCESS_MASK = MAXIMUM_ALLOWED; Attributes: Cardinal = 0);
+
+      /// <summary> Opens a token of a thread. </summary>
+    constructor CreateOpenThread(TID: NativeUInt; ImageName: String;
+      OpenAsSelf: Boolean; Access: ACCESS_MASK = MAXIMUM_ALLOWED;
+      Attributes: Cardinal = 0);
 
     /// <summary> Duplicates a token. </summary>
     constructor CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
@@ -646,6 +662,29 @@ begin
     Result.Privileges[i] := Privileges[i];
 end;
 
+class procedure TToken.AssignTokenToThread(hToken: THandle; TID: NativeUInt);
+var
+  hThread: THandle;
+  ClientId: TClientId;
+  ObjAttr: TObjectAttributes;
+begin
+  InitializeObjectAttributes(ObjAttr);
+  ClientId.Create(0, TID);
+
+  // Open the target thread
+  NativeCheck(NtOpenThread(hThread, THREAD_SET_THREAD_TOKEN, ObjAttr, ClientId),
+    'NtOpenThread with THREAD_SET_THREAD_TOKEN');
+
+  try
+    // Set the impersonation token
+    NativeCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
+      @hToken, SizeOf(hToken)),
+      'NtSetInformationThread#ThreadImpersonationToken');
+  finally
+    NtClose(hThread);
+  end;
+end;
+
 procedure TToken.AssignToProcess(PID: NativeUInt);
 var
   hProcess: THandle;
@@ -662,7 +701,7 @@ begin
     PROCESS_SET_INFORMATION, ObjAttr, ClientId), 'NtOpenProcess with ' +
     'PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION');
 
-  // Open it's first thread and store the handle inside AccessToken
+  // Open its first thread and store the handle inside AccessToken
   Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_INFORMATION, 0, 0,
     AccessToken.Thread);
 
@@ -691,6 +730,13 @@ begin
   // Although changing session does not usually change Modified ID it is good to
   // update it
   InfoClass.ValidateCache(tdTokenStatistics);
+end;
+
+procedure TToken.AssignToThread(TID: NativeUInt);
+begin
+  AssignTokenToThread(hToken, TID);
+  { TODO: Query and compare the result token to the current one since it
+    could've been duplicated to Identification level. }
 end;
 
 function TToken.CanBeFreed: Boolean;
@@ -908,6 +954,29 @@ begin
   end;
 
   FCaption := Format('%s [%d]', [ImageName, PID]);
+end;
+
+constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
+  OpenAsSelf: Boolean; Access: ACCESS_MASK; Attributes: Cardinal);
+var
+  ObjAttr: TObjectAttributes;
+  ClientId: TClientId;
+  hThread: THandle;
+begin
+  InitializeObjectAttributes(ObjAttr);
+  ClientId.Create(0, TID);
+
+  NativeCheck(NtOpenThread(hThread, THREAD_QUERY_INFORMATION, ObjAttr,
+    ClientId), 'NtOpenThread with THREAD_QUERY_INFORMATION');
+
+  try
+    NativeCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
+      hToken), 'NtOpenThreadTokenEx');
+  finally
+    NtClose(hThread);
+  end;
+
+  FCaption := Format('Thread %d of %s', [TID, ImageName]);
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
@@ -1189,6 +1258,12 @@ begin
   end;
 
   // Do not free the buffer on success. The caller must do it after use.
+end;
+
+class procedure TToken.RevertThreadToken(TID: NativeUInt);
+begin
+  // Set the handle to zero to revoke the impersonation token
+  AssignTokenToThread(0, TID);
 end;
 
 function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;

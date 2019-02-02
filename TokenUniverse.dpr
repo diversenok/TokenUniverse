@@ -41,7 +41,8 @@ uses
   Ntapi.ntrtl in 'Headers\Ntapi.ntrtl.pas',
   Ntapi.ntpebteb in 'Headers\Ntapi.ntpebteb.pas',
   Ntapi.ntkeapi in 'Headers\Ntapi.ntkeapi.pas',
-  TU.Winapi in 'Core\TU.Winapi.pas';
+  TU.Winapi in 'Core\TU.Winapi.pas',
+  UI.ThreadList in 'UI\UI.ThreadList.pas' {ThreadListDialog};
 
 {$R *.res}
 

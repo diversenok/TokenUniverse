@@ -35,6 +35,7 @@ object ProcessListDialog: TProcessListDialog
     Enabled = False
     ModalResult = 1
     TabOrder = 1
+    OnClick = ButtonOkClick
   end
   object ButtonCancel: TButton
     Left = 255
@@ -93,6 +94,7 @@ object ProcessListDialog: TProcessListDialog
     RowSelect = True
     TabOrder = 0
     ViewStyle = vsReport
+    OnDblClick = ButtonOkClick
     OnSelectItem = ListViewSelectItem
   end
 end

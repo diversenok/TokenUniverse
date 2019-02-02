@@ -182,6 +182,10 @@
         <DCCReference Include="Headers\Ntapi.ntpebteb.pas"/>
         <DCCReference Include="Headers\Ntapi.ntkeapi.pas"/>
         <DCCReference Include="Core\TU.Winapi.pas"/>
+        <DCCReference Include="UI\UI.ThreadList.pas">
+            <Form>ThreadListDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -43,7 +43,6 @@ type
     MenuItem21: TMenuItem;
     MenuItem22: TMenuItem;
     MenuItem23: TMenuItem;
-    HLine2: TMenuItem;
     RunTaskAsInteractiveUser1: TMenuItem;
     TokenDuplicateHandle: TMenuItem;
     MenuPromptHandleClose: TMenuItem;
@@ -63,6 +62,10 @@ type
     SearchButtons: TImageList;
     SearchBox: TButtonedEdit;
     ComboBoxColumn: TComboBox;
+    AssignToThread: TMenuItem;
+    N2: TMenuItem;
+    RevertThread: TMenuItem;
+    N3: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -89,7 +92,6 @@ type
     procedure MenuExitClick(Sender: TObject);
     procedure NewNtCreateTokenClick(Sender: TObject);
     procedure SelectColumnsClick(Sender: TObject);
-    procedure AssignToProcessClick(Sender: TObject);
     procedure RunAsSystemPlusClick(Sender: TObject);
     procedure MenuCloseCreationDlgClick(Sender: TObject);
     procedure MenuPromptHandleCloseClick(Sender: TObject);
@@ -100,6 +102,10 @@ type
     procedure ListViewTokensEdited(Sender: TObject; Item: TListItem;
       var S: string);
     procedure SearchBoxRightButtonClick(Sender: TObject);
+    procedure ActionOpenThread(Sender: TObject);
+    procedure ActionRevertThread(Sender: TObject);
+    procedure ActionAssignToProcess(Sender: TObject);
+    procedure ActionAssignToThread(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -120,6 +126,24 @@ uses
 {$R *.dfm}
 
 { TFormMain }
+
+procedure TFormMain.ActionAssignToProcess(Sender: TObject);
+begin
+  TokenView.Selected.AssignToProcess(TProcessListDialog.Execute(Self,
+    False).ProcessID);
+
+  MessageDlg('The token was successfully assigned to the process.',
+    mtInformation, [mbOK], 0);
+end;
+
+procedure TFormMain.ActionAssignToThread(Sender: TObject);
+begin
+  TokenView.Selected.AssignToThread(TProcessListDialog.Execute(Self,
+    True).ThreadID);
+
+  MessageDlg('The token was successfully assigned to the thread.',
+    mtInformation, [mbOK], 0);
+end;
 
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
@@ -159,15 +183,24 @@ end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 var
-  ImageName: String;
+  Client: TClientIdEx;
 begin
-  TokenView.Add(TToken.CreateOpenProcess(
-    TProcessListDialog.Execute(Self, ImageName), ImageName));
+  Client := TProcessListDialog.Execute(Self, False);
+  TokenView.Add(TToken.CreateOpenProcess(Client.ProcessID, Client.ImageName));
 end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
 begin
   TokenView.Add(TToken.CreateOpenCurrent);
+end;
+
+procedure TFormMain.ActionOpenThread(Sender: TObject);
+var
+  Client: TClientIdEx;
+begin
+  Client := TProcessListDialog.Execute(Self, True);
+  TokenView.Add(TToken.CreateOpenThread(Client.ThreadID, Client.ImageName,
+    True));
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
@@ -179,6 +212,14 @@ end;
 procedure TFormMain.ActionRestrict(Sender: TObject);
 begin
   TDialogRestrictToken.CreateFromToken(Self, TokenView.Selected);
+end;
+
+procedure TFormMain.ActionRevertThread(Sender: TObject);
+begin
+  TToken.RevertThreadToken(TProcessListDialog.Execute(Self, True).ThreadID);
+
+  MessageDlg('The token was successfully revoked from the thread.',
+    mtInformation, [mbOK], 0);
 end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
@@ -196,16 +237,16 @@ var
   NewHandle: NativeUInt;
 begin
   NewHandle := TokenView.Selected.SendHandleToProcess(
-    TProcessListDialog.Execute(Self));
+    TProcessListDialog.Execute(Self, False).ProcessID);
 
   MessageDlg(Format('The handle was successfully sent.'#$D#$A +
-    'It''s value is %d (0x%x)', [NewHandle, NewHandle]), mtInformation,
+    'Its value is %d (0x%x)', [NewHandle, NewHandle]), mtInformation,
     [mbOK], 0);
 end;
 
 procedure TFormMain.ActionSteal(Sender: TObject);
 begin
-  TProcessListDialog.Execute(Self);//TODO: Copy handle from process
+  TProcessListDialog.Execute(Self, False);//TODO: Copy handle from process
 end;
 
 procedure TFormMain.ActionWTSQuery(Sender: TObject);
@@ -216,14 +257,6 @@ end;
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
 begin
   ShowErrorSuggestions(E);
-end;
-
-procedure TFormMain.AssignToProcessClick(Sender: TObject);
-begin
-  TokenView.Selected.AssignToProcess(TProcessListDialog.Execute(Self));
-
-  MessageDlg('The token was successfully assigned to the process.',
-    mtInformation, [mbOK], 0);
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -268,16 +301,17 @@ end;
 procedure TFormMain.FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
   var AllowEdit: Boolean);
 begin
-  // Disable the shortcut while editing item caption so that pressing <Enter>
-  // would not open the information window.
+  // Disable some shortcuts while editing item caption so that pressing <Enter>
+  // or <Delete> would not open the information window or close the handle.
   TokenOpenInfo.ShortCut := 0;
+  TokenClose.ShortCut := 0;
 end;
 
 procedure TFormMain.FrameListViewTokensEditingEnd(Sender: TObject);
 begin
-  // Editing is over. Restrore the shortcut back so that pressing <Enter>
-  // would open the information window.
+  // Editing is over. Restrore the shortcuts back.
   TokenOpenInfo.ShortCut := VK_RETURN;
+  TokenClose.ShortCut := VK_DELETE;
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
@@ -355,7 +389,7 @@ var
   Menu: TMenuItem;
 begin
   for Menu in PopupMenu.Items do
-    if (Menu <> NewMenu) and (Menu <> ProgramRun)  then
+    if (Menu <> NewMenu) and (Menu <> ProgramRun) and (Menu <> RevertThread) then
       Menu.Enabled := Selected;
 end;
 

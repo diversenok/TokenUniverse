@@ -21,6 +21,10 @@ function NtOpenProcessTokenEx(ProcessHandle: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal;
   out TokenHandle: THandle): NTSTATUS; stdcall; external ntdll;
 
+function NtOpenThreadTokenEx(ThreadHandle: THandle;
+  DesiredAccess: TAccessMask; OpenAsSelf: Boolean; HandleAttributes: Cardinal;
+  out TokenHandle: THandle): NTSTATUS; stdcall; external ntdll;
+
 function NtDuplicateToken(ExistingTokenHandle: THandle;
   DesiredAccess: TAccessMask; ObjectAttributes: PObjectAttributes;
   EffectiveOnly: LongBool; TokenType: TTokenType; out NewTokenHandle: THandle)

@@ -198,7 +198,7 @@ function TryGetCsrssToken: TToken;
 const
   SrcProcess = 'csrss.exe';
 var
-  Csrss: PSystemProcessInformation;
+  Csrss: PProcessInfo;
 begin
   with TProcessSnapshot.Create do
   begin

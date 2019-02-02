@@ -22,9 +22,10 @@ type
     Priority: KPRIORITY;
     BasePriority: Integer;
     ContextSwitches: Cardinal;
-    ThreadState: Cardinal;
+    ThreadState: KTHREAD_STATE;
     WaitReason: KWAIT_REASON;
   end;
+  PSystemThreadInformation = ^TSystemThreadInformation;
 
   // SystemProcessInformation
   TSystemProcessInformation = record

@@ -21,16 +21,21 @@ type
   end;
 
   TProcessItemEx = class
-    Process: PSystemProcessInformation;
+    Process: PProcessInfo;
     SearchKeyword: string;
     Enabled: Boolean; // by search
     Added: Boolean;
     Parent: TProcessItemEx;
     ListItemRef: TListItem;
     ImageIndex: Integer;
-    constructor Create(Src: PSystemProcessInformation);
+    constructor Create(Src: PProcessInfo);
   end;
   PProcessItemEx = ^TProcessItemEx;
+
+  TClientIdEx = record
+    ProcessID, ThreadID: NativeUInt;
+    ImageName: String;
+  end;
 
   TProcessListDialog = class(TChildForm)
     ButtonOk: TButton;
@@ -46,14 +51,16 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     destructor Destroy; override;
     procedure SearchBoxRightButtonClick(Sender: TObject);
+    procedure ButtonOkClick(Sender: TObject);
   private
     ProcessSnapshot: TProcessSnapshot;
     ProcessListEx: array of TProcessItemEx;
+    PickThread: Boolean;
+    ThreadID: NativeUInt;
     function AddChild(ParentIndex: Integer): TListItem;
   public
-    class function Execute(AOwner: TComponent): Cardinal; overload;
-    class function Execute(AOwner: TComponent; out ImgName: string): Cardinal;
-      overload;
+    class function Execute(AOwner: TComponent; AllowSelectThread: Boolean):
+      TClientIdEx;
   end;
 
 var
@@ -62,7 +69,7 @@ var
 implementation
 
 uses
-  Winapi.ShellApi;
+  Winapi.ShellApi, UI.ThreadList;
 
 {$R *.dfm}
 
@@ -76,7 +83,6 @@ begin
   Images.ColorDepth := cd32Bit;
   Images.AllocBy := 32;
 
-  // TODO: Do not use environments, use object manager's symlinks instead
   GetIcon(GetEnvironmentVariable('SystemRoot') + '\system32\user32.dll');
 end;
 
@@ -142,6 +148,15 @@ begin
   Result.Indent := ParentIndent + 1;
 end;
 
+procedure TProcessListDialog.ButtonOkClick(Sender: TObject);
+begin
+  if PickThread and Assigned(ListView.Selected) then
+    ThreadID := TThreadListDialog.Execute(Self,
+      PProcessItemEx(ListView.Selected.Data).Process);
+
+  ModalResult := mrOk;
+end;
+
 destructor TProcessListDialog.Destroy;
 var
   i: integer;
@@ -153,34 +168,27 @@ begin
   inherited;
 end;
 
-class function TProcessListDialog.Execute(AOwner: TComponent): Cardinal;
+class function TProcessListDialog.Execute(AOwner: TComponent;
+  AllowSelectThread: Boolean): TClientIdEx;
+var
+  Process: PProcessInfo;
 begin
   with TProcessListDialog.Create(AOwner) do
   begin
+    PickThread := AllowSelectThread;
+
     ShowModal;
 
     if not Assigned(ListView.Selected) then
       Abort;
 
-    Result := PProcessItemEx(ListView.Selected.Data).Process.ProcessId;
-  end;
-end;
-
-class function TProcessListDialog.Execute(AOwner: TComponent;
-  out ImgName: string): Cardinal;
-var
-  Process: PSystemProcessInformation;
-begin
-  with TProcessListDialog.Create(AOwner) do
-  begin
-    ShowModal;
-
-    if not Assigned(ListView.Selected) then
+    if AllowSelectThread and (ThreadID = 0) then
       Abort;
 
     Process := PProcessItemEx(ListView.Selected.Data).Process;
-    Result := Process.ProcessId;
-    ImgName := Process.GetImageName;
+    Result.ProcessID := Process.ProcessId;
+    Result.ThreadID := ThreadID;
+    Result.ImageName := Process.GetImageName;
   end;
 end;
 
@@ -203,7 +211,7 @@ end;
 procedure TProcessListDialog.ListViewSelectItem(Sender: TObject;
   Item: TListItem; Selected: Boolean);
 begin
-  ButtonOk.Enabled := Selected;
+  ButtonOk.Enabled := (ListView.SelCount <> 0);
 end;
 
 procedure TProcessListDialog.ReloadProcessIcons;
@@ -325,7 +333,7 @@ end;
 
 { TProcessItemEx }
 
-constructor TProcessItemEx.Create(Src: PSystemProcessInformation);
+constructor TProcessItemEx.Create(Src: PProcessInfo);
 begin
   Process := Src;
 end;

@@ -9,7 +9,8 @@ uses
 {$WARN SYMBOL_PLATFORM OFF}
 
 type
-  PSystemProcessInformation = Ntapi.ntexapi.PSystemProcessInformation;
+  PProcessInfo = Ntapi.ntexapi.PSystemProcessInformation;
+  PThreadInfo = Ntapi.ntexapi.PSystemThreadInformation;
 
   /// <summary> Snapshots all processes on the system. </summary>
   TProcessSnapshot = class
@@ -19,16 +20,16 @@ type
     Buffer: PSystemProcessInformation;
     BufferSize: Cardinal;
     FCount: Cardinal;
-    FProcesses: array of PSystemProcessInformation;
+    FProcesses: array of PProcessInfo;
   public
     /// <summary> Create a snapshot of all processes on the system. </summary>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create;
     destructor Destroy; override;
     property Count: Cardinal read FCount;
-    property Process[i: Cardinal]: PSystemProcessInformation read GetItem; default;
-    function FindByPID(PID: Cardinal): PSystemProcessInformation;
-    function FindByName(ImageName: String): PSystemProcessInformation;
+    property Process[i: Cardinal]: PProcessInfo read GetItem; default;
+    function FindByPID(PID: Cardinal): PProcessInfo;
+    function FindByName(ImageName: String): PProcessInfo;
   end;
 
 implementation
@@ -40,7 +41,7 @@ uses
 
 constructor TProcessSnapshot.Create;
 var
-  Process: PSystemProcessInformation;
+  Process: PProcessInfo;
   ReturnLength: Cardinal;
   Status: NTSTATUS;
   i: integer;
@@ -128,7 +129,7 @@ begin
   inherited;
 end;
 
-function TProcessSnapshot.FindByName(ImageName: String): PSystemProcessInformation;
+function TProcessSnapshot.FindByName(ImageName: String): PProcessInfo;
 var
   i: Integer;
 begin
@@ -139,7 +140,7 @@ begin
   Result := nil;
 end;
 
-function TProcessSnapshot.FindByPID(PID: Cardinal): PSystemProcessInformation;
+function TProcessSnapshot.FindByPID(PID: Cardinal): PProcessInfo;
 var
   i: Integer;
 begin
@@ -150,7 +151,7 @@ begin
   Result := nil;
 end;
 
-function TProcessSnapshot.GetItem(i: Cardinal): PSystemProcessInformation;
+function TProcessSnapshot.GetItem(i: Cardinal): PProcessInfo;
 begin
   Result := FProcesses[i];
 end;

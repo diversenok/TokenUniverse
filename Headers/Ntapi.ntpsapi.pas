@@ -9,12 +9,17 @@ uses
 const
   PROCESS_QUERY_LIMITED_INFORMATION = $1000; // move to WinNT
   THREAD_QUERY_INFORMATION = $0040;
+  THREAD_SET_THREAD_TOKEN = $0080;
 
 type
-  TProcessInformationClass = (
+  TProcessInfoClass = (
     ProcessAccessToken = 9, // s: TProcessAccessToken
     ProcessImageFileName = 27, // q: UNICODE_STRING
     ProcessImageFileNameWin32 = 43 // q: UNICODE_STRING
+  );
+
+  TThreadInfoClass = (
+    ThreadImpersonationToken = 5 // s: THandle
   );
 
   // ProcessAccessToken
@@ -36,14 +41,21 @@ function NtGetNextThread(ProcessHandle: THandle; ThreadHandle: THandle;
   out NewThreadHandle: THandle): NTSTATUS; stdcall; external ntdll;
 
 function NtQueryInformationProcess(ProcessHandle: THandle;
-  ProcessInformationClass: TProcessInformationClass;
-  ProcessInformation: Pointer; ProcessInformationLength: Cardinal;
-  ReturnLength: PCardinal): NTSTATUS; stdcall; external ntdll;
+  ProcessInformationClass: TProcessInfoClass; ProcessInformation: Pointer;
+  ProcessInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
+  stdcall; external ntdll;
 
 function NtSetInformationProcess(ProcessHandle: THandle;
-  ProcessInformationClass: TProcessInformationClass;
-  ProcessInformation: Pointer; ProcessInformationLength: Cardinal): NTSTATUS;
-  stdcall; external ntdll;
+  ProcessInformationClass: TProcessInfoClass; ProcessInformation: Pointer;
+  ProcessInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtOpenThread(out ThreadHandle: THandle; DesiredAccess: TAccessMask;
+  const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
+  NTSTATUS; stdcall; external ntdll;
+
+function NtSetInformationThread(ThreadHandle: THandle;
+  ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;
+  ThreadInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
 
 implementation
 
