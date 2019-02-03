@@ -33,7 +33,6 @@ object ProcessListDialog: TProcessListDialog
     Caption = 'OK'
     Default = True
     Enabled = False
-    ModalResult = 1
     TabOrder = 1
     OnClick = ButtonOkClick
   end

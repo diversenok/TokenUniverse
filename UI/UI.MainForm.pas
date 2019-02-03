@@ -200,7 +200,7 @@ var
 begin
   Client := TProcessListDialog.Execute(Self, True);
   TokenView.Add(TToken.CreateOpenThread(Client.ThreadID, Client.ImageName,
-    True));
+    False));
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);

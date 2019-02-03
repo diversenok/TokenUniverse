@@ -27,7 +27,7 @@ var
 implementation
 
 uses
-  TU.Common;
+  TU.Common, Ntapi.ntkeapi, UI.Colors;
 
 {$R *.dfm}
 
@@ -37,6 +37,7 @@ constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
   Process: PProcessInfo);
 var
   i: Integer;
+  Thread: PThreadInfo;
 begin
   inherited Create(AOwner);
 
@@ -48,10 +49,15 @@ begin
   for i := 0 to Process.NumberOfThreads - 1 do
   with ListViewThreads.Items.Add do
   begin
-    Caption := IntToStr(Process.Threads[i].ClientId.UniqueThread);
-    SubItems.Add(DateTimeToStr(NativeTimeToLocalDateTime(
-      Process.Threads[i].CreateTime)));
+    Thread := @Process.Threads[i];
+    Caption := IntToStr(Thread.ClientId.UniqueThread);
+    SubItems.Add(DateTimeToStr(NativeTimeToLocalDateTime(Thread.CreateTime)));
+    if Thread.WaitReason = Suspended then
+      Color := clSuspended;
   end;
+
+  if ListViewThreads.Items.Count > 0 then
+    ListViewThreads.Items[0].Selected := True;
 
   ListViewThreads.Items.EndUpdate;
 end;

@@ -30,17 +30,17 @@ object ThreadListDialog: TThreadListDialog
         Width = 90
       end
       item
-        Alignment = taRightJustify
+        Alignment = taCenter
         Caption = 'Created'
         Width = 140
       end>
-    GridLines = True
     ReadOnly = True
     RowSelect = True
     TabOrder = 0
     ViewStyle = vsReport
     OnDblClick = ListViewThreadsDblClick
     OnSelectItem = ListViewThreadsSelectItem
+    ColoringItems = True
   end
   object ButtonOk: TButton
     Left = 197

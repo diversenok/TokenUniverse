@@ -200,6 +200,7 @@ const
 var
   Csrss: PProcessInfo;
 begin
+  Result := nil;
   with TProcessSnapshot.Create do
   begin
     Csrss := FindByName(SrcProcess);

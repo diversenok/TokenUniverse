@@ -12,6 +12,7 @@ const
   clDisabled: TColor = $E0E0F0;
   clDisabledModified: TColor = $D0D0F0;
   clIntegrity: TColor = $F0E0E0;
+  clSuspended: TColor = $AAAAAA;
 
 function GroupAttributesToColor(Attributes: TGroupAttributes): TColor;
 
