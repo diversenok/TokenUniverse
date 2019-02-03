@@ -572,7 +572,7 @@ end;
 
 procedure TInfoDialog.UpdateObjectTab;
 var
-  Handles: THandleList;
+  Handles: THandleInfoArray;
   DoSnapshotProcesses: Boolean;
   ProcSnapshot: TProcessSnapshot;
   Process: PProcessInfo;
@@ -595,54 +595,46 @@ begin
   ListViewProcesses.Items.BeginUpdate;
   ListViewProcesses.Items.Clear;
   ListViewProcesses.SmallImages := TProcessIcons.ImageList;
-  Handles := THandleList.Create;
 
+  // Snapshot handles and find the ones pointing to that object
+  Handles := THandleSnapshot.OfObject(Token.HandleInformation.PObject);
+
+  // Add handle from current process and check if there are any other
   DoSnapshotProcesses := False;
-
-  // Add current process
-  for i := 0 to Handles.Count - 1 do
-    if (Handles[i].KernelObjectAddress =
-      Token.HandleInformation.KernelObjectAddress) then
-    begin
-      // Add handles from current process
-      if Handles[i].ContextPID = GetCurrentProcessId then
-        with ListViewProcesses.Items.Add do
-        begin
-          Caption := 'Current process';
-          SubItems.Add(IntToStr(GetCurrentProcessId));
-          SubItems.Add(Format('0x%x', [Handles[i].Handle]));
-          SubItems.Add(AccessToString(Handles[i].Access));
-          ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
-        end
-      else
-        DoSnapshotProcesses := True;
-    end;
+  for i := 0 to High(Handles) do
+    if Handles[i].UniqueProcessId = GetCurrentProcessId then
+      with ListViewProcesses.Items.Add do
+      begin
+        Caption := 'Current process';
+        SubItems.Add(IntToStr(GetCurrentProcessId));
+        SubItems.Add(Format('0x%x', [Handles[i].HandleValue]));
+        SubItems.Add(AccessToString(Handles[i].GrantedAccess));
+        ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
+      end
+    else
+      DoSnapshotProcesses := True;
 
   // Add handles from other processes
   if DoSnapshotProcesses then
   begin
     ProcSnapshot := TProcessSnapshot.Create;
 
-    for i := 0 to Handles.Count - 1 do
-    if (Handles[i].KernelObjectAddress =
-      Token.HandleInformation.KernelObjectAddress)
-      and (Handles[i].ContextPID <> GetCurrentProcessId) then
+    for i := 0 to High(Handles) do
+    if (Handles[i].UniqueProcessId <> GetCurrentProcessId) then
       with ListViewProcesses.Items.Add do
       begin
-        Process := ProcSnapshot.FindByPID(Handles[i].ContextPID);
+        Process := ProcSnapshot.FindByPID(Handles[i].UniqueProcessId);
         Caption := Process.GetImageName;
-        SubItems.Add(IntToStr(Handles[i].ContextPID));
-        SubItems.Add(Format('0x%x', [Handles[i].Handle]));
-        SubItems.Add(AccessToString(Handles[i].Access));
+        SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
+        SubItems.Add(Format('0x%x', [Handles[i].HandleValue]));
+        SubItems.Add(AccessToString(Handles[i].GrantedAccess));
         ImageIndex := TProcessIcons.GetIcon(Process.QueryFullImageName);
       end;
 
     ProcSnapshot.Free;
   end;
 
-  Handles.Free;
   ListViewProcesses.Items.EndUpdate;
-
   TabObject.Tag := TAB_UPDATED;
 end;
 

@@ -84,9 +84,9 @@ type
 
   // SystemExtendedHandleInformation
   TSystemHandleInformationEx = record
-    NumberOfHandles: NativeUInt;
+    NumberOfHandles: NativeInt;
     Reserved: NativeUInt;
-    Handles: array [Word] of TSystemHandleTableEntryInfoEx; // TODO: enlarge
+    Handles: array [0..0] of TSystemHandleTableEntryInfoEx;
   end;
   PSystemHandleInformationEx = ^TSystemHandleInformationEx;
 

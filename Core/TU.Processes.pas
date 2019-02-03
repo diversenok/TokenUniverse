@@ -92,9 +92,7 @@ begin
     FreeMem(Buffer);
     Buffer := nil;
     BufferSize := 0;
-
-    OutputDebugString(PChar(Format('Process snapshot failed with 0x%0.8x',
-      [Status])));
+    ReportStatus(Status, 'Process snapshot');
     Exit;
   end;
 

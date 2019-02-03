@@ -183,6 +183,7 @@ procedure WinCheckBuffer(BufferSize: Cardinal; Where: String;
 function WinTryCheckBuffer(BufferSize: Cardinal): Boolean; inline;
 function NativeCheck(Status: NTSTATUS; Where: String;
   Context: TObject = nil): Boolean; inline;
+procedure ReportStatus(Status: NTSTATUS; Where: String);
 
 /// <symmary>
 ///  Converts a string that contains a decimal or a hexadecimal number to an
@@ -247,6 +248,13 @@ begin
   if not NT_SUCCESS(Status) then
     raise ELocatedOSError.CreateLE(Status, Where, Context);
   Result := True;
+end;
+
+procedure ReportStatus(Status: NTSTATUS; Where: String);
+begin
+  if not NT_SUCCESS(Status) then
+    OutputDebugStringW(PWideChar(ELocatedOSError.FormatErrorMessage(Where,
+      Status)));
 end;
 
 { CanFail<ResultType> }

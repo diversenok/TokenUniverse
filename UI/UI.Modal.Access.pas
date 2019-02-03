@@ -37,7 +37,7 @@ begin
   with TDialogAccess.Create(AOwner) do
   begin
     TAccessMaskSource.InitAccessEntries(ListViewAccess,
-      Source.HandleInformation.Access);
+      Source.HandleInformation.GrantedAccess);
 
     ShowModal;
 

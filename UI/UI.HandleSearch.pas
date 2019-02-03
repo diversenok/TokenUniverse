@@ -62,44 +62,8 @@ begin
 end;
 
 procedure TFormHandleSearch.ButtonRefreshClick(Sender: TObject);
-var
-  HandleSnapshot: THandleList;
-  ProcessSnapshot: TProcessSnapshot;
-  PID: NativeUInt;
-  hProcess: THandle;
-  //HandleItem: THandleInformation;
 begin
-  Frame.ClearAll;
-  HandleSnapshot := THandleList.Create;
-  ProcessSnapshot := TProcessSnapshot.Create;
-  Frame.ListViewTokens.Groups.BeginUpdate;
-  Frame.ListViewTokens.Items.BeginUpdate;
-
-  for PID in HandleSnapshot.Processes do
-    if PID <> GetCurrentProcessId then
-    with Frame.ListViewTokens.Groups.Add do
-    begin
-      State := [lgsCollapsible];
-//      Header := Format('%s (%d)', [ProcessSnapshot.FindByPID(PID), PID]);
-
-      hProcess := OpenProcess(PROCESS_DUP_HANDLE, False, PID);
-      if hProcess <> 0 then // TODO: Or setting
-      begin
-        {for HandleItem in HandleSnapshot.ProcessHandles[PID] do
-          Frame.AddToken(TToken.CreateByHandle(HandleItem, hProcess),
-            GroupID);
-        CloseHandle(hProcess);}
-      end;
-    end;
-
-  // TODO: Calculate handles and processes correctly
-  LabelStatistics.Caption := Format('Found %d opened handles in %d processes',
-    [Frame.ListViewTokens.Items.Count, Frame.ListViewTokens.Groups.Count]);
-
-  Frame.ListViewTokens.Groups.EndUpdate;
-  Frame.ListViewTokens.Items.EndUpdate;
-  HandleSnapshot.Free;
-  ProcessSnapshot.Free;
+  //
 end;
 
 procedure TFormHandleSearch.FormClose(Sender: TObject;

@@ -3,209 +3,65 @@ unit TU.Handles;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.Windows, Ntapi.ntexapi;
 
 type
-  /// <summary> Represents information about a handle. </summary>
-  THandleInformation = record
-    /// <remarks>
-    ///  The value is valid only in context of a process with a specific PID
-    ///  of <see cref="ContextPID"/>.
-    /// </remarks>
-    Handle: NativeUInt;
-    ContextPID: NativeUInt;
-    Access: ACCESS_MASK;
-    KernelObjectAddress: NativeUInt;
-  end;
+  THandleInfo = Ntapi.ntexapi.TSystemHandleTableEntryInfoEx;
+  PHandleInfo = Ntapi.ntexapi.PSystemHandleTableEntryInfoEx;
 
-  TNativeUIntArray = array of NativeUInt;
-  THandleItemArray = array of THandleInformation;
+  THandleInfoArray = array of THandleInfo;
 
   // TODO: Are these values fixed or should they be somehow obtained in runtime?
   TObjectType = (objToken = 5);
 
-  /// <summary>
-  ///  Stores a list of handles of a specific type opened in the specified
-  ///  processes.
-  /// </summary>
-  THandleList = class
+  /// <summary> Snapshots all handles on the system. </summary>
+  THandleSnapshot = class
   protected
-    FItems: array of THandleInformation;
-    function GetItem(Ind: Integer): THandleInformation;
-    function GetCount: Integer;
-    function GetProcesses: TNativeUIntArray;
-    function GetProcessHandles(PID: NativeUInt): THandleItemArray;
+    Buffer: PSystemHandleInformationEx;
+    BufferSize: Cardinal;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function FilterByProcess(PID: NativeUInt;
+      ObjectType: TObjectType = objToken): THandleInfoArray; overload;
+    function FilterByObject(ObjectAddress: Pointer): THandleInfoArray; overload;
   public
     /// <summary>
-    ///  Creates a list of all handles on the system of the specific type.
+    ///  Retrieves all handles of the specific type opened by a process.
     /// </summary>
-    /// <exception> This constructor doesn't raise any exceptions. </exception>
-    constructor Create(FilterType: TObjectType = objToken);
+    class function OfProcess(PID: NativeUInt;
+      ObjectType: TObjectType = objToken): THandleInfoArray; overload; static;
 
     /// <summary>
-    ///  Creates a list of all handles of a process of the specific type.
+    ///  Retrieves all handles to the specified kernel object.
     /// </summary>
-    /// <exception> This constructor doesn't raise any exceptions. </exception>
-    constructor CreateOnly(PID: NativeUInt; FilterType: TObjectType = objToken);
-
-    property Handles[Ind: Integer]: THandleInformation read GetItem; default;
-    property Count: Integer read GetCount;
-
-    /// <returns>
-    ///   Returns an array of all processes with opened handles.
-    /// </returns>
-    property Processes: TNativeUIntArray read GetProcesses;
-
-    /// <returns>
-    ///   Returns an array of all handles opened by the specified process.
-    /// </returns>
-    property ProcessHandles[PID: NativeUInt]: THandleItemArray read GetProcessHandles;
+    class function OfObject(ObjectAddress: Pointer): THandleInfoArray;
+      overload; static;
   end;
 
 implementation
 
 uses
-  System.SysUtils, TU.Common, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntexapi;
-
-type
-  /// <summary>
-  ///  A helper class to collect the list of all opened handles on the system.
-  /// </summary>
-  THandleSnapshot = class
-    Buffer: PSystemHandleInformationEx;
-    constructor Create;
-    destructor Destroy; override;
-  end;
-
-{ THandleList }
-
-constructor THandleList.Create(FilterType: TObjectType = objToken);
-begin
-  // Zero PID is reserved as a flag to collect all the processes
-  CreateOnly(0);
-end;
-
-constructor THandleList.CreateOnly(PID: NativeUInt;
-  FilterType: TObjectType = objToken);
-var
-  Snap: THandleSnapshot;
-  i, ItemsCount: integer;
-begin
-  Snap := THandleSnapshot.Create;
-
-  {$R-}
-  with Snap do
-  try
-    // Check if the snapshot is successful.
-    // If not then exit with 0 entries
-    if not Assigned(Buffer) then
-      Exit;
-
-    // Count all handles of the specified process with the specified type.
-    // Zero PID is reserved as a flag to collect all the processes
-    ItemsCount := 0;
-    for i := 0 to Buffer.NumberOfHandles - 1 do
-    with Buffer.Handles[i] do
-      if ObjectTypeIndex = Word(FilterType) then
-        if (UniqueProcessId = PID) or (PID = 0) then
-          Inc(ItemsCount);
-
-    // Allocate memory
-    SetLength(FItems, ItemsCount);
-
-    // Save all these handles and additional information
-    ItemsCount := 0;
-    for i := 0 to Buffer.NumberOfHandles - 1 do
-    with Buffer.Handles[i] do
-      if ObjectTypeIndex = Word(FilterType) then
-        if (UniqueProcessId = PID) or (PID = 0) then
-        with FItems[ItemsCount] do
-        begin
-          // btw: Access field can be also queried separately via
-          // NtQueryObject with ObjectBasicInformation
-
-          ContextPID := UniqueProcessId;
-          Handle := HandleValue;
-          Access := GrantedAccess;
-          KernelObjectAddress := NativeUInt(PObject);
-          Inc(ItemsCount);
-        end;
-  finally
-    Snap.Free;
-  end;
-  {$R+}
-end;
-
-function THandleList.GetCount: Integer;
-begin
-  Result := Length(FItems);
-end;
-
-function THandleList.GetItem(Ind: Integer): THandleInformation;
-begin
-  Result := FItems[Ind];
-end;
-
-function THandleList.GetProcesses: TNativeUIntArray;
-var
-  i, j: integer;
-  Exists: Boolean;
-begin
-  // Collect all processes in our list
-  for i := 0 to High(FItems) do
-  with FItems[i] do
-  begin
-    // Also prevent duplicates
-    Exists := False;
-    for j := 0 to High(Result) do
-      if Result[j] = ContextPID then
-      begin
-        Exists := True;
-        Break;
-      end;
-
-    if not Exists then
-    begin
-      SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := ContextPID;
-    end;
-  end;
-end;
-
-function THandleList.GetProcessHandles(PID: NativeUInt): THandleItemArray;
-var
-  i, Count: Integer;
-begin
-  // Count all the handles that belong to the specified process
-  Count := 0;
-  for i := 0 to High(FItems) do
-    if FItems[i].ContextPID = PID then
-      Inc(Count);
-
-  // Allocate enough memory
-  SetLength(Result, Count);
-
-  // Save them
-  Count := 0;
-  for i := 0 to High(FItems) do
-    if FItems[i].ContextPID = PID then
-    begin
-      Result[Count] := FItems[i];
-      Inc(Count);
-    end;
-end;
+  TU.Common, Ntapi.ntdef, Ntapi.ntstatus;
 
 { THandleSnapshot }
 
 constructor THandleSnapshot.Create;
 var
-  BufferSize, ReturnLength: Cardinal;
+  ReturnLength: Cardinal;
   Status: NTSTATUS;
 begin
-  Buffer := nil;
-  BufferSize := 0;
+  // Some calculations:
+  //  x86: Memory = 28 bytes * Handle
+  //  x64: Memory = 40 bytes * Handle
+  //
+  // On my notebook I usually have ~25k handles, so it's about 1 MB of data.
 
-  // Query the information or it's size until we pass a suitable buffer for a
+  // Start querying with 3 MB.
+  BufferSize := 3 * 1024 * 1024;
+  Buffer := AllocMem(BufferSize);
+
+  // Query the information or its size until we pass a suitable buffer for a
   // system call or get an unexpected error
   while True do
   begin
@@ -224,7 +80,8 @@ begin
         Break;
       end;
 
-      BufferSize := ReturnLength;
+      // Use a 10% addition to be sure to fit despite the fluctuations
+      BufferSize := ReturnLength + ReturnLength div 10;
       Buffer := AllocMem(BufferSize);
     end
     else
@@ -238,17 +95,112 @@ begin
   begin
     FreeMem(Buffer);
     Buffer := nil;
-
-    OutputDebugString(PChar(Format('Handle snapshot failed with 0x%0.8x',
-      [Status])));
-    Exit;
+    BufferSize := 0;
+    ReportStatus(Status, 'Handle snapshot');
   end;
 end;
 
 destructor THandleSnapshot.Destroy;
 begin
+  // Overwrite the buffer to catch potential access violations earlier
+  {$IFDEF DEBUG}
+  FillChar(Buffer^, BufferSize, 0);
+  {$ENDIF}
+
   FreeMem(Buffer);
   inherited;
+end;
+
+function THandleSnapshot.FilterByObject(
+  ObjectAddress: Pointer): THandleInfoArray;
+var
+  i, j: NativeInt;
+  Count: Cardinal;
+begin
+  if not Assigned(Buffer) then
+  begin
+    SetLength(Result, 0);
+    Exit;
+  end;
+
+  {$R-}
+
+  // Count suitable handles
+  Count := 0;
+  for i := 0 to Buffer.NumberOfHandles - 1 do
+    if Buffer.Handles[i].PObject = ObjectAddress then
+      Inc(Count);
+
+  // Allocate storage
+  SetLength(Result, Count);
+
+  // Save references
+  j := 0;
+  for i := 0 to Buffer.NumberOfHandles - 1 do
+    if Buffer.Handles[i].PObject = ObjectAddress then
+      begin
+        Result[j] := Buffer.Handles[i];
+        Inc(j);
+      end;
+
+  {$R+}
+end;
+
+function THandleSnapshot.FilterByProcess(PID: NativeUInt;
+  ObjectType: TObjectType): THandleInfoArray;
+var
+  i, j: NativeInt;
+  Count: Cardinal;
+begin
+  if not Assigned(Buffer) then
+  begin
+    SetLength(Result, 0);
+    Exit;
+  end;
+
+  {$R-}
+
+  // Count suitable handles
+  Count := 0;
+  for i := 0 to Buffer.NumberOfHandles - 1 do
+    if (Buffer.Handles[i].ObjectTypeIndex = Cardinal(ObjectType))
+      and (Buffer.Handles[i].UniqueProcessId = PID) then
+      Inc(Count);
+
+  // Allocate storage
+  SetLength(Result, Count);
+
+  // Save references
+  j := 0;
+  for i := 0 to Buffer.NumberOfHandles - 1 do
+    if (Buffer.Handles[i].ObjectTypeIndex = Cardinal(ObjectType))
+      and (Buffer.Handles[i].UniqueProcessId = PID) then
+      begin
+        Result[j] := Buffer.Handles[i];
+        Inc(j);
+      end;
+
+  {$R+}
+end;
+
+class function THandleSnapshot.OfObject(
+  ObjectAddress: Pointer): THandleInfoArray;
+begin
+  with THandleSnapshot.Create do
+  begin
+    Result := FilterByObject(ObjectAddress);
+    Free;
+  end;
+end;
+
+class function THandleSnapshot.OfProcess(PID: NativeUInt;
+  ObjectType: TObjectType): THandleInfoArray;
+begin
+  with THandleSnapshot.Create do
+  begin
+    Result := FilterByProcess(PID, ObjectType);
+    Free;
+  end;
 end;
 
 end.

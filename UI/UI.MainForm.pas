@@ -267,17 +267,17 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
+  Handles: THandleInfoArray;
   i: integer;
 begin
   TokenView := TTokenViewSource.Create(ListViewTokens);
 
-  with THandleList.CreateOnly(GetCurrentProcessId) do
-  begin
-    for i := 0 to Count - 1 do
-      TokenView.Add(TToken.CreateByHandle(Handles[i]));
-    Free;
-  end;
+  // Search for inherited handles
+  Handles := THandleSnapshot.OfProcess(GetCurrentProcessId);
+  for i := 0 to High(Handles) do
+    TokenView.Add(TToken.CreateByHandle(Handles[i]));
 
+  // Open current process and, maybe, its linked token
   with TokenView.Add(TToken.CreateOpenCurrent) do
     if InfoClass.Query(tdTokenElevation) and
       (InfoClass.Elevation <> TokenElevationTypeDefault) then

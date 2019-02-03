@@ -236,7 +236,7 @@ type
     procedure SetCaption(const Value: String);
   protected
     hToken: THandle;
-    FHandleInformation: THandleInformation;
+    FHandleInformation: THandleInfo;
     FInfoClassData: TTokenData;
     Cache: TTokenCacheAndEvents;
 
@@ -322,7 +322,7 @@ type
     {--------------------  TToken public section ---------------------------}
 
     property Handle: THandle read hToken;
-    property HandleInformation: THandleInformation read FHandleInformation;
+    property HandleInformation: THandleInfo read FHandleInformation;
 
     property InfoClass: TTokenData read FInfoClassData;
     property Events: TTokenCacheAndEvents read Cache;
@@ -381,7 +381,7 @@ type
     /// <summary>
     ///  Create a TToken object using inherited handle.
     /// </summary>
-    constructor CreateByHandle(HandleInfo: THandleInformation);
+    constructor CreateByHandle(HandleInfo: THandleInfo);
 
     /// <summary> Opens a token of current process. </summary>
     constructor CreateOpenCurrent(Access: ACCESS_MASK = MAXIMUM_ALLOWED);
@@ -548,16 +548,16 @@ begin
 
   // Try to assign an existing TTokenCacheAndEvents to the token and
   // maintain reference counter for it.
-  if CacheMapping.TryGetValue(Token.HandleInformation.KernelObjectAddress,
+  if CacheMapping.TryGetValue(NativeUInt(Token.HandleInformation.PObject),
       {out} Token.Cache) then
     Inc(Token.Cache.ReferenceCount)
   else
   begin
     // Or create a new instance
     Token.Cache := TTokenCacheAndEvents.Create;
-    Token.Cache.ObjectAddress := Token.HandleInformation.KernelObjectAddress;
+    Token.Cache.ObjectAddress := NativeUInt(Token.HandleInformation.PObject);
     Token.Cache.ReferenceCount := 1;
-    CacheMapping.Add(Token.HandleInformation.KernelObjectAddress, Token.Cache);
+    CacheMapping.Add(NativeUInt(Token.HandleInformation.PObject), Token.Cache);
   end;
 end;
 
@@ -587,7 +587,7 @@ end;
 
 procedure TToken.AfterConstruction;
 var
-  HandleList: THandleList;
+  OurHandles: THandleInfoArray;
   i: integer;
 begin
   inherited;
@@ -600,22 +600,20 @@ begin
   // system/process handles and iterate through them.
 
   // This information might be already known (from a constructor)
-  if HandleInformation.KernelObjectAddress = 0 then
+  if HandleInformation.PObject = nil then
   begin
-    HandleList := THandleList.CreateOnly(GetCurrentProcessId);
+    OurHandles := THandleSnapshot.OfProcess(GetCurrentProcessId);
 
-    for i := 0 to HandleList.Count - 1 do
-      if HandleList[i].Handle = hToken then
+    for i := 0 to High(OurHandles) do
+      if OurHandles[i].HandleValue = hToken then
       begin
-        FHandleInformation := HandleList[i];
+        FHandleInformation := OurHandles[i];
         Break;
       end;
-
-    HandleList.Free;
   end;
 
   // This should not happen and I do not know what to do here
-  if FHandleInformation.KernelObjectAddress = 0 then
+  if FHandleInformation.PObject = nil then
     raise EAssertionFailed.Create('Can not obtain kernel object address of a ' +
       'token.');
 
@@ -752,12 +750,12 @@ begin
   FCaption := Caption;;
 end;
 
-constructor TToken.CreateByHandle(HandleInfo: THandleInformation);
+constructor TToken.CreateByHandle(HandleInfo: THandleInfo);
 begin
-  if HandleInfo.ContextPID <> GetCurrentProcessId then
+  if HandleInfo.UniqueProcessId <> GetCurrentProcessId then
     raise ENotImplemented.Create('TODO');
 
-  hToken := HandleInfo.Handle;
+  hToken := HandleInfo.HandleValue;
   FHandleInformation := HandleInfo;
   FCaption := Format('Inherited %d [0x%x]', [hToken, hToken]);
 end;
@@ -792,7 +790,7 @@ begin
       goto Done;
 
     // Full access didn't work. Collect the access that is already granted
-    Access := SrcToken.HandleInformation.Access;
+    Access := SrcToken.HandleInformation.GrantedAccess;
 
     // Try each one that is not granted yet
     for i := 0 to ACCESS_COUNT - 1 do
@@ -1471,9 +1469,9 @@ begin
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsAccess:
       if Detailed then
-        Result := AccessToDetailedString(Token.HandleInformation.Access)
+        Result := AccessToDetailedString(Token.HandleInformation.GrantedAccess)
       else
-        Result := AccessToString(Token.HandleInformation.Access);
+        Result := AccessToString(Token.HandleInformation.GrantedAccess);
 
     tsUserName:
       Result := Token.Cache.User.SecurityIdentifier.ToString;
@@ -1492,7 +1490,7 @@ begin
 
     tsObjectAddress:
       Result := Format('0x%0.8x',
-        [Token.HandleInformation.KernelObjectAddress]);
+        [NativeUInt(Token.HandleInformation.PObject)]);
 
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsHandle:
@@ -1604,12 +1602,12 @@ begin
   Result := False;
 
   // TokenSource can't be queried without TOKEN_QUERY_SOURCE access
-  if (Token.HandleInformation.Access and TOKEN_QUERY_SOURCE = 0) and
+  if (Token.HandleInformation.GrantedAccess and TOKEN_QUERY_SOURCE = 0) and
     (DataClass = tdTokenSource) then
     Exit;
 
   // And almost nothing can be queried without TOKEN_QUERY access
-  if (Token.HandleInformation.Access and TOKEN_QUERY = 0) and
+  if (Token.HandleInformation.GrantedAccess and TOKEN_QUERY = 0) and
     not (DataClass in [tdNone, tdTokenSource, tdObjectInfo]) then
       Exit;
 
