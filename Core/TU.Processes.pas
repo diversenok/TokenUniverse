@@ -46,11 +46,20 @@ var
   Status: NTSTATUS;
   i: integer;
 begin
-  BufferSize := 0;
+  // Some calculations:
+  //  x86: Memory = 184 bytes * Processes + 64 bytes * Threads
+  //  x64: Memory = 256 bytes * Processes + 80 bytes * Threads
+  //
+  // On my notebook I usually have ~75 processes with ~850 threads, so it's
+  // about 85 KB of data.
+
+  // Start querying with 256 KB.
+  BufferSize := 256 * 1024;
+  Buffer := AllocMem(BufferSize);
 
   // TODO: Spanshot only processes of current session
 
-  // Query the information or it's size until we pass a suitable buffer for a
+  // Query the information or its size until we pass a suitable buffer for a
   // system call or get an unexpected error
   while True do
   begin
@@ -68,7 +77,8 @@ begin
         Break;
       end;
 
-      BufferSize := ReturnLength;
+      // Use a 10% addition to be sure to fit despite the fluctuations
+      BufferSize := ReturnLength + ReturnLength div 10;
       Buffer := AllocMem(BufferSize);
     end
     else
@@ -77,7 +87,6 @@ begin
 
   // We have exited the loop. It means that we either succeeded (and the buffer
   // is valid) or failed (and the buffer should be cleaned up).
-
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(Buffer);
@@ -92,7 +101,7 @@ begin
   FCount := 0;
   Process := Buffer;
 
-  // FCount the processes
+  // Count the processes
   while True do
   begin
     Inc(FCount);
@@ -104,10 +113,10 @@ begin
   // Allocate memory to store pointers to all process items
   SetLength(FProcesses, FCount);
 
-  // Save each process information
   i := 0;
   Process := Buffer;
 
+  // Save each process information
   while True do
   begin
     FProcesses[i] := Process;
@@ -120,7 +129,7 @@ end;
 
 destructor TProcessSnapshot.Destroy;
 begin
-  // Overwrite the buffer to catch possible access violations earlier
+  // Overwrite the buffer to catch potential access violations earlier
   {$IFDEF DEBUG}
   FillChar(Buffer^, BufferSize, 0);
   {$ENDIF}
