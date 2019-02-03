@@ -39,10 +39,39 @@ type
       overload; static;
   end;
 
+  PObjectInfo = Ntapi.ntexapi.PSystemObjectInformation;
+
+  /// <summary>
+  ///  Snapshots objects on the system. Requires
+  /// </summary>
+  TObjectSnapshot = class
+  protected
+    Buffer: PSystemObjectTypeInformation;
+    BufferSize: Cardinal;
+  public
+    constructor Create;
+    destructor Destroy; override;
+
+    /// <summary>
+    ///  Checks whether object snapshotting is supported on the system.
+    /// </summary>
+    class function FeatureSupported: Boolean; static;
+
+    /// <summary>
+    ///  Finds an object information by its kernel address.
+    /// </summary>
+    function FindObject(ObjectType: TObjectType; Address: Pointer): PObjectInfo;
+  end;
+
 implementation
 
 uses
-  TU.Common, Ntapi.ntdef, Ntapi.ntstatus;
+  TU.Common, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl;
+
+function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
+begin
+  Result := Pointer(NativeUInt(P) + Size);
+end;
 
 { THandleSnapshot }
 
@@ -61,7 +90,7 @@ begin
   BufferSize := 3 * 1024 * 1024;
   Buffer := AllocMem(BufferSize);
 
-  // Query the information or its size until we pass a suitable buffer for a
+  // Query the information or its size until we pass a suitable buffer for the
   // system call or get an unexpected error
   while True do
   begin
@@ -200,6 +229,123 @@ begin
   begin
     Result := FilterByProcess(PID, ObjectType);
     Free;
+  end;
+end;
+
+{ TObjectSnapshot }
+
+constructor TObjectSnapshot.Create;
+var
+  ReturnLength: Cardinal;
+  Status: NTSTATUS;
+begin
+  // Check the flag
+  if not FeatureSupported then
+    Exit;
+
+  // On my system it is usually about 800 KB of data.
+
+  // Start querying with 3 MB.
+  BufferSize := 3 * 1024 * 1024;
+  Buffer := AllocMem(BufferSize);
+
+  // Query the information or its size until we pass a suitable buffer for the
+  // system call or get an unexpected error
+  while True do
+  begin
+    Status := NtQuerySystemInformation(SystemObjectInformation, Buffer,
+      BufferSize, @ReturnLength);
+
+    if (Status = STATUS_BUFFER_TOO_SMALL) or
+      (Status = STATUS_INFO_LENGTH_MISMATCH) then
+    begin
+      FreeMem(Buffer);
+
+      // Do not allocate too big buffers.
+      if ReturnLength > BUFFER_LIMIT then
+      begin
+        Status := STATUS_IMPLEMENTATION_LIMIT;
+        Break;
+      end;
+
+      // Use a 20% addition to be sure to fit despite huge fluctuations
+      BufferSize := ReturnLength + ReturnLength div 5;
+      Buffer := AllocMem(BufferSize);
+    end
+    else
+      Break;
+  end;
+
+  // We have exited the loop. It means that we either succeeded (and the buffer
+  // is valid) or failed (and the buffer should be cleaned up).
+
+  if not NT_SUCCESS(Status) then
+  begin
+    FreeMem(Buffer);
+    Buffer := nil;
+    BufferSize := 0;
+    ReportStatus(Status, 'Object snapshot');
+  end;
+end;
+
+destructor TObjectSnapshot.Destroy;
+begin
+  // Overwrite the buffer to catch potential access violations earlier
+  {$IFDEF DEBUG}
+  FillChar(Buffer^, BufferSize, 0);
+  {$ENDIF}
+
+  FreeMem(Buffer);
+  inherited;
+end;
+
+class function TObjectSnapshot.FeatureSupported: Boolean;
+begin
+  // Querying objects requires a specific flag set at boottime
+  Result := (RtlGetNtGlobalFlags and FLG_MAINTAIN_OBJECT_TYPELIST <> 0);
+end;
+
+function TObjectSnapshot.FindObject(ObjectType: TObjectType; Address: Pointer):
+  PObjectInfo;
+var
+  TypeInfo: PSystemObjectTypeInformation;
+  ObjInfo: PSystemObjectInformation;
+begin
+  Result := nil;
+  if not Assigned(Buffer) then
+    Exit;
+
+  // Iterate through all available types
+  TypeInfo := Buffer;
+  while True do
+  begin
+    // Check if this is the required object type
+    if TypeInfo.TypeIndex = Cardinal(ObjectType) then
+    begin
+      // Point to the first object
+      ObjInfo := AddToPointer(TypeInfo, SizeOf(TSystemObjectTypeInformation) +
+        TypeInfo.TypeName.MaximumLength);
+
+      // Iterate through all objects of this type
+      while True do
+      begin
+        // Check for matching object
+        if ObjInfo.ObjectAddress = Address then
+          Exit(ObjInfo);
+
+        // Skip to the next object within the type
+        if ObjInfo.NextEntryOffset = 0 then
+          Break
+        else
+          ObjInfo := AddToPointer(Buffer, ObjInfo.NextEntryOffset);
+      end;
+    end;
+
+    // Skip to the next type
+    if TypeInfo.NextEntryOffset = 0 then
+      Break
+    else
+      TypeInfo := AddToPointer(Buffer, TypeInfo.NextEntryOffset);
   end;
 end;
 

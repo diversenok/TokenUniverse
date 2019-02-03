@@ -6,9 +6,13 @@ interface
 uses
   Winapi.Windows, Ntapi.ntdef, Ntapi.ntkeapi;
 
+const
+  FLG_MAINTAIN_OBJECT_TYPELIST = $4000;
+
 type
   TSystemInformationClass = (
     SystemProcessInformation = 5, // q: TSystemProcessInformation
+    SystemObjectInformation = 17, // q: TSystemObjectTypeInformation mixed with TSystemObjectInformation
     SystemExtendedHandleInformation = 64 // q: TSystemHandleInformationEx
   );
 
@@ -68,6 +72,38 @@ type
     function QueryFullImageName: String;
   end;
   PSystemProcessInformation = ^TSystemProcessInformation;
+
+  // SystemObjectInformation
+  TSystemObjectTypeInformation = record
+    NextEntryOffset: Cardinal;
+    NumberOfObjects: Cardinal;
+    NumberOfHandles: Cardinal;
+    TypeIndex: Cardinal;
+    InvalidAttributes: Cardinal;
+    GenericMapping: GENERIC_MAPPING;
+    ValidAccessMask: Cardinal;
+    PoolType: Cardinal;
+    SecurityRequired: Boolean;
+    WaitableObject: Boolean;
+    TypeName: UNICODE_STRING;
+  end;
+  PSystemObjectTypeInformation = ^TSystemObjectTypeInformation;
+
+  TSystemObjectInformation = record
+    NextEntryOffset: Cardinal;
+    ObjectAddress: Pointer;
+    CreatorUniqueProcess: THandle;
+    CreatorBackTraceIndex: Word;
+    Flags: Word;
+    PointerCount: Integer;
+    HandleCount: Integer;
+    PagedPoolCharge: Cardinal;
+    NonPagedPoolCharge: Cardinal;
+    ExclusiveProcessId: THandle;
+    SecurityDescriptor: Pointer;
+    NameInfo: UNICODE_STRING;
+  end;
+  PSystemObjectInformation = ^TSystemObjectInformation;
 
   // TSystemHandleInformationEx
   TSystemHandleTableEntryInfoEx = record

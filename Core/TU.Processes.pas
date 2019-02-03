@@ -47,11 +47,11 @@ var
   i: integer;
 begin
   // Some calculations:
-  //  x86: Memory = 184 bytes * Processes + 64 bytes * Threads
-  //  x64: Memory = 256 bytes * Processes + 80 bytes * Threads
+  //  x86: Memory = 184 bytes * Processes + 64 bytes * Threads + ImageName
+  //  x64: Memory = 256 bytes * Processes + 80 bytes * Threads + ImageName
   //
   // On my notebook I usually have ~75 processes with ~850 threads, so it's
-  // about 85 KB of data.
+  // about 100 KB of data.
 
   // Start querying with 256 KB.
   BufferSize := 256 * 1024;
@@ -59,7 +59,7 @@ begin
 
   // TODO: Spanshot only processes of current session
 
-  // Query the information or its size until we pass a suitable buffer for a
+  // Query the information or its size until we pass a suitable buffer for the
   // system call or get an unexpected error
   while True do
   begin

@@ -22,6 +22,8 @@ function RtlInitializeSid(Sid: PSid; const IdentifierAuthority:
   TSidIdentifierAuthority; SubAuthorityCount: Byte): NTSTATUS; stdcall;
   external ntdll;
 
+function RtlGetNtGlobalFlags: Cardinal; stdcall; external ntdll;
+
 implementation
 
 end.

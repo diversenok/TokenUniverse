@@ -573,13 +573,18 @@ end;
 procedure TInfoDialog.UpdateObjectTab;
 var
   Handles: THandleInfoArray;
-  DoSnapshotProcesses: Boolean;
+  OpenedSomewhereElse: Boolean;
   ProcSnapshot: TProcessSnapshot;
   Process: PProcessInfo;
+  CreatorImageName: String;
+  ObjectSnapshot: TObjectSnapshot;
+  ObjInfo: PObjectInfo;
   i: Integer;
 begin
   if TabObject.Tag = TAB_UPDATED then
     Exit;
+
+  ProcSnapshot := nil;
 
   // Update basic object information
   if Token.InfoClass.ReQuery(tdObjectInfo) then
@@ -598,9 +603,9 @@ begin
 
   // Snapshot handles and find the ones pointing to that object
   Handles := THandleSnapshot.OfObject(Token.HandleInformation.PObject);
+  OpenedSomewhereElse := False;
 
   // Add handle from current process and check if there are any other
-  DoSnapshotProcesses := False;
   for i := 0 to High(Handles) do
     if Handles[i].UniqueProcessId = GetCurrentProcessId then
       with ListViewProcesses.Items.Add do
@@ -612,10 +617,10 @@ begin
         ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
       end
     else
-      DoSnapshotProcesses := True;
+      OpenedSomewhereElse := True;
 
   // Add handles from other processes
-  if DoSnapshotProcesses then
+  if OpenedSomewhereElse then
   begin
     ProcSnapshot := TProcessSnapshot.Create;
 
@@ -630,9 +635,54 @@ begin
         SubItems.Add(AccessToString(Handles[i].GrantedAccess));
         ImageIndex := TProcessIcons.GetIcon(Process.QueryFullImageName);
       end;
-
-    ProcSnapshot.Free;
   end;
+
+  // Obtain object creator by snapshotting objects on the system
+  with ListViewObject.Items[6] do
+    if TObjectSnapshot.FeatureSupported then
+    begin
+      ObjectSnapshot := TObjectSnapshot.Create;
+
+      ObjInfo := ObjectSnapshot.FindObject(objToken,
+        Token.HandleInformation.PObject);
+
+      // Determine the cteator
+      if Assigned(ObjInfo) then
+      begin
+        if ObjInfo.CreatorUniqueProcess = GetCurrentProcessId then
+           CreatorImageName := 'Current process'
+        else
+        begin
+          // The creator is somone else, we need to snapshot processes
+          // if it's not done already.
+          if not Assigned(ProcSnapshot) then
+            ProcSnapshot := TProcessSnapshot.Create;
+
+          Process := ProcSnapshot.FindByPID(ObjInfo.CreatorUniqueProcess);
+
+          if Assigned(Process) then
+          begin
+            Hint := 'Since process IDs might be reused, ' +
+                    'image name might be incorrect';
+            CreatorImageName := 'probably, ' + Process.GetImageName;
+          end
+          else // Use default unknown name
+            CreatorImageName := PProcessInfo(nil).GetImageName;
+        end;
+
+        SubItems[0] := Format('PID %d (%s)', [ObjInfo.CreatorUniqueProcess,
+          CreatorImageName]);
+      end
+      else
+        SubItems[0] := 'Kernel';
+
+      ObjectSnapshot.Free;
+    end
+    else
+      Hint := 'Enable global flag FLG_MAINTAIN_OBJECT_TYPELIST (0x4000).';
+
+  if Assigned(ProcSnapshot) then
+    ProcSnapshot.Free;
 
   ListViewProcesses.Items.EndUpdate;
   TabObject.Tag := TAB_UPDATED;
