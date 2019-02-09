@@ -681,7 +681,9 @@ begin
         Token.HandleInformation.PObject);
 
       // Determine the cteator
-      if Assigned(ObjInfo) then
+      if not ObjectSnapshot.IsSuccessful then
+        SubItems[0] := 'Unknown'
+      else if Assigned(ObjInfo) then
       begin
         if ObjInfo.CreatorUniqueProcess = GetCurrentProcessId then
            CreatorImageName := 'Current process'
@@ -698,7 +700,7 @@ begin
           begin
             Hint := 'Since process IDs might be reused, ' +
                     'image name might be incorrect';
-            CreatorImageName := 'probably, ' + Process.GetImageName;
+            CreatorImageName := Process.GetImageName;
           end
           else // Use default unknown name
             CreatorImageName := PProcessInfo(nil).GetImageName;

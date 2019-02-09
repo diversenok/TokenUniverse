@@ -3,10 +3,7 @@ unit TU.Processes;
 interface
 
 uses
-  Winapi.Windows, Ntapi.ntexapi;
-
-{$MINENUMSIZE 4}
-{$WARN SYMBOL_PLATFORM OFF}
+  Ntapi.ntdef, Ntapi.ntexapi;
 
 type
   PProcessInfo = Ntapi.ntexapi.PSystemProcessInformation;
@@ -21,7 +18,9 @@ type
     BufferSize: Cardinal;
     FCount: Cardinal;
     FProcesses: array of PProcessInfo;
+    Status: NTSTATUS;
   public
+    property DetailedStatus: NTSTATUS read Status;
     /// <summary> Create a snapshot of all processes on the system. </summary>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
     constructor Create;
@@ -35,7 +34,12 @@ type
 implementation
 
 uses
-  TU.Common, System.SysUtils, Ntapi.ntdef, Ntapi.ntstatus;
+  Ntapi.ntstatus, TU.Common;
+
+function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
+begin
+  Result := Pointer(NativeUInt(P) + Size);
+end;
 
 { TProcessSnapshot }
 
@@ -43,7 +47,6 @@ constructor TProcessSnapshot.Create;
 var
   Process: PProcessInfo;
   ReturnLength: Cardinal;
-  Status: NTSTATUS;
   i: integer;
 begin
   // Some calculations:
@@ -92,7 +95,6 @@ begin
     FreeMem(Buffer);
     Buffer := nil;
     BufferSize := 0;
-    ReportStatus(Status, 'Process snapshot');
     Exit;
   end;
 
@@ -105,7 +107,7 @@ begin
     Inc(FCount);
     if Process.NextEntryOffset = 0 then
       Break;
-    Process := @PByteArray(Process)[Process.NextEntryOffset];
+    Process := AddToPointer(Process, Process.NextEntryOffset);
   end;
 
   // Allocate memory to store pointers to all process items
@@ -120,7 +122,7 @@ begin
     FProcesses[i] := Process;
     if Process.NextEntryOffset = 0 then
       Break;
-    Process := @PByteArray(Process)[Process.NextEntryOffset];
+    Process := AddToPointer(Process, Process.NextEntryOffset);
     Inc(i);
   end;
 end;

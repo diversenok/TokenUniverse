@@ -3,7 +3,7 @@ unit TU.Handles;
 interface
 
 uses
-  Winapi.Windows, Ntapi.ntexapi;
+  Ntapi.ntdef, Ntapi.ntexapi;
 
 type
   THandleInfo = Ntapi.ntexapi.TSystemHandleTableEntryInfoEx;
@@ -19,7 +19,9 @@ type
   protected
     Buffer: PSystemHandleInformationEx;
     BufferSize: Cardinal;
+    Status: NTSTATUS;
   public
+    property DetailedStatus: NTSTATUS read Status;
     constructor Create;
     destructor Destroy; override;
     function FilterByProcess(PID: NativeUInt;
@@ -41,14 +43,17 @@ type
 
   PObjectInfo = Ntapi.ntexapi.PSystemObjectInformation;
 
-  /// <summary>
-  ///  Snapshots objects on the system. Requires
-  /// </summary>
+  /// <summary> Snapshots objects on the system. </summary>
+  /// <remarks> Requires a specific flag set at boottime. </remarks>
   TObjectSnapshot = class
   protected
     Buffer: PSystemObjectTypeInformation;
     BufferSize: Cardinal;
+    Status: NTSTATUS;
+    function GetSuccess: Boolean;
   public
+    property DetailedStatus: NTSTATUS read Status;
+    property IsSuccessful: Boolean read GetSuccess;
     constructor Create;
     destructor Destroy; override;
 
@@ -66,7 +71,7 @@ type
 implementation
 
 uses
-  TU.Common, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl;
+  TU.Common, Ntapi.ntstatus, Ntapi.ntrtl;
 
 function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
 begin
@@ -78,7 +83,6 @@ end;
 constructor THandleSnapshot.Create;
 var
   ReturnLength: Cardinal;
-  Status: NTSTATUS;
 begin
   // Some calculations:
   //  x86: Memory = 28 bytes * Handle
@@ -237,11 +241,13 @@ end;
 constructor TObjectSnapshot.Create;
 var
   ReturnLength: Cardinal;
-  Status: NTSTATUS;
 begin
   // Check the flag
   if not FeatureSupported then
+  begin
+    Status := STATUS_UNSUCCESSFUL;
     Exit;
+  end;
 
   // On my system it is usually about 800 KB of data.
 
@@ -347,6 +353,11 @@ begin
     else
       TypeInfo := AddToPointer(Buffer, TypeInfo.NextEntryOffset);
   end;
+end;
+
+function TObjectSnapshot.GetSuccess: Boolean;
+begin
+  Result := NT_SUCCESS(Status);
 end;
 
 end.
