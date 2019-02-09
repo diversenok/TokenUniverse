@@ -669,8 +669,12 @@ begin
   InitializeObjectAttributes(ObjAttr);
   ClientId.Create(0, TID);
 
-  // Open the target thread
-  NativeCheck(NtOpenThread(hThread, THREAD_SET_THREAD_TOKEN, ObjAttr, ClientId),
+  // Open the target thread. Specially handle current thread since we don't
+  // want to end up with impersonation that we can't even revert
+  if TID = GetCurrentThreadId then
+    hThread := GetCurrentThread
+  else
+    NativeCheck(NtOpenThread(hThread, THREAD_SET_THREAD_TOKEN, ObjAttr, ClientId),
     'NtOpenThread with THREAD_SET_THREAD_TOKEN');
 
   try
@@ -679,7 +683,8 @@ begin
       @hToken, SizeOf(hToken)),
       'NtSetInformationThread#ThreadImpersonationToken');
   finally
-    NtClose(hThread);
+    if hToken <> GetCurrentThread then
+      NtClose(hThread);
   end;
 end;
 
@@ -964,14 +969,19 @@ begin
   InitializeObjectAttributes(ObjAttr);
   ClientId.Create(0, TID);
 
-  NativeCheck(NtOpenThread(hThread, THREAD_QUERY_INFORMATION, ObjAttr,
-    ClientId), 'NtOpenThread with THREAD_QUERY_INFORMATION');
+  // Open the target thread. Note that we always can access our own.
+  if TID = GetCurrentThreadId then
+    hThread := GetCurrentThread
+  else
+    NativeCheck(NtOpenThread(hThread, THREAD_QUERY_INFORMATION, ObjAttr,
+      ClientId), 'NtOpenThread with THREAD_QUERY_INFORMATION');
 
   try
     NativeCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
       hToken), 'NtOpenThreadTokenEx');
   finally
-    NtClose(hThread);
+    if hThread <> GetCurrentThread then
+      NtClose(hThread);
   end;
 
   FCaption := Format('Thread %d of %s', [TID, ImageName]);
