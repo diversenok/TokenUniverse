@@ -2,7 +2,7 @@ object InfoDialog: TInfoDialog
   Left = 0
   Top = 0
   Caption = 'Token Information'
-  ClientHeight = 423
+  ClientHeight = 448
   ClientWidth = 402
   Color = clBtnFace
   Constraints.MinHeight = 437
@@ -18,9 +18,6 @@ object InfoDialog: TInfoDialog
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  DesignSize = (
-    402
-    423)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -28,7 +25,7 @@ object InfoDialog: TInfoDialog
     Left = 3
     Top = 3
     Width = 396
-    Height = 390
+    Height = 415
     Margins.Bottom = 30
     ActivePage = TabGeneral
     Align = alClient
@@ -39,9 +36,6 @@ object InfoDialog: TInfoDialog
     OnChange = PageControlChange
     object TabGeneral: TTabSheet
       Caption = 'General'
-      DesignSize = (
-        388
-        344)
       object StaticUser: TStaticText
         Left = 7
         Top = 128
@@ -371,6 +365,37 @@ object InfoDialog: TInfoDialog
         TabOrder = 12
         OnClick = BtnSetVAllowedClick
       end
+      object BtnSetOrigin: TButton
+        Left = 360
+        Top = 339
+        Width = 24
+        Height = 23
+        Anchors = [akTop, akRight]
+        ImageAlignment = iaCenter
+        ImageIndex = 5
+        Images = FormMain.SmallIcons
+        TabOrder = 27
+        OnClick = BtnSetOriginClick
+      end
+      object ComboOrigin: TComboBox
+        Left = 112
+        Top = 340
+        Width = 244
+        Height = 21
+        AutoComplete = False
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 28
+        Text = 'Unknown Originating logon session'
+        OnChange = SetStaleColor
+      end
+      object StaticOrigin: TStaticText
+        Left = 9
+        Top = 344
+        Width = 89
+        Height = 17
+        Caption = 'Originating logon:'
+        TabOrder = 29
+      end
     end
     object TabAdvanced: TTabSheet
       Caption = 'Advanced'
@@ -379,7 +404,7 @@ object InfoDialog: TInfoDialog
         Left = 0
         Top = 0
         Width = 388
-        Height = 344
+        Height = 369
         Align = alClient
         BorderStyle = bsNone
         Columns = <
@@ -488,6 +513,7 @@ object InfoDialog: TInfoDialog
         Top = 207
         Width = 382
         Height = 134
+        Height = 159
         Anchors = [akLeft, akTop, akRight, akBottom]
         Columns = <
           item
@@ -588,7 +614,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 338
+        Height = 363
         Align = alClient
         Columns = <
           item
@@ -624,7 +650,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 338
+        Height = 363
         Align = alClient
         Columns = <
           item
@@ -665,7 +691,7 @@ object InfoDialog: TInfoDialog
         Left = 3
         Top = 3
         Width = 382
-        Height = 338
+        Height = 363
         Align = alClient
         Columns = <
           item
@@ -706,7 +732,7 @@ object InfoDialog: TInfoDialog
   end
   object ButtonClose: TButton
     Left = 324
-    Top = 395
+    Top = 420
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

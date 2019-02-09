@@ -64,6 +64,9 @@ type
     TabSecurity: TTabSheet;
     TabDefaultDacl: TTabSheet;
     TabAudit: TTabSheet;
+    BtnSetOrigin: TButton;
+    ComboOrigin: TComboBox;
+    StaticOrigin: TStaticText;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -88,15 +91,18 @@ type
     procedure BtnSetVEnabledClick(Sender: TObject);
     procedure BtnSetVAllowedClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
+    procedure BtnSetOriginClick(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
+    OriginSource: TLogonSessionSource;
     IntegritySource: TIntegritySource;
     PrivilegesSource: TPrivilegesSource;
     GroupsSource, RestrictedSIDsSource: TGroupsSource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
+    procedure ChangedOrigin(NewOrigin: LUID);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
@@ -168,6 +174,23 @@ begin
   except
     if Token.InfoClass.Query(tdTokenIntegrity) then
       ChangedIntegrity(Token.InfoClass.Integrity);
+    raise;
+  end;
+end;
+
+procedure TInfoDialog.BtnSetOriginClick(Sender: TObject);
+begin
+  try
+    Token.InfoClass.Origin := OriginSource.SelectedLogonSession;
+    ComboOrigin.Color := clWindow;
+
+    // TODO: setting Origin succeeds even without actually changing the value.
+    // We should find a way to always call our event listener only once.
+    if Token.InfoClass.Query(tdTokenOrigin) then
+      ChangedOrigin(Token.InfoClass.Origin);
+  except
+    if Token.InfoClass.Query(tdTokenOrigin) then
+      ChangedOrigin(Token.InfoClass.Origin);
     raise;
   end;
 end;
@@ -316,6 +339,12 @@ begin
   ComboIntegrity.Hint := TGroupsSource.BuildHint(NewIntegrity.Group);
 end;
 
+procedure TInfoDialog.ChangedOrigin(NewOrigin: LUID);
+begin
+  ComboOrigin.Color := clWindow;
+  OriginSource.SelectedLogonSession := NewOrigin;
+end;
+
 procedure TInfoDialog.ChangedOwner(NewOwner: TSecurityIdentifier);
 begin
   ComboOwner.Color := clWindow;
@@ -434,12 +463,14 @@ begin
   Token.Events.OnPolicyChange.Delete(ChangedPolicy);
   Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
+  Token.Events.OnOriginChange.Delete(ChangedOrigin);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
   RestrictedSIDsSource.Free;
   GroupsSource.Free;
   PrivilegesSource.Free;
   IntegritySource.Free;
+  OriginSource.Free;
   SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
 end;
@@ -448,6 +479,7 @@ procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession, False);
+  OriginSource := TLogonSessionSource.Create(ComboOrigin);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
@@ -462,6 +494,7 @@ begin
   // order we avoid multiple calls while sharing the data between different
   // tokens pointing the same kernel object.
   Token.Events.OnSessionChange.Add(ChangedSession);
+  Token.Events.OnOriginChange.Add(ChangedOrigin);
   Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
   Token.Events.OnPolicyChange.Add(ChangedPolicy);
@@ -534,9 +567,10 @@ begin
   end;
   ListViewAdvanced.Items.EndUpdate;
 
-  // This triggers InfoClass if the value has changed
+  // This triggers events if the value has changed
   Token.InfoClass.ReQuery(tdTokenIntegrity);
   Token.InfoClass.ReQuery(tdTokenSessionId);
+  Token.InfoClass.ReQuery(tdTokenOrigin);
   Token.InfoClass.ReQuery(tdTokenUIAccess);
   Token.InfoClass.ReQuery(tdTokenMandatoryPolicy);
   Token.InfoClass.ReQuery(tdTokenPrivileges);

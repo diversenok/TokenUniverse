@@ -54,6 +54,8 @@ resourcestring
   SETTER_UIACCESS_TCB = 'You need `SeTcbPrivilege` to enable UIAccess flag.';
   SETTER_POLICY_TCB = 'Changing of mandatory integrity policy requires ' +
     '`SeTcbPrivilege`.';
+  SETTER_ORIGIN_TCB = 'Altering token origin requires `SeTcbPrivilege`. Also ' +
+    'note, that once set, the value can not be changed.';
   SETTOR_VIRT_PRIV = 'You must possess `SeCreateTokenPrivilege` to allow / ' +
     'disallow virtualization for tokens.';
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
@@ -140,6 +142,9 @@ begin
 
     if E.ErrorOrigin = SetterMessage(TokenVirtualizationAllowed) then
       Exit(SETTOR_VIRT_PRIV);
+
+    if E.ErrorOrigin = SetterMessage(TokenOrigin) then
+      Exit(SETTER_ORIGIN_TCB);
   end;
 
   if E.ErrorOrigin = 'AdjustTokenPrivileges' then

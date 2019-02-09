@@ -101,6 +101,7 @@ type
     function GetSelected: LUID;
     procedure SetSelected(const Value: LUID);
   public
+    const NO_LOGON = '0 (value not set)';
     constructor Create(OwnedComboBox: TComboBox);
     procedure UpdateLogonSessions;
     property SelectedLogonSession: LUID read GetSelected write SetSelected;
@@ -810,8 +811,16 @@ begin
 
   if ComboBox.ItemIndex = -1 then
   begin
-    LogonId := StrToUInt64Ex(ComboBox.Text, 'logon ID');
-    Result := PLUID(@LogonId)^;
+    if ComboBox.Text = NO_LOGON then
+    begin
+      Result.LowPart := 0;
+      Result.HighPart := 0;
+    end
+    else
+    begin
+      LogonId := StrToUInt64Ex(ComboBox.Text, 'logon ID');
+      Result := PLUID(@LogonId)^;
+    end;
   end
   else
     Result := FLogonSessions[ComboBox.ItemIndex];
@@ -831,7 +840,10 @@ begin
     end;
 
   ComboBox.ItemIndex := -1;
-  ComboBox.Text := Value.ToString;
+  if Value.ToUInt64 <> 0 then
+    ComboBox.Text := Value.ToString
+  else
+    ComboBox.Text := NO_LOGON;
 end;
 
 procedure TLogonSessionSource.UpdateLogonSessions;

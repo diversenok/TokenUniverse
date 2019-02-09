@@ -65,6 +65,7 @@ type
 
     FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
     FOnSessionChange: TValuedEventHandler<Cardinal>;
+    FOnOriginChange: TValuedEventHandler<LUID>;
     FOnUIAccessChange: TValuedEventHandler<LongBool>;
     FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
     FOnVirtualizationAllowedChange: TValuedEventHandler<LongBool>;
@@ -84,6 +85,7 @@ type
     property OnOwnerChange: TValuedEventHandler<TSecurityIdentifier> read FOnOwnerChange;
     property OnPrimaryChange: TValuedEventHandler<TSecurityIdentifier> read FOnPrimaryChange;
     property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
+    property OnOriginChange: TValuedEventHandler<LUID> read FOnOriginChange;
     property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
     property OnVirtualizationAllowedChange: TValuedEventHandler<LongBool> read FOnVirtualizationAllowedChange;
@@ -113,6 +115,7 @@ type
     procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
     procedure SetSession(const Value: Cardinal);
+    procedure SetOrigin(const Value: LUID);
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(const Value: TSecurityIdentifier);
     procedure SetPrimaryGroup(const Value: TSecurityIdentifier);
@@ -157,7 +160,7 @@ type
     // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
     // TODO -cEnhancement: class 16 TokenAuditPolicy #settable
-    property Origin: LUID read GetOrigin;                                       // class 17 #settable
+    property Origin: LUID read GetOrigin write SetOrigin;                       // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
@@ -469,12 +472,15 @@ begin
   FOnOwnerChange.ComparisonFunction := CompareSIDs;
   FOnPrimaryChange.ComparisonFunction := CompareSIDs;
   FOnSessionChange.ComparisonFunction := CompareCardinals;
+  FOnOriginChange.ComparisonFunction := CompareLUIDs;
   FOnUIAccessChange.ComparisonFunction := CompareLongBools;
   FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
   FOnPolicyChange.ComparisonFunction := ComparePolicies;
   FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
   FOnGroupsChange.ComparisonFunction := CompareGroups;
   FOnStatisticsChange.ComparisonFunction := CompareStatistics;
+  FOnVirtualizationAllowedChange.ComparisonFunction := CompareLongBools;
+  FOnVirtualizationEnabledChange.ComparisonFunction := CompareLongBools;
 end;
 
 destructor TTokenCacheAndEvents.Destroy;
@@ -1735,8 +1741,13 @@ begin
         Token.Cache.SandboxInert);
 
     tdTokenOrigin:
+    begin
       Result := Token.QueryFixedSize<LUID>(TokenOrigin,
         Token.Cache.Origin);
+      if Result then
+        if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
+          InvokeStringEvent(tsOrigin);
+    end;
 
     tdTokenElevation:
       Result := Token.QueryFixedSize<TTokenElevationType>(TokenElevationType,
@@ -1886,6 +1897,15 @@ begin
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenMandatoryPolicy);
+  ValidateCache(tdTokenStatistics);
+end;
+
+procedure TTokenData.SetOrigin(const Value: LUID);
+begin
+  Token.SetFixedSize<LUID>(TokenOrigin, Value);
+
+  // Update the cache and notify event listeners
+  ValidateCache(tdTokenOrigin);
   ValidateCache(tdTokenStatistics);
 end;
 

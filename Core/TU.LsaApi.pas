@@ -137,8 +137,10 @@ begin
   if NT_SUCCESS(LsaEnumerateLogonSessions(Count, Sessions)) then
   try
     SetLength(Result, Count);
+
+    // Invert the order so that later logons appear later in the list
     for i := 0 to Count - 1 do
-      Result[i] := Sessions[i];
+      Result[i] := Sessions[Count - 1 - i];
   finally
     LsaFreeReturnBuffer(Sessions);
   end;
