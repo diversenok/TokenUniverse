@@ -25,11 +25,11 @@ type
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
     tsUserState, tsSession, tsElevation, tsIntegrity, tsObjectAddress, tsHandle,
     tsNoWriteUpPolicy, tsNewProcessMinPolicy, tsUIAccess, tsOwner,
-    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsVirtualization,
-    tsTokenID, tsExprires, tsDynamicCharged, tsDynamicAvailable, tsGroupCount,
-    tsPrivilegeCount, tsModifiedID, tsLogonID, tsLogonAuthPackage,
-    tsLogonServer, tsLogonWtsSession, tsLogonTime, tsLogonType, tsLogonUserName,
-    tsSourceLUID, tsSourceName, tsOrigin);
+    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsIsRestricted,
+    tsVirtualization, tsTokenID, tsExprires, tsDynamicCharged,
+    tsDynamicAvailable, tsGroupCount, tsPrivilegeCount, tsModifiedID, tsLogonID,
+    tsLogonAuthPackage, tsLogonServer, tsLogonWtsSession, tsLogonTime,
+    tsLogonType, tsLogonUserName, tsSourceLUID, tsSourceName, tsOrigin);
 
   TToken = class;
 
@@ -452,11 +452,12 @@ const
     (tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
     tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
     tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
-    tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
+    tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenIsRestricted,
+    tdTokenVirtualizationAllowed, tdTokenStatistics, tdTokenStatistics,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo, tdLogonInfo,
-    tdLogonInfo, tdTokenSource, tdTokenSource, tdTokenOrigin);
+    tdTokenStatistics, tdTokenStatistics, tdLogonInfo, tdLogonInfo, tdLogonInfo,
+    tdLogonInfo, tdLogonInfo, tdLogonInfo, tdTokenSource, tdTokenSource,
+    tdTokenOrigin);
 
 { TTokenCacheAndEvents }
 
@@ -1537,6 +1538,9 @@ begin
 
     tsHasRestrictions:
       Result := YesNoToString(Token.Cache.HasRestrictions);
+
+    tsIsRestricted:
+      Result := YesNoToString(Token.Cache.IsRestricted);
 
     tsVirtualization:
       if Query(tdTokenVirtualizationEnabled) then

@@ -45,6 +45,7 @@ const
     (Caption: 'Primary Group';      Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Sandbox Inert';      Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Has Restrictions';   Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Is Restricted';      Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Virtualization';     Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Token ID';           Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Exprires';           Category: uicStatistics; Width: 100; Alignment: taLeftJustify),

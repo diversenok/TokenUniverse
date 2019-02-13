@@ -564,6 +564,7 @@ begin
     Items[1].SubItems[0] := Token.InfoClass.QueryString(tsSourceLUID);
     Items[10].SubItems[0] := Token.InfoClass.QueryString(tsSandboxInert);
     Items[11].SubItems[0] := Token.InfoClass.QueryString(tsHasRestrictions);
+    Items[19].SubItems[0] := Token.InfoClass.QueryString(tsIsRestricted);
   end;
   ListViewAdvanced.Items.EndUpdate;
 
