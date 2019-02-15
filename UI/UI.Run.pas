@@ -57,7 +57,7 @@ var
 implementation
 
 uses
-  UI.ProcessList, TU.Common;
+  UI.ProcessList, NtUtils.Exceptions;
 
 {$R *.dfm}
 

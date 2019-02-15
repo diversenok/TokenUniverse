@@ -11,7 +11,7 @@ interface
   on the same simple type. }
 
 uses
-  Winapi.Windows, TU.Winapi, TU.Common;
+  Winapi.Windows, TU.Winapi, NtUtils.Exceptions;
 
 type
   TSecurityIdentifier = record
@@ -157,7 +157,8 @@ function SetterMessage(InfoClass: TTokenInformationClass): String;
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, Ntapi.ntdef, Ntapi.ntstatus, TU.LsaApi;
+  System.SysUtils, System.TypInfo, TU.Common, TU.LsaApi,
+  Ntapi.ntdef, Ntapi.ntstatus;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -232,8 +233,9 @@ var
   Buffer: PSID;
 begin
   SID := StringSID;
-  if WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
-    'ConvertStringSidToSid') then
+  WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
+    'ConvertStringSidToSid');
+
   try
     GetDomainAndUser(Buffer);
   finally
@@ -328,12 +330,10 @@ var
   Buffer: PWideChar;
 begin
   SID := '';
-  if WinCheck(ConvertSidToStringSidW(SrcSid, Buffer),
-    'ConvertSidToStringSidW') then
-  begin
-    SID := String(Buffer);
-    LocalFree(Buffer);
-  end;
+  WinCheck(ConvertSidToStringSidW(SrcSid, Buffer), 'ConvertSidToStringSidW');
+
+  SID := String(Buffer);
+  LocalFree(Buffer);
 end;
 
 function TSecurityIdentifier.HasPrettyName: Boolean;

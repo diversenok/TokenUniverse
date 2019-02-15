@@ -71,7 +71,7 @@ type
 implementation
 
 uses
-  TU.Common, Ntapi.ntstatus, Ntapi.ntrtl;
+  Ntapi.ntstatus, Ntapi.ntrtl, NtUtils.Exceptions;
 
 function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
 begin
@@ -129,7 +129,7 @@ begin
     FreeMem(Buffer);
     Buffer := nil;
     BufferSize := 0;
-    ReportStatus(Status, 'Handle snapshot');
+    ENtError.Report(Status, 'Handle snapshot');
   end;
 end;
 
@@ -290,7 +290,7 @@ begin
     FreeMem(Buffer);
     Buffer := nil;
     BufferSize := 0;
-    ReportStatus(Status, 'Object snapshot');
+    ENtError.Report(Status, 'Object snapshot');
   end;
 end;
 

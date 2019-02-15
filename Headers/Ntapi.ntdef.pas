@@ -53,30 +53,55 @@ function NT_INFORMATION(Status: NTSTATUS): Boolean; inline;
 function NT_WARNING(Status: NTSTATUS): Boolean; inline;
 function NT_ERROR(Status: NTSTATUS): Boolean; inline;
 
+function NT_FACILITY(Status: NTSTATUS): Cardinal; inline;
+function NT_NTWIN32(Status: NTSTATUS): Boolean; inline;
+function WIN32_FROM_NTSTATUS(Status: NTSTATUS): Cardinal; inline;
+
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;
   ObjectName: PUNICODE_STRING = nil; Attributes: Cardinal = 0;
   RootDirectory: THandle = 0; QoS: PSecurityQualityOfService = nil); inline;
 
 implementation
 
+uses
+  Ntapi.ntstatus;
+
 function NT_SUCCESS(Status: NTSTATUS): Boolean;
 begin
-  Result := Integer(Status) >= 0;
+  Result := Integer(Status) >= 0; // 00000000..7FFFFFFF
 end;
 
 function NT_INFORMATION(Status: NTSTATUS): Boolean;
 begin
-  Result := (Status shr 30) = 1;
+  Result := (Status shr 30) = 1; // 40000000..7FFFFFFF
 end;
 
 function NT_WARNING(Status: NTSTATUS): Boolean;
 begin
-  Result := (Status shr 30) = 2;
+  Result := (Status shr 30) = 2; // 80000000..BFFFFFFF
 end;
 
 function NT_ERROR(Status: NTSTATUS): Boolean;
 begin
-  Result := (Status shr 30) = 3;
+  Result := (Status shr 30) = 3; // BFFFFFFF..FFFFFFFF
+end;
+
+function NT_FACILITY(Status: NTSTATUS): Cardinal;
+const
+  NT_FACILITY_MASK = $fff;
+  NT_FACILITY_SHIFT = 16;
+begin
+  Result := (Status shr NT_FACILITY_SHIFT) and NT_FACILITY_MASK;
+end;
+
+function NT_NTWIN32(Status: NTSTATUS): Boolean;
+begin
+ Result := (NT_FACILITY(Status) = FACILITY_NTWIN32);
+end;
+
+function WIN32_FROM_NTSTATUS(Status: NTSTATUS): Cardinal;
+begin
+ Result := Status and $ffff;
 end;
 
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;

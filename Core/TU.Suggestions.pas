@@ -10,8 +10,9 @@ procedure ShowErrorSuggestions(E: Exception);
 implementation
 
 uses
-  Winapi.Windows, System.UITypes, Vcl.Dialogs, Ntapi.ntstatus,
-  TU.Common, TU.Winapi, TU.Tokens, TU.Tokens.Types;
+  System.UITypes, Vcl.Dialogs, TU.Tokens, TU.Tokens.Types,
+  Winapi.Windows, TU.Winapi, Winapi.WinError,
+  Ntapi.ntdef, Ntapi.ntstatus, NtUtils.Exceptions;
 
 resourcestring
   TITLE_OS_ERROR = 'System Error';
@@ -75,7 +76,7 @@ resourcestring
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
-  if E.ErrorIn('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
+  if E.Match('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_DUPLICATE_IMP);
 
   if E.ErrorOrigin = 'WTSQueryUserToken' then
@@ -87,10 +88,10 @@ begin
       Exit(NEW_WTS_NO_TOKEN);
   end;
 
-  if E.ErrorIn('NtFilterToken', STATUS_ACCESS_DENIED)  then
+  if E.Match('NtFilterToken', STATUS_ACCESS_DENIED)  then
     Exit(NEW_RESTCICT_ACCESS);
 
-  if E.ErrorIn('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
+  if E.Match('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
     Exit(NEW_NT_CREATE);
 end;
 
@@ -120,10 +121,10 @@ begin
       Exit(SETTER_DEFAULT);
   end;
 
-  if E.ErrorIn(SetterMessage(TokenOwner), ERROR_INVALID_OWNER) then
+  if E.Match(SetterMessage(TokenOwner), ERROR_INVALID_OWNER) then
     Exit(SETTER_OWNER);
 
-  if E.ErrorIn(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
+  if E.Match(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
     Exit(SETTER_PRIMARY);
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
@@ -198,6 +199,8 @@ begin
 end;
 
 procedure ShowErrorSuggestions(E: Exception);
+var
+  MsgType: TMsgDlgType;
 begin
   if (E is EAccessViolation) or (E is EInvalidPointer) or
     (E is EAssertionFailed) then
@@ -205,8 +208,15 @@ begin
   else if E is EConvertError then
     TaskMessageDlg(TITLE_CONVERT, E.Message, mtError, [mbOk], 0)
   else if E is ELocatedOSError then
+  begin
+    if NT_ERROR(ELocatedOSError(E).ErrorCode) then
+      MsgType := mtError
+    else
+      MsgType := mtWarning;
+
     TaskMessageDlg(TITLE_OS_ERROR, E.Message + SuggestAll(ELocatedOSError(E)),
-      mtError, [mbOk], 0)
+      MsgType, [mbOk], 0)
+  end
   else
     TaskMessageDlg(E.ClassName, E.Message, mtError, [mbOk], 0);
 end;

@@ -5,7 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  Winapi.Windows, TU.Common, TU.Tokens.Types, Ntapi.ntseapi;
+  Winapi.Windows, TU.Tokens.Types, Ntapi.ntseapi, NtUtils.Exceptions;
 
 type
   TLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
@@ -63,7 +63,7 @@ function EnumerateLogonSessions: TLuidDynArray;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, System.SysUtils;
+  Ntapi.ntdef, Ntapi.ntstatus, System.SysUtils, TU.Common;
 
 const
   secur32 = 'secur32.dll';

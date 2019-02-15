@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, TU.Common;
+  Ntapi.ntstatus, NtUtils.Exceptions;
 
 function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
 begin
@@ -95,6 +95,7 @@ begin
     FreeMem(Buffer);
     Buffer := nil;
     BufferSize := 0;
+    ENtError.Format(Status, 'Process snapshot');
     Exit;
   end;
 

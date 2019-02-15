@@ -186,6 +186,8 @@
             <Form>ThreadListDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
+        <DCCReference Include="Headers\Winapi.WinError.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

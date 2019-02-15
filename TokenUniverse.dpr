@@ -42,7 +42,9 @@ uses
   Ntapi.ntpebteb in 'Headers\Ntapi.ntpebteb.pas',
   Ntapi.ntkeapi in 'Headers\Ntapi.ntkeapi.pas',
   TU.Winapi in 'Core\TU.Winapi.pas',
-  UI.ThreadList in 'UI\UI.ThreadList.pas' {ThreadListDialog};
+  UI.ThreadList in 'UI\UI.ThreadList.pas' {ThreadListDialog},
+  NtUtils.Exceptions in 'NtUtils\NtUtils.Exceptions.pas',
+  Winapi.WinError in 'Headers\Winapi.WinError.pas';
 
 {$R *.res}
 

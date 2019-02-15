@@ -7,7 +7,7 @@ interface
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
   TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi,
-  Ntapi.ntdef, Ntapi.ntobapi;
+  Ntapi.ntdef, Ntapi.ntobapi, NtUtils.Exceptions;
 
 type
   /// <summary>
@@ -1156,6 +1156,7 @@ const
 var
   PrivArray: PTokenPrivileges;
   i: integer;
+  Status: NTSTATUS;
 begin
   // Allocate privileges
   PrivArray := AllocPrivileges(Privileges);
@@ -1163,8 +1164,17 @@ begin
     for i := 0 to PrivArray.PrivilegeCount - 1 do
       PrivArray.Privileges[i].Attributes := ActionToAttribute[Action];
 
-    NativeCheck(NtAdjustPrivilegesToken(hToken, False, PrivArray, 0, nil, nil),
-      'NtAdjustPrivilegesToken', Self);
+    // Perform adjustment
+    Status := NtAdjustPrivilegesToken(hToken, False, PrivArray, 0, nil, nil);
+
+    // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
+    // not considered as an error. Such behavior does not fit into our
+    // model so we should overwrite it.
+    if not NT_SUCCESS(Status) then
+      raise ENtError.Create(Status, 'NtAdjustPrivilegesToken', Self)
+    else if Status = STATUS_NOT_ALL_ASSIGNED then
+      raise EWinError.Create(ERROR_NOT_ALL_ASSIGNED, 'AdjustTokenPrivileges',
+        Self);
   finally
     FreeMem(PrivArray);
 
@@ -1314,8 +1324,7 @@ procedure TToken.SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
   const Value: ResultType);
 begin
   if not SetTokenInformation(hToken, InfoClass, @Value, SizeOf(Value))
-    then raise ELocatedOSError.CreateLE(GetLastError, SetterMessage(InfoClass),
-      Self);
+    then raise EWinError.Create(GetLastError, SetterMessage(InfoClass), Self);
 end;
 
 { TTokenData }
