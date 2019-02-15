@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils, Winapi.Windows, System.Generics.Collections,
-  TU.Winapi, TU.Tokens.Types, TU.Handles, TU.Common, TU.LsaApi,
+  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi,
   Ntapi.ntdef, Ntapi.ntobapi, NtUtils.Exceptions;
 
 type
@@ -443,7 +443,7 @@ type
 implementation
 
 uses
-  System.TypInfo, TU.WtsApi, TU.Processes,
+  System.TypInfo, TU.WtsApi, NtUtils.Processes,
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const

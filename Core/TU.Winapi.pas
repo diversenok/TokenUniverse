@@ -229,7 +229,7 @@ function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
 
 function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
 
-function GetCurrentSession: Cardinal; inline;
+function GetCurrentSession: Cardinal;
 
 type
   TAccessGroup = (agRead, agWrite, agExecute, agStandard);

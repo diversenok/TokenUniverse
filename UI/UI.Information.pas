@@ -121,8 +121,8 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, TU.Handles, UI.ProcessList,
-  TU.Processes;
+  System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
+  NtUtils.Processes, NtUtils.Handles;
 
 const
   TAB_INVALIDATED = 0;

@@ -101,8 +101,6 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Core\TU.Common.pas"/>
-        <DCCReference Include="Core\TU.Handles.pas"/>
-        <DCCReference Include="Core\TU.Processes.pas"/>
         <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="UI\UI.TokenListFrame.pas">
             <Form>FrameTokenList</Form>
@@ -182,12 +180,14 @@
         <DCCReference Include="Headers\Ntapi.ntpebteb.pas"/>
         <DCCReference Include="Headers\Ntapi.ntkeapi.pas"/>
         <DCCReference Include="Core\TU.Winapi.pas"/>
-        <DCCReference Include="UI\UI.ThreadList.pas">
+        <DCCReference Include="UI\UI.Modal.ThreadList.pas">
             <Form>ThreadListDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
         <DCCReference Include="Headers\Winapi.WinError.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Handles.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

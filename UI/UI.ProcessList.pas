@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls,
   Vcl.ExtCtrls, Vcl.ImgList, System.Generics.Collections,
-  UI.ListViewEx, UI.Prototypes.ChildForm, TU.Processes;
+  UI.ListViewEx, UI.Prototypes.ChildForm, NtUtils.Processes;
 
 type
   TProcessIcons = class
@@ -69,7 +69,7 @@ var
 implementation
 
 uses
-  Winapi.ShellApi, UI.ThreadList;
+  Winapi.ShellApi, UI.Modal.ThreadList;
 
 {$R *.dfm}
 

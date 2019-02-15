@@ -3,8 +3,6 @@ program TokenUniverse;
 uses
   Vcl.Forms,
   TU.Common in 'Core\TU.Common.pas',
-  TU.Handles in 'Core\TU.Handles.pas',
-  TU.Processes in 'Core\TU.Processes.pas',
   TU.Tokens in 'Core\TU.Tokens.pas',
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
   UI.MainForm in 'UI\UI.MainForm.pas' {FormMain},
@@ -42,9 +40,11 @@ uses
   Ntapi.ntpebteb in 'Headers\Ntapi.ntpebteb.pas',
   Ntapi.ntkeapi in 'Headers\Ntapi.ntkeapi.pas',
   TU.Winapi in 'Core\TU.Winapi.pas',
-  UI.ThreadList in 'UI\UI.ThreadList.pas' {ThreadListDialog},
+  UI.Modal.ThreadList in 'UI\UI.Modal.ThreadList.pas' {ThreadListDialog},
   NtUtils.Exceptions in 'NtUtils\NtUtils.Exceptions.pas',
-  Winapi.WinError in 'Headers\Winapi.WinError.pas';
+  Winapi.WinError in 'Headers\Winapi.WinError.pas',
+  NtUtils.Handles in 'NtUtils\NtUtils.Handles.pas',
+  NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas';
 
 {$R *.res}
 

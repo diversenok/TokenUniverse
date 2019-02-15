@@ -1,11 +1,11 @@
-unit UI.ThreadList;
+unit UI.Modal.ThreadList;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  UI.Prototypes.ChildForm, UI.ListViewEx, TU.Processes;
+  UI.Prototypes.ChildForm, UI.ListViewEx, NtUtils.Processes;
 
 type
   TThreadListDialog = class(TChildForm)

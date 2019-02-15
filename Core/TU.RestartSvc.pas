@@ -51,7 +51,7 @@ implementation
 
 uses
   System.SysUtils, Winapi.WinSvc, Winapi.ShellApi,
-  TU.Tokens, TU.Tokens.Types, TU.Processes;
+  TU.Tokens, TU.Tokens.Types, NtUtils.Processes;
 
 type
   TServiceDynArgsW = array of PWideChar;
