@@ -636,7 +636,7 @@ begin
     ComboBox.Items.Add(SessionList[i].ToString);
 
   if SelectCurrent and (SessionList.Count > 0) then
-    ComboBox.ItemIndex := SessionList.Find(GetCurrentSession);
+    SetSession(GetCurrentSession);
 
   ComboBox.Items.EndUpdate;
 end;

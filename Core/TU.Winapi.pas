@@ -213,16 +213,6 @@ function GetTokenInformation(TokenHandle: THandle;
   TokenInformationLength: Cardinal; var ReturnLength: Cardinal): LongBool;
   stdcall; external advapi32;
 
-function AdjustTokenPrivileges(TokenHandle: THandle; DisableAllPrivileges:
-  LongBool; NewState: PTokenPrivileges; BufferLength: Cardinal;
-  PreviousState: PTokenPrivileges; ReturnLength: PCardinal): LongBool;
-  stdcall; external advapi32;
-
-function AdjustTokenGroups(TokenHandle: THandle; ResetToDefault: LongBool;
-  NewState: PTokenGroups; BufferLength: Cardinal;
-  PreviousState: PTokenGroups; ReturnLength: PCardinal): LongBool;
-  stdcall; external advapi32;
-
 function LogonUserExExW(lpszUsername: PWideChar; lpszDomain: PWideChar;
   lpszPassword: PWideChar; dwLogonType: Cardinal; dwLogonProvider: Cardinal;
   pTokenGroups: PTokenGroups; out hToken: THandle; ppLogonSid: PPointer;
@@ -233,22 +223,12 @@ function SetTokenInformation(TokenHandle: THandle;
   TokenInformationClass: TTokenInformationClass; TokenInformation: Pointer;
   TokenInformationLength: Cardinal): LongBool; stdcall; external advapi32;
 
-function CreateRestrictedToken(ExistingTokenHandle: THandle; Flags: Cardinal;
-  DisableSidCount: Cardinal; SidsToDisable: TSIDAndAttributesArray;
-  DeletePrivilegeCount: Cardinal; PrivilegesToDelete: PLUIDAndAttributes;
-  RestrictedSidCount: Cardinal; SidsToRestrict: TSIDAndAttributesArray;
-  out NewTokenHandle: THandle): LongBool; stdcall; external advapi32;
-
 function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
   DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
   stdcall; external advapi32;
 
 function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
 
-function OpenThread(dwDesiredAccess: Cardinal; bInheritHandle: LongBool;
-  dwThreadId: Cardinal): THandle; stdcall; external kernel32;
-
-function RtlGetCurrentPeb: Pointer; stdcall; external 'ntdll.dll';
 function GetCurrentSession: Cardinal; inline;
 
 type
@@ -274,22 +254,12 @@ const
 
 implementation
 
+uses
+  Ntapi.ntrtl, Ntapi.ntpebteb;
+
 function GetCurrentSession: Cardinal;
 begin
-  // Current session ID is always stored in the PEB
-  {$POINTERMATH ON}
-  try
-    // We use hardcoded offsets of SessionID field from PPEB structure
-    {$IFDEF WIN64}
-      Result := PCardinal(PByte(RtlGetCurrentPeb) + $2C0)^;
-    {$ELSE}
-      Result := PCardinal(PByte(RtlGetCurrentPeb) + $1D4)^;
-    {$ENDIF}
-  except
-    Result := 0;
-    OutputDebugStringW('Exception while reading PEB');
-  end;
-  {$POINTERMATH OFF}
+  Result := RtlGetCurrentPeb.SessionId;
 end;
 
 end.

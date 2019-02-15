@@ -6,7 +6,7 @@ interface
 uses
   Winapi.Windows, Ntapi.ntdef, NtApi.ntpebteb;
 
-function RtlGetCurrentPeb: PPEB; stdcall; external ntdll;
+function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
 
 function RtlLengthRequiredSid(SubAuthorityCount: Cardinal): Cardinal;
   stdcall; external ntdll;

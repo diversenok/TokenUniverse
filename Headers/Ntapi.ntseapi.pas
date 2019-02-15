@@ -1,4 +1,6 @@
 unit Ntapi.ntseapi;
+
+{$WARN SYMBOL_PLATFORM OFF}
 {$MINENUMSIZE 4}
 
 interface
@@ -16,6 +18,14 @@ function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   Groups: PTokenGroups; Privileges: PTokenPrivileges; Owner: PTokenOwner;
   PrimaryGroup: PTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
   Source: PTokenSource): NTSTATUS; stdcall; external ntdll;
+
+// Win 8+
+function NtCreateLowBoxToken(out TokenHandle: THandle;
+  ExistingTokenHandle: THandle; DesiredAccess: TAccessMask;
+  ObjectAttributes: PObjectAttributes; PackageSid: PSID;
+  CapabilityCount: Cardinal; Capabilities: PSIDAndAttributes;
+  HandleCount: Cardinal; Handles: array of THandle): NTSTATUS; stdcall;
+  external ntdll delayed;
 
 function NtOpenProcessTokenEx(ProcessHandle: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal;
@@ -52,6 +62,12 @@ function NtAdjustGroupsToken(TokenHandle: THandle; ResetToDefault: Boolean;
 function NtFilterToken(ExistingTokenHandle: THandle; Flags: Cardinal;
   SidsToDisable: PTokenGroups; PrivilegesToDelete: PTokenPrivileges;
   RestrictedSids: PTokenGroups; out NewTokenHandle: THandle): NTSTATUS;
+  stdcall; external ntdll;
+
+function NtCompareTokens(FirstTokenHandle: THandle; SecondTokenHandle: THandle;
+  out Equal: LongBool): NTSTATUS; stdcall; external ntdll;
+
+function NtImpersonateAnonymousToken(ThreadHandle: THandle): NTSTATUS;
   stdcall; external ntdll;
 
 implementation
