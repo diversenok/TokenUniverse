@@ -31,6 +31,22 @@ uses
 
 {$R *.dfm}
 
+type
+  TGuiThreadInfo = record
+    cbSize: Cardinal;
+    flags: Cardinal;
+    hwndActive: HWND;
+    hwndFocus: HWND;
+    hwndCapture: HWND;
+    hwndMenuOwner: HWND;
+    hwndMoveSize: HWND;
+    hwndCaret: HWND;
+    rcCaret: TRect;
+  end;
+
+function GetGUIThreadInfo(idThread: Cardinal; var gui: TGuiThreadInfo):
+  LongBool; stdcall; external 'user32.dll';
+
 { TThreadListDialog }
 
 constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
@@ -38,6 +54,7 @@ constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
 var
   i: Integer;
   Thread: PThreadInfo;
+  GuiInfo: TGuiThreadInfo;
 begin
   inherited Create(AOwner);
 
@@ -53,7 +70,16 @@ begin
     Caption := IntToStr(Thread.ClientId.UniqueThread);
     SubItems.Add(DateTimeToStr(NativeTimeToLocalDateTime(Thread.CreateTime)));
     if Thread.WaitReason = Suspended then
-      Color := clSuspended;
+      Color := clSuspended
+    else
+    begin
+      // Check wether the thread owns any GUI objects
+      FillChar(GuiInfo, SizeOf(GuiInfo), 0);
+      GuiInfo.cbSize := SizeOf(GuiInfo);
+
+      if GetGUIThreadInfo(Thread.ClientId.UniqueThread, GuiInfo) then
+        Color := clGuiThread;
+    end;
   end;
 
   if ListViewThreads.Items.Count > 0 then
