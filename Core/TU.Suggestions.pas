@@ -209,10 +209,10 @@ begin
     TaskMessageDlg(TITLE_CONVERT, E.Message, mtError, [mbOk], 0)
   else if E is ELocatedOSError then
   begin
-    if NT_ERROR(ELocatedOSError(E).ErrorCode) then
-      MsgType := mtError
+    if (E is ENtError) and not NT_ERROR(ENtError(E).ErrorCode) then
+      MsgType := mtWarning
     else
-      MsgType := mtWarning;
+      MsgType := mtError;
 
     TaskMessageDlg(TITLE_OS_ERROR, E.Message + SuggestAll(ELocatedOSError(E)),
       MsgType, [mbOk], 0)
