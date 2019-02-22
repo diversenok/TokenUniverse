@@ -1525,12 +1525,12 @@ begin
         Result := Format('0x%x', [Token.Handle]);
 
     tsNoWriteUpPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy
-        and MandatoryPolicyNoWriteUp <> 0);
+      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contain(
+        MandatoryPolicyNoWriteUp));
 
     tsNewProcessMinPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy
-        and MandatoryPolicyNewProcessMin <> 0);
+      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contain(
+        MandatoryPolicyNewProcessMin));
 
     tsUIAccess:
       Result := EnabledDisabledToString(Token.Cache.UIAccess);

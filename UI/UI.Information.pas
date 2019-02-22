@@ -215,9 +215,9 @@ begin
   try
     Policy := MandatoryPolicyOff;
     if CheckBoxNoWriteUp.Checked then
-      Policy := Policy or MandatoryPolicyNoWriteUp;
+      Policy.Include(MandatoryPolicyNoWriteUp);
     if CheckBoxNewProcessMin.Checked then
-      Policy := Policy or MandatoryPolicyNewProcessMin;
+      Policy.Include(MandatoryPolicyNewProcessMin);
 
     Token.InfoClass.MandatoryPolicy := Policy;
 
@@ -353,10 +353,9 @@ end;
 
 procedure TInfoDialog.ChangedPolicy(NewPolicy: TMandatoryPolicy);
 begin
-  CheckBoxNoWriteUp.Checked := (NewPolicy and
-    MandatoryPolicyNoWriteUp <> 0);
-  CheckBoxNewProcessMin.Checked := (NewPolicy and
-    MandatoryPolicyNewProcessMin <> 0);
+  CheckBoxNoWriteUp.Checked := NewPolicy.Contain(MandatoryPolicyNoWriteUp);
+  CheckBoxNewProcessMin.Checked := NewPolicy.Contain(
+    MandatoryPolicyNewProcessMin);
 
   CheckBoxNoWriteUp.Font.Style := [];
   CheckBoxNewProcessMin.Font.Style := [];

@@ -93,10 +93,11 @@ type
   PGenericMapping = ^TGenericMapping;
 
   // 8944
-  TLUIDAndAttributes = packed record // weird alignment...
+  TLuidAndAttributes = packed record // weird alignment...
     Luid: TLuid;
     Attributes: Cardinal;
   end;
+  PLuidAndAttributes = ^TLuidAndAttributes;
 
   // 8984
   TSidIdentifierAuthority = record

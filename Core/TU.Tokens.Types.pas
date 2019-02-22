@@ -63,7 +63,7 @@ type
   TGroupArray = array of TGroup;
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
 
-  TPrivilege = TLUIDAndAttributes;
+  TPrivilege = TLuidAndAttributes;
 
   TPrivilegeHelper = record helper for TPrivilege
     function Name: String;
@@ -106,12 +106,16 @@ type
     function ToString: String;
   end;
 
-  TMandatoryPolicy = Cardinal;
+  TMandatoryPolicy = (
+    MandatoryPolicyOff = TOKEN_MANDATORY_POLICY_OFF,
+    MandatoryPolicyNoWriteUp = TOKEN_MANDATORY_POLICY_NO_WRITE_UP,
+    MandatoryPolicyNewProcessMin = TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN
+  );
 
-const
-  MandatoryPolicyOff: TMandatoryPolicy = $0;
-  MandatoryPolicyNoWriteUp: TMandatoryPolicy = $1;
-  MandatoryPolicyNewProcessMin: TMandatoryPolicy = $2;
+  TMandatoryPolicyHelper = record helper for TMandatoryPolicy
+    function Contain(Flag: TMandatoryPolicy): Boolean;
+    procedure Include(Flag: TMandatoryPolicy);
+  end;
 
 function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
@@ -561,6 +565,18 @@ begin
   else
     Result := Format('0x%0.4x', [Cardinal(Level)]);
   end;
+end;
+
+{ TMandatoryPolicyHelper }
+
+function TMandatoryPolicyHelper.Contain(Flag: TMandatoryPolicy): Boolean;
+begin
+  Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
+end;
+
+procedure TMandatoryPolicyHelper.Include(Flag: TMandatoryPolicy);
+begin
+  Self := TMandatoryPolicy(Cardinal(Self) or Cardinal(Flag));
 end;
 
 { TTokenSource }
