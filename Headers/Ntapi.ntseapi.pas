@@ -6,15 +6,32 @@ unit Ntapi.ntseapi;
 interface
 
 uses
-  Winapi.Windows, TU.Winapi, Ntapi.ntdef, Ntapi.ntrtl;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntrtl;
 
 const
+  TOKEN_ASSIGN_PRIMARY = $0001;
+  TOKEN_DUPLICATE = $0002;
+  TOKEN_IMPERSONATE = $0004;
+  TOKEN_QUERY = $0008;
+  TOKEN_QUERY_SOURCE = $0010;
+  TOKEN_ADJUST_PRIVILEGES = $0020;
+  TOKEN_ADJUST_GROUPS = $0040;
+  TOKEN_ADJUST_DEFAULT = $0080;
+  TOKEN_ADJUST_SESSIONID = $0100;
+
+  TOKEN_ALL_ACCESS_P = STANDARD_RIGHTS_REQUIRED  or
+    TOKEN_ASSIGN_PRIMARY or TOKEN_DUPLICATE or TOKEN_IMPERSONATE or
+    TOKEN_QUERY or TOKEN_QUERY_SOURCE or TOKEN_ADJUST_PRIVILEGES or
+    TOKEN_ADJUST_GROUPS or TOKEN_ADJUST_DEFAULT;
+
+  TOKEN_ALL_ACCESS = TOKEN_ALL_ACCESS_P or TOKEN_ADJUST_SESSIONID;
+
   SE_MIN_WELL_KNOWN_PRIVILEGE = 2;
   SE_MAX_WELL_KNOWN_PRIVILEGE = 35;
 
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
-  AuthenticationId: PLUID; ExpirationTime: PInt64; User: PTokenUser;
+  AuthenticationId: PLuid; ExpirationTime: PInt64; User: PTokenUser;
   Groups: PTokenGroups; Privileges: PTokenPrivileges; Owner: PTokenOwner;
   PrimaryGroup: PTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
   Source: PTokenSource): NTSTATUS; stdcall; external ntdll;

@@ -188,6 +188,9 @@
         <DCCReference Include="Headers\Winapi.WinError.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Handles.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
+        <DCCReference Include="Headers\Winapi.WinNt.pas"/>
+        <DCCReference Include="Headers\Winapi.WinBase.pas"/>
+        <DCCReference Include="Headers\Winapi.Sddl.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -4,7 +4,7 @@ unit Ntapi.ntpebteb;
 interface
 
 uses
-  Windows, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef;
 
 type
   TPeb = record
@@ -59,13 +59,13 @@ type
 
     OSMajorVersion: Cardinal;
     OSMinorVersion: Cardinal;
-    OSBuildNumber: USHORT;
-    OSCSDVersion: USHORT;
+    OSBuildNumber: Word;
+    OSCSDVersion: Word;
     OSPlatformId: Cardinal;
     ImageSubsystem: Cardinal;
     ImageSubsystemMajorVersion: Cardinal;
     ImageSubsystemMinorVersion: Cardinal;
-    ActiveProcessAffinityMask: ULONG_PTR;
+    ActiveProcessAffinityMask: NativeUInt;
 
   {$IFNDEF WIN64}
     GdiHandleBuffer: array [0 .. 33] of Cardinal;
@@ -80,8 +80,8 @@ type
 
     SessionId: Cardinal;
 
-    AppCompatFlags: ULARGE_INTEGER;
-    AppCompatFlagsUser: ULARGE_INTEGER;
+    AppCompatFlags: TULargeInteger;
+    AppCompatFlagsUser: TULargeInteger;
     pShimData: Pointer;
     AppCompatInfo: Pointer; // APPCOMPAT_EXE_DATA
 
@@ -95,7 +95,7 @@ type
     MinimumStackCommit: NativeUInt;
 
     FlsCallback: PPointer;
-    FlsListHead: LIST_ENTRY;
+    FlsListHead: TListEntry;
     FlsBitmap: Pointer;
     FlsBitmapBits: array [1..4] of Cardinal; // TODO: Check
     FlsHighIndex: Cardinal;
@@ -107,7 +107,7 @@ type
     TracingFlags: Cardinal;
     CsrServerReadOnlySharedMemoryBase: UInt64;
     TppWorkerpListLock: Pointer; // WinNt.PRTL_CRITICAL_SECTION
-    TppWorkerpList: LIST_ENTRY;
+    TppWorkerpList: TListEntry;
     WaitOnAddressHashTable: array [1..128] of Pointer;
     TelemetryCoverageHeader: Pointer; // REDSTONE3
     CloudFileFlags: Cardinal;

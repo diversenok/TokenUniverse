@@ -5,16 +5,10 @@ unit TU.LsaApi;
 interface
 
 uses
-  Winapi.Windows, TU.Tokens.Types, Ntapi.ntseapi, NtUtils.Exceptions;
+  TU.Tokens.Types,
+  Winapi.WinNt, Winapi.WinBase, Ntapi.ntseapi, NtUtils.Exceptions;
 
 type
-  TLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
-    ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
-    ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
-    ltCachedUnlock);
-
-  TLogonProvider = (lpDefault, lpWinNT35, lpWinNT40, lpWinNT50, lpVirtual);
-
   /// <summary>
   ///  Stores the information about a logon session.
   /// </summary>
@@ -31,7 +25,7 @@ type
     LogonTime: TDateTime;
   end;
 
-  TLuidDynArray = array of LUID;
+  TLuidDynArray = array of TLuid;
 
   TPrivilegeRec = record
   private
@@ -57,7 +51,7 @@ type
   end;
 
 function LogonTypeToString(LogonType: TLogonType): String;
-function QueryLogonSession(LogonId: LUID): CanFail<TLogonSessionInfo>;
+function QueryLogonSession(LogonId: TLuid): CanFail<TLogonSessionInfo>;
 function EnumerateLogonSessions: TLuidDynArray;
 
 implementation
@@ -73,7 +67,7 @@ type
 
   TSecurityLogonSessionData = record
     Size: Cardinal;
-    LogonId: LUID;
+    LogonId: TLuid;
     UserName: TLsaUnicodeString;
     LogonDomain: TLsaUnicodeString;
     AuthenticationPackage: TLsaUnicodeString;
@@ -86,7 +80,7 @@ type
     Upn: TLsaUnicodeString;
   end;
 
-  TLuidArray = array [Word] of LUID;
+  TLuidArray = array [Word] of TLuid;
   PLuidArray = ^TLuidArray;
 
   PSecurityLogonSessionData = ^TSecurityLogonSessionData;
@@ -94,14 +88,14 @@ type
 function LsaFreeReturnBuffer(Buffer: Pointer): LongWord; stdcall;
   external secur32;
 
-function LsaGetLogonSessionData(var LogonId: LUID;
+function LsaGetLogonSessionData(var LogonId: TLuid;
   out ppLogonSessionData: PSecurityLogonSessionData): LongWord; stdcall;
   external secur32;
 
 function LsaEnumerateLogonSessions(out LogonSessionCount: Integer;
   out LogonSessionList: PLuidArray): LongWord; stdcall; external secur32;
 
-function QueryLogonSession(LogonId: LUID): CanFail<TLogonSessionInfo>;
+function QueryLogonSession(LogonId: TLuid): CanFail<TLogonSessionInfo>;
 var
   Buffer: PSecurityLogonSessionData;
 begin

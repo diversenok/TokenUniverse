@@ -7,7 +7,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
   UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, TU.Common, TU.WtsApi,
-  TU.Tokens.Types;
+  TU.Tokens.Types, Winapi.WinNt;
 
 type
   TInfoDialog = class(TChildTaskbarForm)
@@ -102,7 +102,7 @@ type
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
-    procedure ChangedOrigin(NewOrigin: LUID);
+    procedure ChangedOrigin(NewOrigin: TLuid);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
@@ -339,7 +339,7 @@ begin
   ComboIntegrity.Hint := TGroupsSource.BuildHint(NewIntegrity.Group);
 end;
 
-procedure TInfoDialog.ChangedOrigin(NewOrigin: LUID);
+procedure TInfoDialog.ChangedOrigin(NewOrigin: TLuid);
 begin
   ComboOrigin.Color := clWindow;
   OriginSource.SelectedLogonSession := NewOrigin;

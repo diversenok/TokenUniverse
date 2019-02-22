@@ -4,7 +4,7 @@ unit Ntapi.ntobapi;
 interface
 
 uses
-  Winapi.Windows, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef;
 
 type
   TObjectInformationClass = (
@@ -92,11 +92,11 @@ function NtWaitForSingleObject(Handle: THandle; Alertable: LongBool;
   const Timeout: TLargeInteger): NTSTATUS; stdcall; external ntdll;
 
 function NtSetSecurityObject(Handle: THandle;
-  SecurityInformation: SECURITY_INFORMATION;
+  SecurityInformation: TSecurityInformation;
   SecurityDescriptor: PSecurityDescriptor): NTSTATUS; stdcall; external ntdll;
 
 function NtQuerySecurityObject(Handle: THandle;
-  SecurityInformation: SECURITY_INFORMATION;
+  SecurityInformation: TSecurityInformation;
   SecurityDescriptor: PSecurityDescriptor; Length: Cardinal;
   out LengthNeeded: Cardinal): NTSTATUS; stdcall; external ntdll;
 

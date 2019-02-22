@@ -11,26 +11,26 @@ interface
   on the same simple type. }
 
 uses
-  Winapi.Windows, TU.Winapi, NtUtils.Exceptions;
+  TU.Winapi, Winapi.WinNt, NtUtils.Exceptions;
 
 type
   TSecurityIdentifier = record
   strict private
-    procedure GetDomainAndUser(SrcSid: PSID);
-    procedure GetStringSid(SrcSid: PSID);
+    procedure GetDomainAndUser(SrcSid: PSid);
+    procedure GetStringSid(SrcSid: PSid);
     procedure CreateFromStringSid(StringSID: string);
     constructor CreateFromUserName(Name: string; Dummy: Integer = 0);
   public
     SID, Domain, User: String;
     SIDType: TSIDNameUse;
-    constructor CreateFromSid(SrcSid: PSID);
+    constructor CreateFromSid(SrcSid: PSid);
     constructor CreateFromString(UserOrSID: String);
     class function CreateWellKnown(WellKnownSidType: TWellKnownSidType):
       CanFail<TSecurityIdentifier>; static;
     function ToString: String;
     function SIDTypeToString: String;
     function HasPrettyName: Boolean;
-    function AllocSid: PSID;
+    function AllocSid: PSid;
   end;
 
   TGroupAttributes = (
@@ -76,11 +76,6 @@ type
 
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
-  TLuidHelper = record helper for LUID
-    function ToUInt64: UInt64;
-    function ToString: String;
-  end;
-
   TTokenTypeEx = (ttAnonymous, ttIdentification, ttImpersonation, ttDelegation,
    ttPrimary);
 
@@ -118,13 +113,13 @@ const
   MandatoryPolicyNoWriteUp: TMandatoryPolicy = $1;
   MandatoryPolicyNewProcessMin: TMandatoryPolicy = $2;
 
-function CreateTokenSource(SourceName: String; SourceLuid: UInt64):
+function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
 
 { Comparison function used by cached event handling system }
 function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
-function CompareLUIDs(Value1, Value2: LUID): Boolean;
+function CompareLUIDs(Value1, Value2: TLuid): Boolean;
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
 function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean;
@@ -135,6 +130,7 @@ function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 { Conversion functions }
 function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
+function LuidToString(Luid: TLuid): String;
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function ObjectAttributesToString(ObjAttributes: Cardinal): String;
 function NativeTimeToString(NativeTime: Int64): String;
@@ -158,7 +154,8 @@ implementation
 
 uses
   System.SysUtils, System.TypInfo, TU.Common, TU.LsaApi,
-  Ntapi.ntdef, Ntapi.ntstatus;
+  Winapi.WinBase, Winapi.WinError, Winapi.Sddl,
+  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -206,13 +203,13 @@ end;
 
 { TSecurityIdentifier }
 
-function TSecurityIdentifier.AllocSid: PSID;
+function TSecurityIdentifier.AllocSid: PSid;
 begin
-  WinCheck(ConvertStringSidToSid(PWideChar(SID), Result),
+  WinCheck(ConvertStringSidToSidW(PWideChar(SID), Result),
     'ConvertStringSidToSid');
 end;
 
-constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSID);
+constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSid);
 begin
   GetStringSid(SrcSid);
   GetDomainAndUser(SrcSid);
@@ -230,10 +227,10 @@ end;
 
 procedure TSecurityIdentifier.CreateFromStringSid(StringSID: string);
 var
-  Buffer: PSID;
+  Buffer: PSid;
 begin
   SID := StringSID;
-  WinCheck(ConvertStringSidToSid(PWideChar(SID), Buffer),
+  WinCheck(ConvertStringSidToSidW(PWideChar(SID), Buffer),
     'ConvertStringSidToSid');
 
   try
@@ -247,19 +244,19 @@ constructor TSecurityIdentifier.CreateFromUserName(Name: string;
   Dummy: Integer = 0);
 var
   SidBuffer, DomainBuffer: Pointer;
-  SidSize, DomainChars, Reserved2: Cardinal;
+  SidSize, DomainChars: Cardinal;
 begin
   SidSize := 0;
   DomainChars := 0;
   LookupAccountNameW(nil, PWideChar(Name), nil, SidSize, nil,
-    DomainChars, Reserved2);
+    DomainChars, SIDType);
   WinCheckBuffer(SidSize, 'LookupAccountNameW');
 
   SidBuffer := AllocMem(SidSize);
   DomainBuffer := AllocMem((DomainChars + 1) * SizeOf(WideChar));
   try
     WinCheck(LookupAccountNameW(nil, PWideChar(Name), SidBuffer, SidSize,
-      DomainBuffer, DomainChars, Reserved2), 'LookupAccountNameW');
+      DomainBuffer, DomainChars, SIDType), 'LookupAccountNameW');
 
     CreateFromSid(SidBuffer);
   finally
@@ -271,7 +268,7 @@ end;
 class function TSecurityIdentifier.CreateWellKnown(
   WellKnownSidType: TWellKnownSidType): CanFail<TSecurityIdentifier>;
 var
-  Buffer: PSID;
+  Buffer: PSid;
   BufferSize: Cardinal;
 begin
   Result.Init;
@@ -291,10 +288,10 @@ begin
   end;
 end;
 
-procedure TSecurityIdentifier.GetDomainAndUser(SrcSid: PSID);
+procedure TSecurityIdentifier.GetDomainAndUser(SrcSid: PSid);
 var
   BufUser, BufDomain: PWideChar;
-  UserChars, DomainChars, peUse: Cardinal;
+  UserChars, DomainChars: Cardinal;
 begin
   Domain := '';
   User := '';
@@ -302,7 +299,7 @@ begin
 
   UserChars := 0;
   DomainChars := 0;
-  LookupAccountSidW(nil, SrcSid, nil, UserChars, nil, DomainChars, peUse);
+  LookupAccountSidW(nil, SrcSid, nil, UserChars, nil, DomainChars, SIDType);
   if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or
     ((UserChars = 0) and (DomainChars = 0)) then
     Exit;
@@ -311,9 +308,8 @@ begin
   BufDomain := AllocMem((DomainChars + 1) * SizeOf(WideChar));
   try
     if LookupAccountSidW(nil, SrcSid, BufUser, UserChars, BufDomain,
-      DomainChars, peUse) then // We don't need exceptions
+      DomainChars, SIDType) then // We don't need exceptions
     begin
-      SIDType := TSIDNameUse(peUse);
       if UserChars <> 0 then
         SetString(User, BufUser, UserChars);
       if DomainChars <> 0 then
@@ -325,7 +321,7 @@ begin
   end;
 end;
 
-procedure TSecurityIdentifier.GetStringSid(SrcSid: PSID);
+procedure TSecurityIdentifier.GetStringSid(SrcSid: PSid);
 var
   Buffer: PWideChar;
 begin
@@ -355,6 +351,7 @@ begin
     SidTypeUnknown: Result := 'Unknown';
     SidTypeComputer: Result := 'Computer';
     SidTypeLabel: Result := 'Label';
+    SidTypeLogonSession: Result := 'Logon Session';
   else
     Result := Format('%d (out of bound)', [Cardinal(SIDType)]);
   end;
@@ -496,18 +493,6 @@ begin
   Result := TPrivilegeCache.Lookup(Luid).Name;
 end;
 
-{ TLuidHelper }
-
-function TLuidHelper.ToUInt64: UInt64;
-begin
-  Result := PUInt64(@Self)^;
-end;
-
-function TLuidHelper.ToString: String;
-begin
-  Result := Format('0x%x', [PInt64(@Self)^]);
-end;
-
 { TTokenTypeExHelper }
 
 function TTokenTypeExHelper.SecurityImpersonationLevel:
@@ -580,7 +565,7 @@ end;
 
 { TTokenSource }
 
-function CreateTokenSource(SourceName: String; SourceLuid: UInt64):
+function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
 var
   i, Count: integer;
@@ -594,7 +579,7 @@ begin
   for i := 1 to Count do
     Result.sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
 
-  Result.SourceIdentifier := PLUID(@SourceLuid)^;
+  Result.SourceIdentifier := SourceLuid;
 end;
 
 { Comparison functions }
@@ -609,9 +594,9 @@ begin
   Result := Value1 = Value2;
 end;
 
-function CompareLUIDs(Value1, Value2: LUID): Boolean;
+function CompareLUIDs(Value1, Value2: TLuid): Boolean;
 begin
-  Result := Value1.ToUInt64 = Value2.ToUInt64;
+  Result := Value1 = Value2;
 end;
 
 function CompareGroups(Value1, Value2: TGroupArray): Boolean;
@@ -629,7 +614,7 @@ end;
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 begin
   Result := (Value1.Group.SecurityIdentifier.SID =
-    Value2.Group.SecurityIdentifier.SID ) and
+    Value2.Group.SecurityIdentifier.SID) and
     (Value1.Group.Attributes = Value2.Group.Attributes);
 end;
 
@@ -657,11 +642,15 @@ end;
 
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 begin
-  Result := (Value1.ModifiedId.LowPart = Value2.ModifiedId.LowPart)
-    and (Value1.ModifiedId.HighPart = Value2.ModifiedId.HighPart);
+  Result := (Value1.ModifiedId = Value2.ModifiedId);
 end;
 
 { Conversion functions }
+
+function LuidToString(Luid: TLuid): String;
+begin
+  Result := Format('0x%x', [Luid]);
+end;
 
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 begin

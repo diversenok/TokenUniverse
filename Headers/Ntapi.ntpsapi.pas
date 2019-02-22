@@ -4,12 +4,38 @@ unit Ntapi.ntpsapi;
 interface
 
 uses
-  Winapi.Windows, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef;
 
 const
-  PROCESS_QUERY_LIMITED_INFORMATION = $1000; // move to WinNT
+  PROCESS_TERMINATE = $0001;
+  PROCESS_CREATE_THREAD = $0002;
+  PROCESS_SET_SESSIONID = $0004;
+  PROCESS_VM_OPERATION = $0008;
+  PROCESS_VM_READ = $0010;
+  PROCESS_VM_WRITE = $0020;
+  PROCESS_DUP_HANDLE = $0040;
+  PROCESS_CREATE_PROCESS = $0080;
+  PROCESS_SET_QUOTA = $0100;
+  PROCESS_SET_INFORMATION = $0200;
+  PROCESS_QUERY_INFORMATION = $0400;
+  PROCESS_SUSPEND_RESUME = $0800;
+  PROCESS_QUERY_LIMITED_INFORMATION = $1000;
+
+  THREAD_TERMINATE = $0001;
+  THREAD_SUSPEND_RESUME = $0002;
+  THREAD_ALERT = $0004;
+  THREAD_GET_CONTEXT = $0008;
+  THREAD_SET_CONTEXT = $0010;
+  THREAD_SET_INFORMATION = $0020;
   THREAD_QUERY_INFORMATION = $0040;
   THREAD_SET_THREAD_TOKEN = $0080;
+  THREAD_IMPERSONATE = $0100;
+  THREAD_DIRECT_IMPERSONATION = $0200;
+  THREAD_SET_LIMITED_INFORMATION = $0400;
+  THREAD_QUERY_LIMITED_INFORMATION = $0800;
+
+  NtCurrentProcess: THandle = THandle(-1);
+  NtCurrentThread: THandle = THandle(-2);
 
 type
   TProcessInfoClass = (
@@ -31,6 +57,15 @@ type
 function NtOpenProcess(out ProcessHandle: THandle; DesiredAccess: TAccessMask;
   const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
   NTSTATUS; stdcall; external ntdll;
+
+function NtTerminateProcess(ProcessHandle: THandle; ExitStatus: NTSTATUS):
+  NTSTATUS; stdcall; external ntdll;
+
+function NtSuspendProcess(ProcessHandle: THandle): NTSTATUS; stdcall;
+  external ntdll;
+
+function NtResumeProcess(ProcessHandle: THandle): NTSTATUS; stdcall;
+  external ntdll;
 
 function NtGetNextProcess(ProcessHandle: THandle; DesiredAccess: TAccessMask;
   HandleAttributes: Cardinal; Flags: Cardinal; out NewProcessHandle: THandle):
@@ -56,6 +91,18 @@ function NtOpenThread(out ThreadHandle: THandle; DesiredAccess: TAccessMask;
 function NtSetInformationThread(ThreadHandle: THandle;
   ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;
   ThreadInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtSuspendThread(ThreadHandle: THandle; PreviousSuspendCount:
+  PCardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
+  PCardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtAlertThread(ThreadHandle: THandle): NTSTATUS; stdcall;
+  external ntdll;
+
+function NtAlertResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
+  PCardinal): NTSTATUS; stdcall; external ntdll;
 
 implementation
 

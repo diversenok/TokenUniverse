@@ -119,7 +119,7 @@ function DateTimeToNative(LocalTime: TDateTime): Int64;
 implementation
 
 uses
-  Winapi.Windows, System.DateUtils;
+  System.DateUtils, Ntapi.ntstatus;
 
 { TEventHandler<T> }
 
@@ -161,7 +161,7 @@ begin
   end;
 
   if not Result then
-    OutputDebugString('Cannot delete event listener');
+    ENtError.Report(STATUS_NOT_FOUND, 'TEventHandler<T>.Delete');
 end;
 
 procedure TEventHandler<T>.Invoke(Value: T);

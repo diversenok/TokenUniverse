@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.ComCtrls, Vcl.StdCtrls, Winapi.Windows,
-  UI.ListViewEx, TU.Tokens, TU.WtsApi, TU.LsaApi, TU.Tokens.Types;
+  UI.ListViewEx, TU.Tokens, TU.WtsApi, TU.LsaApi, TU.Tokens.Types, Winapi.WinNt;
 
 type
   TPrivilegesSource = class
@@ -90,21 +90,21 @@ type
   end;
 
   TAccessMaskSource = class
-    class procedure InitAccessEntries(ListView: TListView; Access: ACCESS_MASK);
-    class function GetAccessMask(ListView: TListView): ACCESS_MASK;
+    class procedure InitAccessEntries(ListView: TListView; Access: TAccessMask);
+    class function GetAccessMask(ListView: TListView): TAccessMask;
   end;
 
   TLogonSessionSource = class
   private
     FLogonSessions: TLuidDynArray;
     ComboBox: TComboBox;
-    function GetSelected: LUID;
-    procedure SetSelected(const Value: LUID);
+    function GetSelected: TLuid;
+    procedure SetSelected(const Value: TLuid);
   public
     const NO_LOGON = '0 (value not set)';
     constructor Create(OwnedComboBox: TComboBox);
     procedure UpdateLogonSessions;
-    property SelectedLogonSession: LUID read GetSelected write SetSelected;
+    property SelectedLogonSession: TLuid read GetSelected write SetSelected;
   end;
 
   TTokenViewSource = class;
@@ -301,7 +301,7 @@ begin
   Item.SubItems.Clear;
   Item.SubItems.Add(Privilege.AttributesToString);
   Item.SubItems.Add(Privilege.Description);
-  Item.SubItems.Add(Privilege.Luid.ToString);
+  Item.SubItems.Add(IntToStr(Privilege.Luid));
   Item.Color := PrivilegeToColor(Privilege);
   Result := Item;
 end;
@@ -758,7 +758,7 @@ end;
 { TAccessMaskSource }
 
 class function TAccessMaskSource.GetAccessMask(
-  ListView: TListView): ACCESS_MASK;
+  ListView: TListView): TAccessMask;
 var
   i: integer;
 begin
@@ -771,7 +771,7 @@ begin
 end;
 
 class procedure TAccessMaskSource.InitAccessEntries(ListView: TListView;
-  Access: ACCESS_MASK);
+  Access: TAccessMask);
 var
   i: integer;
   AccessGroup: TAccessGroup;
@@ -803,45 +803,39 @@ begin
   UpdateLogonSessions;
 end;
 
-function TLogonSessionSource.GetSelected: LUID;
-var
-  LogonId: UInt64;
+function TLogonSessionSource.GetSelected: TLuid;
 begin
   Assert(ComboBox.Items.Count = Length(FLogonSessions));
 
   if ComboBox.ItemIndex = -1 then
   begin
     if ComboBox.Text = NO_LOGON then
-    begin
-      Result.LowPart := 0;
-      Result.HighPart := 0;
-    end
+      Result := 0
     else
-    begin
-      LogonId := StrToUInt64Ex(ComboBox.Text, 'logon ID');
-      Result := PLUID(@LogonId)^;
-    end;
+    {$R-}
+      Result := TLuid(StrToUInt64Ex(ComboBox.Text, 'logon ID'));
+    {$R+}
   end
   else
     Result := FLogonSessions[ComboBox.ItemIndex];
 end;
 
-procedure TLogonSessionSource.SetSelected(const Value: LUID);
+procedure TLogonSessionSource.SetSelected(const Value: TLuid);
 var
   i: integer;
 begin
   Assert(ComboBox.Items.Count = Length(FLogonSessions));
 
   for i := 0 to High(FLogonSessions) do
-    if Value.ToUInt64 = FLogonSessions[i].ToUInt64 then
+    if Value = FLogonSessions[i] then
     begin
       ComboBox.ItemIndex := i;
       Exit;
     end;
 
   ComboBox.ItemIndex := -1;
-  if Value.ToUInt64 <> 0 then
-    ComboBox.Text := Value.ToString
+  if Value <> 0 then
+    ComboBox.Text := LuidToString(Value)
   else
     ComboBox.Text := NO_LOGON;
 end;
@@ -855,7 +849,7 @@ begin
   ComboBox.Items.Clear;
   for i := 0 to High(FLogonSessions) do
   begin
-    S := FLogonSessions[i].ToString;
+    S := LuidToString(FLogonSessions[i]);
       with QueryLogonSession(FLogonSessions[i]) do
         if IsValid and Value.UserPresent and (Value.User.User <> '') then
           S := Format('%s (%s #%d)', [S, Value.User.User, Value.Session]);

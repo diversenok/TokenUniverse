@@ -4,7 +4,7 @@ unit Ntapi.ntrtl;
 interface
 
 uses
-  Winapi.Windows, Ntapi.ntdef, NtApi.ntpebteb;
+  Winapi.WinNt, Ntapi.ntdef, NtApi.ntpebteb;
 
 function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
 

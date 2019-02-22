@@ -11,7 +11,7 @@ implementation
 
 uses
   System.UITypes, Vcl.Dialogs, TU.Tokens, TU.Tokens.Types,
-  Winapi.Windows, TU.Winapi, Winapi.WinError,
+  TU.Winapi, Winapi.WinNt, Winapi.WinError,
   Ntapi.ntdef, Ntapi.ntstatus, NtUtils.Exceptions;
 
 resourcestring

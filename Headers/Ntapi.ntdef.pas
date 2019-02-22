@@ -4,11 +4,10 @@ unit Ntapi.ntdef;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.WinNt;
 
 type
   NTSTATUS = Cardinal;
-  TAccessMask = ACCESS_MASK; // Move to WinNT
   KPRIORITY = Integer;
 
   UNICODE_STRING = record

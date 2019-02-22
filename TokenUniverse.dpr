@@ -44,7 +44,10 @@ uses
   NtUtils.Exceptions in 'NtUtils\NtUtils.Exceptions.pas',
   Winapi.WinError in 'Headers\Winapi.WinError.pas',
   NtUtils.Handles in 'NtUtils\NtUtils.Handles.pas',
-  NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas';
+  NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas',
+  Winapi.WinNt in 'Headers\Winapi.WinNt.pas',
+  Winapi.WinBase in 'Headers\Winapi.WinBase.pas',
+  Winapi.Sddl in 'Headers\Winapi.Sddl.pas';
 
 {$R *.res}
 

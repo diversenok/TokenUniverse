@@ -5,8 +5,9 @@ interface
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 uses
-  System.SysUtils, Winapi.Windows, System.Generics.Collections,
-  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi,
+  System.SysUtils, System.Generics.Collections,
+  TU.Winapi, Winapi.WinNt, Winapi.WinBase,
+  TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi,
   Ntapi.ntdef, Ntapi.ntobapi, NtUtils.Exceptions;
 
 type
@@ -51,7 +52,7 @@ type
     RestrictedSids: TGroupArray;
     Session: Cardinal;
     SandboxInert: LongBool;
-    Origin: LUID;
+    Origin: TLuid;
     Elevation: TTokenElevationType;
     HasRestrictions: LongBool;
     VirtualizationAllowed: LongBool;
@@ -65,7 +66,7 @@ type
 
     FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
     FOnSessionChange: TValuedEventHandler<Cardinal>;
-    FOnOriginChange: TValuedEventHandler<LUID>;
+    FOnOriginChange: TValuedEventHandler<TLuid>;
     FOnUIAccessChange: TValuedEventHandler<LongBool>;
     FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
     FOnVirtualizationAllowedChange: TValuedEventHandler<LongBool>;
@@ -85,7 +86,7 @@ type
     property OnOwnerChange: TValuedEventHandler<TSecurityIdentifier> read FOnOwnerChange;
     property OnPrimaryChange: TValuedEventHandler<TSecurityIdentifier> read FOnPrimaryChange;
     property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
-    property OnOriginChange: TValuedEventHandler<LUID> read FOnOriginChange;
+    property OnOriginChange: TValuedEventHandler<TLuid> read FOnOriginChange;
     property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
     property OnVirtualizationAllowedChange: TValuedEventHandler<LongBool> read FOnVirtualizationAllowedChange;
@@ -115,7 +116,7 @@ type
     procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
     procedure SetSession(const Value: Cardinal);
-    procedure SetOrigin(const Value: LUID);
+    procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(const Value: TSecurityIdentifier);
     procedure SetPrimaryGroup(const Value: TSecurityIdentifier);
@@ -126,7 +127,7 @@ type
     function GetHasRestrictions: LongBool;
     function GetIntegrity: TTokenIntegrity;
     function GetMandatoryPolicy: TMandatoryPolicy;
-    function GetOrigin: LUID;
+    function GetOrigin: TLuid;
     function GetOwner: TSecurityIdentifier;
     function GetPrimaryGroup: TSecurityIdentifier;
     function GetPrivileges: TPrivilegeArray;
@@ -160,7 +161,7 @@ type
     // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
     // TODO -cEnhancement: class 16 TokenAuditPolicy #settable
-    property Origin: LUID read GetOrigin write SetOrigin;                       // class 17 #settable
+    property Origin: TLuid read GetOrigin write SetOrigin;                       // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
@@ -387,25 +388,25 @@ type
     constructor CreateByHandle(HandleInfo: THandleInfo);
 
     /// <summary> Opens a token of current process. </summary>
-    constructor CreateOpenCurrent(Access: ACCESS_MASK = MAXIMUM_ALLOWED);
+    constructor CreateOpenCurrent(Access: TAccessMask = MAXIMUM_ALLOWED);
 
     /// <summary> Opens a token of a process. </summary>
     constructor CreateOpenProcess(PID: NativeUInt; ImageName: String;
-      Access: ACCESS_MASK = MAXIMUM_ALLOWED; Attributes: Cardinal = 0);
+      Access: TAccessMask = MAXIMUM_ALLOWED; Attributes: Cardinal = 0);
 
       /// <summary> Opens a token of a thread. </summary>
     constructor CreateOpenThread(TID: NativeUInt; ImageName: String;
-      OpenAsSelf: Boolean; Access: ACCESS_MASK = MAXIMUM_ALLOWED;
+      OpenAsSelf: Boolean; Access: TAccessMask = MAXIMUM_ALLOWED;
       Attributes: Cardinal = 0);
 
     /// <summary> Duplicates a token. </summary>
-    constructor CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
+    constructor CreateDuplicateToken(SrcToken: TToken; Access: TAccessMask;
       TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
 
     /// <summary>
     ///  Duplicates a handle. The result references for the same kernel object.
     /// </summary>
-    constructor CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
+    constructor CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
       SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 
     /// <summary>
@@ -428,7 +429,7 @@ type
     /// <remarks> This action requires SeCreateTokenPrivilege. </remarks>
     constructor CreateNtCreateToken(User: TSecurityIdentifier;
       DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
-      LogonID: LUID; Owner: TSecurityIdentifier;
+      LogonID: TLuid; Owner: TSecurityIdentifier;
       PrimaryGroup: TSecurityIdentifier; Source: TTokenSource; Expires: Int64);
 
     /// <summary>
@@ -443,7 +444,8 @@ type
 implementation
 
 uses
-  System.TypInfo, TU.WtsApi, NtUtils.Processes,
+  System.TypInfo, TU.WtsApi,
+  NtUtils.Processes, Winapi.WinError,
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const
@@ -464,7 +466,7 @@ const
 procedure CheckAbandoned(Value: Integer; Name: String);
 begin
   if Value > 0 then
-    OutputDebugStringW(PChar('Abandoned ' + Name));
+    ENtError.Report(STATUS_ABANDONED, Name + ' cleanup');
 end;
 
 constructor TTokenCacheAndEvents.Create;
@@ -679,7 +681,7 @@ begin
   // Open the target thread. Specially handle current thread since we don't
   // want to end up with impersonation that we can't even revert
   if TID = GetCurrentThreadId then
-    hThread := GetCurrentThread
+    hThread := NtCurrentThread
   else
     NativeCheck(NtOpenThread(hThread, THREAD_SET_THREAD_TOKEN, ObjAttr, ClientId),
     'NtOpenThread with THREAD_SET_THREAD_TOKEN');
@@ -690,7 +692,7 @@ begin
       @hToken, SizeOf(hToken)),
       'NtSetInformationThread#ThreadImpersonationToken');
   finally
-    if hToken <> GetCurrentThread then
+    if hToken <> NtCurrentThread then
       NtClose(hThread);
   end;
 end;
@@ -772,7 +774,7 @@ begin
   FCaption := Format('Inherited %d [0x%x]', [hToken, hToken]);
 end;
 
-constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: ACCESS_MASK;
+constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
   SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 const
   Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
@@ -789,8 +791,8 @@ begin
   // Make a lucky guess for MAXIMUM_ALLOWED: try full access first
   if (Access = MAXIMUM_ALLOWED) and not SameAccess then
   begin
-    Status := NtDuplicateObject(GetCurrentProcess, SrcToken.hToken,
-      GetCurrentProcess, hToken, TOKEN_ALL_ACCESS, HandleAttributes,
+    Status := NtDuplicateObject(NtCurrentProcess, SrcToken.hToken,
+      NtCurrentProcess, hToken, TOKEN_ALL_ACCESS, HandleAttributes,
       Options[SameAccess]);
 
     // Check for errors different than access problems
@@ -807,8 +809,8 @@ begin
     // Try each one that is not granted yet
     for i := 0 to ACCESS_COUNT - 1 do
       if (Access and AccessValues[i]) = 0 then
-        if NT_SUCCESS(NtDuplicateObject(GetCurrentProcess, SrcToken.hToken,
-          GetCurrentProcess, hToken, AccessValues[i], 0, 0)) then
+        if NT_SUCCESS(NtDuplicateObject(NtCurrentProcess, SrcToken.hToken,
+          NtCurrentProcess, hToken, AccessValues[i], 0, 0)) then
         begin
           // Yes, this access can be granted, add it
           Access := Access or AccessValues[i];
@@ -819,15 +821,15 @@ begin
   end;
 
   // Finally, duplicate the handle
-  NativeCheck(NtDuplicateObject(GetCurrentProcess, SrcToken.hToken,
-    GetCurrentProcess, hToken, Access, HandleAttributes,
+  NativeCheck(NtDuplicateObject(NtCurrentProcess, SrcToken.hToken,
+    NtCurrentProcess, hToken, Access, HandleAttributes,
     Options[SameAccess]), 'NtDuplicateObject', SrcToken);
 
   Done: FCaption := SrcToken.Caption + ' (ref)'
   // TODO: No need to snapshot handles, object address is already known
 end;
 
-constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: ACCESS_MASK;
+constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: TAccessMask;
   TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
 var
   ObjAttr: TObjectAttributes;
@@ -863,7 +865,7 @@ end;
 
 constructor TToken.CreateNtCreateToken(User: TSecurityIdentifier;
   DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
-  LogonID: LUID; Owner: TSecurityIdentifier; PrimaryGroup: TSecurityIdentifier;
+  LogonID: TLuid; Owner: TSecurityIdentifier; PrimaryGroup: TSecurityIdentifier;
   Source: TTokenSource; Expires: Int64);
 var
   TokenUser: TTokenUser;
@@ -932,20 +934,20 @@ begin
     FCaption := FCaption + User.SID;
 end;
 
-constructor TToken.CreateOpenCurrent(Access: ACCESS_MASK);
+constructor TToken.CreateOpenCurrent(Access: TAccessMask);
 begin
   CreateOpenProcess(GetCurrentProcessId, 'Current process');
 end;
 
 constructor TToken.CreateOpenProcess(PID: NativeUInt; ImageName: String;
-  Access: ACCESS_MASK; Attributes: Cardinal);
+  Access: TAccessMask; Attributes: Cardinal);
 var
   hProcess: THandle;
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
 begin
   if PID = GetCurrentProcessId then
-    hProcess := GetCurrentProcess
+    hProcess := NtCurrentProcess
   else
   begin
     InitializeObjectAttributes(ObjAttr);
@@ -967,7 +969,7 @@ begin
 end;
 
 constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
-  OpenAsSelf: Boolean; Access: ACCESS_MASK; Attributes: Cardinal);
+  OpenAsSelf: Boolean; Access: TAccessMask; Attributes: Cardinal);
 var
   ObjAttr: TObjectAttributes;
   ClientId: TClientId;
@@ -978,7 +980,7 @@ begin
 
   // Open the target thread. Note that we always can access our own.
   if TID = GetCurrentThreadId then
-    hThread := GetCurrentThread
+    hThread := NtCurrentThread
   else
     NativeCheck(NtOpenThread(hThread, THREAD_QUERY_INFORMATION, ObjAttr,
       ClientId), 'NtOpenThread with THREAD_QUERY_INFORMATION');
@@ -987,7 +989,7 @@ begin
     NativeCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
       hToken), 'NtOpenThreadTokenEx');
   finally
-    if hThread <> GetCurrentThread then
+    if hThread <> NtCurrentThread then
       NtClose(hThread);
   end;
 
@@ -1037,16 +1039,16 @@ begin
   // requires SeTcbPrivilege to add group membership)
 
   if Length(AddGroups) = 0 then
-    WinCheck(LogonUserW(PWideChar(User), PWideChar(Domain), Password,
-      Cardinal(LogonType), Cardinal(LogonProvider), hToken), 'LogonUserW')
+    WinCheck(LogonUserW(PWideChar(User), PWideChar(Domain), Password, LogonType,
+      LogonProvider, hToken), 'LogonUserW')
   else
   begin
     // Allocate SIDs for groups
     GroupArray := AllocGroups(AddGroups);
     try
       WinCheck(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
-        Cardinal(LogonType), Cardinal(LogonProvider), GroupArray, hToken, nil,
-        nil, nil, nil), 'LogonUserExExW');
+        LogonType, LogonProvider, GroupArray, hToken, nil, nil, nil, nil),
+        'LogonUserExExW');
     finally
       FreeGroups(GroupArray);
     end;
@@ -1064,7 +1066,7 @@ begin
     on E: Exception do
     begin
       // This is really bad. At least inform the debugger...
-      OutputDebugStringW(PChar('Token.OnClose: ' + E.Message));
+      ENtError.Report(STATUS_ASSERTION_FAILURE, 'Token.OnClose: ' + E.Message);
       raise;
     end;
   end;
@@ -1080,12 +1082,9 @@ begin
     ; // but destructor should always succeed
   end;
 
-  if FOnCanClose.Count > 0 then
-    OutputDebugStringW('Abandoned OnCanClose');
-  if FOnClose.Count > 0 then
-    OutputDebugStringW('Abandoned OnClose');
-  if FOnCaptionChange.Count > 0 then
-    OutputDebugStringW('Abandoned OnCaptionChange');
+  CheckAbandoned(FOnCanClose.Count, 'OnCanClose');
+  CheckAbandoned(FOnClose.Count, 'FOnClose');
+  CheckAbandoned(FOnCaptionChange.Count, 'FOnCaptionChange');
 
   inherited;
 end;
@@ -1306,7 +1305,7 @@ begin
 
   try
     // Send the handle
-    NativeCheck(NtDuplicateObject(GetCurrentProcess, hToken, hTargetProcess,
+    NativeCheck(NtDuplicateObject(NtCurrentProcess, hToken, hTargetProcess,
       Result, 0, 0, DUPLICATE_SAME_ACCESS or DUPLICATE_SAME_ATTRIBUTES),
       'NtDuplicateObject', Self);
   finally
@@ -1377,7 +1376,7 @@ begin
   Result := Token.Cache.ObjectInformation;
 end;
 
-function TTokenData.GetOrigin: LUID;
+function TTokenData.GetOrigin: TLuid;
 begin
   Assert(Token.Cache.IsCached[tdTokenOrigin]);
   Result := Token.Cache.Origin;
@@ -1563,10 +1562,10 @@ begin
       end;
 
     tsTokenID:
-      Result := Token.Cache.Statistics.TokenId.ToString;
+      Result := LuidToString(Token.Cache.Statistics.TokenId);
 
     tsExprires:
-      Result := NativeTimeToString(Token.Cache.Statistics.ExpirationTime.QuadPart);
+      Result := NativeTimeToString(Token.Cache.Statistics.ExpirationTime);
 
     tsDynamicCharged:
       Result := BytesToString(Token.InfoClass.Statistics.DynamicCharged);
@@ -1581,10 +1580,10 @@ begin
       Result := Token.Cache.Statistics.PrivilegeCount.ToString;
 
     tsModifiedID:
-      Result := Token.Cache.Statistics.ModifiedId.ToString;
+      Result := LuidToString(Token.Cache.Statistics.ModifiedId);
 
     tsLogonID:
-      Result := Token.Cache.Statistics.AuthenticationId.ToString;
+      Result := LuidToString(Token.Cache.Statistics.AuthenticationId);
 
     tsLogonAuthPackage:
       Result := Token.Cache.LogonSessionInfo.AuthPackage;
@@ -1608,13 +1607,13 @@ begin
         Result := 'No user';
 
     tsSourceLUID:
-      Result := Token.Cache.Source.SourceIdentifier.ToString;
+      Result := LuidToString(Token.Cache.Source.SourceIdentifier);
 
     tsSourceName:
       Result := TokeSourceNameToString(Token.Cache.Source);
 
     tsOrigin:
-      Result := Token.Cache.Origin.ToString;
+      Result := LuidToString(Token.Cache.Origin);
   end;
   {$ENDREGION}
 end;
@@ -1755,7 +1754,7 @@ begin
 
     tdTokenOrigin:
     begin
-      Result := Token.QueryFixedSize<LUID>(TokenOrigin,
+      Result := Token.QueryFixedSize<TLuid>(TokenOrigin,
         Token.Cache.Origin);
       if Result then
         if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
@@ -1913,9 +1912,9 @@ begin
   ValidateCache(tdTokenStatistics);
 end;
 
-procedure TTokenData.SetOrigin(const Value: LUID);
+procedure TTokenData.SetOrigin(const Value: TLuid);
 begin
-  Token.SetFixedSize<LUID>(TokenOrigin, Value);
+  Token.SetFixedSize<TLuid>(TokenOrigin, Value);
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOrigin);

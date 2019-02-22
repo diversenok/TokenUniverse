@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   UI.Prototypes.ChildForm, Vcl.ComCtrls, UI.ListViewEx, UI.Prototypes,
-  Vcl.Menus, TU.LsaApi;
+  Vcl.Menus, TU.LsaApi, Winapi.WinBase;
 
 type
   TLogonDialog = class(TChildForm)

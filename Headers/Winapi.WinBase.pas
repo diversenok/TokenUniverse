@@ -1,0 +1,66 @@
+unit Winapi.WinBase;
+{$MINENUMSIZE 4}
+
+interface
+
+uses
+  Winapi.WinNt;
+
+type
+  TLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
+    ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
+    ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
+    ltCachedUnlock);
+
+  TLogonProvider = (lpDefault, lpWinNT35, lpWinNT40, lpWinNT50, lpVirtual);
+
+// 2830
+function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
+
+// 3500
+function GetCurrentProcessId: Cardinal; stdcall; external kernel32; // Move to nt
+
+// 3932
+function GetCurrentThreadId: Cardinal; stdcall; external kernel32; // Move to nt
+
+// 7733
+procedure OutputDebugStringW(lpOutputString: PWideChar); stdcall;
+  external kernel32;
+
+// 12236
+function LookupAccountSidW(lpSystemName: PWideChar; Sid: PSID;
+  Name: PWideChar; var cbName: Cardinal; ReferencedDomainName: PWideChar;
+  var cbReferencedDomainName: Cardinal; out peUse: TSidNameUse): LongBool;
+  stdcall; external advapi32;
+
+// 12294
+function LookupAccountNameW(lpSystemName, lpAccountName: PWideChar;
+  Sid: PSID; var cbSid: Cardinal; ReferencedDomainName: PWideChar;
+  var cbReferencedDomainName: Cardinal; out peUse: TSidNameUse): LongBool;
+  stdcall; external advapi32;
+
+// 12371
+function LookupPrivilegeNameW(lpSystemName: PWideChar;
+  var lpLuid: TLargeInteger; lpName: PWideChar; var cbName: Cardinal):
+  LongBool; stdcall; external advapi32;
+
+// 12396
+function LookupPrivilegeDisplayNameW(lpSystemName, lpName: PWideChar;
+  lpDisplayName: PWideChar; var cbDisplayName: Cardinal;
+  out lpLanguageId: Cardinal): LongBool; stdcall; external advapi32;
+
+// 12718
+function LogonUserW (lpszUsername: PWideChar; lpszDomain: PWideChar;
+  lpszPassword: PWideChar; dwLogonType: TLogonType; dwLogonProvider:
+  TLogonProvider; out hToken: THandle): LongBool; stdcall; external advapi32;
+
+// ???
+function LogonUserExExW(lpszUsername: PWideChar; lpszDomain: PWideChar;
+  lpszPassword: PWideChar; dwLogonType: TLogonType; dwLogonProvider:
+  TLogonProvider; pTokenGroups: PTokenGroups; out hToken: THandle;
+  ppLogonSid: PPointer; pProfileBuffer: PPointer; pdwProfileLength: PCardinal;
+  QuotaLimits: Pointer): LongBool; stdcall; external advapi32;
+
+implementation
+
+end.

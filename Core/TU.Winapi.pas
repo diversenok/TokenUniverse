@@ -3,91 +3,12 @@ unit TU.Winapi;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.WinNt, Ntapi.ntseapi;
 
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 
-const
-  SE_GROUP_MANDATORY = $00000001;
-  SE_GROUP_ENABLED_BY_DEFAULT = $00000002;
-  SE_GROUP_ENABLED = $00000004;
-  SE_GROUP_OWNER = $00000008;
-  SE_GROUP_USE_FOR_DENY_ONLY = $00000010;
-  SE_GROUP_INTEGRITY = $00000020;
-  SE_GROUP_INTEGRITY_ENABLED = $00000040;
-  SE_GROUP_RESOURCE = $20000000;
-  SE_GROUP_LOGON_ID = $C0000000;
-
-  TOKEN_MANDATORY_POLICY_OFF = $0;
-  TOKEN_MANDATORY_POLICY_NO_WRITE_UP = $1;
-  TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN = $2;
-
 type
-  TTokenInformationClass = (
-    TokenTPad, // The compiler wouldn't generate TypeInfo without it
-    TokenUser,
-    TokenGroups,
-    TokenPrivileges,
-    TokenOwner,
-    TokenPrimaryGroup,
-    TokenDefaultDacl,
-    TokenSource,
-    TokenType,
-    TokenImpersonationLevel,
-    TokenStatistics,
-    TokenRestrictedSids,
-    TokenSessionId,
-    TokenGroupsAndPrivileges,
-    TokenSessionReference,
-    TokenSandBoxInert,
-    TokenAuditPolicy,
-    TokenOrigin,
-    TokenElevationType,
-    TokenLinkedToken,
-    TokenElevation,
-    TokenHasRestrictions,
-    TokenAccessInformation,
-    TokenVirtualizationAllowed,
-    TokenVirtualizationEnabled,
-    TokenIntegrityLevel,
-    TokenUIAccess,
-    TokenMandatoryPolicy,
-    TokenLogonSid,
-    TokenIsAppContainer,
-    TokenCapabilities,
-    TokenAppContainerSid,
-    TokenAppContainerNumber,
-    TokenUserClaimAttributes,
-    TokenDeviceClaimAttributes,
-    TokenRestrictedUserClaimAttributes,
-    TokenRestrictedDeviceClaimAttributes,
-    TokenDeviceGroups,
-    TokenRestrictedDeviceGroups,
-    TokenSecurityAttributes,
-    TokenIsRestricted,
-    TokenProcessTrustLevel,
-    TokenPrivateNameSpace,
-    TokenSingletonAttributes,
-    TokenBnoIsolation,
-    TokenChildProcessFlags,
-    MaxTokenInfoClass
-  );
-
-  TSIDNameUse = (
-    SidTypeZero,
-    SidTypeUser,
-    SidTypeGroup,
-    SidTypeDomain,
-    SidTypeAlias,
-    SidTypeWellKnownGroup,
-    SidTypeDeletedAccount,
-    SidTypeInvalid,
-    SidTypeUnknown,
-    SidTypeComputer,
-    SidTypeLabel
-  );
-
   TWellKnownSidType = (
     WinNullSid,
     WinWorldSid,
@@ -165,22 +86,53 @@ type
     WinNonCacheablePrincipalsGroupSid,
     WinEnterpriseReadonlyControllersSid,
     WinAccountReadonlyControllersSid,
-    WinBuiltinEventLogReadersGroup
+    WinBuiltinEventLogReadersGroup,
+    WinNewEnterpriseReadonlyControllersSid,
+    WinBuiltinCertSvcDComAccessGroup,
+    WinMediumPlusLabelSid,
+    WinLocalLogonSid,
+    WinConsoleLogonSid,
+    WinThisOrganizationCertificateSid,
+    WinApplicationPackageAuthoritySid,
+    WinBuiltinAnyPackageSid,
+    WinCapabilityInternetClientSid,
+    WinCapabilityInternetClientServerSid,
+    WinCapabilityPrivateNetworkClientServerSid,
+    WinCapabilityPicturesLibrarySid,
+    WinCapabilityVideosLibrarySid,
+    WinCapabilityMusicLibrarySid,
+    WinCapabilityDocumentsLibrarySid,
+    WinCapabilitySharedUserCertificatesSid,
+    WinCapabilityEnterpriseAuthenticationSid,
+    WinCapabilityRemovableStorageSid,
+    WinBuiltinRDSRemoteAccessServersSid,
+    WinBuiltinRDSEndpointServersSid,
+    WinBuiltinRDSManagementServersSid,
+    WinUserModeDriversSid,
+    WinBuiltinHyperVAdminsSid,
+    WinAccountCloneableControllersSid,
+    WinBuiltinAccessControlAssistanceOperatorsSid,
+    WinBuiltinRemoteManagementUsersSid,
+    WinAuthenticationAuthorityAssertedSid,
+    WinAuthenticationServiceAssertedSid,
+    WinLocalAccountSid,
+    WinLocalAccountAndAdministratorSid,
+    WinAccountProtectedUsersSid,
+    WinCapabilityAppointmentsSid,
+    WinCapabilityContactsSid,
+    WinAccountDefaultSystemManagedSid,
+    WinBuiltinDefaultSystemManagedGroupSid,
+    WinBuiltinStorageReplicaAdminsSid,
+    WinAccountKeyAdminsSid,
+    WinAccountEnterpriseKeyAdminsSid,
+    WinAuthenticationKeyTrustSid,
+    WinAuthenticationKeyPropertyMFASid,
+    WinAuthenticationKeyPropertyAttestationSid,
+    WinAuthenticationFreshKeyAuthSid,
+    WinBuiltinDeviceOwnersSid
   );
 
   TSIDAndAttributesArray = array of TSIDAndAttributes;
-
-  TTokenGroups = record
-    GroupCount: Integer;
-    Groups: array[Word] of TSIDAndAttributes;
-  end;
-  PTokenGroups = ^TTokenGroups;
-
-  TTokenPrivileges = record
-    PrivilegeCount: Integer;
-    Privileges: array[Byte] of TLUIDAndAttributes;
-  end;
-  PTokenPrivileges = ^TTokenPrivileges;
 
   TSIDAndAttributesHash = record
     const SID_HASH_SIZE = 32;
@@ -198,12 +150,12 @@ type
     AuthenticationId: Int64;
     TokenType: TTokenType;
     ImpersonationLevel: TSecurityImpersonationLevel;
-    MandatoryPolicy: TOKEN_MANDATORY_POLICY;
-    Flags: DWORD;
-    AppContainerNumber: DWORD;
-    PackageSid: PSID;
+    MandatoryPolicy: TTokenMandatoryPolicy;
+    Flags: Cardinal;
+    AppContainerNumber: Cardinal;
+    PackageSid: PSid;
     CapabilitiesHash: PSIDAndAttributesHash;
-    TrustLevelSid: PSID;
+    TrustLevelSid: PSid;
     SecurityAttributes: Pointer;
   end;
   PTokenAccessInformation = ^TTokenAccessInformation;
@@ -213,21 +165,13 @@ function GetTokenInformation(TokenHandle: THandle;
   TokenInformationLength: Cardinal; var ReturnLength: Cardinal): LongBool;
   stdcall; external advapi32;
 
-function LogonUserExExW(lpszUsername: PWideChar; lpszDomain: PWideChar;
-  lpszPassword: PWideChar; dwLogonType: Cardinal; dwLogonProvider: Cardinal;
-  pTokenGroups: PTokenGroups; out hToken: THandle; ppLogonSid: PPointer;
-  pProfileBuffer: PPointer; pdwProfileLength: PCardinal;
-  QuotaLimits: Pointer): LongBool; stdcall; external advapi32;
-
 function SetTokenInformation(TokenHandle: THandle;
   TokenInformationClass: TTokenInformationClass; TokenInformation: Pointer;
   TokenInformationLength: Cardinal): LongBool; stdcall; external advapi32;
 
 function CreateWellKnownSid(WellKnownSidType: TWellKnownSidType;
-  DomainSid: PSID; pSid: PSID; var cbSid: Cardinal): LongBool;
+  DomainSid: PSid; PSid: PSid; var cbSid: Cardinal): LongBool;
   stdcall; external advapi32;
-
-function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
 
 function GetCurrentSession: Cardinal;
 

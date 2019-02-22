@@ -3,7 +3,7 @@ unit TU.WtsApi;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.WinNt;
 
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}

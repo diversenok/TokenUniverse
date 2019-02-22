@@ -4,7 +4,7 @@ unit Ntapi.ntexapi;
 interface
 
 uses
-  Winapi.Windows, Ntapi.ntdef, Ntapi.ntkeapi;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntkeapi;
 
 const
   FLG_MAINTAIN_OBJECT_TYPELIST = $4000;
@@ -80,7 +80,7 @@ type
     NumberOfHandles: Cardinal;
     TypeIndex: Cardinal;
     InvalidAttributes: Cardinal;
-    GenericMapping: GENERIC_MAPPING;
+    GenericMapping: TGenericMapping;
     ValidAccessMask: Cardinal;
     PoolType: Cardinal;
     SecurityRequired: Boolean;
