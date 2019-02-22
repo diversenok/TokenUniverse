@@ -47,7 +47,8 @@ uses
   NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas',
   Winapi.WinNt in 'Headers\Winapi.WinNt.pas',
   Winapi.WinBase in 'Headers\Winapi.WinBase.pas',
-  Winapi.Sddl in 'Headers\Winapi.Sddl.pas';
+  Winapi.Sddl in 'Headers\Winapi.Sddl.pas',
+  UI.Information.Access in 'UI\UI.Information.Access.pas' {DialogGrantedAccess};
 
 {$R *.res}
 

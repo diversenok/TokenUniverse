@@ -92,6 +92,7 @@ type
     procedure BtnSetVAllowedClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure BtnSetOriginClick(Sender: TObject);
+    procedure ListViewGeneralDblClick(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
@@ -122,7 +123,7 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
-  NtUtils.Processes, NtUtils.Handles;
+  UI.Information.Access, NtUtils.Processes, NtUtils.Handles;
 
 const
   TAB_INVALIDATED = 0;
@@ -533,6 +534,13 @@ begin
   // HACK: designs-time AutoSize causes horizontal scrollbar to appear
   ListViewAdvanced.Columns[1].AutoSize := True;
   ListViewRestricted.OnResize := nil;
+end;
+
+procedure TInfoDialog.ListViewGeneralDblClick(Sender: TObject);
+begin
+  if Assigned(ListViewGeneral.Selected) and
+    (ListViewGeneral.Selected.Index = 2) then
+    TDialogGrantedAccess.Execute(Self, Token.HandleInformation.GrantedAccess);
 end;
 
 procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;

@@ -191,6 +191,10 @@
         <DCCReference Include="Headers\Winapi.WinNt.pas"/>
         <DCCReference Include="Headers\Winapi.WinBase.pas"/>
         <DCCReference Include="Headers\Winapi.Sddl.pas"/>
+        <DCCReference Include="UI\UI.Information.Access.pas">
+            <Form>DialogGrantedAccess</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -211,6 +211,7 @@ object InfoDialog: TInfoDialog
         ShowColumnHeaders = False
         TabOrder = 0
         ViewStyle = vsReport
+        OnDblClick = ListViewGeneralDblClick
         ClipboardSourceColumn = 1
       end
       object CheckBoxNoWriteUp: TCheckBox
