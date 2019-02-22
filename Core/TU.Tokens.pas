@@ -714,13 +714,14 @@ begin
     'PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION');
 
   // Open its first thread and store the handle inside AccessToken
-  Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_INFORMATION, 0, 0,
+  Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_LIMITED_INFORMATION, 0, 0,
     AccessToken.Thread);
 
   if not NT_SUCCESS(Status) then
   begin
     NtClose(hProcess);
-    NativeCheck(Status, 'NtGetNextThread with THREAD_QUERY_INFORMATION', Self);
+    raise ENtError.Create(Status,
+      'NtGetNextThread with THREAD_QUERY_LIMITED_INFORMATION');
   end;
 
   // Prepare the token handle. The thread handle is already in here.
@@ -982,8 +983,8 @@ begin
   if TID = GetCurrentThreadId then
     hThread := NtCurrentThread
   else
-    NativeCheck(NtOpenThread(hThread, THREAD_QUERY_INFORMATION, ObjAttr,
-      ClientId), 'NtOpenThread with THREAD_QUERY_INFORMATION');
+    NativeCheck(NtOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, ObjAttr,
+      ClientId), 'NtOpenThread with THREAD_QUERY_LIMITED_INFORMATION');
 
   try
     NativeCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
