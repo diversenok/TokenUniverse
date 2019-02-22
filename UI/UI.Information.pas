@@ -162,8 +162,14 @@ end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
-  if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paRemove);
+  if ListViewPrivileges.SelCount = 0 then
+    Exit;
+
+  if TaskMessageDlg('Remove these privileges from the token?',
+    'This action can''t be undone.', mtWarning, mbYesNo, -1) <> idYes then
+    Exit;
+
+  Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paRemove);
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);

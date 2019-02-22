@@ -116,8 +116,12 @@ begin
 
     if (E.ErrorOrigin = SetterMessage(TokenIntegrityLevel))
       or (E.ErrorOrigin = SetterMessage(TokenUIAccess))
+      or (E.ErrorOrigin = SetterMessage(TokenMandatoryPolicy))
       or (E.ErrorOrigin = SetterMessage(TokenOwner))
-      or (E.ErrorOrigin = SetterMessage(TokenPrimaryGroup)) then
+      or (E.ErrorOrigin = SetterMessage(TokenPrimaryGroup))
+      or (E.ErrorOrigin = SetterMessage(TokenOrigin))
+      or (E.ErrorOrigin = SetterMessage(TokenVirtualizationAllowed))
+      or (E.ErrorOrigin = SetterMessage(TokenVirtualizationEnabled)) then
       Exit(SETTER_DEFAULT);
   end;
 
@@ -148,24 +152,24 @@ begin
       Exit(SETTER_ORIGIN_TCB);
   end;
 
-  if E.ErrorOrigin = 'AdjustTokenPrivileges' then
-  begin
-    if E.ErrorCode = ERROR_ACCESS_DENIED then
-      Exit(SETTER_PRIVILEGES_ACCESS);
+  if E.Match('AdjustTokenPrivileges', ERROR_NOT_ALL_ASSIGNED) then
+    Exit(SETTER_PRIVILEGES_OTHER);
 
-    if E.ErrorCode = ERROR_NOT_ALL_ASSIGNED then
-      Exit(SETTER_PRIVILEGES_OTHER);
+  if E.ErrorOrigin = 'NtAdjustPrivilegesToken' then
+  begin
+    if E.ErrorCode = STATUS_ACCESS_DENIED then
+      Exit(SETTER_PRIVILEGES_ACCESS);
   end;
 
-  if E.ErrorOrigin = 'AdjustTokenGroups' then
+  if E.ErrorOrigin = 'NtAdjustGroupsToken' then
   begin
-    if E.ErrorCode = ERROR_ACCESS_DENIED then
+    if E.ErrorCode = STATUS_ACCESS_DENIED then
       Exit(SETTER_GROUPS_ACCESS);
 
-    if E.ErrorCode = ERROR_CANT_ENABLE_DENY_ONLY then
+    if E.ErrorCode = STATUS_CANT_ENABLE_DENY_ONLY then
       Exit(SETTER_GROUPS_MODIFY);
 
-    if E.ErrorCode = ERROR_CANT_DISABLE_MANDATORY then
+    if E.ErrorCode = STATUS_CANT_DISABLE_MANDATORY then
       Exit(SETTER_GROUPS_MODIFY);
   end;
 
