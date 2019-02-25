@@ -49,8 +49,8 @@ type
     InvalidAttributes: Cardinal;
     GenericMapping: TGenericMapping;
     ValidAccessMask: Cardinal;
-    SecurityRequired: LongBool;
-    MaintainHandleCount: LongBool;
+    SecurityRequired: Boolean;
+    MaintainHandleCount: Boolean;
     TypeIndex: Byte;
     ReservedByte: Byte;
     PoolType: Cardinal;
@@ -59,8 +59,8 @@ type
   end;
 
   TObjectHandleFlagInformation = record
-    Inherit: LongBool;
-    ProtectFromClose: LongBool;
+    Inherit: Boolean;
+    ProtectFromClose: Boolean;
   end;
 
 const
@@ -89,7 +89,7 @@ function NtMakePermanentObject(Handle: THandle): NTSTATUS; stdcall;
   external ntdll;
 
 function NtWaitForSingleObject(Handle: THandle; Alertable: LongBool;
-  const Timeout: TLargeInteger): NTSTATUS; stdcall; external ntdll;
+  Timeout: PLargeInteger): NTSTATUS; stdcall; external ntdll;
 
 function NtSetSecurityObject(Handle: THandle;
   SecurityInformation: TSecurityInformation;
