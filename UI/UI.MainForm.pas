@@ -66,6 +66,7 @@ type
     N2: TMenuItem;
     RevertThread: TMenuItem;
     N3: TMenuItem;
+    NewAnonymous: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -106,6 +107,7 @@ type
     procedure ActionRevertThread(Sender: TObject);
     procedure ActionAssignToProcess(Sender: TObject);
     procedure ActionAssignToThread(Sender: TObject);
+    procedure NewAnonymousClick(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -450,6 +452,11 @@ procedure TFormMain.MenuPromptHandleCloseClick(Sender: TObject);
 begin
   TSettings.PromptOnHandleClose := not TSettings.PromptOnHandleClose;
   MenuPromptHandleClose.Checked := TSettings.PromptOnHandleClose;
+end;
+
+procedure TFormMain.NewAnonymousClick(Sender: TObject);
+begin
+  TokenView.Add(TToken.CreateAnonymous);
 end;
 
 procedure TFormMain.NewNtCreateTokenClick(Sender: TObject);

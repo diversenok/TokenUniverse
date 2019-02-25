@@ -433,6 +433,12 @@ type
       PrimaryGroup: TSecurityIdentifier; Source: TTokenSource; Expires: Int64);
 
     /// <summary>
+    ///  Create a token using <see cref="NtImpersonateAnonymousToken">.
+    /// </summary>
+    constructor CreateAnonymous(Access: TAccessMask = MAXIMUM_ALLOWED;
+      HandleAttributes: Cardinal = 0);
+
+    /// <summary>
     ///  Opens a linked token for the current token.
     ///  Requires SeTcbPrivilege to open a primary token.
     /// </summary>
@@ -763,6 +769,38 @@ constructor TToken.Create(Handle: THandle; Caption: String);
 begin
   hToken := Handle;
   FCaption := Caption;;
+end;
+
+constructor TToken.CreateAnonymous(Access: TAccessMask;
+  HandleAttributes: Cardinal);
+var
+  hTokenToRevert: THandle;
+  WereImpersonating: Boolean;
+begin
+  // Save current impersonation token if we have it
+  WereImpersonating := NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread,
+    TOKEN_IMPERSONATE, True, 0, hTokenToRevert));
+
+  try
+    NativeCheck(NtImpersonateAnonymousToken(NtCurrentThread),
+      'NtImpersonateAnonymousToken');
+
+    NativeCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True,
+      HandleAttributes, hToken), 'NtOpenThreadTokenEx');
+  finally
+    // We need to undo current impersonation to the old one or to a state
+    // with no thread token (aka to zero token)
+    if not WereImpersonating then
+      hTokenToRevert := 0;
+
+    NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
+      @hTokenToRevert, SizeOf(hTokenToRevert));
+
+    if WereImpersonating then
+      NtClose(hTokenToRevert);
+  end;
+
+  FCaption := 'Anonymous token';
 end;
 
 constructor TToken.CreateByHandle(HandleInfo: THandleInfo);

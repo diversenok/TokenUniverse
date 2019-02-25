@@ -282,6 +282,10 @@ object FormMain: TFormMain
         ShortCut = 16462
         OnClick = NewNtCreateTokenClick
       end
+      object NewAnonymous: TMenuItem
+        Caption = 'Anonymous token'
+        OnClick = NewAnonymousClick
+      end
       object HLine4: TMenuItem
         Caption = '-'
       end
