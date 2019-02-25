@@ -7,6 +7,14 @@ uses
 
 procedure ShowErrorSuggestions(E: Exception);
 
+const
+  USE_TYPE_MISMATCH = 'Wrong token type';
+  USE_NEED_PRIMARY = 'This action requires a primary token while you ' +
+   'are trying to use an impersonation one. Do you want to duplicate it first?';
+  USE_NEED_IMPERSONATION = 'This is not an impersonation token (which ' +
+   'includes everything from Anonymous up to Delegation). ' +
+   'Do you want to duplicate it first?';
+
 implementation
 
 uses
@@ -72,7 +80,7 @@ resourcestring
     'suspended process.';
   ACTION_ASSIGN_PRIVILEGE = '`SeAssignPrimaryTokenPrivilege` is required to ' +
     'assign tokens that are not derived from your current token. ';
-  ACTION_ASSIGN_TYPE = 'Only primary token can be assigned to a process';
+  ACTION_ASSIGN_TYPE = 'Only a primary token can be assigned to a process';
 
 function SuggestConstructor(E: ELocatedOSError): String;
 begin

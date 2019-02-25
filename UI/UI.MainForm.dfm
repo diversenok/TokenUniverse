@@ -227,11 +227,13 @@ object FormMain: TFormMain
     object AssignToProcess: TMenuItem
       Caption = 'Assign token to process (Primary)'
       Enabled = False
+      ShortCut = 24641
       OnClick = ActionAssignToProcess
     end
     object AssignToThread: TMenuItem
       Caption = 'Assign token to thread (Impersonation)'
       Enabled = False
+      ShortCut = 24649
       OnClick = ActionAssignToThread
     end
     object RevertThread: TMenuItem

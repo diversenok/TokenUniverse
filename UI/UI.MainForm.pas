@@ -117,7 +117,7 @@ var
 implementation
 
 uses
-  System.UITypes,
+  System.UITypes, TU.Tokens.Types,
   NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi, TU.Tokens,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
@@ -128,18 +128,60 @@ uses
 { TFormMain }
 
 procedure TFormMain.ActionAssignToProcess(Sender: TObject);
+var
+  Token: TToken;
 begin
-  TokenView.Selected.AssignToProcess(TProcessListDialog.Execute(Self,
-    False).ProcessID);
+  Token := TokenView.Selected;
+
+  // Ask the user if he wants to duplicate non-primary tokens
+  if Token.InfoClass.Query(tdTokenType) and
+    (Token.InfoClass.TokenTypeInfo <> ttPrimary) then
+    case TaskMessageDlg(USE_TYPE_MISMATCH, USE_NEED_PRIMARY, mtWarning,
+      [mbYes, mbIgnore, mbCancel], -1) of
+
+      idCancel:
+        Abort;
+
+      // Duplicate existing token to a primary one and add to the list
+      idYes:
+        Token := TokenView.Add(TToken.CreateDuplicateToken(Token,
+          MAXIMUM_ALLOWED, ttPrimary, False));
+
+      idIgnore:
+        ;
+    end;
+
+  Token.AssignToProcess(TProcessListDialog.Execute(Self, False).ProcessID);
 
   MessageDlg('The token was successfully assigned to the process.',
     mtInformation, [mbOK], 0);
 end;
 
 procedure TFormMain.ActionAssignToThread(Sender: TObject);
+var
+  Token: TToken;
 begin
-  TokenView.Selected.AssignToThread(TProcessListDialog.Execute(Self,
-    True).ThreadID);
+  Token := TokenView.Selected;
+
+  // Ask the user if he wants to duplicate primary tokens
+  if Token.InfoClass.Query(tdTokenType) and
+    (Token.InfoClass.TokenTypeInfo = ttPrimary) then
+    case TaskMessageDlg(USE_TYPE_MISMATCH, USE_NEED_IMPERSONATION, mtWarning,
+      [mbYes, mbIgnore, mbCancel], -1) of
+
+      idCancel:
+        Abort;
+
+      // Duplicate existing token to an impersonation one and add to the list
+      idYes:
+        Token := TokenView.Add(TToken.CreateDuplicateToken(Token,
+          MAXIMUM_ALLOWED, ttImpersonation, False));
+
+      idIgnore:
+        ;
+    end;
+
+  Token.AssignToThread(TProcessListDialog.Execute(Self, True).ThreadID);
 
   MessageDlg('The token was successfully assigned to the thread.',
     mtInformation, [mbOK], 0);
