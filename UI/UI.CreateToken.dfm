@@ -17,9 +17,6 @@ object DialogCreateToken: TDialogCreateToken
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
-  DesignSize = (
-    328
-    367)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
@@ -58,9 +55,6 @@ object DialogCreateToken: TDialogCreateToken
     TabOrder = 2
     object TabGeneral: TTabSheet
       Caption = 'General'
-      DesignSize = (
-        314
-        303)
       object StaticLogonID: TStaticText
         Left = 12
         Top = 88
@@ -85,31 +79,14 @@ object DialogCreateToken: TDialogCreateToken
         Caption = 'Primary group:'
         TabOrder = 2
       end
-      object StaticDacl: TStaticText
-        Left = 165
-        Top = 283
-        Width = 72
-        Height = 17
-        Caption = 'Default DACL:'
-        TabOrder = 3
-      end
       object ComboLogonSession: TComboBox
         Left = 114
         Top = 84
         Width = 195
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 4
+        TabOrder = 3
         Text = 'Choose a logon session'
-      end
-      object ButtonLoad: TButton
-        Left = 3
-        Top = 273
-        Width = 118
-        Height = 27
-        Anchors = [akLeft, akBottom]
-        Caption = 'Load entries from...'
-        TabOrder = 5
       end
       object ComboOwner: TComboBox
         Left = 114
@@ -118,7 +95,7 @@ object DialogCreateToken: TDialogCreateToken
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 6
+        TabOrder = 4
         Text = '< Same as user >'
         Items.Strings = (
           '< Same as user >')
@@ -130,7 +107,7 @@ object DialogCreateToken: TDialogCreateToken
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 7
+        TabOrder = 5
         Text = '< Same as user >'
         Items.Strings = (
           '< Same as user >')
@@ -142,10 +119,7 @@ object DialogCreateToken: TDialogCreateToken
         Height = 70
         Anchors = [akLeft, akTop, akRight]
         Caption = 'User '
-        TabOrder = 8
-        DesignSize = (
-          306
-          70)
+        TabOrder = 6
         object ButtonPickUser: TButton
           Left = 274
           Top = 15
@@ -183,9 +157,6 @@ object DialogCreateToken: TDialogCreateToken
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      DesignSize = (
-        314
-        303)
       object ListViewGroups: TListViewEx
         AlignWithMargins = True
         Left = 3
@@ -281,9 +252,6 @@ object DialogCreateToken: TDialogCreateToken
     object TabAdvanced: TTabSheet
       Caption = 'Advanced'
       ImageIndex = 3
-      DesignSize = (
-        314
-        303)
       object GroupBoxExpires: TGroupBox
         Left = 3
         Top = 97
@@ -292,9 +260,6 @@ object DialogCreateToken: TDialogCreateToken
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Expiration Time '
         TabOrder = 0
-        DesignSize = (
-          306
-          82)
         object CheckBoxInfinite: TCheckBox
           Left = 9
           Top = 24
@@ -338,9 +303,6 @@ object DialogCreateToken: TDialogCreateToken
         Height = 76
         Caption = 'Token Source '
         TabOrder = 1
-        DesignSize = (
-          190
-          76)
         object EditSourceName: TEdit
           Left = 69
           Top = 21
@@ -392,6 +354,20 @@ object DialogCreateToken: TDialogCreateToken
         end
       end
     end
+    object TabDefaltDacl: TTabSheet
+      Caption = 'Default DACL'
+      ImageIndex = 4
+    end
+  end
+  object ButtonLoad: TButton
+    Left = 3
+    Top = 336
+    Width = 84
+    Height = 27
+    Anchors = [akLeft, akBottom]
+    Caption = 'Load from...'
+    TabOrder = 3
+    OnClick = ButtonLoadClick
   end
   object PopupMenuGroups: TPopupMenu
     Left = 256

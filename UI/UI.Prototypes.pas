@@ -28,6 +28,7 @@ type
     function AddPrivilege(Privilege: TPrivilege): TListItemEx;
     procedure AddAllPrivileges;
     function RemovePrivilege(Index: Integer): Boolean;
+    function Find(Value: TPrivilege): Integer;
   end;
 
   TGroupsSourceMode = (gsGroups, gsRestrictedSIDs, gsGroupsEnabledOnly);
@@ -54,6 +55,7 @@ type
     function AddGroup(Group: TGroup): TListItemEx;
     function IsAdditional(Index: Integer): Boolean;
     procedure RemoveGroup(Index: Integer);
+    procedure Clear;
     procedure UiEditSelected(AOwner: TComponent; DisableAttributes: Boolean =
       False);
     class function BuildHint(SID: TSecurityIdentifier;
@@ -137,11 +139,13 @@ type
     ListView: TListViewEx;
     DataClasses: array of TTokenStringClass;
     function GetToken(Ind: Integer): TToken;
+    function GetCount: Integer;
   public
     constructor Create(OwnedListView: TListViewEx);
     function Add(Token: TToken): TToken;
     procedure Delete(Index: Integer);
     function Selected: TToken;
+    property Count: Integer read GetCount;
     property Tokens[Ind: Integer]: TToken read GetToken;
     destructor Destroy; override;
   end;
@@ -225,6 +229,17 @@ destructor TPrivilegesSource.Destroy;
 begin
   UnsubscribeToken;
   inherited;
+end;
+
+function TPrivilegesSource.Find(Value: TPrivilege): Integer;
+var
+  i: Integer;
+begin
+  for i := 0 to High(FTokenPrivileges) + Length(FAdditionalPrivileges) do
+    if Privilege[i].Luid = Value.Luid then
+      Exit(i);
+
+  Result := -1;
 end;
 
 function TPrivilegesSource.GetPrivilege(Ind: Integer): TPrivilege;
@@ -400,6 +415,19 @@ begin
       Result[Count] := GetGroup(i);
       Inc(Count);
     end;
+end;
+
+procedure TGroupsSource.Clear;
+var
+  i: Integer;
+begin
+  ListView.Items.BeginUpdate;
+
+  // Delete only addinitional groups
+  for i := High(FAdditionalGroups) downto 0 do
+    RemoveGroup(i + Length(FTokenGroups));
+
+  ListView.Items.EndUpdate;
 end;
 
 constructor TGroupsSource.Create(OwnedListView: TListViewEx);
@@ -996,8 +1024,15 @@ begin
   inherited;
 end;
 
+function TTokenViewSource.GetCount: Integer;
+begin
+  Assert(Assigned(ListView));
+  Result := ListView.Items.Count;
+end;
+
 function TTokenViewSource.GetToken(Ind: Integer): TToken;
 begin
+  Assert(Assigned(ListView));
   Result := (ListView.Items[Ind].OwnedData as TRowSource).Token;
 end;
 

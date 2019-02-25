@@ -8,7 +8,7 @@ uses
   UI.Prototypes, UI.ListViewEx, Vcl.ComCtrls, UI.MainForm, Vcl.Menus, TU.Tokens;
 
 type
-  TDialogCreateToken = class(TChildForm)
+  TDialogCreateToken = class(TChildTaskbarForm)
     ButtonOK: TButton;
     ButtonCancel: TButton;
     PageControl: TPageControl;
@@ -21,11 +21,9 @@ type
     StaticLogonID: TStaticText;
     StaticOwner: TStaticText;
     StaticPrimaryGroup: TStaticText;
-    StaticDacl: TStaticText;
     ComboLogonSession: TComboBox;
     ComboUser: TComboBox;
     ButtonPickUser: TButton;
-    ButtonLoad: TButton;
     PopupMenuGroups: TPopupMenu;
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
@@ -49,6 +47,8 @@ type
     MenuDisabledModif: TMenuItem;
     MenuEnabled: TMenuItem;
     MenuEnabledModif: TMenuItem;
+    TabDefaltDacl: TTabSheet;
+    ButtonLoad: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -66,6 +66,7 @@ type
     procedure MenuDisabledModifClick(Sender: TObject);
     procedure MenuEnabledClick(Sender: TObject);
     procedure MenuEnabledModifClick(Sender: TObject);
+    procedure ButtonLoadClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
     GroupsSource: TGroupsSource;
@@ -75,14 +76,11 @@ type
     procedure SetPrivilegesAttributes(NewValue: Cardinal);
   end;
 
-var
-  DialogCreateToken: TDialogCreateToken;
-
 implementation
 
 uses
   TU.LsaApi, TU.Tokens.Types, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
-  TU.Common, UI.Settings;
+  TU.Common, UI.Settings, UI.Modal.PickToken, System.UITypes;
 
 {$R *.dfm}
 
@@ -111,6 +109,104 @@ end;
 procedure TDialogCreateToken.ButtonCancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TDialogCreateToken.ButtonLoadClick(Sender: TObject);
+var
+  Source: TToken;
+  i, j: Integer;
+begin
+  Source := TDialogPickToken.Execute(Self);
+
+  if Source.HandleInformation.GrantedAccess and TOKEN_QUERY = 0 then
+  begin
+    MessageDlg('This token does not have Query access.', mtError, mbOKCancel,
+      -1);
+    Abort;
+  end;
+
+  // User
+  if Source.InfoClass.Query(tdTokenUser) then
+  begin
+    ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.ToString;
+    CheckBoxUserState.Checked := Source.InfoClass.User.Attributes.Contain(
+      GroupUforDenyOnly)
+  end;
+
+  // Logon ID & Expiration
+  if Source.InfoClass.Query(tdTokenStatistics) then
+  begin
+    LogonIDSource.SelectedLogonSession :=
+      Source.InfoClass.Statistics.AuthenticationId;
+
+    CheckBoxInfinite.Checked := (Source.InfoClass.Statistics.ExpirationTime =
+      Int64.MaxValue);
+
+    if not CheckBoxInfinite.Checked then
+    begin
+      DateExpires.DateTime := NativeTimeToLocalDateTime(
+        Source.InfoClass.Statistics.ExpirationTime);
+
+      TimeExpires.DateTime := DateExpires.DateTime;
+    end;
+  end;
+
+  // Owner
+  if Source.InfoClass.Query(tdTokenOwner) then
+    ComboOwner.Text := Source.InfoClass.Owner.ToString;
+
+  // Primary group
+  if Source.InfoClass.Query(tdTokenPrimaryGroup) then
+    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.ToString;
+
+  // Groups
+  if Source.InfoClass.Query(tdTokenGroups) then
+  begin
+    ListViewGroups.Items.BeginUpdate;
+
+    GroupsSource.Clear;
+    for i := 0 to High(Source.InfoClass.Groups) do
+      GroupsSource.AddGroup(Source.InfoClass.Groups[i]);
+
+    ListViewGroups.Items.EndUpdate;
+  end;
+
+  // Privileges
+  if Source.InfoClass.Query(tdTokenPrivileges) then
+  begin
+    ListViewPrivileges.Items.BeginUpdate;
+
+    // Uncheck everything
+    for i := 0 to ListViewPrivileges.Items.Count - 1 do
+      ListViewPrivileges.Items[i].Checked := False;
+
+    for i := 0 to High(Source.InfoClass.Privileges) do
+    begin
+      // Locate a privilege from the token in the list
+      j := PrivilegesSource.Find(Source.InfoClass.Privileges[i]);
+
+      // Set appropriate state and check it
+      if j = -1 then
+        // Add if necessary
+        PrivilegesSource.AddPrivilege(Source.InfoClass.Privileges[i]).Checked :=
+          True
+      else
+      begin
+        PrivilegesSource.Privilege[j] := Source.InfoClass.Privileges[i];
+        ListViewPrivileges.Items[j].Checked := True;
+      end;
+    end;
+
+    ListViewPrivileges.Items.EndUpdate;
+  end;
+
+  // Source
+  if Source.InfoClass.Query(tdTokenSource) then
+  begin
+    EditSourceName.Text := TokeSourceNameToString(Source.InfoClass.Source);
+    EditSourceLuid.Text := LuidToString(
+      Source.InfoClass.Source.SourceIdentifier);
+  end;
 end;
 
 procedure TDialogCreateToken.ButtonOKClick(Sender: TObject);
