@@ -244,9 +244,10 @@ object DialogCreateToken: TDialogCreateToken
         PopupMenu = PopupMenuPrivileges
         TabOrder = 0
         ViewStyle = vsReport
-        OnContextPopup = ListViewPrivilegesContextPopup
+        OnItemChecked = ListViewPrivilegesItemChecked
         ClipboardSourceColumn = 0
         ColoringItems = True
+        PopupOnItemsOnly = True
       end
     end
     object TabAdvanced: TTabSheet

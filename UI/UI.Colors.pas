@@ -11,6 +11,7 @@ const
   clEnabled: TColor = $E0F0E0;
   clDisabled: TColor = $E0E0F0;
   clDisabledModified: TColor = $D0D0F0;
+  clRemoved: TColor = $E0E0E0;
   clIntegrity: TColor = $F0E0E0;
   clSuspended: TColor = $AAAAAA;
   clGuiThread: TColor = $77FFFF;
@@ -44,6 +45,9 @@ end;
 
 function PrivilegeToColor(Privilege: TPrivilege): TColor;
 begin
+  if Privilege.AttributesContain(SE_PRIVILEGE_REMOVED) then
+    Exit(clRemoved);
+
   if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED) then
   begin
     if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then

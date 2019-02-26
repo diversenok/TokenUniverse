@@ -288,7 +288,11 @@ begin
 
   // <Ctrl + A> to select everyting
   if MultiSelect and (State = [ssCtrl]) and (Message.CharCode = Ord('A')) then
-    SelectAll
+  begin
+    Items.BeginUpdate;
+    SelectAll;
+    Items.EndUpdate;
+  end
 
   // <Ctrl + C> to copy only the main column
   else if (State = [ssCtrl]) and (Message.CharCode = Ord('C')) then
@@ -472,7 +476,7 @@ begin
     FColorEnabled := True;
     FColor := Value;
     if Owner.Owner.ColoringItems then
-      Owner.Owner.Repaint;
+      Owner.SetUpdateState(False);
   end;
 end;
 

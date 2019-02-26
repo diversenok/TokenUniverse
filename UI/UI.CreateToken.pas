@@ -60,13 +60,12 @@ type
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure ComboUserChange(Sender: TObject);
-    procedure ListViewPrivilegesContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: Boolean);
     procedure MenuDisabledClick(Sender: TObject);
     procedure MenuDisabledModifClick(Sender: TObject);
     procedure MenuEnabledClick(Sender: TObject);
     procedure MenuEnabledModifClick(Sender: TObject);
     procedure ButtonLoadClick(Sender: TObject);
+    procedure ListViewPrivilegesItemChecked(Sender: TObject; Item: TListItem);
   private
     LogonIDSource: TLogonSessionSource;
     GroupsSource: TGroupsSource;
@@ -305,10 +304,11 @@ begin
   ButtonAllocLuidClick(Self);
 end;
 
-procedure TDialogCreateToken.ListViewPrivilegesContextPopup(Sender: TObject;
-  MousePos: TPoint; var Handled: Boolean);
+procedure TDialogCreateToken.ListViewPrivilegesItemChecked(Sender: TObject;
+  Item: TListItem);
 begin
-  Handled := (ListViewPrivileges.SelCount = 0);
+  if Assigned(Item) then
+    PrivilegesSource.ValidateColor(Item.Index);
 end;
 
 procedure TDialogCreateToken.MenuDisabledClick(Sender: TObject);

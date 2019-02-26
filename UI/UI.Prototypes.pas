@@ -29,6 +29,7 @@ type
     procedure AddAllPrivileges;
     function RemovePrivilege(Index: Integer): Boolean;
     function Find(Value: TPrivilege): Integer;
+    procedure ValidateColor(Index: Integer);
   end;
 
   TGroupsSourceMode = (gsGroups, gsRestrictedSIDs, gsGroupsEnabledOnly);
@@ -317,7 +318,7 @@ begin
   Item.SubItems.Add(Privilege.AttributesToString);
   Item.SubItems.Add(Privilege.Description);
   Item.SubItems.Add(IntToStr(Privilege.Luid));
-  Item.Color := PrivilegeToColor(Privilege);
+  ValidateColor(Item.Index);
   Result := Item;
 end;
 
@@ -349,6 +350,16 @@ begin
     Token.OnClose.Delete(UnsubscribeToken);
     Token := nil;
   end;
+end;
+
+procedure TPrivilegesSource.ValidateColor(Index: Integer);
+begin
+  Assert(Assigned(ListView));
+
+  if ListView.Checkboxes and not ListView.Items[Index].Checked then
+     ListView.Items[Index].Color := clRemoved
+  else
+    ListView.Items[Index].Color := PrivilegeToColor(Privilege[Index]);
 end;
 
 { TGroupsSource }
