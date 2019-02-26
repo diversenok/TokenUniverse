@@ -52,6 +52,10 @@ type
     MenuEnabledModif: TMenuItem;
     TabDefaltDacl: TTabSheet;
     ButtonLoad: TButton;
+    GroupBoxPostCreation: TGroupBox;
+    CheckBoxNoWriteUp: TCheckBox;
+    CheckBoxNewProcMin: TCheckBox;
+    CheckBoxSession: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -219,6 +223,7 @@ var
   Token: TToken;
   Expires: Int64;
   OwnerGroupName, PrimaryGroupName: String;
+  NewPolicy: TMandatoryPolicy;
 begin
   if CheckBoxInfinite.Checked then
     Expires := Int64.MaxValue
@@ -253,6 +258,15 @@ begin
   );
 
   FormMain.TokenView.Add(Token);
+
+  // Post-creation: change mandatory policy
+  NewPolicy.Create(CheckBoxNoWriteUp.Checked, CheckBoxNewProcMin.Checked);
+  if NewPolicy <> MandatoryPolicyOff then
+    Token.InfoClass.MandatoryPolicy := NewPolicy;
+
+  // Post-creation: change session
+  if CheckBoxSession.Checked then
+    Token.InfoClass.Session := GetCurrentSession;
 
   if not TSettings.NoCloseCreationDialogs then
     Close;
@@ -307,6 +321,7 @@ begin
   GroupsSource := TGroupsSource.Create(ListViewGroups);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   PrivilegesSource.AddAllPrivileges;
+  CheckBoxSession.Enabled := GetCurrentSession <> 0;
   ButtonAllocLuidClick(Self);
 end;
 

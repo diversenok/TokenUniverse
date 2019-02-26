@@ -5,7 +5,7 @@ object DialogCreateToken: TDialogCreateToken
   ClientHeight = 367
   ClientWidth = 328
   Color = clBtnFace
-  Constraints.MinHeight = 300
+  Constraints.MinHeight = 370
   Constraints.MinWidth = 344
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -21,7 +21,7 @@ object DialogCreateToken: TDialogCreateToken
   TextHeight = 13
   object ButtonOK: TButton
     Left = 169
-    Top = 336
+    Top = 337
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -150,6 +150,46 @@ object DialogCreateToken: TDialogCreateToken
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Use for deny only'
+          TabOrder = 2
+        end
+      end
+      object GroupBoxPostCreation: TGroupBox
+        Left = 5
+        Top = 200
+        Width = 306
+        Height = 100
+        Anchors = [akLeft, akRight, akBottom]
+        Caption = 'After creation: '
+        TabOrder = 7
+        object CheckBoxNoWriteUp: TCheckBox
+          Left = 7
+          Top = 24
+          Width = 259
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Enable No Write Up policy'
+          Checked = True
+          State = cbChecked
+          TabOrder = 0
+        end
+        object CheckBoxNewProcMin: TCheckBox
+          Left = 7
+          Top = 47
+          Width = 259
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Enable New Process Min policy'
+          Checked = True
+          State = cbChecked
+          TabOrder = 1
+        end
+        object CheckBoxSession: TCheckBox
+          Left = 7
+          Top = 70
+          Width = 259
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Change session to current'
           TabOrder = 2
         end
       end
@@ -362,9 +402,9 @@ object DialogCreateToken: TDialogCreateToken
   end
   object ButtonLoad: TButton
     Left = 3
-    Top = 336
+    Top = 337
     Width = 84
-    Height = 27
+    Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Load from...'
     TabOrder = 3

@@ -109,12 +109,13 @@ type
   TMandatoryPolicy = (
     MandatoryPolicyOff = TOKEN_MANDATORY_POLICY_OFF,
     MandatoryPolicyNoWriteUp = TOKEN_MANDATORY_POLICY_NO_WRITE_UP,
-    MandatoryPolicyNewProcessMin = TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN
+    MandatoryPolicyNewProcessMin = TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN,
+    MandatoryPolicyAll = TOKEN_MANDATORY_POLICY_VALID_MASK
   );
 
   TMandatoryPolicyHelper = record helper for TMandatoryPolicy
-    function Contain(Flag: TMandatoryPolicy): Boolean;
-    procedure Include(Flag: TMandatoryPolicy);
+    function Contains(Flag: TMandatoryPolicy): Boolean;
+    procedure Create(NoWriteUp, NewProcessMin: Boolean);
   end;
 
 function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
@@ -569,14 +570,21 @@ end;
 
 { TMandatoryPolicyHelper }
 
-function TMandatoryPolicyHelper.Contain(Flag: TMandatoryPolicy): Boolean;
+function TMandatoryPolicyHelper.Contains(Flag: TMandatoryPolicy): Boolean;
 begin
   Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
 end;
 
-procedure TMandatoryPolicyHelper.Include(Flag: TMandatoryPolicy);
+procedure TMandatoryPolicyHelper.Create(NoWriteUp, NewProcessMin: Boolean);
 begin
-  Self := TMandatoryPolicy(Cardinal(Self) or Cardinal(Flag));
+  if NoWriteUp and NewProcessMin then
+    Self := MandatoryPolicyAll
+  else if NoWriteUp then
+    Self := MandatoryPolicyNoWriteUp
+  else if NewProcessMin then
+    Self := MandatoryPolicyNewProcessMin
+  else
+    Self := MandatoryPolicyOff;
 end;
 
 { TTokenSource }

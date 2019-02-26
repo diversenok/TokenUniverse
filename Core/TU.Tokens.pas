@@ -1564,11 +1564,11 @@ begin
         Result := Format('0x%x', [Token.Handle]);
 
     tsNoWriteUpPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contain(
+      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contains(
         MandatoryPolicyNoWriteUp));
 
     tsNewProcessMinPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contain(
+      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contains(
         MandatoryPolicyNewProcessMin));
 
     tsUIAccess:
