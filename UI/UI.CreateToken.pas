@@ -5,9 +5,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, UI.Prototypes.ChildForm, Vcl.StdCtrls,
-  UI.Prototypes, UI.ListViewEx, Vcl.ComCtrls, UI.MainForm, Vcl.Menus, TU.Tokens;
+  UI.Prototypes, UI.ListViewEx, Vcl.ComCtrls, UI.MainForm, Vcl.Menus,
+  TU.Tokens, TU.Tokens.Types;
 
 type
+  TGroupUpdateType = (guEditOne, guEditMultiple, guRemove);
+
   TDialogCreateToken = class(TChildTaskbarForm)
     ButtonOK: TButton;
     ButtonCancel: TButton;
@@ -71,30 +74,32 @@ type
     GroupsSource: TGroupsSource;
     PrivilegesSource: TPrivilegesSource;
     procedure ObjPickerUserCallback(UserName: String);
-    procedure UpdatePrimaryAndOwner;
+    procedure AddGroup(NewGroup: TGroup);
+    procedure UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
     procedure SetPrivilegesAttributes(NewValue: Cardinal);
   end;
 
 implementation
 
 uses
-  TU.LsaApi, TU.Tokens.Types, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
+  TU.LsaApi, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
   TU.Common, UI.Settings, UI.Modal.PickToken, System.UITypes;
 
 {$R *.dfm}
 
-procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
-var
-  NewGroup: TGroup;
+procedure TDialogCreateToken.AddGroup(NewGroup: TGroup);
 begin
-  NewGroup := TDialogPickUser.PickNew(Self);
-
   GroupsSource.AddGroup(NewGroup);
 
   if NewGroup.Attributes.Contain(GroupOwner) then
     ComboOwner.Items.Add(NewGroup.SecurityIdentifier.ToString);
 
   ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.ToString);
+end;
+
+procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
+begin
+  AddGroup(TDialogPickUser.PickNew(Self));
 end;
 
 procedure TDialogCreateToken.ButtonAllocLuidClick(Sender: TObject);
@@ -128,8 +133,9 @@ begin
   if Source.InfoClass.Query(tdTokenUser) then
   begin
     ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.ToString;
+    ComboUserChange(Sender);
     CheckBoxUserState.Checked := Source.InfoClass.User.Attributes.Contain(
-      GroupUforDenyOnly)
+      GroupUforDenyOnly);
   end;
 
   // Logon ID & Expiration
@@ -150,14 +156,6 @@ begin
     end;
   end;
 
-  // Owner
-  if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := Source.InfoClass.Owner.ToString;
-
-  // Primary group
-  if Source.InfoClass.Query(tdTokenPrimaryGroup) then
-    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.ToString;
-
   // Groups
   if Source.InfoClass.Query(tdTokenGroups) then
   begin
@@ -165,10 +163,18 @@ begin
 
     GroupsSource.Clear;
     for i := 0 to High(Source.InfoClass.Groups) do
-      GroupsSource.AddGroup(Source.InfoClass.Groups[i]);
+      AddGroup(Source.InfoClass.Groups[i]);
 
     ListViewGroups.Items.EndUpdate;
   end;
+
+  // Owner
+  if Source.InfoClass.Query(tdTokenOwner) then
+    ComboOwner.Text := Source.InfoClass.Owner.ToString;
+
+  // Primary group
+  if Source.InfoClass.Query(tdTokenPrimaryGroup) then
+    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.ToString;
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
@@ -322,9 +328,21 @@ begin
 end;
 
 procedure TDialogCreateToken.MenuEditClick(Sender: TObject);
+var
+  SelCount: Integer;
 begin
+  SelCount := ListViewGroups.SelCount;
+
   GroupsSource.UiEditSelected(Self);
-  UpdatePrimaryAndOwner;
+
+  case SelCount of
+    0:
+      ; // Nothing to update
+    1:
+      UpdatePrimaryAndOwner(guEditOne);
+  else
+    UpdatePrimaryAndOwner(guEditMultiple);
+  end;
 end;
 
 procedure TDialogCreateToken.MenuEnabledClick(Sender: TObject);
@@ -342,8 +360,8 @@ procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
 begin
   if Assigned(ListViewGroups.Selected) then
   begin
-    ComboPrimary.Items.Delete(ListViewGroups.Selected.Index + 1);
     GroupsSource.RemoveGroup(ListViewGroups.Selected.Index);
+    UpdatePrimaryAndOwner(guRemove);
   end;
 end;
 
@@ -369,14 +387,18 @@ begin
   ListViewPrivileges.Items.EndUpdate;
 end;
 
-procedure TDialogCreateToken.UpdatePrimaryAndOwner;
+procedure TDialogCreateToken.UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
 var
   i: Integer;
-  SavedPrimaryIndex: Integer;
-  SavedOwner: String;
+  SavedPrimaryIndex, SavedOwnerIndex, SavedOwnerCount: Integer;
+  SavedPrimary, SavedOwner: String;
 begin
-  SavedOwner := ComboOwner.Text;
+  // Save current state to be able to restore it back
+  SavedOwnerCount := ComboOwner.Items.Count;
+  SavedOwnerIndex := ComboOwner.ItemIndex;
   SavedPrimaryIndex := ComboPrimary.ItemIndex;
+  SavedOwner := ComboOwner.Text;
+  SavedPrimary := ComboPrimary.Text;
 
   // Refresh potential owners list
   begin
@@ -390,15 +412,28 @@ begin
       if GroupsSource.Group[i].Attributes.Contain(GroupOwner) then
         ComboOwner.Items.Add(ListViewGroups.Items[i].Caption);
 
-    // Restore selection
-    for i := 1 to ComboOwner.Items.Count - 1 do
-      if ComboOwner.Items[i] = SavedOwner then
-        ComboOwner.ItemIndex := i;
+    // Restore choise
+    if (Mode = guEditOne) and (SavedOwnerCount = ComboOwner.Items.Count) then
+      ComboOwner.ItemIndex := SavedOwnerIndex // Restore by index
+    else
+    begin
+      // Restore by name or fall back to user
+
+      ComboOwner.ItemIndex := 0;
+      for i := 1 to ComboOwner.Items.Count - 1 do
+        if ComboOwner.Items[i] = SavedOwner then
+          ComboOwner.ItemIndex := i;
+
+      if ComboOwner.ItemIndex = 0 then
+        ComboOwner.Text := ComboOwner.Items[0];
+    end;
 
     ComboOwner.Items.EndUpdate;
   end;
 
-  // Refresh potential primary group list
+  // Refresh potential primary group list.
+  // Optimization: multiple edit does not change their list
+  if Mode <> guEditMultiple then
   begin
     ComboPrimary.Items.BeginUpdate;
     for i := ComboPrimary.Items.Count - 1 downto 1 do
@@ -408,8 +443,25 @@ begin
     for i := 0 to ListViewGroups.Items.Count - 1 do
       ComboPrimary.Items.Add(ListViewGroups.Items[i].Caption);
 
-    // Restore selection using the fact that editing does not change their count
-    ComboPrimary.ItemIndex := SavedPrimaryIndex;
+    // Restore choise
+    case Mode of
+      guRemove:
+        // Restore by name or fall back to user
+        begin
+          ComboPrimary.ItemIndex := 0;
+          for i := 1 to ComboPrimary.Items.Count - 1 do
+            if ComboPrimary.Items[i] = SavedPrimary then
+              ComboPrimary.ItemIndex := i;
+
+          if ComboPrimary.ItemIndex = 0 then
+            ComboPrimary.Text := ComboPrimary.Items[0];
+        end;
+
+      guEditOne:
+        // Restore by index
+        ComboPrimary.ItemIndex := SavedPrimaryIndex;
+    end;
+
     ComboPrimary.Items.EndUpdate;
   end;
 end;
