@@ -23,8 +23,8 @@ object DialogRestrictToken: TDialogRestrictToken
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
-    Left = 281
-    Top = 385
+    Left = 200
+    Top = 382
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -34,8 +34,8 @@ object DialogRestrictToken: TDialogRestrictToken
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
-    Left = 200
-    Top = 385
+    Left = 281
+    Top = 382
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

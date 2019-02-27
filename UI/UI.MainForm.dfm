@@ -193,28 +193,23 @@ object FormMain: TFormMain
       ShortCut = 24644
       OnClick = ActionDuplicateHandle
     end
-    object TokenRun: TMenuItem
-      Caption = 'Run program with this token'
-      Enabled = False
-      ShortCut = 16453
-      OnClick = ActionRunWithToken
-    end
     object TokenRestrict: TMenuItem
       Caption = 'Create restricted token'
       Enabled = False
       ShortCut = 16466
       OnClick = ActionRestrict
     end
+    object TokenRestrictSafer: TMenuItem
+      Caption = 'Create restricted token via Safer API'
+      Enabled = False
+      ShortCut = 24658
+      OnClick = TokenRestrictSaferClick
+    end
     object TokenOpenLinked: TMenuItem
       Caption = 'Open linked token'
       Enabled = False
       ShortCut = 24652
       OnClick = ActionOpenLinked
-    end
-    object TokenImpersonate: TMenuItem
-      Caption = 'Impersonate'
-      Enabled = False
-      ShortCut = 16457
     end
     object N2: TMenuItem
       Caption = '-'
@@ -273,10 +268,6 @@ object FormMain: TFormMain
         ShortCut = 16469
         OnClick = ActionWTSQuery
       end
-      object NewSaferApi: TMenuItem
-        Caption = 'Create using Safer API'
-        Enabled = False
-      end
       object NewNtCreateToken: TMenuItem
         Caption = 'Create using NtCreateToken'
         ShortCut = 16462
@@ -318,6 +309,12 @@ object FormMain: TFormMain
         Caption = 'CreateProcessWithLogonW'
         Enabled = False
       end
+    end
+    object TokenRun: TMenuItem
+      Caption = 'Run program with this token'
+      Enabled = False
+      ShortCut = 16453
+      OnClick = ActionRunWithToken
     end
   end
   object SmallIcons: TImageList

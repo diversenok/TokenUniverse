@@ -34,7 +34,6 @@ type
     HLine3: TMenuItem;
     NewLogonUser: TMenuItem;
     NewQueryUserToken: TMenuItem;
-    NewSaferApi: TMenuItem;
     NewNtCreateToken: TMenuItem;
     HLine4: TMenuItem;
     NewCopyHandle: TMenuItem;
@@ -47,7 +46,6 @@ type
     TokenDuplicateHandle: TMenuItem;
     MenuPromptHandleClose: TMenuItem;
     Showiconsinprocesslist1: TMenuItem;
-    TokenImpersonate: TMenuItem;
     Displayallsearchresults1: TMenuItem;
     TokenOpenLinked: TMenuItem;
     TokenOpenInfo: TMenuItem;
@@ -67,6 +65,7 @@ type
     RevertThread: TMenuItem;
     N3: TMenuItem;
     NewAnonymous: TMenuItem;
+    TokenRestrictSafer: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -108,6 +107,7 @@ type
     procedure ActionAssignToProcess(Sender: TObject);
     procedure ActionAssignToThread(Sender: TObject);
     procedure NewAnonymousClick(Sender: TObject);
+    procedure TokenRestrictSaferClick(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -123,7 +123,8 @@ uses
   NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi, TU.Tokens,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
-  UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings;
+  UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
+  UI.New.Safer;
 
 {$R *.dfm}
 
@@ -419,6 +420,11 @@ end;
 procedure TFormMain.SelectColumnsClick(Sender: TObject);
 begin
   TDialogColumns.Create(Self).ShowModal;
+end;
+
+procedure TFormMain.TokenRestrictSaferClick(Sender: TObject);
+begin
+  TDialogSafer.CreateFromToken(Self, TokenView.Selected);
 end;
 
 procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;

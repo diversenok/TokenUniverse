@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   System.SysUtils, System.Generics.Collections,
-  TU.Winapi, Winapi.WinNt, Winapi.WinBase,
+  TU.Winapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
   TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi,
   Ntapi.ntdef, Ntapi.ntobapi, NtUtils.Exceptions;
 
@@ -437,6 +437,10 @@ type
     /// </summary>
     constructor CreateAnonymous(Access: TAccessMask = MAXIMUM_ALLOWED;
       HandleAttributes: Cardinal = 0);
+
+    /// <summary> Create a restricted token using Safer API. </summary>
+    constructor CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
+      LevelId: TSaferLevelId; MakeInert: Boolean = False);
 
     /// <summary>
     ///  Opens a linked token for the current token.
@@ -1065,6 +1069,47 @@ begin
     FreeMem(DeletePrivileges);
     FreeGroups(DisableGroups);
   end;
+end;
+
+constructor TToken.CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
+  LevelId: TSaferLevelId; MakeInert: Boolean = False);
+var
+  hLevel: TSaferLevelHandle;
+  Flags: Cardinal;
+  LevelName: String;
+begin
+  WinCheck(SaferCreateLevel(ScopeId, LevelId, SAFER_LEVEL_OPEN, hLevel),
+    'SaferCreateLevel');
+
+  Flags := 0;
+  if MakeInert then
+    Flags := Flags or SAFER_TOKEN_MAKE_INERT;
+
+  try
+    WinCheck(SaferComputeTokenFromLevel(hLevel, SrcToken.hToken, hToken,
+      Flags, nil), 'SaferComputeTokenFromLevel', SrcToken);
+  finally
+    SaferCloseLevel(hLevel);
+  end;
+
+  case LevelId of
+    SAFER_LEVELID_FULLYTRUSTED:
+      LevelName := 'Unrestricted';
+
+    SAFER_LEVELID_NORMALUSER:
+      LevelName := 'Normal';
+
+    SAFER_LEVELID_CONSTRAINED:
+      LevelName := 'Constrained';
+
+    SAFER_LEVELID_UNTRUSTED:
+      LevelName := 'Untrusted';
+
+    SAFER_LEVELID_DISALLOWED:
+      LevelName := 'Disallowed'
+  end;
+
+  FCaption := LevelName + ' Safer for ' + SrcToken.FCaption;
 end;
 
 constructor TToken.CreateWithLogon(LogonType: TLogonType;

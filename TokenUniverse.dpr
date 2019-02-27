@@ -49,7 +49,9 @@ uses
   Winapi.WinBase in 'Headers\Winapi.WinBase.pas',
   Winapi.Sddl in 'Headers\Winapi.Sddl.pas',
   UI.Information.Access in 'UI\UI.Information.Access.pas' {DialogGrantedAccess},
-  UI.Modal.PickToken in 'UI\UI.Modal.PickToken.pas' {DialogPickToken};
+  UI.Modal.PickToken in 'UI\UI.Modal.PickToken.pas' {DialogPickToken},
+  Winapi.WinSafer in 'Headers\Winapi.WinSafer.pas',
+  UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer};
 
 {$R *.res}
 

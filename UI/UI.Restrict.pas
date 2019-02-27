@@ -9,7 +9,7 @@ uses
   UI.Prototypes.ChildForm, System.ImageList, Vcl.ImgList, Vcl.Menus;
 
 type
-  TDialogRestrictToken = class(TChildForm)
+  TDialogRestrictToken = class(TChildTaskbarForm)
     CheckBoxDisableMaxPriv: TCheckBox;
     CheckBoxSandboxInert: TCheckBox;
     CheckBoxLUA: TCheckBox;
@@ -51,7 +51,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Winapi;
+  TU.Winapi, TU.Suggestions;
 
 {$R *.dfm}
 
@@ -64,10 +64,6 @@ begin
 end;
 
 procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
-const
-  NO_SANBOX_INERT = 'The resulting token doesn''t contain SandboxInert flag ' +
-    'despite you tried to enable it. Looks like this action requires ' +
-    'SeTcbPrivilege on your system.';
 var
   NewToken: TToken;
 begin
@@ -94,7 +90,7 @@ end;
 
 procedure TDialogRestrictToken.ChangedCaption(NewCaption: String);
 begin
-  Caption := Format('Create restricted token for "%s"', [NewCaption]);
+  Caption := Format('Create Restricted Token for "%s"', [NewCaption]);
 end;
 
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
@@ -126,6 +122,8 @@ var
   Found: Boolean;
   RestrInd, ItemInd: Integer;
 begin
+  Assert(Assigned(Token));
+
   SubscribeTokenCanClose(Token, Caption);
 
   DisableGoupsSource := TGroupsSource.Create(ListViewDisableSID);
@@ -150,6 +148,14 @@ begin
 
   // RESTRICTED also is useful to provide access to WinSta0 and Default desktop
   with TSecurityIdentifier.CreateWellKnown(WinRestrictedCodeSid) do
+  begin
+    Group.SecurityIdentifier := Value;
+    Group.Attributes := GroupExUser;
+    RestrictGroupsSource.AddGroup(Group);
+  end;
+
+  // And WRITE RESTRICTED
+  with TSecurityIdentifier.CreateWellKnown(WinWriteRestrictedCodeSid) do
   begin
     Group.SecurityIdentifier := Value;
     Group.Attributes := GroupExUser;

@@ -15,6 +15,10 @@ const
    'includes everything from Anonymous up to Delegation). ' +
    'Do you want to duplicate it first?';
 
+  NO_SANBOX_INERT = 'The resulting token doesn''t contain SandboxInert flag ' +
+    'despite you tried to enable it. Looks like this action requires ' +
+    'SeTcbPrivilege on your system.';
+
 implementation
 
 uses
@@ -43,6 +47,9 @@ resourcestring
   NEW_RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
     'resticted tokens.';
   NEW_NT_CREATE = 'Creation of a token from the scratch requires `SeCreateTokenPrivilege`';
+  NEW_SAFER_IMP = 'Since Safer API always returns primary tokens the rules ' +
+   'are the same as while performing duplication. This means only ' +
+   'Impersonation, Delegation, and Primary tokens are suitable.';
 
   GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
     'from the token';
@@ -101,6 +108,9 @@ begin
 
   if E.Match('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
     Exit(NEW_NT_CREATE);
+
+  if E.Match('SaferComputeTokenFromLevel', ERROR_BAD_IMPERSONATION_LEVEL) then
+    Exit(NEW_SAFER_IMP);
 end;
 
 function SuggestGetter(E: ELocatedOSError): String;

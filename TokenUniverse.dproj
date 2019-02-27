@@ -199,6 +199,11 @@
             <Form>DialogPickToken</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Headers\Winapi.WinSafer.pas"/>
+        <DCCReference Include="UI\UI.New.Safer.pas">
+            <Form>DialogSafer</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
