@@ -17,6 +17,8 @@ type
     procedure SetColor(const Value: TColor);
     procedure SetColorEnabled(const Value: Boolean);
     function GetOwnerItems: TListItemsEx;
+    function GetCellText(Index: Integer): String;
+    procedure SetCellText(Index: Integer; const Value: String);
   public
     constructor Create(AOwner: TListItems); override;
     destructor Destroy; override;
@@ -27,6 +29,7 @@ type
     property OwnedData: TObject read FOwnedData write FOwnedData;
     property Owner: TListItemsEx read GetOwnerItems;
     function Matches(SearchPattern: String; OnlyColumn: Integer = -1): Boolean;
+    property Cell[Index: Integer]: String read GetCellText write SetCellText;
   end;
 
   TListViewEx = class;
@@ -434,6 +437,18 @@ begin
   inherited;
 end;
 
+function TListItemEx.GetCellText(Index: Integer): String;
+begin
+  if Index < 0 then
+    Result := ''
+  else if Index = 0 then
+    Result := Caption
+  else if Index <= SubItems.Count then
+    Result := SubItems[Index - 1]
+  else
+    Result := '';
+end;
+
 function TListItemEx.GetOwnerItems: TListItemsEx;
 begin
   Result := inherited Owner as TListItemsEx;
@@ -487,6 +502,26 @@ begin
     FColorEnabled := Value;
     if Owner.Owner.ColoringItems then
       Owner.Owner.Repaint;
+  end;
+end;
+
+procedure TListItemEx.SetCellText(Index: Integer; const Value: String);
+var
+  i: Integer;
+begin
+  if Index < 0 then
+    Exit
+  else if Index = 0 then
+    Caption := Value
+  else if Index <= SubItems.Count then
+    SubItems[Index - 1] := Value
+  else
+  begin
+    // Add empty columns before the target one
+    for i := SubItems.Count + 1 to Index - 1 do
+      SubItems.Add('');
+
+    SubItems.Add(Value);
   end;
 end;
 
