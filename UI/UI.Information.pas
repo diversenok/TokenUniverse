@@ -1,4 +1,4 @@
-unit UI.Information;
+﻿unit UI.Information;
 
 interface
 
@@ -67,6 +67,7 @@ type
     BtnSetOrigin: TButton;
     ComboOrigin: TComboBox;
     StaticOrigin: TStaticText;
+    ListViewAudit: TListViewEx;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -115,6 +116,7 @@ type
     procedure ChangedVEnabled(NewVEnabled: LongBool);
     procedure Refresh;
     procedure UpdateObjectTab;
+    procedure UpdateAuditTab;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -123,7 +125,7 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
-  UI.Information.Access, NtUtils.Processes, NtUtils.Handles;
+  UI.Information.Access, NtUtils.Processes, NtUtils.Handles, TU.Audit;
 
 const
   TAB_INVALIDATED = 0;
@@ -548,7 +550,9 @@ end;
 procedure TInfoDialog.PageControlChange(Sender: TObject);
 begin
   if PageControl.ActivePageIndex = TabObject.TabIndex then
-    UpdateObjectTab;
+    UpdateObjectTab
+  else if PageControl.ActivePageIndex = TabAudit.TabIndex then
+    UpdateAuditTab;
 end;
 
 procedure TInfoDialog.Refresh;
@@ -604,6 +608,7 @@ begin
     end;
 
   TabObject.Tag := TAB_INVALIDATED;
+  TabAudit.Tag := TAB_INVALIDATED;
   PageControlChange(Self);
 end;
 
@@ -611,6 +616,80 @@ procedure TInfoDialog.SetStaleColor(Sender: TObject);
 begin
   Assert(Sender is TComboBox);
   (Sender as TComboBox).Color := clStale;
+end;
+
+function StateToStr(State: Boolean): String;
+begin
+  if State then
+    Result := '☑'
+  else
+    Result := '☐';
+end;
+
+procedure TInfoDialog.UpdateAuditTab;
+var
+  AuditEnties: TAuditCategories;
+  Ind, SubInd: Integer;
+begin
+  if TabAudit.Tag = TAB_UPDATED then
+    Exit;
+
+  if not EnumerateAuditCategiries(AuditEnties) then
+  begin
+    ListViewAudit.Clear;
+    Exit;
+  end;
+
+  ListViewAudit.Items.BeginUpdate;
+  ListViewAudit.Items.Clear;
+
+  // Update ListView Groups
+  begin
+    ListViewAudit.Groups.BeginUpdate;
+    ListViewAudit.Groups.Clear;
+
+    for Ind := 0 to High(AuditEnties.Categories) do
+      with ListViewAudit.Groups.Add do
+      begin
+        Header := AuditEnties.Categories[Ind].Name;
+        State := State + [lgsCollapsible];
+      end;
+
+    ListViewAudit.Groups.EndUpdate;
+  end;
+
+  // Update ListView Items
+  for Ind := 0 to High(AuditEnties.SubCategories) do
+    for SubInd := 0 to High(AuditEnties.SubCategories[Ind]) do
+      with ListViewAudit.Items.Add do
+      begin
+        Caption := AuditEnties.SubCategories[Ind, SubInd].Name;
+        GroupID := Ind;
+      end;
+
+  // Fill up data from the token
+  if Token.InfoClass.ReQuery(tdTokenAuditPolicy) then
+    for Ind := 0 to ListViewAudit.Items.Count - 1 do
+    begin
+      ListViewAudit.Items[Ind].Cell[1] := StateToStr(Token.InfoClass.
+        AuditPolicy.SubCategory[Ind].Contains(asIncludeSuccess));
+
+      ListViewAudit.Items[Ind].Cell[2] := StateToStr(Token.InfoClass.
+        AuditPolicy.SubCategory[Ind].Contains(asExcludeSuccess));
+
+      ListViewAudit.Items[Ind].Cell[3] := StateToStr(Token.InfoClass.
+        AuditPolicy.SubCategory[Ind].Contains(asIncludeFailure));
+
+      ListViewAudit.Items[Ind].Cell[4] := StateToStr(Token.InfoClass.
+        AuditPolicy.SubCategory[Ind].Contains(asExcludeFailure));
+    end
+  else
+    for Ind := 0 to ListViewAudit.Items.Count - 1 do
+      for SubInd := 1 to 4 do
+        ListViewAudit.Items[Ind].SubItems.Add('?');
+
+  ListViewAudit.Items.EndUpdate;
+  TabObject.Tag := TAB_UPDATED;
 end;
 
 procedure TInfoDialog.UpdateObjectTab;

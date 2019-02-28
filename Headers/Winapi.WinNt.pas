@@ -251,6 +251,14 @@ type
   end;
   PTokenMandatoryPolicy = ^TTokenMandatoryPolicy;
 
+  // 10842
+  TTokenAuditPolicy = record
+    // The actual length depends on the count of SubCategories of auditing.
+    // Each half of a byte is a set of Winapi.NtSecApi.PER_USER_AUDIT_* flags.
+    PerUserPolicy: array [Byte] of Byte;
+  end;
+  PTokenAuditPolicy = ^TTokenAuditPolicy;
+
   // 10848
   TTokenSource = record
     sourcename: array[1 .. TOKEN_SOURCE_LENGTH] of AnsiChar;

@@ -17,7 +17,7 @@ type
   TTokenDataClass = (tdNone, tdTokenUser, tdTokenGroups, tdTokenPrivileges,
     tdTokenOwner, tdTokenPrimaryGroup, tdTokenDefaultDacl, tdTokenSource,
     tdTokenType, tdTokenStatistics, tdTokenRestrictedSids, tdTokenSessionId,
-    tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
+    tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
     tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
     tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
     tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo, tdObjectInfo);
@@ -51,6 +51,7 @@ type
     Statistics: TTokenStatistics;
     RestrictedSids: TGroupArray;
     Session: Cardinal;
+    AuditPolicy: TTokenPerUserAudit; // Owned object
     SandboxInert: LongBool;
     Origin: TLuid;
     Elevation: TTokenElevationType;
@@ -134,6 +135,7 @@ type
     function GetRestrictedSids: TGroupArray;
     function GetSandboxInert: LongBool;
     function GetSession: Cardinal;
+    function GetAuditPolicy: TTokenPerUserAudit;
     function GetSource: TTokenSource;
     function GetStatistics: TTokenStatistics;
     function GetTokenType: TTokenTypeEx;
@@ -160,8 +162,8 @@ type
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
-    // TODO -cEnhancement: class 16 TokenAuditPolicy #settable
-    property Origin: TLuid read GetOrigin write SetOrigin;                       // class 17 #settable
+    property AuditPolicy: TTokenPerUserAudit read GetAuditPolicy;               // class 16 #settable
+    property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
@@ -276,7 +278,7 @@ type
     ///   usege by calling <see cref="System.FreeMem"/>.
     /// </remarks>
     function QueryVariableSize(InfoClass: TTokenInformationClass;
-      out Status: Boolean): Pointer;
+      out Status: Boolean; ReturnedSize: PCardinal = nil): Pointer;
 
     /// <summary> Queries a security identifier. </summary>
     /// <remarks>
@@ -500,6 +502,8 @@ destructor TTokenCacheAndEvents.Destroy;
 var
   i: TTokenStringClass;
 begin
+  AuditPolicy.Free;
+
   CheckAbandoned(FOnOwnerChange.Count, 'OnOwnerChange');
   CheckAbandoned(FOnPrimaryChange.Count, 'OnPrimaryChange');
   CheckAbandoned(FOnSessionChange.Count, 'OnSessionChange');
@@ -1337,7 +1341,7 @@ begin
 end;
 
 function TToken.QueryVariableSize(InfoClass: TTokenInformationClass;
-  out Status: Boolean): Pointer;
+  out Status: Boolean; ReturnedSize: PCardinal): Pointer;
 var
   BufferSize, ReturnValue: Cardinal;
 begin
@@ -1363,7 +1367,9 @@ begin
   begin
     FreeMem(Result);
     Result := nil;
-  end;
+  end
+  else if Assigned(ReturnedSize) then
+    ReturnedSize^ := BufferSize;
 
   // Do not free the buffer on success. The caller must do it after use.
 end;
@@ -1411,6 +1417,12 @@ begin
 end;
 
 { TTokenData }
+
+function TTokenData.GetAuditPolicy: TTokenPerUserAudit;
+begin
+  Assert(Token.Cache.IsCached[tdTokenAuditPolicy]);
+  Result := Token.Cache.AuditPolicy;
+end;
 
 function TTokenData.GetElevation: TTokenElevationType;
 begin
@@ -1706,10 +1718,12 @@ function TTokenData.ReQuery(DataClass: TTokenDataClass): Boolean;
 var
   pIntegrity: PSIDAndAttributes;
   pPrivBuf: PTokenPrivileges;
+  pAudit: PTokenAuditPolicy;
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
   lObjInfo: TObjectBasicInformaion;
   i, subAuthCount: Integer;
+  bufferSize: Cardinal;
 begin
   Result := False;
 
@@ -1830,6 +1844,19 @@ begin
       if Result then
         if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
           InvokeStringEvent(tsSession);
+    end;
+
+    tdTokenAuditPolicy:
+    begin
+      pAudit := Token.QueryVariableSize(TokenAuditPolicy, Result, @bufferSize);
+      if Result then
+      begin
+        Token.Cache.AuditPolicy.Free;
+
+        Token.Cache.AuditPolicy := TTokenPerUserAudit.Create;
+        Token.Cache.AuditPolicy.Data := pAudit;
+        Token.Cache.AuditPolicy.AuditPolicySize := bufferSize;
+      end;
     end;
 
     tdTokenSandBoxInert:

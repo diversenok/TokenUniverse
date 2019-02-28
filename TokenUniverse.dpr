@@ -51,7 +51,9 @@ uses
   UI.Information.Access in 'UI\UI.Information.Access.pas' {DialogGrantedAccess},
   UI.Modal.PickToken in 'UI\UI.Modal.PickToken.pas' {DialogPickToken},
   Winapi.WinSafer in 'Headers\Winapi.WinSafer.pas',
-  UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer};
+  UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer},
+  Winapi.NtSecApi in 'Headers\Winapi.NtSecApi.pas',
+  TU.Audit in 'Core\TU.Audit.pas';
 
 {$R *.res}
 

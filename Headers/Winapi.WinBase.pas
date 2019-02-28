@@ -23,6 +23,9 @@ function GetCurrentProcessId: Cardinal; stdcall; external kernel32; // Move to n
 // 3932
 function GetCurrentThreadId: Cardinal; stdcall; external kernel32; // Move to nt
 
+// 4252
+function GetLastError: Cardinal; stdcall; external kernel32;
+
 // 7733
 procedure OutputDebugStringW(lpOutputString: PWideChar); stdcall;
   external kernel32;

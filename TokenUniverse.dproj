@@ -204,6 +204,8 @@
             <Form>DialogSafer</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Headers\Winapi.NtSecApi.pas"/>
+        <DCCReference Include="Core\TU.Audit.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

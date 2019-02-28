@@ -35,7 +35,7 @@ type
 implementation
 
 uses
-  UI.Settings, UI.MainForm, TU.Suggestions, NtUtils.Exceptions;
+  UI.Settings, UI.MainForm, TU.Suggestions, NtUtils.Exceptions, System.UITypes;
 
 {$R *.dfm}
 
