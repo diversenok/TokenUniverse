@@ -81,6 +81,9 @@ resourcestring
   SETTER_GROUPS_ACCESS = 'This action requires `Adjust groups` access right.';
   SETTER_GROUPS_MODIFY = 'You can''t disable `Mandatory` groups ' +
     'just like you can''t enable `Use for deny only` groups.';
+  SETTER_AUDIT_PRIV = 'Changing auditing policy requires `SeTcbPrivilege`.';
+  SETTER_AUDIT_ONCE = 'This is not an informative error, but the problem ' +
+    'might be caused by an already set auditing policy for the token.';
 
   ACTION_ASSIGN_NOT_SUPPORTED = 'A token can be assigned only on an early ' +
     'stage of a process lifetime. Try this action on a newly created ' +
@@ -149,6 +152,9 @@ begin
   if E.Match(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
     Exit(SETTER_PRIMARY);
 
+  if E.Match(SetterMessage(TokenAuditPolicy), ERROR_INVALID_PARAMETER) then
+    Exit(SETTER_AUDIT_ONCE);
+
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
   begin
     if E.ErrorOrigin = SetterMessage(TokenSessionId) then
@@ -168,6 +174,9 @@ begin
 
     if E.ErrorOrigin = SetterMessage(TokenOrigin) then
       Exit(SETTER_ORIGIN_TCB);
+
+    if E.ErrorOrigin = SetterMessage(TokenAuditPolicy) then
+      Exit(SETTER_AUDIT_PRIV);
   end;
 
   if E.Match('AdjustTokenPrivileges', ERROR_NOT_ALL_ASSIGNED) then

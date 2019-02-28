@@ -53,7 +53,8 @@ uses
   Winapi.WinSafer in 'Headers\Winapi.WinSafer.pas',
   UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer},
   Winapi.NtSecApi in 'Headers\Winapi.NtSecApi.pas',
-  TU.Audit in 'Core\TU.Audit.pas';
+  TU.Audit in 'Core\TU.Audit.pas',
+  UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame};
 
 {$R *.res}
 

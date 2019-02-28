@@ -731,44 +731,13 @@ object InfoDialog: TInfoDialog
     object TabAudit: TTabSheet
       Caption = 'Audit Overrides'
       ImageIndex = 8
-      object ListViewAudit: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 382
-        Height = 363
+      inline FrameAudit: TFrameAudit
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
         Align = alClient
-        Columns = <
-          item
-            Width = 140
-          end
-          item
-            Alignment = taCenter
-            Caption = 'Succ Inc'
-            Width = 55
-          end
-          item
-            Alignment = taCenter
-            Caption = 'Succ Exc'
-            Width = 55
-          end
-          item
-            Alignment = taCenter
-            Caption = 'Fail Inc'
-            Width = 55
-          end
-          item
-            Alignment = taCenter
-            Caption = 'Fail Exc'
-            Width = 55
-          end>
-        MultiSelect = True
-        GroupView = True
-        ReadOnly = True
-        RowSelect = True
         TabOrder = 0
-        ViewStyle = vsReport
-        ClipboardSourceColumn = 0
       end
     end
   end

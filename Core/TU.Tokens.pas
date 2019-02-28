@@ -67,6 +67,7 @@ type
 
     FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
     FOnSessionChange: TValuedEventHandler<Cardinal>;
+    FOnAuditChange: TValuedEventHandler<TTokenPerUserAudit>;
     FOnOriginChange: TValuedEventHandler<TLuid>;
     FOnUIAccessChange: TValuedEventHandler<LongBool>;
     FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
@@ -87,6 +88,7 @@ type
     property OnOwnerChange: TValuedEventHandler<TSecurityIdentifier> read FOnOwnerChange;
     property OnPrimaryChange: TValuedEventHandler<TSecurityIdentifier> read FOnPrimaryChange;
     property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
+    property OnAuditChange: TValuedEventHandler<TTokenPerUserAudit> read FOnAuditChange;
     property OnOriginChange: TValuedEventHandler<TLuid> read FOnOriginChange;
     property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
@@ -117,6 +119,7 @@ type
     procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
     procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
     procedure SetSession(const Value: Cardinal);
+    procedure SetAuditPolicy(const Value: TTokenPerUserAudit);
     procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(const Value: TSecurityIdentifier);
@@ -162,7 +165,7 @@ type
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
-    property AuditPolicy: TTokenPerUserAudit read GetAuditPolicy;               // class 16 #settable
+    property AuditPolicy: TTokenPerUserAudit read GetAuditPolicy write SetAuditPolicy; // class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
@@ -1856,6 +1859,8 @@ begin
         Token.Cache.AuditPolicy := TTokenPerUserAudit.Create;
         Token.Cache.AuditPolicy.Data := pAudit;
         Token.Cache.AuditPolicy.AuditPolicySize := bufferSize;
+
+        Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
       end;
     end;
 
@@ -1969,6 +1974,17 @@ begin
   end;
 
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
+end;
+
+procedure TTokenData.SetAuditPolicy(const Value: TTokenPerUserAudit);
+begin
+  if not SetTokenInformation(Token.hToken, TokenAuditPolicy, Value.Data,
+    Value.AuditPolicySize) then
+    raise EWinError.Create(GetLastError, SetterMessage(TokenAuditPolicy), Token);
+
+  // Update the cache and notify event listeners
+  ValidateCache(tdTokenAuditPolicy);
+  ValidateCache(tdTokenStatistics);
 end;
 
 procedure TTokenData.SetIntegrityLevel(const Value: TTokenIntegrityLevel);

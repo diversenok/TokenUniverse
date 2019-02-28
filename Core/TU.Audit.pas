@@ -13,27 +13,33 @@ type
     SubCategories: array of array of TAuditEntitiy;
   end;
 
-function EnumerateAuditCategiries(out Items: TAuditCategories): Boolean;
+/// <summary>
+///  Enumerates all auditing categories and their subcategories.
+/// </summary>
+/// <returns>
+///  <see cref="ERROR_SUCCESS"/>, or any other error occured in the process.
+/// </returns>
+function EnumerateAuditCategiries(out Items: TAuditCategories): Cardinal;
 
 implementation
 
 uses
-  Winapi.WinBase, Winapi.NtSecApi, System.SysUtils;
+  Winapi.WinBase, Winapi.WinError, Winapi.NtSecApi, System.SysUtils;
 
-function EnumerateAuditCategiries(out Items: TAuditCategories): Boolean;
+function EnumerateAuditCategiries(out Items: TAuditCategories): Cardinal;
 var
   Guids, SubGuids: PGuidArray;
   Count, SubCount: Cardinal;
   Ind, SubInd: Integer;
   Buffer: PWideChar;
 begin
-  Result := False;
+  Result := ERROR_SUCCESS;
   SetLength(Items.Categories, 0);
   SetLength(Items.SubCategories, 0, 0);
 
   // Query categories
   if not AuditEnumerateCategories(Guids, Count) then
-    Exit;
+    Exit(GetLastError);
 
   SetLength(Items.Categories, Count);
   SetLength(Items.SubCategories, Count, 0);
@@ -55,7 +61,7 @@ begin
     // Query subcategories of this category
     if not AuditEnumerateSubCategories(Guids[Ind], False, SubGuids, SubCount)
       then
-      Exit;
+      Exit(GetLastError);
 
     SetLength(Items.SubCategories[Ind], SubCount);
 
@@ -78,8 +84,6 @@ begin
   end;
 
   AuditFree(Guids);
-
-  Result := True;
 end;
 
 end.

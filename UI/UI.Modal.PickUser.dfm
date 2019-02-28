@@ -19,9 +19,6 @@ object DialogPickUser: TDialogPickUser
   Position = poOwnerFormCenter
   ShowHint = True
   OnCreate = FormCreate
-  DesignSize = (
-    294
-    288)
   PixelsPerInch = 96
   TextHeight = 13
   object ComboBoxSID: TComboBox
@@ -89,9 +86,6 @@ object DialogPickUser: TDialogPickUser
     Height = 100
     Caption = 'Main attributes '
     TabOrder = 1
-    DesignSize = (
-      278
-      100)
     object CheckBoxEnabled: TCheckBox
       Left = 14
       Top = 26
@@ -153,9 +147,6 @@ object DialogPickUser: TDialogPickUser
     Height = 106
     Caption = 'Additional attributes '
     TabOrder = 2
-    DesignSize = (
-      278
-      106)
     object CheckBoxIntegrityEnabled: TCheckBox
       Left = 14
       Top = 48

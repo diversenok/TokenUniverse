@@ -4,11 +4,7 @@
 
 {TODO : CreateWellKnownSid (in form of a combobox?)}
 {TODO -cUI : Hints everywhere}
-{TODO -cEnhancement :ImpersonateAnonymousToken
-ImpersonateLoggedOnUser
-ImpersonateSelf
-SetThreadToken
-RpclmpersonateClient
+{TODO -cEnhancement :RpclmpersonateClient
 ColmpersonateClient
 ImpersonateNamedPipeClient
 ImpersonateDdeClientWindow

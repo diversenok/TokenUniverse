@@ -127,6 +127,8 @@ type
 
   TAuditStateHelper = record helper for TAuditState
     function Contains(State: TAuditState): Boolean;
+    procedure Include(State: TAuditState);
+    procedure Exclude(State: TAuditState);
   end;
 
   TTokenPerUserAudit = class
@@ -137,6 +139,7 @@ type
     AuditPolicySize: Integer;
     Data: PTokenAuditPolicy;
     property SubCategory[Index: Integer]: TAuditState read GetState write SetState;
+    constructor CreateCopy(Src: TTokenPerUserAudit);
     destructor Destroy; override;
   end;
 
@@ -616,7 +619,28 @@ begin
   Result := Cardinal(Self) and Cardinal(State) = Cardinal(State);
 end;
 
+procedure TAuditStateHelper.Exclude(State: TAuditState);
+begin
+  Self := TAuditState(Cardinal(Self) and not Cardinal(State));
+end;
+
+procedure TAuditStateHelper.Include(State: TAuditState);
+begin
+  Self := TAuditState(Cardinal(Self) or Cardinal(State));
+end;
+
 { TTokenPerUserAudit }
+
+constructor TTokenPerUserAudit.CreateCopy(Src: TTokenPerUserAudit);
+var
+  i: Integer;
+begin
+  Self.AuditPolicySize := Src.AuditPolicySize;
+
+  Self.Data := AllocMem(AuditPolicySize);
+  for i := 0 to AuditPolicySize - 1 do
+    Self.Data.PerUserPolicy[i] := Src.Data.PerUserPolicy[i];
+end;
 
 destructor TTokenPerUserAudit.Destroy;
 begin
