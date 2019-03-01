@@ -51,7 +51,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Winapi, TU.Suggestions;
+  TU.Winapi, TU.Suggestions, Ntapi.ntseapi;
 
 {$R *.dfm}
 
@@ -190,11 +190,6 @@ begin
 end;
 
 function TDialogRestrictToken.GetFlags: Cardinal;
-const
-  DISABLE_MAX_PRIVILEGE = 1;
-  SANDBOX_INERT = 2;
-  LUA_TOKEN = 4;
-  WRITE_RESTRICTED = 8; // TODO: Check windows version, this value depends on it
 begin
   Result := 0;
   if CheckBoxDisableMaxPriv.Checked then
