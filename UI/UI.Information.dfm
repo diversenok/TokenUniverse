@@ -738,6 +738,18 @@ object InfoDialog: TInfoDialog
         Height = 369
         Align = alClient
         TabOrder = 0
+        inherited LabelNote: TLabel
+          Top = 347
+          Width = 279
+        end
+        inherited ListView: TListViewEx
+          Width = 382
+          Height = 337
+        end
+        inherited ButtonApply: TButton
+          Left = 288
+          Top = 342
+        end
       end
     end
   end

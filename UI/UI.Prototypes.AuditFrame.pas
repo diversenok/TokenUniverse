@@ -30,7 +30,9 @@ type
     procedure OnAuditChange(NewAudit: TTokenPerUserAudit);
     procedure ProcessPopupAction(Enable: Boolean; Column: TAuditState);
     procedure FillRow(Index: Integer);
+    function GetSubscribed: Boolean;
   public
+    property Subscribed: Boolean read GetSubscribed;
     procedure SubscribeToken(Token: TToken);
     procedure UnsubscribeToken(Dummy: TToken = nil);
     procedure UpdateCategories;
@@ -105,6 +107,11 @@ begin
       Cell[3] := StateToStr(State.Contains(asIncludeFailure));
       Cell[4] := StateToStr(State.Contains(asExcludeFailure));
     end
+end;
+
+function TFrameAudit.GetSubscribed: Boolean;
+begin
+  Result := Assigned(Token);
 end;
 
 procedure TFrameAudit.ListViewContextPopup(Sender: TObject; MousePos: TPoint;

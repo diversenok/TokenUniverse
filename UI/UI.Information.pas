@@ -623,9 +623,11 @@ begin
   if TabAudit.Tag = TAB_UPDATED then
     Exit;
 
-  FrameAudit.SubscribeToken(Token);
+  Token.InfoClass.ReQuery(tdTokenAuditPolicy);
+  if not FrameAudit.Subscribed then
+    FrameAudit.SubscribeToken(Token);
 
-  TabObject.Tag := TAB_UPDATED;
+  TabAudit.Tag := TAB_UPDATED;
 end;
 
 procedure TInfoDialog.UpdateObjectTab;
