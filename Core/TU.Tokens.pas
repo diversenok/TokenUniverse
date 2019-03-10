@@ -1085,6 +1085,7 @@ end;
 constructor TToken.CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
   User: String; const Source: TTokenSource; AddGroups: TGroupArray);
 var
+  IsWow64: NativeUInt;
   Status, SubStatus: NTSTATUS;
   LsaHandle: TLsaHandle;
   PkgName: ANSI_STRING;
@@ -1098,6 +1099,13 @@ var
   LogonId: TLuid;
   Quotas: TQuotaLimits;
 begin
+  if not NT_SUCCESS(NtQueryInformationProcess(NtCurrentProcess,
+    ProcessWow64Information, @IsWow64, SizeOf(IsWow64), nil)) or
+    (IsWow64 <> 0) then
+    raise ENtError.Create(STATUS_WOW_ASSERTION, 'TODO');
+
+  // TODO: Investigate why LsaLogonUser overwrites our memory under WoW64.
+
   // Connect to the LSA
   NativeCheck(LsaConnectUntrusted(LsaHandle), 'LsaConnectUntrusted');
 

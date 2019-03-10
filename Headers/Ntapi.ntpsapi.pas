@@ -40,6 +40,7 @@ const
 type
   TProcessInfoClass = (
     ProcessAccessToken = 9, // s: TProcessAccessToken
+    ProcessWow64Information = 26, // q: NativeUInt
     ProcessImageFileName = 27, // q: UNICODE_STRING
     ProcessImageFileNameWin32 = 43 // q: UNICODE_STRING
   );
