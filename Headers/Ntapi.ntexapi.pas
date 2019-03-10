@@ -131,6 +131,9 @@ function NtQuerySystemInformation(SystemInformationClass
   SystemInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
   stdcall; external ntdll;
 
+function NtAllocateLocallyUniqueId(out Luid: TLuid): NTSTATUS; stdcall;
+  external ntdll;
+
 implementation
 
 uses

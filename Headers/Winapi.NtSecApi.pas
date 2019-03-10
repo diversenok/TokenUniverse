@@ -3,7 +3,7 @@ unit Winapi.NtSecApi;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.WinNt;
 
 const
   // 1857

@@ -10,6 +10,12 @@ uses
 
 function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
 
+// Errors
+
+function RtlNtStatusToDosError(Status: NTSTATUS): Cardinal; external ntdll;
+
+function RtlNtStatusToDosErrorNoTeb(Status: NTSTATUS): Cardinal; external ntdll;
+
 // SIDs
 
 function RtlValidSid(Sid: PSid): Boolean; stdcall; external ntdll;

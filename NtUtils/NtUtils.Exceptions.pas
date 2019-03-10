@@ -32,6 +32,7 @@ type
       Context: TObject = nil); reintroduce;
     class function Format(Status: Cardinal; Location: String): String;
     class procedure Report(Status: Cardinal; Location: String);
+    function ToWinErrorCode: Cardinal;
   end;
 
   /// <summary>
@@ -107,7 +108,7 @@ procedure NativeCheck(Status: Cardinal; Where: String; Context: TObject = nil);
 implementation
 
 uses
-  Winapi.Windows, Winapi.WinError;
+  Winapi.Windows, Winapi.WinError, Ntapi.ntrtl;
 
 resourcestring
   ERROR_TEMPLATE = '%s failed.' + #$D#$A#$D#$A +
@@ -157,6 +158,11 @@ end;
 class procedure ENtError.Report(Status: Cardinal; Location: String);
 begin
   OutputDebugStringW(PWideChar(Format(Status, Location)));
+end;
+
+function ENtError.ToWinErrorCode: Cardinal;
+begin
+  Result := RtlNtStatusToDosErrorNoTeb(ErrorCode);
 end;
 
 { CanFail<ResultType> }

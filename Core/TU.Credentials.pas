@@ -6,15 +6,16 @@ uses
   Winapi.Windows, TU.Tokens;
 
 type
-  TCredentialsPayload = procedure(Domain, User: String; Password: PWideChar)
+  TCredentialsCallback = procedure(Domain, User: String; Password: PWideChar)
     of object;
 
-procedure PromptCredentialsUI(ParentWindow: HWND; Payload: TCredentialsPayload);
+procedure PromptCredentialsUI(ParentWindow: HWND;
+  Callback: TCredentialsCallback; AllowNoPassword: Boolean = False);
 
 implementation
 
 uses
-  System.SysUtils, Winapi.Ole2, TU.Common, TU.Tokens.Types;
+  System.SysUtils, Winapi.Ole2, TU.Common, TU.Tokens.Types, Ntutils.Exceptions;
 
 type
   TCredUIInfoW = record
@@ -45,7 +46,8 @@ function CredUnPackAuthenticationBufferW(dwFlags: Cardinal;
   var cchMaxDomainname: Cardinal; pszPassword: PWideChar;
   var cchMaxPassword: Cardinal): LongBool; stdcall; external credui;
 
-procedure PromptCredentialsUI(ParentWindow: HWND; Payload: TCredentialsPayload);
+procedure PromptCredentialsUI(ParentWindow: HWND;
+  Callback: TCredentialsCallback; AllowNoPassword: Boolean = False);
 var
   CredInfo: TCredUIInfoW;
   ErrorCode, AuthPackage: Cardinal;
@@ -62,7 +64,10 @@ begin
     CredInfo.cbSize := SizeOf(CredInfo);
     CredInfo.hwndParent := ParentWindow;
     CredInfo.pszCaptionText := 'Logon a user';
-    CredInfo.pszMessageText := 'Please enter the credentials:';
+    if AllowNoPassword then
+      CredInfo.pszMessageText := 'Note: password is not required.'
+    else
+      CredInfo.pszMessageText := 'Please enter credentials:';
 
     AuthPackage := 0;
     ErrorCode := CredUIPromptForWindowsCredentialsW(CredInfo, LastAuthError,
@@ -101,11 +106,13 @@ begin
       try
         with TSecurityIdentifier.CreateFromString(UserBuffer) do
         begin
-          if Assigned(Payload) then
-            Payload(Domain, User, PasswordBuffer);
+          if Assigned(Callback) then
+            Callback(Domain, User, PasswordBuffer);
           Exit;
         end;
       except
+        on E: ENtError do
+          LastAuthError := ENtError(E).ToWinErrorCode;
         on E: EOSError do
           LastAuthError := E.ErrorCode
       end;

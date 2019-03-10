@@ -20,7 +20,7 @@ type
     UserPresent: Boolean;
 
     AuthPackage, LogonServer: String;
-    LogonType: TLogonType;
+    LogonType: TSecurityLogonType;
     Session: Cardinal;
     LogonTime: TDateTime;
   end;
@@ -50,7 +50,7 @@ type
     class function AllPrivileges: TPrivilegeRecArray;
   end;
 
-function LogonTypeToString(LogonType: TLogonType): String;
+function LogonTypeToString(LogonType: TSecurityLogonType): String;
 function QueryLogonSession(LogonId: TLuid): CanFail<TLogonSessionInfo>;
 function EnumerateLogonSessions: TLuidDynArray;
 
@@ -112,7 +112,7 @@ begin
           Value.User := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
 
         Value.AuthPackage := Buffer.AuthenticationPackage.ToString;
-        Value.LogonType := TLogonType(Buffer.LogonType);
+        Value.LogonType := TSecurityLogonType(Buffer.LogonType);
         Value.Session := Buffer.Session;
         Value.LogonTime := NativeTimeToLocalDateTime(Buffer.LogonTime);
         Value.LogonServer := Buffer.LogonServer.ToString;
@@ -142,14 +142,14 @@ end;
 
 { Helper functions }
 
-function LogonTypeToString(LogonType: TLogonType): String;
+function LogonTypeToString(LogonType: TSecurityLogonType): String;
 const
-  Mapping: array [TLogonType] of String = ('System', 'Reserved',
+  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
     'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
     'Network clear text', 'New credentials', 'Remote interactive',
     'Cached interactive', 'Cached remote interactive', 'Cached unlock');
 begin
-  if (LogonType >= Low(TLogonType)) and (LogonType <= High(TLogonType)) then
+  if (LogonType >= Low(TSecurityLogonType)) and (LogonType <= High(TSecurityLogonType)) then
     Result := Mapping[LogonType]
   else
     Result := '(Out of bound)';

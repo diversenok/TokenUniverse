@@ -9,6 +9,7 @@ const
   kernelbase = 'kernelbase.dll';
   kernel32  = 'kernel32.dll';
   advapi32  = 'advapi32.dll';
+  secur32 = 'secur32.dll';
 
   // 8881
   _DELETE = $00010000;
@@ -310,6 +311,17 @@ type
   // 11200
   TSecurityInformation = Cardinal;
   PSecurityInformation = ^TSecurityInformation;
+
+  // 11450
+  TQuotaLimits = record
+    PagedPoolLimit: NativeUInt;
+    NonPagedPoolLimit: NativeUInt;
+    MinimumWorkingSetSize: NativeUInt;
+    MaximumWorkingSetSize: NativeUInt;
+    PagefileLimit: NativeUInt;
+    TimeLimit: TLargeInteger;
+  end;
+  PQuotaLimits = ^TQuotaLimits;
 
 implementation
 

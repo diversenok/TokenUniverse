@@ -7,7 +7,7 @@ uses
   Winapi.WinNt;
 
 type
-  TLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
+  TSecurityLogonType = (ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
     ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
     ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
     ltCachedUnlock);
@@ -54,12 +54,12 @@ function LookupPrivilegeDisplayNameW(lpSystemName, lpName: PWideChar;
 
 // 12718
 function LogonUserW (lpszUsername: PWideChar; lpszDomain: PWideChar;
-  lpszPassword: PWideChar; dwLogonType: TLogonType; dwLogonProvider:
+  lpszPassword: PWideChar; dwLogonType: TSecurityLogonType; dwLogonProvider:
   TLogonProvider; out hToken: THandle): LongBool; stdcall; external advapi32;
 
 // ???
 function LogonUserExExW(lpszUsername: PWideChar; lpszDomain: PWideChar;
-  lpszPassword: PWideChar; dwLogonType: TLogonType; dwLogonProvider:
+  lpszPassword: PWideChar; dwLogonType: TSecurityLogonType; dwLogonProvider:
   TLogonProvider; pTokenGroups: PTokenGroups; out hToken: THandle;
   ppLogonSid: PPointer; pProfileBuffer: PPointer; pdwProfileLength: PCardinal;
   QuotaLimits: Pointer): LongBool; stdcall; external advapi32;

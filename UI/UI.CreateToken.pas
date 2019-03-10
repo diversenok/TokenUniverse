@@ -3,10 +3,9 @@ unit UI.CreateToken;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, UI.Prototypes.ChildForm, Vcl.StdCtrls,
-  UI.Prototypes, UI.ListViewEx, Vcl.ComCtrls, UI.MainForm, Vcl.Menus,
-  TU.Tokens, TU.Tokens.Types;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.ChildForm,
+  UI.Prototypes, UI.ListViewEx, UI.MainForm, TU.Tokens, TU.Tokens.Types;
 
 type
   TGroupUpdateType = (guEditOne, guEditMultiple, guRemove);
@@ -87,7 +86,8 @@ implementation
 
 uses
   TU.LsaApi, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
-  TU.Common, UI.Settings, UI.Modal.PickToken, System.UITypes;
+  TU.Common, UI.Settings, UI.Modal.PickToken, System.UITypes,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi;
 
 {$R *.dfm}
 
@@ -108,9 +108,9 @@ end;
 
 procedure TDialogCreateToken.ButtonAllocLuidClick(Sender: TObject);
 var
-  NewLuid: Int64;
+  NewLuid: TLuid;
 begin
-  if Winapi.Windows.AllocateLocallyUniqueId(NewLuid) then
+  if NT_SUCCESS(NtAllocateLocallyUniqueId(NewLuid)) then
     EditSourceLuid.Text := Format('0x%x', [NewLuid]);
 end;
 

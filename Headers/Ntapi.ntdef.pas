@@ -10,11 +10,20 @@ type
   NTSTATUS = Cardinal;
   KPRIORITY = Integer;
 
+  ANSI_STRING = record
+    Length: Word;
+    MaximumLength: Word;
+    Buffer: PAnsiChar;
+    procedure FromString(Value: AnsiString);
+  end;
+  PANSI_STRING = ^ANSI_STRING;
+
   UNICODE_STRING = record
     Length: Word;
     MaximumLength: Word;
     Buffer: PWideChar;
     function ToString: String;
+    procedure FromString(Value: string);
   end;
   PUNICODE_STRING = ^UNICODE_STRING;
 
@@ -118,7 +127,23 @@ begin
   ObjAttr.SecurityQualityOfService := QoS;
 end;
 
+{ ANSI_STRING }
+
+procedure ANSI_STRING.FromString(Value: AnsiString);
+begin
+  Self.Buffer := PAnsiChar(Value);
+  Self.Length := System.Length(Value) * SizeOf(AnsiChar);
+  Self.MaximumLength := Self.Length + SizeOf(AnsiChar);
+end;
+
 { UNICODE_STRING }
+
+procedure UNICODE_STRING.FromString(Value: String);
+begin
+  Self.Buffer := PWideChar(Value);
+  Self.Length := System.Length(Value) * SizeOf(WideChar);
+  Self.MaximumLength := Self.Length + SizeOf(WideChar);
+end;
 
 function UNICODE_STRING.ToString: String;
 begin

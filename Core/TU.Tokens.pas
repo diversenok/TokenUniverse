@@ -425,10 +425,14 @@ type
       SIDsToDisabe, SIDsToRestrict: TGroupArray;
       PrivilegesToDelete: TPrivilegeArray);
 
-    /// <summary> Logons the user with the specified credentials. </summary>
-    constructor CreateWithLogon(LogonType: TLogonType;
+    /// <summary> Logons a user with the specified credentials. </summary>
+    constructor CreateWithLogon(LogonType: TSecurityLogonType;
       LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
       AddGroups: TGroupArray);
+
+    /// <summary> Logon a user using Services 4 Users. </summary>
+    constructor CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
+      User: String; const Source: TTokenSource; AddGroups: TGroupArray);
 
     /// <summary> Creates a new token from the scratch. </summary>
     /// <remarks> This action requires SeCreateTokenPrivilege. </remarks>
@@ -460,7 +464,7 @@ implementation
 
 uses
   System.TypInfo, TU.WtsApi,
-  NtUtils.Processes, Winapi.WinError,
+  NtUtils.Processes, Winapi.WinError, Winapi.NtLsa,
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const
@@ -1078,6 +1082,92 @@ begin
   end;
 end;
 
+constructor TToken.CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
+  User: String; const Source: TTokenSource; AddGroups: TGroupArray);
+var
+  Status, SubStatus: NTSTATUS;
+  LsaHandle: TLsaHandle;
+  PkgName: ANSI_STRING;
+  AuthPkg: Cardinal;
+  Buffer: PKERB_S4U_LOGON;
+  BufferSize: Cardinal;
+  OriginName: ANSI_STRING;
+  GroupArray: PTokenGroups;
+  ProfileBuffer: Pointer;
+  ProfileSize: Cardinal;
+  LogonId: TLuid;
+  Quotas: TQuotaLimits;
+begin
+  // Connect to the LSA
+  NativeCheck(LsaConnectUntrusted(LsaHandle), 'LsaConnectUntrusted');
+
+  // Lookup for Negotiate package
+  PkgName.FromString(NEGOSSP_NAME_A);
+  Status := LsaLookupAuthenticationPackage(LsaHandle, PkgName, AuthPkg);
+
+  if not NT_SUCCESS(Status) then
+  begin
+    LsaDeregisterLogonProcess(LsaHandle);
+    raise ENtError.Create(Status, 'LsaLookupAuthenticationPackage');
+  end;
+
+  // We need to prepare a blob where KERB_S4U_LOGON is followed by the username
+  // and the domain.
+  BufferSize := SizeOf(KERB_S4U_LOGON) + Length(User) * SizeOf(WideChar) +
+    Length(Domain) * SizeOf(WideChar);
+  Buffer := AllocMem(BufferSize);
+
+  Buffer.MessageType := KerbS4ULogon;
+
+  Buffer.ClientUpn.Length := Length(User) * SizeOf(WideChar);
+  Buffer.ClientUpn.MaximumLength := Buffer.ClientUpn.Length;
+
+  // Place the username just after the structure
+  Buffer.ClientUpn.Buffer := Pointer(NativeUInt(Buffer) +
+    SizeOf(KERB_S4U_LOGON));
+  Move(PWideChar(User)^, Buffer.ClientUpn.Buffer^, Buffer.ClientUpn.Length);
+
+  Buffer.ClientRealm.Length := Length(Domain) * SizeOf(WideChar);
+  Buffer.ClientRealm.MaximumLength := Buffer.ClientRealm.Length;
+
+  // Place the domain after the username
+  Buffer.ClientRealm.Buffer := Pointer(NativeUInt(Buffer) +
+    SizeOf(KERB_S4U_LOGON) + Buffer.ClientUpn.Length);
+  Move(PWideChar(Domain)^, Buffer.ClientRealm.Buffer^,
+    Buffer.ClientRealm.Length);
+
+  OriginName.FromString('S4U');
+
+  if Length(AddGroups) > 0 then
+    GroupArray := AllocGroups(AddGroups)
+  else
+    GroupArray := nil;
+
+  // Perform the logon
+  SubStatus := STATUS_SUCCESS;
+  Status := LsaLogonUser(LsaHandle, OriginName, LogonType, AuthPkg, Buffer,
+    BufferSize, GroupArray, Source, ProfileBuffer, ProfileSize, LogonId, hToken,
+    Quotas, SubStatus);
+
+  // Clean up
+  LsaFreeReturnBuffer(ProfileBuffer);
+
+  if Assigned(GroupArray) then
+      FreeGroups(GroupArray);
+
+  FreeMem(Buffer);
+  LsaDeregisterLogonProcess(LsaHandle);
+
+  // Prefer more detailed error information
+  if not NT_SUCCESS(SubStatus) then
+    Status := SubStatus;
+
+  if not NT_SUCCESS(Status) then
+    raise ENtError.Create(Status, 'LsaLogonUser');
+
+  FCaption := 'S4U logon of ' + User;
+end;
+
 constructor TToken.CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
   LevelId: TSaferLevelId; MakeInert: Boolean = False);
 var
@@ -1119,7 +1209,7 @@ begin
   FCaption := LevelName + ' Safer for ' + SrcToken.FCaption;
 end;
 
-constructor TToken.CreateWithLogon(LogonType: TLogonType;
+constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;
   LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
   AddGroups: TGroupArray);
 var
