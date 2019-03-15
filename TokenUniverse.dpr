@@ -55,7 +55,8 @@ uses
   Winapi.NtSecApi in 'Headers\Winapi.NtSecApi.pas',
   TU.Audit in 'Core\TU.Audit.pas',
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
-  Winapi.ntlsa in 'Headers\Winapi.ntlsa.pas';
+  Winapi.ntlsa in 'Headers\Winapi.ntlsa.pas',
+  UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame};
 
 {$R *.res}
 
