@@ -29,8 +29,7 @@ type
     tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsIsRestricted,
     tsVirtualization, tsTokenID, tsExprires, tsDynamicCharged,
     tsDynamicAvailable, tsGroupCount, tsPrivilegeCount, tsModifiedID, tsLogonID,
-    tsLogonAuthPackage, tsLogonServer, tsLogonWtsSession, tsLogonTime,
-    tsLogonType, tsLogonUserName, tsSourceLUID, tsSourceName, tsOrigin);
+    tsSourceLUID, tsSourceName, tsOrigin);
 
   TToken = class;
 
@@ -476,9 +475,8 @@ const
     tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenIsRestricted,
     tdTokenVirtualizationAllowed, tdTokenStatistics, tdTokenStatistics,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdLogonInfo, tdLogonInfo, tdLogonInfo,
-    tdLogonInfo, tdLogonInfo, tdLogonInfo, tdTokenSource, tdTokenSource,
-    tdTokenOrigin);
+    tdTokenStatistics, tdTokenStatistics, tdTokenSource,
+    tdTokenSource, tdTokenOrigin);
 
 { TTokenCacheAndEvents }
 
@@ -510,6 +508,7 @@ var
   i: TTokenStringClass;
 begin
   AuditPolicy.Free;
+  LogonSessionInfo.Free;
 
   CheckAbandoned(FOnOwnerChange.Count, 'OnOwnerChange');
   CheckAbandoned(FOnPrimaryChange.Count, 'OnPrimaryChange');
@@ -903,10 +902,7 @@ begin
     SecQos.ImpersonationLevel := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  // Prepare Object Attributes to store Security QoS
-  FillChar(ObjAttr, SizeOf(ObjAttr), 0);
-  ObjAttr.Length := SizeOf(ObjAttr);
-  ObjAttr.SecurityQualityOfService := @SecQos;
+  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @SecQos);
 
   NativeCheck(NtDuplicateToken(SrcToken.hToken, Access, @ObjAttr, EffectiveOnly,
     TokenType, hToken), 'NtDuplicateToken', SrcToken);
@@ -1782,27 +1778,6 @@ begin
     tsLogonID:
       Result := LuidToString(Token.Cache.Statistics.AuthenticationId);
 
-    tsLogonAuthPackage:
-      Result := Token.Cache.LogonSessionInfo.AuthPackage;
-
-    tsLogonServer:
-      Result := Token.Cache.LogonSessionInfo.LogonServer;
-
-    tsLogonWtsSession: // Detailed?
-      Result := Token.Cache.LogonSessionInfo.Session.ToString;
-
-    tsLogonTime:
-      Result := DateTimeToStr(Token.Cache.LogonSessionInfo.LogonTime);
-
-    tsLogonType:
-      Result := LogonTypeToString(Token.Cache.LogonSessionInfo.LogonType);
-
-    tsLogonUserName:
-      if Token.Cache.LogonSessionInfo.UserPresent then
-        Result := Token.Cache.LogonSessionInfo.User.ToString
-      else
-        Result := 'No user';
-
     tsSourceLUID:
       Result := LuidToString(Token.Cache.Source.SourceIdentifier);
 
@@ -1822,6 +1797,7 @@ var
   pAudit: PTokenAuditPolicy;
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
+  lLogonInfo: TLogonSessionInfo;
   lObjInfo: TObjectBasicInformaion;
   i, subAuthCount: Integer;
   bufferSize: Cardinal;
@@ -2054,12 +2030,17 @@ begin
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then
-      with QueryLogonSession(Token.Cache.Statistics.AuthenticationId) do
-        if IsValid then
+      begin
+        lLogonInfo := TLogonSessionInfo.Query(Token.Cache.Statistics.
+          AuthenticationId);
+
+        if Assigned(lLogonInfo) then
         begin
+          Token.Cache.LogonSessionInfo.Free;
+          Token.Cache.LogonSessionInfo := lLogonInfo;
           Result := True;
-          Token.Cache.LogonSessionInfo := Value;
         end;
+      end;
 
     tdObjectInfo:
     begin

@@ -55,12 +55,6 @@ const
     (Caption: 'Privilege Count';    Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Modified ID';        Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Logon/Auth ID';      Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon Auth Package'; Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon Server';       Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon WTS Session';  Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon Time';         Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon Type';         Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon User Name';    Category: uicLogon; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Source LUID';        Category: uicSource; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Source Name';        Category: uicSource; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Origin';             Category: uicAdvanced; Width: 100; Alignment: taLeftJustify)

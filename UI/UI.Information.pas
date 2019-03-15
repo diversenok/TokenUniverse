@@ -396,18 +396,6 @@ begin
     Items[9].SubItems[0] := Token.InfoClass.QueryString(tsModifiedID);
 
     Items[12].SubItems[0] := Token.InfoClass.QueryString(tsLogonID);
-    Items[13].SubItems[0] := Token.InfoClass.QueryString(tsLogonUserName);
-
-    if Token.InfoClass.Query(tdLogonInfo) and
-      Token.InfoClass.LogonSessionInfo.UserPresent then
-      Items[13].Hint := TGroupsSource.BuildHint(
-        Token.InfoClass.LogonSessionInfo.User, TGroupAttributes(0), False);
-
-    Items[14].SubItems[0] := Token.InfoClass.QueryString(tsLogonAuthPackage);
-    Items[15].SubItems[0] := Token.InfoClass.QueryString(tsLogonServer);
-    Items[16].SubItems[0] := Token.InfoClass.QueryString(tsLogonType);
-    Items[17].SubItems[0] := Token.InfoClass.QueryString(tsLogonWtsSession);
-    Items[18].SubItems[0] := Token.InfoClass.QueryString(tsLogonTime);
 
     // TODO: Error hints
   end;

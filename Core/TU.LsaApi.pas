@@ -5,27 +5,36 @@ unit TU.LsaApi;
 interface
 
 uses
-  TU.Tokens.Types,
-  Winapi.WinNt, Winapi.WinBase, Ntapi.ntseapi, NtUtils.Exceptions;
+  TU.Tokens.Types, NtUtils.Exceptions,
+  Winapi.WinNt, Winapi.WinBase, Ntapi.ntseapi, Winapi.NtSecApi;
 
 type
-  /// <summary>
-  ///  Stores the information about a logon session.
-  /// </summary>
-  TLogonSessionInfo = record
-    /// <remarks>
-    ///  This field is valid only if <see cref="UserPresent"/> is true.
-    /// </remarks>
-    User: TSecurityIdentifier;
-    UserPresent: Boolean;
-
-    AuthPackage, LogonServer: String;
-    LogonType: TSecurityLogonType;
-    Session: Cardinal;
-    LogonTime: TDateTime;
-  end;
+  TLogonDataClass = (lsLogonId, lsUserName, lsLogonDomain, lsAuthPackage,
+    lsLogonType, lsSession, lsLogonTime, lsLogonServer, lsDnsDomainName, lsUpn,
+    lsUserFlags, lsLastSuccessfulLogon, lsLastFailedLogon,
+    lsFailedAttemptSinceSuccess, lsLogonScript, lsProfilePath, lsHomeDirectory,
+    lsHomeDirectoryDrive, lsLogoffTime, lsKickOffTime, lsPasswordLastSet,
+    lsPasswordCanChange, lsPasswordMustChange);
 
   TLuidDynArray = array of TLuid;
+
+  TLogonSessionInfo = class
+  private
+    FData: PSecurityLogonSessionData;
+    function GetUser: TSecurityIdentifier;
+    function GetUserPresent: Boolean;
+  public
+    constructor Create(OwnedData: PSecurityLogonSessionData);
+    destructor Destroy; override;
+
+    property UserPresent: Boolean read GetUserPresent;
+    property User: TSecurityIdentifier read GetUser;
+    property Data: PSecurityLogonSessionData read FData;
+    function GetString(InfoClass: TLogonDataClass): String;
+
+    class function Query(LogonId: TLuid): TLogonSessionInfo; static;
+    class function Enumerate: TLuidDynArray; static;
+  end;
 
   TPrivilegeRec = record
   private
@@ -50,42 +59,76 @@ type
     class function AllPrivileges: TPrivilegeRecArray;
   end;
 
-function LogonTypeToString(LogonType: TSecurityLogonType): String;
-function QueryLogonSession(LogonId: TLuid): CanFail<TLogonSessionInfo>;
-function EnumerateLogonSessions: TLuidDynArray;
-
 implementation
 
 uses
-  Ntapi.ntdef, Winapi.NtSecApi, System.SysUtils, TU.Common;
+  Ntapi.ntdef, System.SysUtils, TU.Common;
 
-function QueryLogonSession(LogonId: TLuid): CanFail<TLogonSessionInfo>;
-var
-  Buffer: PSecurityLogonSessionData;
+{ TLogonSessionInfo }
+
+function LogonTypeToString(LogonType: TSecurityLogonType): String;
+const
+  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
+    'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
+    'Network clear text', 'New credentials', 'Remote interactive',
+    'Cached interactive', 'Cached remote interactive', 'Cached unlock');
 begin
-  Result.Init;
-
-  // Query the information
-  if Result.CheckNativeError(LsaGetLogonSessionData(LogonId, Buffer),
-    'LsaGetLogonSessionData') then
-    with Result do
-      try
-        // The Sid field might be null if we have no permissions to query it.
-        Value.UserPresent := Buffer.Sid <> nil;
-        if Value.UserPresent then
-          Value.User := TSecurityIdentifier.CreateFromSid(Buffer.Sid);
-
-        Value.AuthPackage := Buffer.AuthenticationPackage.ToString;
-        Value.LogonType := TSecurityLogonType(Buffer.LogonType);
-        Value.Session := Buffer.Session;
-        Value.LogonTime := NativeTimeToLocalDateTime(Buffer.LogonTime);
-        Value.LogonServer := Buffer.LogonServer.ToString;
-      finally
-        LsaFreeReturnBuffer(Buffer);
-      end;
+  if (LogonType >= Low(TSecurityLogonType)) and (LogonType <=
+    High(TSecurityLogonType)) then
+    Result := Mapping[LogonType]
+  else
+    Result := IntToStr(Integer(LogonType)) + ' (Out of bound)';
 end;
 
-function EnumerateLogonSessions: TLuidDynArray;
+function UserFlagsToString(UserFlags: Cardinal): String;
+const
+  USER_FLAGS_COUNT = 19;
+  FlagValues: array [1 .. USER_FLAGS_COUNT] of Cardinal = (LOGON_GUEST,
+    LOGON_NOENCRYPTION, LOGON_CACHED_ACCOUNT, LOGON_USED_LM_PASSWORD,
+    LOGON_EXTRA_SIDS, LOGON_SUBAUTH_SESSION_KEY, LOGON_SERVER_TRUST_ACCOUNT,
+    LOGON_NTLMV2_ENABLED, LOGON_RESOURCE_GROUPS, LOGON_PROFILE_PATH_RETURNED,
+    LOGON_NT_V2, LOGON_LM_V2, LOGON_NTLM_V2, LOGON_OPTIMIZED, LOGON_WINLOGON,
+    LOGON_PKINIT, LOGON_NO_OPTIMIZED, LOGON_NO_ELEVATION, LOGON_MANAGED_SERVICE
+  );
+  FlagStrings: array [1 .. USER_FLAGS_COUNT] of String = ('Guest',
+    'No Encryption', 'Cached Account', 'Used LM Password', 'Extra SIDs',
+    'Subauth Session Key', 'Server Trust Account', 'NTLMv2 Enabled',
+    'Resource Groups', 'Profile Path Returned', 'NTv2', 'LMv2', 'NTLMv2',
+    'Optimized', 'Winlogon', 'Pkinit', 'No Optimized', 'No Elevation',
+    'Managed Service'
+  );
+var
+  Strings: array of string;
+  FlagInd, StrInd: Integer;
+begin
+  if UserFlags = 0 then
+    Exit('');
+
+  SetLength(Strings, USER_FLAGS_COUNT);
+  StrInd := 0;
+  for FlagInd := 1 to USER_FLAGS_COUNT do
+    if UserFlags and FlagValues[FlagInd] = FlagValues[FlagInd] then
+    begin
+      Strings[StrInd] := FlagStrings[FlagInd];
+      Inc(StrInd);
+    end;
+  SetLength(Strings, StrInd);
+  Result := String.Join(', ', Strings);
+end;
+
+constructor TLogonSessionInfo.Create(OwnedData: PSecurityLogonSessionData);
+begin
+  Assert(Assigned(OwnedData));
+  FData := OwnedData;
+end;
+
+destructor TLogonSessionInfo.Destroy;
+begin
+  LsaFreeReturnBuffer(FData);
+  inherited;
+end;
+
+class function TLogonSessionInfo.Enumerate: TLuidDynArray;
 var
   Count, i: Integer;
   Sessions: PLuidArray;
@@ -104,19 +147,107 @@ begin
   end;
 end;
 
-{ Helper functions }
-
-function LogonTypeToString(LogonType: TSecurityLogonType): String;
-const
-  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
-    'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
-    'Network clear text', 'New credentials', 'Remote interactive',
-    'Cached interactive', 'Cached remote interactive', 'Cached unlock');
+function TLogonSessionInfo.GetString(InfoClass: TLogonDataClass): String;
 begin
-  if (LogonType >= Low(TSecurityLogonType)) and (LogonType <= High(TSecurityLogonType)) then
-    Result := Mapping[LogonType]
+  if not Assigned(Self) then
+    Exit('Unknown');
+
+  case InfoClass of
+    lsLogonId:
+      Result := LuidToString(Data.LogonId);
+
+    lsUserName:
+      if UserPresent then
+        Result := Data.UserName.ToString
+      else
+        Result := 'No User';
+
+    lsLogonDomain:
+      Result := Data.LogonDomain.ToString;
+
+    lsAuthPackage:
+      Result := Data.AuthenticationPackage.ToString;
+
+    lsLogonType:
+      Result := LogonTypeToString(Data.LogonType);
+
+    lsSession:
+      Result := Data.Session.ToString;
+
+    lsLogonTime:
+      Result := NativeTimeToString(Data.LogonTime);
+
+    lsLogonServer:
+      Result := Data.LogonServer.ToString;
+
+    lsDnsDomainName:
+      Result := Data.DnsDomainName.ToString;
+
+    lsUpn:
+      Result := Data.Upn.ToString;
+
+    lsUserFlags:
+      Result := UserFlagsToString(Data.UserFlags);
+
+    lsLastSuccessfulLogon:
+      Result := NativeTimeToString(Data.LastLogonInfo.LastSuccessfulLogon);
+
+    lsLastFailedLogon:
+      Result := NativeTimeToString(Data.LastLogonInfo.LastFailedLogon);
+
+    lsFailedAttemptSinceSuccess:
+      Result := Data.LastLogonInfo.FailedAttemptCountSinceLastSuccessfulLogon.
+        ToString;
+
+    lsLogonScript:
+      Result := Data.LogonScript.ToString;
+
+    lsProfilePath:
+      Result := Data.ProfilePath.ToString;
+
+    lsHomeDirectory:
+      Result := Data.HomeDirectory.ToString;
+
+    lsHomeDirectoryDrive:
+      Result := Data.HomeDirectoryDrive.ToString;
+
+    lsLogoffTime:
+      Result := NativeTimeToString(Data.LogoffTime);
+
+    lsKickOffTime:
+      Result := NativeTimeToString(Data.KickOffTime);
+
+    lsPasswordLastSet:
+      Result := NativeTimeToString(Data.PasswordLastSet);
+
+    lsPasswordCanChange:
+      Result := YesNoToString(LongBool(Data.PasswordCanChange));
+
+    lsPasswordMustChange:
+      Result := YesNoToString(LongBool(Data.PasswordMustChange));
+
+  end;
+end;
+
+function TLogonSessionInfo.GetUser: TSecurityIdentifier;
+begin
+  Assert(UserPresent);
+  Result := TSecurityIdentifier.CreateFromSid(Data.Sid);
+end;
+
+function TLogonSessionInfo.GetUserPresent: Boolean;
+begin
+  Result := Assigned(Data.Sid)
+end;
+
+class function TLogonSessionInfo.Query(LogonId: TLuid): TLogonSessionInfo;
+var
+  Buffer: PSecurityLogonSessionData;
+begin
+  if NT_SUCCESS(LsaGetLogonSessionData(LogonId, Buffer)) then
+    Result := TLogonSessionInfo.Create(Buffer)
   else
-    Result := '(Out of bound)';
+    Result := nil;
 end;
 
 { TPrivilegeCache }

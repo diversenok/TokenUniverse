@@ -883,15 +883,25 @@ procedure TLogonSessionSource.UpdateLogonSessions;
 var
   i: integer;
   S: String;
+  LogonData: TLogonSessionInfo;
 begin
-  FLogonSessions := EnumerateLogonSessions;
+  FLogonSessions := TLogonSessionInfo.Enumerate;
   ComboBox.Items.Clear;
   for i := 0 to High(FLogonSessions) do
   begin
     S := LuidToString(FLogonSessions[i]);
-      with QueryLogonSession(FLogonSessions[i]) do
-        if IsValid and Value.UserPresent and (Value.User.User <> '') then
-          S := Format('%s (%s #%d)', [S, Value.User.User, Value.Session]);
+
+    LogonData := TLogonSessionInfo.Query(FLogonSessions[i]);
+
+    if Assigned(LogonData) then
+      try
+        if LogonData.UserPresent and (LogonData.User.User <> '') then
+            S := Format('%s (%s #%d)', [S, LogonData.User.User,
+              LogonData.Data.Session]);
+      finally
+        LogonData.Free;
+      end;
+
     ComboBox.Items.Add(S);
   end;
 end;
