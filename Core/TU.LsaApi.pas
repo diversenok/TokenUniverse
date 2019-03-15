@@ -57,43 +57,7 @@ function EnumerateLogonSessions: TLuidDynArray;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, System.SysUtils, TU.Common;
-
-const
-  secur32 = 'secur32.dll';
-
-type
-  TLsaUnicodeString = UNICODE_STRING;
-
-  TSecurityLogonSessionData = record
-    Size: Cardinal;
-    LogonId: TLuid;
-    UserName: TLsaUnicodeString;
-    LogonDomain: TLsaUnicodeString;
-    AuthenticationPackage: TLsaUnicodeString;
-    LogonType: Cardinal;
-    Session: Cardinal;
-    Sid: PSID;
-    LogonTime: TLargeInteger;
-    LogonServer: TLsaUnicodeString;
-    DnsDomainName: TLsaUnicodeString;
-    Upn: TLsaUnicodeString;
-  end;
-
-  TLuidArray = array [Word] of TLuid;
-  PLuidArray = ^TLuidArray;
-
-  PSecurityLogonSessionData = ^TSecurityLogonSessionData;
-
-function LsaFreeReturnBuffer(Buffer: Pointer): LongWord; stdcall;
-  external secur32;
-
-function LsaGetLogonSessionData(var LogonId: TLuid;
-  out ppLogonSessionData: PSecurityLogonSessionData): LongWord; stdcall;
-  external secur32;
-
-function LsaEnumerateLogonSessions(out LogonSessionCount: Integer;
-  out LogonSessionList: PLuidArray): LongWord; stdcall; external secur32;
+  Ntapi.ntdef, Winapi.NtSecApi, System.SysUtils, TU.Common;
 
 function QueryLogonSession(LogonId: TLuid): CanFail<TLogonSessionInfo>;
 var

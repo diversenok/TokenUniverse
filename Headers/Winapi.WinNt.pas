@@ -33,6 +33,9 @@ const
   GENERIC_EXECUTE = $20000000;
   GENERIC_ALL = $10000000;
 
+  // 9007
+  SID_MAX_SUB_AUTHORITIES = 15;
+
   // 9623
   SE_GROUP_MANDATORY = $00000001;
   SE_GROUP_ENABLED_BY_DEFAULT = $00000002;
@@ -90,15 +93,15 @@ type
   TLuid = Int64;
   PLuid = ^TLuid;
 
+  TLuidArray = array [Word] of TLuid;
+  PLuidArray = ^TLuidArray;
+
   // 1119
   PListEntry = ^TListEntry;
   TListEntry = record
     Flink: PListEntry;
     Blink: PListEntry;
   end;
-
-  // 8822
-  PSid = Pointer;
 
   // 8864
   TAccessMask = Cardinal;
@@ -124,6 +127,18 @@ type
     Value: array [0..5] of Byte;
   end;
   PSidIdentifierAuthority = ^TSidIdentifierAuthority;
+
+  // 8994
+  TSid = record
+   Revision: Byte;
+   SubAuthorityCount: Byte;
+   IdentifierAuthority: TSidIdentifierAuthority;
+   SubAuthority: array [0 .. SID_MAX_SUB_AUTHORITIES - 1] of Cardinal;
+  end;
+  PSid = ^TSid;
+
+  TSidArray = array [Word] of PSid;
+  PSidArray = ^TSidArray;
 
   // 9042
   TSidNameUse = (SidTypeZero, SidTypeUser, SidTypeGroup, SidTypeDomain,

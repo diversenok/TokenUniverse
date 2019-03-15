@@ -464,7 +464,7 @@ implementation
 
 uses
   System.TypInfo, TU.WtsApi,
-  NtUtils.Processes, Winapi.WinError, Winapi.NtLsa,
+  NtUtils.Processes, Winapi.WinError, Winapi.NtSecApi,
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const
