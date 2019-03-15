@@ -178,6 +178,14 @@ type
   end;
   PSecurityDescriptor = ^TSecurityDescriptor;
 
+  // 10346
+  TPrivilegeSet = record
+    PrivilegeCount: Cardinal;
+    Control: Cardinal;
+    Privilege: array [Byte] of TLuidAndAttributes;
+  end;
+  PPrivilegeSet = ^TPrivilegeSet;
+
   // 10556
   TSecurityImpersonationLevel = (SecurityAnonymous,
     SecurityIdentification, SecurityImpersonation, SecurityDelegation);

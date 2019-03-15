@@ -35,6 +35,8 @@ const
   LOGON_WINLOGON = $8000;
   LOGON_PKINIT = $10000;
   LOGON_NO_OPTIMIZED = $20000;
+  LOGON_NO_ELEVATION = $40000;
+  LOGON_MANAGED_SERVICE = $80000;
 
 type
   TLsaHandle = THandle;
@@ -66,7 +68,7 @@ type
     UserName: TLsaUnicodeString;
     LogonDomain: TLsaUnicodeString;
     AuthenticationPackage: TLsaUnicodeString;
-    LogonType: Cardinal;
+    LogonType: TSecurityLogonType;
     Session: Cardinal;
     Sid: PSID;
     LogonTime: TLargeInteger;

@@ -163,7 +163,7 @@ function AccessToDetailedString(Access: Cardinal): String;
 function LuidToString(Luid: TLuid): String;
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function ObjectAttributesToString(ObjAttributes: Cardinal): String;
-function NativeTimeToString(NativeTime: Int64): String;
+function NativeTimeToString(NativeTime: TLargeInteger): String;
 function BytesToString(Size: Cardinal): String;
 function EnabledDisabledToString(Value: LongBool): String;
 function YesNoToString(Value: LongBool): String;
@@ -326,6 +326,8 @@ begin
   Domain := '';
   User := '';
   SIDType := SidTypeZero;
+
+  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
 
   UserChars := 0;
   DomainChars := 0;
@@ -807,7 +809,7 @@ begin
     Result := 'None';
 end;
 
-function NativeTimeToString(NativeTime: Int64): String;
+function NativeTimeToString(NativeTime: TLargeInteger): String;
 begin
   if NativeTime = Int64.MaxValue then
     Result := 'Infinite'

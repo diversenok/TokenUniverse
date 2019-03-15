@@ -120,6 +120,7 @@ procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;
   ObjectName: PUNICODE_STRING; Attributes: Cardinal; RootDirectory: THandle;
   QoS: PSecurityQualityOfService);
 begin
+  FillChar(ObjAttr, SizeOf(ObjAttr), 0);
   ObjAttr.Length := SizeOf(ObjAttr);
   ObjAttr.ObjectName := ObjectName;
   ObjAttr.Attributes := Attributes;

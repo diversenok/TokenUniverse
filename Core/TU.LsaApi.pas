@@ -121,6 +121,8 @@ end;
 
 { TPrivilegeCache }
 
+// TODO: Switch to LsaLookupPrivilege*
+
 function DoLookupDisplayName(Name: String; out DisplayName: String): Boolean;
 var
   Buffer: PWideChar;
@@ -195,6 +197,8 @@ class function TPrivilegeCache.AllPrivileges: TPrivilegeRecArray;
 var
   i, j, Count: Integer;
 begin
+  // TODO: Switch to LsaEnumeratePrivileges (POLICY_VIEW_LOCAL_INFORMATION)
+
   // Make sure that all privileges in the cache are already looked up
   for i := Low(Cache) to High(Cache) do
     if not Cache[i].IsChecked then
