@@ -811,7 +811,9 @@ end;
 
 function NativeTimeToString(NativeTime: TLargeInteger): String;
 begin
-  if NativeTime = Int64.MaxValue then
+  if NativeTime = 0 then
+    Result := 'Never'
+  else if NativeTime = Int64.MaxValue then
     Result := 'Infinite'
   else
     Result := DateTimeToStr(NativeTimeToLocalDateTime(NativeTime));

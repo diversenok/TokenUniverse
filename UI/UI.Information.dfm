@@ -508,6 +508,17 @@ object InfoDialog: TInfoDialog
         ClipboardSourceColumn = 1
       end
     end
+    object TabLogon: TTabSheet
+      Caption = 'Logon'
+      ImageIndex = 9
+      inline FrameLogon: TFrameLogon
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
+        TabOrder = 0
+      end
+    end
     object TabObject: TTabSheet
       Caption = 'Object'
       ImageIndex = 5

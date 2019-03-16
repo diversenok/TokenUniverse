@@ -7,7 +7,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
   UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, TU.Common, TU.WtsApi,
-  TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame;
+  TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon;
 
 type
   TInfoDialog = class(TChildTaskbarForm)
@@ -68,6 +68,8 @@ type
     ComboOrigin: TComboBox;
     StaticOrigin: TStaticText;
     FrameAudit: TFrameAudit;
+    TabLogon: TTabSheet;
+    FrameLogon: TFrameLogon;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -117,6 +119,7 @@ type
     procedure Refresh;
     procedure UpdateObjectTab;
     procedure UpdateAuditTab;
+    procedure UpdateLogonTab;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -540,7 +543,9 @@ begin
   if PageControl.ActivePageIndex = TabObject.TabIndex then
     UpdateObjectTab
   else if PageControl.ActivePageIndex = TabAudit.TabIndex then
-    UpdateAuditTab;
+    UpdateAuditTab
+  else if PageControl.ActivePageIndex = TabLogon.TabIndex then
+    UpdateLogonTab;
 end;
 
 procedure TInfoDialog.Refresh;
@@ -616,6 +621,20 @@ begin
     FrameAudit.SubscribeToken(Token);
 
   TabAudit.Tag := TAB_UPDATED;
+end;
+
+procedure TInfoDialog.UpdateLogonTab;
+begin
+  if TabLogon.Tag = TAB_UPDATED then
+    Exit;
+
+  Token.InfoClass.ReQuery(tdTokenStatistics);
+  Token.InfoClass.ReQuery(tdTokenOrigin);
+
+  if not FrameLogon.Subscribed then
+    FrameLogon.SubscribeToken(Token);
+
+  TabLogon.Tag := TAB_UPDATED;
 end;
 
 procedure TInfoDialog.UpdateObjectTab;
