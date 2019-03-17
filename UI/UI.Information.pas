@@ -64,9 +64,6 @@ type
     TabSecurity: TTabSheet;
     TabDefaultDacl: TTabSheet;
     TabAudit: TTabSheet;
-    BtnSetOrigin: TButton;
-    ComboOrigin: TComboBox;
-    StaticOrigin: TStaticText;
     FrameAudit: TFrameAudit;
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
@@ -94,19 +91,16 @@ type
     procedure BtnSetVEnabledClick(Sender: TObject);
     procedure BtnSetVAllowedClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
-    procedure BtnSetOriginClick(Sender: TObject);
     procedure ListViewGeneralDblClick(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
-    OriginSource: TLogonSessionSource;
     IntegritySource: TIntegritySource;
     PrivilegesSource: TPrivilegesSource;
     GroupsSource, RestrictedSIDsSource: TGroupsSource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
-    procedure ChangedOrigin(NewOrigin: TLuid);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
@@ -186,23 +180,6 @@ begin
   except
     if Token.InfoClass.Query(tdTokenIntegrity) then
       ChangedIntegrity(Token.InfoClass.Integrity);
-    raise;
-  end;
-end;
-
-procedure TInfoDialog.BtnSetOriginClick(Sender: TObject);
-begin
-  try
-    Token.InfoClass.Origin := OriginSource.SelectedLogonSession;
-    ComboOrigin.Color := clWindow;
-
-    // TODO: setting Origin succeeds even without actually changing the value.
-    // We should find a way to always call our event listener only once.
-    if Token.InfoClass.Query(tdTokenOrigin) then
-      ChangedOrigin(Token.InfoClass.Origin);
-  except
-    if Token.InfoClass.Query(tdTokenOrigin) then
-      ChangedOrigin(Token.InfoClass.Origin);
     raise;
   end;
 end;
@@ -346,12 +323,6 @@ begin
   ComboIntegrity.Hint := TGroupsSource.BuildHint(NewIntegrity.Group);
 end;
 
-procedure TInfoDialog.ChangedOrigin(NewOrigin: TLuid);
-begin
-  ComboOrigin.Color := clWindow;
-  OriginSource.SelectedLogonSession := NewOrigin;
-end;
-
 procedure TInfoDialog.ChangedOwner(NewOwner: TSecurityIdentifier);
 begin
   ComboOwner.Color := clWindow;
@@ -397,9 +368,6 @@ begin
     Items[7].SubItems[0] := Token.InfoClass.QueryString(tsGroupCount);
     Items[8].SubItems[0] := Token.InfoClass.QueryString(tsPrivilegeCount);
     Items[9].SubItems[0] := Token.InfoClass.QueryString(tsModifiedID);
-
-    Items[12].SubItems[0] := Token.InfoClass.QueryString(tsLogonID);
-
     // TODO: Error hints
   end;
 end;
@@ -457,14 +425,12 @@ begin
   Token.Events.OnPolicyChange.Delete(ChangedPolicy);
   Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
   Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
-  Token.Events.OnOriginChange.Delete(ChangedOrigin);
   Token.Events.OnSessionChange.Delete(ChangedSession);
   Token.OnCaptionChange.Delete(ChangedCaption);
   RestrictedSIDsSource.Free;
   GroupsSource.Free;
   PrivilegesSource.Free;
   IntegritySource.Free;
-  OriginSource.Free;
   SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
 end;
@@ -473,7 +439,6 @@ procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession, False);
-  OriginSource := TLogonSessionSource.Create(ComboOrigin);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
@@ -488,7 +453,6 @@ begin
   // order we avoid multiple calls while sharing the data between different
   // tokens pointing the same kernel object.
   Token.Events.OnSessionChange.Add(ChangedSession);
-  Token.Events.OnOriginChange.Add(ChangedOrigin);
   Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
   Token.Events.OnPolicyChange.Add(ChangedPolicy);
@@ -569,7 +533,7 @@ begin
     Items[1].SubItems[0] := Token.InfoClass.QueryString(tsSourceLUID);
     Items[10].SubItems[0] := Token.InfoClass.QueryString(tsSandboxInert);
     Items[11].SubItems[0] := Token.InfoClass.QueryString(tsHasRestrictions);
-    Items[19].SubItems[0] := Token.InfoClass.QueryString(tsIsRestricted);
+    Items[12].SubItems[0] := Token.InfoClass.QueryString(tsIsRestricted);
   end;
   ListViewAdvanced.Items.EndUpdate;
 
