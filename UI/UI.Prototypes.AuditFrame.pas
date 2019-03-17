@@ -1,4 +1,4 @@
-﻿unit UI.Prototypes.AuditFrame;
+unit UI.Prototypes.AuditFrame;
 
 interface
 
@@ -45,14 +45,6 @@ uses
   Winapi.WinError, TU.Audit, UI.Colors;
 
 {$R *.dfm}
-
-function StateToStr(Audit: Boolean): String;
-begin
-  if Audit then
-    Result := '☑'
-  else
-    Result := '☐';
-end;
 
 { TFrameAudit }
 
@@ -102,10 +94,10 @@ begin
   with ListView.Items[Index] do
     begin
       State := Policy.SubCategory[Index];
-      Cell[1] := StateToStr(State.Contains(asIncludeSuccess));
-      Cell[2] := StateToStr(State.Contains(asExcludeSuccess));
-      Cell[3] := StateToStr(State.Contains(asIncludeFailure));
-      Cell[4] := StateToStr(State.Contains(asExcludeFailure));
+      Cell[1] := CheckboxToString(State.Contains(asIncludeSuccess));
+      Cell[2] := CheckboxToString(State.Contains(asExcludeSuccess));
+      Cell[3] := CheckboxToString(State.Contains(asIncludeFailure));
+      Cell[4] := CheckboxToString(State.Contains(asExcludeFailure));
     end
 end;
 

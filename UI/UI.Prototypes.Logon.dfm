@@ -37,6 +37,10 @@ object FrameLogon: TFrameLogon
         FooterAlign = taLeftJustify
         TitleImage = -1
       end>
+    Items.ItemData = {
+      053F0000000100000000000000FFFFFFFFFFFFFFFF0100000001000000000000
+      00084C006F0067006F006E002000490044000755006E006B006E006F0077006E
+      0028C1651FFFFF}
     MultiSelect = True
     GroupView = True
     ReadOnly = True
@@ -60,9 +64,9 @@ object FrameLogon: TFrameLogon
   object StaticOrigin: TStaticText
     Left = 3
     Top = 347
-    Width = 89
+    Width = 92
     Height = 17
-    Caption = 'Originating logon:'
+    Caption = 'Originating Logon:'
     TabOrder = 2
   end
   object BtnSetOrigin: TButton

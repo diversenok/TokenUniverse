@@ -1,4 +1,4 @@
-unit TU.Tokens.Types;
+﻿unit TU.Tokens.Types;
 
 interface
 
@@ -167,6 +167,7 @@ function NativeTimeToString(NativeTime: TLargeInteger): String;
 function BytesToString(Size: Cardinal): String;
 function EnabledDisabledToString(Value: LongBool): String;
 function YesNoToString(Value: LongBool): String;
+function CheckboxToString(Value: LongBool): String;
 
 /// <summary>
 ///   Formats a string to use as a location of an error that might occur while
@@ -841,6 +842,14 @@ begin
     Result := 'Yes'
   else
     Result := 'No';
+end;
+
+function CheckboxToString(Value: LongBool): String;
+begin
+  if Value then
+    Result := '☑'
+  else
+    Result := '☐';
 end;
 
 end.

@@ -9,12 +9,13 @@ uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntseapi, Winapi.NtSecApi;
 
 type
-  TLogonDataClass = (lsLogonId, lsUserName, lsLogonDomain, lsAuthPackage,
-    lsLogonType, lsSession, lsLogonTime, lsLogonServer, lsDnsDomainName, lsUpn,
-    lsUserFlags, lsLastSuccessfulLogon, lsLastFailedLogon,
-    lsFailedAttemptSinceSuccess, lsLogonScript, lsProfilePath, lsHomeDirectory,
-    lsHomeDirectoryDrive, lsLogoffTime, lsKickOffTime, lsPasswordLastSet,
-    lsPasswordCanChange, lsPasswordMustChange);
+  TLogonDataClass = (lsLogonId, lsSecurityIdentifier, lsUserName, lsLogonDomain,
+    lsAuthPackage, lsLogonType, lsSession, lsLogonTime, lsLogonServer,
+    lsDnsDomainName, lsUpn, lsUserFlags, lsLastSuccessfulLogon,
+    lsLastFailedLogon, lsFailedAttemptSinceSuccess, lsLogonScript,
+    lsProfilePath, lsHomeDirectory, lsHomeDirectoryDrive, lsLogoffTime,
+    lsKickOffTime, lsPasswordLastSet, lsPasswordCanChange, lsPasswordMustChange
+  );
 
   TLuidDynArray = array of TLuid;
 
@@ -31,6 +32,7 @@ type
     property User: TSecurityIdentifier read GetUser;
     property Data: PSecurityLogonSessionData read FData;
     function GetString(InfoClass: TLogonDataClass): String;
+    function UserFlagsHint: String;
 
     class function Query(LogonId: TLuid): TLogonSessionInfo; static;
     class function Enumerate: TLuidDynArray; static;
@@ -66,21 +68,6 @@ uses
 
 { TLogonSessionInfo }
 
-function LogonTypeToString(LogonType: TSecurityLogonType): String;
-const
-  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
-    'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
-    'Network clear text', 'New credentials', 'Remote interactive',
-    'Cached interactive', 'Cached remote interactive', 'Cached unlock');
-begin
-  if (LogonType >= Low(TSecurityLogonType)) and (LogonType <=
-    High(TSecurityLogonType)) then
-    Result := Mapping[LogonType]
-  else
-    Result := IntToStr(Integer(LogonType)) + ' (Out of bound)';
-end;
-
-function UserFlagsToString(UserFlags: Cardinal): String;
 const
   USER_FLAGS_COUNT = 19;
   FlagValues: array [1 .. USER_FLAGS_COUNT] of Cardinal = (LOGON_GUEST,
@@ -97,6 +84,8 @@ const
     'Optimized', 'Winlogon', 'Pkinit', 'No Optimized', 'No Elevation',
     'Managed Service'
   );
+
+function UserFlagsToString(UserFlags: Cardinal): String;
 var
   Strings: array of string;
   FlagInd, StrInd: Integer;
@@ -114,6 +103,20 @@ begin
     end;
   SetLength(Strings, StrInd);
   Result := String.Join(', ', Strings);
+end;
+
+function LogonTypeToString(LogonType: TSecurityLogonType): String;
+const
+  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
+    'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
+    'Network clear text', 'New credentials', 'Remote interactive',
+    'Cached interactive', 'Cached remote interactive', 'Cached unlock');
+begin
+  if (LogonType >= Low(TSecurityLogonType)) and (LogonType <=
+    High(TSecurityLogonType)) then
+    Result := Mapping[LogonType]
+  else
+    Result := IntToStr(Integer(LogonType)) + ' (Out of bound)';
 end;
 
 constructor TLogonSessionInfo.Create(OwnedData: PSecurityLogonSessionData);
@@ -156,11 +159,14 @@ begin
     lsLogonId:
       Result := LuidToString(Data.LogonId);
 
-    lsUserName:
+    lsSecurityIdentifier:
       if UserPresent then
-        Result := Data.UserName.ToString
+        Result := GetUser.ToString
       else
         Result := 'No User';
+
+    lsUserName:
+      Result := Data.UserName.ToString;
 
     lsLogonDomain:
       Result := Data.LogonDomain.ToString;
@@ -237,7 +243,7 @@ end;
 
 function TLogonSessionInfo.GetUserPresent: Boolean;
 begin
-  Result := Assigned(Data.Sid)
+  Result := Assigned(Self) and Assigned(Data.Sid)
 end;
 
 class function TLogonSessionInfo.Query(LogonId: TLuid): TLogonSessionInfo;
@@ -248,6 +254,22 @@ begin
     Result := TLogonSessionInfo.Create(Buffer)
   else
     Result := nil;
+end;
+
+function TLogonSessionInfo.UserFlagsHint: String;
+var
+  Strings: array of string;
+  i: Integer;
+begin
+  if not Assigned(Self) then
+    Exit('');
+
+  SetLength(Strings, Length(FlagValues));
+  for i := 1 to USER_FLAGS_COUNT do
+    Strings[i - 1] := CheckboxToString(Data.UserFlags and FlagValues[i] =
+      FlagValues[i]) + ' ' + FlagStrings[i];
+
+  Result := String.Join(#$D#$A, Strings);
 end;
 
 { TPrivilegeCache }

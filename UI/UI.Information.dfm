@@ -516,6 +516,7 @@ object InfoDialog: TInfoDialog
         Top = 0
         Width = 388
         Height = 369
+        Align = alClient
         TabOrder = 0
       end
     end
