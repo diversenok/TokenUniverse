@@ -162,7 +162,7 @@ uses
 
 procedure TPrivilegesSource.AddAllPrivileges;
 var
-  PrivArray: TPrivilegeRecArray;
+  PrivArray: TLuidDynArray;
   Privilege: TPrivilege;
   i: Integer;
 begin
@@ -173,9 +173,9 @@ begin
   ListView.Items.BeginUpdate;
   for i := 0 to High(PrivArray) do
   begin
-    Privilege.Luid := PrivArray[i].Value;
+    Privilege.Luid := PrivArray[i];
 
-    if PrivArray[i].Name = 'SeChangeNotifyPrivilege' then
+    if TPrivilegeCache.QueryName(PrivArray[i]) = 'SeChangeNotifyPrivilege' then
     begin
       Privilege.Attributes := SE_PRIVILEGE_ENABLED_BY_DEFAULT or
         SE_PRIVILEGE_ENABLED;

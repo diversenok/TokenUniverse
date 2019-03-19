@@ -7,6 +7,8 @@ uses
   Winapi.WinNt, Ntapi.ntdef, Winapi.NtSecApi;
 
 const
+  MAX_PREFERRED_LENGTH = -1;
+
   // 1757
   POLICY_VIEW_LOCAL_INFORMATION = $00000001;
   POLICY_VIEW_AUDIT_INFORMATION = $00000002;
@@ -71,8 +73,8 @@ function LsaEnumerateAccounts(PolicyHandle: TLsaHandle;
 // 3371
 function LsaEnumeratePrivileges(PolicyHandle: TLsaHandle;
   var EnumerationContext: TLsaEnumerationHandle;
-  out Buffer: PPolicyPrivilegeDefinitionArray; PreferedMaximumLength: Cardinal;
-  out CountReturned: Cardinal): NTSTATUS; stdcall; external advapi32;
+  out Buffer: PPolicyPrivilegeDefinitionArray; PreferedMaximumLength: Integer;
+  out CountReturned: Integer): NTSTATUS; stdcall; external advapi32;
 
 // 3444
 function LsaOpenAccount(PolicyHandle: TLsaHandle;

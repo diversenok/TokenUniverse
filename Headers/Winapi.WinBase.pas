@@ -42,16 +42,6 @@ function LookupAccountNameW(lpSystemName, lpAccountName: PWideChar;
   var cbReferencedDomainName: Cardinal; out peUse: TSidNameUse): LongBool;
   stdcall; external advapi32;
 
-// 12371
-function LookupPrivilegeNameW(lpSystemName: PWideChar;
-  var lpLuid: TLargeInteger; lpName: PWideChar; var cbName: Cardinal):
-  LongBool; stdcall; external advapi32;
-
-// 12396
-function LookupPrivilegeDisplayNameW(lpSystemName, lpName: PWideChar;
-  lpDisplayName: PWideChar; var cbDisplayName: Cardinal;
-  out lpLanguageId: Cardinal): LongBool; stdcall; external advapi32;
-
 // 12718
 function LogonUserW (lpszUsername: PWideChar; lpszDomain: PWideChar;
   lpszPassword: PWideChar; dwLogonType: TSecurityLogonType; dwLogonProvider:

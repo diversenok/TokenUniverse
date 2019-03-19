@@ -518,12 +518,12 @@ end;
 
 function TPrivilegeHelper.Description: String;
 begin
-  Result := TPrivilegeCache.Lookup(Luid).DisplayName;
+  Result := TPrivilegeCache.QueryDisplayName(Luid);
 end;
 
 function TPrivilegeHelper.Name: String;
 begin
-  Result := TPrivilegeCache.Lookup(Luid).Name;
+  Result := TPrivilegeCache.QueryName(Luid);
 end;
 
 { TTokenTypeExHelper }

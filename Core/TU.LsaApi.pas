@@ -39,32 +39,27 @@ type
   end;
 
   TPrivilegeRec = record
-  private
-    IsChecked: Boolean;
-  public
-    Value: Int64;
-    IsValid: Boolean;
-    Name: String;
-    DisplayName: String;
-    constructor Create(Value: Int64);
+    NameValid, DisplayNameValid: Boolean;
+    Name, DisplayName: String;
   end;
-
-  TPrivilegeRecArray = array of TPrivilegeRec;
 
   TPrivilegeCache = class
   private
     class var Cache: array [SE_MIN_WELL_KNOWN_PRIVILEGE ..
       SE_MAX_WELL_KNOWN_PRIVILEGE] of TPrivilegeRec;
-    class var CacheEx: TPrivilegeRecArray;
+    class function InRange(Value: TLuid): Boolean; static; inline;
+    class function TryQueryName(Value: Int64; out Name: String): Boolean;
+      static;
   public
-    class function Lookup(Value: Int64): TPrivilegeRec; static;
-    class function AllPrivileges: TPrivilegeRecArray;
+    class function QueryName(Value: Int64): String; static;
+    class function QueryDisplayName(Value: Int64): String; static;
+    class function AllPrivileges: TLuidDynArray;
   end;
 
 implementation
 
 uses
-  Ntapi.ntdef, System.SysUtils, TU.Common;
+  Ntapi.ntdef, Ntutils.Lsa, System.SysUtils, TU.Common;
 
 { TLogonSessionInfo }
 
@@ -274,146 +269,95 @@ end;
 
 { TPrivilegeCache }
 
-// TODO: Switch to LsaLookupPrivilege*
-
-function DoLookupDisplayName(Name: String; out DisplayName: String): Boolean;
-var
-  Buffer: PWideChar;
-  BufferChars: Cardinal;
-  LangId: Cardinal;
-begin
-  Result := False;
-  BufferChars := 0;
-  LookupPrivilegeDisplayNameW(nil, PWideChar(Name), nil, BufferChars, LangId);
-
-  if not WinTryCheckBuffer(BufferChars) then
-    Exit;
-
-  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
-  try
-    if LookupPrivilegeDisplayNameW(nil, PWideChar(Name), Buffer, BufferChars,
-      LangId) then
-    begin
-      SetString(DisplayName, Buffer, BufferChars);
-      Result := True;
-    end;
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
-function DoLookupName(Value: Int64; out Name: String): Boolean;
-var
-  Buffer: PWideChar;
-  BufferChars: Cardinal;
-begin
-  Result := False;
-  BufferChars := 0;
-  LookupPrivilegeNameW(nil, Value, nil, BufferChars);
-
-  if not WinTryCheckBuffer(BufferChars) then
-    Exit;
-
-  Buffer := AllocMem((BufferChars + 1) * SizeOf(WideChar));
-  try
-    if LookupPrivilegeNameW(nil, Value, Buffer, BufferChars) then
-    begin
-      SetString(Name, Buffer, BufferChars);
-      Result := True;
-    end;
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
-constructor TPrivilegeRec.Create(Value: Int64);
-const
-  UNKNOWN_PRIV_FMT = 'Unknown privilege %d';
-begin
-  Self.Value := Value;
-  IsChecked := True;
-  DisplayName := '';
-
-  if DoLookupName(Value, Name) then
-  begin
-    IsValid := True;
-    DoLookupDisplayName(Name, DisplayName);
-  end
-  else
-  begin
-    IsValid := False;
-    Name := Format(UNKNOWN_PRIV_FMT, [Value]);
-  end;
-end;
-
-class function TPrivilegeCache.AllPrivileges: TPrivilegeRecArray;
-var
-  i, j, Count: Integer;
-begin
-  // TODO: Switch to LsaEnumeratePrivileges (POLICY_VIEW_LOCAL_INFORMATION)
-
-  // Make sure that all privileges in the cache are already looked up
-  for i := Low(Cache) to High(Cache) do
-    if not Cache[i].IsChecked then
-      Cache[i].Create(i);
-
-  // Count availible privileges in usual cache
-  Count := 0;
-  for i := Low(Cache) to High(Cache) do
-    if Cache[i].IsValid then
-      Inc(Count);
-
-  // Save valid privileges
-  j := 0;
-  SetLength(Result, Count);
-  for i := Low(Cache) to High(Cache) do
-    if Cache[i].IsValid then
-    begin
-      Result[j] := Cache[i];
-      Inc(j);
-    end;
-
-  // And add custom ones
-  Result := Concat(Result, CacheEx);
-end;
-
-class function TPrivilegeCache.Lookup(Value: Int64): TPrivilegeRec;
+class function TPrivilegeCache.AllPrivileges: TLuidDynArray;
 var
   i: Integer;
+  Privileges: TPrivDefArray;
+  Value: TLuid;
 begin
-  // Normally all privileges on the system should be within the range of Cache
-  // array. However, as a backup plan we have a dynamically allocated CacheEx
-  // that will hold all custom privileges.
-
-  // If the privilege is in the range then use the usual cache.
-  if (Low(Cache) <= Value) and (Value <= High(Cache)) then
+  // Ask LSA to enumerate the privileges.
+  if NT_SUCCESS(EnumeratePrivileges(Privileges)) then
   begin
-    // Lookup the privilege if necessary
-    if not Cache[Value].IsChecked then
-      Cache[Value].Create(Value);
+    SetLength(Result, Length(Privileges));
 
-    Result := Cache[Value];
+    for i := 0 to High(Privileges) do
+    begin
+      Value := Privileges[i].LocalValue;
+
+      // Save into the result list
+      Result[i] := Value;
+
+      // Cache privilege name
+      if InRange(Value) then
+      begin
+        Cache[Value].NameValid := True;
+        Cache[Value].Name := Privileges[i].Name;
+      end;
+    end;
   end
   else
   begin
-    // Preferably, this code should never be called since it is a backup plan
-    // for encounting a strange privilege that is not in the usual system range.
-    // This also migh happen if Microsoft adds a new privilege. In this case
-    // increase SE_MAX_WELL_KNOWN_PRIVILEGE to place it in the usual cache.
+    // Query was unsuccessful. Just return the range from min to max
+    SetLength(Result, SE_MAX_WELL_KNOWN_PRIVILEGE - SE_MIN_WELL_KNOWN_PRIVILEGE);
 
-    // Try to find it in the custom list
-    for i := 0 to High(CacheEx) do
-      if CacheEx[i].Value = Value then
-      begin
-        Result := CacheEx[i];
-        Exit;
-      end;
-
-    // Allocate a new entry and lookup this privilege
-    SetLength(CacheEx, Length(CacheEx) + 1);
-    CacheEx[High(CacheEx)].Create(Value);
-    Result := CacheEx[High(CacheEx)];
+    for i := 0 to High(Result) do
+      Result[i] := SE_MIN_WELL_KNOWN_PRIVILEGE + i;
   end;
+end;
+
+class function TPrivilegeCache.InRange(Value: TLuid): Boolean;
+begin
+  Result := (SE_MIN_WELL_KNOWN_PRIVILEGE <= Value) and
+    (Value <= SE_MAX_WELL_KNOWN_PRIVILEGE);
+end;
+
+class function TPrivilegeCache.QueryDisplayName(Value: Int64): String;
+var
+  Name: String;
+begin
+  // Note: we need privilege name to obtain its display name
+
+  if InRange(Value) and Cache[Value].DisplayNameValid then
+    Result := Cache[Value].DisplayName
+  else if TryQueryName(Value, Name) and NT_SUCCESS(QueryPrivilegeDisplayName(
+    Name, Result)) then
+  begin
+    // Cache it if applicable
+    if InRange(Value) then
+    begin
+      Cache[Value].DisplayNameValid := True;
+      Cache[Value].DisplayName := Result;
+    end;
+  end
+  else
+    Result := '';
+end;
+
+class function TPrivilegeCache.QueryName(Value: Int64): String;
+begin
+  if not TryQueryName(Value, Result) then
+    Result := 'Unknown privilege ' + IntToStr(Value);
+end;
+
+class function TPrivilegeCache.TryQueryName(Value: Int64; out Name: String):
+  Boolean;
+begin
+  Result := True;
+
+  // Try cache first, then query LSA
+  if InRange(Value) and Cache[Value].NameValid then
+    Name := Cache[Value].Name
+  else if NT_SUCCESS(QueryPrivilegeName(Value, Name)) then
+  begin
+    // Cache it if applicable
+    if InRange(Value) then
+    begin
+      Cache[Value].NameValid := True;
+      Cache[Value].Name := Name;
+    end;
+  end
+  else
+    Result := False;
 end;
 
 end.
