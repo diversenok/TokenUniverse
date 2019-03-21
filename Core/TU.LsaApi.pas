@@ -245,6 +245,7 @@ class function TLogonSessionInfo.Query(LogonId: TLuid): TLogonSessionInfo;
 var
   Buffer: PSecurityLogonSessionData;
 begin
+  // TODO -c WoW64: LsaGetLogonSessionData returns a weird pointer
   if NT_SUCCESS(LsaGetLogonSessionData(LogonId, Buffer)) then
     Result := TLogonSessionInfo.Create(Buffer)
   else

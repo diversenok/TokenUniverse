@@ -358,6 +358,7 @@ procedure TSecurityIdentifier.GetStringSid(SrcSid: PSid);
 var
   Buffer: PWideChar;
 begin
+  // TODO: assert for valid SIDs
   SID := '';
   WinCheck(ConvertSidToStringSidW(SrcSid, Buffer), 'ConvertSidToStringSidW');
 

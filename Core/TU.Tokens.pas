@@ -1095,12 +1095,11 @@ var
   LogonId: TLuid;
   Quotas: TQuotaLimits;
 begin
+  // TODO -c WoW64: LsaLogonUser overwrites our memory
   if not NT_SUCCESS(NtQueryInformationProcess(NtCurrentProcess,
     ProcessWow64Information, @IsWow64, SizeOf(IsWow64), nil)) or
     (IsWow64 <> 0) then
-    raise ENtError.Create(STATUS_WOW_ASSERTION, 'TODO');
-
-  // TODO: Investigate why LsaLogonUser overwrites our memory under WoW64.
+    raise ENotSupportedException.Create('S4U is not supported under WoW64');
 
   // Connect to the LSA
   NativeCheck(LsaConnectUntrusted(LsaHandle), 'LsaConnectUntrusted');
@@ -1443,6 +1442,7 @@ var
   BufferSize, ReturnValue: Cardinal;
 begin
   Status := False;
+  // TODO: fix potenrial race condition
 
   // Make a probe call to estimate a requied buffer size
   BufferSize := 0;

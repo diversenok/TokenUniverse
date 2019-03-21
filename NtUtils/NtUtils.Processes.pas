@@ -95,7 +95,7 @@ begin
     FreeMem(Buffer);
     Buffer := nil;
     BufferSize := 0;
-    ENtError.Format(Status, 'Process snapshot');
+    ENtError.Report(Status, 'Process snapshot');
     Exit;
   end;
 

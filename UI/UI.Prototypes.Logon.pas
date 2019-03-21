@@ -81,6 +81,8 @@ end;
 constructor TFrameLogon.Create(AOwner: TComponent);
 begin
   inherited;
+  // TODO: TLogonSessionSource triggers enumeration, postpone it until
+  // the user actually switches to the tab
   LogonSource := TLogonSessionSource.Create(ComboOrigin);
 
   // Add items for Logon ID

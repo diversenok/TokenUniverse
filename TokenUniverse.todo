@@ -1,4 +1,4 @@
-{TODO : CheckTokenCapability}
+{TODO : CheckTokenCapability & CheckTokenMembership}
 {TODO : Changed logon sessions event}
 {TODO : Token comparison dialog (juxtaposition + NtCompareTokens)}
 
