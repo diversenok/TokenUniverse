@@ -54,6 +54,14 @@ function LogonUserExExW(lpszUsername: PWideChar; lpszDomain: PWideChar;
   ppLogonSid: PPointer; pProfileBuffer: PPointer; pdwProfileLength: PCardinal;
   QuotaLimits: Pointer): LongBool; stdcall; external advapi32;
 
+// move
+function LoadStringW(hInstance: HINST; uID: Cardinal; out pBuffer: PWideChar;
+  nBufferMax: Integer = 0): Integer; stdcall; external kernelbase;
+
+// move
+function GetModuleHandleW(lpModuleName: PWideChar): HMODULE; stdcall;
+  external kernel32;
+
 implementation
 
 end.

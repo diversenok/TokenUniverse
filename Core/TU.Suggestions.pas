@@ -24,12 +24,15 @@ implementation
 uses
   System.UITypes, Vcl.Dialogs, TU.Tokens, TU.Tokens.Types,
   TU.Winapi, Winapi.WinNt, Winapi.WinError,
-  Ntapi.ntdef, Ntapi.ntstatus, NtUtils.Exceptions;
+  Ntapi.ntdef, Ntapi.ntstatus, NtUtils.Exceptions, NtUtils.ErrorMsg;
 
 resourcestring
-  TITLE_OS_ERROR = 'System Error';
+  TITLE_OS_ERROR = 'System error';
   TITLE_CONVERT = 'Conversion error';
   TITLE_BUG = 'This is definitely a bug...';
+  ERR_FMT = 'Last call: %s' + #$D#$A +
+   'Result: %s' + #$D#$A#$D#$A + '%s';
+
   BUGTRACKER = #$D#$A#$D#$A'If you known how to reproduce this error please ' +
     'help the project by opening an issue on our GitHub page'#$D#$A +
     'https://github.com/diversenok/TokenUniverse';
@@ -229,25 +232,55 @@ begin
 
 end;
 
-procedure ShowErrorSuggestions(E: Exception);
+procedure ShowEWinError(E: EWinError);
+var
+  Title: String;
+begin
+  // Try to query short error descrtiption
+  Title := Win32ErrorToDescription(E.ErrorCode);
+
+  if Title = '' then
+    Title := TITLE_OS_ERROR;
+
+  TaskMessageDlg(Title, Format(ERR_FMT, [E.ErrorOrigin,
+    Win32ErrorToString(E.ErrorCode), SysErrorMessage(E.ErrorCode)]) +
+    SuggestAll(E), mtError, [mbOk], 0);
+end;
+
+procedure ShowENtError(E: ENtError);
 var
   MsgType: TMsgDlgType;
+  Title: String;
+begin
+  // Select appropriate icon
+  if not NT_ERROR(E.ErrorCode) then
+    MsgType := mtWarning
+  else
+    MsgType := mtError;
+
+  // Try to query short error descrtiption
+  Title := StatusToDescription(E.ErrorCode);
+
+  if Title = '' then
+    Title := TITLE_OS_ERROR;
+
+  TaskMessageDlg(Title, Format(ERR_FMT, [E.ErrorOrigin,
+    StatusToString(E.ErrorCode), SysNativeErrorMessage(E.ErrorCode)]) +
+    SuggestAll(E),
+    MsgType, [mbOk], 0);
+end;
+
+procedure ShowErrorSuggestions(E: Exception);
 begin
   if (E is EAccessViolation) or (E is EInvalidPointer) or
     (E is EAssertionFailed) then
     TaskMessageDlg(TITLE_BUG, E.Message + BUGTRACKER, mtError, [mbOk], 0)
   else if E is EConvertError then
     TaskMessageDlg(TITLE_CONVERT, E.Message, mtError, [mbOk], 0)
-  else if E is ELocatedOSError then
-  begin
-    if (E is ENtError) and not NT_ERROR(ENtError(E).ErrorCode) then
-      MsgType := mtWarning
-    else
-      MsgType := mtError;
-
-    TaskMessageDlg(TITLE_OS_ERROR, E.Message + SuggestAll(ELocatedOSError(E)),
-      MsgType, [mbOk], 0)
-  end
+  else if E is EWinError then
+    ShowEWinError(EWinError(E))
+  else if E is ENtError then
+    ShowENtError(ENtError(E))
   else
     TaskMessageDlg(E.ClassName, E.Message, mtError, [mbOk], 0);
 end;

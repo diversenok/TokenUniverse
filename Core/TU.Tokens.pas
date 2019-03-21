@@ -1353,11 +1353,8 @@ begin
     // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
     // not considered as an error. Such behavior does not fit into our
     // model so we should overwrite it.
-    if not NT_SUCCESS(Status) then
-      raise ENtError.Create(Status, 'NtAdjustPrivilegesToken', Self)
-    else if Status = STATUS_NOT_ALL_ASSIGNED then
-      raise EWinError.Create(ERROR_NOT_ALL_ASSIGNED, 'AdjustTokenPrivileges',
-        Self);
+    if not NT_SUCCESS(Status) or (Status = STATUS_NOT_ALL_ASSIGNED) then
+      raise ENtError.Create(Status, 'NtAdjustPrivilegesToken', Self);
   finally
     FreeMem(PrivArray);
 

@@ -218,6 +218,10 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
+        <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
+            <Form>NtUtils.ErrorMsg.res</Form>
+        </RcCompile>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

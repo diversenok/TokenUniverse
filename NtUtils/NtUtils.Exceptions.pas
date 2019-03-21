@@ -22,7 +22,6 @@ type
   public
     constructor Create(Code: Cardinal; Location: String;
       Context: TObject = nil); reintroduce;
-    class function Format(Code: Cardinal; Location: String): String;
   end;
 
   /// <summary> Represents a Native error with a known location. </summary>
@@ -30,7 +29,6 @@ type
   public
     constructor Create(Status: NTSTATUS; Location: String;
       Context: TObject = nil); reintroduce;
-    class function Format(Status: Cardinal; Location: String): String;
     class procedure Report(Status: Cardinal; Location: String);
     function ToWinErrorCode: Cardinal;
   end;
@@ -94,8 +92,6 @@ type
     /// </summary>
     /// <returns> The buffer wrapper itself (<paramref name="Src"/>). </returns>
     function CopyResult(Src: CanFail<Pointer>): CanFail<Pointer>;
-
-    function GetErrorMessage: String;
   end;
 
 { Runtime error-checking functions }
@@ -108,11 +104,7 @@ procedure NativeCheck(Status: Cardinal; Where: String; Context: TObject = nil);
 implementation
 
 uses
-  Winapi.Windows, Winapi.WinError, Ntapi.ntrtl;
-
-resourcestring
-  ERROR_TEMPLATE = '%s failed.' + #$D#$A#$D#$A +
-    'Code 0x%x' + #$D#$A#$D#$A + '%s';
+  Winapi.Windows, Winapi.WinError, Ntapi.ntrtl, NtUtils.ErrorMsg;
 
 { ELocatedOSError }
 
@@ -126,16 +118,10 @@ end;
 constructor EWinError.Create(Code: Cardinal; Location: String;
   Context: TObject);
 begin
-  Message := Format(Code, Location);
+  Message := Location + ' returned ' + Win32ErrorToString(Code);
   ErrorOrigin := Location;
   ErrorCode := Code;
   ErrorContext := Context;
-end;
-
-class function EWinError.Format(Code: Cardinal; Location: String): String;
-begin
-  Result := System.SysUtils.Format(ERROR_TEMPLATE, [Location, Code,
-    SysErrorMessage(Code)]);
 end;
 
 { ENtError }
@@ -143,21 +129,15 @@ end;
 constructor ENtError.Create(Status: NTSTATUS; Location: String;
   Context: TObject);
 begin
-  Message := Format(Status, Location);
+  Message := Location + ' returned ' + StatusToString(Status);
   ErrorOrigin := Location;
   ErrorCode := Status;
   ErrorContext := Context;
 end;
 
-class function ENtError.Format(Status: Cardinal; Location: String): String;
-begin
-  Result := System.SysUtils.Format(ERROR_TEMPLATE, [Location, Status,
-    SysErrorMessage(Status, GetModuleHandle('ntdll.dll'))]);
-end;
-
 class procedure ENtError.Report(Status: Cardinal; Location: String);
 begin
-  OutputDebugStringW(PWideChar(Format(Status, Location)));
+  OutputDebugStringW(PWideChar(Location + ': ' + StatusToString(Status)));
 end;
 
 function ENtError.ToWinErrorCode: Cardinal;
@@ -218,18 +198,6 @@ begin
   Self.ErrorCode := Src.ErrorCode;
   Self.ErrorOrigin := Src.ErrorOrigin;
   Result := Src;
-end;
-
-function CanFail<ResultType>.GetErrorMessage: String;
-begin
-  case ErrorType of
-    errWin:
-      Result := EWinError.Format(ErrorCode, ErrorOrigin);
-    errNative:
-      Result := ENtError.Format(ErrorCode, ErrorOrigin);
-  else
-    Assert(False);
-  end;
 end;
 
 function CanFail<ResultType>.GetValueOrRaise: ResultType;

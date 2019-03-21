@@ -57,7 +57,8 @@ uses
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
   Winapi.ntlsa in 'Headers\Winapi.ntlsa.pas',
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
-  NtUtils.Lsa in 'NtUtils\NtUtils.Lsa.pas';
+  NtUtils.Lsa in 'NtUtils\NtUtils.Lsa.pas',
+  NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas';
 
 {$R *.res}
 
