@@ -64,7 +64,7 @@ function NtDuplicateToken(ExistingTokenHandle: THandle;
 
 function NtQueryInformationToken(TokenHandle: THandle;
   TokenInformationClass: TTokenInformationClass; TokenInformation: Pointer;
-  TokenInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
+  TokenInformationLength: Cardinal; out ReturnLength: Cardinal): NTSTATUS;
   stdcall; external ntdll;
 
 function NtSetInformationToken(TokenHandle: THandle;

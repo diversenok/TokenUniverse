@@ -18,11 +18,11 @@ const
   WRITE_OWNER = $00080000;
   SYNCHRONIZE = $00100000;
 
-  STANDARD_RIGHTS_REQUIRED = $000F0000;
+  STANDARD_RIGHTS_REQUIRED = _DELETE or READ_CONTROL or WRITE_DAC or WRITE_OWNER;
   STANDARD_RIGHTS_READ = READ_CONTROL;
   STANDARD_RIGHTS_WRITE = READ_CONTROL;
   STANDARD_RIGHTS_EXECUTE = READ_CONTROL;
-  STANDARD_RIGHTS_ALL = $001F0000;
+  STANDARD_RIGHTS_ALL = STANDARD_RIGHTS_REQUIRED or SYNCHRONIZE;
   SPECIFIC_RIGHTS_ALL = $0000FFFF;
 
   ACCESS_SYSTEM_SECURITY = $01000000;
@@ -46,6 +46,43 @@ const
   SE_GROUP_INTEGRITY_ENABLED = $00000040;
   SE_GROUP_RESOURCE = $20000000;
   SE_GROUP_LOGON_ID = $C0000000;
+
+  // 9682
+  ACL_REVISION = 2;
+
+  // 9738
+  ACCESS_ALLOWED_ACE_TYPE = $0;
+  ACCESS_DENIED_ACE_TYPE = $1;
+  SYSTEM_AUDIT_ACE_TYPE = $2;
+  SYSTEM_ALARM_ACE_TYPE = $3;
+  ACCESS_ALLOWED_CALLBACK_ACE_TYPE = $9;
+  ACCESS_DENIED_CALLBACK_ACE_TYPE = $A;
+  SYSTEM_AUDIT_CALLBACK_ACE_TYPE = $D;
+  SYSTEM_ALARM_CALLBACK_ACE_TYPE = $E;
+  SYSTEM_MANDATORY_LABEL_ACE_TYPE = $11;
+  SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE = $12;
+  SYSTEM_SCOPED_POLICY_ID_ACE_TYPE = $13;
+  SYSTEM_PROCESS_TRUST_LABEL_ACE_TYPE = $14;
+  SYSTEM_ACCESS_FILTER_ACE_TYPE = $15;
+
+  // 9779
+  OBJECT_INHERIT_ACE = $1;
+  CONTAINER_INHERIT_ACE = $2;
+  NO_PROPAGATE_INHERIT_ACE = $4;
+  INHERIT_ONLY_ACE = $8;
+  INHERITED_ACE = $10;
+
+  // 9805
+  SUCCESSFUL_ACCESS_ACE_FLAG = $40;
+  FAILED_ACCESS_ACE_FLAG = $80;
+
+  // 9915
+  SYSTEM_MANDATORY_LABEL_NO_WRITE_UP = $1;
+  SYSTEM_MANDATORY_LABEL_NO_READ_UP = $2;
+  SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP = $4;
+
+  // 10096
+  SECURITY_DESCRIPTOR_REVISION = 1;
 
   // 10320
   SE_PRIVILEGE_ENABLED_BY_DEFAULT = $00000001;
@@ -161,6 +198,53 @@ type
     Sbz2: Word;
   end;
   PAcl = ^TAcl;
+
+  // 9725
+  TAceHeader = record
+    AceType: Byte;
+    AceFlags: Byte;
+    AceSize: Word;
+  end;
+  PAceHeader = ^TAceHeader;
+
+  // This structure covers:
+  //  ACCESS_ALLOWED_ACE & ACCESS_DENIED_ACE
+  //  SYSTEM_AUDIT_ACE & SYSTEM_ALARM_ACE
+  //  SYSTEM_RESOURCE_ATTRIBUTE_ACE
+  //  SYSTEM_SCOPED_POLICY_ID_ACE
+  //  SYSTEM_MANDATORY_LABEL_ACE
+  //  SYSTEM_PROCESS_TRUST_LABEL_ACE
+  //  SYSTEM_ACCESS_FILTER_ACE
+  //  ACCESS_ALLOWED_CALLBACK_ACE & ACCESS_DENIED_CALLBACK_ACE
+  //  SYSTEM_AUDIT_CALLBACK_ACE & SYSTEM_ALARM_CALLBACK_ACE
+  // i.e. everything except OBJECT ACEs.
+  TAce = record
+    Header: TAceHeader;
+    Mask: TAccessMask;
+    SidStart: Cardinal;
+    function Sid: PSid;
+  end;
+  PAce = ^TAce;
+
+  // 10054
+  TAclInformationClass = (
+    AclRevisionInformation = 1,
+    AclSizeInformation = 2
+  );
+
+  // 10064
+  TAclRevisionInformation = record
+    AclRevision: Cardinal;
+  end;
+  PAclRevisionInformation = ^TAclRevisionInformation;
+
+  // 10073
+  TAclSizeInformation = record
+    AceCount: Cardinal;
+    AclBytesInUse: Cardinal;
+    AclBytesFree: Cardinal;
+  end;
+  PAclSizeInformation = ^TAclSizeInformation;
 
   // 10105
   TSecurityDescriptorControl = Word;
@@ -347,5 +431,12 @@ type
   PQuotaLimits = ^TQuotaLimits;
 
 implementation
+
+{ TAce }
+
+function TAce.Sid: PSid;
+begin
+  Result := PSid(@Self.SidStart);
+end;
 
 end.

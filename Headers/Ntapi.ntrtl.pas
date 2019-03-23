@@ -73,7 +73,7 @@ function RtlCreateSecurityDescriptor(SecurityDescriptor: PSecurityDescriptor;
   Revision: Cardinal): NTSTATUS; stdcall; external ntdll;
 
 function RtlValidSecurityDescriptor(SecurityDescriptor: PSecurityDescriptor):
-  NTSTATUS; stdcall; external ntdll;
+  Boolean; stdcall; external ntdll;
 
 function RtlLengthSecurityDescriptor(SecurityDescriptor: PSecurityDescriptor):
   NTSTATUS; stdcall; external ntdll;
@@ -127,6 +127,52 @@ function RtlGetGroupSecurityDescriptor(SecurityDescriptor:
 
 procedure RtlMapGenericMask(var AccessMask: TAccessMask; const GenericMapping:
   TGenericMapping); stdcall; external ntdll;
+
+// ACLs
+
+function RtlCreateAcl(Acl: PAcl; AclLength: Cardinal;
+  AclRevision: Cardinal): NTSTATUS; stdcall; external ntdll;
+
+function RtlValidAcl(Acl: PAcl): Boolean; stdcall; external ntdll;
+
+function RtlQueryInformationAcl(Acl: PAcl;
+  out AclInformation: TAclRevisionInformation;
+  AclInformationLength: Cardinal = SizeOf(TAclRevisionInformation);
+  AclInformationClass: TAclInformationClass = AclRevisionInformation):
+  NTSTATUS; stdcall; external ntdll; overload;
+
+function RtlQueryInformationAcl(Acl: PAcl;
+  out AclInformation: TAclSizeInformation;
+  AclInformationLength: Cardinal = SizeOf(TAclSizeInformation);
+  AclInformationClass: TAclInformationClass = AclSizeInformation):
+  NTSTATUS; stdcall; external ntdll; overload;
+
+function RtlAddAce(Acl: PAcl; AceRevision: Cardinal;
+  StartingAceIndex: Cardinal; AceList: Pointer; AceListLength: Cardinal):
+  NTSTATUS; stdcall; external ntdll;
+
+function RtlDeleteAce(Acl: Pacl; AceIndex: Cardinal): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlGetAce(Acl: PAcl; AceIndex: Cardinal; out Ace: PAce): NTSTATUS;
+  stdcall; external ntdll;
+
+function RtlAddAccessAllowedAceEx(Acl: PAcl; AceRevision: Cardinal;
+  AceFlags: Cardinal; AccessMask: TAccessMask; Sid: PSid): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlAddAccessDeniedAceEx(Acl: PAcl; AceRevision: Cardinal;
+  AceFlags: Cardinal; AccessMask: TAccessMask; Sid: PSid): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlAddAuditAccessAceEx(Acl: PAcl; AceRevision: Cardinal;
+  AceFlags: Cardinal; AccessMask: TAccessMask; Sid: PSid;
+  AuditSuccess: Boolean; AuditFailure: Boolean): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlAddMandatoryAce(Acl: PAcl; AceRevision: Cardinal;
+  AceFlags: Cardinal; Sid: PSid; AceType: Byte; AccessMask: TAccessMask):
+  NTSTATUS; stdcall; external ntdll;
 
 // System information
 
