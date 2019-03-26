@@ -99,12 +99,14 @@ procedure WinCheck(RetVal: LongBool; Where: String; Context: TObject = nil);
 function WinTryCheckBuffer(BufferSize: Cardinal): Boolean;
 procedure WinCheckBuffer(BufferSize: Cardinal; Where: String; Context: TObject = nil);
 
-procedure NativeCheck(Status: Cardinal; Where: String; Context: TObject = nil);
+procedure NativeCheck(Status: NTSTATUS; Where: String; Context: TObject = nil);
+function NativeTryCheckBuffer(var Status: NTSTATUS; BufferSize: Cardinal): Boolean;
 
 implementation
 
 uses
-  Winapi.Windows, Winapi.WinError, Ntapi.ntrtl, NtUtils.ErrorMsg;
+  Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.WinError,
+  NtUtils.ErrorMsg;
 
 { ELocatedOSError }
 
@@ -278,10 +280,22 @@ begin
     raise EWinError.Create(ERROR_IMPLEMENTATION_LIMIT, Where, Context);
 end;
 
-procedure NativeCheck(Status: Cardinal; Where: String; Context: TObject);
+procedure NativeCheck(Status: NTSTATUS; Where: String; Context: TObject);
 begin
   if not NT_SUCCESS(Status) then
     raise ENtError.Create(Status, Where, Context);
+end;
+
+function NativeTryCheckBuffer(var Status: NTSTATUS; BufferSize: Cardinal): Boolean;
+begin
+  Result := (Status = STATUS_INFO_LENGTH_MISMATCH) or
+    (Status = STATUS_BUFFER_TOO_SMALL);
+
+  if BufferSize > BUFFER_LIMIT then
+  begin
+    Result := False;
+    Status := STATUS_IMPLEMENTATION_LIMIT;
+  end;
 end;
 
 end.

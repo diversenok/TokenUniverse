@@ -463,7 +463,7 @@ implementation
 
 uses
   System.TypInfo, TU.WtsApi,
-  NtUtils.Processes, Winapi.WinError, Winapi.NtSecApi,
+  NtUtils.Processes, Ntutils.ApiExtension, Winapi.WinError, Winapi.NtSecApi,
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const
@@ -829,56 +829,12 @@ end;
 
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
   SameAccess: Boolean; HandleAttributes: Cardinal = 0);
-const
-  Options: array [Boolean] of Cardinal = (0, DUPLICATE_SAME_ACCESS);
-var
-  Status: NTSTATUS;
-  i: Integer;
-label
-  Done;
 begin
-  // DuplicateHandle does not support MAXIMUM_ALLOWED access and returns zero
-  // access instead. We should implement it on our own by probing additional
-  // access masks.
+  NativeCheck(NtxDuplicateObject(NtCurrentProcess, SrcToken.hToken,
+    NtCurrentProcess, hToken, Access, HandleAttributes, 0),
+    'NtDuplicateObject');
 
-  // Make a lucky guess for MAXIMUM_ALLOWED: try full access first
-  if (Access = MAXIMUM_ALLOWED) and not SameAccess then
-  begin
-    Status := NtDuplicateObject(NtCurrentProcess, SrcToken.hToken,
-      NtCurrentProcess, hToken, TOKEN_ALL_ACCESS, HandleAttributes,
-      Options[SameAccess]);
-
-    // Check for errors different than access problems
-    if Status <> STATUS_ACCESS_DENIED then
-      NativeCheck(Status, 'NtDuplicateObject', SrcToken);
-
-    // If the guess was correct no further processing required
-    if NT_SUCCESS(Status) then
-      goto Done;
-
-    // Full access didn't work. Collect the access that is already granted
-    Access := SrcToken.HandleInformation.GrantedAccess;
-
-    // Try each one that is not granted yet
-    for i := 0 to ACCESS_COUNT - 1 do
-      if (Access and AccessValues[i]) = 0 then
-        if NT_SUCCESS(NtDuplicateObject(NtCurrentProcess, SrcToken.hToken,
-          NtCurrentProcess, hToken, AccessValues[i], 0, 0)) then
-        begin
-          // Yes, this access can be granted, add it
-          Access := Access or AccessValues[i];
-          NtClose(hToken);
-        end;
-
-    // At this point Access variable contains expanded MAXIMUM_ALLOWED
-  end;
-
-  // Finally, duplicate the handle
-  NativeCheck(NtDuplicateObject(NtCurrentProcess, SrcToken.hToken,
-    NtCurrentProcess, hToken, Access, HandleAttributes,
-    Options[SameAccess]), 'NtDuplicateObject', SrcToken);
-
-  Done: FCaption := SrcToken.Caption + ' (ref)'
+  FCaption := SrcToken.Caption + ' (ref)'
   // TODO: No need to snapshot handles, object address is already known
 end;
 
@@ -1259,11 +1215,9 @@ begin
   TTokenFactory.UnRegisterToken(Self);
 
   if hToken <> 0 then
-  try
-    NtClose(hToken); // A protected handle may cause an exception
+  begin
+    NtxSafeClose(hToken);
     hToken := 0;
-  except
-    ; // but destructor should always succeed
   end;
 
   CheckAbandoned(FOnCanClose.Count, 'OnCanClose');
@@ -1436,34 +1390,10 @@ end;
 function TToken.QueryVariableSize(InfoClass: TTokenInformationClass;
   out Status: Boolean; ReturnedSize: PCardinal): Pointer;
 var
-  BufferSize, ReturnValue: Cardinal;
+  DetaiedStatus: NTSTATUS;
 begin
-  Status := False;
-  // TODO: fix potenrial race condition
-
-  // Make a probe call to estimate a requied buffer size
-  BufferSize := 0;
-  GetTokenInformation(hToken, InfoClass, nil, 0, BufferSize);
-
-  // Check for errors and for too big buffers
-  if not WinTryCheckBuffer(BufferSize) then
-    Exit(nil);
-
-  // Allocate memory
-  Result := AllocMem(BufferSize);
-
-  // Query the info class again with a buffer enough to hold the data
-  Status := GetTokenInformation(hToken, InfoClass, Result, BufferSize,
-    ReturnValue);
-
-  // Clean up on failure
-  if not Status then
-  begin
-    FreeMem(Result);
-    Result := nil;
-  end
-  else if Assigned(ReturnedSize) then
-    ReturnedSize^ := BufferSize;
+  Result := NtxQueryBufferToken(hToken, InfoClass, DetaiedStatus, ReturnedSize);
+  Status := NT_SUCCESS(DetaiedStatus);
 
   // Do not free the buffer on success. The caller must do it after use.
 end;

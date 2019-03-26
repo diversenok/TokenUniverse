@@ -182,13 +182,13 @@ begin
       Exit(SETTER_AUDIT_PRIV);
   end;
 
-  if E.Match('AdjustTokenPrivileges', ERROR_NOT_ALL_ASSIGNED) then
-    Exit(SETTER_PRIVILEGES_OTHER);
-
   if E.ErrorOrigin = 'NtAdjustPrivilegesToken' then
   begin
     if E.ErrorCode = STATUS_ACCESS_DENIED then
       Exit(SETTER_PRIVILEGES_ACCESS);
+
+    if E.ErrorCode = STATUS_NOT_ALL_ASSIGNED then
+      Exit(SETTER_PRIVILEGES_OTHER);
   end;
 
   if E.ErrorOrigin = 'NtAdjustGroupsToken' then

@@ -58,7 +58,8 @@ uses
   Winapi.ntlsa in 'Headers\Winapi.ntlsa.pas',
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
   NtUtils.Lsa in 'NtUtils\NtUtils.Lsa.pas',
-  NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas';
+  NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas',
+  NtUtils.ApiExtension in 'NtUtils\NtUtils.ApiExtension.pas';
 
 {$R *.res}
 

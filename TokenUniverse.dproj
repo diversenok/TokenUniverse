@@ -219,6 +219,7 @@
         </DCCReference>
         <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
         <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.ApiExtension.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
