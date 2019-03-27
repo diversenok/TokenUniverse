@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.ComCtrls, Vcl.StdCtrls, Winapi.Windows,
-  UI.ListViewEx, TU.Tokens, TU.WtsApi, TU.LsaApi, TU.Tokens.Types, Winapi.WinNt;
+  UI.ListViewEx, TU.Tokens, TU.LsaApi, TU.Tokens.Types, Winapi.WinNt,
+  NtUtils.WinStation;
 
 type
   TPrivilegesSource = class
@@ -67,12 +68,11 @@ type
 
   TSessionSource = class
   private
-    SessionList: TSessionList;
+    Sessions: TSessionArray;
     ComboBox: TComboBox;
     function GetSession: Cardinal;
     procedure SetSession(const Value: Cardinal);
   public
-    destructor Destroy; override;
     constructor Create(OwnedComboBox: TComboBox; SelectCurrent: Boolean);
     procedure RefreshSessionList(SelectCurrent: Boolean);
     property SelectedSession: Cardinal read GetSession write SetSession;
@@ -640,12 +640,6 @@ begin
   RefreshSessionList(SelectCurrent);
 end;
 
-destructor TSessionSource.Destroy;
-begin
-  SessionList.Free;
-  inherited;
-end;
-
 function TSessionSource.GetSession: Cardinal;
 begin
   Assert(Assigned(ComboBox));
@@ -653,7 +647,7 @@ begin
   if ComboBox.ItemIndex = -1 then
     Result := StrToUIntEx(ComboBox.Text, 'session')
   else
-    Result := SessionList[ComboBox.ItemIndex].SessionId;
+    Result := Sessions[ComboBox.ItemIndex].SessionId;
 end;
 
 procedure TSessionSource.RefreshSessionList(SelectCurrent: Boolean);
@@ -665,16 +659,15 @@ begin
   // THINK: Should we preserve the selection? Note that Info window re-assigns
   // the value on Refresh action because it re-queries it.
 
-  SessionList.Free;
-  SessionList := TSessionList.CreateCurrentServer;
+  Sessions := EnumerateSessions;
 
   ComboBox.Items.BeginUpdate;
   ComboBox.Items.Clear;
 
-  for i := 0 to SessionList.Count - 1 do
-    ComboBox.Items.Add(SessionList[i].ToString);
+  for i := 0 to High(Sessions) do
+    ComboBox.Items.Add(QuerySessionFullName(Sessions[i].SessionId));
 
-  if SelectCurrent and (SessionList.Count > 0) then
+  if SelectCurrent and (Length(Sessions) > 0) then
     SetSession(GetCurrentSession);
 
   ComboBox.Items.EndUpdate;
@@ -684,7 +677,7 @@ procedure TSessionSource.SetSession(const Value: Cardinal);
 begin
   Assert(Assigned(ComboBox));
 
-  ComboBox.ItemIndex := SessionList.Find(Value);
+  ComboBox.ItemIndex := FindSessionById(Sessions, Value);
   if ComboBox.ItemIndex = -1 then
     ComboBox.Text := IntToStr(Value);
 end;

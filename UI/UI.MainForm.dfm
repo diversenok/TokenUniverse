@@ -264,7 +264,7 @@ object FormMain: TFormMain
         OnClick = ActionLogon
       end
       object NewQueryUserToken: TMenuItem
-        Caption = 'WTSQueryUserToken'
+        Caption = 'Query session token'
         ShortCut = 16469
         OnClick = ActionWTSQuery
       end

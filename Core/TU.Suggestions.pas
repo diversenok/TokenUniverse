@@ -44,9 +44,6 @@ resourcestring
     'Impersonation and Delegation ones. If you are working with linked ' +
     'tokens you can obtain a primary linked token if you have ' +
     '`SeTcbPrivilege` privilege.';
-  NEW_WTS_PRIV = 'WTSQueryUserToken requires SeTcbPrivilege.';
-  NEW_WTS_NO_TOKEN = 'You can''t query a token of a session that ' +
-    'doesn''t belong to any user.';
   NEW_RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
     'resticted tokens.';
   NEW_NT_CREATE = 'Creation of a token from the scratch requires `SeCreateTokenPrivilege`';
@@ -99,15 +96,6 @@ function SuggestConstructor(E: ELocatedOSError): String;
 begin
   if E.Match('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_DUPLICATE_IMP);
-
-  if E.ErrorOrigin = 'WTSQueryUserToken' then
-  begin
-    if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
-      Exit(NEW_WTS_PRIV);
-
-    if E.ErrorCode = ERROR_NO_TOKEN then
-      Exit(NEW_WTS_NO_TOKEN);
-  end;
 
   if E.Match('NtFilterToken', STATUS_ACCESS_DENIED)  then
     Exit(NEW_RESTCICT_ACCESS);

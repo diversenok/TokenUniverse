@@ -12,7 +12,6 @@ uses
   UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
   UI.Run in 'UI\UI.Run.pas' {RunDialog},
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
-  TU.WtsApi in 'Core\TU.WtsApi.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
   UI.ListViewEx in 'UI\UI.ListViewEx.pas',
@@ -59,7 +58,9 @@ uses
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
   NtUtils.Lsa in 'NtUtils\NtUtils.Lsa.pas',
   NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas',
-  NtUtils.ApiExtension in 'NtUtils\NtUtils.ApiExtension.pas';
+  NtUtils.ApiExtension in 'NtUtils\NtUtils.ApiExtension.pas',
+  Winapi.winsta in 'Headers\Winapi.winsta.pas',
+  NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas';
 
 {$R *.res}
 

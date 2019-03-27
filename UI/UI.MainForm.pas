@@ -120,7 +120,7 @@ implementation
 
 uses
   System.UITypes, TU.Tokens.Types,
-  NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.WtsApi, TU.Tokens,
+  NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,

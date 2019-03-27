@@ -131,7 +131,6 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.RestartSvc.pas"/>
-        <DCCReference Include="Core\TU.WtsApi.pas"/>
         <DCCReference Include="Core\TU.Suggestions.pas"/>
         <DCCReference Include="UI\UI.Restrict.pas">
             <Form>DialogRestrictToken</Form>
@@ -220,6 +219,8 @@
         <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
         <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
         <DCCReference Include="NtUtils\NtUtils.ApiExtension.pas"/>
+        <DCCReference Include="Headers\Winapi.winsta.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

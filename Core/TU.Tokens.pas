@@ -5,10 +5,9 @@ interface
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 uses
-  System.SysUtils, System.Generics.Collections,
-  TU.Winapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
-  TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi,
-  Ntapi.ntdef, Ntapi.ntobapi, NtUtils.Exceptions;
+  System.SysUtils, System.Generics.Collections, NtUtils.Exceptions,
+  Ntapi.ntdef, Ntapi.ntobapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
+  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi;
 
 type
   /// <summary>
@@ -416,7 +415,6 @@ type
     /// <summary>
     ///  Queries a token of the specified Windows Terminal Session.
     /// </summary>
-    /// <remarks> Requires SeTcbPrivilege. </remarks>
     constructor CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
 
     /// <summary> Creates a restricted version of the token. </summary>
@@ -462,9 +460,9 @@ type
 implementation
 
 uses
-  System.TypInfo, TU.WtsApi,
-  NtUtils.Processes, Ntutils.ApiExtension, Winapi.WinError, Winapi.NtSecApi,
-  Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
+  System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension,
+  Winapi.WinError, Winapi.NtSecApi, Winapi.winsta, Ntapi.ntstatus,
+  Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -1003,8 +1001,18 @@ begin
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
+var
+  ReturedSize: Cardinal;
+  Buffer: TWinStationUserToken;
 begin
-  WinCheck(WTSQueryUserToken(SessionID, hToken), 'WTSQueryUserToken');
+  Buffer.ClientID.Create(GetCurrentProcessId, GetCurrentThreadId);
+  Buffer.UserToken := 0;
+
+  WinCheck(WinStationQueryInformationW(SERVER_CURRENT, SessionID,
+    WinStationUserToken, @Buffer, SizeOf(Buffer), ReturedSize),
+    'WinStationQueryInformationW [WinStationUserToken]');
+
+  hToken := Buffer.UserToken;
   FCaption := Format('Session %d token', [SessionID]);
 end;
 
