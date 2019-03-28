@@ -182,7 +182,7 @@ var
 
 function ReSvcMain: Boolean;
 begin
-  Result := StartServiceCtrlDispatcherW(@RESVC_SERVICE_TABLE);
+  Result := StartServiceCtrlDispatcherW(PServiceTableEntryW(@RESVC_SERVICE_TABLE));
 end;
 
 function ReSvcHandlerEx(dwControl: Cardinal; dwEventType: Cardinal;
