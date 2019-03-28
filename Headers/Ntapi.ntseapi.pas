@@ -36,7 +36,7 @@ const
 
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
-  AuthenticationId: PLuid; ExpirationTime: PInt64; User: PTokenUser;
+  AuthenticationId: PLuid; ExpirationTime: PLargeInteger; User: PTokenUser;
   Groups: PTokenGroups; Privileges: PTokenPrivileges; Owner: PTokenOwner;
   PrimaryGroup: PTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
   Source: PTokenSource): NTSTATUS; stdcall; external ntdll;

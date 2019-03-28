@@ -51,8 +51,8 @@ const
   'Logon flags', 'Last succcessful attempt', 'Last failed attempt',
   'Failed attempts since last successful logon',
   'Logon script', 'Profile path', 'Home directory', 'Home drive', 'Logoff time',
-  'Kickoff time', 'Password last set', 'Password can change',
-  'Password must change');
+  'Kickoff time', 'Password last set', 'Password can change from',
+  'Password must change before');
 
   // Be consistent with ListView
   ITEM_IND_ORIGIN = 0;

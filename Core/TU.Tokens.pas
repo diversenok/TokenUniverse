@@ -436,7 +436,8 @@ type
     constructor CreateNtCreateToken(User: TSecurityIdentifier;
       DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
       LogonID: TLuid; Owner: TSecurityIdentifier;
-      PrimaryGroup: TSecurityIdentifier; Source: TTokenSource; Expires: Int64);
+      PrimaryGroup: TSecurityIdentifier; Source: TTokenSource;
+      Expires: TLargeInteger);
 
     /// <summary>
     ///  Create a token using <see cref="NtImpersonateAnonymousToken">.
@@ -870,7 +871,7 @@ end;
 constructor TToken.CreateNtCreateToken(User: TSecurityIdentifier;
   DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
   LogonID: TLuid; Owner: TSecurityIdentifier; PrimaryGroup: TSecurityIdentifier;
-  Source: TTokenSource; Expires: Int64);
+  Source: TTokenSource; Expires: TLargeInteger);
 var
   TokenUser: TTokenUser;
   TokenGroups: PTokenGroups;

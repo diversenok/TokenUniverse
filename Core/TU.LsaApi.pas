@@ -222,10 +222,10 @@ begin
       Result := NativeTimeToString(Data.PasswordLastSet);
 
     lsPasswordCanChange:
-      Result := YesNoToString(LongBool(Data.PasswordCanChange));
+      Result := NativeTimeToString(Data.PasswordCanChange);
 
     lsPasswordMustChange:
-      Result := YesNoToString(LongBool(Data.PasswordMustChange));
+      Result := NativeTimeToString(Data.PasswordMustChange);
 
   end;
 end;

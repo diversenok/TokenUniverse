@@ -148,13 +148,13 @@ begin
     LogonIDSource.SelectedLogonSession :=
       Source.InfoClass.Statistics.AuthenticationId;
 
-    CheckBoxInfinite.Checked := (Source.InfoClass.Statistics.ExpirationTime =
-      Int64.MaxValue);
+    CheckBoxInfinite.Checked := (
+      Source.InfoClass.Statistics.ExpirationTime.QuadPart = Int64.MaxValue);
 
     if not CheckBoxInfinite.Checked then
     begin
-      DateExpires.DateTime := NativeTimeToLocalDateTime(
-        Source.InfoClass.Statistics.ExpirationTime);
+      DateExpires.DateTime :=
+        Source.InfoClass.Statistics.ExpirationTime.ToDateTime;
 
       TimeExpires.DateTime := DateExpires.DateTime;
     end;
@@ -221,16 +221,16 @@ end;
 procedure TDialogCreateToken.ButtonOKClick(Sender: TObject);
 var
   Token: TToken;
-  Expires: Int64;
+  Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: TMandatoryPolicy;
 begin
   if CheckBoxInfinite.Checked then
-    Expires := Int64.MaxValue
+    Expires.QuadPart := Int64.MaxValue
   else if TimeExpires.Checked then
-    Expires := DateTimeToNative(DateExpires.Date + TimeExpires.Time)
+    Expires.FromDateTime(DateExpires.Date + TimeExpires.Time)
   else
-    Expires := DateTimeToNative(DateExpires.Date);
+    Expires.FromDateTime(DateExpires.Date);
 
   // ComboOwner may contain '< Same as user >' value
   if ComboOwner.ItemIndex = 0 then

@@ -13,13 +13,14 @@ type
   TSystemInformationClass = (
     SystemProcessInformation = 5, // q: TSystemProcessInformation
     SystemObjectInformation = 17, // q: TSystemObjectTypeInformation mixed with TSystemObjectInformation
+    SystemCurrentTimeZoneInformation = 44, // q, s: TRtlTimeZoneInformation
     SystemExtendedHandleInformation = 64 // q: TSystemHandleInformationEx
   );
 
   TSystemThreadInformation = record
-    KernelTime: UInt64;
-    UserTime: UInt64;
-    CreateTime: UInt64;
+    KernelTime: TLargeInteger;
+    UserTime: TLargeInteger;
+    CreateTime: TLargeInteger;
     WaitTime: Cardinal;
     StartAddress: Pointer;
     ClientId: TClientId;

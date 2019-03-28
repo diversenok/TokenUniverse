@@ -119,7 +119,11 @@ const
 
 type
   // 818
-  TLargeInteger = Int64;
+  TLargeInteger = record
+    QuadPart: Int64;
+    function ToDateTime: TDateTime;
+    procedure FromDateTime(DateTime: TDateTime);
+  end;
   PLargeInteger = ^TLargeInteger;
 
   // 838
@@ -432,11 +436,43 @@ type
 
 implementation
 
+uses
+  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntexapi;
+
 { TAce }
 
 function TAce.Sid: PSid;
 begin
   Result := PSid(@Self.SidStart);
+end;
+
+{ TLargeInteger }
+
+const
+  DAYS_FROM_1601 = 109205; // difference with Delphi's zero time in days
+  DAY_TO_NATIVE_TIME = 864000000000; // 100ns in 1 day
+  MINUTE_TO_NATIVE_TIME = 600000000; // 100ns in 1 minute
+
+function GetTimeZoneBias: Int64;
+var
+  TimeZoneInfo: TRtlTimeZoneInformation;
+begin
+  if NT_SUCCESS(NtQuerySystemInformation(SystemCurrentTimeZoneInformation,
+    @TimeZoneInfo, SizeOf(TimeZoneInfo), nil)) then
+    Result := Int64(TimeZoneInfo.Bias) * MINUTE_TO_NATIVE_TIME
+  else
+    Result := 0;
+end;
+
+procedure TLargeInteger.FromDateTime(DateTime: TDateTime);
+begin
+  QuadPart := Trunc(DAY_TO_NATIVE_TIME * (DAYS_FROM_1601 + DateTime))
+    + GetTimeZoneBias;
+end;
+
+function TLargeInteger.ToDateTime: TDateTime;
+begin
+  Result := (QuadPart - GetTimeZoneBias) / DAY_TO_NATIVE_TIME - DAYS_FROM_1601;
 end;
 
 end.

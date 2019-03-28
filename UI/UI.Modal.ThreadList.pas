@@ -68,7 +68,7 @@ begin
   begin
     Thread := @Process.Threads[i];
     Caption := IntToStr(Thread.ClientId.UniqueThread);
-    SubItems.Add(DateTimeToStr(NativeTimeToLocalDateTime(Thread.CreateTime)));
+    SubItems.Add(DateTimeToStr(Thread.CreateTime.ToDateTime));
     if Thread.WaitReason = Suspended then
       Color := clSuspended
     else

@@ -6,6 +6,31 @@ interface
 uses
   Winapi.WinNt, Ntapi.ntdef, NtApi.ntpebteb;
 
+type
+  // Time
+
+  TTimeFields = record
+    Year: SmallInt;
+    Month: SmallInt;
+    Day: SmallInt;
+    Hour: SmallInt;
+    Minute: SmallInt;
+    Second: SmallInt;
+    Milliseconds: SmallInt;
+    Weekday: SmallInt;
+  end;
+
+  TRtlTimeZoneInformation = record
+    Bias: Integer;
+    StandardName: array [0..31] of WideChar;
+    StandardStart: TTimeFields;
+    StandardBias: Cardinal;
+    DaylightName: array [0..31] of WideChar;
+    DaylightStart: TTimeFields;
+    DaylightBias: Integer;
+  end;
+  PTRtlTimeZoneInformation = ^TRtlTimeZoneInformation;
+
 // PEB
 
 function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
