@@ -184,22 +184,22 @@ begin
   UnsubscribeToken;
 
   Self.Token := Token;
-  Token.OnClose.Add(UnsubscribeToken);
+  Token.OnClose.Subscribe(UnsubscribeToken);
 
   if Token.InfoClass.Query(tdTokenAuditPolicy) then
     OnAuditChange(Token.InfoClass.AuditPolicy)
   else
     OnAuditChange(nil);
 
-  Token.Events.OnAuditChange.Add(OnAuditChange, False);
+  Token.Events.OnAuditChange.Subscribe(OnAuditChange, False);
 end;
 
 procedure TFrameAudit.UnsubscribeToken(Dummy: TToken);
 begin
   if Assigned(Token) then
   begin
-    Token.Events.OnAuditChange.Delete(OnAuditChange);
-    Token.OnClose.Delete(UnsubscribeToken);
+    Token.Events.OnAuditChange.Unsubscribe(OnAuditChange);
+    Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
 
     Policy.Free;

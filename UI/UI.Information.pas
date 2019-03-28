@@ -415,18 +415,18 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Token.Events.OnVirtualizationEnabledChange.Delete(ChangedVEnabled);
-  Token.Events.OnVirtualizationAllowedChange.Delete(ChangedVAllowed);
-  Token.Events.OnPrimaryChange.Delete(ChangedPrimaryGroup);
-  Token.Events.OnOwnerChange.Delete(ChangedOwner);
-  Token.Events.OnStatisticsChange.Delete(ChangedStatistics);
-  Token.Events.OnGroupsChange.Delete(ChangedGroups);
-  Token.Events.OnPrivilegesChange.Delete(ChangedPrivileges);
-  Token.Events.OnPolicyChange.Delete(ChangedPolicy);
-  Token.Events.OnIntegrityChange.Delete(ChangedIntegrity);
-  Token.Events.OnUIAccessChange.Delete(ChangedUIAccess);
-  Token.Events.OnSessionChange.Delete(ChangedSession);
-  Token.OnCaptionChange.Delete(ChangedCaption);
+  Token.Events.OnVirtualizationEnabledChange.Unsubscribe(ChangedVEnabled);
+  Token.Events.OnVirtualizationAllowedChange.Unsubscribe(ChangedVAllowed);
+  Token.Events.OnPrimaryChange.Unsubscribe(ChangedPrimaryGroup);
+  Token.Events.OnOwnerChange.Unsubscribe(ChangedOwner);
+  Token.Events.OnStatisticsChange.Unsubscribe(ChangedStatistics);
+  Token.Events.OnGroupsChange.Unsubscribe(ChangedGroups);
+  Token.Events.OnPrivilegesChange.Unsubscribe(ChangedPrivileges);
+  Token.Events.OnPolicyChange.Unsubscribe(ChangedPolicy);
+  Token.Events.OnIntegrityChange.Unsubscribe(ChangedIntegrity);
+  Token.Events.OnUIAccessChange.Unsubscribe(ChangedUIAccess);
+  Token.Events.OnSessionChange.Unsubscribe(ChangedSession);
+  Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   RestrictedSIDsSource.Free;
   GroupsSource.Free;
   PrivilegesSource.Free;
@@ -452,22 +452,22 @@ begin
   // information that is stored in the event handlers. By doing that in this
   // order we avoid multiple calls while sharing the data between different
   // tokens pointing the same kernel object.
-  Token.Events.OnSessionChange.Add(ChangedSession);
-  Token.Events.OnUIAccessChange.Add(ChangedUIAccess);
-  Token.Events.OnIntegrityChange.Add(ChangedIntegrity);
-  Token.Events.OnPolicyChange.Add(ChangedPolicy);
-  Token.Events.OnPrivilegesChange.Add(ChangedPrivileges);
-  Token.Events.OnGroupsChange.Add(ChangedGroups);
-  Token.Events.OnStatisticsChange.Add(ChangedStatistics);
-  Token.Events.OnOwnerChange.Add(ChangedOwner);
-  Token.Events.OnPrimaryChange.Add(ChangedPrimaryGroup);
-  Token.Events.OnVirtualizationAllowedChange.Add(ChangedVAllowed);
-  Token.Events.OnVirtualizationEnabledChange.Add(ChangedVEnabled);
+  Token.Events.OnSessionChange.Subscribe(ChangedSession);
+  Token.Events.OnUIAccessChange.Subscribe(ChangedUIAccess);
+  Token.Events.OnIntegrityChange.Subscribe(ChangedIntegrity);
+  Token.Events.OnPolicyChange.Subscribe(ChangedPolicy);
+  Token.Events.OnPrivilegesChange.Subscribe(ChangedPrivileges);
+  Token.Events.OnGroupsChange.Subscribe(ChangedGroups);
+  Token.Events.OnStatisticsChange.Subscribe(ChangedStatistics);
+  Token.Events.OnOwnerChange.Subscribe(ChangedOwner);
+  Token.Events.OnPrimaryChange.Subscribe(ChangedPrimaryGroup);
+  Token.Events.OnVirtualizationAllowedChange.Subscribe(ChangedVAllowed);
+  Token.Events.OnVirtualizationEnabledChange.Subscribe(ChangedVEnabled);
   PrivilegesSource.SubscribeToken(Token);
   GroupsSource.SubscribeToken(Token, gsGroups);
   RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);
 
-  Token.OnCaptionChange.Add(ChangedCaption);
+  Token.OnCaptionChange.Subscribe(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);
 
   TabRestricted.Caption := Format('Restricting SIDs (%d)',

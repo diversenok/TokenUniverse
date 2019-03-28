@@ -88,7 +88,7 @@ end;
 
 procedure TDialogSafer.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Token.OnCaptionChange.Delete(ChangedCaption);
+  Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   UnsubscribeTokenCanClose(Token);
 end;
 
@@ -98,7 +98,7 @@ begin
 
   SubscribeTokenCanClose(Token, Caption);
 
-  Token.OnCaptionChange.Add(ChangedCaption);
+  Token.OnCaptionChange.Subscribe(ChangedCaption);
   ChangedCaption(Token.Caption);
 
   if Token.InfoClass.Query(tdTokenSandBoxInert) then

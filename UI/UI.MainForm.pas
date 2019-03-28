@@ -6,7 +6,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList, Vcl.AppEvnts,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
-  UI.ListViewEx, UI.Prototypes, TU.Common, Winapi.WinNt;
+  UI.ListViewEx, UI.Prototypes, DelphiUtils.Events, Winapi.WinNt;
 
 type
   TFormMain = class(TForm)

@@ -336,18 +336,18 @@ begin
   UnsubscribeToken;
 
   Self.Token := Token;
-  Token.OnClose.Add(UnsubscribeToken);
+  Token.OnClose.Subscribe(UnsubscribeToken);
 
   Token.InfoClass.Query(tdTokenPrivileges);
-  Token.Events.OnPrivilegesChange.Add(OnPrivilegeChange);
+  Token.Events.OnPrivilegesChange.Subscribe(OnPrivilegeChange);
 end;
 
 procedure TPrivilegesSource.UnsubscribeToken(Dummy: TToken = nil);
 begin
   if Assigned(Token) then
   begin
-    Token.Events.OnPrivilegesChange.Delete(OnPrivilegeChange);
-    Token.OnClose.Delete(UnsubscribeToken);
+    Token.Events.OnPrivilegesChange.Unsubscribe(OnPrivilegeChange);
+    Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
   end;
 end;
@@ -564,14 +564,14 @@ begin
 
   Self.Mode := Mode;
   Self.Token := Token;
-  Token.OnClose.Add(UnsubscribeToken);
+  Token.OnClose.Subscribe(UnsubscribeToken);
 
   if (Mode = gsGroups) or (Mode = gsGroupsEnabledOnly) then
   begin
     // Query groups and subcribe for the event. The subscription will
     // automatically invoke our event listener.
     Token.InfoClass.Query(tdTokenGroups);
-    Token.Events.OnGroupsChange.Add(OnGroupsChange);
+    Token.Events.OnGroupsChange.Subscribe(OnGroupsChange);
   end
   else if Mode = gsRestrictedSIDs then
   begin
@@ -624,9 +624,9 @@ begin
   begin
     // Restricted SIDs do not have an event, but Groups do
     if (Mode = gsGroups) or (Mode = gsGroupsEnabledOnly) then
-      Token.Events.OnGroupsChange.Delete(OnGroupsChange);
+      Token.Events.OnGroupsChange.Unsubscribe(OnGroupsChange);
 
-    Token.OnClose.Delete(UnsubscribeToken);
+    Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
   end;
 end;
@@ -938,7 +938,7 @@ begin
   Item.OwnedData := Self;
 
   // Subscribe main column updates
-  Token.OnCaptionChange.Add(TokenCaptionCallback, False);
+  Token.OnCaptionChange.Subscribe(TokenCaptionCallback, False);
   TokenCaptionCallback(Token.Caption);
 
   // Initialize sources for all other columns
@@ -958,7 +958,7 @@ begin
   for i := 0 to High(Cells) do
     Cells[i].Free;
 
-  Token.OnCaptionChange.Delete(TokenCaptionCallback);
+  Token.OnCaptionChange.Unsubscribe(TokenCaptionCallback);
   Token.Free;
 
   inherited;

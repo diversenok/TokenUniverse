@@ -221,6 +221,7 @@
         <DCCReference Include="Headers\Winapi.winsta.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Audit.pas"/>
+        <DCCReference Include="DelphiUtils\DelphiUtils.Events.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

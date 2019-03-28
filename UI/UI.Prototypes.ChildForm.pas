@@ -55,13 +55,13 @@ procedure TChildForm.DoClose(var Action: TCloseAction);
 begin
   Action := caFree;
   inherited;
-  FormMain.OnMainFormClose.Delete(OnMainFormClose);
+  FormMain.OnMainFormClose.Unsubscribe(OnMainFormClose);
 end;
 
 procedure TChildForm.DoCreate;
 begin
   inherited;
-  FormMain.OnMainFormClose.Add(OnMainFormClose);
+  FormMain.OnMainFormClose.Subscribe(OnMainFormClose);
 end;
 
 procedure TChildForm.OnMainFormClose(Sender: TObject);
@@ -81,12 +81,12 @@ procedure TChildForm.SubscribeTokenCanClose(Token: TToken;
   ConfirmComment: String);
 begin
   FConfirmComment := ConfirmComment;
-  Token.OnCanClose.Add(ConfirmTokenClose);
+  Token.OnCanClose.Subscribe(ConfirmTokenClose);
 end;
 
 procedure TChildForm.UnsubscribeTokenCanClose(Token: TToken);
 begin
-  Token.OnCanClose.Delete(ConfirmTokenClose);
+  Token.OnCanClose.Unsubscribe(ConfirmTokenClose);
 end;
 
 { TChildTaskbarForm }

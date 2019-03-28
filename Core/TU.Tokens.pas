@@ -7,7 +7,7 @@ interface
 uses
   System.SysUtils, System.Generics.Collections, NtUtils.Exceptions,
   Ntapi.ntdef, Ntapi.ntobapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
-  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, TU.Common, TU.LsaApi;
+  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, DelphiUtils.Events,  TU.LsaApi;
 
 type
   /// <summary>
@@ -63,19 +63,19 @@ type
     LogonSessionInfo: TLogonSessionInfo;
     ObjectInformation: TObjectBasicInformaion;
 
-    FOnOwnerChange, FOnPrimaryChange: TValuedEventHandler<TSecurityIdentifier>;
-    FOnSessionChange: TValuedEventHandler<Cardinal>;
-    FOnAuditChange: TValuedEventHandler<TTokenPerUserAudit>;
-    FOnOriginChange: TValuedEventHandler<TLuid>;
-    FOnUIAccessChange: TValuedEventHandler<LongBool>;
-    FOnIntegrityChange: TValuedEventHandler<TTokenIntegrity>;
-    FOnVirtualizationAllowedChange: TValuedEventHandler<LongBool>;
-    FOnVirtualizationEnabledChange: TValuedEventHandler<LongBool>;
-    FOnPolicyChange: TValuedEventHandler<TMandatoryPolicy>;
-    FOnPrivilegesChange: TValuedEventHandler<TPrivilegeArray>;
-    FOnGroupsChange: TValuedEventHandler<TGroupArray>;
-    FOnStatisticsChange: TValuedEventHandler<TTokenStatistics>;
-    OnStringDataChange: array [TTokenStringClass] of TEventHandler<String>;
+    FOnOwnerChange, FOnPrimaryChange: TCachingEvent<TSecurityIdentifier>;
+    FOnSessionChange: TCachingEvent<Cardinal>;
+    FOnAuditChange: TCachingEvent<TTokenPerUserAudit>;
+    FOnOriginChange: TCachingEvent<TLuid>;
+    FOnUIAccessChange: TCachingEvent<LongBool>;
+    FOnIntegrityChange: TCachingEvent<TTokenIntegrity>;
+    FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
+    FOnVirtualizationEnabledChange: TCachingEvent<LongBool>;
+    FOnPolicyChange: TCachingEvent<TMandatoryPolicy>;
+    FOnPrivilegesChange: TCachingEvent<TPrivilegeArray>;
+    FOnGroupsChange: TCachingEvent<TGroupArray>;
+    FOnStatisticsChange: TCachingEvent<TTokenStatistics>;
+    OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
 
     ObjectAddress: NativeUInt;
     ReferenceCount: Integer;
@@ -83,19 +83,19 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    property OnOwnerChange: TValuedEventHandler<TSecurityIdentifier> read FOnOwnerChange;
-    property OnPrimaryChange: TValuedEventHandler<TSecurityIdentifier> read FOnPrimaryChange;
-    property OnSessionChange: TValuedEventHandler<Cardinal> read FOnSessionChange;
-    property OnAuditChange: TValuedEventHandler<TTokenPerUserAudit> read FOnAuditChange;
-    property OnOriginChange: TValuedEventHandler<TLuid> read FOnOriginChange;
-    property OnUIAccessChange: TValuedEventHandler<LongBool> read FOnUIAccessChange;
-    property OnIntegrityChange: TValuedEventHandler<TTokenIntegrity> read FOnIntegrityChange;
-    property OnVirtualizationAllowedChange: TValuedEventHandler<LongBool> read FOnVirtualizationAllowedChange;
-    property OnVirtualizationEnabledChange: TValuedEventHandler<LongBool> read FOnVirtualizationEnabledChange;
-    property OnPolicyChange: TValuedEventHandler<TMandatoryPolicy> read FOnPolicyChange;
-    property OnPrivilegesChange: TValuedEventHandler<TPrivilegeArray> read FOnPrivilegesChange;
-    property OnGroupsChange: TValuedEventHandler<TGroupArray> read FOnGroupsChange;
-    property OnStatisticsChange: TValuedEventHandler<TTokenStatistics> read FOnStatisticsChange;
+    property OnOwnerChange: TCachingEvent<TSecurityIdentifier> read FOnOwnerChange;
+    property OnPrimaryChange: TCachingEvent<TSecurityIdentifier> read FOnPrimaryChange;
+    property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
+    property OnAuditChange: TCachingEvent<TTokenPerUserAudit> read FOnAuditChange;
+    property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
+    property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
+    property OnIntegrityChange: TCachingEvent<TTokenIntegrity> read FOnIntegrityChange;
+    property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
+    property OnVirtualizationEnabledChange: TCachingEvent<LongBool> read FOnVirtualizationEnabledChange;
+    property OnPolicyChange: TCachingEvent<TMandatoryPolicy> read FOnPolicyChange;
+    property OnPrivilegesChange: TCachingEvent<TPrivilegeArray> read FOnPrivilegesChange;
+    property OnGroupsChange: TCachingEvent<TGroupArray> read FOnGroupsChange;
+    property OnStatisticsChange: TCachingEvent<TTokenStatistics> read FOnStatisticsChange;
 
     /// <summary>
     ///  Calls the event listener with the newly obtained string and subscribes
@@ -248,9 +248,9 @@ type
     Cache: TTokenCacheAndEvents;
 
     FCaption: String;
-    FOnCaptionChange: TValuedEventHandler<String>;
-    FOnCanClose: TEventHandler<TToken>;
-    FOnClose: TEventHandler<TToken>;
+    FOnCaptionChange: TCachingEvent<String>;
+    FOnCanClose: TEvent<TToken>;
+    FOnClose: TEvent<TToken>;
   protected
 
     {---  TToken routines to query / set data for token info classes  ---- }
@@ -335,14 +335,14 @@ type
     property Events: TTokenCacheAndEvents read Cache;
 
     property Caption: String read FCaption write SetCaption;
-    property OnCaptionChange: TValuedEventHandler<String> read FOnCaptionChange;
+    property OnCaptionChange: TCachingEvent<String> read FOnCaptionChange;
 
     /// <summary>
     ///  The event is called to test whether the token can be destroyed.
     ///  The listener can deny object destruction by calling
     ///  <see cref="System.SysUtils.EAbort"/>.
     /// </summary>
-    property OnCanClose: TEventHandler<TToken> read FOnCanClose;
+    property OnCanClose: TEvent<TToken> read FOnCanClose;
 
     /// <summary>
     ///  Asks all subscribed event listeners if the token can be freed.
@@ -354,7 +354,7 @@ type
 
     /// <summary> The event is called on token destruction. </summary>
     /// <remarks> Be aware of exceptions at this point. </remarks>
-    property OnClose: TEventHandler<TToken> read FOnClose;
+    property OnClose: TEvent<TToken> read FOnClose;
     destructor Destroy; override;
 
     procedure PrivilegeAdjust(Privileges: TPrivilegeArray;
@@ -535,7 +535,7 @@ begin
   // stored inside TTokenData. They are currently not supported for invocation.
 
   // Subscribe for future events
-  OnStringDataChange[StringClass].Add(Listener);
+  OnStringDataChange[StringClass].Subscribe(Listener);
 end;
 
 procedure TTokenCacheAndEvents.UnSubscribeString(StringClass: TTokenStringClass;
@@ -544,7 +544,7 @@ begin
   // Note: tsHandle and tsAccess should be per-handle events and should be
   // stored inside TTokenData. They are currently not supported for invocation.
 
-  OnStringDataChange[StringClass].Delete(Listener);
+  OnStringDataChange[StringClass].Unsubscribe(Listener);
 end;
 
 { TTokenFactory }

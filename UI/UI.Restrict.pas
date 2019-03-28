@@ -109,7 +109,7 @@ end;
 procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  Token.OnCaptionChange.Delete(ChangedCaption);
+  Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   PrivilegesSource.Free;
   RestrictGroupsSource.Free;
   DisableGoupsSource.Free;
@@ -136,7 +136,7 @@ begin
   // Show only enabled groups to make things clear when using restictions
   RestrictGroupsSource.SubscribeToken(Token, gsGroupsEnabledOnly);
 
-  Token.OnCaptionChange.Add(ChangedCaption);
+  Token.OnCaptionChange.Subscribe(ChangedCaption);
   ChangedCaption(Token.Caption);
 
   // The user can also be disabled and restricted

@@ -120,7 +120,7 @@ begin
   UnsubscribeToken;
 
   Self.Token := Token;
-  Token.OnClose.Add(UnsubscribeToken);
+  Token.OnClose.Subscribe(UnsubscribeToken);
 
   LogonSource.UpdateLogonSessions;
 
@@ -138,15 +138,15 @@ begin
   else
     TLogonInfoSource.SetItems(ListView, IndexOfLogon, nil);
 
-  Token.Events.OnOriginChange.Add(OnOriginChange);
+  Token.Events.OnOriginChange.Subscribe(OnOriginChange);
 end;
 
 procedure TFrameLogon.UnsubscribeToken(Dummy: TToken);
 begin
   if Assigned(Token) then
   begin
-    Token.Events.OnOriginChange.Delete(OnOriginChange);
-    Token.OnClose.Delete(UnsubscribeToken);
+    Token.Events.OnOriginChange.Unsubscribe(OnOriginChange);
+    Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
   end;
 end;
