@@ -52,7 +52,6 @@ uses
   Winapi.WinSafer in 'Headers\Winapi.WinSafer.pas',
   UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer},
   Winapi.NtSecApi in 'Headers\Winapi.NtSecApi.pas',
-  TU.Audit in 'Core\TU.Audit.pas',
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
   Winapi.ntlsa in 'Headers\Winapi.ntlsa.pas',
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
@@ -60,7 +59,8 @@ uses
   NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas',
   NtUtils.ApiExtension in 'NtUtils\NtUtils.ApiExtension.pas',
   Winapi.winsta in 'Headers\Winapi.winsta.pas',
-  NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas';
+  NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
+  NtUtils.Audit in 'NtUtils\NtUtils.Audit.pas';
 
 {$R *.res}
 
