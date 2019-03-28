@@ -27,7 +27,7 @@ var
 implementation
 
 uses
-  TU.Common, Ntapi.ntkeapi, UI.Colors;
+  Ntapi.ntkeapi, UI.Colors;
 
 {$R *.dfm}
 

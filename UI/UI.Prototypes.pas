@@ -154,9 +154,8 @@ type
 implementation
 
 uses
-  System.Generics.Collections,
-  UI.Colors, UI.Modal.PickUser, UI.Settings,
-  TU.Winapi, TU.Common;
+  System.Generics.Collections, DelphiUtils.Strings,
+  UI.Colors, UI.Modal.PickUser, UI.Settings, TU.Winapi;
 
 { TPrivilegesSource }
 
@@ -867,7 +866,7 @@ begin
 
   ComboBox.ItemIndex := -1;
   if Value <> 0 then
-    ComboBox.Text := LuidToString(Value)
+    ComboBox.Text := IntToHexEx(Value)
   else
     ComboBox.Text := NO_LOGON;
 end;
@@ -882,7 +881,7 @@ begin
   ComboBox.Items.Clear;
   for i := 0 to High(FLogonSessions) do
   begin
-    S := LuidToString(FLogonSessions[i]);
+    S := IntToHexEx(FLogonSessions[i]);
 
     LogonData := TLogonSessionInfo.Query(FLogonSessions[i]);
 

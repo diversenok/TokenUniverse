@@ -85,8 +85,8 @@ type
 implementation
 
 uses
-  TU.LsaApi, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
-  TU.Common, UI.Settings, UI.Modal.PickToken, System.UITypes,
+  TU.LsaApi, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, DelphiUtils.Strings,
+  UI.Settings, UI.Modal.PickToken, System.UITypes,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi;
 
 {$R *.dfm}
@@ -111,7 +111,7 @@ var
   NewLuid: TLuid;
 begin
   if NT_SUCCESS(NtAllocateLocallyUniqueId(NewLuid)) then
-    EditSourceLuid.Text := Format('0x%x', [NewLuid]);
+    EditSourceLuid.Text := IntToHexEx(NewLuid);
 end;
 
 procedure TDialogCreateToken.ButtonCancelClick(Sender: TObject);
@@ -153,6 +153,8 @@ begin
 
     if not CheckBoxInfinite.Checked then
     begin
+      // TODO: extract date/time only
+
       DateExpires.DateTime :=
         Source.InfoClass.Statistics.ExpirationTime.ToDateTime;
 
@@ -171,6 +173,8 @@ begin
 
     ListViewGroups.Items.EndUpdate;
   end;
+
+  // TODO: Owner and Primary group ItemIndexes are not updated properly
 
   // Owner
   if Source.InfoClass.Query(tdTokenOwner) then
@@ -213,7 +217,7 @@ begin
   if Source.InfoClass.Query(tdTokenSource) then
   begin
     EditSourceName.Text := TokeSourceNameToString(Source.InfoClass.Source);
-    EditSourceLuid.Text := LuidToString(
+    EditSourceLuid.Text := IntToHexEx(
       Source.InfoClass.Source.SourceIdentifier);
   end;
 end;

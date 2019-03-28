@@ -59,7 +59,7 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntutils.Lsa, System.SysUtils, TU.Common;
+  Ntapi.ntdef, Ntutils.Lsa, System.SysUtils, DelphiUtils.Strings;
 
 { TLogonSessionInfo }
 
@@ -152,7 +152,7 @@ begin
 
   case InfoClass of
     lsLogonId:
-      Result := LuidToString(Data.LogonId);
+      Result := IntToHexEx(Data.LogonId);
 
     lsSecurityIdentifier:
       if UserPresent then

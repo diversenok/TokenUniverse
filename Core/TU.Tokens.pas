@@ -461,7 +461,7 @@ type
 implementation
 
 uses
-  System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension,
+  System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension, DelphiUtils.Strings,
   Winapi.WinError, Winapi.NtSecApi, Winapi.winsta, Ntapi.ntstatus,
   Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
@@ -922,8 +922,8 @@ begin
   // Call NtCreateToken.
   try
     NativeCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
-      @LogonID, @Expires, @TokenUser, TokenGroups, TokenPrivileges,
-      @TokenOwner, @TokenPrimaryGroup, nil, @Source), 'NtCreateToken');
+      LogonID, Expires, TokenUser, TokenGroups, TokenPrivileges,
+      @TokenOwner, @TokenPrimaryGroup, nil, Source), 'NtCreateToken');
   finally
     LocalFree(TokenPrimaryGroup.PrimaryGroup);
     LocalFree(TokenOwner.Owner);
@@ -1643,15 +1643,14 @@ begin
       Result := Token.Cache.Integrity.ToString;
 
     tsObjectAddress:
-      Result := Format('0x%0.8x',
-        [NativeUInt(Token.HandleInformation.PObject)]);
+      Result := IntToHexEx(UInt64(Token.HandleInformation.PObject));
 
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsHandle:
       if Detailed then
         Result := Format('0x%x (%d)', [Token.Handle, Token.Handle])
       else
-        Result := Format('0x%x', [Token.Handle]);
+        Result := IntToHexEx(Token.Handle);
 
     tsNoWriteUpPolicy:
       Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contains(
@@ -1691,7 +1690,7 @@ begin
       end;
 
     tsTokenID:
-      Result := LuidToString(Token.Cache.Statistics.TokenId);
+      Result := IntToHexEx(Token.Cache.Statistics.TokenId);
 
     tsExprires:
       Result := NativeTimeToString(Token.Cache.Statistics.ExpirationTime);
@@ -1709,19 +1708,19 @@ begin
       Result := Token.Cache.Statistics.PrivilegeCount.ToString;
 
     tsModifiedID:
-      Result := LuidToString(Token.Cache.Statistics.ModifiedId);
+      Result := IntToHexEx(Token.Cache.Statistics.ModifiedId);
 
     tsLogonID:
-      Result := LuidToString(Token.Cache.Statistics.AuthenticationId);
+      Result := IntToHexEx(Token.Cache.Statistics.AuthenticationId);
 
     tsSourceLUID:
-      Result := LuidToString(Token.Cache.Source.SourceIdentifier);
+      Result := IntToHexEx(Token.Cache.Source.SourceIdentifier);
 
     tsSourceName:
       Result := TokeSourceNameToString(Token.Cache.Source);
 
     tsOrigin:
-      Result := LuidToString(Token.Cache.Origin);
+      Result := IntToHexEx(Token.Cache.Origin);
   end;
   {$ENDREGION}
 end;

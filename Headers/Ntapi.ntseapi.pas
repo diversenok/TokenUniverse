@@ -36,10 +36,11 @@ const
 
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
-  AuthenticationId: PLuid; ExpirationTime: PLargeInteger; User: PTokenUser;
-  Groups: PTokenGroups; Privileges: PTokenPrivileges; Owner: PTokenOwner;
-  PrimaryGroup: PTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
-  Source: PTokenSource): NTSTATUS; stdcall; external ntdll;
+  var AuthenticationId: TLuid; var ExpirationTime: TLargeInteger;
+  const User: TTokenUser; Groups: PTokenGroups; Privileges: PTokenPrivileges;
+  Owner: PTokenOwner; PrimaryGroup: PTokenPrimaryGroup;
+  DefaultDacl: PTokenDefaultDacl; const Source: TTokenSource): NTSTATUS;
+  stdcall; external ntdll;
 
 // Win 8+
 function NtCreateLowBoxToken(out TokenHandle: THandle;

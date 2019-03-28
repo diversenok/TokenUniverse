@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, TU.Common,
+  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon;
 
 type
@@ -122,7 +122,8 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
-  UI.Information.Access, NtUtils.Processes, NtUtils.Handles;
+  UI.Information.Access, NtUtils.Processes, NtUtils.Handles,
+  DelphiUtils.Strings;
 
 const
   TAB_INVALIDATED = 0;
@@ -643,7 +644,7 @@ begin
       begin
         Caption := 'Current process';
         SubItems.Add(IntToStr(GetCurrentProcessId));
-        SubItems.Add(Format('0x%x', [Handles[i].HandleValue]));
+        SubItems.Add(IntToHexEx(Handles[i].HandleValue));
         SubItems.Add(AccessToString(Handles[i].GrantedAccess));
         ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
       end
@@ -662,7 +663,7 @@ begin
         Process := ProcSnapshot.FindByPID(Handles[i].UniqueProcessId);
         Caption := Process.GetImageName;
         SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
-        SubItems.Add(Format('0x%x', [Handles[i].HandleValue]));
+        SubItems.Add(IntToHexEx(Handles[i].HandleValue));
         SubItems.Add(AccessToString(Handles[i].GrantedAccess));
         ImageIndex := TProcessIcons.GetIcon(Process.QueryFullImageName);
       end;

@@ -101,7 +101,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Core\TU.Common.pas"/>
         <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="UI\UI.TokenListFrame.pas">
             <Form>FrameTokenList</Form>
@@ -223,6 +222,7 @@
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Audit.pas"/>
         <DCCReference Include="DelphiUtils\DelphiUtils.Events.pas"/>
+        <DCCReference Include="DelphiUtils\DelphiUtils.Strings.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

@@ -2,7 +2,6 @@ program TokenUniverse;
 
 uses
   Vcl.Forms,
-  TU.Common in 'Core\TU.Common.pas',
   TU.Tokens in 'Core\TU.Tokens.pas',
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
   UI.MainForm in 'UI\UI.MainForm.pas' {FormMain},
@@ -61,7 +60,8 @@ uses
   Winapi.winsta in 'Headers\Winapi.winsta.pas',
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
   NtUtils.Audit in 'NtUtils\NtUtils.Audit.pas',
-  DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas';
+  DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas',
+  DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas';
 
 {$R *.res}
 

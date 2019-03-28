@@ -40,7 +40,7 @@ type
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors, TU.Tokens.Types;
+  Vcl.Graphics, UI.Colors, TU.Tokens.Types, DelphiUtils.Strings;
 
 {$R *.dfm}
 
@@ -112,7 +112,7 @@ begin
     (Token.InfoClass.Statistics.AuthenticationId = NewOrigin) then
     ListView.Items[ITEM_IND_ORIGIN].Cell[1] := 'Same as current'
   else
-    ListView.Items[ITEM_IND_ORIGIN].Cell[1] := LuidToString(NewOrigin);
+    ListView.Items[ITEM_IND_ORIGIN].Cell[1] := IntToHexEx(NewOrigin);
 end;
 
 procedure TFrameLogon.SubscribeToken(Token: TToken);
@@ -126,7 +126,7 @@ begin
 
   // Update Logon ID value
   if Token.InfoClass.Query(tdTokenStatistics) then
-    ListView.Items[IndexOfLogon].Cell[1] := LuidToString(
+    ListView.Items[IndexOfLogon].Cell[1] := IntToHexEx(
       Token.InfoClass.Statistics.AuthenticationId)
   else
     ListView.Items[IndexOfLogon].Cell[1] := 'Unknown';

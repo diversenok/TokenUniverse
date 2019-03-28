@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, TU.Common, TU.Tokens;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, TU.Tokens;
 
 type
   TChildForm = class(TForm)

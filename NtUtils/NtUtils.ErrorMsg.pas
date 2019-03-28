@@ -31,7 +31,7 @@ function SysNativeErrorMessage(Status: NTSTATUS): String;
 implementation
 
 uses
-  Winapi.WinBase, System.SysUtils;
+  Winapi.WinBase, System.SysUtils, DelphiUtils.Strings;
 
 {$R 'NtUtils.ErrorMsg.res' 'NtUtils.ErrorMsg.rc'}
 
@@ -103,7 +103,7 @@ function StatusToString(Status: NTSTATUS): String;
 begin
   Result := StatusNameToString(Status);
   if Result = '' then
-    Result := Format('0x%0.8x', [Status]);
+    Result := IntToHexEx(Status, 8);
 end;
 
 function PrettifyError(PossiblePrefix: String; Msg: String): String;

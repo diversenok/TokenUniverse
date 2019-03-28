@@ -45,8 +45,9 @@ type
 implementation
 
 uses
-  TU.Common, TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
-  TU.Tokens.Types, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi;
+  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
+  TU.Tokens.Types, DelphiUtils.Strings,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi;
 
 {$R *.dfm}
 
@@ -64,7 +65,7 @@ var
   NewLuid: TLuid;
 begin
   if NT_SUCCESS(NtAllocateLocallyUniqueId(NewLuid)) then
-    EditSourceLuid.Text := Format('0x%x', [NewLuid]);
+    EditSourceLuid.Text := IntToHexEx(NewLuid);
 end;
 
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);

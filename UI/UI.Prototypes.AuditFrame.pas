@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  Winapi.WinError, NtUtils.Audit, UI.Colors;
+  Winapi.WinError, NtUtils.Audit, UI.Colors, DelphiUtils.Strings;
 
 {$R *.dfm}
 

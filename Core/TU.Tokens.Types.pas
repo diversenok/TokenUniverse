@@ -1,4 +1,4 @@
-﻿unit TU.Tokens.Types;
+unit TU.Tokens.Types;
 
 interface
 
@@ -160,14 +160,9 @@ function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 { Conversion functions }
 function AccessToString(Access: Cardinal): String;
 function AccessToDetailedString(Access: Cardinal): String;
-function LuidToString(Luid: TLuid): String;
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function ObjectAttributesToString(ObjAttributes: Cardinal): String;
 function NativeTimeToString(NativeTime: TLargeInteger): String;
-function BytesToString(Size: Cardinal): String;
-function EnabledDisabledToString(Value: LongBool): String;
-function YesNoToString(Value: LongBool): String;
-function CheckboxToString(Value: LongBool): String;
 
 /// <summary>
 ///   Formats a string to use as a location of an error that might occur while
@@ -184,7 +179,7 @@ function SetterMessage(InfoClass: TTokenInformationClass): String;
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, TU.Common, TU.LsaApi,
+  System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
   Winapi.WinBase, Winapi.WinError, Winapi.Sddl,
   Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus;
 
@@ -593,7 +588,7 @@ begin
     ilSystem: Result := 'System';
     ilProtected: Result := 'Protected';
   else
-    Result := Format('0x%0.4x', [Cardinal(Level)]);
+    Result := IntToHexEx(UInt64(Level));
   end;
 end;
 
@@ -787,11 +782,6 @@ end;
 
 { Conversion functions }
 
-function LuidToString(Luid: TLuid): String;
-begin
-  Result := Format('0x%x', [Luid]);
-end;
-
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 begin
   // sourcename field may or may not contain zero-termination byte
@@ -819,38 +809,6 @@ begin
     Result := 'Infinite'
   else
     Result := DateTimeToStr(NativeTime.ToDateTime);
-end;
-
-function BytesToString(Size: Cardinal): String;
-begin
-  if Size mod 1024 = 0 then
-    Result := (Size div 1024).ToString + ' kB'
-  else
-    Result := Size.ToString + ' B';
-end;
-
-function EnabledDisabledToString(Value: LongBool): String;
-begin
-  if Value then
-    Result := 'Enabled'
-  else
-    Result := 'Disabled';
-end;
-
-function YesNoToString(Value: LongBool): String;
-begin
-  if Value then
-    Result := 'Yes'
-  else
-    Result := 'No';
-end;
-
-function CheckboxToString(Value: LongBool): String;
-begin
-  if Value then
-    Result := '☑'
-  else
-    Result := '☐';
 end;
 
 end.

@@ -15,7 +15,7 @@ procedure PromptCredentialsUI(ParentWindow: HWND;
 implementation
 
 uses
-  System.SysUtils, Winapi.Ole2, TU.Common, TU.Tokens.Types, Ntutils.Exceptions;
+  System.SysUtils, Winapi.Ole2, TU.Tokens.Types, Ntutils.Exceptions;
 
 type
   TCredUIInfoW = record
