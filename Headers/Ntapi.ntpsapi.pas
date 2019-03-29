@@ -105,6 +105,10 @@ function NtAlertThread(ThreadHandle: THandle): NTSTATUS; stdcall;
 function NtAlertResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
   PCardinal): NTSTATUS; stdcall; external ntdll;
 
+function NtImpersonateThread(ServerThreadHandle: THandle;
+  ClientThreadHandle: THandle; const SecurityQos: TSecurityQualityOfService):
+  NTSTATUS; stdcall; external ntdll;
+
 implementation
 
 end.

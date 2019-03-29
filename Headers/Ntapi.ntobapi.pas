@@ -1,7 +1,8 @@
 unit Ntapi.ntobapi;
-{$MINENUMSIZE 4}
 
 interface
+{$MINENUMSIZE 4}
+{$WARN SYMBOL_PLATFORM OFF}
 
 uses
   Winapi.WinNt, Ntapi.ntdef;
@@ -101,6 +102,10 @@ function NtQuerySecurityObject(Handle: THandle;
   out LengthNeeded: Cardinal): NTSTATUS; stdcall; external ntdll;
 
 function NtClose(Handle: THandle): NTSTATUS; stdcall; external ntdll;
+
+// Win 10 THRESHOLD+
+function NtCompareObjects(FirstObjectHandle: THandle;
+  SecondObjectHandle: THandle): NTSTATUS; stdcall; external ntdll delayed;
 
 implementation
 

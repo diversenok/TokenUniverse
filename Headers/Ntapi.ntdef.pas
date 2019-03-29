@@ -69,6 +69,10 @@ procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;
   ObjectName: PUNICODE_STRING = nil; Attributes: Cardinal = 0;
   RootDirectory: THandle = 0; QoS: PSecurityQualityOfService = nil); inline;
 
+procedure InitializaQoS(var QoS: TSecurityQualityOfService;
+  ImpersonationLevel: TSecurityImpersonationLevel = SecurityImpersonation;
+  EffectiveOnly: Boolean = False); inline;
+
 implementation
 
 uses
@@ -104,6 +108,15 @@ begin
   ObjAttr.Attributes := Attributes;
   ObjAttr.RootDirectory := RootDirectory;
   ObjAttr.SecurityQualityOfService := QoS;
+end;
+
+procedure InitializaQoS(var QoS: TSecurityQualityOfService;
+  ImpersonationLevel: TSecurityImpersonationLevel; EffectiveOnly: Boolean);
+begin
+  FillChar(QoS, SizeOf(QoS), 0);
+  QoS.Length := SizeOf(QoS);
+  QoS.ImpersonationLevel := ImpersonationLevel;
+  QoS.EffectiveOnly := EffectiveOnly;
 end;
 
 { ANSI_STRING }
