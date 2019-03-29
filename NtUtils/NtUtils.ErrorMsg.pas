@@ -163,12 +163,15 @@ begin
   // Fix those messages which are formatted like:
   //   {Asdf}
   //   Asdf asdf asdf...
-  if Result[Low(Result)] = '{' then
+  if (Length(Result) > 0) and (Result[Low(Result)] = '{') then
   begin
     StartFrom := Pos('}'#$D#$A, Result);
     if StartFrom >= Low(Result) then
       Delete(Result, Low(Result), StartFrom + 2);
   end;
+
+  if Result = '' then
+    Result := '<No description available>';
 end;
 
 end.
