@@ -58,10 +58,6 @@ function LogonUserExExW(lpszUsername: PWideChar; lpszDomain: PWideChar;
 function LoadStringW(hInstance: HINST; uID: Cardinal; out pBuffer: PWideChar;
   nBufferMax: Integer = 0): Integer; stdcall; external kernelbase;
 
-// move
-function GetModuleHandleW(lpModuleName: PWideChar): HMODULE; stdcall;
-  external kernel32;
-
 implementation
 
 end.

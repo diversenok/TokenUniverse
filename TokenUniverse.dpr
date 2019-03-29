@@ -61,7 +61,9 @@ uses
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
   NtUtils.Audit in 'NtUtils\NtUtils.Audit.pas',
   DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas',
-  DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas';
+  DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas',
+  NtUtils.DelayedImport in 'NtUtils\NtUtils.DelayedImport.pas',
+  Ntapi.ntldr in 'Headers\Ntapi.ntldr.pas';
 
 {$R *.res}
 

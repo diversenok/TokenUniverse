@@ -223,6 +223,8 @@
         <DCCReference Include="NtUtils\NtUtils.Audit.pas"/>
         <DCCReference Include="DelphiUtils\DelphiUtils.Events.pas"/>
         <DCCReference Include="DelphiUtils\DelphiUtils.Strings.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.DelayedImport.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntldr.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

@@ -22,6 +22,7 @@ type
   public
     constructor Create(Code: Cardinal; Location: String;
       Context: TObject = nil); reintroduce;
+    class procedure Report(Code: Cardinal; Location: String);
   end;
 
   /// <summary> Represents a Native error with a known location. </summary>
@@ -124,6 +125,11 @@ begin
   ErrorOrigin := Location;
   ErrorCode := Code;
   ErrorContext := Context;
+end;
+
+class procedure EWinError.Report(Code: Cardinal; Location: String);
+begin
+  OutputDebugStringW(PWideChar(Location + ': ' + Win32ErrorToString(Code)));
 end;
 
 { ENtError }

@@ -31,7 +31,7 @@ function SysNativeErrorMessage(Status: NTSTATUS): String;
 implementation
 
 uses
-  Winapi.WinBase, System.SysUtils, DelphiUtils.Strings;
+  Ntapi.ntldr, Winapi.WinBase, System.SysUtils, DelphiUtils.Strings;
 
 {$R 'NtUtils.ErrorMsg.res' 'NtUtils.ErrorMsg.rc'}
 
@@ -153,22 +153,10 @@ begin
   Result := PrettifyError('STATUS_', Result);
 end;
 
-var
-  // Optimize queries by caching ntdll handle
-  hNtdllInit: Boolean;
-  hNtdll: HMODULE;
-
 function SysNativeErrorMessage(Status: NTSTATUS): String;
 var
   StartFrom: Integer;
 begin
-  // Obtain HMODULE for ntdll
-  if not hNtdllInit then
-  begin
-    hNtdll := GetModuleHandleW(ntdll);
-    hNtdllInit := True;
-  end;
-
   // Get error message
   Result := SysErrorMessage(Status, hNtdll);
 
