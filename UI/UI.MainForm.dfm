@@ -142,6 +142,11 @@ object FormMain: TFormMain
         Caption = 'Do not close creation dialogs'
         OnClick = MenuCloseCreationDlgClick
       end
+      object MenuSafeImpersonation: TMenuItem
+        Caption = 'Use safe impersonation technique'
+        Checked = True
+        OnClick = MenuSafeImpersonationClick
+      end
       object Showiconsinprocesslist1: TMenuItem
         Caption = 'Show icons in process list'
         Checked = True
@@ -254,6 +259,11 @@ object FormMain: TFormMain
         Caption = 'Open thread'
         ShortCut = 49231
         OnClick = ActionOpenThread
+      end
+      object NewOpenEffective: TMenuItem
+        Caption = 'Open effective token'
+        ShortCut = 57423
+        OnClick = ActionOpenEffective
       end
       object HLine3: TMenuItem
         Caption = '-'

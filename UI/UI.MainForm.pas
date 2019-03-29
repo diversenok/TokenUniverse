@@ -66,6 +66,8 @@ type
     N3: TMenuItem;
     NewAnonymous: TMenuItem;
     TokenRestrictSafer: TMenuItem;
+    NewOpenEffective: TMenuItem;
+    MenuSafeImpersonation: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -108,6 +110,8 @@ type
     procedure ActionAssignToThread(Sender: TObject);
     procedure NewAnonymousClick(Sender: TObject);
     procedure TokenRestrictSaferClick(Sender: TObject);
+    procedure ActionOpenEffective(Sender: TObject);
+    procedure MenuSafeImpersonationClick(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -184,7 +188,10 @@ begin
         ;
     end;
 
-  Token.AssignToThread(TProcessListDialog.Execute(Self, True).ThreadID);
+  if TSettings.UseSafeImpersonation then
+    Token.AssignToThreadSafe(TProcessListDialog.Execute(Self, True).ThreadID)
+  else
+    Token.AssignToThread(TProcessListDialog.Execute(Self, True).ThreadID);
 
   MessageDlg('The token was successfully assigned to the thread.',
     mtInformation, [mbOK], 0);
@@ -219,6 +226,15 @@ end;
 procedure TFormMain.ActionOpen(Sender: TObject);
 begin
   TInfoDialog.CreateFromToken(Self, TokenView.Selected);
+end;
+
+procedure TFormMain.ActionOpenEffective(Sender: TObject);
+var
+  Client: TClientIdEx;
+begin
+  Client := TProcessListDialog.Execute(Self, True);
+  TokenView.Add(TToken.CreateOpenEffective(Client.ThreadID,
+    Client.ImageName));
 end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
@@ -458,6 +474,12 @@ procedure TFormMain.MenuPromptHandleCloseClick(Sender: TObject);
 begin
   TSettings.PromptOnHandleClose := not TSettings.PromptOnHandleClose;
   MenuPromptHandleClose.Checked := TSettings.PromptOnHandleClose;
+end;
+
+procedure TFormMain.MenuSafeImpersonationClick(Sender: TObject);
+begin
+  TSettings.UseSafeImpersonation := not TSettings.UseSafeImpersonation;
+  MenuSafeImpersonation.Checked := TSettings.UseSafeImpersonation;
 end;
 
 procedure TFormMain.NewAnonymousClick(Sender: TObject);

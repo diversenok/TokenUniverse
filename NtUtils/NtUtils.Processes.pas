@@ -3,7 +3,7 @@ unit NtUtils.Processes;
 interface
 
 uses
-  Ntapi.ntdef, Ntapi.ntexapi;
+  Ntapi.ntdef, Ntapi.ntexapi, DelphiUtils.Events;
 
 type
   PProcessInfo = Ntapi.ntexapi.PSystemProcessInformation;
@@ -19,6 +19,7 @@ type
     FCount: Cardinal;
     FProcesses: array of PProcessInfo;
     Status: NTSTATUS;
+    class var FOnSnaphot: TEvent<TProcessSnapshot>;
   public
     property DetailedStatus: NTSTATUS read Status;
     /// <summary> Create a snapshot of all processes on the system. </summary>
@@ -29,6 +30,7 @@ type
     property Process[i: Cardinal]: PProcessInfo read GetItem; default;
     function FindByPID(PID: Cardinal): PProcessInfo;
     function FindByName(ImageName: String): PProcessInfo;
+    class property OnSnaphot: TEvent<TProcessSnapshot> read FOnSnaphot;
   end;
 
 implementation
@@ -126,6 +128,10 @@ begin
     Process := AddToPointer(Process, Process.NextEntryOffset);
     Inc(i);
   end;
+
+  // Notify event listeners
+  if FCount > 0 then
+    OnSnaphot.Invoke(Self);
 end;
 
 destructor TProcessSnapshot.Destroy;

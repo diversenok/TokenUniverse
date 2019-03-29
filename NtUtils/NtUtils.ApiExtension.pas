@@ -6,6 +6,8 @@ interface
 uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntobapi;
 
+{ -------------------------------- Objects --------------------------------- }
+
 // NtClose without exceptions on protected handles
 function NtxSafeClose(hObject: THandle): NTSTATUS;
 
@@ -18,20 +20,40 @@ function NtxDuplicateObject(SourceProcessHandle: THandle;
   out TargetHandle: THandle; DesiredAccess: TAccessMask;
   HandleAttributes: Cardinal; Options: Cardinal): NTSTATUS;
 
+{ -------------------------------- Tokens ---------------------------------- }
+
 // NtQueryInformationToken for variable-sized buffers without race conditions
 function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
   out Status: NTSTATUS; ReturnedSize: PCardinal = nil): Pointer;
 
+// NtCompareObjects for comparing tokens on all versions of Windows
+function NtxCompareTokens(hToken1, hToken2: THandle): NTSTATUS;
+
+// NtSetInformationThread that doesn't duplicate tokens to Identification level
+function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): NTSTATUS;
+
+{ -------------------------------- Threads --------------------------------- }
+
+// NtOpenThread that might return a pseudo-handle
+function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
+  TID: NativeUInt): NTSTATUS;
+
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
-   NtUtils.Exceptions, System.SysUtils;
+  Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi, Winapi.WinBase,
+  NtUtils.Exceptions, NtUtils.Handles, NtUtils.DelayedImport, System.SysUtils;
 
-{ TNtObject }
+{ Objects }
 
 function NtxSafeClose(hObject: THandle): NTSTATUS;
 begin
+  if hObject = NtCurrentProcess then
+    Exit(STATUS_INVALID_HANDLE);
+
+  if hObject = NtCurrentThread then
+    Exit(STATUS_INVALID_HANDLE);
+
   Result := STATUS_UNSUCCESSFUL;
   try
     // NtClose can raise errors, we should capture them
@@ -165,6 +187,8 @@ begin
   end;
 end;
 
+{ Tokens }
+
 function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
   out Status: NTSTATUS; ReturnedSize: PCardinal): Pointer;
 var
@@ -198,6 +222,174 @@ begin
 
     BufferSize := RequiredSize;
     Result := AllocMem(BufferSize);
+  end;
+end;
+
+function NtxpQueryStatisticsToken(hToken: THandle;
+  out Statistics: TTokenStatistics): NTSTATUS;
+var
+  Returned: Cardinal;
+  hTemp: THandle;
+begin
+  Result := NtQueryInformationToken(hToken, TokenStatistics, @Statistics,
+    SizeOf(Statistics), Returned);
+
+  // Process the case of a handle with no QUERY access
+  if Result = STATUS_ACCESS_DENIED then
+  begin
+    Result := NtDuplicateObject(NtCurrentProcess, hToken, NtCurrentProcess,
+      hTemp, TOKEN_QUERY, 0, 0);
+
+    if NT_SUCCESS(Result) then
+    begin
+      Result := NtQueryInformationToken(hTemp, TokenStatistics, @Statistics,
+        SizeOf(Statistics), Returned);
+
+      NtxSafeClose(hTemp);
+    end;
+  end;
+end;
+
+function NtxCompareTokens(hToken1, hToken2: THandle): NTSTATUS;
+var
+  Statistics1, Statistics2: TTokenStatistics;
+begin
+  if hToken1 = hToken2 then
+    Exit(STATUS_SUCCESS);
+
+  // Win 10 TH+ makes things way easier
+  if NtxCheckDelayedImport('NtCompareObjects') then
+    Exit(NtCompareObjects(hToken1, hToken2));
+
+  // Try to perform a comparison based on TokenIDs. NtxpQueryStatisticsToken
+  // might be capable of handling it even without TOKEN_QUERY access.
+
+  Result := NtxpQueryStatisticsToken(hToken1, Statistics1);
+  if NT_SUCCESS(Result) then
+  begin
+    Result := NtxpQueryStatisticsToken(hToken2, Statistics2);
+
+    if NT_SUCCESS(Result) then
+    begin
+      if Statistics1.TokenId = Statistics2.TokenId then
+        Exit(STATUS_SUCCESS)
+      else
+        Exit(STATUS_NOT_SAME_OBJECT);
+    end;
+  end;
+
+  if Result <> STATUS_ACCESS_DENIED then
+    Exit;
+
+  // The only way to proceed is via a handle snaphot
+  Result := THandleSnapshot.Compare(hToken1, hToken2);
+end;
+
+{ Some notes about impersonation...
+
+ * In case of absence of SeImpersonatePrivilege some security contexts
+   might cause the system to duplicate the token to Identification level
+   which fails all access checks. The result of NtSetInformationThread
+   does not provide information whether it happened.
+   The goal is to detect and avoid such situations.
+
+ * NtxSafeSetThreadToken sets the token, queries it back, and compares them.
+   Anything but success causes the routine to revoke the token.
+
+ * Although it tries to, the function does not guarantee the secutity
+   context of the target thread to return to the state before the call.
+   It is potentially possible to user NtImpersonateThread to retrive a copy
+   of the original security context if NtOpenThreadTokenEx fails with
+   ACCESS_DENIED.
+
+ * Remark: NtImpersonateThread fails with BAD_IMPERSONATION_LEVEL when we
+   request Impersonation-level token while the thread's token is Identification
+   and less. This in another way to implement the check.
+}
+
+function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): NTSTATUS;
+var
+  hOldStateToken, hNewToken: THandle;
+begin
+  // Backup old state
+  if not NT_SUCCESS(NtOpenThreadTokenEx(hThread, TOKEN_IMPERSONATE, False, 0,
+    hOldStateToken)) then
+    hOldStateToken := 0;
+
+  // Set our token
+  Result := NtSetInformationThread(hThread, ThreadImpersonationToken, @hToken,
+    SizeOf(hToken));
+
+  if not NT_SUCCESS(Result) then
+    Exit;
+
+  // Query what was actually set
+  Result := NtOpenThreadTokenEx(hThread, MAXIMUM_ALLOWED,
+    (hThread = NtCurrentThread), 0, hNewToken);
+
+  if not NT_SUCCESS(Result) then
+  begin
+    // Reset and exit
+    NtSetInformationThread(hThread, ThreadImpersonationToken, @hOldStateToken,
+      SizeOf(hOldStateToken));
+    Exit;
+  end;
+
+  if hThread = NtCurrentThread then
+  begin
+    // Revert to self to perform comparison
+    NtSetInformationThread(hThread, ThreadImpersonationToken, @hOldStateToken,
+      SizeOf(hOldStateToken));
+  end;
+
+  // Compare
+  Result := NtxCompareTokens(hToken, hNewToken);
+  NtxSafeClose(hNewToken);
+
+  // STATUS_SUCCESS => Impersonation works fine, use it.
+  // STATUS_NOT_SAME_OBJECT => Duplication happened, reset and exit
+  // Oher errors => Reset and exit
+
+  // SeImpersonatePrivilege can help
+  if Result = STATUS_NOT_SAME_OBJECT then
+    Result := STATUS_PRIVILEGE_NOT_HELD;
+
+  if Result = STATUS_SUCCESS then
+  begin
+    // Repeat in case of current thread
+    if hThread = NtCurrentThread then
+      Result := NtSetInformationThread(hThread, ThreadImpersonationToken,
+        @hToken, SizeOf(hToken));
+  end
+  else
+  begin
+    // Reset impersonation
+    NtSetInformationThread(hThread, ThreadImpersonationToken, @hOldStateToken,
+      SizeOf(hOldStateToken));
+  end;
+
+  if hOldStateToken <> 0 then
+    NtxSafeClose(hOldStateToken);
+end;
+
+{ Threads }
+
+function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
+  TID: NativeUInt): NTSTATUS;
+var
+  ClientId: TClientId;
+  ObjAttr: TObjectAttributes;
+begin
+  if TID = GetCurrentThreadId then
+  begin
+    hThread := NtCurrentThread;
+    Result := STATUS_SUCCESS;
+  end
+  else
+  begin
+    InitializeObjectAttributes(ObjAttr);
+    ClientId.Create(0, TID);
+    Result := NtOpenThread(hThread, DesiredAccess, ObjAttr, ClientId);
   end;
 end;
 

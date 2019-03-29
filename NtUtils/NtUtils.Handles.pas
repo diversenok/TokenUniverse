@@ -3,7 +3,7 @@ unit NtUtils.Handles;
 interface
 
 uses
-  Ntapi.ntdef, Ntapi.ntexapi;
+  Ntapi.ntdef, Ntapi.ntexapi, DelphiUtils.Events;
 
 type
   THandleInfo = Ntapi.ntexapi.TSystemHandleTableEntryInfoEx;
@@ -20,6 +20,7 @@ type
     Buffer: PSystemHandleInformationEx;
     BufferSize: Cardinal;
     Status: NTSTATUS;
+    class var FOnSnapshot: TEvent<THandleSnapshot>;
   public
     property DetailedStatus: NTSTATUS read Status;
     constructor Create;
@@ -28,6 +29,8 @@ type
       ObjectType: TObjectType = objToken): THandleInfoArray; overload;
     function FilterByObject(ObjectAddress: Pointer): THandleInfoArray; overload;
   public
+    class property OnSnapshot: TEvent<THandleSnapshot> read FOnSnapshot;
+
     /// <summary>
     ///  Retrieves all handles of the specific type opened by a process.
     /// </summary>
@@ -39,6 +42,8 @@ type
     /// </summary>
     class function OfObject(ObjectAddress: Pointer): THandleInfoArray;
       overload; static;
+
+    class function Compare(hObject1, hObject2: THandle): NTSTATUS; static;
   end;
 
   PObjectInfo = Ntapi.ntexapi.PSystemObjectInformation;
@@ -71,7 +76,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntrtl, NtUtils.Exceptions;
+  Ntapi.ntstatus, Ntapi.ntrtl, Winapi.WinBase, NtUtils.Exceptions;
 
 function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
 begin
@@ -79,6 +84,39 @@ begin
 end;
 
 { THandleSnapshot }
+
+class function THandleSnapshot.Compare(hObject1, hObject2: THandle): NTSTATUS;
+var
+  i, j: Integer;
+  Handles: THandleInfoArray;
+begin
+  with THandleSnapshot.Create do
+  try
+    Handles := FilterByProcess(GetCurrentProcessId);
+    Result := Status;
+  finally
+    Free;
+  end;
+
+  if not NT_SUCCESS(Result) then
+    Exit;
+
+  for i := 0 to High(Handles) do
+    if Handles[i].HandleValue = hObject1 then
+    begin
+      for j := 0 to High(Handles) do
+        if Handles[j].HandleValue = hObject2 then
+        begin
+          if Handles[i].PObject = Handles[j].PObject then
+            Exit(STATUS_SUCCESS)
+          else
+            Exit(STATUS_NOT_SAME_OBJECT);
+        end;
+      Break;
+    end;
+
+  Result := STATUS_NOT_FOUND;
+end;
 
 constructor THandleSnapshot.Create;
 var
@@ -130,7 +168,9 @@ begin
     Buffer := nil;
     BufferSize := 0;
     ENtError.Report(Status, 'Handle snapshot');
-  end;
+  end
+  else
+    OnSnapshot.Invoke(Self);
 end;
 
 destructor THandleSnapshot.Destroy;

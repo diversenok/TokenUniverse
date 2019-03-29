@@ -92,6 +92,13 @@ resourcestring
     'assign tokens that are not derived from your current token. ';
   ACTION_ASSIGN_TYPE = 'Only a primary token can be assigned to a process';
 
+  ACTION_SAFE_IMP = 'Not all security contexts can be impersonated if the ' +
+    'target process does not possess SeImpersonatePrivilege. In this case ' +
+    'NtSetInformationThread succeeds, but the target thread gets an ' +
+    'Identification-level token that is not suitable for any access checks. ' +
+    'The "Use safe impersonation technique" setting prevents such situations ' +
+    'and shows this message instead.';
+
 function SuggestConstructor(E: ELocatedOSError): String;
 begin
   if E.Match('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
@@ -202,6 +209,9 @@ begin
    if E.ErrorCode = STATUS_BAD_IMPERSONATION_LEVEL then
      Exit(ACTION_ASSIGN_TYPE);
   end;
+
+  if E.Match('NtxSafeSetThreadToken', STATUS_PRIVILEGE_NOT_HELD) then
+    Exit(ACTION_SAFE_IMP);
 end;
 
 function SuggestAll(E: ELocatedOSError): String;

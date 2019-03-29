@@ -13,6 +13,7 @@ type
     SelectedColumns: TColumns;
     PromptOnHandleClose: Boolean;
     NoCloseCreationDialogs: Boolean;
+    UseSafeImpersonation: Boolean;
     class constructor Create;
   end;
 
@@ -68,6 +69,8 @@ class constructor TSettings.Create;
 begin
   SelectedColumns := [tsTokenType, tsAccess, tsUserName, tsSession, tsElevation,
     tsIntegrity];
+
+  UseSafeImpersonation := True;
 end;
 
 end.

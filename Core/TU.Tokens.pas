@@ -321,9 +321,6 @@ type
     /// <remarks> Call <see cref="System.FreeMem"/> after use. </remarks>
     class function AllocPrivileges(Privileges: TPrivilegeArray):
       PTokenPrivileges; static;
-
-    /// <summary> Sets thread token to the specified handle. </summary>
-    class procedure AssignTokenToThread(hToken: THandle; TID: NativeUInt);
   public
 
     {--------------------  TToken public section ---------------------------}
@@ -368,6 +365,12 @@ type
     /// <summary> Assigned impersonation token to a thread. </summary>
     procedure AssignToThread(TID: NativeUInt);
 
+    /// <summary>
+    ///  Assigned a token to a thread and make sure that the
+    ///  privileged part of the impersonation succeeds.
+    /// </summary>
+    procedure AssignToThreadSafe(TID: NativeUInt);
+
     /// <summary> Removes the thread impersonation token. </summary>
     class procedure RevertThreadToken(TID: NativeUInt);
   public
@@ -401,6 +404,11 @@ type
     constructor CreateOpenThread(TID: NativeUInt; ImageName: String;
       OpenAsSelf: Boolean; Access: TAccessMask = MAXIMUM_ALLOWED;
       Attributes: Cardinal = 0);
+
+    constructor CreateOpenEffective(TID: NativeUInt; ImageName: String;
+      ImpersonationLevel: TSecurityImpersonationLevel = SecurityImpersonation;
+      Access: TAccessMask = MAXIMUM_ALLOWED;
+      Attributes: Cardinal = 0; EffectiveOnly: Boolean = False);
 
     /// <summary> Duplicates a token. </summary>
     constructor CreateDuplicateToken(SrcToken: TToken; Access: TAccessMask;
@@ -688,34 +696,6 @@ begin
     Result.Privileges[i] := Privileges[i];
 end;
 
-class procedure TToken.AssignTokenToThread(hToken: THandle; TID: NativeUInt);
-var
-  hThread: THandle;
-  ClientId: TClientId;
-  ObjAttr: TObjectAttributes;
-begin
-  InitializeObjectAttributes(ObjAttr);
-  ClientId.Create(0, TID);
-
-  // Open the target thread. Specially handle current thread since we don't
-  // want to end up with impersonation that we can't even revert
-  if TID = GetCurrentThreadId then
-    hThread := NtCurrentThread
-  else
-    NativeCheck(NtOpenThread(hThread, THREAD_SET_THREAD_TOKEN, ObjAttr, ClientId),
-    'NtOpenThread with THREAD_SET_THREAD_TOKEN');
-
-  try
-    // Set the impersonation token
-    NativeCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
-      @hToken, SizeOf(hToken)),
-      'NtSetInformationThread#ThreadImpersonationToken');
-  finally
-    if hToken <> NtCurrentThread then
-      NtClose(hThread);
-  end;
-end;
-
 procedure TToken.AssignToProcess(PID: NativeUInt);
 var
   hProcess: THandle;
@@ -765,10 +745,36 @@ begin
 end;
 
 procedure TToken.AssignToThread(TID: NativeUInt);
+var
+  hThread: THandle;
 begin
-  AssignTokenToThread(hToken, TID);
-  { TODO: Query and compare the result token to the current one since it
-    could've been duplicated to Identification level. }
+  NativeCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
+    'NtOpenThread with SET_THREAD_TOKEN');
+
+  try
+    // Set the impersonation token
+    NativeCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
+      @hToken, SizeOf(hToken)),
+      'NtSetInformationThread [ThreadImpersonationToken]');
+  finally
+    NtxSafeClose(hThread);
+  end;
+end;
+
+procedure TToken.AssignToThreadSafe(TID: NativeUInt);
+var
+  hThread: THandle;
+begin
+  NativeCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN or
+    THREAD_QUERY_LIMITED_INFORMATION, TID),
+    'NtOpenThread with SET_THREAD_TOKEN | QUERY_LIMITED_INFORMATION');
+
+  try
+    NativeCheck(NtxSafeSetThreadToken(hThread, hToken),
+      'NtxSafeSetThreadToken');
+  finally
+    NtxSafeClose(hThread);
+  end;
 end;
 
 function TToken.CanBeFreed: Boolean;
@@ -787,12 +793,12 @@ end;
 constructor TToken.CreateAnonymous(Access: TAccessMask;
   HandleAttributes: Cardinal);
 var
-  hTokenToRevert: THandle;
-  WereImpersonating: Boolean;
+  hOldStateToken: THandle;
 begin
   // Save current impersonation token if we have it
-  WereImpersonating := NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread,
-    TOKEN_IMPERSONATE, True, 0, hTokenToRevert));
+  if not NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread, TOKEN_IMPERSONATE,
+    True, 0, hOldStateToken)) then
+    hOldStateToken := 0;
 
   try
     NativeCheck(NtImpersonateAnonymousToken(NtCurrentThread),
@@ -801,16 +807,12 @@ begin
     NativeCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True,
       HandleAttributes, hToken), 'NtOpenThreadTokenEx');
   finally
-    // We need to undo current impersonation to the old one or to a state
-    // with no thread token (aka to zero token)
-    if not WereImpersonating then
-      hTokenToRevert := 0;
-
+    // Undo current impersonation
     NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
-      @hTokenToRevert, SizeOf(hTokenToRevert));
+      @hOldStateToken, SizeOf(hOldStateToken));
 
-    if WereImpersonating then
-      NtClose(hTokenToRevert);
+    if hOldStateToken <> 0 then
+      NtxSafeClose(hOldStateToken);
   end;
 
   FCaption := 'Anonymous token';
@@ -944,6 +946,51 @@ begin
   CreateOpenProcess(GetCurrentProcessId, 'Current process');
 end;
 
+constructor TToken.CreateOpenEffective(TID: NativeUInt; ImageName: String;
+  ImpersonationLevel: TSecurityImpersonationLevel; Access: TAccessMask;
+  Attributes: Cardinal; EffectiveOnly: Boolean);
+var
+  hOldToken: THandle;
+  hThread: THandle;
+  QoS: TSecurityQualityOfService;
+begin
+  NativeCheck(NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID),
+    'NtOpenThreadEx with DIRECT_IMPERSONATION');
+
+  try
+    // Save previous impersonation state
+    if not NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread, TOKEN_IMPERSONATE,
+      True, 0, hOldToken)) then
+      hOldToken := 0;
+
+    try
+      InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
+
+      // Direct impersonation sets our impersonation context to
+      // an effective security context of the target thread
+      NativeCheck(NtImpersonateThread(NtCurrentThread, hThread, QoS),
+        'NtImpersonateThread');
+
+      // Read it back
+      NativeCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True, Attributes,
+        hToken), 'NtOpenThreadTokenEx');
+
+      FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
+      if EffectiveOnly then
+        FCaption := FCaption + ' (eff.)';
+
+    finally
+      // Restore impersonation
+      NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
+        @hOldToken, SizeOf(hOldToken));
+      NtxSafeClose(hOldToken);
+    end;
+
+  finally
+    NtxSafeClose(hThread);
+  end;
+end;
+
 constructor TToken.CreateOpenProcess(PID: NativeUInt; ImageName: String;
   Access: TAccessMask; Attributes: Cardinal);
 var
@@ -976,26 +1023,16 @@ end;
 constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
   OpenAsSelf: Boolean; Access: TAccessMask; Attributes: Cardinal);
 var
-  ObjAttr: TObjectAttributes;
-  ClientId: TClientId;
   hThread: THandle;
 begin
-  InitializeObjectAttributes(ObjAttr);
-  ClientId.Create(0, TID);
-
-  // Open the target thread. Note that we always can access our own.
-  if TID = GetCurrentThreadId then
-    hThread := NtCurrentThread
-  else
-    NativeCheck(NtOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, ObjAttr,
-      ClientId), 'NtOpenThread with THREAD_QUERY_LIMITED_INFORMATION');
+  NativeCheck(NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID),
+    'NtOpenThread with QUERY_LIMITED_INFORMATION');
 
   try
     NativeCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
       hToken), 'NtOpenThreadTokenEx');
   finally
-    if hThread <> NtCurrentThread then
-      NtClose(hThread);
+    NtxSafeClose(hThread);
   end;
 
   FCaption := Format('Thread %d of %s', [TID, ImageName]);
@@ -1408,9 +1445,22 @@ begin
 end;
 
 class procedure TToken.RevertThreadToken(TID: NativeUInt);
+var
+  hThread: THandle;
+  hNoToken: THandle;
 begin
-  // Set the handle to zero to revoke the impersonation token
-  AssignTokenToThread(0, TID);
+  NativeCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
+    'NtOpenThread with SET_THREAD_TOKEN');
+
+  try
+    hNoToken := 0;
+
+    NativeCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
+      @hNoToken, SizeOf(hNoToken)),
+      'NtSetInformationThread [ThreadImpersonationToken]');
+  finally
+    NtxSafeClose(hThread);
+  end;
 end;
 
 function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;
