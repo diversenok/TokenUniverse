@@ -6,7 +6,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList, Vcl.AppEvnts,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
-  UI.ListViewEx, UI.Prototypes, DelphiUtils.Events, Winapi.WinNt;
+  UI.ListViewEx, UI.Prototypes, DelphiUtils.Events;
 
 type
   TFormMain = class(TForm)
@@ -112,6 +112,8 @@ type
     procedure TokenRestrictSaferClick(Sender: TObject);
     procedure ActionOpenEffective(Sender: TObject);
     procedure MenuSafeImpersonationClick(Sender: TObject);
+  private
+    procedure CurrentUserChanged(Sender: TObject);
   public
     TokenView: TTokenViewSource;
     OnMainFormClose: TNotifyEventHandler;
@@ -123,7 +125,7 @@ var
 implementation
 
 uses
-  System.UITypes, TU.Tokens.Types,
+  System.UITypes, TU.Tokens.Types, Winapi.WinNt,
   NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
@@ -193,6 +195,7 @@ begin
   else
     Token.AssignToThread(TProcessListDialog.Execute(Self, True).ThreadID);
 
+  CurrentUserChanged(Self);
   MessageDlg('The token was successfully assigned to the thread.',
     mtInformation, [mbOK], 0);
 end;
@@ -279,6 +282,7 @@ procedure TFormMain.ActionRevertThread(Sender: TObject);
 begin
   TToken.RevertThreadToken(TProcessListDialog.Execute(Self, True).ThreadID);
 
+  CurrentUserChanged(Self);
   MessageDlg('The token was successfully revoked from the thread.',
     mtInformation, [mbOK], 0);
 end;
@@ -320,6 +324,11 @@ begin
   ShowErrorSuggestions(E);
 end;
 
+procedure TFormMain.CurrentUserChanged(Sender: TObject);
+begin
+  Caption := 'Token Universe :: Main Window [' + FormatCurrentState + ']';
+end;
+
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   OnMainFormClose.Invoke(Self);
@@ -346,6 +355,7 @@ begin
         if IsValid then
           TokenView.Add(Value);
 
+  CurrentUserChanged(Self);
   SetForegroundWindow(Handle);
 end;
 

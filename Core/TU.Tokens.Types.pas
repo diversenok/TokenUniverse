@@ -146,6 +146,8 @@ type
 function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
 
+function FormatCurrentState: String;
+
 { Comparison function used by cached event handling system }
 function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
@@ -180,8 +182,8 @@ implementation
 
 uses
   System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
-  Winapi.WinBase, Winapi.WinError, Winapi.Sddl,
-  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus;
+  Winapi.WinBase, Winapi.WinError, Winapi.Sddl, Winapi.ntlsa,
+  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -715,6 +717,30 @@ begin
     Result.sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
 
   Result.SourceIdentifier := SourceLuid;
+end;
+
+function FormatCurrentState: String;
+var
+  User, Domain: PLsaUnicodeString;
+begin
+  if NT_SUCCESS(LsaGetUserName(User, Domain))  then
+  begin
+    if (Domain.Length > 0) and (User.Length > 0) then
+      Result := Domain.ToString + '\' + User.ToString
+    else if Domain.Length > 0 then
+      Result := Domain.ToString
+    else if User.Length > 0 then
+      Result := User.ToString
+    else
+      Result := 'N/A';
+
+    LsaFreeMemory(User);
+    LsaFreeMemory(Domain);
+  end
+  else
+    Result := 'Unknown user';
+
+  Result := Result + ' @ ' + IntToStr(RtlGetCurrentPeb.SessionId);
 end;
 
 { Comparison functions }

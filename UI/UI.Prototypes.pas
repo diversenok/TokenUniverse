@@ -888,7 +888,7 @@ begin
     if Assigned(LogonData) then
       try
         if LogonData.UserPresent and (LogonData.User.User <> '') then
-            S := Format('%s (%s #%d)', [S, LogonData.User.User,
+            S := Format('%s (%s @ %d)', [S, LogonData.User.User,
               LogonData.Data.Session]);
       finally
         LogonData.Free;
