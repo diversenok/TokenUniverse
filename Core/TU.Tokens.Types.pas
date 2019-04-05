@@ -239,8 +239,8 @@ begin
 
   with LsaxLookupSid(SrcSid) do
   begin
-    Self.Domain := Domain;
-    Self.User := User;
+    Self.Domain := DomainName;
+    Self.User := UserName;
     Self.SID := SDDL;
     Self.SIDType := SidType;
   end;

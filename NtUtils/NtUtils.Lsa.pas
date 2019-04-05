@@ -14,7 +14,7 @@ type
   TPrivDefArray = array of TPrivilegeDefinition;
 
   TTranslatedName = record
-    Domain, User, SDDL: String;
+    DomainName, UserName, SDDL: String;
     SidType: TSidNameUse;
     function HasName: Boolean;
     function FullName: String;
@@ -195,15 +195,15 @@ begin
       end
       else
       begin
-        Result[i].User := Names[i].Name.ToString;
+        Result[i].UserName := Names[i].Name.ToString;
 
         // Negative DomainIndex means the SID does not reference a domain
         if (Names[i].DomainIndex >= 0) and
           (Names[i].DomainIndex < ReferencedDomains.Entries) then
-          Result[i].Domain := ReferencedDomains.Domains[
+          Result[i].DomainName := ReferencedDomains.Domains[
             Names[i].DomainIndex].Name.ToString
         else
-          Result[i].Domain := '';
+          Result[i].DomainName := '';
 
         Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
       end;
@@ -274,19 +274,19 @@ end;
 
 function TTranslatedName.FullName: String;
 begin
-  if (User <> '') and (Domain <> '') then
-    Result := Domain + '\' + User
-  else if (Domain <> '') then
-    Result := Domain
-  else if (User <> '') then
-    Result := User
+  if (UserName <> '') and (DomainName <> '') then
+    Result := DomainName + '\' + UserName
+  else if (DomainName <> '') then
+    Result := DomainName
+  else if (UserName <> '') then
+    Result := UserName
   else
     Result := SDDL;
 end;
 
 function TTranslatedName.HasName: Boolean;
 begin
-  Result := (User <> '') or (Domain <> '');
+  Result := (UserName <> '') or (DomainName <> '');
 end;
 
 end.

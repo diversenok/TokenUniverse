@@ -43,6 +43,10 @@ function RtlNtStatusToDosError(Status: NTSTATUS): Cardinal; stdcall;
 function RtlNtStatusToDosErrorNoTeb(Status: NTSTATUS): Cardinal; stdcall;
   external ntdll;
 
+function RtlGetLastNtStatus: NTSTATUS; stdcall; external ntdll;
+
+function RtlGetLastWin32Error: Cardinal; stdcall; external ntdll;
+
 // SIDs
 
 function RtlValidSid(Sid: PSid): Boolean; stdcall; external ntdll;
