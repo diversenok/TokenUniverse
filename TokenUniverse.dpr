@@ -63,7 +63,8 @@ uses
   DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas',
   DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas',
   NtUtils.DelayedImport in 'NtUtils\NtUtils.DelayedImport.pas',
-  Ntapi.ntldr in 'Headers\Ntapi.ntldr.pas';
+  Ntapi.ntldr in 'Headers\Ntapi.ntldr.pas',
+  Winapi.securitybaseapi in 'Headers\Winapi.securitybaseapi.pas';
 
 {$R *.res}
 

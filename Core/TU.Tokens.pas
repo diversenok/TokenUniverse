@@ -1372,8 +1372,8 @@ var
   ReturnLength: Cardinal;
 begin
   // TODO: Save error code and error location
-  Result := GetTokenInformation(hToken, InfoClass, @BufferData,
-    SizeOf(ResultType), ReturnLength);
+  Result := NT_SUCCESS(NtQueryInformationToken(hToken, InfoClass, @BufferData,
+    SizeOf(ResultType), ReturnLength));
 
   // Modify the specified Data parameter only on success
   if Result then
@@ -1494,9 +1494,12 @@ end;
 
 procedure TToken.SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
   const Value: ResultType);
+var
+  status: NTSTATUS;
 begin
-  if not SetTokenInformation(hToken, InfoClass, @Value, SizeOf(Value))
-    then raise EWinError.Create(GetLastError, SetterMessage(InfoClass), Self);
+  status := NtSetInformationToken(hToken, InfoClass, @Value, SizeOf(Value));
+  if not NT_SUCCESS(status) then
+    raise ENtError.Create(status, SetterMessage(InfoClass), Self);
 end;
 
 { TTokenData }
@@ -2042,9 +2045,8 @@ end;
 
 procedure TTokenData.SetAuditPolicy(const Value: TTokenPerUserAudit);
 begin
-  if not SetTokenInformation(Token.hToken, TokenAuditPolicy, Value.Data,
-    Value.AuditPolicySize) then
-    raise EWinError.Create(GetLastError, SetterMessage(TokenAuditPolicy), Token);
+  NativeCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy, Value.Data,
+    Value.AuditPolicySize), SetterMessage(TokenAuditPolicy));
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenAuditPolicy);

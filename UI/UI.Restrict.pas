@@ -51,7 +51,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Winapi, TU.Suggestions, Ntapi.ntseapi;
+  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi;
 
 {$R *.dfm}
 

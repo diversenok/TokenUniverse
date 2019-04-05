@@ -11,7 +11,8 @@ interface
   on the same simple type. }
 
 uses
-  TU.Winapi, Winapi.WinNt, Winapi.NtSecApi, NtUtils.Exceptions;
+  TU.Winapi, Winapi.WinNt, Winapi.NtSecApi, Winapi.securitybaseapi,
+  NtUtils.Exceptions;
 
 type
   TSecurityIdentifier = record
@@ -195,8 +196,8 @@ end;
 function SetterMessage(InfoClass: TTokenInformationClass): String;
 begin
   // We use a name of info class from the enumeration definition
-  Result := 'SetTokenInformation:' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
+  Result := 'NtSetInformationToken [' +
+    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
 end;
 
 { TTokenAccess }

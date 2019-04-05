@@ -155,7 +155,7 @@ implementation
 
 uses
   System.Generics.Collections, DelphiUtils.Strings,
-  UI.Colors, UI.Modal.PickUser, UI.Settings, TU.Winapi;
+  UI.Colors, UI.Modal.PickUser, UI.Settings, TU.Winapi, Ntapi.ntrtl;
 
 { TPrivilegesSource }
 
@@ -667,7 +667,7 @@ begin
     ComboBox.Items.Add(QuerySessionFullName(Sessions[i].SessionId));
 
   if SelectCurrent and (Length(Sessions) > 0) then
-    SetSession(GetCurrentSession);
+    SetSession(RtlGetCurrentPeb.SessionId);
 
   ComboBox.Items.EndUpdate;
 end;

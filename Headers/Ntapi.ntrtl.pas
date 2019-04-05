@@ -76,7 +76,7 @@ function RtlSubAuthoritySid(Sid: PSid; SubAuthority: Cardinal): PCardinal;
 
 function RtlSubAuthorityCountSid(Sid: PSid): PByte; stdcall; external ntdll;
 
-function RtlLengthSid(Sid: PSid): NTSTATUS; stdcall; external ntdll;
+function RtlLengthSid(Sid: PSid): Cardinal; stdcall; external ntdll;
 
 function RtlCopySid(DestinationSidLength: Cardinal; DestinationSid: PSid;
   SourceSid: PSid): NTSTATUS; stdcall; external ntdll;

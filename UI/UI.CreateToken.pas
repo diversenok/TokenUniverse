@@ -87,7 +87,7 @@ implementation
 uses
   TU.LsaApi, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, DelphiUtils.Strings,
   UI.Settings, UI.Modal.PickToken, System.UITypes,
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl;
 
 {$R *.dfm}
 
@@ -270,7 +270,7 @@ begin
 
   // Post-creation: change session
   if CheckBoxSession.Checked then
-    Token.InfoClass.Session := GetCurrentSession;
+    Token.InfoClass.Session := RtlGetCurrentPeb.SessionId;
 
   if not TSettings.NoCloseCreationDialogs then
     Close;
@@ -325,7 +325,7 @@ begin
   GroupsSource := TGroupsSource.Create(ListViewGroups);
   PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   PrivilegesSource.AddAllPrivileges;
-  CheckBoxSession.Enabled := GetCurrentSession <> 0;
+  CheckBoxSession.Enabled := RtlGetCurrentPeb.SessionId <> 0;
   ButtonAllocLuidClick(Self);
 end;
 

@@ -193,6 +193,16 @@ type
   end;
   PSidAndAttributes = ^TSidAndAttributes;
 
+  // 9084
+  TSIDAndAttributesHash = record
+    const SID_HASH_SIZE = 32;
+  var
+    SidCount: Cardinal;
+    SidAttr: PSIDAndAttributes;
+    Hash: array [0 .. SID_HASH_SIZE - 1] of NativeUInt;
+  end;
+  PSIDAndAttributesHash = ^TSIDAndAttributesHash;
+
   // 9695
   TAcl = record
     AclRevision: Byte;
@@ -379,6 +389,24 @@ type
     Policy: Cardinal;
   end;
   PTokenMandatoryPolicy = ^TTokenMandatoryPolicy;
+
+  // 10820
+  TTokenAccessInformation = record
+    SidHash: PSIDAndAttributesHash;
+    RestrictedSidHash: PSIDAndAttributesHash;
+    Privileges: PTokenPrivileges;
+    AuthenticationId: Int64;
+    TokenType: TTokenType;
+    ImpersonationLevel: TSecurityImpersonationLevel;
+    MandatoryPolicy: TTokenMandatoryPolicy;
+    Flags: Cardinal;
+    AppContainerNumber: Cardinal;
+    PackageSid: PSid;
+    CapabilitiesHash: PSIDAndAttributesHash;
+    TrustLevelSid: PSid;
+    SecurityAttributes: Pointer;
+  end;
+  PTokenAccessInformation = ^TTokenAccessInformation;
 
   // 10842
   TTokenAuditPolicy = record
