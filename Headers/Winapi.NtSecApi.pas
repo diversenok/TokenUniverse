@@ -47,6 +47,8 @@ type
   TLsaUnicodeString = UNICODE_STRING;
   PLsaUnicodeString = ^TLsaUnicodeString;
 
+  TLsaUnicodeStringDynArray = array of TLsaUnicodeString;
+
   TLsaOperationalMode = Cardinal;
 
   TGuidArray = array [Byte] of TGUID;

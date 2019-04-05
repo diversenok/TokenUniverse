@@ -43,6 +43,46 @@ type
   TPolicyPrivilegeDefinitionArray = array [Byte] of TPolicyPrivilegeDefinition;
   PPolicyPrivilegeDefinitionArray = ^TPolicyPrivilegeDefinitionArray;
 
+  // Winapi.LsaLookup 70
+  TLsaTrustInformation = record
+    Name: TLsaUnicodeString;
+    Sid: PSid;
+  end;
+  PLsaTrustInformation = ^TLsaTrustInformation;
+
+  TLsaTrustInformationArray = array [Word] of TLsaTrustInformation;
+  PLsaTrustInformationArray = ^TLsaTrustInformationArray;
+
+  // Winapi.LsaLookup 89
+  TLsaReferencedDomainList = record
+    Entries: Integer;
+    Domains: PLsaTrustInformationArray;
+  end;
+  PLsaReferencedDomainList = ^TLsaReferencedDomainList;
+
+  // Winapi.LsaLookup 111
+  TLsaTranslatedSid2 = record
+    Use: TSidNameUse;
+    Sid: PSid;
+    DomainIndex: Integer;
+    Flags: Cardinal;
+  end;
+  PLsaTranslatedSid2 = ^TLsaTranslatedSid2;
+
+  TLsaTranslatedSid2Array = array [Word] of TLsaTranslatedSid2;
+  PLsaTranslatedSid2Array = ^TLsaTranslatedSid2Array;
+
+  // Winapi.LsaLookup 142
+  TLsaTranslatedName = record
+    Use: TSidNameUse;
+    Name: TLsaUnicodeString;
+    DomainIndex: Integer;
+  end;
+  PLsaTranslatedName = ^TLsaTranslatedName;
+
+  TLsaTranslatedNameArray = array [Word] of TLsaTranslatedName;
+  PLsaTranslatedNameArray = ^TLsaTranslatedNameArray;
+
 // 2983
 function LsaFreeMemory(Buffer: Pointer): NTSTATUS; stdcall; external advapi32;
 
@@ -107,12 +147,22 @@ function LsaLookupPrivilegeName(PolicyHandle: TLsaHandle;
 // 3590
 function LsaLookupPrivilegeDisplayName(PolicyHandle: TLsaHandle;
   const Name: TLsaUnicodeString; out DisplayName: PLsaUnicodeString;
-  out LanguageReturned: Smallint): NTSTATUS; stdcall;
-  external advapi32;
+  out LanguageReturned: Smallint): NTSTATUS; stdcall; external advapi32;
 
 // 3605
 function LsaGetUserName(out UserName: PLsaUnicodeString;
   out DomainName: PLsaUnicodeString): NTSTATUS; stdcall; external advapi32;
+
+// 3394
+function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
+  Count: Integer; Names: TLsaUnicodeStringDynArray;
+  out ReferencedDomains: PLsaReferencedDomainList;
+  out Sids: PLsaTranslatedSid2Array): NTSTATUS; stdcall; external advapi32;
+
+// 3406
+function LsaLookupSids(PolicyHandle: TLsaHandle; Count: Cardinal;
+  Sids: TSidDynArray; out ReferencedDomains: PLsaReferencedDomainList;
+  out Names: PLsaTranslatedNameArray): NTSTATUS; stdcall; external advapi32;
 
 implementation
 

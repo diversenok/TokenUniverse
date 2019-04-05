@@ -277,7 +277,7 @@ var
   Value: TLuid;
 begin
   // Ask LSA to enumerate the privileges.
-  if NT_SUCCESS(EnumeratePrivileges(Privileges)) then
+  if NT_SUCCESS(LsaxEnumeratePrivileges(Privileges)) then
   begin
     SetLength(Result, Length(Privileges));
 
@@ -320,8 +320,8 @@ begin
 
   if InRange(Value) and Cache[Value].DisplayNameValid then
     Result := Cache[Value].DisplayName
-  else if TryQueryName(Value, Name) and NT_SUCCESS(QueryPrivilegeDisplayName(
-    Name, Result)) then
+  else if TryQueryName(Value, Name) and
+    NT_SUCCESS(LsaxQueryDescriptionPrivilege(Name, Result)) then
   begin
     // Cache it if applicable
     if InRange(Value) then
@@ -348,7 +348,7 @@ begin
   // Try cache first, then query LSA
   if InRange(Value) and Cache[Value].NameValid then
     Name := Cache[Value].Name
-  else if NT_SUCCESS(QueryPrivilegeName(Value, Name)) then
+  else if NT_SUCCESS(LsaxQueryNamePrivilege(Value, Name)) then
   begin
     // Cache it if applicable
     if InRange(Value) then

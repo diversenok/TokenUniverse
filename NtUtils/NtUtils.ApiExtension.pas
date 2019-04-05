@@ -38,10 +38,15 @@ function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): NTSTATUS;
 function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
   TID: NativeUInt): NTSTATUS;
 
+{ ---------------------------------- RTL ----------------------------------- }
+
+// RtlConvertSidToUnicodeString that uses delphi strings
+function RtlxConvertSidToString(SID: PSid): String;
+
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi, Winapi.WinBase,
+  Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi, Ntapi.ntrtl, Winapi.WinBase,
   NtUtils.Exceptions, NtUtils.Handles, NtUtils.DelayedImport, System.SysUtils;
 
 { Objects }
@@ -391,6 +396,23 @@ begin
     ClientId.Create(0, TID);
     Result := NtOpenThread(hThread, DesiredAccess, ObjAttr, ClientId);
   end;
+end;
+
+{ RTL }
+
+function RtlxConvertSidToString(SID: PSid): String;
+var
+  SDDL: UNICODE_STRING;
+  Buffer: array [0 .. SECURITY_MAX_SID_STRING_CHARACTERS] of WideChar;
+begin
+  SDDL.Length := 0;
+  SDDL.MaximumLength := SECURITY_MAX_SID_STRING_CHARACTERS;
+  SDDL.Buffer := PWideChar(@Buffer);
+
+  if NT_SUCCESS(RtlConvertSidToUnicodeString(SDDL, SID, False)) then
+    Result := SDDL.ToString
+  else
+    Result := '';
 end;
 
 end.

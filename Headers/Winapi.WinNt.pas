@@ -35,6 +35,8 @@ const
 
   // 9007
   SID_MAX_SUB_AUTHORITIES = 15;
+  SECURITY_MAX_SID_STRING_CHARACTERS = 2 + 4 + 15 +
+    (11 * SID_MAX_SUB_AUTHORITIES) + 1;
 
   // 9623
   SE_GROUP_MANDATORY = $00000001;
@@ -181,6 +183,8 @@ type
   TSidArray = array [Word] of PSid;
   PSidArray = ^TSidArray;
 
+  TSidDynArray = array of PSid;
+
   // 9042
   TSidNameUse = (SidTypeZero, SidTypeUser, SidTypeGroup, SidTypeDomain,
     SidTypeAlias, SidTypeWellKnownGroup, SidTypeDeletedAccount, SidTypeInvalid,
@@ -192,6 +196,8 @@ type
     Attributes: Cardinal;
   end;
   PSidAndAttributes = ^TSidAndAttributes;
+
+  TSIDAndAttributesDynArray = array of TSIDAndAttributes;
 
   // 9084
   TSIDAndAttributesHash = record
