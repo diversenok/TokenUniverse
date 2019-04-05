@@ -33,13 +33,16 @@ function LsaxQueryDescriptionPrivilege(const Name: String;
   out DisplayName: String): NTSTATUS;
 
 // LsaLookupSids mixed with RtlConvertSidToUnicodeString, always succeeds
-procedure LsaxLookupSids(Sids: TSidDynArray;
-  out TranslatedNames: TTranslatedNames);
+function LsaxLookupSid(Sid: PSid): TTranslatedName;
+function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
+
+// LsaLookupNames2, on success the SID buffer must be freed using FreeMem
+function LsaxLookupUserName(UserName: String; out Sid: PSid): NTSTATUS;
 
 implementation
 
 uses
-  Winapi.NtSecApi, Winapi.ntlsa, Ntapi.ntstatus,
+  Winapi.NtSecApi, Winapi.ntlsa, Ntapi.ntstatus, Ntapi.ntrtl,
   NtUtils.ApiExtension, System.SysUtils;
 
 function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): NTSTATUS;
@@ -132,8 +135,17 @@ begin
   end;
 end;
 
-procedure LsaxLookupSids(Sids: TSidDynArray;
-  out TranslatedNames: TTranslatedNames);
+function LsaxLookupSid(Sid: PSid): TTranslatedName;
+var
+  Sids: TSidDynArray;
+begin
+  SetLength(Sids, 1);
+  Sids[0] := Sid;
+
+  Result := LsaxLookupSids(Sids)[0];
+end;
+
+function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
 var
   Status: NTSTATUS;
   LsaHandle: TLsaHandle;
@@ -156,15 +168,17 @@ begin
     // Even without mapping names it converts most of them to SDDL
     if Status = STATUS_NONE_MAPPED then
       Status := STATUS_SOME_NOT_MAPPED;
+
+    LsaClose(LsaHandle);
   end;
 
-  SetLength(TranslatedNames, Length(SIDs));
+  SetLength(Result, Length(SIDs));
 
   if NT_SUCCESS(Status) then
   begin
     for i := 0 to High(Sids) do
     begin
-      TranslatedNames[i].SidType := Names[i].Use;
+      Result[i].SidType := Names[i].Use;
 
       // If an SID has a known name, LsaLookupSids returns it.
       // Otherwise, Names[i].Name field contains SID's SDDL representation.
@@ -174,24 +188,24 @@ begin
       begin
         // Only SDDL representation is suitable for these SID types
 
-        if Names[i].Name.ToString.StartsWith('S-1-') then
-          TranslatedNames[i].SDDL := Names[i].Name.ToString
-        else
-          TranslatedNames[i].SDDL := RtlxConvertSidToString(Sids[i]);
+        Result[i].SDDL := Names[i].Name.ToString;
+
+        if not Result[i].SDDL.StartsWith('S-1-') then
+          Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
       end
       else
       begin
-        TranslatedNames[i].User := Names[i].Name.ToString;
+        Result[i].User := Names[i].Name.ToString;
 
         // Negative DomainIndex means the SID does not reference a domain
         if (Names[i].DomainIndex >= 0) and
           (Names[i].DomainIndex < ReferencedDomains.Entries) then
-          TranslatedNames[i].Domain := ReferencedDomains.Domains[
+          Result[i].Domain := ReferencedDomains.Domains[
             Names[i].DomainIndex].Name.ToString
         else
-          TranslatedNames[i].Domain := '';
+          Result[i].Domain := '';
 
-        TranslatedNames[i].SDDL := RtlxConvertSidToString(Sids[i]);
+        Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
       end;
     end;
 
@@ -202,7 +216,57 @@ begin
   begin
     // Lookup failed, only SDDL representations available
     for i := 0 to High(Sids) do
-      TranslatedNames[i].SDDL := RtlxConvertSidToString(Sids[i]);
+      Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
+  end;
+end;
+
+function LsaxLookupUserName(UserName: String; out Sid: PSid): NTSTATUS;
+var
+  LsaHandle: TLsaHandle;
+  ObjAttr: TObjectAttributes;
+  Name: TLsaUnicodeString;
+  ReferencedDomain: PLsaReferencedDomainList;
+  TranslatedSid: PLsaTranslatedSid2;
+  BufferSize: Cardinal;
+begin
+  Sid := nil;
+  Name.FromString(UserName);
+  InitializeObjectAttributes(ObjAttr);
+
+  // Connect to LSA
+  Result := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, LsaHandle);
+
+  if not NT_SUCCESS(Result) then
+    Exit;
+
+  // Request translation of one name
+  Result := LsaLookupNames2(LsaHandle, 0, 1, Name, ReferencedDomain,
+    TranslatedSid);
+
+  if Result = STATUS_NONE_MAPPED then
+  begin
+    LsaFreeMemory(ReferencedDomain);
+    LsaFreeMemory(TranslatedSid);
+    Exit;
+  end;
+
+  if NT_SUCCESS(Result) then
+  begin
+    // Allocate memory and copy SID
+
+    BufferSize := RtlLengthSid(TranslatedSid.Sid);
+    Sid := AllocMem(BufferSize);
+
+    Result := RtlCopySid(BufferSize, Sid, TranslatedSid.Sid);
+
+    if not NT_SUCCESS(Result) then
+    begin
+      FreeMem(Sid);
+      Sid := nil;
+    end;
+
+    LsaFreeMemory(ReferencedDomain);
+    LsaFreeMemory(TranslatedSid);
   end;
 end;
 

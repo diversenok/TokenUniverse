@@ -155,9 +155,17 @@ function LsaGetUserName(out UserName: PLsaUnicodeString;
 
 // 3394
 function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
+  Count: Integer; const Name: TLsaUnicodeString;
+  out ReferencedDomain: PLsaReferencedDomainList;
+  out Sid: PLsaTranslatedSid2): NTSTATUS; stdcall;
+  external advapi32; overload;
+
+// 3394
+function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
   Count: Integer; Names: TLsaUnicodeStringDynArray;
   out ReferencedDomains: PLsaReferencedDomainList;
-  out Sids: PLsaTranslatedSid2Array): NTSTATUS; stdcall; external advapi32;
+  out Sids: PLsaTranslatedSid2Array): NTSTATUS; stdcall;
+  external advapi32; overload;
 
 // 3406
 function LsaLookupSids(PolicyHandle: TLsaHandle; Count: Cardinal;

@@ -30,18 +30,6 @@ function GetLastError: Cardinal; stdcall; external kernel32;
 procedure OutputDebugStringW(lpOutputString: PWideChar); stdcall;
   external kernel32;
 
-// 12236
-function LookupAccountSidW(lpSystemName: PWideChar; Sid: PSID;
-  Name: PWideChar; var cbName: Cardinal; ReferencedDomainName: PWideChar;
-  var cbReferencedDomainName: Cardinal; out peUse: TSidNameUse): LongBool;
-  stdcall; external advapi32;
-
-// 12294
-function LookupAccountNameW(lpSystemName, lpAccountName: PWideChar;
-  Sid: PSID; var cbSid: Cardinal; ReferencedDomainName: PWideChar;
-  var cbReferencedDomainName: Cardinal; out peUse: TSidNameUse): LongBool;
-  stdcall; external advapi32;
-
 // 12718
 function LogonUserW (lpszUsername: PWideChar; lpszDomain: PWideChar;
   lpszPassword: PWideChar; dwLogonType: TSecurityLogonType; dwLogonProvider:

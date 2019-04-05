@@ -16,11 +16,6 @@ uses
 
 type
   TSecurityIdentifier = record
-  strict private
-    procedure GetDomainAndUser(SrcSid: PSid);
-    procedure GetStringSid(SrcSid: PSid);
-    procedure CreateFromStringSid(StringSID: string);
-    constructor CreateFromUserName(Name: string; Dummy: Integer = 0);
   public
     SID, Domain, User: String;
     SIDType: TSIDNameUse;
@@ -184,7 +179,7 @@ implementation
 uses
   System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
   Winapi.WinBase, Winapi.WinError, Winapi.Sddl, Winapi.ntlsa,
-  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl;
+  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, NtUtils.Lsa;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -240,57 +235,43 @@ end;
 
 constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSid);
 begin
-  GetStringSid(SrcSid);
-  GetDomainAndUser(SrcSid);
-end;
+  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
 
-constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
-begin
-  if UserOrSID.StartsWith('S-1-') then
-    CreateFromStringSid(UserOrSID)
-  else if UserOrSID.StartsWith('s-1-') then
-    CreateFromStringSid(UpperCase(UserOrSID))
-  else
-    CreateFromUserName(UserOrSID);
-end;
-
-procedure TSecurityIdentifier.CreateFromStringSid(StringSID: string);
-var
-  Buffer: PSid;
-begin
-  SID := StringSID;
-  WinCheck(ConvertStringSidToSidW(PWideChar(SID), Buffer),
-    'ConvertStringSidToSid');
-
-  try
-    GetDomainAndUser(Buffer);
-  finally
-    LocalFree(Buffer);
+  with LsaxLookupSid(SrcSid) do
+  begin
+    Self.Domain := Domain;
+    Self.User := User;
+    Self.SID := SDDL;
+    Self.SIDType := SidType;
   end;
 end;
 
-constructor TSecurityIdentifier.CreateFromUserName(Name: string;
-  Dummy: Integer = 0);
+constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
 var
-  SidBuffer, DomainBuffer: Pointer;
-  SidSize, DomainChars: Cardinal;
+  Buffer: PSid;
 begin
-  SidSize := 0;
-  DomainChars := 0;
-  LookupAccountNameW(nil, PWideChar(Name), nil, SidSize, nil,
-    DomainChars, SIDType);
-  WinCheckBuffer(SidSize, 'LookupAccountNameW');
+  if UserOrSID.StartsWith('S-1-', True) then
+  begin
+    SID := UserOrSID;
 
-  SidBuffer := AllocMem(SidSize);
-  DomainBuffer := AllocMem((DomainChars + 1) * SizeOf(WideChar));
-  try
-    WinCheck(LookupAccountNameW(nil, PWideChar(Name), SidBuffer, SidSize,
-      DomainBuffer, DomainChars, SIDType), 'LookupAccountNameW');
+    WinCheck(ConvertStringSidToSidW(PWideChar(SID), Buffer),
+    'ConvertStringSidToSid');
 
-    CreateFromSid(SidBuffer);
-  finally
-    FreeMem(SidBuffer);
-    FreeMem(DomainBuffer);
+    try
+      CreateFromSid(Buffer);
+    finally
+      LocalFree(Buffer);
+    end;
+  end
+  else
+  begin
+    NativeCheck(LsaxLookupUserName(UserOrSID, Buffer), 'LsaLookupNames2');
+
+    try
+      CreateFromSid(Buffer);
+    finally
+      FreeMem(Buffer);
+    end;
   end;
 end;
 
@@ -315,53 +296,6 @@ begin
   finally
     FreeMem(Buffer);
   end;
-end;
-
-procedure TSecurityIdentifier.GetDomainAndUser(SrcSid: PSid);
-var
-  BufUser, BufDomain: PWideChar;
-  UserChars, DomainChars: Cardinal;
-begin
-  Domain := '';
-  User := '';
-  SIDType := SidTypeZero;
-
-  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
-
-  UserChars := 0;
-  DomainChars := 0;
-  LookupAccountSidW(nil, SrcSid, nil, UserChars, nil, DomainChars, SIDType);
-  if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or
-    ((UserChars = 0) and (DomainChars = 0)) then
-    Exit;
-
-  BufUser := AllocMem((UserChars + 1) * SizeOf(WideChar));
-  BufDomain := AllocMem((DomainChars + 1) * SizeOf(WideChar));
-  try
-    if LookupAccountSidW(nil, SrcSid, BufUser, UserChars, BufDomain,
-      DomainChars, SIDType) then // We don't need exceptions
-    begin
-      if UserChars <> 0 then
-        SetString(User, BufUser, UserChars);
-      if DomainChars <> 0 then
-        SetString(Domain, BufDomain, DomainChars);
-    end;
-  finally
-    FreeMem(BufUser);
-    FreeMem(BufDomain);
-  end;
-end;
-
-procedure TSecurityIdentifier.GetStringSid(SrcSid: PSid);
-var
-  Buffer: PWideChar;
-begin
-  // TODO: assert for valid SIDs
-  SID := '';
-  WinCheck(ConvertSidToStringSidW(SrcSid, Buffer), 'ConvertSidToStringSidW');
-
-  SID := String(Buffer);
-  LocalFree(Buffer);
 end;
 
 function TSecurityIdentifier.HasPrettyName: Boolean;
