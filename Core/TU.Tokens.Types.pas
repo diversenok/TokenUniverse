@@ -12,37 +12,10 @@ interface
 
 uses
   TU.Winapi, Winapi.WinNt, Winapi.NtSecApi, Winapi.securitybaseapi,
-  NtUtils.Exceptions, NtUtils.Lsa;
+  NtUtils.Exceptions, NtUtils.Lsa, NtUtils.Types;
 
 type
-  TSecurityIdentifier = record
-  public
-    Lookup: TTranslatedName;
-    constructor CreateFromSid(SrcSid: PSid);
-    constructor CreateFromString(UserOrSID: String);
-    class function CreateWellKnown(WellKnownSidType: TWellKnownSidType):
-      CanFail<TSecurityIdentifier>; static;
-    function ToString: String;
-    function HasPrettyName: Boolean;
-    function AllocSid: PSid;
-  end;
-
-  TGroup = record
-    SecurityIdentifier: TSecurityIdentifier;
-    Attributes: Cardinal;
-  end;
-
-  TGroupArray = array of TGroup;
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
-
-  TPrivilege = TLuidAndAttributes;
-
-  TPrivilegeHelper = record helper for TPrivilege
-    function Name: String;
-    function Description: String;
-    function AttributesToString: String;
-    function AttributesContain(Flag: Cardinal): Boolean;
-  end;
 
   TPrivilegeArray = array of TPrivilege;
 
@@ -121,7 +94,7 @@ function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
 function FormatCurrentState: String;
 
 { Comparison function used by cached event handling system }
-function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
+function CompareSIDs(Value1, Value2: ISid): Boolean;
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 function CompareLUIDs(Value1, Value2: TLuid): Boolean;
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
@@ -156,7 +129,7 @@ uses
   System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
   Winapi.WinBase, Winapi.WinError, Winapi.Sddl, Winapi.ntlsa,
   Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl,
-  NtUtils.Strings, NtUtils.Types;
+  NtUtils.Strings;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -200,89 +173,6 @@ begin
     end;
   SetLength(Granted, StrInd);
   Result := String.Join(', ', Granted);
-end;
-
-{ TSecurityIdentifier }
-
-function TSecurityIdentifier.AllocSid: PSid;
-begin
-  WinCheck(ConvertStringSidToSidW(PWideChar(Lookup.SDDL), Result),
-    'ConvertStringSidToSid');
-end;
-
-constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSid);
-begin
-  Lookup := LsaxLookupSid(SrcSid);
-end;
-
-constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
-var
-  Buffer: ISid;
-begin
-  Buffer := TSid.CreateFromString(UserOrSID);
-  Lookup := Buffer.Lookup;
-end;
-
-class function TSecurityIdentifier.CreateWellKnown(
-  WellKnownSidType: TWellKnownSidType): CanFail<TSecurityIdentifier>;
-var
-  Buffer: ISid;
-begin
-  Result.Init;
-  if Result.CheckError(TSid.GetWellKnownSid(WellKnownSidType, Buffer),
-    'CreateWellKnownSid') then
-    Result.Value.CreateFromSid(Buffer.Sid);
-end;
-
-function TSecurityIdentifier.HasPrettyName: Boolean;
-begin
-  Result := Lookup.HasName;
-end;
-
-function TSecurityIdentifier.ToString: String;
-begin
-  Result := Lookup.FullName;
-end;
-
-{ TPrivilegeHelper }
-
-function TPrivilegeHelper.AttributesContain(Flag: Cardinal): Boolean;
-begin
-  Result := Self.Attributes and Flag = Flag;
-end;
-
-function TPrivilegeHelper.AttributesToString: String;
-begin
-  if Self.AttributesContain(SE_PRIVILEGE_ENABLED) then
-  begin
-    if Self.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-      Result := 'Enabled'
-    else
-      Result := 'Enabled (modified)';
-  end
-  else
-  begin
-    if Self.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-      Result := 'Disabled (modified)'
-    else
-      Result := 'Disabled';
-  end;
-
-  if Self.AttributesContain(SE_PRIVILEGE_REMOVED) then
-    Result := 'Removed, ' + Result;
-
-  if Self.AttributesContain(SE_PRIVILEGE_USED_FOR_ACCESS) then
-    Result := 'Used for access, ' + Result;
-end;
-
-function TPrivilegeHelper.Description: String;
-begin
-  Result := TPrivilegeCache.QueryDisplayName(Luid);
-end;
-
-function TPrivilegeHelper.Name: String;
-begin
-  Result := TPrivilegeCache.QueryName(Luid);
 end;
 
 { TTokenTypeExHelper }
@@ -506,9 +396,9 @@ end;
 
 { Comparison functions }
 
-function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
+function CompareSIDs(Value1, Value2: ISid): Boolean;
 begin
-  Result := Value1.Lookup.SDDL = Value2.Lookup.SDDL;
+  Result := Value1.EqualsTo(Value2);
 end;
 
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;

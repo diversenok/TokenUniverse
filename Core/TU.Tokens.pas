@@ -43,8 +43,8 @@ type
     User: TGroup;
     Groups: TGroupArray;
     Privileges: TPrivilegeArray;
-    Owner: TSecurityIdentifier;
-    PrimaryGroup: TSecurityIdentifier;
+    Owner: ISid;
+    PrimaryGroup: ISid;
     Source: TTokenSource;
     TokenType: TTokenTypeEx;
     Statistics: TTokenStatistics;
@@ -64,7 +64,7 @@ type
     LogonSessionInfo: TLogonSessionInfo;
     ObjectInformation: TObjectBasicInformaion;
 
-    FOnOwnerChange, FOnPrimaryChange: TCachingEvent<TSecurityIdentifier>;
+    FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
     FOnSessionChange: TCachingEvent<Cardinal>;
     FOnAuditChange: TCachingEvent<TTokenPerUserAudit>;
     FOnOriginChange: TCachingEvent<TLuid>;
@@ -84,8 +84,8 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    property OnOwnerChange: TCachingEvent<TSecurityIdentifier> read FOnOwnerChange;
-    property OnPrimaryChange: TCachingEvent<TSecurityIdentifier> read FOnPrimaryChange;
+    property OnOwnerChange: TCachingEvent<ISid> read FOnOwnerChange;
+    property OnPrimaryChange: TCachingEvent<ISid> read FOnPrimaryChange;
     property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
     property OnAuditChange: TCachingEvent<TTokenPerUserAudit> read FOnAuditChange;
     property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
@@ -121,8 +121,8 @@ type
     procedure SetAuditPolicy(const Value: TTokenPerUserAudit);
     procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
-    procedure SetOwner(const Value: TSecurityIdentifier);
-    procedure SetPrimaryGroup(const Value: TSecurityIdentifier);
+    procedure SetOwner(const Value: ISid);
+    procedure SetPrimaryGroup(const Value: ISid);
     function GetVirtualizationAllowed: LongBool;
     function GetVirtualizationEnabled: LongBool;
     function GetElevation: TTokenElevationType;
@@ -131,8 +131,8 @@ type
     function GetIntegrity: TTokenIntegrity;
     function GetMandatoryPolicy: TMandatoryPolicy;
     function GetOrigin: TLuid;
-    function GetOwner: TSecurityIdentifier;
-    function GetPrimaryGroup: TSecurityIdentifier;
+    function GetOwner: ISid;
+    function GetPrimaryGroup: ISid;
     function GetPrivileges: TPrivilegeArray;
     function GetRestrictedSids: TGroupArray;
     function GetSandboxInert: LongBool;
@@ -153,8 +153,8 @@ type
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TGroupArray read GetGroups;                                // class 2
     property Privileges: TPrivilegeArray read GetPrivileges;                    // class 3
-    property Owner: TSecurityIdentifier read GetOwner write SetOwner;           // class 4 #settable
-    property PrimaryGroup: TSecurityIdentifier read GetPrimaryGroup write SetPrimaryGroup; // class 5 #settable
+    property Owner: ISid read GetOwner write SetOwner;                          // class 4 #settable
+    property PrimaryGroup: ISid read GetPrimaryGroup write SetPrimaryGroup;     // class 5 #settable
     // TODO: class 6: DefaultDacl #settable
     property Source: TTokenSource read GetSource;                               // classes 7 & 8
     property TokenTypeInfo: TTokenTypeEx read GetTokenType;                     // class 9
@@ -288,7 +288,7 @@ type
     ///  if it fails.
     /// </remarks>
     function QuerySid(InfoClass: TTokenInformationClass;
-      out Sid: TSecurityIdentifier): Boolean;
+      out Sid: ISid): Boolean;
 
     /// <summary> Queries a security identifier and attributes. </summary>
     /// <remarks>
@@ -309,14 +309,9 @@ type
     /// <summary>
     ///  Allocates and fills <see cref="Winapi.PTokenGroups"/>.
     /// </summary>
-    /// <remarks> Call <see cref="FreeGroups"/> after use. </remarks>
+    /// <remarks> Call <see cref="FreeMem"/> after use. </remarks>
     class function AllocGroups(Groups: TGroupArray;
       ResetAttributes: Boolean = False): PTokenGroups; static;
-
-    /// <summary>
-    ///  Frees memory previously allocated by <see cref="AllocGroups"/>.
-    /// </summary>
-    class procedure FreeGroups(Groups: PTokenGroups); static;
 
     /// <summary> Allocates <see cref="Winapi.PTokenPrivileges"/>. </summary>
     /// <remarks> Call <see cref="System.FreeMem"/> after use. </remarks>
@@ -442,11 +437,10 @@ type
 
     /// <summary> Creates a new token from the scratch. </summary>
     /// <remarks> This action requires SeCreateTokenPrivilege. </remarks>
-    constructor CreateNtCreateToken(User: TSecurityIdentifier;
-      DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
-      LogonID: TLuid; Owner: TSecurityIdentifier;
-      PrimaryGroup: TSecurityIdentifier; Source: TTokenSource;
-      Expires: TLargeInteger);
+    constructor CreateNtCreateToken(User: ISid; DisableUser: Boolean;
+      Groups: TGroupArray; Privileges: TPrivilegeArray;
+      LogonID: TLuid; Owner: ISid; PrimaryGroup: ISid;
+      Source: TTokenSource; Expires: TLargeInteger);
 
     /// <summary>
     ///  Create a token using <see cref="NtImpersonateAnonymousToken">.
@@ -673,7 +667,7 @@ begin
   begin
     // This function calls ConvertStringSidToSid to allocates memory that
     // we need to clean up by calling LocalFree inside FreeGroups routine.
-    Result.Groups[i].Sid := Groups[i].SecurityIdentifier.AllocSid;
+    Result.Groups[i].Sid := Groups[i].SecurityIdentifier.Sid;
 
     if not ResetAttributes then
       Result.Groups[i].Attributes := Cardinal(Groups[i].Attributes);
@@ -871,10 +865,10 @@ begin
     FCaption := SrcToken.Caption + ' (copy)'
 end;
 
-constructor TToken.CreateNtCreateToken(User: TSecurityIdentifier;
-  DisableUser: Boolean; Groups: TGroupArray; Privileges: TPrivilegeArray;
-  LogonID: TLuid; Owner: TSecurityIdentifier; PrimaryGroup: TSecurityIdentifier;
-  Source: TTokenSource; Expires: TLargeInteger);
+constructor TToken.CreateNtCreateToken(User: ISid; DisableUser: Boolean;
+  Groups: TGroupArray; Privileges: TPrivilegeArray; LogonID: TLuid;
+  Owner: ISid; PrimaryGroup: ISid; Source: TTokenSource;
+  Expires: TLargeInteger);
 var
   TokenUser: TTokenUser;
   TokenGroups: PTokenGroups;
@@ -888,13 +882,12 @@ begin
   else
     TokenUser.User.Attributes := 0;
 
+  TokenUser.User.Sid := User.Sid;
+  TokenOwner.Owner := Owner.Sid;
+  TokenPrimaryGroup.PrimaryGroup := PrimaryGroup.Sid;
+
   TokenGroups := nil;
   TokenPrivileges := nil;
-  TokenUser.User.Sid := nil;
-  TokenUser.User.Sid := nil;
-  TokenOwner.Owner := nil;
-  TokenPrimaryGroup.PrimaryGroup := nil;
-
   try
     // Allocate groups. This memory should be freed with FreeGroups
     TokenGroups := AllocGroups(Groups);
@@ -904,21 +897,12 @@ begin
 
     // Allocate user, owner, and primary group SIDs.
     // This memory should be freed with LocalFree.
-    TokenUser.User.Sid := User.AllocSid;
-    TokenOwner.Owner := Owner.AllocSid;
-    TokenPrimaryGroup.PrimaryGroup := PrimaryGroup.AllocSid;
   except
     // Free memory in case of abnormal termination
     if Assigned(TokenGroups) then
-      FreeGroups(TokenGroups);
+      FreeMem(TokenGroups);
     if Assigned(TokenPrivileges) then
       FreeMem(TokenPrivileges);
-    if Assigned(TokenUser.User.Sid) then
-      LocalFree(TokenUser.User.Sid);
-    if Assigned(TokenOwner.Owner) then
-      LocalFree(TokenOwner.Owner);
-    if Assigned(TokenPrimaryGroup.PrimaryGroup) then
-      LocalFree(TokenPrimaryGroup.PrimaryGroup);
     raise;
   end;
 
@@ -932,11 +916,11 @@ begin
     LocalFree(TokenOwner.Owner);
     LocalFree(TokenUser.User.Sid);
     FreeMem(TokenPrivileges);
-    FreeGroups(TokenGroups);
+    FreeMem(TokenGroups);
   end;
 
   FCaption := 'New token: ';
-  if User.HasPrettyName then
+  if User.Lookup.HasName then
     FCaption := FCaption + User.Lookup.UserName
   else
     FCaption := FCaption + User.Lookup.SDDL;
@@ -1062,22 +1046,27 @@ var
   DisableGroups, RestrictGroups: PTokenGroups;
   DeletePrivileges: PTokenPrivileges;
 begin
-  // Prepare SIDs and LUIDs
-  DisableGroups := AllocGroups(SIDsToDisabe);
-  DeletePrivileges := AllocPrivileges(PrivilegesToDelete);
+  DisableGroups := nil;
+  DeletePrivileges := nil;
+  RestrictGroups := nil;
 
-  // Attributes for Restricting SIDs must be set to zero
-  RestrictGroups := AllocGroups(SIDsToRestrict, True);
   try
+    // Prepare SIDs and LUIDs
+    DisableGroups := AllocGroups(SIDsToDisabe);
+    DeletePrivileges := AllocPrivileges(PrivilegesToDelete);
+
+    // Attributes for Restricting SIDs must be set to zero
+    RestrictGroups := AllocGroups(SIDsToRestrict, True);
+
     // aka CreateRestrictedToken API
     NativeCheck(NtFilterToken(SrcToken.hToken, Flags, DisableGroups,
       DeletePrivileges, RestrictGroups, hToken), 'NtFilterToken', SrcToken);
 
     FCaption := 'Restricted ' + SrcToken.Caption;
   finally
-    FreeGroups(RestrictGroups);
+    FreeMem(RestrictGroups);
     FreeMem(DeletePrivileges);
-    FreeGroups(DisableGroups);
+    FreeMem(DisableGroups);
   end;
 end;
 
@@ -1159,7 +1148,7 @@ begin
   LsaFreeReturnBuffer(ProfileBuffer);
 
   if Assigned(GroupArray) then
-      FreeGroups(GroupArray);
+    FreeMem(GroupArray);
 
   FreeMem(Buffer);
   LsaDeregisterLogonProcess(LsaHandle);
@@ -1237,7 +1226,7 @@ begin
         LogonType, LogonProvider, GroupArray, hToken, nil, nil, nil, nil),
         'LogonUserExExW');
     finally
-      FreeGroups(GroupArray);
+      FreeMem(GroupArray);
     end;
   end;
 
@@ -1274,20 +1263,6 @@ begin
   inherited;
 end;
 
-class procedure TToken.FreeGroups(Groups: PTokenGroups);
-var
-  i: Integer;
-begin
-  Assert(Assigned(Groups));
-
-  // The memory of each item was previously allocated by ConvertStringSidToSid.
-  for i := 0 to Groups.GroupCount - 1 do
-    if Assigned(Groups.Groups[i].Sid) then
-      LocalFree(Groups.Groups[i].Sid);
-
-  FreeMem(Groups);
-end;
-
 procedure TToken.GroupAdjust(Groups: TGroupArray; Action:
   TGroupAdjustAction);
 const
@@ -1317,7 +1292,7 @@ begin
     // Adjusting groups may change integrity attributes
     InfoClass.ValidateCache(tdTokenIntegrity);
   finally
-    FreeGroups(GroupArray);
+    FreeMem(GroupArray);
   end;
 end;
 
@@ -1397,7 +1372,7 @@ begin
     for i := 0 to Buffer.GroupCount - 1 do
     begin
       // Each SID should be converted to a TSecurityIdentifier
-      GroupArray[i].SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
+      GroupArray[i].SecurityIdentifier := TSid.CreateCopy(Buffer.Groups[i].Sid);
       GroupArray[i].Attributes := Buffer.Groups[i].Attributes;
     end;
   finally
@@ -1406,14 +1381,14 @@ begin
 end;
 
 function TToken.QuerySid(InfoClass: TTokenInformationClass;
-  out Sid: TSecurityIdentifier): Boolean;
+  out Sid: ISid): Boolean;
 var
   Buffer: PTokenOwner; // aka TTokenPrimaryGroup aka PPSID
 begin
   Buffer := QueryVariableSize(InfoClass, Result);
   if Result then
   try
-    Sid := TSecurityIdentifier.CreateFromSid(Buffer.Owner);
+    Sid := TSid.CreateCopy(Buffer.Owner);
   finally
     FreeMem(Buffer);
   end;
@@ -1427,7 +1402,7 @@ begin
   Buffer := QueryVariableSize(InfoClass, Result);
   if Result then
   try
-    Group.SecurityIdentifier.CreateFromSid(Buffer.Sid);
+    Group.SecurityIdentifier := TSid.CreateCopy(Buffer.Sid);
     Group.Attributes := Buffer.Attributes;
   finally
     FreeMem(Buffer);
@@ -1565,13 +1540,13 @@ begin
   Result := Token.Cache.Origin;
 end;
 
-function TTokenData.GetOwner: TSecurityIdentifier;
+function TTokenData.GetOwner: ISid;
 begin
   Assert(Token.Cache.IsCached[tdTokenOwner]);
   Result := Token.Cache.Owner;
 end;
 
-function TTokenData.GetPrimaryGroup: TSecurityIdentifier;
+function TTokenData.GetPrimaryGroup: ISid;
 begin
   Assert(Token.Cache.IsCached[tdTokenPrimaryGroup]);
   Result := Token.Cache.PrimaryGroup;
@@ -1682,7 +1657,7 @@ begin
         Result := AccessToString(Token.HandleInformation.GrantedAccess);
 
     tsUserName:
-      Result := Token.Cache.User.SecurityIdentifier.ToString;
+      Result := Token.Cache.User.SecurityIdentifier.Lookup.FullName;
 
     tsUserState:
       Result := Token.Cache.User.Attributes.ToString;
@@ -1718,10 +1693,10 @@ begin
       Result := EnabledDisabledToString(Token.Cache.UIAccess);
 
     tsOwner:
-      Result := Token.Cache.Owner.ToString;
+      Result := Token.Cache.Owner.Lookup.FullName;
 
     tsPrimaryGroup:
-      Result := Token.Cache.PrimaryGroup.ToString;
+      Result := Token.Cache.PrimaryGroup.Lookup.FullName;
 
     tsSandboxInert:
       Result := YesNoToString(Token.Cache.SandboxInert);
@@ -1974,7 +1949,7 @@ begin
       if Result then
         with Token.Cache.Integrity do
         try
-          Group.SecurityIdentifier.CreateFromSid(pIntegrity.Sid);
+          Group.SecurityIdentifier := TSid.CreateCopy(pIntegrity.Sid);
           Group.Attributes := pIntegrity.Attributes;
 
           // Get level value from the last sub-authority
@@ -2115,36 +2090,28 @@ begin
   ValidateCache(tdTokenStatistics);
 end;
 
-procedure TTokenData.SetOwner(const Value: TSecurityIdentifier);
+procedure TTokenData.SetOwner(const Value: ISid);
 var
   NewOwner: TTokenOwner;
 begin
-  NewOwner.Owner := Value.AllocSid;
-  try
-    Token.SetFixedSize<TTokenOwner>(TokenOwner, NewOwner);
+  NewOwner.Owner := Value.Sid;
+  Token.SetFixedSize<TTokenOwner>(TokenOwner, NewOwner);
 
-    // Update the cache and notify event listeners
-    ValidateCache(tdTokenOwner);
-    ValidateCache(tdTokenStatistics);
-  finally
-    LocalFree(NewOwner.Owner);
-  end;
+  // Update the cache and notify event listeners
+  ValidateCache(tdTokenOwner);
+  ValidateCache(tdTokenStatistics);
 end;
 
-procedure TTokenData.SetPrimaryGroup(const Value: TSecurityIdentifier);
+procedure TTokenData.SetPrimaryGroup(const Value: ISid);
 var
   NewPrimaryGroup: TTokenPrimaryGroup;
 begin
-  NewPrimaryGroup.PrimaryGroup := Value.AllocSid;
-  try
-    Token.SetFixedSize<TTokenPrimaryGroup>(TokenPrimaryGroup, NewPrimaryGroup);
+  NewPrimaryGroup.PrimaryGroup := Value.Sid;
+  Token.SetFixedSize<TTokenPrimaryGroup>(TokenPrimaryGroup, NewPrimaryGroup);
 
-    // Update the cache and notify event listeners
-    ValidateCache(tdTokenPrimaryGroup);
-    ValidateCache(tdTokenStatistics);
-  finally
-    LocalFree(NewPrimaryGroup.PrimaryGroup);
-  end;
+  // Update the cache and notify event listeners
+  ValidateCache(tdTokenPrimaryGroup);
+  ValidateCache(tdTokenStatistics);
 end;
 
 procedure TTokenData.SetSession(const Value: Cardinal);

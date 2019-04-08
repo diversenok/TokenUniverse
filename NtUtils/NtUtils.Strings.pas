@@ -8,17 +8,26 @@ uses
 type
   TBitFlagMode = (bmGroupFlags);
 
+// Bit Flags
 function MapKnownFlags(Value: Cardinal; Mode: TBitFlagMode): String;
-function SidTypeToString(Value: TSidNameUse): String;
-function GroupStateToString(Value: Cardinal): String;
 
+// Enumerations
+function SidTypeToString(Value: TSidNameUse): String;
+
+// States
+function GroupStateToString(Value: Cardinal): String;
+function PrivilegeStateToString(Value: Cardinal): String;
+
+// Misc
 function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
-  AttributesPresent: Boolean): String;
+  AttributesPresent: Boolean = True): String;
 
 implementation
 
 uses
   System.SysUtils, DelphiUtils.Strings, NtUtils.Types;
+
+{ Bit Flags }
 
 const
   GroupFlags: array [0..5] of TFlagName = (
@@ -37,6 +46,8 @@ begin
   end;
 end;
 
+{ Enumerations }
+
 function SidTypeToString(Value: TSidNameUse): String;
 const
   SidTypeNames: array [TSidNameUse] of String = ('Undefined', 'User', 'Group',
@@ -48,6 +59,8 @@ begin
   else
     Result := IntToStr(Cardinal(Value)) + ' (out of bound)';
 end;
+
+{ States }
 
 function GroupStateToString(Value: Cardinal): String;
 begin
@@ -75,6 +88,32 @@ begin
       Exit('Integrity Enabled');
   end;
 end;
+
+function PrivilegeStateToString(Value: Cardinal): String;
+begin
+  if Contains(Value, SE_PRIVILEGE_ENABLED) then
+  begin
+    if Contains(Value, SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := 'Enabled'
+    else
+      Result := 'Enabled (modified)';
+  end
+  else
+  begin
+    if Contains(Value, SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+      Result := 'Disabled (modified)'
+    else
+      Result := 'Disabled';
+  end;
+
+  if Contains(Value, SE_PRIVILEGE_REMOVED) then
+    Result := 'Removed, ' + Result;
+
+  if Contains(Value, SE_PRIVILEGE_USED_FOR_ACCESS) then
+    Result := 'Used for access, ' + Result;
+end;
+
+{ Misc }
 
 function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
   AttributesPresent: Boolean): String;

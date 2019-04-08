@@ -3,7 +3,7 @@ unit UI.Colors;
 interface
 
 uses
-  Vcl.Graphics, TU.Tokens.Types;
+  Vcl.Graphics, TU.Tokens.Types, NtUtils.Types;
 
 const
   clStale: TColor = $F5DCC2;
@@ -48,19 +48,19 @@ end;
 
 function PrivilegeToColor(Privilege: TPrivilege): TColor;
 begin
-  if Privilege.AttributesContain(SE_PRIVILEGE_REMOVED) then
+  if Contains(Privilege.Attributes, SE_PRIVILEGE_REMOVED) then
     Exit(clRemoved);
 
-  if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED) then
+  if Contains(Privilege.Attributes, SE_PRIVILEGE_ENABLED) then
   begin
-    if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+    if Contains(Privilege.Attributes, SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
       Result := clEnabled
     else
       Result := clEnabledModified;
   end
   else
   begin
-    if Privilege.AttributesContain(SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
+    if Contains(Privilege.Attributes, SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
       Result := clDisabledModified
     else
       Result := clDisabled;

@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.ComCtrls, Vcl.StdCtrls, Winapi.Windows,
   UI.ListViewEx, TU.Tokens, TU.LsaApi, TU.Tokens.Types, Winapi.WinNt,
-  NtUtils.WinStation;
+  NtUtils.WinStation, NtUtils.Types;
 
 type
   TPrivilegesSource = class
@@ -60,10 +60,6 @@ type
     procedure Clear;
     procedure UiEditSelected(AOwner: TComponent; DisableAttributes: Boolean =
       False);
-    class function BuildHint(SID: TSecurityIdentifier;
-      Attributes: Cardinal; AttributesPresent: Boolean = True): String;
-      overload; static;
-    class function BuildHint(Group: TGroup): String; overload; static;
   end;
 
   TSessionSource = class
@@ -312,10 +308,10 @@ end;
 function TPrivilegesSource.SetItem(Item: TListItemEx;
   Privilege: TPrivilege): TListItemEx;
 begin
-  Item.Caption := Privilege.Name;
+  Item.Caption := TPrivilegeCache.QueryName(Privilege.Luid);
   Item.SubItems.Clear;
-  Item.SubItems.Add(Privilege.AttributesToString);
-  Item.SubItems.Add(Privilege.Description);
+  Item.SubItems.Add(PrivilegeStateToString(Privilege.Attributes));
+  Item.SubItems.Add(TPrivilegeCache.QueryDisplayName(Privilege.Luid));
   Item.SubItems.Add(IntToStr(Privilege.Luid));
   ValidateColor(Item.Index);
   Result := Item;
@@ -371,17 +367,6 @@ begin
   FAdditionalGroups[High(FAdditionalGroups)] := Group;
 
   Result := SetItem(ListView.Items.Add, Group);
-end;
-
-class function TGroupsSource.BuildHint(SID: TSecurityIdentifier;
-  Attributes: Cardinal; AttributesPresent: Boolean): String;
-begin
-  Result := BuildSidHint(SID.Lookup, Attributes, AttributesPresent);
-end;
-
-class function TGroupsSource.BuildHint(Group: TGroup): String;
-begin
-  Result := BuildHint(Group.SecurityIdentifier, Group.Attributes, True);
 end;
 
 function TGroupsSource.CheckedGroups: TGroupArray;
@@ -529,8 +514,8 @@ end;
 
 function TGroupsSource.SetItem(Item: TListItemEx; Group: TGroup): TListItemEx;
 begin
-  Item.Caption := Group.SecurityIdentifier.ToString;
-  Item.Hint := BuildHint(Group.SecurityIdentifier, Group.Attributes);
+  Item.Caption := Group.SecurityIdentifier.Lookup.FullName;
+  Item.Hint := BuildSidHint(Group.SecurityIdentifier.Lookup, Group.Attributes);
   Item.SubItems.Clear;
   Item.SubItems.Add(GroupStateToString(Group.Attributes));
   Item.SubItems.Add(MapKnownFlags(Group.Attributes, bmGroupFlags));

@@ -5,7 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.ChildForm,
-  UI.Prototypes, UI.ListViewEx, UI.MainForm, TU.Tokens, TU.Tokens.Types;
+  UI.Prototypes, UI.ListViewEx, UI.MainForm, TU.Tokens, TU.Tokens.Types,
+  NtUtils.Types;
 
 type
   TGroupUpdateType = (guEditOne, guEditMultiple, guRemove);
@@ -96,9 +97,9 @@ begin
   GroupsSource.AddGroup(NewGroup);
 
   if Contains(NewGroup.Attributes, SE_GROUP_OWNER) then
-    ComboOwner.Items.Add(NewGroup.SecurityIdentifier.ToString);
+    ComboOwner.Items.Add(NewGroup.SecurityIdentifier.Lookup.FullName);
 
-  ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.ToString);
+  ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.Lookup.FullName);
 end;
 
 procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
@@ -136,7 +137,7 @@ begin
   // User
   if Source.InfoClass.Query(tdTokenUser) then
   begin
-    ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.ToString;
+    ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.Lookup.FullName;
     ComboUserChange(Sender);
     CheckBoxUserState.Checked := Contains(Source.InfoClass.User.Attributes,
       SE_GROUP_USE_FOR_DENY_ONLY);
@@ -178,11 +179,11 @@ begin
 
   // Owner
   if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := Source.InfoClass.Owner.ToString;
+    ComboOwner.Text := Source.InfoClass.Owner.Lookup.FullName;
 
   // Primary group
   if Source.InfoClass.Query(tdTokenPrimaryGroup) then
-    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.ToString;
+    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.Lookup.FullName;
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
@@ -249,13 +250,13 @@ begin
     PrimaryGroupName := ComboPrimary.Text;
 
   Token := TToken.CreateNtCreateToken(
-    TSecurityIdentifier.CreateFromString(ComboUser.Text),
+    TSid.CreateFromString(ComboUser.Text),
     CheckBoxUserState.Checked,
     GroupsSource.Groups,
     PrivilegesSource.CheckedPrivileges,
     LogonIDSource.SelectedLogonSession,
-    TSecurityIdentifier.CreateFromString(OwnerGroupName),
-    TSecurityIdentifier.CreateFromString(PrimaryGroupName),
+    TSid.CreateFromString(OwnerGroupName),
+    TSid.CreateFromString(PrimaryGroupName),
     CreateTokenSource(EditSourceName.Text,
       StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID')),
     Expires
@@ -385,8 +386,11 @@ begin
 end;
 
 procedure TDialogCreateToken.ObjPickerUserCallback(UserName: String);
+var
+  Sid: ISid;
 begin
-  ComboUser.Text := TSecurityIdentifier.CreateFromString(UserName).ToString;
+  Sid := TSid.CreateFromString(UserName);
+  ComboUser.Text := Sid.Lookup.FullName;
   ComboUserChange(ButtonPickUser);
 end;
 

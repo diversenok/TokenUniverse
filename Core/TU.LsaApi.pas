@@ -5,7 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  TU.Tokens.Types, NtUtils.Exceptions,
+  TU.Tokens.Types, NtUtils.Exceptions, NtUtils.Types,
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntseapi, Winapi.NtSecApi;
 
 type
@@ -22,14 +22,14 @@ type
   TLogonSessionInfo = class
   private
     FData: PSecurityLogonSessionData;
-    function GetUser: TSecurityIdentifier;
+    function GetUser: ISid;
     function GetUserPresent: Boolean;
   public
     constructor Create(OwnedData: PSecurityLogonSessionData);
     destructor Destroy; override;
 
     property UserPresent: Boolean read GetUserPresent;
-    property User: TSecurityIdentifier read GetUser;
+    property User: ISid read GetUser;
     property Data: PSecurityLogonSessionData read FData;
     function GetString(InfoClass: TLogonDataClass): String;
     function UserFlagsHint: String;
@@ -156,7 +156,7 @@ begin
 
     lsSecurityIdentifier:
       if UserPresent then
-        Result := GetUser.ToString
+        Result := GetUser.Lookup.FullName
       else
         Result := 'No User';
 
@@ -230,10 +230,10 @@ begin
   end;
 end;
 
-function TLogonSessionInfo.GetUser: TSecurityIdentifier;
+function TLogonSessionInfo.GetUser: ISid;
 begin
   Assert(UserPresent);
-  Result := TSecurityIdentifier.CreateFromSid(Data.Sid);
+  Result := TSid.CreateCopy(Data.Sid);
 end;
 
 function TLogonSessionInfo.GetUserPresent: Boolean;

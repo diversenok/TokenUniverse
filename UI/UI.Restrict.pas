@@ -118,6 +118,7 @@ end;
 
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 var
+  Sid: ISid;
   Group: TGroup;
   Found: Boolean;
   RestrInd, ItemInd: Integer;
@@ -147,17 +148,17 @@ begin
   end;
 
   // RESTRICTED also is useful to provide access to WinSta0 and Default desktop
-  with TSecurityIdentifier.CreateWellKnown(WinRestrictedCodeSid) do
+  if TSid.GetWellKnownSid(WinRestrictedCodeSid, Sid) then
   begin
-    Group.SecurityIdentifier := Value;
+    Group.SecurityIdentifier := Sid;
     Group.Attributes := SE_GROUP_USER_DEFAULT;
     RestrictGroupsSource.AddGroup(Group);
   end;
 
   // And WRITE RESTRICTED
-  with TSecurityIdentifier.CreateWellKnown(WinWriteRestrictedCodeSid) do
+  if TSid.GetWellKnownSid(WinWriteRestrictedCodeSid, Sid) then
   begin
-    Group.SecurityIdentifier := Value;
+    Group.SecurityIdentifier := Sid;
     Group.Attributes := SE_GROUP_USER_DEFAULT;
     RestrictGroupsSource.AddGroup(Group);
   end;

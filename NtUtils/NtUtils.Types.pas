@@ -38,6 +38,15 @@ type
     function EqualsTo(Sid2: ISid): Boolean;
   end;
 
+  TGroup = record
+    SecurityIdentifier: ISid;
+    Attributes: Cardinal; // SE_GROUP_*
+  end;
+
+  TGroupArray = array of TGroup;
+
+  TPrivilege = TLuidAndAttributes;
+
 implementation
 
 uses
@@ -130,6 +139,7 @@ function TSid.NewLookup: TTranslatedName;
 begin
   FLookup := LsaxLookupSid(FSid);
   FLookupCached := True;
+  Result := FLookup;
 end;
 
 function TSid.Sid: PSid;

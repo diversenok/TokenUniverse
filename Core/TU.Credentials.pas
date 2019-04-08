@@ -15,7 +15,8 @@ procedure PromptCredentialsUI(ParentWindow: HWND;
 implementation
 
 uses
-  System.SysUtils, Winapi.Ole2, TU.Tokens.Types, Ntutils.Exceptions;
+  System.SysUtils, Winapi.Ole2, TU.Tokens.Types, Ntutils.Exceptions,
+  NtUtils.Types;
 
 type
   TCredUIInfoW = record
@@ -56,6 +57,7 @@ var
   AuthBufferSize: Cardinal;
   UserBuffer, DomainBuffer, PasswordBuffer: PWideChar;
   UserLength, DomainLength, PasswordLength: Cardinal;
+  Sid: ISid;
 begin
   LastAuthError := 0;
   while True do
@@ -104,12 +106,12 @@ begin
         RaiseLastOSError;
 
       try
-        with TSecurityIdentifier.CreateFromString(UserBuffer) do
-        begin
-          if Assigned(Callback) then
-            Callback(Lookup.DomainName, Lookup.UserName, PasswordBuffer);
-          Exit;
-        end;
+        Sid := TSid.CreateFromString(UserBuffer);
+
+        if Assigned(Callback) then
+          Callback(Sid.Lookup.DomainName, Sid.Lookup.UserName, PasswordBuffer);
+
+        Exit;
       except
         on E: ENtError do
           LastAuthError := ENtError(E).ToWinErrorCode;

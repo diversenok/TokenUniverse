@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm,
+  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Types,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon;
 
 type
@@ -106,8 +106,8 @@ type
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
     procedure ChangedGroups(NewGroups: TGroupArray);
     procedure ChangedStatistics(NewStatistics: TTokenStatistics);
-    procedure ChangedOwner(NewOwner: TSecurityIdentifier);
-    procedure ChangedPrimaryGroup(NewPrimary: TSecurityIdentifier);
+    procedure ChangedOwner(NewOwner: ISid);
+    procedure ChangedPrimaryGroup(NewPrimary: ISid);
     procedure ChangedVAllowed(NewVAllowed: LongBool);
     procedure ChangedVEnabled(NewVEnabled: LongBool);
     procedure Refresh;
@@ -123,7 +123,7 @@ implementation
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
   UI.Information.Access, NtUtils.Processes, NtUtils.Handles,
-  DelphiUtils.Strings;
+  DelphiUtils.Strings, NtUtils.Strings;
 
 const
   TAB_INVALIDATED = 0;
@@ -188,7 +188,7 @@ end;
 procedure TInfoDialog.BtnSetOwnerClick(Sender: TObject);
 begin
   try
-    Token.InfoClass.Owner := TSecurityIdentifier.CreateFromString(
+    Token.InfoClass.Owner := TSid.CreateFromString(
       ComboOwner.Text);
     ComboOwner.Color := clWindow;
   except
@@ -218,8 +218,7 @@ end;
 procedure TInfoDialog.BtnSetPrimaryClick(Sender: TObject);
 begin
   try
-    Token.InfoClass.PrimaryGroup := TSecurityIdentifier.CreateFromString(
-      ComboPrimary.Text);
+    Token.InfoClass.PrimaryGroup := TSid.CreateFromString(ComboPrimary.Text);
     ComboPrimary.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenPrimaryGroup) then
@@ -300,17 +299,17 @@ begin
   // Add User since it is always assignable
   if Token.InfoClass.Query(tdTokenUser) then
   begin
-    ComboOwner.Items.Add(Token.InfoClass.User.SecurityIdentifier.ToString);
-    ComboPrimary.Items.Add(Token.InfoClass.User.SecurityIdentifier.ToString);
+    ComboOwner.Items.Add(Token.InfoClass.User.SecurityIdentifier.Lookup.FullName);
+    ComboPrimary.Items.Add(Token.InfoClass.User.SecurityIdentifier.Lookup.FullName);
   end;
 
   // Add all groups for Primary Group and only those with specific attribtes
   // for Owner.
   for i := 0 to High(NewGroups) do
   begin
-    ComboPrimary.Items.Add(NewGroups[i].SecurityIdentifier.ToString);
+    ComboPrimary.Items.Add(NewGroups[i].SecurityIdentifier.Lookup.FullName);
     if Contains(NewGroups[i].Attributes, SE_GROUP_OWNER) then
-      ComboOwner.Items.Add(NewGroups[i].SecurityIdentifier.ToString);
+      ComboOwner.Items.Add(NewGroups[i].SecurityIdentifier.Lookup.FullName);
   end;
 
   ComboPrimary.Items.EndUpdate;
@@ -321,13 +320,14 @@ procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TTokenIntegrity);
 begin
   ComboIntegrity.Color := clWindow;
   IntegritySource.SetIntegrity(NewIntegrity);
-  ComboIntegrity.Hint := TGroupsSource.BuildHint(NewIntegrity.Group);
+  ComboIntegrity.Hint := BuildSidHint(
+    NewIntegrity.Group.SecurityIdentifier.Lookup, NewIntegrity.Group.Attributes);
 end;
 
-procedure TInfoDialog.ChangedOwner(NewOwner: TSecurityIdentifier);
+procedure TInfoDialog.ChangedOwner(NewOwner: ISid);
 begin
   ComboOwner.Color := clWindow;
-  ComboOwner.Text := NewOwner.ToString;
+  ComboOwner.Text := NewOwner.Lookup.FullName;
 end;
 
 procedure TInfoDialog.ChangedPolicy(NewPolicy: TMandatoryPolicy);
@@ -340,10 +340,10 @@ begin
   CheckBoxNewProcessMin.Font.Style := [];
 end;
 
-procedure TInfoDialog.ChangedPrimaryGroup(NewPrimary: TSecurityIdentifier);
+procedure TInfoDialog.ChangedPrimaryGroup(NewPrimary: ISid);
 begin
   ComboPrimary.Color := clWindow;
-  ComboPrimary.Text := NewPrimary.ToString;
+  ComboPrimary.Text := NewPrimary.Lookup.FullName;
 end;
 
 procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TPrivilegeArray);
@@ -555,9 +555,8 @@ begin
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass.User, EditUser do
     begin
-      Text := SecurityIdentifier.ToString;
-      Hint := TGroupsSource.BuildHint(SecurityIdentifier,
-        Attributes);
+      Text := SecurityIdentifier.Lookup.FullName;
+      Hint := BuildSidHint(SecurityIdentifier.Lookup, Attributes);
 
       if Contains(Attributes, SE_GROUP_USE_FOR_DENY_ONLY) then
         Color := clDisabled

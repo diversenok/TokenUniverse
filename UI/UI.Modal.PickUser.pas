@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, TU.Tokens, TU.Tokens.Types,
-  UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm;
+  UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Types;
 
 type
   TCheckBoxMapping = record
@@ -50,13 +50,13 @@ type
     procedure CheckBoxEnabledClick(Sender: TObject);
     procedure CheckBoxEnabledByDafaultClick(Sender: TObject);
   private
-    SelectedGroup: TSecurityIdentifier;
+    SelectedGroup: ISid;
     IsValidGroup: Boolean;
     Mapping: array of TCheckBoxMapping;
     procedure ObjPickerCallback(UserName: String);
     function GetAttributes: Cardinal;
     procedure SetAttributes(const Value: Cardinal);
-    procedure SetSelectedGroup(const Value: TSecurityIdentifier);
+    procedure SetSelectedGroup(const Value: ISid);
     procedure DoDisableAttributes;
   public
     class function PickNew(AOwner: TComponent;
@@ -103,7 +103,7 @@ end;
 
 procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
 begin
-  SetSelectedGroup(TSecurityIdentifier.CreateFromString(Format('S-1-16-%d',
+  SetSelectedGroup(TSid.CreateFromString(Format('S-1-16-%d',
     [Cardinal(TComboDialog.PickIntegrity(Self))])));
 
   SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
@@ -112,7 +112,7 @@ end;
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
 begin
   if ComboBoxSID.Enabled and not IsValidGroup then
-    SelectedGroup := TSecurityIdentifier.CreateFromString(ComboBoxSID.Text);
+    SelectedGroup := TSid.CreateFromString(ComboBoxSID.Text);
   ModalResult := mrOk;
 end;
 
@@ -197,7 +197,7 @@ end;
 
 procedure TDialogPickUser.ObjPickerCallback(UserName: String);
 begin
-  SetSelectedGroup(TSecurityIdentifier.CreateFromString(UserName));
+  SetSelectedGroup(TSid.CreateFromString(UserName));
 end;
 
 class procedure TDialogPickUser.PickEditMultiple(AOwner: TComponent;
@@ -298,11 +298,11 @@ begin
     Mapping[i].CheckBox.SetCheckedEx(Contains(Value, Mapping[i].Attribute));
 end;
 
-procedure TDialogPickUser.SetSelectedGroup(const Value: TSecurityIdentifier);
+procedure TDialogPickUser.SetSelectedGroup(const Value: ISid);
 begin
   IsValidGroup := True;
   SelectedGroup := Value;
-  ComboBoxSID.Text := SelectedGroup.ToString;
+  ComboBoxSID.Text := SelectedGroup.Lookup.FullName;
 end;
 
 end.
