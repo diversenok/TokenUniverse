@@ -154,7 +154,7 @@ type
 implementation
 
 uses
-  System.Generics.Collections, DelphiUtils.Strings,
+  DelphiUtils.Strings, NtUtils.Strings, NtUtils.Lsa,
   UI.Colors, UI.Modal.PickUser, UI.Settings, TU.Winapi, Ntapi.ntrtl;
 
 { TPrivilegesSource }
@@ -375,27 +375,8 @@ end;
 
 class function TGroupsSource.BuildHint(SID: TSecurityIdentifier;
   Attributes: TGroupAttributes; AttributesPresent: Boolean): String;
-const
-  ITEM_FORMAT = '%s:'#$D#$A'  %s';
-var
-  Items: TList<String>;
 begin
-  Items := TList<String>.Create;
-  try
-    if SID.HasPrettyName then
-      Items.Add(Format(ITEM_FORMAT, ['Pretty name', SID.ToString]));
-    Items.Add(Format(ITEM_FORMAT, ['SID', SID.SID]));
-    Items.Add(Format(ITEM_FORMAT, ['Type', SID.SIDTypeToString]));
-    if AttributesPresent then
-    begin
-      Items.Add(Format(ITEM_FORMAT, ['State', Attributes.StateToString]));
-      if Attributes.ContainAnyFlags then
-        Items.Add(Format(ITEM_FORMAT, ['Flags', Attributes.FlagsToString]));
-    end;
-    Result := String.Join(#$D#$A, Items.ToArray);
-  finally
-    Items.Free;
-  end;
+  Result := BuildSidHint(SID.Lookup, Cardinal(Attributes), AttributesPresent);
 end;
 
 class function TGroupsSource.BuildHint(Group: TGroup): String;
@@ -887,8 +868,8 @@ begin
 
     if Assigned(LogonData) then
       try
-        if LogonData.UserPresent and (LogonData.User.User <> '') then
-            S := Format('%s (%s @ %d)', [S, LogonData.User.User,
+        if LogonData.UserPresent and (LogonData.User.Lookup.UserName <> '') then
+            S := Format('%s (%s @ %d)', [S, LogonData.User.Lookup.UserName,
               LogonData.Data.Session]);
       finally
         LogonData.Free;

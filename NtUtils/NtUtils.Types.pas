@@ -3,7 +3,7 @@ unit NtUtils.Types;
 interface
 
 uses
-  Winapi.WinNt, NtUtils.Lsa;
+  Winapi.WinNt, Winapi.securitybaseapi, NtUtils.Lsa;
 
 const
   SE_GROUP_USER_DEFAULT = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
@@ -17,25 +17,25 @@ type
   ISid = interface
     function Sid: PSid;
     function Lookup: TTranslatedName;
+    function NewLookup: TTranslatedName;
+    function EqualsTo(Sid2: ISid): Boolean;
   end;
 
   TSid = class(TInterfacedObject, ISid)
   protected
     FSid: PSid;
+    FLookupCached: Boolean;
+    FLookup: TTranslatedName;
   public
     constructor CreateCopy(SourceSid: PSid);
     constructor CreateFromString(AccountOrSID: String);
+    class function GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
+      out Sid: ISid): Boolean;
     destructor Destroy; override;
     function Sid: PSid;
-    function Lookup: TTranslatedName; virtual;
-  end;
-
-  TCachedLookupSid = class(TSid, ISid)
-  protected
-    FLookup: TTranslatedName;
-  public
-    procedure AfterConstruction; override;
-    function Lookup: TTranslatedName; override;
+    function Lookup: TTranslatedName;
+    function NewLookup: TTranslatedName;
+    function EqualsTo(Sid2: ISid): Boolean;
   end;
 
 implementation
@@ -89,27 +89,52 @@ begin
   inherited;
 end;
 
+function TSid.EqualsTo(Sid2: ISid): Boolean;
+begin
+  Result := RtlEqualSid(FSid, Sid2.Sid)
+end;
+
+class function TSid.GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
+  out Sid: ISid): Boolean;
+var
+  Buffer: PSid;
+  BufferSize: Cardinal;
+begin
+  BufferSize := 0;
+  CreateWellKnownSid(WellKnownSidType, nil, nil, BufferSize);
+
+  if not WinTryCheckBuffer(BufferSize) then
+    Exit(False);
+
+  Buffer := AllocMem(BufferSize);
+  try
+    Result := CreateWellKnownSid(WellKnownSidType, nil, Buffer, BufferSize);
+
+    if Result then
+      Sid := TSid.CreateCopy(Buffer);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
 function TSid.Lookup: TTranslatedName;
 begin
-  Result := LsaxLookupSid(FSid);
+  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
+  if FLookupCached then
+    Result := FLookup
+  else
+    Result := NewLookup;
+end;
+
+function TSid.NewLookup: TTranslatedName;
+begin
+  FLookup := LsaxLookupSid(FSid);
+  FLookupCached := True;
 end;
 
 function TSid.Sid: PSid;
 begin
   Result := FSid;
-end;
-
-{ TCachedLookupSid }
-
-procedure TCachedLookupSid.AfterConstruction;
-begin
-  inherited;
-  FLookup := inherited Lookup; // Cache to query only once
-end;
-
-function TCachedLookupSid.Lookup: TTranslatedName;
-begin
-  Result := FLookup;
 end;
 
 end.

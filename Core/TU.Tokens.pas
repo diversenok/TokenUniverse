@@ -936,9 +936,9 @@ begin
 
   FCaption := 'New token: ';
   if User.HasPrettyName then
-    FCaption := FCaption + User.User
+    FCaption := FCaption + User.Lookup.UserName
   else
-    FCaption := FCaption + User.SID;
+    FCaption := FCaption + User.Lookup.SDDL;
 end;
 
 constructor TToken.CreateOpenCurrent(Access: TAccessMask);
@@ -2089,7 +2089,7 @@ begin
   // Since the owner is internally stored as an index in the group table,
   // changing it, in this case, also changes the owner.
   if Token.Cache.IsCached[tdTokenOwner] and
-    (Token.Cache.Owner.SIDType = SidTypeLabel) then
+    (Token.Cache.Owner.Lookup.SidType = SidTypeLabel) then
     ValidateCache(tdTokenOwner);
 
   // Note: this logic does not apply to the primary group since it is stored

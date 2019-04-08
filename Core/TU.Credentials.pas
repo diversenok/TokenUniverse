@@ -107,7 +107,7 @@ begin
         with TSecurityIdentifier.CreateFromString(UserBuffer) do
         begin
           if Assigned(Callback) then
-            Callback(Domain, User, PasswordBuffer);
+            Callback(Lookup.DomainName, Lookup.UserName, PasswordBuffer);
           Exit;
         end;
       except

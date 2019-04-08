@@ -12,19 +12,17 @@ interface
 
 uses
   TU.Winapi, Winapi.WinNt, Winapi.NtSecApi, Winapi.securitybaseapi,
-  NtUtils.Exceptions;
+  NtUtils.Exceptions, NtUtils.Lsa;
 
 type
   TSecurityIdentifier = record
   public
-    SID, Domain, User: String;
-    SIDType: TSIDNameUse;
+    Lookup: TTranslatedName;
     constructor CreateFromSid(SrcSid: PSid);
     constructor CreateFromString(UserOrSID: String);
     class function CreateWellKnown(WellKnownSidType: TWellKnownSidType):
       CanFail<TSecurityIdentifier>; static;
     function ToString: String;
-    function SIDTypeToString: String;
     function HasPrettyName: Boolean;
     function AllocSid: PSid;
   end;
@@ -179,7 +177,7 @@ implementation
 uses
   System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
   Winapi.WinBase, Winapi.WinError, Winapi.Sddl, Winapi.ntlsa,
-  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, NtUtils.Lsa,
+  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl,
   NtUtils.Strings, NtUtils.Types;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
@@ -230,98 +228,42 @@ end;
 
 function TSecurityIdentifier.AllocSid: PSid;
 begin
-  WinCheck(ConvertStringSidToSidW(PWideChar(SID), Result),
+  WinCheck(ConvertStringSidToSidW(PWideChar(Lookup.SDDL), Result),
     'ConvertStringSidToSid');
 end;
 
 constructor TSecurityIdentifier.CreateFromSid(SrcSid: PSid);
 begin
-  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
-
-  with LsaxLookupSid(SrcSid) do
-  begin
-    Self.Domain := DomainName;
-    Self.User := UserName;
-    Self.SID := SDDL;
-    Self.SIDType := SidType;
-  end;
+  Lookup := LsaxLookupSid(SrcSid);
 end;
 
 constructor TSecurityIdentifier.CreateFromString(UserOrSID: String);
 var
-  Buffer: PSid;
+  Buffer: ISid;
 begin
-  if UserOrSID.StartsWith('S-1-', True) then
-  begin
-    SID := UserOrSID;
-
-    WinCheck(ConvertStringSidToSidW(PWideChar(SID), Buffer),
-    'ConvertStringSidToSid');
-
-    try
-      CreateFromSid(Buffer);
-    finally
-      LocalFree(Buffer);
-    end;
-  end
-  else
-  begin
-    NativeCheck(LsaxLookupUserName(UserOrSID, Buffer), 'LsaLookupNames2');
-
-    try
-      CreateFromSid(Buffer);
-    finally
-      FreeMem(Buffer);
-    end;
-  end;
+  Buffer := TSid.CreateFromString(UserOrSID);
+  Lookup := Buffer.Lookup;
 end;
 
 class function TSecurityIdentifier.CreateWellKnown(
   WellKnownSidType: TWellKnownSidType): CanFail<TSecurityIdentifier>;
 var
-  Buffer: PSid;
-  BufferSize: Cardinal;
+  Buffer: ISid;
 begin
   Result.Init;
-
-  BufferSize := 0;
-  CreateWellKnownSid(WellKnownSidType, nil, nil, BufferSize);
-  if not Result.CheckBuffer(BufferSize, 'CreateWellKnownSid') then
-    Exit;
-
-  Buffer := AllocMem(BufferSize);
-  try
-    if Result.CheckError(CreateWellKnownSid(WellKnownSidType, nil, Buffer,
-      BufferSize), 'CreateWellKnownSid') then
-      Result.Value.CreateFromSid(Buffer);
-  finally
-    FreeMem(Buffer);
-  end;
+  if Result.CheckError(TSid.GetWellKnownSid(WellKnownSidType, Buffer),
+    'CreateWellKnownSid') then
+    Result.Value.CreateFromSid(Buffer.Sid);
 end;
 
 function TSecurityIdentifier.HasPrettyName: Boolean;
 begin
-  Result := (Domain <> '') or (User <> '');
-end;
-
-function TSecurityIdentifier.SIDTypeToString: String;
-begin
-  Result := NtUtils.Strings.SidTypeToString(SIDType);
+  Result := Lookup.HasName;
 end;
 
 function TSecurityIdentifier.ToString: String;
 begin
- if (User <> '') and (Domain <> '') then
-    Result := Domain + '\' + User
-  else if User <> '' then
-    Result := User
-  else if Domain <> '' then
-    Result := Domain
-  else if SID <> '' then
-    Result := SID
-  else
-    Result := 'Invalid SID';
-  // TODO: Convert unknown IL and Logon session
+  Result := Lookup.FullName;
 end;
 
 { TGroupAttributesHelper }
@@ -619,7 +561,7 @@ end;
 
 function CompareSIDs(Value1, Value2: TSecurityIdentifier): Boolean;
 begin
-  Result := Value1.SID = Value2.SID;
+  Result := Value1.Lookup.SDDL = Value2.Lookup.SDDL;
 end;
 
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
@@ -639,15 +581,16 @@ begin
   Result := Length(Value1) = Length(Value2);
   if Result then
     for i := 0 to High(Value1) do
-      if (Value1[i].SecurityIdentifier.SID <> Value2[i].SecurityIdentifier.SID)
+      if (Value1[i].SecurityIdentifier.Lookup.SDDL <>
+        Value2[i].SecurityIdentifier.Lookup.SDDL)
         or (Value1[i].Attributes <> Value2[i].Attributes) then
           Exit(False);
 end;
 
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 begin
-  Result := (Value1.Group.SecurityIdentifier.SID =
-    Value2.Group.SecurityIdentifier.SID) and
+  Result := (Value1.Group.SecurityIdentifier.Lookup.SDDL =
+    Value2.Group.SecurityIdentifier.Lookup.SDDL) and
     (Value1.Group.Attributes = Value2.Group.Attributes);
 end;
 

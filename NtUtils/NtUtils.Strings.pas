@@ -12,6 +12,9 @@ function MapKnownFlags(Value: Cardinal; Mode: TBitFlagMode): String;
 function SidTypeToString(Value: TSidNameUse): String;
 function GroupStateToString(Value: Cardinal): String;
 
+function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
+  AttributesPresent: Boolean): String;
+
 implementation
 
 uses
@@ -112,7 +115,7 @@ begin
     end;
   end;
 
-  SetLength(Items, Index + 1);
+  SetLength(Items, Index);
   Result := String.Join(#$D#$A, Items);
 end;
 

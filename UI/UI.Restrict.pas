@@ -172,8 +172,9 @@ begin
 
         // Find and check it
         for ItemInd := 0 to ListViewRestrictSID.Items.Count - 1 do
-          if RestrictedSids[RestrInd].SecurityIdentifier.SID =
-            RestrictGroupsSource.Group[ItemInd].SecurityIdentifier.SID then
+          if RestrictedSids[RestrInd].SecurityIdentifier.Lookup.SDDL =
+            RestrictGroupsSource.Group[ItemInd].SecurityIdentifier.Lookup.SDDL
+            then
           begin
             ListViewRestrictSID.Items[ItemInd].Checked := True;
             Found := True;
