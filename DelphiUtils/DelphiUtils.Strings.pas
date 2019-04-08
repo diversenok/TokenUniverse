@@ -2,10 +2,21 @@
 
 interface
 
+type
+  TFlagName = record
+    Value: Cardinal;
+    Name: String;
+  end;
+
 function EnabledDisabledToString(Value: LongBool): String;
 function YesNoToString(Value: LongBool): String;
 function CheckboxToString(Value: LongBool): String;
 function BytesToString(Size: Cardinal): String;
+
+function Contains(Value, Flag: Cardinal): Boolean; inline;
+function ContainsAny(Value, Flag: Cardinal): Boolean; inline;
+
+function MapFlags(Value: Cardinal; Mapping: array of TFlagName): String;
 
 function IntToHexEx(Value: Int64; Digits: Integer = 0): String; overload;
 function IntToHexEx(Value: UInt64; Digits: Integer = 0): String; overload;
@@ -49,6 +60,35 @@ begin
     Result := (Size div 1024).ToString + ' kB'
   else
     Result := Size.ToString + ' B';
+end;
+
+function Contains(Value, Flag: Cardinal): Boolean;
+begin
+  Result := (Value and Flag = Flag);
+end;
+
+function ContainsAny(Value, Flag: Cardinal): Boolean;
+begin
+  Result := (Value and Flag <> 0);
+end;
+
+function MapFlags(Value: Cardinal; Mapping: array of TFlagName): String;
+var
+  Strings: array of String;
+  i, Count: Integer;
+begin
+  SetLength(Strings, Length(Mapping));
+
+  Count := 0;
+  for i := Low(Mapping) to High(Mapping) do
+    if Contains(Value, Mapping[i].Value) then
+    begin
+      Strings[Count] := Mapping[i].Name;
+      Inc(Count);
+    end;
+
+  SetLength(Strings, Count);
+  Result := String.Join(', ', Strings);
 end;
 
 function IntToHexEx(Value: UInt64; Digits: Integer): String;

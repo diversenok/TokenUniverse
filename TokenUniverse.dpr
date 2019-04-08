@@ -64,7 +64,9 @@ uses
   DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas',
   NtUtils.DelayedImport in 'NtUtils\NtUtils.DelayedImport.pas',
   Ntapi.ntldr in 'Headers\Ntapi.ntldr.pas',
-  Winapi.securitybaseapi in 'Headers\Winapi.securitybaseapi.pas';
+  Winapi.securitybaseapi in 'Headers\Winapi.securitybaseapi.pas',
+  NtUtils.Strings in 'NtUtils\NtUtils.Strings.pas',
+  NtUtils.Types in 'NtUtils\NtUtils.Types.pas';
 
 {$R *.res}
 

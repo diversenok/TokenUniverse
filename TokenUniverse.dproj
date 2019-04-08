@@ -226,6 +226,8 @@
         <DCCReference Include="NtUtils\NtUtils.DelayedImport.pas"/>
         <DCCReference Include="Headers\Ntapi.ntldr.pas"/>
         <DCCReference Include="Headers\Winapi.securitybaseapi.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Strings.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Types.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

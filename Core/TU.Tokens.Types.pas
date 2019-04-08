@@ -179,7 +179,8 @@ implementation
 uses
   System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
   Winapi.WinBase, Winapi.WinError, Winapi.Sddl, Winapi.ntlsa,
-  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, NtUtils.Lsa;
+  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, NtUtils.Lsa,
+  NtUtils.Strings, NtUtils.Types;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin
@@ -305,22 +306,7 @@ end;
 
 function TSecurityIdentifier.SIDTypeToString: String;
 begin
-  case SIDType of
-    SidTypeZero: Result := 'Undefined';
-    SidTypeUser: Result := 'User';
-    SidTypeGroup: Result := 'Group';
-    SidTypeDomain: Result := 'Domain';
-    SidTypeAlias: Result := 'Alias';
-    SidTypeWellKnownGroup:  Result := 'Well-known Group';
-    SidTypeDeletedAccount: Result := 'Deleted Account';
-    SidTypeInvalid: Result := 'Invalid';
-    SidTypeUnknown: Result := 'Unknown';
-    SidTypeComputer: Result := 'Computer';
-    SidTypeLabel: Result := 'Label';
-    SidTypeLogonSession: Result := 'Logon Session';
-  else
-    Result := Format('%d (out of bound)', [Cardinal(SIDType)]);
-  end;
+  Result := NtUtils.Strings.SidTypeToString(SIDType);
 end;
 
 function TSecurityIdentifier.ToString: String;
@@ -346,67 +332,18 @@ begin
 end;
 
 function TGroupAttributesHelper.ContainAnyFlags: Boolean;
-const
-  AllFlags = Cardinal(GroupMandatory) or Cardinal(GroupOwner) or
-    Cardinal(GroupIntegrity) or Cardinal(GroupResource) or
-    Cardinal(GroupLogonId) or Cardinal(GroupUforDenyOnly);
 begin
-  Result := Cardinal(Self) and AllFlags <> 0;
+  Result := ContainsAny(Cardinal(Self), SE_GROUP_ALL_FLAGS)
 end;
 
 function TGroupAttributesHelper.FlagsToString: String;
-const
-  GROUP_FLAGS_COUNT = 6;
-  FlagValues: array [1 .. GROUP_FLAGS_COUNT] of TGroupAttributes = (
-    GroupMandatory, GroupOwner, GroupIntegrity, GroupResource, GroupLogonId,
-    GroupUforDenyOnly);
-  FlagStrings: array [1 .. GROUP_FLAGS_COUNT] of String = (
-    'Mandatory', 'Owner', 'Integrity', 'Resource', 'Logon Id',
-    'Use for deny only');
-var
-  Strings: array of string;
-  FlagInd, StrInd: Integer;
 begin
-  if not ContainAnyFlags then
-    Exit('');
-
-  SetLength(Strings, GROUP_FLAGS_COUNT);
-  StrInd := 0;
-  for FlagInd := 1 to GROUP_FLAGS_COUNT do
-    if Cardinal(Self) and Cardinal(FlagValues[FlagInd]) =
-      Cardinal(FlagValues[FlagInd]) then
-    begin
-      Strings[StrInd] := FlagStrings[FlagInd];
-      Inc(StrInd);
-    end;
-  SetLength(Strings, StrInd);
-  Result := String.Join(', ', Strings);
+  Result := MapKnownFlags(Cardinal(Self), bmGroupFlags);
 end;
 
 function TGroupAttributesHelper.StateToString: String;
 begin
-  if Self.Contain(GroupEnabled) then
-  begin
-    if Self.Contain(GroupEnabledByDefault) then
-      Result := 'Enabled'
-    else
-      Result := 'Enabled (modified)';
-  end
-  else
-  begin
-    if Self.Contain(GroupEnabledByDefault) then
-      Result := 'Disabled (modified)'
-    else
-      Result := 'Disabled';
-  end;
-
-  if Self.Contain(GroupIntegrityEnabled) then
-  begin
-    if Self.Contain(GroupEnabled) or Self.Contain(GroupEnabledByDefault) then
-      Result := 'Integrity Enabled, Group ' + Result
-    else
-      Exit('Integrity Enabled');
-  end;
+  Result := GroupStateToString(Cardinal(Self));
 end;
 
 function TGroupAttributesHelper.ToString: String;

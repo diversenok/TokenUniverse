@@ -172,13 +172,13 @@ type
   PSidIdentifierAuthority = ^TSidIdentifierAuthority;
 
   // 8994
-  TSid = record
+  TSid_Internal = record
    Revision: Byte;
    SubAuthorityCount: Byte;
    IdentifierAuthority: TSidIdentifierAuthority;
    SubAuthority: array [0 .. SID_MAX_SUB_AUTHORITIES - 1] of Cardinal;
   end;
-  PSid = ^TSid;
+  PSid = ^TSid_Internal;
 
   TSidArray = array [Word] of PSid;
   PSidArray = ^TSidArray;
