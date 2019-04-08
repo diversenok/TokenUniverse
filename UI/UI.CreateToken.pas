@@ -95,7 +95,7 @@ procedure TDialogCreateToken.AddGroup(NewGroup: TGroup);
 begin
   GroupsSource.AddGroup(NewGroup);
 
-  if NewGroup.Attributes.Contain(GroupOwner) then
+  if Contains(NewGroup.Attributes, SE_GROUP_OWNER) then
     ComboOwner.Items.Add(NewGroup.SecurityIdentifier.ToString);
 
   ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.ToString);
@@ -138,8 +138,8 @@ begin
   begin
     ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.ToString;
     ComboUserChange(Sender);
-    CheckBoxUserState.Checked := Source.InfoClass.User.Attributes.Contain(
-      GroupUforDenyOnly);
+    CheckBoxUserState.Checked := Contains(Source.InfoClass.User.Attributes,
+      SE_GROUP_USE_FOR_DENY_ONLY);
   end;
 
   // Logon ID & Expiration
@@ -428,7 +428,7 @@ begin
 
     // Only groups with Owner flag can be assigned as owners
     for i := 0 to ListViewGroups.Items.Count - 1 do
-      if GroupsSource.Group[i].Attributes.Contain(GroupOwner) then
+      if Contains(GroupsSource.Group[i].Attributes, SE_GROUP_OWNER) then
         ComboOwner.Items.Add(ListViewGroups.Items[i].Caption);
 
     // Restore choise

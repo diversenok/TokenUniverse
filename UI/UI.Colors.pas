@@ -3,7 +3,7 @@ unit UI.Colors;
 interface
 
 uses
-  Vcl.Graphics, Winapi.Windows, TU.Tokens, TU.Tokens.Types;
+  Vcl.Graphics, TU.Tokens.Types;
 
 const
   clStale: TColor = $F5DCC2;
@@ -16,27 +16,30 @@ const
   clSuspended: TColor = $AAAAAA;
   clGuiThread: TColor = $77FFFF;
 
-function GroupAttributesToColor(Attributes: TGroupAttributes): TColor;
+function GroupAttributesToColor(Attributes: Cardinal): TColor;
 
 function PrivilegeToColor(Privilege: TPrivilege): TColor;
 
 implementation
 
-function GroupAttributesToColor(Attributes: TGroupAttributes): TColor;
+uses
+  Winapi.WinNt, DelphiUtils.Strings;
+
+function GroupAttributesToColor(Attributes: Cardinal): TColor;
 begin
-  if Attributes.Contain(GroupIntegrityEnabled) then
+  if Contains(Attributes, SE_GROUP_INTEGRITY_ENABLED) then
     Exit(clIntegrity);
 
-  if Attributes.Contain(GroupEnabled) then
+  if Contains(Attributes, SE_GROUP_ENABLED) then
   begin
-    if Attributes.Contain(GroupEnabledByDefault) then
+    if Contains(Attributes, SE_GROUP_ENABLED_BY_DEFAULT) then
       Result := clEnabled
     else
       Result := clEnabledModified;
   end
   else
   begin
-    if Attributes.Contain(GroupEnabledByDefault) then
+    if Contains(Attributes, SE_GROUP_ENABLED_BY_DEFAULT) then
       Result := clDisabledModified
     else
       Result := clDisabled;

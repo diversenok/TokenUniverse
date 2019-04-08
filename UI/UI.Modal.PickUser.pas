@@ -11,8 +11,8 @@ uses
 type
   TCheckBoxMapping = record
     CheckBox: TCheckBox;
-    Attribute: TGroupAttributes;
-    procedure Create(CheckBox: TCheckBox; Attribute: TGroupAttributes);
+    Attribute: Cardinal;
+    procedure Create(CheckBox: TCheckBox; Attribute: Cardinal);
   end;
 
   // HACK: Change of state should not issue OnClick event
@@ -54,8 +54,8 @@ type
     IsValidGroup: Boolean;
     Mapping: array of TCheckBoxMapping;
     procedure ObjPickerCallback(UserName: String);
-    function GetAttributes: TGroupAttributes;
-    procedure SetAttributes(const Value: TGroupAttributes);
+    function GetAttributes: Cardinal;
+    procedure SetAttributes(const Value: Cardinal);
     procedure SetSelectedGroup(const Value: TSecurityIdentifier);
     procedure DoDisableAttributes;
   public
@@ -70,14 +70,14 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg;
+  TU.ObjPicker, UI.Modal.ComboDlg, DelphiUtils.Strings;
 
 {$R *.dfm}
 
 { TCheckBoxMapping }
 
 procedure TCheckBoxMapping.Create(CheckBox: TCheckBox;
-  Attribute: TGroupAttributes);
+  Attribute: Cardinal);
 begin
   Self.CheckBox := CheckBox;
   Self.Attribute := Attribute;
@@ -106,8 +106,7 @@ begin
   SetSelectedGroup(TSecurityIdentifier.CreateFromString(Format('S-1-16-%d',
     [Cardinal(TComboDialog.PickIntegrity(Self))])));
 
-  SetAttributes(TGroupAttributes(Cardinal(GroupIntegrity) or
-    Cardinal(GroupIntegrityEnabled)));
+  SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
 end;
 
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
@@ -174,28 +173,26 @@ end;
 procedure TDialogPickUser.FormCreate(Sender: TObject);
 begin
   SetLength(Mapping, 9);
-  Mapping[0].Create(CheckBoxMandatory, GroupMandatory);
-  Mapping[1].Create(CheckBoxEnabledByDafault, GroupEnabledByDefault);
-  Mapping[2].Create(CheckBoxEnabled, GroupEnabled);
-  Mapping[3].Create(CheckBoxOwner, GroupOwner);
-  Mapping[4].Create(CheckBoxDenyOnly, GroupUforDenyOnly);
-  Mapping[5].Create(CheckBoxIntegrity, GroupIntegrity);
-  Mapping[6].Create(CheckBoxIntegrityEnabled, GroupIntegrityEnabled);
-  Mapping[7].Create(CheckBoxResource, GroupResource);
-  Mapping[8].Create(CheckBoxLogon, GroupLogonId);
+  Mapping[0].Create(CheckBoxMandatory, SE_GROUP_MANDATORY);
+  Mapping[1].Create(CheckBoxEnabledByDafault, SE_GROUP_ENABLED_BY_DEFAULT);
+  Mapping[2].Create(CheckBoxEnabled, SE_GROUP_ENABLED);
+  Mapping[3].Create(CheckBoxOwner, SE_GROUP_OWNER);
+  Mapping[4].Create(CheckBoxDenyOnly, SE_GROUP_USE_FOR_DENY_ONLY);
+  Mapping[5].Create(CheckBoxIntegrity, SE_GROUP_INTEGRITY);
+  Mapping[6].Create(CheckBoxIntegrityEnabled, SE_GROUP_INTEGRITY_ENABLED);
+  Mapping[7].Create(CheckBoxResource, SE_GROUP_RESOURCE);
+  Mapping[8].Create(CheckBoxLogon, SE_GROUP_LOGON_ID);
 end;
 
-function TDialogPickUser.GetAttributes: TGroupAttributes;
+function TDialogPickUser.GetAttributes: Cardinal;
 var
-  BitwiseResult, i: Integer;
+  i: Integer;
 begin
-  BitwiseResult := 0;
+  Result := 0;
 
   for i := 0 to High(Mapping) do
     if Mapping[i].CheckBox.Checked then
-      BitwiseResult := BitwiseResult or Integer(Mapping[i].Attribute);
-
-  Result := TGroupAttributes(BitwiseResult);
+      Result := Result or Mapping[i].Attribute;
 end;
 
 procedure TDialogPickUser.ObjPickerCallback(UserName: String);
@@ -230,9 +227,9 @@ begin
 
     // Set appropriate checkbox states
     for i := 0 to High(Mapping) do
-      if TGroupAttributes(BitwiseAnd).Contain(Mapping[i].Attribute) then
+      if Contains(BitwiseAnd, Mapping[i].Attribute) then
         Mapping[i].CheckBox.SetStateEx(cbChecked) // All groups contain it
-      else if TGroupAttributes(BitwiseOr).Contain(Mapping[i].Attribute) then
+      else if Contains(BitwiseOr, Mapping[i].Attribute) then
       begin
         Mapping[i].CheckBox.AllowGrayed := True;
         Mapping[i].CheckBox.SetStateEx(cbGrayed); // Only some of them
@@ -283,7 +280,7 @@ begin
   begin
     if DisableAttributes then
     begin
-      SetAttributes(GroupEnabled);
+      SetAttributes(SE_GROUP_ENABLED);
       DoDisableAttributes;
     end;
 
@@ -293,12 +290,12 @@ begin
   end;
 end;
 
-procedure TDialogPickUser.SetAttributes(const Value: TGroupAttributes);
+procedure TDialogPickUser.SetAttributes(const Value: Cardinal);
 var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
-    Mapping[i].CheckBox.SetCheckedEx(Value.Contain(Mapping[i].Attribute));
+    Mapping[i].CheckBox.SetCheckedEx(Contains(Value, Mapping[i].Attribute));
 end;
 
 procedure TDialogPickUser.SetSelectedGroup(const Value: TSecurityIdentifier);

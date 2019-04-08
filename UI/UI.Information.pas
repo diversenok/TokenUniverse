@@ -309,7 +309,7 @@ begin
   for i := 0 to High(NewGroups) do
   begin
     ComboPrimary.Items.Add(NewGroups[i].SecurityIdentifier.ToString);
-    if NewGroups[i].Attributes.Contain(GroupOwner) then
+    if Contains(NewGroups[i].Attributes, SE_GROUP_OWNER) then
       ComboOwner.Items.Add(NewGroups[i].SecurityIdentifier.ToString);
   end;
 
@@ -559,7 +559,7 @@ begin
       Hint := TGroupsSource.BuildHint(SecurityIdentifier,
         Attributes);
 
-      if Attributes.Contain(GroupUforDenyOnly) then
+      if Contains(Attributes, SE_GROUP_USE_FOR_DENY_ONLY) then
         Color := clDisabled
       else
         Color := clEnabled;

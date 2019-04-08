@@ -27,31 +27,9 @@ type
     function AllocSid: PSid;
   end;
 
-  TGroupAttributes = (
-    GroupMandatory = SE_GROUP_MANDATORY,
-    GroupEnabledByDefault = SE_GROUP_ENABLED_BY_DEFAULT,
-    GroupEnabled = SE_GROUP_ENABLED,
-    GroupOwner = SE_GROUP_OWNER,
-    GroupUforDenyOnly = SE_GROUP_USE_FOR_DENY_ONLY,
-    GroupIntegrity = SE_GROUP_INTEGRITY,
-    GroupIntegrityEnabled = SE_GROUP_INTEGRITY_ENABLED,
-    GroupResource = SE_GROUP_RESOURCE,
-    GroupLogonId = Integer(SE_GROUP_LOGON_ID),
-    GroupExUser = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT
-    // Used to display TOKEN_USER's attributes correctly
-  );
-
-  TGroupAttributesHelper = record helper for TGroupAttributes
-    function StateToString: String;
-    function FlagsToString: String;
-    function ToString: String;
-    function ContainAnyFlags: Boolean;
-    function Contain(Flag: TGroupAttributes): Boolean;
-  end;
-
   TGroup = record
     SecurityIdentifier: TSecurityIdentifier;
-    Attributes: TGroupAttributes;
+    Attributes: Cardinal;
   end;
 
   TGroupArray = array of TGroup;
@@ -264,37 +242,6 @@ end;
 function TSecurityIdentifier.ToString: String;
 begin
   Result := Lookup.FullName;
-end;
-
-{ TGroupAttributesHelper }
-
-function TGroupAttributesHelper.Contain(Flag: TGroupAttributes): Boolean;
-begin
-  Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
-end;
-
-function TGroupAttributesHelper.ContainAnyFlags: Boolean;
-begin
-  Result := ContainsAny(Cardinal(Self), SE_GROUP_ALL_FLAGS)
-end;
-
-function TGroupAttributesHelper.FlagsToString: String;
-begin
-  Result := MapKnownFlags(Cardinal(Self), bmGroupFlags);
-end;
-
-function TGroupAttributesHelper.StateToString: String;
-begin
-  Result := GroupStateToString(Cardinal(Self));
-end;
-
-function TGroupAttributesHelper.ToString: String;
-begin
-  Result := FlagsToString;
-  if Result = '' then
-    Result := StateToString
-  else
-    Result := StateToString + ', ' + Result;
 end;
 
 { TPrivilegeHelper }

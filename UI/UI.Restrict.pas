@@ -51,7 +51,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi;
+  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi, NtUtils.Types;
 
 {$R *.dfm}
 
@@ -150,7 +150,7 @@ begin
   with TSecurityIdentifier.CreateWellKnown(WinRestrictedCodeSid) do
   begin
     Group.SecurityIdentifier := Value;
-    Group.Attributes := GroupExUser;
+    Group.Attributes := SE_GROUP_USER_DEFAULT;
     RestrictGroupsSource.AddGroup(Group);
   end;
 
@@ -158,7 +158,7 @@ begin
   with TSecurityIdentifier.CreateWellKnown(WinWriteRestrictedCodeSid) do
   begin
     Group.SecurityIdentifier := Value;
-    Group.Attributes := GroupExUser;
+    Group.Attributes := SE_GROUP_USER_DEFAULT;
     RestrictGroupsSource.AddGroup(Group);
   end;
 

@@ -7,7 +7,8 @@ interface
 uses
   System.SysUtils, System.Generics.Collections, NtUtils.Exceptions,
   Ntapi.ntdef, Ntapi.ntobapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
-  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, DelphiUtils.Events,  TU.LsaApi;
+  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, DelphiUtils.Events, TU.LsaApi,
+  NtUtils.Types;
 
 type
   /// <summary>
@@ -1301,7 +1302,7 @@ begin
   // Set approriate attribes depending on the action
   for i := 0 to GroupArray.GroupCount - 1 do
     if Action = gaEnable then
-      GroupArray.Groups[i].Attributes := Cardinal(GroupEnabled)
+      GroupArray.Groups[i].Attributes := SE_GROUP_ENABLED
     else
       GroupArray.Groups[i].Attributes := 0;
 
@@ -1397,7 +1398,7 @@ begin
     begin
       // Each SID should be converted to a TSecurityIdentifier
       GroupArray[i].SecurityIdentifier.CreateFromSid(Buffer.Groups[i].Sid);
-      GroupArray[i].Attributes := TGroupAttributes(Buffer.Groups[i].Attributes);
+      GroupArray[i].Attributes := Buffer.Groups[i].Attributes;
     end;
   finally
     FreeMem(Buffer);
@@ -1427,7 +1428,7 @@ begin
   if Result then
   try
     Group.SecurityIdentifier.CreateFromSid(Buffer.Sid);
-    Group.Attributes := TGroupAttributes(Buffer.Attributes);
+    Group.Attributes := Buffer.Attributes;
   finally
     FreeMem(Buffer);
   end;
@@ -1814,8 +1815,8 @@ begin
       // In this case we replace it with this flag. However, it can also be
       // "Use for deny only" and we shouldn't replace it in this case.
 
-      if Result and (Token.Cache.User.Attributes = TGroupAttributes(0)) then
-        Token.Cache.User.Attributes := GroupExUser;
+      if Result and (Token.Cache.User.Attributes = 0) then
+        Token.Cache.User.Attributes := SE_GROUP_USER_DEFAULT;
     end;
 
     tdTokenGroups:
@@ -1974,7 +1975,7 @@ begin
         with Token.Cache.Integrity do
         try
           Group.SecurityIdentifier.CreateFromSid(pIntegrity.Sid);
-          Group.Attributes := TGroupAttributes(pIntegrity.Attributes);
+          Group.Attributes := pIntegrity.Attributes;
 
           // Get level value from the last sub-authority
           subAuthCount := RtlSubAuthorityCountSid(pIntegrity.Sid)^;

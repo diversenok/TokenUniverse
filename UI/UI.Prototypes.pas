@@ -61,7 +61,7 @@ type
     procedure UiEditSelected(AOwner: TComponent; DisableAttributes: Boolean =
       False);
     class function BuildHint(SID: TSecurityIdentifier;
-      Attributes: TGroupAttributes; AttributesPresent: Boolean = True): String;
+      Attributes: Cardinal; AttributesPresent: Boolean = True): String;
       overload; static;
     class function BuildHint(Group: TGroup): String; overload; static;
   end;
@@ -374,9 +374,9 @@ begin
 end;
 
 class function TGroupsSource.BuildHint(SID: TSecurityIdentifier;
-  Attributes: TGroupAttributes; AttributesPresent: Boolean): String;
+  Attributes: Cardinal; AttributesPresent: Boolean): String;
 begin
-  Result := BuildSidHint(SID.Lookup, Cardinal(Attributes), AttributesPresent);
+  Result := BuildSidHint(SID.Lookup, Attributes, AttributesPresent);
 end;
 
 class function TGroupsSource.BuildHint(Group: TGroup): String;
@@ -465,7 +465,7 @@ begin
     FTokenGroups := Copy(FTokenGroups, 0, Length(FTokenGroups));
 
     for i := High(FTokenGroups) downto 0 do
-      if not FTokenGroups[i].Attributes.Contain(GroupEnabled) then
+      if not Contains(FTokenGroups[i].Attributes, SE_GROUP_ENABLED) then
         Delete(FTokenGroups, i, 1);
   end;
 
@@ -532,8 +532,8 @@ begin
   Item.Caption := Group.SecurityIdentifier.ToString;
   Item.Hint := BuildHint(Group.SecurityIdentifier, Group.Attributes);
   Item.SubItems.Clear;
-  Item.SubItems.Add(Group.Attributes.StateToString);
-  Item.SubItems.Add(Group.Attributes.FlagsToString);
+  Item.SubItems.Add(GroupStateToString(Group.Attributes));
+  Item.SubItems.Add(MapKnownFlags(Group.Attributes, bmGroupFlags));
   Item.Color := GroupAttributesToColor(Group.Attributes);
   Result := Item;
 end;
@@ -591,8 +591,8 @@ begin
       if ListView.Items[i].Selected and IsAdditional(i) then
       begin
         NewGroup := Group[i];
-        NewGroup.Attributes := TGroupAttributes(Cardinal(NewGroup.Attributes)
-          and not AttributesToDelete or AttributesToAdd);
+        NewGroup.Attributes := NewGroup.Attributes and not AttributesToDelete
+          or AttributesToAdd;
         Group[i] := NewGroup;
       end;
   end;

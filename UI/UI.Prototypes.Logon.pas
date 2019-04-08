@@ -40,7 +40,7 @@ type
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors, TU.Tokens.Types, DelphiUtils.Strings;
+  Vcl.Graphics, UI.Colors, TU.Tokens.Types, DelphiUtils.Strings, NtUtils.Types;
 
 {$R *.dfm}
 
@@ -190,7 +190,7 @@ begin
   // Build hint for the user
   if LogonInfo.UserPresent then
     ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
-      TGroupsSource.BuildHint(LogonInfo.User, GroupExUser, False);
+      TGroupsSource.BuildHint(LogonInfo.User, SE_GROUP_USER_DEFAULT, False);
 end;
 
 end.
