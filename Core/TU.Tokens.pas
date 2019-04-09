@@ -310,7 +310,7 @@ type
     ///  Allocates and fills <see cref="Winapi.PTokenGroups"/>.
     /// </summary>
     /// <remarks> Call <see cref="FreeMem"/> after use. </remarks>
-    class function AllocGroups(Groups: TGroupArray;
+    class function AllocGroups(const Groups: TGroupArray;
       ResetAttributes: Boolean = False): PTokenGroups; static;
 
     /// <summary> Allocates <see cref="Winapi.PTokenPrivileges"/>. </summary>
@@ -652,7 +652,7 @@ begin
   TTokenFactory.RegisterToken(Self);
 end;
 
-class function TToken.AllocGroups(Groups: TGroupArray;
+class function TToken.AllocGroups(const Groups: TGroupArray;
   ResetAttributes: Boolean): PTokenGroups;
 var
   i: integer;
@@ -670,7 +670,7 @@ begin
     Result.Groups[i].Sid := Groups[i].SecurityIdentifier.Sid;
 
     if not ResetAttributes then
-      Result.Groups[i].Attributes := Cardinal(Groups[i].Attributes);
+      Result.Groups[i].Attributes := Groups[i].Attributes;
   end;
 end;
 
@@ -888,40 +888,24 @@ begin
 
   TokenGroups := nil;
   TokenPrivileges := nil;
-  try
-    // Allocate groups. This memory should be freed with FreeGroups
-    TokenGroups := AllocGroups(Groups);
 
-    // Allocate privileges. This memory should be freed with FreeMem
+  try
+    TokenGroups := AllocGroups(Groups);
     TokenPrivileges := AllocPrivileges(Privileges);
 
-    // Allocate user, owner, and primary group SIDs.
-    // This memory should be freed with LocalFree.
-  except
-    // Free memory in case of abnormal termination
-    if Assigned(TokenGroups) then
-      FreeMem(TokenGroups);
-    if Assigned(TokenPrivileges) then
-      FreeMem(TokenPrivileges);
-    raise;
-  end;
-
-  // Call NtCreateToken.
-  try
     NativeCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
       LogonID, Expires, TokenUser, TokenGroups, TokenPrivileges,
       @TokenOwner, @TokenPrimaryGroup, nil, Source), 'NtCreateToken');
   finally
-    LocalFree(TokenPrimaryGroup.PrimaryGroup);
-    LocalFree(TokenOwner.Owner);
-    LocalFree(TokenUser.User.Sid);
     FreeMem(TokenPrivileges);
     FreeMem(TokenGroups);
   end;
 
   FCaption := 'New token: ';
-  if User.Lookup.HasName then
+  if User.Lookup.UserName <> '' then
     FCaption := FCaption + User.Lookup.UserName
+  else if User.Lookup.DomainName <> '' then
+    FCaption := FCaption + User.Lookup.DomainName
   else
     FCaption := FCaption + User.Lookup.SDDL;
 end;
