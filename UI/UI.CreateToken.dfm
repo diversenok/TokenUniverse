@@ -249,45 +249,37 @@ object DialogCreateToken: TDialogCreateToken
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      object ListViewPrivileges: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 308
-        Height = 297
+      inline FramePrivileges: TFramePrivileges
+        Left = 0
+        Top = 0
+        Width = 314
+        Height = 303
         Align = alClient
-        AllocBy = 40
-        Checkboxes = True
-        Columns = <
-          item
-            Caption = 'Privilege name'
-            Width = 180
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Description'
-            Width = 220
-          end
-          item
-            Alignment = taCenter
-            Caption = 'LUID'
-            Width = 40
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
-        PopupMenu = PopupMenuPrivileges
         TabOrder = 0
-        ViewStyle = vsReport
-        OnItemChecked = ListViewPrivilegesItemChecked
-        ClipboardSourceColumn = 0
-        ColoringItems = True
-        PopupOnItemsOnly = True
+        inherited ListView: TListViewEx
+          Width = 308
+          Height = 297
+          Checkboxes = True
+          Columns = <
+            item
+              Caption = 'Privilege name'
+              Width = 180
+            end
+            item
+              Caption = 'State'
+              Width = 90
+            end
+            item
+              Caption = 'Description'
+              Width = 220
+            end
+            item
+              Alignment = taCenter
+              Caption = 'LUID'
+              Width = 40
+            end>
+          PopupMenu = PopupMenuPrivileges
+        end
       end
     end
     object TabAdvanced: TTabSheet

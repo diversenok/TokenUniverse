@@ -17,8 +17,6 @@ uses
 type
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
 
-  TPrivilegeArray = array of TPrivilege;
-
   TPrivilegeAdjustAction = (paEnable, paDisable, paRemove);
 
   TTokenTypeEx = (ttAnonymous, ttIdentification, ttImpersonation, ttDelegation,

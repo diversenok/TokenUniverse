@@ -7,7 +7,8 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
   UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Types,
-  TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon;
+  TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
+  UI.Prototypes.Privileges;
 
 type
   TInfoDialog = class(TChildTaskbarForm)
@@ -19,7 +20,6 @@ type
     EditUser: TEdit;
     ButtonClose: TButton;
     ListViewGroups: TListViewEx;
-    ListViewPrivileges: TListViewEx;
     TabRestricted: TTabSheet;
     ListViewRestricted: TListViewEx;
     StaticSession: TStaticText;
@@ -67,6 +67,7 @@ type
     FrameAudit: TFrameAudit;
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
+    FramePrivileges: TFramePrivileges;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -96,7 +97,6 @@ type
     Token: TToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
-    PrivilegesSource: TPrivilegesSource;
     GroupsSource, RestrictedSIDsSource: TGroupsSource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
@@ -151,26 +151,26 @@ end;
 
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
-  if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paDisable);
+  if FramePrivileges.ListView.SelCount <> 0 then
+    Token.PrivilegeAdjust(FramePrivileges.SelectedPrivileges, paDisable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
-  if ListViewPrivileges.SelCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paEnable);
+  if FramePrivileges.ListView.SelCount <> 0 then
+    Token.PrivilegeAdjust(FramePrivileges.SelectedPrivileges, paEnable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
-  if ListViewPrivileges.SelCount = 0 then
+  if FramePrivileges.ListView.SelCount = 0 then
     Exit;
 
   if TaskMessageDlg('Remove these privileges from the token?',
     'This action can''t be undone.', mtWarning, mbYesNo, -1) <> idYes then
     Exit;
 
-  Token.PrivilegeAdjust(PrivilegesSource.SelectedPrivileges, paRemove);
+  Token.PrivilegeAdjust(FramePrivileges.SelectedPrivileges, paRemove);
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
@@ -349,6 +349,13 @@ end;
 procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TPrivilegeArray);
 begin
   TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
+
+  FramePrivileges.ListView.Items.BeginUpdate(True);
+
+  FramePrivileges.Clear;
+  FramePrivileges.AddPrivileges(NewPrivileges);
+
+  FramePrivileges.ListView.Items.EndUpdate(True);
 end;
 
 procedure TInfoDialog.ChangedSession(NewSession: Cardinal);
@@ -430,7 +437,6 @@ begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   RestrictedSIDsSource.Free;
   GroupsSource.Free;
-  PrivilegesSource.Free;
   IntegritySource.Free;
   SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
@@ -441,7 +447,6 @@ begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
-  PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
   GroupsSource := TGroupsSource.Create(ListViewGroups);
   RestrictedSIDsSource := TGroupsSource.Create(ListViewRestricted);
 
@@ -464,7 +469,6 @@ begin
   Token.Events.OnPrimaryChange.Subscribe(ChangedPrimaryGroup);
   Token.Events.OnVirtualizationAllowedChange.Subscribe(ChangedVAllowed);
   Token.Events.OnVirtualizationEnabledChange.Subscribe(ChangedVEnabled);
-  PrivilegesSource.SubscribeToken(Token);
   GroupsSource.SubscribeToken(Token, gsGroups);
   RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);
 

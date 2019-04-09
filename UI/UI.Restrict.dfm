@@ -17,9 +17,6 @@ object DialogRestrictToken: TDialogRestrictToken
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
-  DesignSize = (
-    360
-    415)
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
@@ -89,9 +86,6 @@ object DialogRestrictToken: TDialogRestrictToken
     object TabSheetSidRestict: TTabSheet
       Caption = 'SIDs to restrict'
       ImageIndex = 1
-      DesignSize = (
-        344
-        328)
       object CheckBoxWriteOnly: TCheckBox
         Left = 3
         Top = 308
@@ -189,9 +183,6 @@ object DialogRestrictToken: TDialogRestrictToken
     object TabSheetPrivDelete: TTabSheet
       Caption = 'Privileges to delete'
       ImageIndex = 2
-      DesignSize = (
-        344
-        328)
       object CheckBoxDisableMaxPriv: TCheckBox
         Left = 6
         Top = 4
@@ -210,7 +201,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentFont = False
         TabOrder = 0
       end
-      object ListViewPrivileges: TListViewEx
+      inline FramePrivileges: TFramePrivileges
         AlignWithMargins = True
         Left = 3
         Top = 26
@@ -218,34 +209,12 @@ object DialogRestrictToken: TDialogRestrictToken
         Height = 299
         Margins.Top = 26
         Align = alClient
-        Checkboxes = True
-        Columns = <
-          item
-            Caption = 'Privilege name'
-            Width = 180
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Description'
-            Width = 220
-          end
-          item
-            Alignment = taCenter
-            Caption = 'LUID'
-            Width = 40
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
         TabOrder = 1
-        ViewStyle = vsReport
-        ClipboardSourceColumn = 0
-        ColoringItems = True
+        inherited ListView: TListViewEx
+          Width = 332
+          Height = 293
+          Checkboxes = True
+        end
       end
     end
   end

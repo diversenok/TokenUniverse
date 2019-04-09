@@ -6,7 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, TU.Tokens, UI.ListViewEx, UI.Prototypes,
-  UI.Prototypes.ChildForm, System.ImageList, Vcl.ImgList, Vcl.Menus;
+  UI.Prototypes.ChildForm, System.ImageList, Vcl.ImgList, Vcl.Menus,
+  UI.Prototypes.Privileges, NtUtils.Types;
 
 type
   TDialogRestrictToken = class(TChildTaskbarForm)
@@ -20,7 +21,6 @@ type
     TabSheetSidDisable: TTabSheet;
     TabSheetSidRestict: TTabSheet;
     TabSheetPrivDelete: TTabSheet;
-    ListViewPrivileges: TListViewEx;
     ListViewRestrictSID: TListViewEx;
     ListViewDisableSID: TListViewEx;
     ButtonAddSID: TButton;
@@ -28,6 +28,7 @@ type
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
     CheckBoxUsual: TCheckBox;
+    FramePrivileges: TFramePrivileges;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
@@ -40,9 +41,9 @@ type
   private
     Token: TToken;
     DisableGoupsSource, RestrictGroupsSource: TGroupsSource;
-    PrivilegesSource: TPrivilegesSource;
     function GetFlags: Cardinal;
     procedure ChangedCaption(NewCaption: String);
+    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -51,7 +52,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi, NtUtils.Types;
+  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi;
 
 {$R *.dfm}
 
@@ -70,7 +71,7 @@ begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
     DisableGoupsSource.CheckedGroups,
     RestrictGroupsSource.CheckedGroups,
-    PrivilegesSource.CheckedPrivileges);
+    FramePrivileges.CheckedPrivileges);
 
   FormMain.TokenView.Add(NewToken);
 
@@ -93,6 +94,17 @@ begin
   Caption := Format('Create Restricted Token for "%s"', [NewCaption]);
 end;
 
+procedure TDialogRestrictToken.ChangedPrivileges(
+  NewPrivileges: TPrivilegeArray);
+begin
+  FramePrivileges.ListView.Items.BeginUpdate(True);
+
+  FramePrivileges.Clear;
+  FramePrivileges.AddPrivileges(NewPrivileges);
+
+  FramePrivileges.ListView.Items.EndUpdate(True);
+end;
+
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
   SrcToken: TToken);
 begin
@@ -110,9 +122,9 @@ procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
-  PrivilegesSource.Free;
   RestrictGroupsSource.Free;
   DisableGoupsSource.Free;
+  Token.Events.OnPrivilegesChange.Unsubscribe(ChangedPrivileges);
   UnsubscribeTokenCanClose(Token);
 end;
 
@@ -129,10 +141,12 @@ begin
 
   DisableGoupsSource := TGroupsSource.Create(ListViewDisableSID);
   RestrictGroupsSource := TGroupsSource.Create(ListViewRestrictSID);
-  PrivilegesSource := TPrivilegesSource.Create(ListViewPrivileges);
 
   DisableGoupsSource.SubscribeToken(Token, gsGroups);
-  PrivilegesSource.SubscribeToken(Token);
+
+  FramePrivileges.ColorMode := pmGrayChecked;
+  Token.InfoClass.Query(tdTokenPrivileges);
+  Token.Events.OnPrivilegesChange.Subscribe(ChangedPrivileges, True);
 
   // Show only enabled groups to make things clear when using restictions
   RestrictGroupsSource.SubscribeToken(Token, gsGroupsEnabledOnly);

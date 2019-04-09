@@ -228,6 +228,11 @@
         <DCCReference Include="Headers\Winapi.securitybaseapi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Strings.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Types.pas"/>
+        <DCCReference Include="UI\UI.Prototypes.Privileges.pas">
+            <Form>FramePrivileges</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

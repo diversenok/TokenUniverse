@@ -66,7 +66,8 @@ uses
   Ntapi.ntldr in 'Headers\Ntapi.ntldr.pas',
   Winapi.securitybaseapi in 'Headers\Winapi.securitybaseapi.pas',
   NtUtils.Strings in 'NtUtils\NtUtils.Strings.pas',
-  NtUtils.Types in 'NtUtils\NtUtils.Types.pas';
+  NtUtils.Types in 'NtUtils\NtUtils.Types.pas',
+  UI.Prototypes.Privileges in 'UI\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame};
 
 {$R *.res}
 

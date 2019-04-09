@@ -603,42 +603,15 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      object ListViewPrivileges: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 382
-        Height = 363
-        Align = alClient
-        Columns = <
-          item
-            Caption = 'Privilege name'
-            Width = 180
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Description'
-            Width = 220
-          end
-          item
-            Alignment = taCenter
-            Caption = 'LUID'
-            Width = 40
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
-        PopupMenu = PrivilegePopup
+      inline FramePrivileges: TFramePrivileges
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
         TabOrder = 0
-        ViewStyle = vsReport
-        ClipboardSourceColumn = 0
-        ColoringItems = True
-        PopupOnItemsOnly = True
+        inherited ListView: TListViewEx
+          PopupMenu = PrivilegePopup
+        end
       end
     end
     object TabRestricted: TTabSheet

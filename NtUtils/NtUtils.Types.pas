@@ -42,10 +42,10 @@ type
     SecurityIdentifier: ISid;
     Attributes: Cardinal; // SE_GROUP_*
   end;
-
   TGroupArray = array of TGroup;
 
   TPrivilege = TLuidAndAttributes;
+  TPrivilegeArray = array of TPrivilege;
 
 implementation
 
