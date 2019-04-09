@@ -61,7 +61,7 @@ type
   public
     class function PickNew(AOwner: TComponent;
       DisableAttributes: Boolean = False): TGroup;
-    class function PickEditOne(AOwner: TComponent; Group: TGroup;
+    class function PickEditOne(AOwner: TComponent; const Group: TGroup;
       DisableAttributes: Boolean = False): TGroup;
     class procedure PickEditMultiple(AOwner: TComponent; Groups: TGroupArray;
       out AttributesToAdd, AttributesToDelete: Cardinal);
@@ -167,7 +167,7 @@ var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
-    Mapping[i].CheckBox.SetCheckedEx(False);
+    Mapping[i].CheckBox.Enabled := False;
 end;
 
 procedure TDialogPickUser.FormCreate(Sender: TObject);
@@ -256,8 +256,8 @@ begin
   end;
 end;
 
-class function TDialogPickUser.PickEditOne(AOwner: TComponent; Group: TGroup;
-  DisableAttributes: Boolean): TGroup;
+class function TDialogPickUser.PickEditOne(AOwner: TComponent;
+  const Group: TGroup; DisableAttributes: Boolean): TGroup;
 begin
   with TDialogPickUser.Create(AOwner) do
   begin

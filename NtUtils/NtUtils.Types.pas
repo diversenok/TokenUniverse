@@ -87,9 +87,9 @@ begin
     finally
       LocalFree(Buffer);
     end;
-  end;
-
-  NativeCheck(Status, 'LsaLookupNames2');
+  end
+  else
+    NativeCheck(Status, 'LsaLookupNames2');
 end;
 
 destructor TSid.Destroy;
