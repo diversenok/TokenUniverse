@@ -24,8 +24,8 @@ type
     property Privilege[Ind: Integer]: TPrivilege read GetPrivilege write SetPrivilege;
     function Privileges: TPrivilegeArray;
 
-    function AddPrivilege(const Privilege: TPrivilege): TListItemEx;
-    procedure AddPrivileges(Privileges: TPrivilegeArray);
+    function AddPrivilege(const NewPrivilege: TPrivilege): TListItemEx;
+    procedure AddPrivileges(NewPrivileges: TPrivilegeArray);
     procedure AddAllPrivileges;
 
     procedure RemovePrivilege(Index: Integer);
@@ -76,23 +76,24 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-function TFramePrivileges.AddPrivilege(const Privilege: TPrivilege): TListItemEx;
+function TFramePrivileges.AddPrivilege(const NewPrivilege: TPrivilege):
+  TListItemEx;
 begin
   SetLength(FPrivileges, Length(FPrivileges) + 1);
-  FPrivileges[High(FPrivileges)] := Privilege;
-  Result := SetItemData(ListView.Items.Add, Privilege);
+  FPrivileges[High(FPrivileges)] := NewPrivilege;
+  Result := SetItemData(ListView.Items.Add, NewPrivilege);
 end;
 
-procedure TFramePrivileges.AddPrivileges(Privileges: TPrivilegeArray);
+procedure TFramePrivileges.AddPrivileges(NewPrivileges: TPrivilegeArray);
 var
   i: Integer;
 begin
-  FPrivileges := Concat(FPrivileges, Privileges);
+  FPrivileges := Concat(FPrivileges, NewPrivileges);
 
   ListView.Items.BeginUpdate;
 
-  for i := 0 to High(Privileges) do
-    SetItemData(ListView.Items.Add, Privileges[i]);
+  for i := 0 to High(NewPrivileges) do
+    SetItemData(ListView.Items.Add, NewPrivileges[i]);
 
   ListView.Items.EndUpdate;
 end;

@@ -567,37 +567,17 @@ object InfoDialog: TInfoDialog
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      object ListViewGroups: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 382
-        Height = 363
+      inline FrameGroupSIDs: TFrameGroups
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
         Align = alClient
-        Columns = <
-          item
-            Caption = 'Group name'
-            Width = 220
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Flags'
-            Width = 120
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
-        PopupMenu = GroupPopup
         TabOrder = 0
-        ViewStyle = vsReport
-        OnContextPopup = ListViewGroupsContextPopup
-        ClipboardSourceColumn = 0
-        ColoringItems = True
+        inherited ListView: TListViewEx
+          PopupMenu = GroupPopup
+          OnContextPopup = ListViewGroupsContextPopup
+        end
       end
     end
     object TabPrivileges: TTabSheet
@@ -617,35 +597,13 @@ object InfoDialog: TInfoDialog
     object TabRestricted: TTabSheet
       Caption = 'Restricting SIDs'
       ImageIndex = 3
-      object ListViewRestricted: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 382
-        Height = 363
+      inline FrameRestrictSIDs: TFrameGroups
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
         Align = alClient
-        Columns = <
-          item
-            Caption = 'User or Group'
-            Width = 220
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Flags'
-            Width = 120
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
         TabOrder = 0
-        ViewStyle = vsReport
-        ClipboardSourceColumn = 0
-        ColoringItems = True
       end
     end
     object TabSecurity: TTabSheet

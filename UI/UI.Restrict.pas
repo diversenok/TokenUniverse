@@ -7,7 +7,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, TU.Tokens, UI.ListViewEx, UI.Prototypes,
   UI.Prototypes.ChildForm, System.ImageList, Vcl.ImgList, Vcl.Menus,
-  UI.Prototypes.Privileges, NtUtils.Types;
+  UI.Prototypes.Privileges, NtUtils.Types, UI.Prototypes.Groups;
 
 type
   TDialogRestrictToken = class(TChildTaskbarForm)
@@ -21,14 +21,14 @@ type
     TabSheetSidDisable: TTabSheet;
     TabSheetSidRestict: TTabSheet;
     TabSheetPrivDelete: TTabSheet;
-    ListViewRestrictSID: TListViewEx;
-    ListViewDisableSID: TListViewEx;
     ButtonAddSID: TButton;
     PopupMenu: TPopupMenu;
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
     CheckBoxUsual: TCheckBox;
     FramePrivileges: TFramePrivileges;
+    FrameGroupsDisable: TFrameGroups;
+    FrameGroupsRestrict: TFrameGroups;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
@@ -40,10 +40,11 @@ type
     procedure MenuEditClick(Sender: TObject);
   private
     Token: TToken;
-    DisableGoupsSource, RestrictGroupsSource: TGroupsSource;
+    FirstEditableItem: Integer; // in list of restricting SIDs
     function GetFlags: Cardinal;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
+    procedure ChangedGroups(NewGroups: TGroupArray);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -52,7 +53,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi;
+  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings;
 
 {$R *.dfm}
 
@@ -60,7 +61,7 @@ uses
 
 procedure TDialogRestrictToken.ButtonAddSIDClick(Sender: TObject);
 begin
-  RestrictGroupsSource.AddGroup(TDialogPickUser.PickNew(Self, True)).Checked :=
+  FrameGroupsRestrict.AddGroup(TDialogPickUser.PickNew(Self, True)).Checked :=
     True;
 end;
 
@@ -69,8 +70,8 @@ var
   NewToken: TToken;
 begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
-    DisableGoupsSource.CheckedGroups,
-    RestrictGroupsSource.CheckedGroups,
+    FrameGroupsDisable.CheckedGroups,
+    FrameGroupsRestrict.CheckedGroups,
     FramePrivileges.CheckedPrivileges);
 
   FormMain.TokenView.Add(NewToken);
@@ -92,6 +93,57 @@ end;
 procedure TDialogRestrictToken.ChangedCaption(NewCaption: String);
 begin
   Caption := Format('Create Restricted Token for "%s"', [NewCaption]);
+end;
+
+procedure TDialogRestrictToken.ChangedGroups(NewGroups: TGroupArray);
+var
+  ManuallyAddes: TGroupArray;
+  i: Integer;
+begin
+  // Disabled SIDs: add all groups
+  with FrameGroupsDisable do
+  begin
+    ListView.Items.BeginUpdate(True);
+
+    Clear;
+    AddGroups(NewGroups);
+
+    ListView.Items.EndUpdate(True);
+  end;
+
+  // Restricting SIDs: add only enabled once to avoid confusion
+  with FrameGroupsRestrict do
+  begin
+    ListView.Items.BeginUpdate(True);
+
+    // If there are any manually added SIDs backup them
+    if FirstEditableItem < ListView.Items.Count then
+    begin
+      SetLength(ManuallyAddes, ListView.Items.Count - FirstEditableItem);
+
+      for i := FirstEditableItem to ListView.Items.Count - 1 do
+        ManuallyAddes[i - FirstEditableItem] := Group[i];
+    end
+    else
+      SetLength(ManuallyAddes, 0);
+
+    // Delete everything
+    Clear;
+
+    // Add enabled groups
+    for i := 0 to High(NewGroups) do
+      if Contains(NewGroups[i].Attributes, SE_GROUP_ENABLED) then
+        AddGroup(NewGroups[i]);
+
+    // Starting from here manually items only
+    FirstEditableItem := ListView.Items.Count;
+
+    // Restore manually added ones
+    for i := 0 to High(ManuallyAddes) do
+      AddGroup(ManuallyAddes[i]);
+
+    ListView.Items.EndUpdate(True);
+  end;
 end;
 
 procedure TDialogRestrictToken.ChangedPrivileges(
@@ -122,9 +174,8 @@ procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
-  RestrictGroupsSource.Free;
-  DisableGoupsSource.Free;
   Token.Events.OnPrivilegesChange.Unsubscribe(ChangedPrivileges);
+  Token.Events.OnGroupsChange.Unsubscribe(ChangedGroups);
   UnsubscribeTokenCanClose(Token);
 end;
 
@@ -132,77 +183,75 @@ procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 var
   Sid: ISid;
   Group: TGroup;
-  Found: Boolean;
   RestrInd, ItemInd: Integer;
 begin
   Assert(Assigned(Token));
 
   SubscribeTokenCanClose(Token, Caption);
 
-  DisableGoupsSource := TGroupsSource.Create(ListViewDisableSID);
-  RestrictGroupsSource := TGroupsSource.Create(ListViewRestrictSID);
+  Token.OnCaptionChange.Subscribe(ChangedCaption);
+  ChangedCaption(Token.Caption);
 
-  DisableGoupsSource.SubscribeToken(Token, gsGroups);
+  if Token.InfoClass.Query(tdTokenSandBoxInert) then
+    CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;
 
+  // Privileges
   FramePrivileges.ColorMode := pmGrayChecked;
   Token.InfoClass.Query(tdTokenPrivileges);
   Token.Events.OnPrivilegesChange.Subscribe(ChangedPrivileges, True);
 
-  // Show only enabled groups to make things clear when using restictions
-  RestrictGroupsSource.SubscribeToken(Token, gsGroupsEnabledOnly);
-
-  Token.OnCaptionChange.Subscribe(ChangedCaption);
-  ChangedCaption(Token.Caption);
-
-  // The user can also be disabled and restricted
-  if Token.InfoClass.Query(tdTokenUser) then
+  // Disabled SIDs and Restricting SIDs
   begin
-    DisableGoupsSource.AddGroup(Token.InfoClass.User);
-    RestrictGroupsSource.AddGroup(Token.InfoClass.User);
-  end;
+    FrameGroupsDisable.ListView.Items.BeginUpdate;
+    FrameGroupsRestrict.ListView.Items.BeginUpdate;
 
-  // RESTRICTED also is useful to provide access to WinSta0 and Default desktop
-  if TSid.GetWellKnownSid(WinRestrictedCodeSid, Sid) then
-  begin
-    Group.SecurityIdentifier := Sid;
-    Group.Attributes := SE_GROUP_USER_DEFAULT;
-    RestrictGroupsSource.AddGroup(Group);
-  end;
+    // Subscribe
+    Token.InfoClass.Query(tdTokenGroups);
+    Token.Events.OnGroupsChange.Subscribe(ChangedGroups, True);
 
-  // And WRITE RESTRICTED
-  if TSid.GetWellKnownSid(WinWriteRestrictedCodeSid, Sid) then
-  begin
-    Group.SecurityIdentifier := Sid;
-    Group.Attributes := SE_GROUP_USER_DEFAULT;
-    RestrictGroupsSource.AddGroup(Group);
-  end;
-
-  // If the token has restricting SIDs then check them. It can also contain
-  // manually added items that are not part of the group list. Add them here.
-  if Token.InfoClass.Query(tdTokenRestrictedSids) then
-    with Token.InfoClass do
-      for RestrInd := 0 to High(RestrictedSids) do
-      begin
-        Found := False;
-
-        // Find and check it
-        for ItemInd := 0 to ListViewRestrictSID.Items.Count - 1 do
-          if RestrictedSids[RestrInd].SecurityIdentifier.Lookup.SDDL =
-            RestrictGroupsSource.Group[ItemInd].SecurityIdentifier.Lookup.SDDL
-            then
-          begin
-            ListViewRestrictSID.Items[ItemInd].Checked := True;
-            Found := True;
-            Break;
-          end;
-
-      // The restricting SID was not found in the list, add and check it
-      if not Found then
-        RestrictGroupsSource.AddGroup(RestrictedSids[RestrInd]).Checked := True;
+     // Add the user since it can also be disabled and restricted
+    if Token.InfoClass.Query(tdTokenUser) then
+    begin
+      FrameGroupsDisable.AddGroup(Token.InfoClass.User);
+      FrameGroupsRestrict.AddGroup(Token.InfoClass.User);
     end;
 
-  if Token.InfoClass.Query(tdTokenSandBoxInert) then
-    CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert
+    // RESTRICTED is useful to provide access to WinSta0 and Default desktop
+    if TSid.GetWellKnownSid(WinRestrictedCodeSid, Sid) then
+    begin
+      Group.SecurityIdentifier := Sid;
+      Group.Attributes := SE_GROUP_USER_DEFAULT;
+      FrameGroupsRestrict.AddGroup(Group);
+    end;
+
+    // And WRITE RESTRICTED
+    if TSid.GetWellKnownSid(WinWriteRestrictedCodeSid, Sid) then
+    begin
+      Group.SecurityIdentifier := Sid;
+      Group.Attributes := SE_GROUP_USER_DEFAULT;
+      FrameGroupsRestrict.AddGroup(Group);
+    end;
+
+    // If the token has restricting SIDs then check them. It can also contain
+    // manually added items that are not part of the group list. Add them here.
+    if Token.InfoClass.Query(tdTokenRestrictedSids) then
+      with Token.InfoClass do
+        for RestrInd := 0 to High(RestrictedSids) do
+        begin
+          ItemInd := FrameGroupsRestrict.Find(
+            RestrictedSids[RestrInd].SecurityIdentifier);
+
+          // Check the item if it's in the list. If not, add it.
+          if ItemInd <> -1 then
+            FrameGroupsRestrict.ListView.Items[ItemInd].Checked := True
+          else
+            FrameGroupsRestrict.AddGroup(
+              RestrictedSids[RestrInd]).Checked := True;
+      end;
+
+    FrameGroupsRestrict.ListView.Items.EndUpdate;
+    FrameGroupsDisable.ListView.Items.EndUpdate;
+  end;
 end;
 
 function TDialogRestrictToken.GetFlags: Cardinal;
@@ -223,35 +272,40 @@ procedure TDialogRestrictToken.ListViewRestrictSIDContextPopup(Sender: TObject;
 var
   i: Integer;
 begin
-  with ListViewRestrictSID do
+  with FrameGroupsRestrict.ListView do
   begin
     // Only one item can be edited at a time
     MenuEdit.Enabled := (SelCount = 1);
 
     // Show context menu only if selection contains removable/editable items
-    for i := 0 to Items.Count - 1 do
+    Handled := True;
+    for i := FirstEditableItem to Items.Count - 1 do
       if Items[i].Selected then
-        Handled := Handled or RestrictGroupsSource.IsAdditional(i);
-
-    Handled := not Handled;
+      begin
+        Handled := False;
+        Exit;
+      end;
   end;
 end;
 
 procedure TDialogRestrictToken.MenuEditClick(Sender: TObject);
 begin
-  RestrictGroupsSource.UiEditSelected(Self, True);
+  with FrameGroupsRestrict do
+    if (ListView.SelCount = 1) and Assigned(ListView.Selected) and
+      (ListView.Selected.Index >= FirstEditableItem) then
+        UiEditSelected(Self, True);
 end;
 
 procedure TDialogRestrictToken.MenuRemoveClick(Sender: TObject);
 var
   i: Integer;
 begin
-  with ListViewRestrictSID do
+  with FrameGroupsRestrict.ListView do
   begin
     // deletion changes indexes, go downwards
-    for i := Items.Count - 1 downto 0 do
-      if Items[i].Selected and RestrictGroupsSource.IsAdditional(i) then
-        RestrictGroupsSource.RemoveGroup(i);
+    for i := Items.Count - 1 downto FirstEditableItem do
+      if Items[i].Selected then
+        FrameGroupsRestrict.RemoveGroup(i);
   end;
 end;
 

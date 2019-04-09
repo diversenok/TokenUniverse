@@ -8,7 +8,7 @@ uses
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
   UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Types,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
-  UI.Prototypes.Privileges;
+  UI.Prototypes.Privileges, UI.Prototypes.Groups;
 
 type
   TInfoDialog = class(TChildTaskbarForm)
@@ -19,9 +19,7 @@ type
     StaticUser: TStaticText;
     EditUser: TEdit;
     ButtonClose: TButton;
-    ListViewGroups: TListViewEx;
     TabRestricted: TTabSheet;
-    ListViewRestricted: TListViewEx;
     StaticSession: TStaticText;
     StaticIntegrity: TStaticText;
     ComboSession: TComboBox;
@@ -68,6 +66,8 @@ type
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
     FramePrivileges: TFramePrivileges;
+    FrameGroupSIDs: TFrameGroups;
+    FrameRestrictSIDs: TFrameGroups;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -97,7 +97,6 @@ type
     Token: TToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
-    GroupsSource, RestrictedSIDsSource: TGroupsSource;
     procedure ChangedCaption(NewCaption: String);
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
@@ -133,20 +132,20 @@ const
 
 procedure TInfoDialog.ActionGroupDisable(Sender: TObject);
 begin
-  if ListViewGroups.SelCount <> 0 then
-    Token.GroupAdjust(GroupsSource.SelectedGroups, gaDisable);
+  if FrameGroupSIDs.ListView.SelCount <> 0 then
+    Token.GroupAdjust(FrameGroupSIDs.SelectedGroups, gaDisable);
 end;
 
 procedure TInfoDialog.ActionGroupEnable(Sender: TObject);
 begin
-  if ListViewGroups.SelCount <> 0 then
-    Token.GroupAdjust(GroupsSource.SelectedGroups, gaEnable);
+  if FrameGroupSIDs.ListView.SelCount <> 0 then
+    Token.GroupAdjust(FrameGroupSIDs.SelectedGroups, gaEnable);
 end;
 
 procedure TInfoDialog.ActionGroupReset(Sender: TObject);
 begin
-  if ListViewGroups.SelCount <> 0 then
-    Token.GroupAdjust(GroupsSource.SelectedGroups, gaResetDefault);
+  if FrameGroupSIDs.ListView.SelCount <> 0 then
+    Token.GroupAdjust(FrameGroupSIDs.SelectedGroups, gaResetDefault);
 end;
 
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
@@ -288,6 +287,17 @@ var
   i: Integer;
 begin
   TabGroups.Caption := Format('Groups (%d)', [Length(NewGroups)]);
+
+  // Update group list
+  with FrameGroupSIDs do
+  begin
+    ListView.Items.BeginUpdate(True);
+
+    Clear;
+    AddGroups(NewGroups);
+
+    ListView.Items.EndUpdate(True);
+  end;
 
   // Update suggestions for Owner and Primary Group
   ComboOwner.Items.BeginUpdate;
@@ -435,8 +445,6 @@ begin
   Token.Events.OnUIAccessChange.Unsubscribe(ChangedUIAccess);
   Token.Events.OnSessionChange.Unsubscribe(ChangedSession);
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
-  RestrictedSIDsSource.Free;
-  GroupsSource.Free;
   IntegritySource.Free;
   SessionSource.Free;
   UnsubscribeTokenCanClose(Token);
@@ -447,8 +455,6 @@ begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
-  GroupsSource := TGroupsSource.Create(ListViewGroups);
-  RestrictedSIDsSource := TGroupsSource.Create(ListViewRestricted);
 
   // "Refresh" queries all the information, stores changeble one in the event
   // handler, and distributes changed one to every existing event listener
@@ -469,14 +475,12 @@ begin
   Token.Events.OnPrimaryChange.Subscribe(ChangedPrimaryGroup);
   Token.Events.OnVirtualizationAllowedChange.Subscribe(ChangedVAllowed);
   Token.Events.OnVirtualizationEnabledChange.Subscribe(ChangedVEnabled);
-  GroupsSource.SubscribeToken(Token, gsGroups);
-  RestrictedSIDsSource.SubscribeToken(Token, gsRestrictedSIDs);
 
   Token.OnCaptionChange.Subscribe(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);
 
   TabRestricted.Caption := Format('Restricting SIDs (%d)',
-    [ListViewRestricted.Items.Count]);
+    [FrameRestrictSIDs.ListView.Items.Count]);
 end;
 
 procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
@@ -490,7 +494,6 @@ procedure TInfoDialog.ListViewAdvancedResize(Sender: TObject);
 begin
   // HACK: designs-time AutoSize causes horizontal scrollbar to appear
   ListViewAdvanced.Columns[1].AutoSize := True;
-  ListViewRestricted.OnResize := nil;
 end;
 
 procedure TInfoDialog.ListViewGeneralDblClick(Sender: TObject);
@@ -503,8 +506,8 @@ end;
 procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;
   MousePos: TPoint; var Handled: Boolean);
 begin
-  MenuGroupEnable.Visible := ListViewGroups.SelCount <> 0;
-  MenuGroupDisable.Visible := ListViewGroups.SelCount <> 0;
+  MenuGroupEnable.Visible := FrameGroupSIDs.ListView.SelCount <> 0;
+  MenuGroupDisable.Visible := FrameGroupSIDs.ListView.SelCount <> 0;
 end;
 
 procedure TInfoDialog.PageControlChange(Sender: TObject);
@@ -566,6 +569,15 @@ begin
         Color := clDisabled
       else
         Color := clEnabled;
+    end;
+
+  if Token.InfoClass.Query(tdTokenRestrictedSids) then
+    with FrameRestrictSIDs do
+    begin
+      ListView.Items.BeginUpdate;
+      Clear;
+      AddGroups(Token.InfoClass.RestrictedSids);
+      ListView.Items.EndUpdate;
     end;
 
   TabObject.Tag := TAB_INVALIDATED;

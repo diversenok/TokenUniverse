@@ -197,40 +197,6 @@ object DialogCreateToken: TDialogCreateToken
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      object ListViewGroups: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 308
-        Height = 270
-        Margins.Bottom = 30
-        Align = alClient
-        Columns = <
-          item
-            Caption = 'Group name'
-            Width = 160
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Flags'
-            Width = 120
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
-        PopupMenu = PopupMenuGroups
-        TabOrder = 0
-        ViewStyle = vsReport
-        OnDblClick = MenuEditClick
-        ClipboardSourceColumn = 0
-        ColoringItems = True
-        PopupOnItemsOnly = True
-      end
       object ButtonAddSID: TButton
         Left = 117
         Top = 276
@@ -242,8 +208,28 @@ object DialogCreateToken: TDialogCreateToken
         ImageMargins.Left = 3
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
-        TabOrder = 1
+        TabOrder = 0
         OnClick = ButtonAddSIDClick
+      end
+      inline FrameGroups: TFrameGroups
+        AlignWithMargins = True
+        Left = 0
+        Top = 0
+        Width = 314
+        Height = 273
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 30
+        Align = alClient
+        TabOrder = 1
+        inherited ListView: TListViewEx
+          Width = 308
+          Height = 267
+          PopupMenu = PopupMenuGroups
+          OnDblClick = MenuEditClick
+          PopupOnItemsOnly = True
+        end
       end
     end
     object TabPrivileges: TTabSheet

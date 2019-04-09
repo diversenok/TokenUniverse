@@ -51,36 +51,18 @@ object DialogRestrictToken: TDialogRestrictToken
     TabOrder = 2
     object TabSheetSidDisable: TTabSheet
       Caption = 'SIDs to disable'
-      object ListViewDisableSID: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 338
-        Height = 322
+      inline FrameGroupsDisable: TFrameGroups
+        Left = 0
+        Top = 0
+        Width = 344
+        Height = 328
         Align = alClient
-        Checkboxes = True
-        Columns = <
-          item
-            Caption = 'SID'
-            Width = 220
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Flags'
-            Width = 120
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
         TabOrder = 0
-        ViewStyle = vsReport
-        ClipboardSourceColumn = 0
-        ColoringItems = True
+        inherited ListView: TListViewEx
+          Width = 338
+          Height = 322
+          Checkboxes = True
+        end
       end
     end
     object TabSheetSidRestict: TTabSheet
@@ -108,43 +90,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Font.Style = [fsBold]
         ParentFont = False
         State = cbChecked
-        TabOrder = 0
-      end
-      object ListViewRestrictSID: TListViewEx
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 338
-        Height = 284
-        Margins.Bottom = 41
-        Align = alClient
-        Checkboxes = True
-        Columns = <
-          item
-            Caption = 'SID'
-            Width = 220
-          end
-          item
-            Caption = 'State'
-            Width = 110
-          end
-          item
-            Caption = 'Flags'
-            Width = 120
-          end>
-        FullDrag = True
-        GridLines = True
-        MultiSelect = True
-        ReadOnly = True
-        RowSelect = True
-        PopupMenu = PopupMenu
         TabOrder = 1
-        ViewStyle = vsReport
-        OnContextPopup = ListViewRestrictSIDContextPopup
-        OnDblClick = MenuEditClick
-        ClipboardSourceColumn = 0
-        ColoringItems = True
-        PopupOnItemsOnly = True
       end
       object ButtonAddSID: TButton
         Left = 263
@@ -179,6 +125,27 @@ object DialogRestrictToken: TDialogRestrictToken
         State = cbChecked
         TabOrder = 3
       end
+      inline FrameGroupsRestrict: TFrameGroups
+        AlignWithMargins = True
+        Left = 0
+        Top = 0
+        Width = 344
+        Height = 287
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 41
+        Align = alClient
+        TabOrder = 0
+        inherited ListView: TListViewEx
+          Width = 338
+          Height = 281
+          Checkboxes = True
+          PopupMenu = PopupMenu
+          OnContextPopup = ListViewRestrictSIDContextPopup
+          OnDblClick = MenuEditClick
+        end
+      end
     end
     object TabSheetPrivDelete: TTabSheet
       Caption = 'Privileges to delete'
@@ -203,16 +170,19 @@ object DialogRestrictToken: TDialogRestrictToken
       end
       inline FramePrivileges: TFramePrivileges
         AlignWithMargins = True
-        Left = 3
+        Left = 0
         Top = 26
-        Width = 338
-        Height = 299
+        Width = 344
+        Height = 302
+        Margins.Left = 0
         Margins.Top = 26
+        Margins.Right = 0
+        Margins.Bottom = 0
         Align = alClient
         TabOrder = 1
         inherited ListView: TListViewEx
-          Width = 332
-          Height = 293
+          Width = 338
+          Height = 296
           Checkboxes = True
         end
       end

@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.ChildForm, Vcl.ComCtrls,
-  UI.ListViewEx, UI.Prototypes, TU.LsaApi, Winapi.WinBase;
+  UI.ListViewEx, UI.Prototypes, TU.LsaApi, Winapi.WinBase, UI.Prototypes.Groups;
 
 type
   TLogonDialog = class(TChildForm)
@@ -15,7 +15,6 @@ type
     LabelProvider: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
-    ListViewGroups: TListViewEx;
     ButtonAddSID: TButton;
     LabelGroups: TLabel;
     PopupMenu: TPopupMenu;
@@ -27,16 +26,15 @@ type
     StaticSourceLuid: TStaticText;
     EditSourceLuid: TEdit;
     ButtonAllocLuid: TButton;
+    FrameGroups: TFrameGroups;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
     procedure MenuEditClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ComboLogonProviderChange(Sender: TObject);
     procedure ButtonAllocLuidClick(Sender: TObject);
   private
-    GroupsSource: TGroupsSource;
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: TSecurityLogonType;
     function GetLogonProvider: TLogonProvider;
@@ -56,7 +54,7 @@ const
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
-  GroupsSource.AddGroup(TDialogPickUser.PickNew(Self));
+  FrameGroups.AddGroup(TDialogPickUser.PickNew(Self));
   ButtonContinue.SetFocus;
 end;
 
@@ -82,14 +80,8 @@ begin
   ButtonAllocLuid.Enabled := EditSourceName.Enabled;
 end;
 
-procedure TLogonDialog.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  GroupsSource.Free;
-end;
-
 procedure TLogonDialog.FormCreate(Sender: TObject);
 begin
-  GroupsSource := TGroupsSource.Create(ListViewGroups);
   ButtonAllocLuidClick(Sender);
 end;
 
@@ -109,13 +101,13 @@ end;
 
 procedure TLogonDialog.MenuEditClick(Sender: TObject);
 begin
-  GroupsSource.UiEditSelected(Self);
+  FrameGroups.UiEditSelected(Self);
 end;
 
 procedure TLogonDialog.MenuRemoveClick(Sender: TObject);
 begin
-  if Assigned(ListViewGroups.Selected) then
-    GroupsSource.RemoveGroup(ListViewGroups.Selected.Index);
+  if Assigned(FrameGroups.ListView.Selected) then
+    FrameGroups.RemoveGroup(FrameGroups.ListView.Selected.Index);
 end;
 
 procedure TLogonDialog.TokenCreationCallback(Domain, User: String;
@@ -130,11 +122,11 @@ begin
       EditSourceLuid.Text, 'Source LUID'));
 
     FormMain.TokenView.Add(TToken.CreateS4ULogon(GetLogonType, Domain, User,
-      Source, GroupsSource.Groups));
+      Source, FrameGroups.Groups));
   end
   else
     FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType,
-      GetLogonProvider, Domain, User, Password, GroupsSource.Groups));
+      GetLogonProvider, Domain, User, Password, FrameGroups.Groups));
 end;
 
 end.

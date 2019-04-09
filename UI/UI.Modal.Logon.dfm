@@ -17,7 +17,6 @@ object LogonDialog: TLogonDialog
   OldCreateOrder = False
   Position = poMainFormCenter
   ShowHint = True
-  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -92,7 +91,7 @@ object LogonDialog: TLogonDialog
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 2
+    TabOrder = 6
   end
   object ButtonContinue: TButton
     Left = 229
@@ -102,42 +101,8 @@ object LogonDialog: TLogonDialog
     Anchors = [akRight, akBottom]
     Caption = 'Continue'
     Default = True
-    TabOrder = 3
-    OnClick = ButtonContinueClick
-  end
-  object ListViewGroups: TListViewEx
-    Left = 8
-    Top = 193
-    Width = 296
-    Height = 166
-    Margins.Top = 26
-    Margins.Bottom = 31
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Columns = <
-      item
-        Caption = 'SID'
-        Width = 160
-      end
-      item
-        Caption = 'State'
-        Width = 90
-      end
-      item
-        Caption = 'Flags'
-        Width = 120
-      end>
-    FullDrag = True
-    GridLines = True
-    MultiSelect = True
-    ReadOnly = True
-    RowSelect = True
-    PopupMenu = PopupMenu
     TabOrder = 4
-    ViewStyle = vsReport
-    OnDblClick = MenuEditClick
-    ClipboardSourceColumn = 0
-    ColoringItems = True
-    PopupOnItemsOnly = True
+    OnClick = ButtonContinueClick
   end
   object ButtonAddSID: TButton
     Left = 118
@@ -150,7 +115,7 @@ object LogonDialog: TLogonDialog
     ImageMargins.Left = 3
     ImageMargins.Top = 1
     Images = FormMain.SmallIcons
-    TabOrder = 5
+    TabOrder = 3
     OnClick = ButtonAddSIDClick
   end
   object GroupBoxSource: TGroupBox
@@ -160,7 +125,7 @@ object LogonDialog: TLogonDialog
     Height = 54
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Token Source '
-    TabOrder = 6
+    TabOrder = 2
     object EditSourceName: TEdit
       Left = 45
       Top = 21
@@ -213,9 +178,25 @@ object LogonDialog: TLogonDialog
       OnClick = ButtonAllocLuidClick
     end
   end
+  inline FrameGroups: TFrameGroups
+    Left = 8
+    Top = 169
+    Width = 296
+    Height = 188
+    TabOrder = 5
+    inherited ListView: TListViewEx
+      AlignWithMargins = False
+      Left = 0
+      Top = 0
+      Width = 296
+      Height = 188
+      PopupMenu = PopupMenu
+      OnDblClick = MenuEditClick
+    end
+  end
   object PopupMenu: TPopupMenu
-    Left = 136
-    Top = 168
+    Left = 208
+    Top = 64
     object MenuEdit: TMenuItem
       Caption = 'Edit'
       ShortCut = 113
