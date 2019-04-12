@@ -28,10 +28,6 @@ type
     function SecurityImpersonationLevel: TSecurityImpersonationLevel;
   end;
 
-  TTokenElevationTypeHelper = record helper for TTokenElevationType
-    function ToString: string;
-  end;
-
   TTokenIntegrityLevel = (
     ilUntrusted = $0000,
     ilLow = $1000,
@@ -47,18 +43,6 @@ type
     Level: TTokenIntegrityLevel;
     function IsWellKnown: Boolean;
     function ToString: String;
-  end;
-
-  TMandatoryPolicy = (
-    MandatoryPolicyOff = TOKEN_MANDATORY_POLICY_OFF,
-    MandatoryPolicyNoWriteUp = TOKEN_MANDATORY_POLICY_NO_WRITE_UP,
-    MandatoryPolicyNewProcessMin = TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN,
-    MandatoryPolicyAll = TOKEN_MANDATORY_POLICY_VALID_MASK
-  );
-
-  TMandatoryPolicyHelper = record helper for TMandatoryPolicy
-    function Contains(Flag: TMandatoryPolicy): Boolean;
-    procedure Create(NoWriteUp, NewProcessMin: Boolean);
   end;
 
   TAuditState = (
@@ -97,7 +81,6 @@ function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 function CompareLUIDs(Value1, Value2: TLuid): Boolean;
 function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
-function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean;
 function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean;
 function CompareGroups(Value1, Value2: TGroupArray): Boolean;
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
@@ -203,19 +186,6 @@ begin
   end
 end;
 
-{ TTokenElevationTypeHelper }
-
-function TTokenElevationTypeHelper.ToString: string;
-begin
-  case Self of
-    TokenElevationTypeDefault: Result := 'N/A';
-    TokenElevationTypeFull: Result := 'Full';
-    TokenElevationTypeLimited: Result := 'Limited';
-  else
-    Result := '(out of bound)';
-  end;
-end;
-
 { TTokenIntegrity }
 
 function TTokenIntegrity.IsWellKnown: Boolean;
@@ -241,25 +211,6 @@ begin
   else
     Result := IntToHexEx(UInt64(Level));
   end;
-end;
-
-{ TMandatoryPolicyHelper }
-
-function TMandatoryPolicyHelper.Contains(Flag: TMandatoryPolicy): Boolean;
-begin
-  Result := Cardinal(Self) and Cardinal(Flag) = Cardinal(Flag);
-end;
-
-procedure TMandatoryPolicyHelper.Create(NoWriteUp, NewProcessMin: Boolean);
-begin
-  if NoWriteUp and NewProcessMin then
-    Self := MandatoryPolicyAll
-  else if NoWriteUp then
-    Self := MandatoryPolicyNoWriteUp
-  else if NewProcessMin then
-    Self := MandatoryPolicyNewProcessMin
-  else
-    Self := MandatoryPolicyOff;
 end;
 
 { TAuditStateHelper }
@@ -430,11 +381,6 @@ begin
 end;
 
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
-begin
-  Result := Value1 = Value2;
-end;
-
-function ComparePolicies(Value1, Value2: TMandatoryPolicy): Boolean;
 begin
   Result := Value1 = Value2;
 end;

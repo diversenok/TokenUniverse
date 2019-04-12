@@ -59,7 +59,7 @@ type
     VirtualizationEnabled: LongBool;
     Integrity: TTokenIntegrity;
     UIAccess: LongBool;
-    MandatoryPolicy: TMandatoryPolicy;
+    MandatoryPolicy: Cardinal;
     IsRestricted: LongBool;
     LogonSessionInfo: TLogonSessionInfo;
     ObjectInformation: TObjectBasicInformaion;
@@ -72,7 +72,7 @@ type
     FOnIntegrityChange: TCachingEvent<TTokenIntegrity>;
     FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
     FOnVirtualizationEnabledChange: TCachingEvent<LongBool>;
-    FOnPolicyChange: TCachingEvent<TMandatoryPolicy>;
+    FOnPolicyChange: TCachingEvent<Cardinal>;
     FOnPrivilegesChange: TCachingEvent<TPrivilegeArray>;
     FOnGroupsChange: TCachingEvent<TGroupArray>;
     FOnStatisticsChange: TCachingEvent<TTokenStatistics>;
@@ -93,7 +93,7 @@ type
     property OnIntegrityChange: TCachingEvent<TTokenIntegrity> read FOnIntegrityChange;
     property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
     property OnVirtualizationEnabledChange: TCachingEvent<LongBool> read FOnVirtualizationEnabledChange;
-    property OnPolicyChange: TCachingEvent<TMandatoryPolicy> read FOnPolicyChange;
+    property OnPolicyChange: TCachingEvent<Cardinal> read FOnPolicyChange;
     property OnPrivilegesChange: TCachingEvent<TPrivilegeArray> read FOnPrivilegesChange;
     property OnGroupsChange: TCachingEvent<TGroupArray> read FOnGroupsChange;
     property OnStatisticsChange: TCachingEvent<TTokenStatistics> read FOnStatisticsChange;
@@ -116,7 +116,7 @@ type
   private
     Token: TToken; // Owner
     procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
-    procedure SetMandatoryPolicy(const Value: TMandatoryPolicy);
+    procedure SetMandatoryPolicy(const Value: Cardinal);
     procedure SetSession(const Value: Cardinal);
     procedure SetAuditPolicy(const Value: TTokenPerUserAudit);
     procedure SetOrigin(const Value: TLuid);
@@ -129,7 +129,7 @@ type
     function GetGroups: TGroupArray;
     function GetHasRestrictions: LongBool;
     function GetIntegrity: TTokenIntegrity;
-    function GetMandatoryPolicy: TMandatoryPolicy;
+    function GetMandatoryPolicy: Cardinal;
     function GetOrigin: TLuid;
     function GetOwner: ISid;
     function GetPrimaryGroup: ISid;
@@ -175,7 +175,7 @@ type
     property Integrity: TTokenIntegrity read GetIntegrity;                      // class 25 #settable
     property IntegrityLevel: TTokenIntegrityLevel write SetIntegrityLevel;
     property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
-    property MandatoryPolicy: TMandatoryPolicy read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
+    property MandatoryPolicy: Cardinal read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
     // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: TLogonSessionInfo read GetLogonSessionInfo;
@@ -466,7 +466,7 @@ implementation
 uses
   System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension, DelphiUtils.Strings,
   Winapi.WinError, Winapi.NtSecApi, Winapi.winsta, Ntapi.ntstatus,
-  Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl;
+  Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl, NtUtils.Strings;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -497,7 +497,7 @@ begin
   FOnOriginChange.ComparisonFunction := CompareLUIDs;
   FOnUIAccessChange.ComparisonFunction := CompareLongBools;
   FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
-  FOnPolicyChange.ComparisonFunction := ComparePolicies;
+  FOnPolicyChange.ComparisonFunction := CompareCardinals;
   FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
   FOnGroupsChange.ComparisonFunction := CompareGroups;
   FOnStatisticsChange.ComparisonFunction := CompareStatistics;
@@ -1506,7 +1506,7 @@ begin
   Result := Token.Cache.LogonSessionInfo;
 end;
 
-function TTokenData.GetMandatoryPolicy: TMandatoryPolicy;
+function TTokenData.GetMandatoryPolicy: Cardinal;
 begin
   Assert(Token.Cache.IsCached[tdTokenMandatoryPolicy]);
   Result := Token.Cache.MandatoryPolicy;
@@ -1650,7 +1650,7 @@ begin
       Result := Token.Cache.Session.ToString;
 
     tsElevation:
-      Result := Token.Cache.Elevation.ToString;
+      Result := EnumElevationToString(Token.Cache.Elevation);
 
     tsIntegrity:
       Result := Token.Cache.Integrity.ToString;
@@ -1666,12 +1666,12 @@ begin
         Result := IntToHexEx(Token.Handle);
 
     tsNoWriteUpPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contains(
-        MandatoryPolicyNoWriteUp));
+      Result := EnabledDisabledToString(Contains(Token.Cache.MandatoryPolicy,
+        TOKEN_MANDATORY_POLICY_NO_WRITE_UP));
 
     tsNewProcessMinPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy.Contains(
-        MandatoryPolicyNewProcessMin));
+      Result := EnabledDisabledToString(Contains(Token.Cache.MandatoryPolicy,
+        TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN));
 
     tsUIAccess:
       Result := EnabledDisabledToString(Token.Cache.UIAccess);
@@ -1962,7 +1962,7 @@ begin
 
     tdTokenMandatoryPolicy:
     begin
-      Result := Token.QueryFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy,
+      Result := Token.QueryFixedSize<Cardinal>(TokenMandatoryPolicy,
         Token.Cache.MandatoryPolicy);
       if Result then
         if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
@@ -2056,9 +2056,9 @@ begin
   // as a separate SID, not as a reference.
 end;
 
-procedure TTokenData.SetMandatoryPolicy(const Value: TMandatoryPolicy);
+procedure TTokenData.SetMandatoryPolicy(const Value: Cardinal);
 begin
-  Token.SetFixedSize<TMandatoryPolicy>(TokenMandatoryPolicy, Value);
+  Token.SetFixedSize<Cardinal>(TokenMandatoryPolicy, Value);
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenMandatoryPolicy);

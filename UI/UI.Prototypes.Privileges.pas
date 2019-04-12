@@ -222,7 +222,7 @@ function TFramePrivileges.SetItemData(Item: TListItemEx;
   Privilege: TPrivilege): TListItemEx;
 begin
   Item.Cell[0] := TPrivilegeCache.QueryName(Privilege.Luid);
-  Item.Cell[1] := PrivilegeStateToString(Privilege.Attributes);
+  Item.Cell[1] := StateOfPrivilegeToString(Privilege.Attributes);
   Item.Cell[2] := TPrivilegeCache.QueryDisplayName(Privilege.Luid);
   Item.Cell[3] := IntToStr(Privilege.Luid);
   SetItemColor(Item.Index);

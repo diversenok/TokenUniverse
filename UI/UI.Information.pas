@@ -101,7 +101,7 @@ type
     procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
     procedure ChangedSession(NewSession: Cardinal);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
-    procedure ChangedPolicy(NewPolicy: TMandatoryPolicy);
+    procedure ChangedPolicy(NewPolicy: Cardinal);
     procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
     procedure ChangedGroups(NewGroups: TGroupArray);
     procedure ChangedStatistics(NewStatistics: TTokenStatistics);
@@ -199,10 +199,17 @@ end;
 
 procedure TInfoDialog.BtnSetPolicyClick(Sender: TObject);
 var
-  Policy: TMandatoryPolicy;
+  Policy: Cardinal;
 begin
   try
-    Policy.Create(CheckBoxNoWriteUp.Checked, CheckBoxNewProcessMin.Checked);
+    Policy := 0;
+
+    if CheckBoxNoWriteUp.Checked then
+      Policy := Policy or TOKEN_MANDATORY_POLICY_NO_WRITE_UP;
+
+    if CheckBoxNewProcessMin.Checked then
+      Policy := Policy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
+
     Token.InfoClass.MandatoryPolicy := Policy;
 
     CheckBoxNoWriteUp.Font.Style := [];
@@ -340,11 +347,13 @@ begin
   ComboOwner.Text := NewOwner.Lookup.FullName;
 end;
 
-procedure TInfoDialog.ChangedPolicy(NewPolicy: TMandatoryPolicy);
+procedure TInfoDialog.ChangedPolicy(NewPolicy: Cardinal);
 begin
-  CheckBoxNoWriteUp.Checked := NewPolicy.Contains(MandatoryPolicyNoWriteUp);
-  CheckBoxNewProcessMin.Checked := NewPolicy.Contains(
-    MandatoryPolicyNewProcessMin);
+  CheckBoxNoWriteUp.Checked := Contains(NewPolicy,
+    TOKEN_MANDATORY_POLICY_NO_WRITE_UP);
+
+  CheckBoxNewProcessMin.Checked := Contains(NewPolicy,
+    TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN);
 
   CheckBoxNoWriteUp.Font.Style := [];
   CheckBoxNewProcessMin.Font.Style := [];

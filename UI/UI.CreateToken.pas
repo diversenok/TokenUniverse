@@ -226,7 +226,7 @@ var
   Token: TToken;
   Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
-  NewPolicy: TMandatoryPolicy;
+  NewPolicy: Cardinal;
 begin
   if CheckBoxInfinite.Checked then
     Expires.QuadPart := Int64.MaxValue
@@ -263,8 +263,13 @@ begin
   FormMain.TokenView.Add(Token);
 
   // Post-creation: change mandatory policy
-  NewPolicy.Create(CheckBoxNoWriteUp.Checked, CheckBoxNewProcMin.Checked);
-  if NewPolicy <> MandatoryPolicyOff then
+  NewPolicy := 0;
+  if CheckBoxNoWriteUp.Checked then
+    NewPolicy := NewPolicy or TOKEN_MANDATORY_POLICY_NO_WRITE_UP;
+  if CheckBoxNewProcMin.Checked then
+    NewPolicy := NewPolicy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
+
+  if NewPolicy <> 0 then
     Token.InfoClass.MandatoryPolicy := NewPolicy;
 
   // Post-creation: change session

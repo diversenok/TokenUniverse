@@ -154,7 +154,7 @@ end;
 function TFrameGroups.SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
 begin
   Item.Cell[0] := Group.SecurityIdentifier.Lookup.FullName;
-  Item.Cell[1] := GroupStateToString(Group.Attributes);
+  Item.Cell[1] := StateOfGroupToString(Group.Attributes);
   Item.Cell[2] := MapKnownFlags(Group.Attributes, bmGroupFlags);
   Item.Hint := BuildSidHint(Group.SecurityIdentifier.Lookup, Group.Attributes);
   Item.Color := GroupAttributesToColor(Group.Attributes);

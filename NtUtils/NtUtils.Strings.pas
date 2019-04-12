@@ -12,11 +12,13 @@ type
 function MapKnownFlags(Value: Cardinal; Mode: TBitFlagMode): String;
 
 // Enumerations
-function SidTypeToString(Value: TSidNameUse): String;
+function EnumOutOfBoundString(Value: Cardinal): String;
+function EnumElevationToString(Value: TTokenElevationType): String;
+function EnumSidTypeToString(Value: TSidNameUse): String;
 
 // States
-function GroupStateToString(Value: Cardinal): String;
-function PrivilegeStateToString(Value: Cardinal): String;
+function StateOfGroupToString(Value: Cardinal): String;
+function StateOfPrivilegeToString(Value: Cardinal): String;
 
 // Misc
 function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
@@ -48,7 +50,23 @@ end;
 
 { Enumerations }
 
-function SidTypeToString(Value: TSidNameUse): String;
+function EnumOutOfBoundString(Value: Cardinal): String;
+begin
+  Result := IntToStr(Value) + ' (out of bound)';
+end;
+
+function EnumElevationToString(Value: TTokenElevationType): String;
+begin
+  case Value of
+    TokenElevationTypeDefault: Result := 'N/A';
+    TokenElevationTypeFull: Result := 'Full';
+    TokenElevationTypeLimited: Result := 'Limited';
+  else
+     Result := EnumOutOfBoundString(Cardinal(Value));
+  end;
+end;
+
+function EnumSidTypeToString(Value: TSidNameUse): String;
 const
   SidTypeNames: array [TSidNameUse] of String = ('Undefined', 'User', 'Group',
     'Domain', 'Alias', 'Well-known Group', 'Deleted Account', 'Invalid',
@@ -57,12 +75,12 @@ begin
   if (Low(Value) <= Value) and (Value <= High(Value)) then
     Result := SidTypeNames[Value]
   else
-    Result := IntToStr(Cardinal(Value)) + ' (out of bound)';
+    Result := EnumOutOfBoundString(Cardinal(Value));
 end;
 
 { States }
 
-function GroupStateToString(Value: Cardinal): String;
+function StateOfGroupToString(Value: Cardinal): String;
 begin
   if Contains(Value, SE_GROUP_ENABLED) then
   begin
@@ -89,7 +107,7 @@ begin
   end;
 end;
 
-function PrivilegeStateToString(Value: Cardinal): String;
+function StateOfPrivilegeToString(Value: Cardinal): String;
 begin
   if Contains(Value, SE_PRIVILEGE_ENABLED) then
   begin
@@ -137,13 +155,13 @@ begin
   Inc(Index);
 
   Items[Index] := Format(ITEM_FORMAT,
-    ['Type', SidTypeToString(SID.SidType)]);
+    ['Type', EnumSidTypeToString(SID.SidType)]);
   Inc(Index);
 
   if AttributesPresent then
   begin
     Items[Index] := Format(ITEM_FORMAT,
-      ['State', GroupStateToString(Attributes)]);
+      ['State', StateOfGroupToString(Attributes)]);
     Inc(Index);
 
     if ContainsAny(Attributes, SE_GROUP_ALL_FLAGS) then
