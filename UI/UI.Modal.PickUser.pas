@@ -55,8 +55,8 @@ type
     Mapping: array of TCheckBoxMapping;
     procedure ObjPickerCallback(UserName: String);
     function GetAttributes: Cardinal;
-    procedure SetAttributes(const Value: Cardinal);
-    procedure SetSelectedGroup(const Value: ISid);
+    procedure SetAttributes(Value: Cardinal);
+    procedure SetSelectedGroup(Value: ISid);
     procedure DoDisableAttributes;
   public
     class function PickNew(AOwner: TComponent;
@@ -70,7 +70,7 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg, DelphiUtils.Strings;
+  TU.ObjPicker, UI.Modal.ComboDlg, DelphiUtils.Strings, Winapi.WinNt;
 
 {$R *.dfm}
 
@@ -221,8 +221,8 @@ begin
     // some of them
     for i := 0 to High(Groups) do
     begin
-      BitwiseOr := BitwiseOr or Cardinal(Groups[i].Attributes);
-      BitwiseAnd := BitwiseAnd and Cardinal(Groups[i].Attributes);
+      BitwiseOr := BitwiseOr or Groups[i].Attributes;
+      BitwiseAnd := BitwiseAnd and Groups[i].Attributes;
     end;
 
     // Set appropriate checkbox states
@@ -247,11 +247,9 @@ begin
     for i := 0 to High(Mapping) do
       case Mapping[i].CheckBox.State of
         cbUnchecked:
-          AttributesToDelete := AttributesToDelete or
-            Cardinal(Mapping[i].Attribute);
+          AttributesToDelete := AttributesToDelete or Mapping[i].Attribute;
         cbChecked:
-          AttributesToAdd := AttributesToAdd or
-            Cardinal(Mapping[i].Attribute);
+          AttributesToAdd := AttributesToAdd or Mapping[i].Attribute;
       end;
   end;
 end;
@@ -290,7 +288,7 @@ begin
   end;
 end;
 
-procedure TDialogPickUser.SetAttributes(const Value: Cardinal);
+procedure TDialogPickUser.SetAttributes(Value: Cardinal);
 var
   i: Integer;
 begin
@@ -298,7 +296,7 @@ begin
     Mapping[i].CheckBox.SetCheckedEx(Contains(Value, Mapping[i].Attribute));
 end;
 
-procedure TDialogPickUser.SetSelectedGroup(const Value: ISid);
+procedure TDialogPickUser.SetSelectedGroup(Value: ISid);
 begin
   IsValidGroup := True;
   SelectedGroup := Value;

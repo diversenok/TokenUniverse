@@ -121,8 +121,8 @@ type
     procedure SetAuditPolicy(const Value: TTokenPerUserAudit);
     procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
-    procedure SetOwner(const Value: ISid);
-    procedure SetPrimaryGroup(const Value: ISid);
+    procedure SetOwner(Value: ISid);
+    procedure SetPrimaryGroup(Value: ISid);
     function GetVirtualizationAllowed: LongBool;
     function GetVirtualizationEnabled: LongBool;
     function GetElevation: TTokenElevationType;
@@ -2074,7 +2074,7 @@ begin
   ValidateCache(tdTokenStatistics);
 end;
 
-procedure TTokenData.SetOwner(const Value: ISid);
+procedure TTokenData.SetOwner(Value: ISid);
 var
   NewOwner: TTokenOwner;
 begin
@@ -2086,7 +2086,7 @@ begin
   ValidateCache(tdTokenStatistics);
 end;
 
-procedure TTokenData.SetPrimaryGroup(const Value: ISid);
+procedure TTokenData.SetPrimaryGroup(Value: ISid);
 var
   NewPrimaryGroup: TTokenPrimaryGroup;
 begin

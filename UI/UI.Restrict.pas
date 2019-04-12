@@ -53,7 +53,8 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings;
+  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings,
+  Winapi.WinNt;
 
 {$R *.dfm}
 
