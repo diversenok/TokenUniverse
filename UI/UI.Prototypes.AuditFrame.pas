@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  Winapi.WinError, NtUtils.Audit, UI.Colors, DelphiUtils.Strings;
+  Ntapi.ntdef, NtUtils.Lsa, UI.Colors, DelphiUtils.Strings;
 
 {$R *.dfm}
 
@@ -215,7 +215,7 @@ var
 begin
   Assert(Assigned(ListView));
 
-  if EnumerateAuditCategiries(AuditEnties) <> ERROR_SUCCESS then
+  if not NT_SUCCESS(LsaxEnumerateAuditCategiries(AuditEnties))then
     Exit;
 
   ListView.Items.BeginUpdate;

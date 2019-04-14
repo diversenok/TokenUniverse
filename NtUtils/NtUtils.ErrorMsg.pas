@@ -101,7 +101,14 @@ end;
 
 function StatusToString(Status: NTSTATUS): String;
 begin
-  Result := StatusNameToString(Status);
+  // Check if it's a fake status based on a Win32 error.
+  // In this case use "ERROR_SOMETHING_WENT_WRONG" messages.
+
+  if NT_NTWIN32(Status) then
+    Result := Win32ErrorNameToString(WIN32_FROM_NTSTATUS(Status))
+  else
+    Result := StatusNameToString(Status);
+
   if Result = '' then
     Result := IntToHexEx(Status, 8);
 end;
@@ -113,7 +120,7 @@ begin
   Result := Msg;
 
   // Remove the prefix
-  if Pos(PossiblePrefix, Result) = Low(Result) then
+  if Result.StartsWith(PossiblePrefix) then
     Delete(Result, Low(Result), Length(PossiblePrefix));
 
   // Lower the case and replace underscores with spaces
@@ -140,34 +147,51 @@ begin
 
   Result := PrettifyError('ERROR_', Result);
 end;
+
 function StatusToDescription(Status: NTSTATUS): String;
 begin
-  // We query the status name which looks like "STATUS_SOMETHING_WENT_WRONG"
-  // and prettify it so it appears like "Something went wrong"
+  if NT_NTWIN32(Status) then
+  begin
+    // This status was converted from a Win32 error.
+    Result := Win32ErrorToDescription(WIN32_FROM_NTSTATUS(Status));
+  end
+  else
+  begin
+    // We query the status name which looks like "STATUS_SOMETHING_WENT_WRONG"
+    // and prettify it so it appears like "Something went wrong"
 
-  Result := StatusNameToString(Status);
+    Result := StatusNameToString(Status);
 
-  if Result = '' then
-    Exit;
+    if Result = '' then
+      Exit;
 
-  Result := PrettifyError('STATUS_', Result);
+    Result := PrettifyError('STATUS_', Result);
+  end;
 end;
 
 function SysNativeErrorMessage(Status: NTSTATUS): String;
 var
   StartFrom: Integer;
 begin
-  // Get error message
-  Result := SysErrorMessage(Status, hNtdll);
-
-  // Fix those messages which are formatted like:
-  //   {Asdf}
-  //   Asdf asdf asdf...
-  if (Length(Result) > 0) and (Result[Low(Result)] = '{') then
+  if NT_NTWIN32(Status) then
   begin
-    StartFrom := Pos('}'#$D#$A, Result);
-    if StartFrom >= Low(Result) then
-      Delete(Result, Low(Result), StartFrom + 2);
+    // This status was converted from a Win32 errors.
+    Result := SysErrorMessage(WIN32_FROM_NTSTATUS(Status));
+  end
+  else
+  begin
+    // Get error message from ntdll
+    Result := SysErrorMessage(Status, hNtdll);
+
+    // Fix those messages which are formatted like:
+    //   {Asdf}
+    //   Asdf asdf asdf...
+    if (Length(Result) > 0) and (Result[Low(Result)] = '{') then
+    begin
+      StartFrom := Pos('}'#$D#$A, Result);
+      if StartFrom >= Low(Result) then
+        Delete(Result, Low(Result), StartFrom + 2);
+    end;
   end;
 
   if Result = '' then

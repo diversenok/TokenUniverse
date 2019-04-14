@@ -59,7 +59,6 @@ uses
   NtUtils.ApiExtension in 'NtUtils\NtUtils.ApiExtension.pas',
   Winapi.winsta in 'Headers\Winapi.winsta.pas',
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
-  NtUtils.Audit in 'NtUtils\NtUtils.Audit.pas',
   DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas',
   DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas',
   NtUtils.DelayedImport in 'NtUtils\NtUtils.DelayedImport.pas',

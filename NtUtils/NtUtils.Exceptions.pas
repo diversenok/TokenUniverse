@@ -150,7 +150,10 @@ end;
 
 function ENtError.ToWinErrorCode: Cardinal;
 begin
-  Result := RtlNtStatusToDosErrorNoTeb(ErrorCode);
+  if NT_NTWIN32(ErrorCode) then
+    Result := WIN32_FROM_NTSTATUS(ErrorCode)
+  else
+    Result := RtlNtStatusToDosErrorNoTeb(ErrorCode);
 end;
 
 { CanFail<ResultType> }

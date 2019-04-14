@@ -65,6 +65,10 @@ function NT_INFORMATION(Status: NTSTATUS): Boolean; inline;
 function NT_WARNING(Status: NTSTATUS): Boolean; inline;
 function NT_ERROR(Status: NTSTATUS): Boolean; inline;
 
+function NTSTATUS_FROM_WIN32(Win32Error: Cardinal): NTSTATUS; inline;
+function NT_NTWIN32(Status: NTSTATUS): Boolean;
+function WIN32_FROM_NTSTATUS(Status: NTSTATUS): Cardinal;
+
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;
   ObjectName: PUNICODE_STRING = nil; Attributes: Cardinal = 0;
   RootDirectory: THandle = 0; QoS: PSecurityQualityOfService = nil); inline;
@@ -96,6 +100,28 @@ end;
 function NT_ERROR(Status: NTSTATUS): Boolean;
 begin
   Result := (Status shr 30) = 3; // C0000000..FFFFFFFF
+end;
+
+function NTSTATUS_FROM_WIN32(Win32Error: Cardinal): NTSTATUS; inline;
+begin
+  // Note: the result is a fake NTSTATUS which is only suitable for storing
+  // the error code without collisions with well-known NTSTATUS values.
+  // Before formatting error messages convert it back to Win32.
+  // Template: C007xxxx
+
+  Result := ERROR_SEVERITY_ERROR or (FACILITY_NTWIN32 shl NT_FACILITY_SHIFT) or
+    (Win32Error and $FFFF);
+end;
+
+function NT_NTWIN32(Status: NTSTATUS): Boolean;
+begin
+  Result := ((Status shr NT_FACILITY_SHIFT) and NT_FACILITY_MASK =
+    FACILITY_NTWIN32);
+end;
+
+function WIN32_FROM_NTSTATUS(Status: NTSTATUS): Cardinal;
+begin
+  Result := Status and $FFFF;
 end;
 
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;

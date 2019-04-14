@@ -46,6 +46,9 @@ function NtxCheckIsWoW64: Boolean;
 // RtlConvertSidToUnicodeString that uses delphi strings
 function RtlxConvertSidToString(SID: PSid): String;
 
+// RtlGetLastNtStatus with extra checks to ensure the result is correct
+function RtlxGetLastNtStatus: NTSTATUS;
+
 implementation
 
 uses
@@ -427,6 +430,21 @@ begin
     Result := SDDL.ToString
   else
     Result := '';
+end;
+
+function RtlxGetLastNtStatus: NTSTATUS;
+begin
+  // If the last Win32 error was set using RtlNtStatusToDosError call followed
+  // by RtlSetLastWin32Error call (aka SetLastError), the LastStatusValue in TEB
+  // should contain the correct NTSTATUS value. The way to check whether it is
+  // correct is to convert it to Win32 error and compare with LastErrorValue
+  // from TEB. If, for some reason, they don't match return a fake NTSTATUS with
+  // a Win32 facility.
+
+  if RtlNtStatusToDosErrorNoTeb(RtlGetLastNtStatus) = RtlGetLastWin32Error then
+    Result := RtlGetLastNtStatus
+  else
+    Result := NTSTATUS_FROM_WIN32(RtlGetLastWin32Error);
 end;
 
 end.
