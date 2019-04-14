@@ -20,6 +20,7 @@ function MapFlags(Value: Cardinal; Mapping: array of TFlagName): String;
 
 function IntToHexEx(Value: Int64; Digits: Integer = 0): String; overload;
 function IntToHexEx(Value: UInt64; Digits: Integer = 0): String; overload;
+function IntToHexEx(Value: Pointer): String; overload;
 
 function TryStrToUInt64Ex(S: String; out Value: UInt64): Boolean;
 function StrToUIntEx(S: String; Comment: String): Cardinal; inline;
@@ -99,6 +100,11 @@ end;
 function IntToHexEx(Value: Int64; Digits: Integer): String;
 begin
   Result := '0x' + IntToHex(Value, Digits);
+end;
+
+function IntToHexEx(Value: Pointer): String;
+begin
+  Result := '0x' + IntToHex(NativeUInt(Value), 8);
 end;
 
 function TryStrToUInt64Ex(S: String; out Value: UInt64): Boolean;

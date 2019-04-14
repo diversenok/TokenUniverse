@@ -5,8 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  TU.Tokens.Types, NtUtils.Exceptions, NtUtils.Types,
-  Winapi.WinNt, Winapi.WinBase, Ntapi.ntseapi, Winapi.NtSecApi;
+  NtUtils.Types, Winapi.WinNt, Ntapi.ntseapi, Winapi.NtSecApi;
 
 type
   TLogonDataClass = (lsLogonId, lsSecurityIdentifier, lsUserName, lsLogonDomain,
@@ -59,7 +58,8 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntutils.Lsa, System.SysUtils, DelphiUtils.Strings;
+  Ntapi.ntdef, NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings,
+  TU.Tokens.Types, NtUtils.ApiExtension;
 
 { TLogonSessionInfo }
 
@@ -246,6 +246,9 @@ var
   Buffer: PSecurityLogonSessionData;
 begin
   // TODO -c WoW64: LsaGetLogonSessionData returns a weird pointer
+  if NtxCheckIsWoW64 then
+    Exit(nil);
+
   if NT_SUCCESS(LsaGetLogonSessionData(LogonId, Buffer)) then
     Result := TLogonSessionInfo.Create(Buffer)
   else

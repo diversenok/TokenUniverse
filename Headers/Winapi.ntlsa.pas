@@ -7,7 +7,7 @@ uses
   Winapi.WinNt, Ntapi.ntdef, Winapi.NtSecApi;
 
 const
-  MAX_PREFERRED_LENGTH = -1;
+  MAX_PREFERRED_LENGTH = MaxInt;
 
   // 1757
   POLICY_VIEW_LOCAL_INFORMATION = $00000001;
@@ -107,8 +107,8 @@ function LsaCreateAccount(PolicyHandle: TLsaHandle;
 // 3338
 function LsaEnumerateAccounts(PolicyHandle: TLsaHandle;
   var EnumerationContext: TLsaEnumerationHandle;
-  out Buffer: PSidArray; PreferedMaximumLength: Cardinal;
-  out CountReturned: Cardinal): NTSTATUS; stdcall; external advapi32;
+  out Buffer: PSidArray; PreferedMaximumLength: Integer;
+  out CountReturned: Integer): NTSTATUS; stdcall; external advapi32;
 
 // 3371
 function LsaEnumeratePrivileges(PolicyHandle: TLsaHandle;
@@ -133,6 +133,14 @@ function LsaAddPrivilegesToAccount(AccountHandle: TLsaHandle;
 function LsaRemovePrivilegesFromAccount(AccountHandle: TLsaHandle;
   AllPrivileges: Boolean; Privileges: PPrivilegeSet): NTSTATUS; stdcall;
   external advapi32;
+
+// 3475
+function LsaGetQuotasForAccount(AccountHandle: TLsaHandle;
+  out QuotaLimits: TQuotaLimits): NTSTATUS; stdcall; external advapi32;
+
+// 3482
+function LsaSetQuotasForAccount(AccountHandle: TLsaHandle;
+  const QuotaLimits: PQuotaLimits): NTSTATUS; stdcall; external advapi32;
 
 // 3574
 function LsaLookupPrivilegeValue(PolicyHandle: TLsaHandle;

@@ -11,8 +11,7 @@ interface
   on the same simple type. }
 
 uses
-  TU.Winapi, Winapi.WinNt, Winapi.NtSecApi, Winapi.securitybaseapi,
-  NtUtils.Exceptions, NtUtils.Lsa, NtUtils.Types;
+  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Types, Ntapi.ntseapi;
 
 type
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
@@ -107,10 +106,8 @@ function SetterMessage(InfoClass: TTokenInformationClass): String;
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, TU.LsaApi, DelphiUtils.Strings,
-  Winapi.WinBase, Winapi.WinError, Winapi.Sddl, Winapi.ntlsa,
-  Ntapi.ntseapi, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl,
-  NtUtils.Strings;
+  System.SysUtils, System.TypInfo, DelphiUtils.Strings,
+  Winapi.ntlsa, Ntapi.ntdef, Ntapi.ntrtl, TU.Winapi;
 
 function GetterMessage(InfoClass: TTokenInformationClass): String;
 begin

@@ -4,7 +4,7 @@ interface
 {$MINENUMSIZE 4}
 
 uses
-  Ntapi.ntdef, Winapi.WinNt, Winapi.WinBase;
+  Ntapi.ntdef, Winapi.WinNt;
 
 const
   NEGOSSP_NAME_A: AnsiString = 'Negotiate';
@@ -54,6 +54,14 @@ type
   TGuidArray = array [Byte] of TGUID;
   PGuidArray = ^TGuidArray;
   TGuidDynArray = array of TGUID;
+
+  // 948
+  TSecurityLogonType = (
+    ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
+    ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
+    ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
+    ltCachedUnlock
+  );
 
   // 2760
   TLsaLastInterLogonInfo = record

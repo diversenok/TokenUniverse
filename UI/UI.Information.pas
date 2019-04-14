@@ -122,7 +122,7 @@ implementation
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
   UI.Information.Access, NtUtils.Processes, NtUtils.Handles,
-  DelphiUtils.Strings, NtUtils.Strings;
+  DelphiUtils.Strings, NtUtils.Strings, Ntapi.ntpsapi;
 
 const
   TAB_INVALIDATED = 0;
@@ -663,11 +663,11 @@ begin
 
   // Add handle from current process and check if there are any other
   for i := 0 to High(Handles) do
-    if Handles[i].UniqueProcessId = GetCurrentProcessId then
+    if Handles[i].UniqueProcessId = NtCurrentProcessId then
       with ListViewProcesses.Items.Add do
       begin
         Caption := 'Current process';
-        SubItems.Add(IntToStr(GetCurrentProcessId));
+        SubItems.Add(IntToStr(NtCurrentProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
         SubItems.Add(AccessToString(Handles[i].GrantedAccess));
         ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
@@ -681,7 +681,7 @@ begin
     ProcSnapshot := TProcessSnapshot.Create;
 
     for i := 0 to High(Handles) do
-    if (Handles[i].UniqueProcessId <> GetCurrentProcessId) then
+    if (Handles[i].UniqueProcessId <> NtCurrentProcessId) then
       with ListViewProcesses.Items.Add do
       begin
         Process := ProcSnapshot.FindByPID(Handles[i].UniqueProcessId);
@@ -707,7 +707,7 @@ begin
         SubItems[0] := 'Unknown'
       else if Assigned(ObjInfo) then
       begin
-        if ObjInfo.CreatorUniqueProcess = GetCurrentProcessId then
+        if ObjInfo.CreatorUniqueProcess = NtCurrentProcessId then
            CreatorImageName := 'Current process'
         else
         begin

@@ -24,7 +24,8 @@ implementation
 uses
   System.UITypes, Vcl.Dialogs, TU.Tokens, TU.Tokens.Types,
   TU.Winapi, Winapi.WinNt, Winapi.WinError,
-  Ntapi.ntdef, Ntapi.ntstatus, NtUtils.Exceptions, NtUtils.ErrorMsg;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntseapi,
+  NtUtils.Exceptions, NtUtils.ErrorMsg;
 
 resourcestring
   TITLE_OS_ERROR = 'System error';

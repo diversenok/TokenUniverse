@@ -238,6 +238,7 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="Headers\Ntapi.ntsam.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

@@ -68,7 +68,8 @@ uses
   NtUtils.Strings in 'NtUtils\NtUtils.Strings.pas',
   NtUtils.Types in 'NtUtils\NtUtils.Types.pas',
   UI.Prototypes.Privileges in 'UI\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
-  UI.Prototypes.Groups in 'UI\UI.Prototypes.Groups.pas' {FrameGroups: TFrame};
+  UI.Prototypes.Groups in 'UI\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
+  Ntapi.ntsam in 'Headers\Ntapi.ntsam.pas';
 
 {$R *.res}
 

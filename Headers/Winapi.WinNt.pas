@@ -11,7 +11,7 @@ const
   advapi32  = 'advapi32.dll';
   secur32 = 'secur32.dll';
 
-  // 8881
+  // 8894
   _DELETE = $00010000;
   READ_CONTROL = $00020000;
   WRITE_DAC = $00040000;
@@ -33,12 +33,12 @@ const
   GENERIC_EXECUTE = $20000000;
   GENERIC_ALL = $10000000;
 
-  // 9007
+  // 9020
   SID_MAX_SUB_AUTHORITIES = 15;
   SECURITY_MAX_SID_STRING_CHARACTERS = 2 + 4 + 15 +
     (11 * SID_MAX_SUB_AUTHORITIES) + 1;
 
-  // 9623
+  // 9641
   SE_GROUP_MANDATORY = $00000001;
   SE_GROUP_ENABLED_BY_DEFAULT = $00000002;
   SE_GROUP_ENABLED = $00000004;
@@ -49,10 +49,10 @@ const
   SE_GROUP_RESOURCE = $20000000;
   SE_GROUP_LOGON_ID = $C0000000;
 
-  // 9682
+  // 9700
   ACL_REVISION = 2;
 
-  // 9738
+  // 9756
   ACCESS_ALLOWED_ACE_TYPE = $0;
   ACCESS_DENIED_ACE_TYPE = $1;
   SYSTEM_AUDIT_ACE_TYPE = $2;
@@ -67,42 +67,58 @@ const
   SYSTEM_PROCESS_TRUST_LABEL_ACE_TYPE = $14;
   SYSTEM_ACCESS_FILTER_ACE_TYPE = $15;
 
-  // 9779
+  // 9797
   OBJECT_INHERIT_ACE = $1;
   CONTAINER_INHERIT_ACE = $2;
   NO_PROPAGATE_INHERIT_ACE = $4;
   INHERIT_ONLY_ACE = $8;
   INHERITED_ACE = $10;
 
-  // 9805
+  // 9834
   SUCCESSFUL_ACCESS_ACE_FLAG = $40;
   FAILED_ACCESS_ACE_FLAG = $80;
 
-  // 9915
+  // 9944
   SYSTEM_MANDATORY_LABEL_NO_WRITE_UP = $1;
   SYSTEM_MANDATORY_LABEL_NO_READ_UP = $2;
   SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP = $4;
 
-  // 10096
+  // 10125
   SECURITY_DESCRIPTOR_REVISION = 1;
 
-  // 10320
+  // 10349
   SE_PRIVILEGE_ENABLED_BY_DEFAULT = $00000001;
   SE_PRIVILEGE_ENABLED = $00000002;
   SE_PRIVILEGE_REMOVED = $00000004;
   SE_PRIVILEGE_USED_FOR_ACCESS = Cardinal($80000000);
 
-  // 10803
+  // 10833
   TOKEN_MANDATORY_POLICY_OFF = $0;
   TOKEN_MANDATORY_POLICY_NO_WRITE_UP = $1;
   TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN = $2;
   TOKEN_MANDATORY_POLICY_VALID_MASK = TOKEN_MANDATORY_POLICY_NO_WRITE_UP or
     TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
 
-  // 10846
-  TOKEN_SOURCE_LENGTH = 8;
+  // 10950
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_INVALID = $00;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_INT64 = $01;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_UINT64 = $02;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_STRING = $03;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_FQBN = $04;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_SID = $05;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_BOOLEAN = $06;
+  CLAIM_SECURITY_ATTRIBUTE_TYPE_OCTET_STRING = $10;
 
-  // 11202
+  // 10995
+  CLAIM_SECURITY_ATTRIBUTE_NON_INHERITABLE = $0001;
+  CLAIM_SECURITY_ATTRIBUTE_VALUE_CASE_SENSITIVE = $0002;
+  CLAIM_SECURITY_ATTRIBUTE_USE_FOR_DENY_ONLY = $0004;
+  CLAIM_SECURITY_ATTRIBUTE_DISABLED_BY_DEFAULT = $0008;
+  CLAIM_SECURITY_ATTRIBUTE_DISABLED = $0010;
+  CLAIM_SECURITY_ATTRIBUTE_MANDATORY = $0020;
+  CLAIM_SECURITY_ATTRIBUTE_CUSTOM_FLAGS = $FFFF0000;
+
+  // 11232
   OWNER_SECURITY_INFORMATION = $00000001;
   GROUP_SECURITY_INFORMATION = $00000002;
   DACL_SECURITY_INFORMATION = $00000004;
@@ -120,7 +136,7 @@ const
   UNPROTECTED_SACL_SECURITY_INFORMATION = $10000000;
 
 type
-  // 818
+  // 823
   TLargeInteger = record
     QuadPart: Int64;
     function ToDateTime: TDateTime;
@@ -128,7 +144,7 @@ type
   end;
   PLargeInteger = ^TLargeInteger;
 
-  // 838
+  // 843
   TULargeInteger = UInt64;
   PULargeInteger = ^TULargeInteger;
 
@@ -146,10 +162,10 @@ type
     Blink: PListEntry;
   end;
 
-  // 8864
+  // 8877
   TAccessMask = Cardinal;
 
-  // 8923
+  // 8936
   TGenericMapping = record
     GenericRead: TAccessMask;
     GenericWrite: TAccessMask;
@@ -158,20 +174,20 @@ type
   end;
   PGenericMapping = ^TGenericMapping;
 
-  // 8944
+  // 8957
   TLuidAndAttributes = packed record // weird alignment...
     Luid: TLuid;
     Attributes: Cardinal;
   end;
   PLuidAndAttributes = ^TLuidAndAttributes;
 
-  // 8984
+  // 8999
   TSidIdentifierAuthority = record
     Value: array [0..5] of Byte;
   end;
   PSidIdentifierAuthority = ^TSidIdentifierAuthority;
 
-  // 8994
+  // 9007
   TSid_Internal = record
    Revision: Byte;
    SubAuthorityCount: Byte;
@@ -185,12 +201,12 @@ type
 
   TSidDynArray = array of PSid;
 
-  // 9042
+  // 9055
   TSidNameUse = (SidTypeZero, SidTypeUser, SidTypeGroup, SidTypeDomain,
     SidTypeAlias, SidTypeWellKnownGroup, SidTypeDeletedAccount, SidTypeInvalid,
     SidTypeUnknown, SidTypeComputer, SidTypeLabel, SidTypeLogonSession);
 
-  // 9056
+  // 9069
   TSidAndAttributes = record
     Sid: PSid;
     Attributes: Cardinal;
@@ -209,7 +225,7 @@ type
   end;
   PSIDAndAttributesHash = ^TSIDAndAttributesHash;
 
-  // 9695
+  // 9713
   TAcl = record
     AclRevision: Byte;
     Sbz1: Byte;
@@ -219,7 +235,7 @@ type
   end;
   PAcl = ^TAcl;
 
-  // 9725
+  // 9743
   TAceHeader = record
     AceType: Byte;
     AceFlags: Byte;
@@ -246,19 +262,19 @@ type
   end;
   PAce = ^TAce;
 
-  // 10054
+  // 10083
   TAclInformationClass = (
     AclRevisionInformation = 1,
     AclSizeInformation = 2
   );
 
-  // 10064
+  // 10093
   TAclRevisionInformation = record
     AclRevision: Cardinal;
   end;
   PAclRevisionInformation = ^TAclRevisionInformation;
 
-  // 10073
+  // 10102
   TAclSizeInformation = record
     AceCount: Cardinal;
     AclBytesInUse: Cardinal;
@@ -266,11 +282,11 @@ type
   end;
   PAclSizeInformation = ^TAclSizeInformation;
 
-  // 10105
+  // 10134
   TSecurityDescriptorControl = Word;
   PSecurityDescriptorControl = ^TSecurityDescriptorControl;
 
-  // 10195
+  // 10234
   TSecurityDescriptor = record
     Revision: Byte;
     Sbz1: Byte;
@@ -282,7 +298,7 @@ type
   end;
   PSecurityDescriptor = ^TSecurityDescriptor;
 
-  // 10346
+  // 10375
   TPrivilegeSet = record
     PrivilegeCount: Cardinal;
     Control: Cardinal;
@@ -290,113 +306,95 @@ type
   end;
   PPrivilegeSet = ^TPrivilegeSet;
 
-  // 10556
+  // 10585
   TSecurityImpersonationLevel = (SecurityAnonymous,
     SecurityIdentification, SecurityImpersonation, SecurityDelegation);
 
-  // 10638
+  // 10667
   TTokenType = (TokenTPad, TokenPrimary, TokenImpersonation);
 
-  // 10650
+  // 10679
   TTokenElevationType = (TokenElevationTPad, TokenElevationTypeDefault,
     TokenElevationTypeFull, TokenElevationTypeLimited);
 
-  // 10661
-  TTokenInformationClass = (
-    TokenInfoTPad = 0, // Required by the compiler to generate TypeInfo
-    TokenUser = 1,
-    TokenGroups = 2,
-    TokenPrivileges = 3,
-    TokenOwner = 4,
-    TokenPrimaryGroup = 5,
-    TokenDefaultDacl = 6,
-    TokenSource = 7,
-    TokenType = 8,
-    TokenImpersonationLevel = 9,
-    TokenStatistics = 10,
-    TokenRestrictedSids = 11,
-    TokenSessionId = 12,
-    TokenGroupsAndPrivileges = 13,
-    TokenSessionReference = 14,
-    TokenSandBoxInert = 15,
-    TokenAuditPolicy = 16,
-    TokenOrigin = 17,
-    TokenElevationType = 18,
-    TokenLinkedToken = 19,
-    TokenElevation = 20,
-    TokenHasRestrictions = 21,
-    TokenAccessInformation = 22,
-    TokenVirtualizationAllowed = 23,
-    TokenVirtualizationEnabled = 24,
-    TokenIntegrityLevel = 25,
-    TokenUIAccess = 26,
-    TokenMandatoryPolicy = 27,
-    TokenLogonSid = 28,
-    TokenIsAppContainer = 29,
-    TokenCapabilities = 30,
-    TokenAppContainerSid = 31,
-    TokenAppContainerNumber = 32,
-    TokenUserClaimAttributes = 33,
-    TokenDeviceClaimAttributes = 34,
-    TokenRestrictedUserClaimAttributes = 35,
-    TokenRestrictedDeviceClaimAttributes = 36,
-    TokenDeviceGroups = 37,
-    TokenRestrictedDeviceGroups = 38,
-    TokenSecurityAttributes = 39,
-    TokenIsRestricted = 40,
-    TokenProcessTrustLevel = 41,
-    TokenPrivateNameSpace = 42,
-    TokenSingletonAttributes = 43,
-    TokenBnoIsolation = 44,
-    TokenChildProcessFlags = 45,
-    MaxTokenInfoClass
-  );
-
-  // 10714
+  // 10744
   TTokenUser = record
     User: TSidAndAttributes;
   end;
   PTokenUser = ^TTokenUser;
 
-  // 10738
+  // 10768
   TTokenGroups = record
     GroupCount: Integer;
     Groups: array[Word] of TSIDAndAttributes;
   end;
   PTokenGroups = ^TTokenGroups;
 
-  // 10747
+  // 10777
   TTokenPrivileges = record
     PrivilegeCount: Integer;
     Privileges: array[Byte] of TLUIDAndAttributes;
   end;
   PTokenPrivileges = ^TTokenPrivileges;
 
-  // 10754
+  // 10783
   TTokenOwner = record
     Owner: PSid;
   end;
   PTokenOwner = ^TTokenOwner;
 
-  // 10761
+  // 10791
   TTokenPrimaryGroup = record
     PrimaryGroup: PSid;
   end;
   PTokenPrimaryGroup = ^TTokenPrimaryGroup;
 
-  // 10766
+  // 10796
   TTokenDefaultDacl = record
     DefaultDacl :PAcl;
   end;
   PTokenDefaultDacl = ^TTokenDefaultDacl;
 
-  // 10814
+  // 10808
+  TTokenGroupsAndPrivileges = record
+    SidCount: Cardinal;
+    SidLength: Cardinal;
+    Sids: PSidAndAttributes;
+    RestrictedSidCount: Cardinal;
+    RestrictedSidLength: Cardinal;
+    RestrictedSids: PSidAndAttributes;
+    PrivilegeCount: Cardinal;
+    PrivilegeLength: Cardinal;
+    Privileges: PLuidAndAttributes;
+    AuthenticationId: TLuid;
+  end;
+  PTokenGroupsAndPrivileges = ^TTokenGroupsAndPrivileges;
+
+  // 10821
+  TTokenLinkedToken = record
+    LinkedToken: THandle;
+  end;
+  PTokenLinkedToken = ^TTokenLinkedToken;
+
+  // 10825
+  TTokenElevation = record
+    TokenIsElevated: LongBool;
+  end;
+  PTokenElevation = ^TTokenElevation;
+
+  // 10829
+  TTokenMandatoryLabel = record
+    MandatoryLabel: TSidAndAttributes;
+  end;
+  PTokenMandatoryLabel = ^TTokenMandatoryLabel;
+
+  // 10844
   TTokenMandatoryPolicy = record
     Policy: Cardinal;
   end;
   PTokenMandatoryPolicy = ^TTokenMandatoryPolicy;
 
-  // 10820
+  // 10850
   TTokenAccessInformation = record
     SidHash: PSIDAndAttributesHash;
     RestrictedSidHash: PSIDAndAttributesHash;
@@ -414,7 +412,7 @@ type
   end;
   PTokenAccessInformation = ^TTokenAccessInformation;
 
-  // 10842
+  // 10872
   TTokenAuditPolicy = record
     // The actual length depends on the count of SubCategories of auditing.
     // Each half of a byte is a set of Winapi.NtSecApi.PER_USER_AUDIT_* flags.
@@ -422,14 +420,16 @@ type
   end;
   PTokenAuditPolicy = ^TTokenAuditPolicy;
 
-  // 10848
+  // 10878
   TTokenSource = record
+    const TOKEN_SOURCE_LENGTH = 8;
+  var
     sourcename: array[1 .. TOKEN_SOURCE_LENGTH] of AnsiChar;
     SourceIdentifier: TLuid;
   end;
   PTokenSource = ^TTokenSource;
 
-  // 10854
+  // 10884
   TTokenStatistics = record
     TokenId: TLuid;
     AuthenticationId: TLuid;
@@ -444,7 +444,39 @@ type
   end;
   PTokenStatistics = ^TTokenStatistics;
 
-  // 11176
+  // 10906
+  TTokenOrigin = record
+    OriginatingLogonSession: TLuid;
+  end;
+  PTokenOrigin = ^TTokenOrigin;
+
+  // 10929
+  TTokenAppContainer = record
+    TokenAppContainer: PSid;
+  end;
+  PTokenAppContainer = ^TTokenAppContainer;
+
+  // 11051
+  TClainSecurityAttributeV1 = record
+    Name: PWideChar;
+    ValueType: Word;
+    Reserved: Word;
+    Flags: Cardinal;
+    ValueCount: Integer;
+    Values: Pointer;
+  end;
+  PClainSecurityAttributeV1 = ^TClainSecurityAttributeV1;
+
+  // 11170
+  TClaimSecurityAttributes = record
+    Version: Word;
+    Reserved: Word;
+    AttributeCount: Cardinal;
+    Attribute: PClainSecurityAttributeV1;
+  end;
+  PClaimSecurityAttributes = ^TClaimSecurityAttributes;
+
+  // 11206
   TSecurityQualityOfService = record
     Length: Cardinal;
     ImpersonationLevel: TSecurityImpersonationLevel;
@@ -453,11 +485,11 @@ type
   end;
   PSecurityQualityOfService = ^TSecurityQualityOfService;
 
-  // 11200
+  // 11230
   TSecurityInformation = Cardinal;
   PSecurityInformation = ^TSecurityInformation;
 
-  // 11450
+  // 11481
   TQuotaLimits = record
     PagedPoolLimit: NativeUInt;
     NonPagedPoolLimit: NativeUInt;
@@ -491,6 +523,7 @@ function GetTimeZoneBias: Int64;
 var
   TimeZoneInfo: TRtlTimeZoneInformation;
 begin
+  // After call to NtQuerySystemInformation we get timezone bias in minutes
   if NT_SUCCESS(NtQuerySystemInformation(SystemCurrentTimeZoneInformation,
     @TimeZoneInfo, SizeOf(TimeZoneInfo), nil)) then
     Result := Int64(TimeZoneInfo.Bias) * MINUTE_TO_NATIVE_TIME

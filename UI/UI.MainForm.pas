@@ -130,7 +130,7 @@ uses
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
-  UI.New.Safer;
+  UI.New.Safer, Ntapi.ntpsapi;
 
 {$R *.dfm}
 
@@ -343,7 +343,7 @@ begin
   TokenView := TTokenViewSource.Create(ListViewTokens);
 
   // Search for inherited handles
-  Handles := THandleSnapshot.OfProcess(GetCurrentProcessId);
+  Handles := THandleSnapshot.OfProcess(NtCurrentProcessId);
   for i := 0 to High(Handles) do
     TokenView.Add(TToken.CreateByHandle(Handles[i]));
 

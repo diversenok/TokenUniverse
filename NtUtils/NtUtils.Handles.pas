@@ -76,7 +76,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntrtl, Winapi.WinBase, NtUtils.Exceptions;
+  Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntpsapi, NtUtils.Exceptions;
 
 function AddToPointer(P: Pointer; Size: NativeUInt): Pointer;
 begin
@@ -92,7 +92,7 @@ var
 begin
   with THandleSnapshot.Create do
   try
-    Handles := FilterByProcess(GetCurrentProcessId);
+    Handles := FilterByProcess(NtCurrentProcessId);
     Result := Status;
   finally
     Free;

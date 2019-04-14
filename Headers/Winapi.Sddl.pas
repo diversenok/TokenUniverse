@@ -3,7 +3,7 @@ unit Winapi.Sddl;
 interface
 
 uses
-  Winapi.WinNt, Winapi.WinBase;
+  Winapi.WinNt;
 
 function ConvertSidToStringSidW(Sid: PSid; var StringSid: PWideChar): LongBool;
   stdcall; external advapi32;

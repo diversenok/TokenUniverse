@@ -4,7 +4,7 @@ unit Ntapi.ntpsapi;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpebteb;
 
 const
   PROCESS_TERMINATE = $0001;
@@ -37,6 +37,10 @@ const
   NtCurrentProcess: THandle = THandle(-1);
   NtCurrentThread: THandle = THandle(-2);
 
+  // Not NT, but useful
+  function NtCurrentProcessId: NativeUInt;
+  function NtCurrentThreadId: NativeUInt;
+
 type
   TProcessInfoClass = (
     ProcessAccessToken = 9, // s: TProcessAccessToken
@@ -46,7 +50,9 @@ type
   );
 
   TThreadInfoClass = (
-    ThreadImpersonationToken = 5 // s: THandle
+    ThreadBasicInformation = 0, // q: TThreadBasicInformation
+    ThreadImpersonationToken = 5, // s: THandle
+    ThreadIsTerminated = 20 // q: LongBool
   );
 
   // ProcessAccessToken
@@ -54,6 +60,16 @@ type
     Token: THandle; // needs TOKEN_ASSIGN_PRIMARY
     Thread: THandle; // needs THREAD_QUERY_INFORMATION
   end;
+
+  TThreadBasicInformation = record
+    ExitStatus: NTSTATUS;
+    TebBaseAddress: PTeb;
+    ClientId: TClientId;
+    AffinityMask: NativeUInt;
+    Priority: KPRIORITY;
+    BasePriority: Integer;
+  end;
+  PThreadBasicInformation = ^TThreadBasicInformation;
 
 function NtOpenProcess(out ProcessHandle: THandle; DesiredAccess: TAccessMask;
   const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
@@ -89,6 +105,11 @@ function NtOpenThread(out ThreadHandle: THandle; DesiredAccess: TAccessMask;
   const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
   NTSTATUS; stdcall; external ntdll;
 
+function NtQueryInformationThread(ThreadHandle: THandle;
+  ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;
+  ThreadInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
+  stdcall; external ntdll;
+
 function NtSetInformationThread(ThreadHandle: THandle;
   ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;
   ThreadInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
@@ -110,5 +131,15 @@ function NtImpersonateThread(ServerThreadHandle: THandle;
   NTSTATUS; stdcall; external ntdll;
 
 implementation
+
+function NtCurrentProcessId: NativeUInt;
+begin
+  Result := NtCurrentTeb.ClientId.UniqueProcess;
+end;
+
+function NtCurrentThreadId: NativeUInt;
+begin
+  Result := NtCurrentTeb.ClientId.UniqueThread;
+end;
 
 end.

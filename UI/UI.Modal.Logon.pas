@@ -5,7 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.ChildForm, Vcl.ComCtrls,
-  UI.ListViewEx, UI.Prototypes, TU.LsaApi, Winapi.WinBase, UI.Prototypes.Groups;
+  UI.ListViewEx, UI.Prototypes, TU.LsaApi, UI.Prototypes.Groups,
+  Winapi.WinBase, Winapi.NtSecApi;
 
 type
   TLogonDialog = class(TChildForm)

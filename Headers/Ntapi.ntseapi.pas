@@ -32,7 +32,59 @@ const
   WRITE_RESTRICTED = $8;
 
   SE_MIN_WELL_KNOWN_PRIVILEGE = 2;
-  SE_MAX_WELL_KNOWN_PRIVILEGE = 35;
+  SE_MAX_WELL_KNOWN_PRIVILEGE = 36;
+
+type
+  // WinNt.10661
+  TTokenInformationClass = (
+    TokenInfoTPad = 0, // [Required to generate TypeInfo]
+    TokenUser = 1,                             // q: TTokenUser
+    TokenGroups = 2,                           // q: TTokenGroups
+    TokenPrivileges = 3,                       // q: TTokenPrivileges
+    TokenOwner = 4,                            // q, s: TTokenOwner
+    TokenPrimaryGroup = 5,                     // q, s: TTokenPrimaryGroup
+    TokenDefaultDacl = 6,                      // q, s: TTokenDefaultDacl
+    TokenSource = 7,                           // q: TTokenSource
+    TokenType = 8,                             // q: TTokenType
+    TokenImpersonationLevel = 9,               // q: TSecurityImpersonationLevel
+    TokenStatistics = 10,                      // q: TTokenStatistics
+    TokenRestrictedSids = 11,                  // q: TTokenGroups
+    TokenSessionId = 12,                       // q, s: Cardinal
+    TokenGroupsAndPrivileges = 13,             // q: TTokenGroupsAndPrivileges
+    TokenSessionReference = 14,                // s: LongBool
+    TokenSandBoxInert = 15,                    // q: LongBool
+    TokenAuditPolicy = 16,                     // q, s: TTokenAuditPolicy
+    TokenOrigin = 17,                          // q, s: TTokenOrigin
+    TokenElevationType = 18,                   // q: TTokenElevationType
+    TokenLinkedToken = 19,                     // q, s: TTokenLinkedToken
+    TokenElevation = 20,                       // q: TTokenElevation
+    TokenHasRestrictions = 21,                 // q: LongBool
+    TokenAccessInformation = 22,               // q: TTokenAccessInformation
+    TokenVirtualizationAllowed = 23,           // q, s: LongBool
+    TokenVirtualizationEnabled = 24,           // q, s: LongBool
+    TokenIntegrityLevel = 25,                  // q, s: TTokenMandatoryLabel
+    TokenUIAccess = 26,                        // q, s: LongBool
+    TokenMandatoryPolicy = 27,                 // q, s: TTokenMandatoryPolicy
+    TokenLogonSid = 28,                        // q: TTokenGroups
+    TokenIsAppContainer = 29,                  // q: LongBool
+    TokenCapabilities = 30,                    // q: TTokenGroups
+    TokenAppContainerSid = 31,                 // q: TTokenAppContainer
+    TokenAppContainerNumber = 32,              // q: Cardinal
+    TokenUserClaimAttributes = 33,             // q: TClaimSecurityAttributes
+    TokenDeviceClaimAttributes = 34,           // q: TClaimSecurityAttributes
+    TokenRestrictedUserClaimAttributes = 35,   // q:
+    TokenRestrictedDeviceClaimAttributes = 36, // q:
+    TokenDeviceGroups = 37,                    // q: TTokenGroups
+    TokenRestrictedDeviceGroups = 38,          // q: TTokenGroups
+    TokenSecurityAttributes = 39,              // q, s:
+    TokenIsRestricted = 40,                    // q: LongBool
+    TokenProcessTrustLevel = 41,               // q:
+    TokenPrivateNameSpace = 42,                // q, s: LongBool
+    TokenSingletonAttributes = 43,             // q:
+    TokenBnoIsolation = 44,                    // q:
+    TokenChildProcessFlags = 45,               // q:
+    TokenIsLessPrivilegedAppContainer = 46     // q:
+  );
 
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;

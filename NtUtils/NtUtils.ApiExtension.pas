@@ -4,7 +4,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntobapi;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntobapi, Ntapi.ntseapi;
 
 { -------------------------------- Objects --------------------------------- }
 
@@ -32,11 +32,14 @@ function NtxCompareTokens(hToken1, hToken2: THandle): NTSTATUS;
 // NtSetInformationThread that doesn't duplicate tokens to Identification level
 function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): NTSTATUS;
 
-{ -------------------------------- Threads --------------------------------- }
+{ -------------------------- Processes & Threads --------------------------- }
 
 // NtOpenThread that might return a pseudo-handle
 function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
   TID: NativeUInt): NTSTATUS;
+
+// Checks if current process is running under WoW64
+function NtxCheckIsWoW64: Boolean;
 
 { ---------------------------------- RTL ----------------------------------- }
 
@@ -46,7 +49,7 @@ function RtlxConvertSidToString(SID: PSid): String;
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi, Ntapi.ntrtl, Winapi.WinBase,
+  Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl,
   NtUtils.Exceptions, NtUtils.Handles, NtUtils.DelayedImport, System.SysUtils;
 
 { Objects }
@@ -377,7 +380,7 @@ begin
     NtxSafeClose(hOldStateToken);
 end;
 
-{ Threads }
+{ Processes & Threads }
 
 function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
   TID: NativeUInt): NTSTATUS;
@@ -385,7 +388,7 @@ var
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
 begin
-  if TID = GetCurrentThreadId then
+  if TID = NtCurrentThreadId then
   begin
     hThread := NtCurrentThread;
     Result := STATUS_SUCCESS;
@@ -396,6 +399,17 @@ begin
     ClientId.Create(0, TID);
     Result := NtOpenThread(hThread, DesiredAccess, ObjAttr, ClientId);
   end;
+end;
+
+function NtxCheckIsWoW64: Boolean;
+var
+  IsWoW64: NativeUInt;
+begin
+  if NT_SUCCESS(NtQueryInformationProcess(NtCurrentProcess,
+    ProcessWow64Information, @IsWoW64, SizeOf(IsWoW64), nil)) then
+    Result := IsWoW64 <> 0
+  else
+    Result := True;
 end;
 
 { RTL }

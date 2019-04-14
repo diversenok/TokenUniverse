@@ -8,7 +8,7 @@ uses
   System.SysUtils, System.Generics.Collections, NtUtils.Exceptions,
   Ntapi.ntdef, Ntapi.ntobapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
   TU.Winapi, TU.Tokens.Types, NtUtils.Handles, DelphiUtils.Events, TU.LsaApi,
-  NtUtils.Types;
+  NtUtils.Types, Ntapi.ntseapi, Winapi.NtSecApi;
 
 type
   /// <summary>
@@ -465,8 +465,8 @@ implementation
 
 uses
   System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension, DelphiUtils.Strings,
-  Winapi.WinError, Winapi.NtSecApi, Winapi.winsta, Ntapi.ntstatus,
-  Ntapi.ntpsapi, Ntapi.ntseapi, Ntapi.ntrtl, NtUtils.Strings;
+  Winapi.WinError, Winapi.winsta, Ntapi.ntstatus,
+  Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -633,7 +633,7 @@ begin
   // This information might be already known (from a constructor)
   if HandleInformation.PObject = nil then
   begin
-    OurHandles := THandleSnapshot.OfProcess(GetCurrentProcessId);
+    OurHandles := THandleSnapshot.OfProcess(NtCurrentProcessId);
 
     for i := 0 to High(OurHandles) do
       if OurHandles[i].HandleValue = hToken then
@@ -815,7 +815,7 @@ end;
 
 constructor TToken.CreateByHandle(HandleInfo: THandleInfo);
 begin
-  if HandleInfo.UniqueProcessId <> GetCurrentProcessId then
+  if HandleInfo.UniqueProcessId <> NtCurrentProcessId then
     raise ENotImplemented.Create('TODO');
 
   hToken := HandleInfo.HandleValue;
@@ -912,7 +912,7 @@ end;
 
 constructor TToken.CreateOpenCurrent(Access: TAccessMask);
 begin
-  CreateOpenProcess(GetCurrentProcessId, 'Current process');
+  CreateOpenProcess(NtCurrentProcessId, 'Current process');
 end;
 
 constructor TToken.CreateOpenEffective(TID: NativeUInt; ImageName: String;
@@ -967,7 +967,7 @@ var
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
 begin
-  if PID = GetCurrentProcessId then
+  if PID = NtCurrentProcessId then
     hProcess := NtCurrentProcess
   else
   begin
@@ -1012,7 +1012,7 @@ var
   ReturedSize: Cardinal;
   Buffer: TWinStationUserToken;
 begin
-  Buffer.ClientID.Create(GetCurrentProcessId, GetCurrentThreadId);
+  Buffer.ClientID.Create(NtCurrentProcessId, NtCurrentThreadId);
   Buffer.UserToken := 0;
 
   WinCheck(WinStationQueryInformationW(SERVER_CURRENT, SessionID,
@@ -1057,7 +1057,6 @@ end;
 constructor TToken.CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
   User: String; const Source: TTokenSource; AddGroups: TGroupArray);
 var
-  IsWow64: NativeUInt;
   Status, SubStatus: NTSTATUS;
   LsaHandle: TLsaHandle;
   PkgName: ANSI_STRING;
@@ -1072,9 +1071,7 @@ var
   Quotas: TQuotaLimits;
 begin
   // TODO -c WoW64: LsaLogonUser overwrites our memory
-  if not NT_SUCCESS(NtQueryInformationProcess(NtCurrentProcess,
-    ProcessWow64Information, @IsWow64, SizeOf(IsWow64), nil)) or
-    (IsWow64 <> 0) then
+  if NtxCheckIsWoW64 then
     raise ENotSupportedException.Create('S4U is not supported under WoW64');
 
   // Connect to the LSA
