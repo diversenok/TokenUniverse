@@ -70,22 +70,53 @@ constructor TSid.CreateFromString(AccountOrSID: String);
 var
   Status: NTSTATUS;
   Buffer: PSid;
+  IdentifierAuthorityUInt64: UInt64;
+  IdentifierAuthority: TSidIdentifierAuthority;
 begin
-  // Check if it's a valid account name first. If not, try to parse it as SDDL.
-  // It should be done in such order since someone might create an account
-  // which name can be parsed as SDDL.
+  // Since someone might create an account which name is a valid SDDL string,
+  // lookup the account name first. Parse it as SDDL only if this lookup failed.
 
   Status := LsaxLookupUserName(AccountOrSID, FSid);
 
   if not NT_SUCCESS(Status) and AccountOrSID.StartsWith('S-1-', True) then
   begin
-    WinCheck(ConvertStringSidToSidW(PWideChar(AccountOrSID), Buffer),
-      'ConvertStringSidToSidW');
+    // Despite the fact that RtlConvertSidToUnicodeString can convert SIDs with
+    // zero sub authorities to SDDL, ConvertStringSidToSidW (for some reason)
+    // can't convert them back. Fix this behaviour by parsing them manually.
 
-    try
-      CreateCopy(Buffer);
-    finally
-      LocalFree(Buffer);
+    // Expected formats for an SID with 0 sub authorities:
+    //        S-1-(\d+)     |     S-1-(0x[A-F\d]+)
+    // where the value fits into a 6-byte (48-bit) buffer
+
+    if TryStrToUInt64Ex(Copy(AccountOrSID, Length('S-1-') + 1,
+      Length(AccountOrSID)), IdentifierAuthorityUInt64) and
+      (IdentifierAuthorityUInt64 < UInt64(1) shl 48) then
+    begin
+      IdentifierAuthority.Value[0] := Byte(IdentifierAuthorityUInt64 shr 40);
+      IdentifierAuthority.Value[1] := Byte(IdentifierAuthorityUInt64 shr 32);
+      IdentifierAuthority.Value[2] := Byte(IdentifierAuthorityUInt64 shr 24);
+      IdentifierAuthority.Value[3] := Byte(IdentifierAuthorityUInt64 shr 16);
+      IdentifierAuthority.Value[4] := Byte(IdentifierAuthorityUInt64 shr 8);
+      IdentifierAuthority.Value[5] := Byte(IdentifierAuthorityUInt64 shr 0);
+
+      Buffer := AllocMem(RtlLengthRequiredSid(0));
+      try
+        RtlInitializeSid(Buffer, IdentifierAuthority, 0);
+        CreateCopy(Buffer);
+      finally
+        FreeMem(Buffer);
+      end;
+    end
+    else
+    begin
+      WinCheck(ConvertStringSidToSidW(PWideChar(AccountOrSID), Buffer),
+        'ConvertStringSidToSidW');
+
+      try
+        CreateCopy(Buffer);
+      finally
+        LocalFree(Buffer);
+      end;
     end;
   end
   else
