@@ -9,6 +9,7 @@ uses
 type
   TFrameGroups = class(TFrame)
     ListView: TListViewEx;
+    procedure ListViewDblClick(Sender: TObject);
   private
     FGroups: TGroupArray;
     function SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
@@ -34,7 +35,7 @@ type
 implementation
 
 uses
-  UI.Colors, NtUtils.Strings, UI.Modal.PickUser;
+  UI.Colors, NtUtils.Strings, UI.Modal.PickUser, UI.Sid.View;
 
 {$R *.dfm}
 
@@ -116,6 +117,12 @@ begin
   Result := Copy(FGroups, 0, Length(FGroups));
 end;
 
+procedure TFrameGroups.ListViewDblClick(Sender: TObject);
+begin
+  if Assigned(ListView.Selected) then
+    TDialogSidView.CreateView(Group[ListView.Selected.Index].SecurityIdentifier);
+end;
+
 procedure TFrameGroups.RemoveGroup(Index: Integer);
 begin
   if (Index < 0) or (Index > High(FGroups)) then
@@ -153,7 +160,7 @@ end;
 
 function TFrameGroups.SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
 begin
-  Item.Cell[0] := Group.SecurityIdentifier.Lookup.FullName;
+  Item.Cell[0] := Group.SecurityIdentifier.NewLookup.FullName;
   Item.Cell[1] := StateOfGroupToString(Group.Attributes);
   Item.Cell[2] := MapKnownFlags(Group.Attributes, bmGroupFlags);
   Item.Hint := BuildSidHint(Group.SecurityIdentifier.Lookup, Group.Attributes);

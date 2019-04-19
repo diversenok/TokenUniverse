@@ -68,8 +68,8 @@ function RtlAllocateAndInitializeSid(const IdentifierAuthority:
   SubAuthority7: Cardinal; out Sid: PSid): NTSTATUS; stdcall;
   external ntdll;
 
-function RtlInitializeSid(Sid: PSid; const IdentifierAuthority:
-  TSidIdentifierAuthority; SubAuthorityCount: Byte): NTSTATUS; stdcall;
+function RtlInitializeSid(Sid: PSid; IdentifierAuthority:
+  PSidIdentifierAuthority; SubAuthorityCount: Byte): NTSTATUS; stdcall;
   external ntdll;
 
 function RtlIdentifierAuthoritySid(Sid: PSid): PSidIdentifierAuthority; stdcall;

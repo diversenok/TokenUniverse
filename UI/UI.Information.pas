@@ -93,6 +93,7 @@ type
     procedure BtnSetVAllowedClick(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
     procedure ListViewGeneralDblClick(Sender: TObject);
+    procedure EditUserDblClick(Sender: TObject);
   private
     Token: TToken;
     SessionSource: TSessionSource;
@@ -121,7 +122,7 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
-  UI.Information.Access, NtUtils.Processes, NtUtils.Handles,
+  UI.Information.Access, UI.Sid.View, NtUtils.Processes, NtUtils.Handles,
   DelphiUtils.Strings, NtUtils.Strings, Ntapi.ntpsapi;
 
 const
@@ -438,6 +439,12 @@ end;
 procedure TInfoDialog.DoCloseForm(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TInfoDialog.EditUserDblClick(Sender: TObject);
+begin
+  if Token.InfoClass.Query(tdTokenUser) then
+    TDialogSidView.CreateView(Token.InfoClass.User.SecurityIdentifier);
 end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);

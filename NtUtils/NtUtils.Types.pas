@@ -19,6 +19,9 @@ type
     function Lookup: TTranslatedName;
     function NewLookup: TTranslatedName;
     function EqualsTo(Sid2: ISid): Boolean;
+    function SDDL: String;
+    function SubAuthorities: Byte;
+    function ParentSid: ISid;
   end;
 
   TSid = class(TInterfacedObject, ISid)
@@ -36,6 +39,9 @@ type
     function Lookup: TTranslatedName;
     function NewLookup: TTranslatedName;
     function EqualsTo(Sid2: ISid): Boolean;
+    function SDDL: String;
+    function SubAuthorities: Byte;
+    function ParentSid: ISid;
   end;
 
   TGroup = record
@@ -50,8 +56,8 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, Winapi.WinBase, Winapi.Sddl,
-  NtUtils.Exceptions, System.SysUtils;
+  Ntapi.ntdef, Ntapi.ntrtl, Winapi.WinBase, Winapi.Sddl, DelphiUtils.Strings,
+  NtUtils.Exceptions, System.SysUtils, NtUtils.ApiExtension;
 
 { TSid }
 
@@ -101,7 +107,7 @@ begin
 
       Buffer := AllocMem(RtlLengthRequiredSid(0));
       try
-        RtlInitializeSid(Buffer, IdentifierAuthority, 0);
+        RtlInitializeSid(Buffer, @IdentifierAuthority, 0);
         CreateCopy(Buffer);
       finally
         FreeMem(Buffer);
@@ -173,9 +179,48 @@ begin
   Result := FLookup;
 end;
 
+function TSid.ParentSid: ISid;
+var
+  Buffer: PSid;
+  i: Integer;
+begin
+  // The rule is simple: we drop the last sub-authority and create a new SID.
+
+  if SubAuthorities = 0 then
+    Result := nil
+  else
+  begin
+    Buffer := AllocMem(RtlLengthRequiredSid(SubAuthorities - 1));
+    try
+      // Copy identifier authority
+      if not NT_SUCCESS(RtlInitializeSid(Buffer,
+        RtlIdentifierAuthoritySid(FSid), SubAuthorities - 1)) then
+        Exit(nil);
+
+      // Copy sub authorities
+      for i := 0 to RtlSubAuthorityCountSid(Buffer)^ - 1 do
+        RtlSubAuthoritySid(Buffer, i)^ := RtlSubAuthoritySid(FSid, i)^;
+
+      Result := TSid.CreateCopy(Buffer);
+    finally
+      FreeMem(Buffer);
+    end;
+  end;
+end;
+
+function TSid.SDDL: String;
+begin
+  Result := RtlxConvertSidToString(FSid);
+end;
+
 function TSid.Sid: PSid;
 begin
   Result := FSid;
+end;
+
+function TSid.SubAuthorities: Byte;
+begin
+  Result := RtlSubAuthorityCountSid(FSid)^;
 end;
 
 end.

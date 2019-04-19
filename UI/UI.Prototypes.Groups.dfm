@@ -31,6 +31,7 @@ object FrameGroups: TFrameGroups
     RowSelect = True
     TabOrder = 0
     ViewStyle = vsReport
+    OnDblClick = ListViewDblClick
     ClipboardSourceColumn = 0
     ColoringItems = True
   end

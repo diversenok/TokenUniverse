@@ -56,6 +56,7 @@ object InfoDialog: TInfoDialog
         ReadOnly = True
         TabOrder = 1
         Text = 'Unknown user'
+        OnDblClick = EditUserDblClick
       end
       object StaticSession: TStaticText
         Left = 7

@@ -2022,7 +2022,7 @@ begin
   mandatoryLabel.Sid := AllocMem(RtlLengthRequiredSid(1));
   try
     NativeCheck(RtlInitializeSid(mandatoryLabel.Sid,
-      SECURITY_MANDATORY_LABEL_AUTHORITY, 1), 'RtlInitializeSid');
+      @SECURITY_MANDATORY_LABEL_AUTHORITY, 1), 'RtlInitializeSid');
 
     RtlSubAuthoritySid(mandatoryLabel.Sid, 0)^ := Cardinal(Value);
     mandatoryLabel.Attributes := SE_GROUP_INTEGRITY_ENABLED;
