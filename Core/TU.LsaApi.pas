@@ -59,60 +59,9 @@ implementation
 
 uses
   Ntapi.ntdef, NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings,
-  TU.Tokens.Types, NtUtils.ApiExtension;
+  TU.Tokens.Types, NtUtils.ApiExtension, Winapi.ntlsa, NtUtils.Strings;
 
 { TLogonSessionInfo }
-
-const
-  USER_FLAGS_COUNT = 19;
-  FlagValues: array [1 .. USER_FLAGS_COUNT] of Cardinal = (LOGON_GUEST,
-    LOGON_NOENCRYPTION, LOGON_CACHED_ACCOUNT, LOGON_USED_LM_PASSWORD,
-    LOGON_EXTRA_SIDS, LOGON_SUBAUTH_SESSION_KEY, LOGON_SERVER_TRUST_ACCOUNT,
-    LOGON_NTLMV2_ENABLED, LOGON_RESOURCE_GROUPS, LOGON_PROFILE_PATH_RETURNED,
-    LOGON_NT_V2, LOGON_LM_V2, LOGON_NTLM_V2, LOGON_OPTIMIZED, LOGON_WINLOGON,
-    LOGON_PKINIT, LOGON_NO_OPTIMIZED, LOGON_NO_ELEVATION, LOGON_MANAGED_SERVICE
-  );
-  FlagStrings: array [1 .. USER_FLAGS_COUNT] of String = ('Guest',
-    'No Encryption', 'Cached Account', 'Used LM Password', 'Extra SIDs',
-    'Subauth Session Key', 'Server Trust Account', 'NTLMv2 Enabled',
-    'Resource Groups', 'Profile Path Returned', 'NTv2', 'LMv2', 'NTLMv2',
-    'Optimized', 'Winlogon', 'Pkinit', 'No Optimized', 'No Elevation',
-    'Managed Service'
-  );
-
-function UserFlagsToString(UserFlags: Cardinal): String;
-var
-  Strings: array of string;
-  FlagInd, StrInd: Integer;
-begin
-  if UserFlags = 0 then
-    Exit('');
-
-  SetLength(Strings, USER_FLAGS_COUNT);
-  StrInd := 0;
-  for FlagInd := 1 to USER_FLAGS_COUNT do
-    if UserFlags and FlagValues[FlagInd] = FlagValues[FlagInd] then
-    begin
-      Strings[StrInd] := FlagStrings[FlagInd];
-      Inc(StrInd);
-    end;
-  SetLength(Strings, StrInd);
-  Result := String.Join(', ', Strings);
-end;
-
-function LogonTypeToString(LogonType: TSecurityLogonType): String;
-const
-  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
-    'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
-    'Network clear text', 'New credentials', 'Remote interactive',
-    'Cached interactive', 'Cached remote interactive', 'Cached unlock');
-begin
-  if (LogonType >= Low(TSecurityLogonType)) and (LogonType <=
-    High(TSecurityLogonType)) then
-    Result := Mapping[LogonType]
-  else
-    Result := IntToStr(Integer(LogonType)) + ' (Out of bound)';
-end;
 
 constructor TLogonSessionInfo.Create(OwnedData: PSecurityLogonSessionData);
 begin
@@ -170,7 +119,7 @@ begin
       Result := Data.AuthenticationPackage.ToString;
 
     lsLogonType:
-      Result := LogonTypeToString(Data.LogonType);
+      Result := EnumLogonTypeToString(Data.LogonType);
 
     lsSession:
       Result := Data.Session.ToString;
@@ -188,7 +137,7 @@ begin
       Result := Data.Upn.ToString;
 
     lsUserFlags:
-      Result := UserFlagsToString(Data.UserFlags);
+      Result := MapKnownFlags(Data.UserFlags, bmLogonFlags);
 
     lsLastSuccessfulLogon:
       Result := NativeTimeToString(Data.LastLogonInfo.LastSuccessfulLogon);
@@ -256,19 +205,11 @@ begin
 end;
 
 function TLogonSessionInfo.UserFlagsHint: String;
-var
-  Strings: array of string;
-  i: Integer;
 begin
   if not Assigned(Self) then
     Exit('');
 
-  SetLength(Strings, Length(FlagValues));
-  for i := 1 to USER_FLAGS_COUNT do
-    Strings[i - 1] := CheckboxToString(Data.UserFlags and FlagValues[i] =
-      FlagValues[i]) + ' ' + FlagStrings[i];
-
-  Result := String.Join(#$D#$A, Strings);
+  Result := MapKnownFlagsHint(Data.UserFlags, bmLogonFlags);
 end;
 
 { TPrivilegeCache }

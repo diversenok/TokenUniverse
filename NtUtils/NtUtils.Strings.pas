@@ -3,18 +3,20 @@ unit NtUtils.Strings;
 interface
 
 uses
-  Winapi.WinNt, NtUtils.Lsa;
+  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Lsa;
 
 type
-  TBitFlagMode = (bmGroupFlags);
+  TBitFlagMode = (bmGroupFlags, bmLogonFlags);
 
 // Bit Flags
 function MapKnownFlags(Value: Cardinal; Mode: TBitFlagMode): String;
+function MapKnownFlagsHint(Value: Cardinal; Mode: TBitFlagMode): String;
 
 // Enumerations
 function EnumOutOfBoundString(Value: Cardinal): String;
 function EnumElevationToString(Value: TTokenElevationType): String;
 function EnumSidTypeToString(Value: TSidNameUse): String;
+function EnumLogonTypeToString(Value: TSecurityLogonType): String;
 
 // States
 function StateOfGroupToString(Value: Cardinal): String;
@@ -41,10 +43,45 @@ const
     (Value: SE_GROUP_USE_FOR_DENY_ONLY; Name: 'Use for deny only')
   );
 
+  LogonFlags: array [0..18] of TFlagName = (
+    (Value: LOGON_GUEST; Name: 'Guest'),
+    (Value: LOGON_NOENCRYPTION; Name: 'No Encryption'),
+    (Value: LOGON_CACHED_ACCOUNT; Name: 'Cached Account'),
+    (Value: LOGON_USED_LM_PASSWORD; Name: 'Used LM Password'),
+    (Value: LOGON_EXTRA_SIDS; Name: 'Extra SIDs'),
+    (Value: LOGON_SUBAUTH_SESSION_KEY; Name: 'Subauth Session Key'),
+    (Value: LOGON_SERVER_TRUST_ACCOUNT; Name: 'Server Trust Account'),
+    (Value: LOGON_NTLMV2_ENABLED; Name: 'NTLMv2 Enabled'),
+    (Value: LOGON_RESOURCE_GROUPS; Name: 'Resource Groups'),
+    (Value: LOGON_PROFILE_PATH_RETURNED; Name: 'Profile Path Returned'),
+    (Value: LOGON_NT_V2; Name: 'NTv2'),
+    (Value: LOGON_LM_V2; Name: 'LMv2'),
+    (Value: LOGON_NTLM_V2; Name: 'NTLMv2'),
+    (Value: LOGON_OPTIMIZED; Name: 'Optimized'),
+    (Value: LOGON_WINLOGON; Name: 'Winlogon'),
+    (Value: LOGON_PKINIT; Name: 'Pkinit'),
+    (Value: LOGON_NO_OPTIMIZED; Name: 'No Optimized'),
+    (Value: LOGON_NO_ELEVATION; Name: 'No Elevation'),
+    (Value: LOGON_MANAGED_SERVICE; Name: 'Managed Service')
+  );
+
 function MapKnownFlags(Value: Cardinal; Mode: TBitFlagMode): String;
 begin
   case Mode of
     bmGroupFlags: Result := MapFlags(Value, GroupFlags);
+    bmLogonFlags: Result := MapFlags(Value, LogonFlags);
+  else
+    Result := '';
+  end;
+end;
+
+function MapKnownFlagsHint(Value: Cardinal; Mode: TBitFlagMode): String;
+begin
+  case Mode of
+    bmGroupFlags: Result := MapFlagsHint(Value, GroupFlags);
+    bmLogonFlags: Result := MapFlagsHint(Value, LogonFlags);
+  else
+    Result := '';
   end;
 end;
 
@@ -74,6 +111,19 @@ const
 begin
   if (Low(Value) <= Value) and (Value <= High(Value)) then
     Result := SidTypeNames[Value]
+  else
+    Result := EnumOutOfBoundString(Cardinal(Value));
+end;
+
+function EnumLogonTypeToString(Value: TSecurityLogonType): String;
+const
+  Mapping: array [TSecurityLogonType] of String = ('System', 'Reserved',
+    'Interactive', 'Network', 'Batch', 'Service', 'Proxy', 'Unlock',
+    'Network clear text', 'New credentials', 'Remote interactive',
+    'Cached interactive', 'Cached remote interactive', 'Cached unlock');
+begin
+  if (Low(Value) <= Value) and (Value <= High(Value)) then
+    Result := Mapping[Value]
   else
     Result := EnumOutOfBoundString(Cardinal(Value));
 end;

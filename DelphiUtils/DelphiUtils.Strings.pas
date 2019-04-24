@@ -17,6 +17,7 @@ function Contains(Value, Flag: Cardinal): Boolean; inline;
 function ContainsAny(Value, Flag: Cardinal): Boolean; inline;
 
 function MapFlags(Value: Cardinal; Mapping: array of TFlagName): String;
+function MapFlagsHint(Value: Cardinal; Mapping: array of TFlagName): String;
 
 function IntToHexEx(Value: Int64; Digits: Integer = 0): String; overload;
 function IntToHexEx(Value: UInt64; Digits: Integer = 0): String; overload;
@@ -90,6 +91,20 @@ begin
 
   SetLength(Strings, Count);
   Result := String.Join(', ', Strings);
+end;
+
+function MapFlagsHint(Value: Cardinal; Mapping: array of TFlagName): String;
+var
+  Strings: array of string;
+  i: Integer;
+begin
+  SetLength(Strings, Length(Mapping));
+
+  for i := Low(Mapping) to High(Mapping) do
+    Strings[i - Low(Mapping)] := CheckboxToString(Contains(Value,
+      Mapping[i].Value)) + ' ' + Mapping[i].Name;
+
+  Result := String.Join(#$D#$A, Strings);
 end;
 
 function IntToHexEx(Value: UInt64; Digits: Integer): String;
