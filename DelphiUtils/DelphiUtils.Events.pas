@@ -66,12 +66,16 @@ end;
 procedure TEvent<T>.Invoke(Value: T);
 var
   i: Integer;
+  ListenersCopy: TEventListenerArray<T>;
 begin
+  // Listeners can modify the list by deleting themselves. Use a copy to proceed
+  ListenersCopy := Copy(Listeners, 0, Length(Listeners));
+
   // Event listeners must not raise any exceptions
   // unless the caller is aware of it.
 
   for i := 0 to High(Listeners) do
-    Listeners[i](Value);
+    ListenersCopy[i](Value);
 end;
 
 procedure TEvent<T>.Subscribe(EventListener: TEventListener<T>);
@@ -146,12 +150,16 @@ end;
 procedure TEvent2<T1, T2>.Invoke(Param1: T1; Param2: T2);
 var
   i: Integer;
+  ListenersCopy: TEventListenerArray2<T1, T2>;
 begin
+  // Listeners can modify the list by deleting themselves. Use a copy to proceed
+  ListenersCopy := Copy(Listeners, 0, Length(Listeners));
+
   // Event listeners must not raise any exceptions
   // unless the caller is aware of it.
 
   for i := 0 to High(Listeners) do
-    Listeners[i](Param1, Param2);
+    ListenersCopy[i](Param1, Param2);
 end;
 
 procedure TEvent2<T1, T2>.Subscribe(EventListener: TEventListener2<T1, T2>);
