@@ -1327,14 +1327,19 @@ function TToken.QueryFixedSize<ResultType>(InfoClass: TTokenInformationClass;
 var
   BufferData: ResultType;
   ReturnLength: Cardinal;
+  Status: NTSTATUS;
 begin
   // TODO: Save error code and error location
-  Result := NT_SUCCESS(NtQueryInformationToken(hToken, InfoClass, @BufferData,
-    SizeOf(ResultType), ReturnLength));
+  Status := NtQueryInformationToken(hToken, InfoClass, @BufferData,
+    SizeOf(ResultType), ReturnLength);
+
+  Result := NT_SUCCESS(Status);
 
   // Modify the specified Data parameter only on success
   if Result then
-    Data := BufferData;
+    Data := BufferData
+  else
+    RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status);
 end;
 
 function TToken.QueryGroups(InfoClass: TTokenInformationClass;

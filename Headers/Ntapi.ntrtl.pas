@@ -47,6 +47,9 @@ function RtlGetLastNtStatus: NTSTATUS; stdcall; external ntdll;
 
 function RtlGetLastWin32Error: Cardinal; stdcall; external ntdll;
 
+procedure RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status: NTSTATUS);
+   stdcall; external ntdll;
+
 // SIDs
 
 function RtlValidSid(Sid: PSid): Boolean; stdcall; external ntdll;
