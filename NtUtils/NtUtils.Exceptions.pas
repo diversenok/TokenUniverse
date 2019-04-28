@@ -9,6 +9,15 @@ const
   BUFFER_LIMIT = 1024 * 1024 * 256; // 256 MB
 
 type
+  TNtxStatus = record
+    Status: NTSTATUS;
+    Location: String;
+    function Matches(Status: NTSTATUS; Location: String): Boolean;
+    function IsSuccess: Boolean;
+    procedure RaiseOnError;
+  end;
+
+type
   TErrorType = (errWin, errNative);
 
   ELocatedOSError = class(EOSError)
@@ -108,6 +117,24 @@ implementation
 uses
   Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.WinError,
   NtUtils.ErrorMsg;
+
+{ TNtxStatus }
+
+function TNtxStatus.IsSuccess: Boolean;
+begin
+  Result := NT_SUCCESS(Status);
+end;
+
+function TNtxStatus.Matches(Status: NTSTATUS; Location: String): Boolean;
+begin
+  Result := (Self.Status = Status) and (Self.Location = Location);
+end;
+
+procedure TNtxStatus.RaiseOnError;
+begin
+  if not NT_SUCCESS(Status) then
+    raise ENtError.Create(Status, Location);
+end;
 
 { ELocatedOSError }
 
