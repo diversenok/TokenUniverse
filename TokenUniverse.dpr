@@ -69,7 +69,8 @@ uses
   UI.Prototypes.Privileges in 'UI\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
   UI.Prototypes.Groups in 'UI\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   Ntapi.ntsam in 'Headers\Ntapi.ntsam.pas',
-  UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView};
+  UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView},
+  UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame};
 
 {$R *.res}
 

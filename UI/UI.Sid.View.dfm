@@ -2,7 +2,7 @@ object DialogSidView: TDialogSidView
   Left = 0
   Top = 0
   Caption = 'SID Information'
-  ClientHeight = 318
+  ClientHeight = 371
   ClientWidth = 364
   Color = clBtnFace
   DoubleBuffered = True
@@ -21,10 +21,11 @@ object DialogSidView: TDialogSidView
     Left = 3
     Top = 3
     Width = 358
-    Height = 282
+    Height = 335
     Margins.Bottom = 33
     ActivePage = TabSid
     Align = alClient
+    MultiLine = True
     TabOrder = 0
     object TabSid: TTabSheet
       Caption = 'General'
@@ -110,7 +111,7 @@ object DialogSidView: TDialogSidView
         Top = 80
         Width = 136
         Height = 17
-        Anchors = [akLeft, akTop, akBottom]
+        Anchors = [akLeft, akTop, akRight]
         BorderStyle = bsNone
         ReadOnly = True
         TabOrder = 8
@@ -119,7 +120,7 @@ object DialogSidView: TDialogSidView
       object LinkLabelMinusOne: TLinkLabel
         Left = 256
         Top = 80
-        Width = 84
+        Width = 81
         Height = 17
         Hint = 'View the parent SID'
         Anchors = [akTop, akRight]
@@ -152,14 +153,45 @@ object DialogSidView: TDialogSidView
       Caption = 'User'
       ImageIndex = 4
     end
-    object TabLsa: TTabSheet
-      Caption = 'Local Security Policy'
+    object TabLsaPrivileges: TTabSheet
+      Caption = 'Privileges'
       ImageIndex = 5
+    end
+    object TabLsaRights: TTabSheet
+      Caption = 'Logon rights'
+      ImageIndex = 6
+      inline FrameLsaRights: TFrameLsaRights
+        Left = 0
+        Top = 0
+        Width = 350
+        Height = 289
+        Align = alClient
+        TabOrder = 0
+        inherited LabelStatus: TLabel
+          Top = 266
+          Width = 260
+        end
+        inherited ButtonApply: TButton
+          Top = 261
+        end
+        inherited ListView: TListViewEx
+          Width = 344
+          Height = 255
+        end
+      end
+    end
+    object TabLsaAudit: TTabSheet
+      Caption = 'Per-user audit'
+      ImageIndex = 7
+    end
+    object TabLsaQuotas: TTabSheet
+      Caption = 'Quotas'
+      ImageIndex = 8
     end
   end
   object ButtonClose: TButton
     Left = 286
-    Top = 289
+    Top = 342
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

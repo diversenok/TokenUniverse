@@ -9,6 +9,18 @@ uses
 const
   MAX_PREFERRED_LENGTH = MaxInt;
 
+  // 174, values for Lsa[Get/Set]SystemAccessAccount
+  SECURITY_ACCESS_INTERACTIVE_LOGON = $00000001;
+  SECURITY_ACCESS_NETWORK_LOGON = $00000002;
+  SECURITY_ACCESS_BATCH_LOGON = $00000004;
+  SECURITY_ACCESS_SERVICE_LOGON = $00000010;
+  SECURITY_ACCESS_DENY_INTERACTIVE_LOGON = $00000040;
+  SECURITY_ACCESS_DENY_NETWORK_LOGON = $00000080;
+  SECURITY_ACCESS_DENY_BATCH_LOGON = $00000100;
+  SECURITY_ACCESS_DENY_SERVICE_LOGON = $00000200;
+  SECURITY_ACCESS_REMOTE_INTERACTIVE_LOGON = $00000400;
+  SECURITY_ACCESS_DENY_REMOTE_INTERACTIVE_LOGON = $00000800;
+
   // 1757
   POLICY_VIEW_LOCAL_INFORMATION = $00000001;
   POLICY_VIEW_AUDIT_INFORMATION = $00000002;
@@ -30,7 +42,20 @@ const
   ACCOUNT_ADJUST_QUOTAS = $00000004;
   ACCOUNT_ADJUST_SYSTEM_ACCESS = $00000008;
 
+  // 3627, see SECURITY_ACCESS_*
+  SE_INTERACTIVE_LOGON_NAME = 'SeInteractiveLogonRight';
+  SE_NETWORK_LOGON_NAME = 'SeNetworkLogonRight';
+  SE_BATCH_LOGON_NAME = 'SeBatchLogonRight';
+  SE_SERVICE_LOGON_NAME = 'SeServiceLogonRight';
+  SE_DENY_INTERACTIVE_LOGON_NAME = 'SeDenyInteractiveLogonRight';
+  SE_DENY_NETWORK_LOGON_NAME = 'SeDenyNetworkLogonRight';
+  SE_DENY_BATCH_LOGON_NAME = 'SeDenyBatchLogonRight';
+  SE_DENY_SERVICE_LOGON_NAME = 'SeDenyServiceLogonRight';
+  SE_REMOTE_INTERACTIVE_LOGON_NAME = 'SeRemoteInteractiveLogonRight';
+  SE_DENY_REMOTE_INTERACTIVE_LOGON_NAME = 'SeDenyRemoteInteractiveLogonRight';
+
 type
+  TLsaHandle = Winapi.NtSecApi.TLsaHandle;
   TLsaEnumerationHandle = Cardinal;
 
   // 1956
@@ -141,6 +166,14 @@ function LsaGetQuotasForAccount(AccountHandle: TLsaHandle;
 // 3482
 function LsaSetQuotasForAccount(AccountHandle: TLsaHandle;
   const QuotaLimits: PQuotaLimits): NTSTATUS; stdcall; external advapi32;
+
+// 3489
+function LsaGetSystemAccessAccount(AccountHandle: TLsaHandle;
+  out SystemAccess: Cardinal): NTSTATUS; stdcall; external advapi32;
+
+// 3496
+function LsaSetSystemAccessAccount(AccountHandle: TLsaHandle;
+  SystemAccess: Cardinal): NTSTATUS; stdcall; external advapi32;
 
 // 3574
 function LsaLookupPrivilegeValue(PolicyHandle: TLsaHandle;

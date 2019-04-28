@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UI.Prototypes.ChildForm, NtUtils.Types;
+  UI.Prototypes.ChildForm, NtUtils.Types, UI.Prototypes.Lsa.Rights;
 
 type
   TDialogSidView = class(TChildTaskbarForm)
@@ -15,7 +15,7 @@ type
     TabGroup: TTabSheet;
     TabAlias: TTabSheet;
     TabUser: TTabSheet;
-    TabLsa: TTabSheet;
+    TabLsaPrivileges: TTabSheet;
     LinkLabelDomain: TLinkLabel;
     LabelSid: TStaticText;
     LabelType: TStaticText;
@@ -28,6 +28,10 @@ type
     EditSubAuthorities: TEdit;
     LinkLabelMinusOne: TLinkLabel;
     StaticTextDomain: TStaticText;
+    TabLsaRights: TTabSheet;
+    TabLsaAudit: TTabSheet;
+    FrameLsaRights: TFrameLsaRights;
+    TabLsaQuotas: TTabSheet;
     procedure LinkLabelDomainLinkClick(Sender: TObject; const Link: string;
       LinkType: TSysLinkType);
     procedure ButtonCloseClick(Sender: TObject);
@@ -89,6 +93,9 @@ begin
     TabAlias.TabVisible := (Sid.Lookup.SidType = SidTypeAlias);
     TabUser.TabVisible := (Sid.Lookup.SidType = SidTypeUser);
     Pages.ActivePage := TabSid;
+
+    FrameLsaRights.DeleyedCreate;
+    FrameLsaRights.LoadForSid(Sid);
 
     Show;
   end;

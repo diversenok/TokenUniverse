@@ -3,9 +3,11 @@ unit NtUtils.Lsa;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef, NtUtils.Exceptions;
 
 type
+  TNtxStatus = NtUtils.Exceptions.TNtxStatus;
+
   TAuditEntitiy = record
     Value: TGuid;
     Name: String;
@@ -22,6 +24,14 @@ type
   end;
 
   TPrivDefArray = array of TPrivilegeDefinition;
+
+  TLogonRightRec = record
+    Value: Cardinal;
+    AllowedType: Boolean;
+    Name, Description: String;
+  end;
+
+  TLogonRightRecArray = array of TLogonRightRec;
 
   TTranslatedName = record
     DomainName, UserName, SDDL: String;
@@ -44,6 +54,16 @@ function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): NTSTATUS;
 // LsaLookupPrivilegeDisplayName
 function LsaxQueryDescriptionPrivilege(const Name: String;
   out DisplayName: String): NTSTATUS;
+
+// Enumerate known logon rights
+function LsaxEnumerateLogonRights: TLogonRightRecArray;
+
+// LsaGetSystemAccessAccount
+function LsaxQueryRightsAccount(Sid: PSid; out SystemAccess: Cardinal):
+  TNtxStatus;
+
+// LsaSetSystemAccessAccount
+function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
 
 // LsaLookupSids mixed with RtlConvertSidToUnicodeString, always succeeds
 function LsaxLookupSid(Sid: PSid): TTranslatedName;
@@ -207,6 +227,142 @@ begin
     LsaClose(hPolicy);
   end;
 end;
+
+{ Logon rights }
+
+function LsaxEnumerateLogonRights: TLogonRightRecArray;
+begin
+  // If someone knows a system function to enumerate logon rights on the system
+  // you are welcome to use it here.
+
+  SetLength(Result, 10);
+
+  Result[0].Value := SECURITY_ACCESS_INTERACTIVE_LOGON;
+  Result[0].AllowedType := True;
+  Result[0].Name := SE_INTERACTIVE_LOGON_NAME;
+  Result[0].Description := 'Allow interactive logon';
+
+  Result[1].Value := SECURITY_ACCESS_NETWORK_LOGON;
+  Result[1].AllowedType := True;
+  Result[1].Name := SE_NETWORK_LOGON_NAME;
+  Result[1].Description := 'Allow network logon';
+
+  Result[2].Value := SECURITY_ACCESS_BATCH_LOGON;
+  Result[2].AllowedType := True;
+  Result[2].Name := SE_BATCH_LOGON_NAME;
+  Result[2].Description := 'Allow batch job logon';
+
+  Result[3].Value := SECURITY_ACCESS_SERVICE_LOGON;
+  Result[3].AllowedType := True;
+  Result[3].Name := SE_SERVICE_LOGON_NAME;
+  Result[3].Description := 'Allow service logon';
+
+  Result[4].Value := SECURITY_ACCESS_REMOTE_INTERACTIVE_LOGON;
+  Result[4].AllowedType := True;
+  Result[4].Name := SE_REMOTE_INTERACTIVE_LOGON_NAME;
+  Result[4].Description := 'Allow Remote Desktop Services logon';
+
+  Result[5].Value := SECURITY_ACCESS_DENY_INTERACTIVE_LOGON;
+  Result[5].AllowedType := False;
+  Result[5].Name := SE_DENY_INTERACTIVE_LOGON_NAME;
+  Result[5].Description := 'Deny interactive logon';
+
+  Result[6].Value := SECURITY_ACCESS_DENY_NETWORK_LOGON;
+  Result[6].AllowedType := False;
+  Result[6].Name := SE_DENY_NETWORK_LOGON_NAME;
+  Result[6].Description := 'Deny network logon';
+
+  Result[7].Value := SECURITY_ACCESS_DENY_BATCH_LOGON;
+  Result[7].AllowedType := False;
+  Result[7].Name := SE_DENY_BATCH_LOGON_NAME;
+  Result[7].Description := 'Deny batch job logon';
+
+  Result[8].Value := SECURITY_ACCESS_DENY_SERVICE_LOGON;
+  Result[8].AllowedType := False;
+  Result[8].Name := SE_DENY_SERVICE_LOGON_NAME;
+  Result[8].Description := 'Deny service logon';
+
+  Result[9].Value := SECURITY_ACCESS_DENY_REMOTE_INTERACTIVE_LOGON;
+  Result[9].AllowedType := False;
+  Result[9].Name := SE_DENY_REMOTE_INTERACTIVE_LOGON_NAME;
+  Result[9].Description := 'Deny Remote Desktop Services logon';
+end;
+
+function LsaxQueryRightsAccount(Sid: PSid; out SystemAccess: Cardinal):
+  TNtxStatus;
+var
+  LsaHandle, AccountHandle: TLsaHandle;
+  ObjAttr: TObjectAttributes;
+begin
+  SystemAccess := 0;
+  InitializeObjectAttributes(ObjAttr);
+
+  Result.Location := 'LsaOpenPolicy';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
+    LsaHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaOpenAccount';
+  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_VIEW, AccountHandle);
+  LsaClose(LsaHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaGetSystemAccessAccount';
+  Result.Status := LsaGetSystemAccessAccount(AccountHandle, SystemAccess);
+  LsaClose(AccountHandle);
+end;
+
+function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
+var
+  LsaHandle, AccountHandle: TLsaHandle;
+  ObjAttr: TObjectAttributes;
+begin
+  InitializeObjectAttributes(ObjAttr);
+
+  // Connect to LSA for opening existing account
+  Result.Location := 'LsaOpenPolicy for POLICY_VIEW_LOCAL_INFORMATION';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
+    LsaHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaOpenAccount for ACCOUNT_ADJUST_SYSTEM_ACCESS';
+  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_ADJUST_SYSTEM_ACCESS,
+    AccountHandle);
+
+  LsaClose(LsaHandle);
+
+  // If the account does not exist in the LSA database we should create it
+  if Result.Status = STATUS_OBJECT_NAME_NOT_FOUND then
+  begin
+    // Connect to LSA for creating a new account
+    Result.Location := 'LsaOpenPolicy for POLICY_CREATE_ACCOUNT';
+    Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_CREATE_ACCOUNT,
+      LsaHandle);
+
+    if not NT_SUCCESS(Result.Status) then
+      Exit;
+
+    Result.Location := 'LsaCreateAccount for ACCOUNT_ADJUST_SYSTEM_ACCESS';
+    Result.Status := LsaCreateAccount(LsaHandle, Sid,
+      ACCOUNT_ADJUST_SYSTEM_ACCESS, AccountHandle);
+
+    LsaClose(LsaHandle);
+  end;
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaSetSystemAccessAccount';
+  Result.Status := LsaSetSystemAccessAccount(AccountHandle, SystemAccess);
+end;
+
+{ SID translation}
 
 function LsaxLookupSid(Sid: PSid): TTranslatedName;
 var
