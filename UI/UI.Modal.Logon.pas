@@ -69,8 +69,13 @@ end;
 
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
 begin
-  PromptCredentialsUI(Handle, TokenCreationCallback,
-    ComboLogonProvider.ItemIndex = S4U_INDEX);
+  Enabled := False;
+  try
+    PromptCredentialsUI(Handle, TokenCreationCallback,
+      ComboLogonProvider.ItemIndex = S4U_INDEX);
+  finally
+    Enabled := True;
+  end;
   ModalResult := mrOk;
 end;
 
