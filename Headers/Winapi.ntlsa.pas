@@ -152,7 +152,7 @@ function LsaEnumeratePrivilegesOfAccount(AccountHandle: TLsaHandle;
 
 // 3460
 function LsaAddPrivilegesToAccount(AccountHandle: TLsaHandle;
-  const Privileges: TPrivilegeSet): NTSTATUS; stdcall; external advapi32;
+  Privileges: PPrivilegeSet): NTSTATUS; stdcall; external advapi32;
 
 // 3467
 function LsaRemovePrivilegesFromAccount(AccountHandle: TLsaHandle;

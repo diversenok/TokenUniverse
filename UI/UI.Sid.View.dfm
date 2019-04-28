@@ -156,6 +156,30 @@ object DialogSidView: TDialogSidView
     object TabLsaPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 5
+      inline FrameLsaPrivileges: TFrameLsaPrivileges
+        Left = 0
+        Top = 0
+        Width = 350
+        Height = 289
+        Align = alClient
+        TabOrder = 0
+        inherited LabelStatus: TLabel
+          Top = 266
+          Width = 260
+        end
+        inherited ButtonApply: TButton
+          Top = 261
+        end
+        inherited FramePrivileges: TFramePrivileges
+          Width = 350
+          Height = 260
+          inherited ListView: TListViewEx
+            Width = 344
+            Height = 254
+            PopupMenu = FrameLsaPrivileges.PopupMenu
+          end
+        end
+      end
     end
     object TabLsaRights: TTabSheet
       Caption = 'Logon rights'

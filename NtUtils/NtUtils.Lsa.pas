@@ -62,6 +62,14 @@ function LsaxQueryDescriptionPrivilege(const Name: String;
 // Get the minimal integrity level required to use a specific privilege
 function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
 
+// LsaEnumeratePrivilegesOfAccount
+function LsaxEnumerateAccountPrivileges(Sid: PSid;
+  out Privileges: TPrivilegeArray): TNtxStatus;
+
+// LsaAddPrivilegesToAccount & LsaRemovePrivilegesFromAccount
+function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
+  PrivilegesToAdd, PrivilegesToRemove: TPrivilegeArray): TNtxStatus;
+
 { ------------------------------- Logon Rights ------------------------------ }
 
 // Enumerate known logon rights
@@ -275,6 +283,146 @@ begin
     // All other require Medium
     Result := SECURITY_MANDATORY_MEDIUM_RID;
   end;
+end;
+
+function LsaxEnumerateAccountPrivileges(Sid: PSid;
+  out Privileges: TPrivilegeArray): TNtxStatus;
+var
+  LsaHandle, AccountHandle: TLsaHandle;
+  ObjAttr: TObjectAttributes;
+  PrivilegeSet: PPrivilegeSet;
+  i: Integer;
+begin
+  SetLength(Privileges, 0);
+  InitializeObjectAttributes(ObjAttr);
+
+  Result.Location := 'LsaOpenPolicy';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
+    LsaHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaOpenAccount';
+  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_VIEW, AccountHandle);
+  LsaClose(LsaHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaEnumeratePrivilegesOfAccount';
+  Result.Status := LsaEnumeratePrivilegesOfAccount(AccountHandle, PrivilegeSet);
+  LsaClose(AccountHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  SetLength(Privileges, PrivilegeSet.PrivilegeCount);
+
+  for i := 0 to High(Privileges) do
+    Privileges[i] := PrivilegeSet.Privilege[i];
+
+  LsaFreeMemory(PrivilegeSet);
+end;
+
+function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
+  PrivilegesToAdd, PrivilegesToRemove: TPrivilegeArray): TNtxStatus;
+var
+  ObjAttr: TObjectAttributes;
+  LsaHandle, AccountHandle: TLsaHandle;
+  PrivSet: PPrivilegeSet;
+  i: Integer;
+begin
+  InitializeObjectAttributes(ObjAttr);
+
+  Result.Location := 'LsaOpenPolicy for POLICY_VIEW_LOCAL_INFORMATION';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
+    LsaHandle);
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  Result.Location := 'LsaOpenAccount for ACCOUNT_ADJUST_PRIVILEGES';
+  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_ADJUST_PRIVILEGES,
+    AccountHandle);
+
+  LsaClose(LsaHandle);
+
+  // If the account does not exist in the LSA database we should create it
+  if Result.Status = STATUS_OBJECT_NAME_NOT_FOUND then
+  begin
+    // Connect to LSA for creating a new account
+    Result.Location := 'LsaOpenPolicy for POLICY_CREATE_ACCOUNT';
+    Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_CREATE_ACCOUNT,
+      LsaHandle);
+
+    if not NT_SUCCESS(Result.Status) then
+      Exit;
+
+    Result.Location := 'LsaCreateAccount for ACCOUNT_ADJUST_PRIVILEGES';
+    Result.Status := LsaCreateAccount(LsaHandle, Sid,
+      ACCOUNT_ADJUST_PRIVILEGES, AccountHandle);
+
+    LsaClose(LsaHandle);
+  end;
+
+  if not NT_SUCCESS(Result.Status) then
+    Exit;
+
+  // Add privileges
+  if Length(PrivilegesToAdd) > 0 then
+  begin
+    PrivSet := AllocMem(SizeOf(Cardinal) + SizeOf(Cardinal) +
+      SizeOf(TLuidAndAttributes) * Length(PrivilegesToAdd));
+
+    try
+      PrivSet.PrivilegeCount := Length(PrivilegesToAdd);
+      PrivSet.Control := 0;
+
+      for i := 0 to High(PrivilegesToAdd) do
+        PrivSet.Privilege[i] := PrivilegesToAdd[i];
+
+      Result.Location := 'LsaAddPrivilegesToAccount';
+      Result.Status := LsaAddPrivilegesToAccount(AccountHandle, PrivSet);
+    finally
+      FreeMem(PrivSet);
+    end;
+
+    // Quit on error
+    if not NT_SUCCESS(Result.Status) then
+    begin
+      LsaClose(AccountHandle);
+      Exit;
+    end;
+  end;
+
+  // Remove privileges
+  if RemoveAll then
+  begin
+    Result.Location := 'LsaRemovePrivilegesFromAccount';
+    Result.Status := LsaRemovePrivilegesFromAccount(AccountHandle, True, nil);
+  end
+  else if Length(PrivilegesToRemove) > 0 then
+  begin
+    PrivSet := AllocMem(SizeOf(Cardinal) + SizeOf(Cardinal) +
+      SizeOf(TLuidAndAttributes) * Length(PrivilegesToRemove));
+
+    try
+      PrivSet.PrivilegeCount := Length(PrivilegesToRemove);
+      PrivSet.Control := 0;
+
+      for i := 0 to High(PrivilegesToRemove) do
+        PrivSet.Privilege[i] := PrivilegesToRemove[i];
+
+      Result.Location := 'LsaRemovePrivilegesFromAccount';
+      Result.Status := LsaRemovePrivilegesFromAccount(AccountHandle, False,
+        PrivSet);
+    finally
+      FreeMem(PrivSet);
+    end;
+  end;
+
+  LsaClose(AccountHandle);
 end;
 
 { Logon rights }
