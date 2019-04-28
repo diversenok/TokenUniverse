@@ -87,6 +87,163 @@ type
   TCardinalArray = array [Word] of Cardinal;
   PCardinalArray = ^TCardinalArray;
 
+  // 263
+  TDomainInformationClass = (
+    DomainPasswordInformation = 1,    // q, s:
+    DomainGeneralInformation = 2,     // q: TDomainGeneralInformation
+    DomainLogoffInformation = 3,      // q, s: TLargeInteger
+    DomainOemInformation = 4,         // q, s: UNICODE_STRING
+    DomainNameInformation = 5,        // q: UNICODE_STRING
+    DomainReplicationInformation = 6, // q, s: UNICODE_STRING
+    DomainServerRoleInformation = 7,  // q, s: TDomainServerRole
+    DomainModifiedInformation = 8,    // q: TDomainModifiedInformation
+    DomainStateInformation = 9,       // q, s: TDomainServerEnableState
+    DomainUasInformation = 10,        // q, s: Boolean
+    DomainGeneralInformation2 = 11,   // q:
+    DomainLockoutInformation = 12,    // q, s:
+    DomainModifiedInformation2 = 13   // q:
+  );
+
+  // 279
+  TDomainServerEnableState = (
+    DomainServerEnabled = 1,
+    DomainServerDisabled
+  );
+
+  // 284
+  TDomainServerRole = (
+    DomainServerRoleBackup = 2,
+    DomainServerRolePrimary
+  );
+
+  // 290
+  TDomainGeneralInformation = record
+    ForceLogoff: TLargeInteger;
+    OemInformation: UNICODE_STRING;
+    DomainName: UNICODE_STRING;
+    ReplicaSourceNodeName: UNICODE_STRING;
+    DomainModifiedCount: Int64;
+    DomainServerState: TDomainServerEnableState;
+    DomainServerRole: TDomainServerRole;
+    UasCompatibilityRequired: Boolean;
+    UserCount: Cardinal;
+    GroupCount: Cardinal;
+    AliasCount: Cardinal;
+  end;
+
+  // 394
+  TDomainModifiedInformation = record
+    DomainModifiedCount: Int64;
+    CreationTime: TLargeInteger;
+  end;
+  PDomainModifiedInformation = ^TDomainModifiedInformation;
+
+  // 565
+  TGroupInfrmationClass = (
+    GroupGeneralInformation = 1,     // q: TGroupGeneralInformation
+    GroupNameInformation = 2,        // q, s: UNICODE_STRING;
+    GroupAttributeInformation = 3,   // q, s: Cardinal
+    GroupAdminCommentInformation = 4 // q, s: UNICODE_STRING;
+  );
+
+  // 573
+  TGroupGeneralInformation = record
+    Name: UNICODE_STRING;
+    Attributes: Cardinal;
+    MemberCount: Cardinal;
+    AdminComment: UNICODE_STRING;
+  end;
+  PGroupGeneralInformation = ^TGroupGeneralInformation;
+
+  // 634
+  TAliasInformationClass = (
+    AliasGeneralInformation = 1,      // q: TAliasGeneralInformation
+    AliasNameInformation = 2,         // q, s: UNICODE_STRING
+    AliasAdminCommentInformation = 3, // q, s: UNICODE_STRING
+    AliasReplicationInformation = 4,  // q: UNICODE_STRING
+    AliasExtendedInformation = 5      // q, s:
+  );
+
+  // 642
+  TAliasGeneralInformation = record
+    Name: UNICODE_STRING;
+    MemberCount: Cardinal;
+    AdminComment: UNICODE_STRING;
+  end;
+  PAliasGeneralInformation = ^TAliasGeneralInformation;
+
+  // 829
+  TLogonHours = record
+    UnitsPerWeek: Word;
+    LogonHours: PByte;
+  end;
+
+  // 860
+  TUserInformationClass = (
+    UserGeneralInformation = 1,       // q: TUserGeneralInformation
+    UserPreferencesInformation = 2,   // q, s:
+    UserLogonInformation = 3,         // q: TUserLogonInformation
+    UserLogonHoursInformation = 4,    // q, s: TLogonHours
+    UserAccountInformation = 5,       // q: TUserAccountInformation (almost identical to TUserLogonInformation)
+    UserNameInformation = 6,          // q, s:
+    UserAccountNameInformation = 7,   // q, s: UNICODE_STRING
+    UserFullNameInformation = 8,      // q, s: UNICODE_STRING
+    UserPrimaryGroupInformation = 9,  // q, s: Cardinal
+    UserHomeInformation = 10,         // q, s:
+    UserScriptInformation = 11,       // q, s: UNICODE_STRING
+    UserProfileInformation = 12,      // q, s: UNICODE_STRING
+    UserAdminCommentInformation = 13, // q, s: UNICODE_STRING
+    UserWorkStationsInformation = 14, // q, s:
+    UserSetPasswordInformation = 15,  // s:
+    UserControlInformation = 16,      // q, s: Cardinal
+    UserExpiresInformation = 17,      // q, s: TLargeInteger
+    UserInternal1Information = 18,    // q, s:
+    UserInternal2Information = 19,    // q, s:
+    UserParametersInformation = 20,   // q, s: UNICODE_STRING
+    UserAllInformation = 21,          // q, s:
+    UserInternal3Information = 22,    // q, s:
+    UserInternal4Information = 23,    // s:
+    UserInternal5Information = 24,    // s:
+    UserInternal4InformationNew = 25, // s:
+    UserInternal5InformationNew = 26, // s:
+    UserInternal6Information = 27,    // q, s:
+    UserExtendedInformation = 28,     // q, s:
+    UserLogonUIInformation = 29       // q:
+  );
+
+  // 1105
+  TUserGeneralInformation = record
+    UserName: UNICODE_STRING;
+    FullName: UNICODE_STRING;
+    PrimaryGroupId: Cardinal;
+    AdminComment: UNICODE_STRING;
+    UserComment: UNICODE_STRING;
+  end;
+  PUserGeneralInformation = ^TUserGeneralInformation;
+
+  // 1125
+  TUserLogonInformation = record
+    UserName: UNICODE_STRING;
+    FullName: UNICODE_STRING;
+    UserId: Cardinal;
+    PrimaryGroupId: Cardinal;
+    HomeDirectory: UNICODE_STRING;
+    HomeDirectoryDrive: UNICODE_STRING;
+    ScriptPath: UNICODE_STRING;
+    ProfilePath: UNICODE_STRING;
+    WorkStations: UNICODE_STRING;
+    LastLogon: TLargeInteger;
+    LastLogoff: TLargeInteger;
+    PasswordLastSet: TLargeInteger;
+    PasswordCanChange: TLargeInteger;
+    PasswordMustChange: TLargeInteger;
+    LogonHours: TLogonHours;
+    BadPasswordCount: Word;
+    LogonCount: Word;
+    UserAccountControl: Cardinal;
+  end;
+  PUserLogonInformation = ^TUserLogonInformation;
+
 // 1777
 function SamFreeMemory(Buffer: Pointer): NTSTATUS; stdcall; external samlib;
 
@@ -115,6 +272,16 @@ function SamOpenDomain(ServerHandle: TSamHandle; DesiredAccess: TAccessMask;
   DomainId: PSid; out DomainHandle: TSamHandle): NTSTATUS; stdcall;
   external samlib;
 
+// 1847
+function SamQueryInformationDomain(DomainHandle: TSamHandle;
+  DomainInformationClass: TDomainInformationClass; out Buffer: Pointer):
+  NTSTATUS; stdcall; external samlib;
+
+// 1855
+function SamSetInformationDomain(DomainHandle: TSamHandle;
+  DomainInformationClass: TDomainInformationClass; DomainInformation: Pointer):
+  NTSTATUS; stdcall; external samlib;
+
 // 1874
 function SamEnumerateGroupsInDomain(DomainHandle: TSamHandle;
   var EnumerationContext: TSamEnumerationHandle;
@@ -138,6 +305,16 @@ function SamOpenGroup(DomainHandle: TSamHandle; DesiredAccess: TAccessMask;
   GroupId: Cardinal; out GroupHandle: TSamHandle): NTSTATUS; stdcall;
   external samlib;
 
+// 1976
+function SamQueryInformationGroup(GroupHandle: TSamHandle;
+  GroupInformationClass: TGroupGeneralInformation;
+  out Buffer: Pointer): NTSTATUS; stdcall; external samlib;
+
+// 1984
+function SamSetInformationGroup(GroupHandle: TSamHandle;
+  GroupInformationClass: TGroupInfrmationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
+
 // 2013
 function SamGetMembersInGroup(GroupHandle: TSamHandle;
   out MemberIds: PCardinalArray; out Attributes: PCardinalArray;
@@ -148,6 +325,16 @@ function SamOpenAlias(DomainHandle: TSamHandle; DesiredAccess: TAccessMask;
   AliasId: Cardinal; out AliasHandle: TSamHandle): NTSTATUS; stdcall;
   external samlib;
 
+// 2039
+function SamQueryInformationAlias(AliasHandle: TSamHandle;
+  AliasInformationClass: TAliasInformationClass; out Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
+
+// 2047
+function SamSetInformationAlias(AliasHandle: TSamHandle;
+  AliasInformationClass: TAliasInformationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
+
 // 2098
 function SamGetMembersInAlias(AliasHandle: TSamHandle; out MemberIds: PSidArray;
   out MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
@@ -156,6 +343,16 @@ function SamGetMembersInAlias(AliasHandle: TSamHandle; out MemberIds: PSidArray;
 function SamOpenUser(DomainHandle: TSamHandle; DesiredAccess: TAccessMask;
   UserId: Cardinal; out UserHandle: TSamHandle): NTSTATUS; stdcall;
   external samlib;
+
+// 2121
+function SamQueryInformationUser(UserHandle: TSamHandle;
+  UserInformationClass: TUserInformationClass; out Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
+
+// 2129
+function SamSetInformationUser(UserHandle: TSamHandle;
+  UserInformationClass: TUserInformationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
 
 // 2198
 function SamRidToSid(ObjectHandle: TSamHandle; Rid: Cardinal;

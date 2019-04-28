@@ -119,6 +119,16 @@ function LsaClose(ObjectHandle: TLsaHandle): NTSTATUS; stdcall;
 function LsaDelete(ObjectHandle: TLsaHandle): NTSTATUS; stdcall;
   external advapi32;
 
+// 3003
+function LsaQuerySecurityObject(ObjectHandle: TLsaHandle;
+  SecurityInformation: TSecurityInformation; out SecurityDescriptor:
+  PSecurityDescriptor): NTSTATUS; stdcall; external advapi32;
+
+// 3031
+function LsaSetSecurityObject(ObjectHandle: TLargeInteger;
+  SecurityInformation: TSecurityInformation; SecurityDescriptor:
+  PSecurityDescriptor): NTSTATUS; stdcall; external advapi32;
+
 // 3108
 function LsaOpenPolicy(SystemName: PLsaUnicodeString;
   const ObjectAttributes: TObjectAttributes; DesiredAccess: TAccessMask;

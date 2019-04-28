@@ -9,6 +9,12 @@ uses
 const
   NEGOSSP_NAME_A: AnsiString = 'Negotiate';
 
+  // 1601
+  POLICY_AUDIT_EVENT_UNCHANGED = $0;
+  POLICY_AUDIT_EVENT_SUCCESS = $1;
+  POLICY_AUDIT_EVENT_FAILURE = $2;
+  POLICY_AUDIT_EVENT_NONE = $4;
+
   // 2046
   PER_USER_POLICY_UNCHANGED = $00;
   PER_USER_AUDIT_SUCCESS_INCLUDE = $01;
@@ -138,6 +144,8 @@ type
   end;
   PAuditPolicyInformation = ^TAuditPolicyInformation;
 
+  TAuditPolicyInformationDynArray = array of TAuditPolicyInformation;
+
   TPAuditPolicyInformationArray = array [Byte] of PAuditPolicyInformation;
   PPAuditPolicyInformationArray = ^TPAuditPolicyInformationArray;
 
@@ -180,6 +188,15 @@ function LsaEnumerateLogonSessions(out LogonSessionCount: Integer;
 function LsaGetLogonSessionData(var LogonId: TLuid;
   out pLogonSessionData: PSecurityLogonSessionData): NTSTATUS; stdcall;
   external secur32;
+
+// 5248
+function AuditSetSystemPolicy(AuditPolicy: TAuditPolicyInformationDynArray;
+  dwPolicyCount: Cardinal): Boolean; stdcall; external advapi32;
+
+// 5255
+function AuditSetPerUserPolicy(Sid: PSid; AuditPolicy:
+  TAuditPolicyInformationDynArray; dwPolicyCount: Cardinal): Boolean; stdcall;
+  external advapi32;
 
 // 5264
 function AuditQuerySystemPolicy(pSubCategoryGuids: TGuidDynArray;
