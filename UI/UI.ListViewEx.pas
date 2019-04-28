@@ -272,9 +272,11 @@ procedure TListViewEx.SetSelectedCheckboxesState(State: Boolean);
 var
   i: integer;
 begin
+  Items.BeginUpdate;
   for i := 0 to Items.Count - 1 do
     if Items[i].Selected then
       Items[i].Checked := State;
+  Items.EndUpdate;
 end;
 
 procedure TListViewEx.ShowItemsHint(Sender: TObject; Item: TListItem;
@@ -486,9 +488,10 @@ end;
 
 procedure TListItemEx.SetColor(const Value: TColor);
 begin
+  FColorEnabled := True;
+
   if FColor <> Value then
   begin
-    FColorEnabled := True;
     FColor := Value;
     if Owner.Owner.ColoringItems then
       Owner.SetUpdateState(False);
@@ -501,7 +504,7 @@ begin
   begin
     FColorEnabled := Value;
     if Owner.Owner.ColoringItems then
-      Owner.Owner.Repaint;
+      Owner.SetUpdateState(False);
   end;
 end;
 
