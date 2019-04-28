@@ -328,7 +328,7 @@ begin
   ButtonAllocLuidClick(Self);
 
   FramePrivileges.AddAllPrivileges;
-  FramePrivileges.ColorMode := pmGrayUnchecked;
+  FramePrivileges.ColorMode := pcGrayUnchecked;
 end;
 
 procedure TDialogCreateToken.MenuDisabledClick(Sender: TObject);

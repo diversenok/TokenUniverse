@@ -42,8 +42,12 @@ type
 
   TTranslatedNames = array of TTranslatedName;
 
+{ ---------------------------------- Audit ---------------------------------- }
+
 // AuditEnumerateCategories & AuditEnumerateSubCategories
 function LsaxEnumerateAuditCategiries(out Items: TAuditCategories): NTSTATUS;
+
+{ -------------------------------- Privileges ------------------------------- }
 
 // LsaEnumeratePrivileges
 function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): NTSTATUS;
@@ -55,6 +59,11 @@ function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): NTSTATUS;
 function LsaxQueryDescriptionPrivilege(const Name: String;
   out DisplayName: String): NTSTATUS;
 
+// Get the minimal integrity level required to use a specific privilege
+function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
+
+{ ------------------------------- Logon Rights ------------------------------ }
+
 // Enumerate known logon rights
 function LsaxEnumerateLogonRights: TLogonRightRecArray;
 
@@ -64,6 +73,8 @@ function LsaxQueryRightsAccount(Sid: PSid; out SystemAccess: Cardinal):
 
 // LsaSetSystemAccessAccount
 function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
+
+{ ----------------------------- SID translation ----------------------------- }
 
 // LsaLookupSids mixed with RtlConvertSidToUnicodeString, always succeeds
 function LsaxLookupSid(Sid: PSid): TTranslatedName;
@@ -75,8 +86,10 @@ function LsaxLookupUserName(UserName: String; out Sid: PSid): NTSTATUS;
 implementation
 
 uses
-  Winapi.NtSecApi, Winapi.ntlsa, Ntapi.ntstatus, Ntapi.ntrtl,
-  NtUtils.ApiExtension, System.SysUtils;
+  Winapi.NtSecApi, Winapi.ntlsa, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntseapi,
+  System.SysUtils, NtUtils.ApiExtension;
+
+{ Audit }
 
 function LsaxEnumerateAuditCategiries(out Items: TAuditCategories): NTSTATUS;
 var
@@ -137,6 +150,8 @@ begin
 
   AuditFree(Guids);
 end;
+
+{ Privileges }
 
 function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): NTSTATUS;
 var
@@ -225,6 +240,40 @@ begin
     end;
 
     LsaClose(hPolicy);
+  end;
+end;
+
+function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
+begin
+  // Some privileges require a specific integrity level to be enabled.
+  // The ones that require more than Medium also trigger UAC to split logon
+  // sessions. The following data is gathered by experimenting and should be
+  // maintained in sync with Windows behavior when new privileges are
+  // introduced.
+
+  case Luid of
+    // Ten of them require High
+    SE_CREATE_TOKEN_PRIVILEGE,
+    SE_TCB_PRIVILEGE,
+    SE_TAKE_OWNERSHIP_PRIVILEGE,
+    SE_LOAD_DRIVER_PRIVILEGE,
+    SE_BACKUP_PRIVILEGE,
+    SE_RESTORE_PRIVILEGE,
+    SE_DEBUG_PRIVILEGE,
+    SE_IMPERSONATE_PRIVILEGE,
+    SE_RELABEL_PRIVILEGE,
+    SE_DELEGATE_SESSION_USER_IMPERSONATE_PRIVILEGE:
+      Result := SECURITY_MANDATORY_HIGH_RID;
+
+    // Three of them does not require anything
+    SE_CHANGE_NOTIFY_PRIVILEGE,
+    SE_UNDOCK_PRIVILEGE,
+    SE_INC_WORKING_SET_PRIVILEGE:
+      Result := SECURITY_MANDATORY_UNTRUSTED_RID;
+
+  else
+    // All other require Medium
+    Result := SECURITY_MANDATORY_MEDIUM_RID;
   end;
 end;
 

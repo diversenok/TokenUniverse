@@ -16,8 +16,6 @@ type
     lsKickOffTime, lsPasswordLastSet, lsPasswordCanChange, lsPasswordMustChange
   );
 
-  TLuidDynArray = array of TLuid;
-
   TLogonSessionInfo = class
   private
     FData: PSecurityLogonSessionData;

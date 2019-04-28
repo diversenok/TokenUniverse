@@ -3,7 +3,7 @@ unit UI.Colors;
 interface
 
 uses
-  Vcl.Graphics, TU.Tokens.Types, NtUtils.Types;
+  Vcl.Graphics, TU.Tokens.Types, Winapi.WinNt;
 
 const
   clStale: TColor = $F5DCC2;
@@ -23,7 +23,7 @@ function PrivilegeToColor(Privilege: TPrivilege): TColor;
 implementation
 
 uses
-  Winapi.WinNt, DelphiUtils.Strings;
+  DelphiUtils.Strings;
 
 function GroupAttributesToColor(Attributes: Cardinal): TColor;
 begin

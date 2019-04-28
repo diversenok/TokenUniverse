@@ -25,6 +25,7 @@ function StateOfPrivilegeToString(Value: Cardinal): String;
 // Misc
 function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
   AttributesPresent: Boolean = True): String;
+function PrivilegeFriendlyName(SePrivilegeName: String): String;
 
 implementation
 
@@ -224,6 +225,33 @@ begin
 
   SetLength(Items, Index);
   Result := String.Join(#$D#$A, Items);
+end;
+
+function PrivilegeFriendlyName(SePrivilegeName: String): String;
+const
+  PREFIX = 'Se';
+var
+  i: Integer;
+begin
+  // Convert a privilege name from CamelCase to a spaced string, for example:
+  //   'SeCreateTokenPrivilege' => 'Create token privilege'
+
+  Result := SePrivilegeName;
+
+  if Result.StartsWith(PREFIX) then
+    Delete(Result, Low(Result), Length(PREFIX));
+
+  i := Low(Result) + 1;
+  while i <= High(Result) do
+  begin
+    if CharInSet(Result[i], ['A'..'Z']) then
+    begin
+      Result[i] := Chr(Ord('a') + Ord(Result[i]) - Ord('A'));
+      Insert(' ', Result, i);
+      Inc(i);
+    end;
+    Inc(i);
+  end;
 end;
 
 end.

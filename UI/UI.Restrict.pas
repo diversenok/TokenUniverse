@@ -3,11 +3,10 @@ unit UI.Restrict;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, TU.Tokens, UI.ListViewEx, UI.Prototypes,
-  UI.Prototypes.ChildForm, System.ImageList, Vcl.ImgList, Vcl.Menus,
-  UI.Prototypes.Privileges, NtUtils.Types, UI.Prototypes.Groups;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls, TU.Tokens,
+  UI.ListViewEx, UI.Prototypes.ChildForm, UI.Prototypes.Privileges,
+  UI.Prototypes.Groups, NtUtils.Types, Winapi.WinNt;
 
 type
   TDialogRestrictToken = class(TChildTaskbarForm)
@@ -52,9 +51,8 @@ type
 implementation
 
 uses
-  UI.MainForm, System.UITypes, UI.Modal.PickUser, TU.Tokens.Types, UI.Settings,
-  TU.Suggestions, Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings,
-  Winapi.WinNt;
+  UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
+  Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings;
 
 {$R *.dfm}
 
@@ -197,7 +195,7 @@ begin
     CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;
 
   // Privileges
-  FramePrivileges.ColorMode := pmGrayChecked;
+  FramePrivileges.ColorMode := pcGrayChecked;
   Token.InfoClass.Query(tdTokenPrivileges);
   Token.Events.OnPrivilegesChange.Subscribe(ChangedPrivileges, True);
 

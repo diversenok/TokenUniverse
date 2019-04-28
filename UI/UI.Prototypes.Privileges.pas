@@ -7,22 +7,30 @@ uses
   Vcl.ComCtrls, UI.ListViewEx, NtUtils.Types, Winapi.WinNt;
 
 type
-  TPrivilegeColorMode = (pmDefault, pmGrayChecked, pmGrayUnchecked);
+  TPrivilegeColorMode = (pcDefault, pcGrayChecked, pcGrayUnchecked,
+    pcColorChecked);
+  TPrivilegeNameMode = (pnName, pnFriendlyName);
 
   TFramePrivileges = class(TFrame)
     ListView: TListViewEx;
     procedure ListViewItemChecked(Sender: TObject; Item: TListItem);
   private
     FPrivileges: TPrivilegeArray;
-    FMode: TPrivilegeColorMode;
+    FNameMode: TPrivilegeNameMode;
+    FColorMode: TPrivilegeColorMode;
     function GetPrivilege(Ind: Integer): TPrivilege;
     procedure SetPrivilege(Ind: Integer; const Value: TPrivilege);
     function SetItemData(Item: TListItemEx; Privilege: TPrivilege): TListItemEx;
     procedure SetItemColor(Index: Cardinal);
     procedure SetColorMode(const Value: TPrivilegeColorMode);
+    procedure SetNameMode(const Value: TPrivilegeNameMode);
+    function GetAttributes(Ind: Integer): Cardinal;
+    procedure SetAttributes(Ind: Integer; const Value: Cardinal);
   public
     property Privilege[Ind: Integer]: TPrivilege read GetPrivilege write SetPrivilege;
+    property PrivAttributes[Ind: Integer]: Cardinal read GetAttributes write SetAttributes;
     function Privileges: TPrivilegeArray;
+    function PrivilegeCount: Integer;
 
     function AddPrivilege(const NewPrivilege: TPrivilege): TListItemEx;
     procedure AddPrivileges(NewPrivileges: TPrivilegeArray);
@@ -35,17 +43,43 @@ type
     function SelectedPrivileges: TPrivilegeArray;
     function CheckedPrivileges: TPrivilegeArray;
 
-    property ColorMode: TPrivilegeColorMode read FMode write SetColorMode;
+    property ColorMode: TPrivilegeColorMode read FColorMode write SetColorMode;
+    property NamingMode: TPrivilegeNameMode read FNameMode write SetNameMode;
   end;
 
 implementation
 
 uses
-  NtUtils.Strings, TU.LsaApi, UI.Colors;
+  NtUtils.Strings, TU.LsaApi, UI.Colors, NtUtils.Lsa;
 
 {$R *.dfm}
 
 { TFramePrivileges }
+
+function GetPrivilegeGroupId(Value: TLuid): Integer;
+const
+  // Be consistent with ListView's groups
+  GROUP_ID_HIGH = 0;
+  GROUP_ID_MEDIUM = 1;
+  GROUP_ID_LOW = 2;
+begin
+  if LsaxQueryIntegrityPrivilege(Value) > SECURITY_MANDATORY_MEDIUM_RID  then
+    Result := GROUP_ID_HIGH
+  else if LsaxQueryIntegrityPrivilege(Value) < SECURITY_MANDATORY_MEDIUM_RID
+    then Result := GROUP_ID_LOW
+  else
+    Result := GROUP_ID_MEDIUM;
+end;
+
+function FormatHint(Value: TLuid): String;
+begin
+  Result := 'Name: ' + #$D#$A +
+    '    ' + TPrivilegeCache.QueryName(Value) + '  ' + #$D#$A +
+    'Description: ' + #$D#$A +
+    '    ' + TPrivilegeCache.QueryDisplayName(Value) + '  ' + #$D#$A +
+    'Value:'  + #$D#$A +
+    '    ' + IntToStr(Value);
+end;
 
 procedure TFramePrivileges.AddAllPrivileges;
 var
@@ -139,6 +173,14 @@ begin
   Result := -1;
 end;
 
+function TFramePrivileges.GetAttributes(Ind: Integer): Cardinal;
+begin
+  if (0 <= Ind) and (Ind <= High(FPrivileges)) then
+    Result := FPrivileges[Ind].Attributes
+  else
+    raise ERangeError.Create('TFramePrivileges.GetAttributes');
+end;
+
 function TFramePrivileges.GetPrivilege(Ind: Integer): TPrivilege;
 begin
   if (0 <= Ind) and (Ind <= High(FPrivileges)) then
@@ -152,6 +194,12 @@ procedure TFramePrivileges.ListViewItemChecked(Sender: TObject;
 begin
   if Assigned(Item) then
     SetItemColor(Item.Index);
+end;
+
+function TFramePrivileges.PrivilegeCount: Integer;
+begin
+  Assert(Length(FPrivileges) = ListView.Items.Count);
+  Result := Length(FPrivileges);
 end;
 
 function TFramePrivileges.Privileges: TPrivilegeArray;
@@ -186,11 +234,20 @@ begin
     end;
 end;
 
+procedure TFramePrivileges.SetAttributes(Ind: Integer; const Value: Cardinal);
+begin
+  if (Ind < 0) or (Ind > High(FPrivileges)) then
+    raise ERangeError.Create('TFramePrivileges.SetAttributes');
+
+  FPrivileges[Ind].Attributes := Value;
+  SetItemData(ListView.Items[Ind], FPrivileges[Ind]);
+end;
+
 procedure TFramePrivileges.SetColorMode(const Value: TPrivilegeColorMode);
 var
   i: Integer;
 begin
-  FMode := Value;
+  FColorMode := Value;
 
   ListView.Items.BeginUpdate;
   for i := 0 to ListView.Items.Count - 1 do
@@ -202,15 +259,21 @@ procedure TFramePrivileges.SetItemColor(Index: Cardinal);
 begin
   if ListView.Checkboxes then
   begin
-    if ListView.Items[Index].Checked and (FMode = pmGrayChecked) then
+    if ListView.Items[Index].Checked and (FColorMode = pcGrayChecked) then
     begin
       ListView.Items[Index].Color := clRemoved;
       Exit;
     end;
 
-    if not ListView.Items[Index].Checked and (FMode = pmGrayUnchecked) then
+    if not ListView.Items[Index].Checked and (FColorMode = pcGrayUnchecked) then
     begin
       ListView.Items[Index].Color := clRemoved;
+      Exit;
+    end;
+
+    if not ListView.Items[Index].Checked and (FColorMode = pcColorChecked) then
+    begin
+      ListView.Items[Index].ColorEnabled := False;
       Exit;
     end;
   end;
@@ -221,12 +284,37 @@ end;
 function TFramePrivileges.SetItemData(Item: TListItemEx;
   Privilege: TPrivilege): TListItemEx;
 begin
-  Item.Cell[0] := TPrivilegeCache.QueryName(Privilege.Luid);
+  if FNameMode = pnName then
+    Item.Cell[0] := TPrivilegeCache.QueryName(Privilege.Luid)
+  else
+    Item.Cell[0] := PrivilegeFriendlyName(TPrivilegeCache.QueryName(
+      Privilege.Luid));
+
   Item.Cell[1] := StateOfPrivilegeToString(Privilege.Attributes);
   Item.Cell[2] := TPrivilegeCache.QueryDisplayName(Privilege.Luid);
   Item.Cell[3] := IntToStr(Privilege.Luid);
+  Item.Hint := FormatHint(Privilege.Luid);
+  Item.GroupID := GetPrivilegeGroupId(Privilege.Luid);
+
   SetItemColor(Item.Index);
   Result := Item;
+end;
+
+procedure TFramePrivileges.SetNameMode(const Value: TPrivilegeNameMode);
+var
+  i: Integer;
+begin
+  if FNameMode <> Value then
+  begin
+    FNameMode := Value;
+
+    ListView.Items.BeginUpdate;
+
+    for i := 0 to ListView.Items.Count - 1 do
+      SetItemData(ListView.Items[i], FPrivileges[i]);
+
+    ListView.Items.EndUpdate;
+  end;
 end;
 
 procedure TFramePrivileges.SetPrivilege(Ind: Integer; const Value: TPrivilege);

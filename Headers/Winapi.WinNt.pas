@@ -38,6 +38,15 @@ const
   SECURITY_MAX_SID_STRING_CHARACTERS = 2 + 4 + 15 +
     (11 * SID_MAX_SUB_AUTHORITIES) + 1;
 
+  // 9425
+  SECURITY_MANDATORY_UNTRUSTED_RID = $0000;
+  SECURITY_MANDATORY_LOW_RID = $1000;
+  SECURITY_MANDATORY_MEDIUM_RID = $2000;
+  SECURITY_MANDATORY_MEDIUM_PLUS_RID = SECURITY_MANDATORY_MEDIUM_RID + $0100;
+  SECURITY_MANDATORY_HIGH_RID = $3000;
+  SECURITY_MANDATORY_SYSTEM_RID = $4000;
+  SECURITY_MANDATORY_PROTECTED_PROCESS_RID = $5000;
+
   // 9641
   SE_GROUP_MANDATORY = $00000001;
   SE_GROUP_ENABLED_BY_DEFAULT = $00000002;
@@ -155,6 +164,8 @@ type
   TLuidArray = array [Word] of TLuid;
   PLuidArray = ^TLuidArray;
 
+  TLuidDynArray = array of TLuid;
+
   // 1119
   PListEntry = ^TListEntry;
   TListEntry = record
@@ -180,6 +191,10 @@ type
     Attributes: Cardinal;
   end;
   PLuidAndAttributes = ^TLuidAndAttributes;
+
+  TPrivilege = TLuidAndAttributes;
+  PPrivilege = PLuidAndAttributes;
+  TPrivilegeArray = array of TPrivilege;
 
   // 8999
   TSidIdentifierAuthority = record

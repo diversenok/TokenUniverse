@@ -50,9 +50,6 @@ type
   end;
   TGroupArray = array of TGroup;
 
-  TPrivilege = TLuidAndAttributes;
-  TPrivilegeArray = array of TPrivilege;
-
 implementation
 
 uses
