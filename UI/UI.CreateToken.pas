@@ -120,6 +120,7 @@ end;
 procedure TDialogCreateToken.ButtonLoadClick(Sender: TObject);
 var
   Source: TToken;
+  Expiration: TDateTime;
   i, j: Integer;
 begin
   Source := TDialogPickToken.Execute(Self);
@@ -151,12 +152,13 @@ begin
 
     if not CheckBoxInfinite.Checked then
     begin
-      // TODO: extract date/time only
+      Expiration := Source.InfoClass.Statistics.ExpirationTime.ToDateTime;
 
-      DateExpires.DateTime :=
-        Source.InfoClass.Statistics.ExpirationTime.ToDateTime;
+      // Date only
+      DateExpires.DateTime := Trunc(Expiration);
 
-      TimeExpires.DateTime := DateExpires.DateTime;
+      // Time only
+      TimeExpires.DateTime := Expiration - Trunc(Expiration);
     end;
   end;
 
