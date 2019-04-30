@@ -44,31 +44,6 @@ type
     function ToString: String;
   end;
 
-  TAuditState = (
-    asIncludeSuccess = PER_USER_AUDIT_SUCCESS_INCLUDE,
-    asExcludeSuccess = PER_USER_AUDIT_SUCCESS_EXCLUDE,
-    asIncludeFailure = PER_USER_AUDIT_FAILURE_INCLUDE,
-    asExcludeFailure = PER_USER_AUDIT_FAILURE_EXCLUDE
-  );
-
-  TAuditStateHelper = record helper for TAuditState
-    function Contains(State: TAuditState): Boolean;
-    procedure Include(State: TAuditState);
-    procedure Exclude(State: TAuditState);
-  end;
-
-  TTokenPerUserAudit = class
-  private
-    function GetState(Index: Integer): TAuditState;
-    procedure SetState(Index: Integer; Value: TAuditState);
-  public
-    AuditPolicySize: Integer;
-    Data: PTokenAuditPolicy;
-    property SubCategory[Index: Integer]: TAuditState read GetState write SetState;
-    constructor CreateCopy(Src: TTokenPerUserAudit);
-    destructor Destroy; override;
-  end;
-
 function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
 
@@ -208,93 +183,6 @@ begin
   else
     Result := IntToHexEx(UInt64(Level));
   end;
-end;
-
-{ TAuditStateHelper }
-
-function TAuditStateHelper.Contains(State: TAuditState): Boolean;
-begin
-  Result := Cardinal(Self) and Cardinal(State) = Cardinal(State);
-end;
-
-procedure TAuditStateHelper.Exclude(State: TAuditState);
-begin
-  Self := TAuditState(Cardinal(Self) and not Cardinal(State));
-end;
-
-procedure TAuditStateHelper.Include(State: TAuditState);
-begin
-  Self := TAuditState(Cardinal(Self) or Cardinal(State));
-end;
-
-{ TTokenPerUserAudit }
-
-constructor TTokenPerUserAudit.CreateCopy(Src: TTokenPerUserAudit);
-var
-  i: Integer;
-begin
-  Self.AuditPolicySize := Src.AuditPolicySize;
-
-  Self.Data := AllocMem(AuditPolicySize);
-  for i := 0 to AuditPolicySize - 1 do
-    Self.Data.PerUserPolicy[i] := Src.Data.PerUserPolicy[i];
-end;
-
-destructor TTokenPerUserAudit.Destroy;
-begin
-  FreeMem(Data);
-  Data := nil;
-end;
-
-function TTokenPerUserAudit.GetState(Index: Integer): TAuditState;
-var
-  RawResult: Byte;
-begin
-  if (Index < 0) or (Index > AuditPolicySize * 2) then
-    Exit(TAuditState(0));
-
-  // Each bytes stores policies for two subcategories
-  RawResult := Data.PerUserPolicy[Index div 2];
-
-  // We need only half of the byte
-  if Index mod 2 = 0 then
-    RawResult := RawResult mod $10
-  else
-    RawResult := RawResult div $10;
-
-  Result := TAuditState(RawResult);
-end;
-
-procedure TTokenPerUserAudit.SetState(Index: Integer; Value: TAuditState);
-var
-  PolicyByte, RawValue: Byte;
-begin
-  if (Index < 0) or (Index > AuditPolicySize * 2) then
-    Exit;
-
-  {$R-}
-  // We need half a byte
-  RawValue := Byte(Value) mod $10;
-  {$R+}
-
-  // Preserve another half of the target byte since it might already store
-  // some policies.
-
-  PolicyByte := Data.PerUserPolicy[Index div 2];
-
-  if Index mod 2 = 0 then
-  begin
-    PolicyByte := PolicyByte and $F0;
-    PolicyByte := PolicyByte or RawValue;
-  end
-  else
-  begin    
-    RawValue := RawValue shl 4;
-    PolicyByte := PolicyByte and $0F;
-    PolicyByte := PolicyByte or RawValue;
-  end;  
-
-  Data.PerUserPolicy[Index div 2] := PolicyByte;
 end;
 
 { TTokenSource }
