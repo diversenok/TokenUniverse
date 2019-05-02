@@ -5,9 +5,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
-  Vcl.ComCtrls, UI.ListViewEx, TU.Tokens, NtUtils.Types;
+  Vcl.ComCtrls, UI.ListViewEx, NtUtils.Lsa.Audit;
 
 type
+  TApplyProc = procedure (AuditPolicy: IPerUserAudit) of object;
+
   TFrameAudit = class(TFrame)
     ListView: TListViewEx;
     AuditPopup: TPopupMenu;
@@ -16,7 +18,7 @@ type
     AuditIncFail: TMenuItem;
     AuditExcFail: TMenuItem;
     ButtonApply: TButton;
-    LabelNote: TLabel;
+    LabelStatus: TLabel;
     procedure ListViewContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
     procedure AuditIncSuccClick(Sender: TObject);
@@ -25,24 +27,24 @@ type
     procedure AuditExcFailClick(Sender: TObject);
     procedure ButtonApplyClick(Sender: TObject);
   private
-    Token: TToken;
-    Policy: ITokenPerUserAudit;
-    procedure OnAuditChange(NewAudit: ITokenPerUserAudit);
+    AuditEnties: TAuditCategories;
+    Policy: IPerUserAudit;
+    ApplyProc: TApplyProc;
+
     procedure ProcessPopupAction(Flag: Integer; NewState: Boolean);
     procedure FillRow(Index: Integer);
-    function GetSubscribed: Boolean;
+    procedure SetApplyEvent(Value: TApplyProc);
   public
-    property Subscribed: Boolean read GetSubscribed;
-    procedure SubscribeToken(Token: TToken);
-    procedure UnsubscribeToken(Dummy: TToken = nil);
-    procedure UpdateCategories;
-    destructor Destroy; override;
+    procedure DelayedCreate;
+    procedure Load(AuditPoicy: IPerUserAudit);
+    procedure LoadForSid(Sid: PSid);
+    property OnApplyClick: TApplyProc read ApplyProc write SetApplyEvent;
   end;
 
 implementation
 
 uses
-  Winapi.NtSecApi, Ntapi.ntdef, NtUtils.Lsa, UI.Colors, DelphiUtils.Strings;
+  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUtils.Strings;
 
 {$R *.dfm}
 
@@ -69,44 +71,32 @@ begin
 end;
 
 procedure TFrameAudit.ButtonApplyClick(Sender: TObject);
+var
+  i: Integer;
 begin
-  try
-    Token.InfoClass.AuditPolicy := Policy;
-  except
-    SubscribeToken(Token);
-    raise;
-  end;
-end;
+  for i := 0 to ListView.Items.Count - 1 do
+    ListView.Items[i].ColorEnabled := False;
 
-destructor TFrameAudit.Destroy;
-begin
-  UnsubscribeToken;
-  inherited;
+  if Assigned(Policy) and Assigned(ApplyProc)then
+    ApplyProc(Policy);
 end;
 
 procedure TFrameAudit.FillRow(Index: Integer);
+const
+  ColumnToFlag: array [1 .. 4] of Integer = (
+    PER_USER_AUDIT_SUCCESS_INCLUDE, PER_USER_AUDIT_SUCCESS_EXCLUDE,
+    PER_USER_AUDIT_FAILURE_INCLUDE, PER_USER_AUDIT_FAILURE_EXCLUDE
+  );
+var
+  ColumnInd: Integer;
 begin
-  Assert(Assigned(Policy));
-
   with ListView.Items[Index] do
-    begin
-      Cell[1] := CheckboxToString(Policy.ContainsFlag(Index,
-        PER_USER_AUDIT_SUCCESS_INCLUDE));
-
-      Cell[2] := CheckboxToString(Policy.ContainsFlag(Index,
-        PER_USER_AUDIT_SUCCESS_EXCLUDE));
-
-      Cell[3] := CheckboxToString(Policy.ContainsFlag(Index,
-        PER_USER_AUDIT_FAILURE_INCLUDE));
-
-      Cell[4] :=  CheckboxToString(Policy.ContainsFlag(Index,
-        PER_USER_AUDIT_FAILURE_EXCLUDE));
-    end
-end;
-
-function TFrameAudit.GetSubscribed: Boolean;
-begin
-  Result := Assigned(Token);
+    for ColumnInd := 1 to 4 do
+      if Assigned(Policy) then
+        Cell[ColumnInd] := CheckboxToString(Policy.ContainsFlag(Index,
+          ColumnToFlag[ColumnInd]))
+      else
+        Cell[ColumnInd] := '?';
 end;
 
 procedure TFrameAudit.ListViewContextPopup(Sender: TObject; MousePos: TPoint;
@@ -127,7 +117,7 @@ begin
 
   for i := 0 to ListView.Items.Count - 1 do
     if ListView.Items[i].Selected then
-    begin    
+    begin
       if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_INCLUDE) then
         AuditIncSucc.Checked := True;
 
@@ -142,18 +132,55 @@ begin
     end;
 end;
 
-procedure TFrameAudit.OnAuditChange(NewAudit: ITokenPerUserAudit);
+procedure TFrameAudit.Load(AuditPoicy: IPerUserAudit);
+var
+  Ind: Integer;
 begin
-  Policy := NewAudit;
-  ButtonApply.Enabled := Assigned(Policy);
-  UpdateCategories;
+  DelayedCreate;
+
+  Policy := AuditPoicy;
+  ButtonApply.Enabled := Assigned(Policy) and Assigned(ApplyProc);
+
+  ListView.Items.BeginUpdate;
+
+  for Ind := 0 to ListView.Items.Count - 1 do
+  begin
+    ListView.Items[Ind].ColorEnabled := False;
+    FillRow(Ind);
+  end;
+
+  ListView.Items.EndUpdate;
+end;
+
+procedure TFrameAudit.LoadForSid(Sid: PSid);
+var
+  StatusEx: TNtxStatus;
+begin
+  Policy := nil;
+  StatusEx := TPerUserAudit.CreateLoadForUser(Sid, Policy);
+
+  if StatusEx.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsarQueryAuditPolicy') then
+  begin
+    LabelStatus.Caption := 'Audit policy is not defined for the account';
+    LabelStatus.Hint := '';
+    StatusEx := TPerUserAudit.CreateEmpty(Policy);
+  end;
+
+  if not StatusEx.IsSuccess then
+  begin
+    LabelStatus.Caption := StatusEx.ToString;
+    LabelStatus.Hint := StatusEx.MessageHint;
+  end;
+
+  Load(Policy);
 end;
 
 procedure TFrameAudit.ProcessPopupAction(Flag: Integer; NewState: Boolean);
 var
   i: Integer;
 begin
-  Assert(Assigned(Policy));
+  if not Assigned(Policy) then
+    Exit;
 
   ListView.Items.BeginUpdate;
   for i := 0 to ListView.Items.Count - 1 do
@@ -166,46 +193,32 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-procedure TFrameAudit.SubscribeToken(Token: TToken);
+procedure TFrameAudit.SetApplyEvent(Value: TApplyProc);
 begin
-  UnsubscribeToken;
-
-  Self.Token := Token;
-  Token.OnClose.Subscribe(UnsubscribeToken);
-
-  if Token.InfoClass.Query(tdTokenAuditPolicy) then
-    OnAuditChange(Token.InfoClass.AuditPolicy)
-  else
-    OnAuditChange(nil);
-
-  Token.Events.OnAuditChange.Subscribe(OnAuditChange, False);
+  ApplyProc := Value;
+  ButtonApply.Enabled := Assigned(Policy) and Assigned(Value);
 end;
 
-procedure TFrameAudit.UnsubscribeToken(Dummy: TToken);
-begin
-  if Assigned(Token) then
-  begin
-    Token.Events.OnAuditChange.Unsubscribe(OnAuditChange);
-    Token.OnClose.Unsubscribe(UnsubscribeToken);
-    Token := nil;
-    OnAuditChange(nil);
-  end;
-end;
-
-procedure TFrameAudit.UpdateCategories;
+procedure TFrameAudit.DelayedCreate;
 var
-  AuditEnties: TAuditCategories;
   Ind, SubInd: Integer;
+  StatusEx: TNtxStatus;
 begin
-  Assert(Assigned(ListView));
+  if Length(AuditEnties.Categories) > 0 then
+    Exit; // Already done
 
-  if not NT_SUCCESS(LsaxEnumerateAuditCategiries(AuditEnties))then
+  StatusEx := LsaxEnumerateAuditCategiries(AuditEnties);
+  if not StatusEx.IsSuccess then
+  begin
+    LabelStatus.Caption := StatusEx.ToString;
+    LabelStatus.Hint := StatusEx.MessageHint;
     Exit;
+  end;
 
   ListView.Items.BeginUpdate;
   ListView.Items.Clear;
 
-  // Update ListView Groups
+  // Each audit category is a group
   begin
     ListView.Groups.BeginUpdate;
     ListView.Groups.Clear;
@@ -220,7 +233,7 @@ begin
     ListView.Groups.EndUpdate;
   end;
 
-  // Update ListView Items
+  // Each subcategory is and item
   for Ind := 0 to High(AuditEnties.SubCategories) do
     for SubInd := 0 to High(AuditEnties.SubCategories[Ind]) do
       with ListView.Items.Add do
@@ -228,15 +241,6 @@ begin
         Caption := AuditEnties.SubCategories[Ind, SubInd].Name;
         GroupID := Ind;
       end;
-
-  // Fill up data from the token
-  if Assigned(Policy) then
-    for Ind := 0 to ListView.Items.Count - 1 do
-      FillRow(Ind)
-  else
-    for Ind := 0 to ListView.Items.Count - 1 do
-      for SubInd := 1 to 4 do
-        ListView.Items[Ind].SubItems.Add('?');
 
   ListView.Items.EndUpdate;
 end;

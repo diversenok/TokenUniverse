@@ -1,26 +1,25 @@
 object FrameAudit: TFrameAudit
   Left = 0
   Top = 0
-  Width = 388
-  Height = 369
+  Width = 451
+  Height = 304
   Align = alClient
   TabOrder = 0
-  object LabelNote: TLabel
+  object LabelStatus: TLabel
     Left = 3
-    Top = 347
-    Width = 279
+    Top = 282
+    Width = 342
     Height = 19
     Anchors = [akLeft, akRight, akBottom]
     AutoSize = False
-    Caption = 'Note: audition policy for a token can be set only once'
     EllipsisPosition = epEndEllipsis
   end
   object ListView: TListViewEx
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 382
-    Height = 337
+    Width = 445
+    Height = 272
     Margins.Bottom = 29
     Align = alClient
     Columns = <
@@ -60,8 +59,8 @@ object FrameAudit: TFrameAudit
     PopupOnItemsOnly = True
   end
   object ButtonApply: TButton
-    Left = 288
-    Top = 342
+    Left = 351
+    Top = 277
     Width = 97
     Height = 25
     Anchors = [akRight, akBottom]

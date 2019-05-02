@@ -50,39 +50,19 @@ type
   end;
   TGroupArray = array of TGroup;
 
-  ITokenPerUserAudit = interface
+  IPerUserAudit = interface
     function RawBuffer: PTokenAuditPolicy;
     function RawBufferSize: Integer;
+    procedure FreeRawBuffer(Buffer: PTokenAuditPolicy);
+    function AssignToUser(Sid: PSid): TNtxStatus;
     function ContainsFlag(Index: Integer; Flag: Integer): Boolean;
     procedure SetFlag(Index: Integer; Flag: Integer; Enabled: Boolean);
-  end;
-
-  TTokenPerUserAudit = class(TInterfacedObject, ITokenPerUserAudit)
-  protected
-    AuditPolicySize: Integer;
-    Data: PTokenAuditPolicy;
-    function GetSubCatogiry(Index: Integer): Byte;
-    procedure SetSubCatogiry(Index: Integer; Value: Byte);
-  private
-    function RawBuffer: PTokenAuditPolicy;
-    function RawBufferSize: Integer;
-  public
-    constructor CreateCopy(Buffer: PTokenAuditPolicy; BufferSize: Integer);
-    destructor Destroy; override;
-
-    function ContainsFlag(Index: Integer; Flag: Integer): Boolean;
-    procedure SetFlag(Index: Integer; Flag: Integer; Enabled: Boolean);
-
-    property SuccessInclude[SubCatogiry: Integer]: Boolean index PER_USER_AUDIT_SUCCESS_INCLUDE read ContainsFlag write SetFlag;
-    property SuccessExclude[SubCatogiry: Integer]: Boolean index PER_USER_AUDIT_SUCCESS_EXCLUDE read ContainsFlag write SetFlag;
-    property FailureInclude[SubCatogiry: Integer]: Boolean index PER_USER_AUDIT_FAILURE_INCLUDE read ContainsFlag write SetFlag;
-    property FailureExclude[SubCatogiry: Integer]: Boolean index PER_USER_AUDIT_FAILURE_EXCLUDE read ContainsFlag write SetFlag;
   end;
 
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, Winapi.WinBase, Winapi.Sddl,
+  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.Sddl,
   NtUtils.Exceptions, NtUtils.ApiExtension,
   DelphiUtils.Strings, System.SysUtils;
 
@@ -248,96 +228,6 @@ end;
 function TSid.SubAuthorities: Byte;
 begin
   Result := RtlSubAuthorityCountSid(FSid)^;
-end;
-
-{ TTokenPerUserAudit }
-
-function TTokenPerUserAudit.ContainsFlag(Index: Integer; Flag: Integer): Boolean;
-begin
-  Result := Contains(GetSubCatogiry(Index), Flag);
-end;
-
-constructor TTokenPerUserAudit.CreateCopy(Buffer: PTokenAuditPolicy;
-  BufferSize: Integer);
-var
-  i: Integer;
-begin
-  Self.AuditPolicySize := BufferSize;
-
-  Self.Data := AllocMem(AuditPolicySize);
-  for i := 0 to AuditPolicySize - 1 do
-    Self.Data.PerUserPolicy[i] := Buffer.PerUserPolicy[i];
-end;
-
-destructor TTokenPerUserAudit.Destroy;
-begin
-  FreeMem(Data);
-  Data := nil;
-  inherited;
-end;
-
-function TTokenPerUserAudit.GetSubCatogiry(Index: Integer): Byte;
-begin
-  if (Index < 0) or (Index > AuditPolicySize shl 1) then
-    Exit(0);
-
-  // Each bytes stores policies for two subcategories, extract the byte
-  Result := Data.PerUserPolicy[Index shr 1];
-
-  // Extract the required half of it
-  if Index and 1 = 0 then
-    Result := Result and $0F
-  else
-    Result := Result shr 4;
-end;
-
-function TTokenPerUserAudit.RawBuffer: PTokenAuditPolicy;
-begin
-  Result := Data;
-end;
-
-function TTokenPerUserAudit.RawBufferSize: Integer;
-begin
-  Result := AuditPolicySize;
-end;
-
-procedure TTokenPerUserAudit.SetFlag(Index: Integer; Flag: Integer;
-  Enabled: Boolean);
-begin
-  if Enabled then
-    SetSubCatogiry(Index, GetSubCatogiry(Index) or Flag)
-  else
-    SetSubCatogiry(Index, GetSubCatogiry(Index) and not Flag);
-end;
-
-procedure TTokenPerUserAudit.SetSubCatogiry(Index: Integer; Value: Byte);
-var
-  PolicyByte: Byte;
-begin
-  if (Index < 0) or (Index > AuditPolicySize shl 1) then
-    Exit;
-
-  // We need only half a byte
-  Value := Value and $0F;
-
-  // Since each byte stores policies for two subcategories we should modify
-  // only half of the byte preserving another half unchanged.
-
-  PolicyByte := Data.PerUserPolicy[Index shr 1];
-
-  if Index and 1 = 0 then
-  begin
-    PolicyByte := PolicyByte and $F0; // one half
-    PolicyByte := PolicyByte or Value;
-  end
-  else
-  begin
-    Value := Value shl 4;
-    PolicyByte := PolicyByte and $0F; // another half
-    PolicyByte := PolicyByte or Value;
-  end;
-
-  Data.PerUserPolicy[Index shr 1] := PolicyByte;
 end;
 
 end.

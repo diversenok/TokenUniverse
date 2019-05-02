@@ -3,7 +3,7 @@ object DialogSidView: TDialogSidView
   Top = 0
   Caption = 'SID Information'
   ClientHeight = 371
-  ClientWidth = 364
+  ClientWidth = 387
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object DialogSidView: TDialogSidView
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 358
+    Width = 381
     Height = 335
     Margins.Bottom = 33
     ActivePage = TabSid
@@ -32,7 +32,7 @@ object DialogSidView: TDialogSidView
       object LinkLabelDomain: TLinkLabel
         Left = 97
         Top = 103
-        Width = 243
+        Width = 266
         Height = 17
         Hint = 'View the domain SID'
         Anchors = [akLeft, akTop, akRight]
@@ -68,7 +68,7 @@ object DialogSidView: TDialogSidView
       object EditFullName: TEdit
         Left = 97
         Top = 11
-        Width = 243
+        Width = 266
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         BorderStyle = bsNone
@@ -79,7 +79,7 @@ object DialogSidView: TDialogSidView
       object EditSID: TEdit
         Left = 97
         Top = 34
-        Width = 243
+        Width = 266
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         BorderStyle = bsNone
@@ -90,7 +90,7 @@ object DialogSidView: TDialogSidView
       object EditType: TEdit
         Left = 97
         Top = 57
-        Width = 243
+        Width = 266
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         BorderStyle = bsNone
@@ -109,7 +109,7 @@ object DialogSidView: TDialogSidView
       object EditSubAuthorities: TEdit
         Left = 97
         Top = 80
-        Width = 136
+        Width = 159
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         BorderStyle = bsNone
@@ -118,7 +118,7 @@ object DialogSidView: TDialogSidView
         Text = '-'
       end
       object LinkLabelMinusOne: TLinkLabel
-        Left = 256
+        Left = 279
         Top = 80
         Width = 81
         Height = 17
@@ -159,22 +159,22 @@ object DialogSidView: TDialogSidView
       inline FrameLsaPrivileges: TFrameLsaPrivileges
         Left = 0
         Top = 0
-        Width = 350
+        Width = 373
         Height = 289
         Align = alClient
         TabOrder = 0
         inherited LabelStatus: TLabel
           Top = 266
-          Width = 260
+          Width = 283
         end
         inherited ButtonApply: TButton
           Top = 261
         end
         inherited FramePrivileges: TFramePrivileges
-          Width = 350
+          Width = 373
           Height = 260
           inherited ListView: TListViewEx
-            Width = 344
+            Width = 367
             Height = 254
             PopupMenu = FrameLsaPrivileges.PopupMenu
           end
@@ -187,19 +187,19 @@ object DialogSidView: TDialogSidView
       inline FrameLsaRights: TFrameLsaRights
         Left = 0
         Top = 0
-        Width = 350
+        Width = 373
         Height = 289
         Align = alClient
         TabOrder = 0
         inherited LabelStatus: TLabel
           Top = 266
-          Width = 260
+          Width = 283
         end
         inherited ButtonApply: TButton
           Top = 261
         end
         inherited ListView: TListViewEx
-          Width = 344
+          Width = 367
           Height = 255
         end
       end
@@ -207,6 +207,50 @@ object DialogSidView: TDialogSidView
     object TabLsaAudit: TTabSheet
       Caption = 'Per-user audit'
       ImageIndex = 7
+      inline FrameLsaAudit: TFrameAudit
+        Left = 0
+        Top = 0
+        Width = 373
+        Height = 289
+        Align = alClient
+        TabOrder = 0
+        inherited LabelStatus: TLabel
+          Top = 267
+          Width = 264
+        end
+        inherited ListView: TListViewEx
+          Width = 367
+          Height = 257
+          Columns = <
+            item
+              Width = 120
+            end
+            item
+              Alignment = taCenter
+              Caption = 'Succ Inc'
+              Width = 55
+            end
+            item
+              Alignment = taCenter
+              Caption = 'Succ Exc'
+              Width = 55
+            end
+            item
+              Alignment = taCenter
+              Caption = 'Fail Inc'
+              Width = 55
+            end
+            item
+              Alignment = taCenter
+              Caption = 'Fail Exc'
+              Width = 55
+            end>
+        end
+        inherited ButtonApply: TButton
+          Left = 273
+          Top = 262
+        end
+      end
     end
     object TabLsaQuotas: TTabSheet
       Caption = 'Quotas'
@@ -214,7 +258,7 @@ object DialogSidView: TDialogSidView
     end
   end
   object ButtonClose: TButton
-    Left = 286
+    Left = 309
     Top = 342
     Width = 75
     Height = 25

@@ -146,8 +146,8 @@ type
 
   TAuditPolicyInformationDynArray = array of TAuditPolicyInformation;
 
-  TPAuditPolicyInformationArray = array [Byte] of PAuditPolicyInformation;
-  PPAuditPolicyInformationArray = ^TPAuditPolicyInformationArray;
+  TAuditPolicyInformationArray = array [Byte] of TAuditPolicyInformation;
+  PAuditPolicyInformationArray = ^TAuditPolicyInformationArray;
 
 // 1648
 function LsaRegisterLogonProcess(const LogonProcessName: TLsaString;
@@ -191,21 +191,28 @@ function LsaGetLogonSessionData(var LogonId: TLuid;
 
 // 5248
 function AuditSetSystemPolicy(AuditPolicy: TAuditPolicyInformationDynArray;
-  dwPolicyCount: Cardinal): Boolean; stdcall; external advapi32;
+  dwPolicyCount: Cardinal): Boolean; stdcall; external advapi32; overload;
+
+function AuditSetSystemPolicy(AuditPolicy: PAuditPolicyInformationArray;
+  dwPolicyCount: Cardinal): Boolean; stdcall; external advapi32; overload;
 
 // 5255
 function AuditSetPerUserPolicy(Sid: PSid; AuditPolicy:
   TAuditPolicyInformationDynArray; dwPolicyCount: Cardinal): Boolean; stdcall;
-  external advapi32;
+  external advapi32; overload;
+
+function AuditSetPerUserPolicy(Sid: PSid; AuditPolicy:
+  PAuditPolicyInformationArray; dwPolicyCount: Cardinal): Boolean; stdcall;
+  external advapi32; overload;
 
 // 5264
 function AuditQuerySystemPolicy(pSubCategoryGuids: TGuidDynArray;
-  dwPolicyCount: Cardinal; ppAuditPolicy: PPAuditPolicyInformationArray):
+  dwPolicyCount: Cardinal; out pAuditPolicy: PAuditPolicyInformationArray):
   Boolean; stdcall; external advapi32;
 
 // 5274
 function AuditQueryPerUserPolicy(pSid: PSid; SubCategoryGuids: TGuidDynArray;
-  dwPolicyCount: Cardinal; ppAuditPolicy: PPAuditPolicyInformationArray):
+  dwPolicyCount: Cardinal; out pAuditPolicy: PAuditPolicyInformationArray):
   Boolean; stdcall; external advapi32;
 
 // 5285

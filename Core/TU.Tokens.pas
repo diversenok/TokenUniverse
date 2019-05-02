@@ -50,7 +50,7 @@ type
     Statistics: TTokenStatistics;
     RestrictedSids: TGroupArray;
     Session: Cardinal;
-    AuditPolicy: ITokenPerUserAudit;
+    AuditPolicy: IPerUserAudit;
     SandboxInert: LongBool;
     Origin: TLuid;
     Elevation: TTokenElevationType;
@@ -66,7 +66,7 @@ type
 
     FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
     FOnSessionChange: TCachingEvent<Cardinal>;
-    FOnAuditChange: TCachingEvent<ITokenPerUserAudit>;
+    FOnAuditChange: TCachingEvent<IPerUserAudit>;
     FOnOriginChange: TCachingEvent<TLuid>;
     FOnUIAccessChange: TCachingEvent<LongBool>;
     FOnIntegrityChange: TCachingEvent<TTokenIntegrity>;
@@ -87,7 +87,7 @@ type
     property OnOwnerChange: TCachingEvent<ISid> read FOnOwnerChange;
     property OnPrimaryChange: TCachingEvent<ISid> read FOnPrimaryChange;
     property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
-    property OnAuditChange: TCachingEvent<ITokenPerUserAudit> read FOnAuditChange;
+    property OnAuditChange: TCachingEvent<IPerUserAudit> read FOnAuditChange;
     property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
     property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TCachingEvent<TTokenIntegrity> read FOnIntegrityChange;
@@ -118,7 +118,7 @@ type
     procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
     procedure SetMandatoryPolicy(const Value: Cardinal);
     procedure SetSession(const Value: Cardinal);
-    procedure SetAuditPolicy(Value: ITokenPerUserAudit);
+    procedure SetAuditPolicy(Value: IPerUserAudit);
     procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(Value: ISid);
@@ -137,7 +137,7 @@ type
     function GetRestrictedSids: TGroupArray;
     function GetSandboxInert: LongBool;
     function GetSession: Cardinal;
-    function GetAuditPolicy: ITokenPerUserAudit;
+    function GetAuditPolicy: IPerUserAudit;
     function GetSource: TTokenSource;
     function GetStatistics: TTokenStatistics;
     function GetTokenType: TTokenTypeEx;
@@ -164,7 +164,7 @@ type
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
-    property AuditPolicy: ITokenPerUserAudit read GetAuditPolicy write SetAuditPolicy; // class 16 #settable
+    property AuditPolicy: IPerUserAudit read GetAuditPolicy write SetAuditPolicy; // class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
@@ -465,7 +465,7 @@ implementation
 
 uses
   System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension, DelphiUtils.Strings,
-  Winapi.WinError, Winapi.winsta, Ntapi.ntstatus,
+  Winapi.WinError, Winapi.winsta, Ntapi.ntstatus, NtUtils.Lsa.Audit,
   Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings;
 
 const
@@ -1465,7 +1465,7 @@ end;
 
 { TTokenData }
 
-function TTokenData.GetAuditPolicy: ITokenPerUserAudit;
+function TTokenData.GetAuditPolicy: IPerUserAudit;
 begin
   Assert(Token.Cache.IsCached[tdTokenAuditPolicy]);
   Result := Token.Cache.AuditPolicy;
@@ -2002,10 +2002,18 @@ begin
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
 end;
 
-procedure TTokenData.SetAuditPolicy(Value: ITokenPerUserAudit);
+procedure TTokenData.SetAuditPolicy(Value: IPerUserAudit);
+var
+  pAuditPolicy: PTokenAuditPolicy;
 begin
-  NativeCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy,
-    Value.RawBuffer, Value.RawBufferSize), SetterMessage(TokenAuditPolicy));
+  pAuditPolicy := Value.RawBuffer;
+
+  try
+    NativeCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy,
+      pAuditPolicy, Value.RawBufferSize), SetterMessage(TokenAuditPolicy));
+  finally
+    Value.FreeRawBuffer(pAuditPolicy);
+  end;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenAuditPolicy);

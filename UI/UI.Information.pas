@@ -110,6 +110,7 @@ type
     procedure ChangedPrimaryGroup(NewPrimary: ISid);
     procedure ChangedVAllowed(NewVAllowed: LongBool);
     procedure ChangedVEnabled(NewVEnabled: LongBool);
+    procedure SetAuditPolicy(NewAudit: IPerUserAudit);
     procedure Refresh;
     procedure UpdateObjectTab;
     procedure UpdateAuditTab;
@@ -471,6 +472,7 @@ begin
   SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
+  FrameAudit.OnApplyClick := SetAuditPolicy;
 
   // "Refresh" queries all the information, stores changeble one in the event
   // handler, and distributes changed one to every existing event listener
@@ -601,6 +603,16 @@ begin
   PageControlChange(Self);
 end;
 
+procedure TInfoDialog.SetAuditPolicy(NewAudit: IPerUserAudit);
+begin
+  try
+    Token.InfoClass.AuditPolicy := NewAudit;
+  finally
+    TabAudit.Tag := TAB_INVALIDATED;
+    UpdateAuditTab;
+  end;
+end;
+
 procedure TInfoDialog.SetStaleColor(Sender: TObject);
 begin
   Assert(Sender is TComboBox);
@@ -612,9 +624,11 @@ begin
   if TabAudit.Tag = TAB_UPDATED then
     Exit;
 
-  Token.InfoClass.ReQuery(tdTokenAuditPolicy);
-  if not FrameAudit.Subscribed then
-    FrameAudit.SubscribeToken(Token);
+  // TODO: Subscribe event
+  if Token.InfoClass.ReQuery(tdTokenAuditPolicy) then
+    FrameAudit.Load(Token.InfoClass.AuditPolicy)
+  else
+    FrameAudit.Load(nil);
 
   TabAudit.Tag := TAB_UPDATED;
 end;

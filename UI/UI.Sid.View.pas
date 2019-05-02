@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   UI.Prototypes.ChildForm, NtUtils.Types, UI.Prototypes.Lsa.Rights,
-  UI.Prototypes.Lsa.Privileges;
+  UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame;
 
 type
   TDialogSidView = class(TChildTaskbarForm)
@@ -34,6 +34,7 @@ type
     FrameLsaRights: TFrameLsaRights;
     TabLsaQuotas: TTabSheet;
     FrameLsaPrivileges: TFrameLsaPrivileges;
+    FrameLsaAudit: TFrameAudit;
     procedure LinkLabelDomainLinkClick(Sender: TObject; const Link: string;
       LinkType: TSysLinkType);
     procedure ButtonCloseClick(Sender: TObject);
@@ -41,6 +42,7 @@ type
       LinkType: TSysLinkType);
   private
     Sid: ISid;
+    procedure SetUserAudit(NewAudit: IPerUserAudit);
   public
     class procedure CreateView(SrcSid: ISid); static;
   end;
@@ -102,6 +104,9 @@ begin
     FrameLsaPrivileges.DeleyedCreate;
     FrameLsaPrivileges.LoadForSid(Sid);
 
+    FrameLsaAudit.OnApplyClick := SetUserAudit;
+    FrameLsaAudit.LoadForSid(Sid.Sid);
+
     Show;
   end;
 end;
@@ -123,6 +128,14 @@ procedure TDialogSidView.LinkLabelMinusOneLinkClick(Sender: TObject;
 begin
   if Sid.SubAuthorities > 0 then
     TDialogSidView.CreateView(Sid.ParentSid);
+end;
+
+procedure TDialogSidView.SetUserAudit(NewAudit: IPerUserAudit);
+begin
+  FrameLsaAudit.LabelStatus.Caption := '';
+  FrameLsaAudit.LabelStatus.Hint := '';
+
+  NewAudit.AssignToUser(Sid.Sid).RaiseOnError;
 end;
 
 end.

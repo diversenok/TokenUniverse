@@ -3,20 +3,10 @@ unit NtUtils.Lsa;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, NtUtils.Exceptions;
+  Winapi.WinNt, Ntapi.ntdef, Winapi.NtSecApi, NtUtils.Exceptions;
 
 type
   TNtxStatus = NtUtils.Exceptions.TNtxStatus;
-
-  TAuditEntitiy = record
-    Value: TGuid;
-    Name: String;
-  end;
-
-  TAuditCategories = record
-    Categories: array of TAuditEntitiy;
-    SubCategories: array of array of TAuditEntitiy;
-  end;
 
   TPrivilegeDefinition = record
     Name: String;
@@ -41,11 +31,6 @@ type
   end;
 
   TTranslatedNames = array of TTranslatedName;
-
-{ ---------------------------------- Audit ---------------------------------- }
-
-// AuditEnumerateCategories & AuditEnumerateSubCategories
-function LsaxEnumerateAuditCategiries(out Items: TAuditCategories): NTSTATUS;
 
 { -------------------------------- Privileges ------------------------------- }
 
@@ -94,70 +79,8 @@ function LsaxLookupUserName(UserName: String; out Sid: PSid): NTSTATUS;
 implementation
 
 uses
-  Winapi.NtSecApi, Winapi.ntlsa, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntseapi,
+  Winapi.ntlsa, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntseapi,
   System.SysUtils, NtUtils.ApiExtension;
-
-{ Audit }
-
-function LsaxEnumerateAuditCategiries(out Items: TAuditCategories): NTSTATUS;
-var
-  Guids, SubGuids: PGuidArray;
-  Count, SubCount: Cardinal;
-  Ind, SubInd: Integer;
-  Buffer: PWideChar;
-begin
-  Result := STATUS_SUCCESS;
-  SetLength(Items.Categories, 0);
-  SetLength(Items.SubCategories, 0, 0);
-
-  // Query categories
-  if not AuditEnumerateCategories(Guids, Count) then
-    Exit(RtlxGetLastNtStatus);
-
-  SetLength(Items.Categories, Count);
-  SetLength(Items.SubCategories, Count, 0);
-
-  // Go through all categories
-  for Ind := 0 to High(Items.Categories) do
-  begin
-    Items.Categories[Ind].Value := Guids[Ind];
-
-    // Query category name
-    if AuditLookupCategoryNameW(Guids[Ind], Buffer) then
-    begin
-       Items.Categories[Ind].Name := String(Buffer);
-       AuditFree(Buffer);
-    end
-    else
-      Items.Categories[Ind].Name := GUIDToString(Guids[Ind]);
-
-    // Query subcategories of this category
-    if not AuditEnumerateSubCategories(Guids[Ind], False, SubGuids, SubCount)
-      then
-      Exit(RtlxGetLastNtStatus);
-
-    SetLength(Items.SubCategories[Ind], SubCount);
-
-    // Go through all subcategories
-    for SubInd := 0 to High(Items.SubCategories[Ind]) do
-    begin
-      Items.SubCategories[Ind, SubInd].Value := SubGuids[SubInd];
-
-      // Query subcategory name
-      if AuditLookupSubCategoryNameW(SubGuids[SubInd], Buffer) then
-      begin
-        Items.SubCategories[Ind, SubInd].Name := String(Buffer);
-        AuditFree(Buffer);
-      end
-      else
-        Items.SubCategories[Ind, SubInd].Name := GUIDToString(SubGuids[SubInd]);
-    end;
-
-    AuditFree(SubGuids);
-  end;
-
-  AuditFree(Guids);
-end;
 
 { Privileges }
 

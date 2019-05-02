@@ -15,6 +15,10 @@ type
     function Matches(Status: NTSTATUS; Location: String): Boolean;
     function IsSuccess: Boolean;
     procedure RaiseOnError;
+    function ToString: String;
+    function MessageHint: String;
+    class function FromWin32(RetVal: LongBool; Location: String): TNtxStatus;
+      static;
   end;
 
 type
@@ -116,9 +120,20 @@ implementation
 
 uses
   Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.WinError,
-  NtUtils.ErrorMsg;
+  NtUtils.ErrorMsg, NtUtils.ApiExtension;
 
 { TNtxStatus }
+
+class function TNtxStatus.FromWin32(RetVal: LongBool;
+  Location: String): TNtxStatus;
+begin
+  Result.Location := Location;
+
+  if not RetVal then
+    Result.Status := RtlxGetLastNtStatus
+  else
+    Result.Status := STATUS_SUCCESS;
+end;
 
 function TNtxStatus.IsSuccess: Boolean;
 begin
@@ -130,10 +145,20 @@ begin
   Result := (Self.Status = Status) and (Self.Location = Location);
 end;
 
+function TNtxStatus.MessageHint: String;
+begin
+  Result := SysNativeErrorMessage(Status);
+end;
+
 procedure TNtxStatus.RaiseOnError;
 begin
   if not NT_SUCCESS(Status) then
     raise ENtError.Create(Status, Location);
+end;
+
+function TNtxStatus.ToString: String;
+begin
+  Result := Location + ': ' + StatusToString(Status);
 end;
 
 { ELocatedOSError }

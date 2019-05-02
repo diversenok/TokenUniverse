@@ -625,7 +625,7 @@ object InfoDialog: TInfoDialog
         Height = 369
         Align = alClient
         TabOrder = 0
-        inherited LabelNote: TLabel
+        inherited LabelStatus: TLabel
           Top = 347
           Width = 279
         end

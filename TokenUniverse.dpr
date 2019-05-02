@@ -71,7 +71,8 @@ uses
   Ntapi.ntsam in 'Headers\Ntapi.ntsam.pas',
   UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView},
   UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame},
-  UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame};
+  UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
+  NtUtils.Lsa.Audit in 'NtUtils\NtUtils.Lsa.Audit.pas';
 
 {$R *.res}
 
