@@ -135,7 +135,11 @@ begin
   FrameLsaAudit.LabelStatus.Caption := '';
   FrameLsaAudit.LabelStatus.Hint := '';
 
-  NewAudit.AssignToUser(Sid.Sid).RaiseOnError;
+  try
+    NewAudit.AssignToUser(Sid.Sid).RaiseOnError;
+  finally
+    FrameLsaAudit.LoadForSid(Sid.Sid);
+  end;
 end;
 
 end.

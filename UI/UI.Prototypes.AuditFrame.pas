@@ -27,7 +27,8 @@ type
     procedure AuditExcFailClick(Sender: TObject);
     procedure ButtonApplyClick(Sender: TObject);
   private
-    AuditEnties: TAuditCategories;
+    Categories: TGuidDynArray;
+    SubCategories: TGuidDynArray2;
     Policy: IPerUserAudit;
     ApplyProc: TApplyProc;
 
@@ -204,10 +205,10 @@ var
   Ind, SubInd: Integer;
   StatusEx: TNtxStatus;
 begin
-  if Length(AuditEnties.Categories) > 0 then
+  if Length(Categories) > 0 then
     Exit; // Already done
 
-  StatusEx := LsaxEnumerateAuditCategiries(AuditEnties);
+  StatusEx := LsaxEnumerateAuditCategiries(Categories, SubCategories);
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
@@ -223,10 +224,10 @@ begin
     ListView.Groups.BeginUpdate;
     ListView.Groups.Clear;
 
-    for Ind := 0 to High(AuditEnties.Categories) do
+    for Ind := 0 to High(Categories) do
       with ListView.Groups.Add do
       begin
-        Header := AuditEnties.Categories[Ind].Name;
+        Header := LsaxLookupAuditCategoryName(Categories[Ind]);
         State := State + [lgsCollapsible];
       end;
 
@@ -234,11 +235,11 @@ begin
   end;
 
   // Each subcategory is and item
-  for Ind := 0 to High(AuditEnties.SubCategories) do
-    for SubInd := 0 to High(AuditEnties.SubCategories[Ind]) do
+  for Ind := 0 to High(SubCategories) do
+    for SubInd := 0 to High(SubCategories[Ind]) do
       with ListView.Items.Add do
       begin
-        Caption := AuditEnties.SubCategories[Ind, SubInd].Name;
+        Caption := LsaxLookupAuditSubCategoryName(SubCategories[Ind, SubInd]);
         GroupID := Ind;
       end;
 

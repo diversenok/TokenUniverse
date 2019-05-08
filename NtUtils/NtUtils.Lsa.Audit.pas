@@ -58,20 +58,22 @@ type
     property FailureExclude[SubCatogiry: Integer]: Boolean index PER_USER_AUDIT_FAILURE_EXCLUDE read ContainsFlag write SetFlag;
   end;
 
-  TAuditEntitiy = record
-    Value: TGuid;
-    Name: String;
-  end;
+  TGuidDynArray = Winapi.NtSecApi.TGuidDynArray;
+  TGuidDynArray2 = array of TGuidDynArray;
 
-  TAuditCategories = record
-    Categories: array of TAuditEntitiy;
-    SubCategories: array of array of TAuditEntitiy;
-    function AllSubCategories: TGuidDynArray;
-    function SubCategoriesCount: Cardinal;
-  end;
+// LsarEnumerateAuditCategories & LsarEnumerateAuditSubCategories
+function LsaxEnumerateAuditCategiries(out Categories: TGuidDynArray;
+  out SubCategories: TGuidDynArray2): TNtxStatus;
 
-// AuditEnumerateCategories & AuditEnumerateSubCategories
-function LsaxEnumerateAuditCategiries(out Items: TAuditCategories): TNtxStatus;
+// LsarEnumerateAuditSubCategories
+function LsaxEnumerateAuditSubCategiries(out SubCategories: TGuidDynArray):
+  TNtxStatus;
+
+// LsarLookupAuditCategoryName
+function LsaxLookupAuditCategoryName(const Category: TGuid): String;
+
+// LsarLookupAuditSubCategoryName
+function LsaxLookupAuditSubCategoryName(const SubCategory: TGuid): String;
 
 implementation
 
@@ -82,16 +84,16 @@ uses
 
 function TTokenPerUserAudit.AssignToUser(Sid: PSid): TNtxStatus;
 var
-  i, j, Count: Integer;
-  Audit: TAuditCategories;
+  i: Integer;
+  SubCategories: TGuidDynArray;
   Policies: TAuditPolicyInformationDynArray;
 begin
-  Result := LsaxEnumerateAuditCategiries(Audit);
+  Result := LsaxEnumerateAuditSubCategiries(SubCategories);
 
   if not Result.IsSuccess then
     Exit;
 
-  SetLength(Policies, Audit.SubCategoriesCount);
+  SetLength(Policies, Length(SubCategories));
 
   if Length(Policies) > AuditPolicySize shl 1 then
   begin
@@ -102,20 +104,15 @@ begin
     Exit;
   end;
 
-  Count := 0;
-  for i := 0 to High(Audit.SubCategories) do
-    for j := 0 to High(Audit.SubCategories[i]) do
-    begin
-      Policies[Count].AuditCategoryGuid := Audit.Categories[i].Value;
-      Policies[Count].AuditSubCategoryGuid := Audit.SubCategories[i, j].Value;
-      Policies[Count].AuditingInformation := GetSubCatogory(Count);
+  for i := 0 to High(SubCategories) do
+  begin
+    Policies[i].AuditSubCategoryGuid := SubCategories[i];
+    Policies[i].AuditingInformation := GetSubCatogory(i);
 
-      // Explicitly convert PER_USER_POLICY_UNCHANGED to PER_USER_AUDIT_NONE
-      if Policies[Count].AuditingInformation = PER_USER_POLICY_UNCHANGED then
-        Policies[Count].AuditingInformation := PER_USER_AUDIT_NONE;
-
-      Inc(Count);
-    end;
+    // Explicitly convert PER_USER_POLICY_UNCHANGED to PER_USER_AUDIT_NONE
+    if Policies[i].AuditingInformation = PER_USER_POLICY_UNCHANGED then
+      Policies[i].AuditingInformation := PER_USER_AUDIT_NONE;
+  end;
 
   Result := TNtxStatus.FromWin32(AuditSetPerUserPolicy(Sid, Policies,
     Length(Policies)), 'LsarSetAuditPolicy');
@@ -242,29 +239,25 @@ end;
 class function TPerUserAudit.CreateEmpty(out Self: IPerUserAudit): TNtxStatus;
 var
   Obj: TPerUserAudit;
-  AllCategories: TAuditCategories;
-  i, j, k: Integer;
+  SubCategories: TGuidDynArray;
+  i: Integer;
 begin
   Self := nil;
-  Result := LsaxEnumerateAuditCategiries(AllCategories);
+  Result := LsaxEnumerateAuditSubCategiries(SubCategories);
 
   if not Result.IsSuccess then
     Exit;
 
   Obj := TPerUserAudit.Create;
 
-  Obj.Count := AllCategories.SubCategoriesCount;
+  Obj.Count := Length(SubCategories);
   SetLength(Obj.Data, Obj.Count);
 
-  k := 0;
-  for i := 0 to High(AllCategories.SubCategories) do
-    for j := 0 to High(AllCategories.SubCategories[i]) do
-    begin
-      Obj.Data[k].AuditCategoryGuid := AllCategories.Categories[i].Value;
-      Obj.Data[k].AuditSubCategoryGuid := AllCategories.SubCategories[i, j].Value;
-      Obj.Data[k].AuditingInformation := PER_USER_POLICY_UNCHANGED;
-      Inc(k);
-    end;
+  for i := 0 to High(SubCategories) do
+  begin
+    Obj.Data[i].AuditSubCategoryGuid := SubCategories[i];
+    Obj.Data[i].AuditingInformation := PER_USER_POLICY_UNCHANGED;
+  end;
 
   Self := Obj;
 end;
@@ -273,21 +266,18 @@ class function TPerUserAudit.CreateLoadForUser(Sid: PSid;
   out Self: IPerUserAudit): TNtxStatus;
 var
   Obj: TPerUserAudit;
-  AllCategories: TAuditCategories;
+  SubCategories: TGuidDynArray;
   Buffer: PAuditPolicyInformationArray;
-  ItemsCount, i: Integer;
+  i: Integer;
 begin
   Self := nil;
-  Result := LsaxEnumerateAuditCategiries(AllCategories);
+  Result := LsaxEnumerateAuditSubCategiries(SubCategories);
 
   if not Result.IsSuccess then
     Exit;
 
-  ItemsCount := AllCategories.SubCategoriesCount;
-
-  Result := TNtxStatus.FromWin32(AuditQueryPerUserPolicy(Sid,
-    AllCategories.AllSubCategories, ItemsCount, Buffer),
-    'LsarQueryAuditPolicy');
+  Result := TNtxStatus.FromWin32(AuditQueryPerUserPolicy(Sid, SubCategories,
+    Length(SubCategories), Buffer), 'LsarQueryAuditPolicy');
 
   if not Result.IsSuccess then
     Exit;
@@ -295,7 +285,7 @@ begin
   Obj := TPerUserAudit.Create;
   Self := Obj;
 
-  Obj.Count := ItemsCount;
+  Obj.Count := Length(SubCategories);
   SetLength(Obj.Data, Obj.Count);
 
   for i := 0 to Obj.Count - 1 do
@@ -349,50 +339,19 @@ begin
     Data[Index].AuditingInformation := PolicyByte and not Flag;
 end;
 
-{ TAuditCategories }
+{ Functions }
 
-function TAuditCategories.AllSubCategories: TGuidDynArray;
-var
-  i, j, Count: Integer;
-begin
-  Count := 0;
-  for i := 0 to High(SubCategories) do
-    for j := 0 to High(SubCategories[i]) do
-      Inc(Count);
-
-  SetLength(Result, Count);
-
-  Count := 0;
-  for i := 0 to High(SubCategories) do
-    for j := 0 to High(SubCategories[i]) do
-    begin
-      Result[Count] := SubCategories[i, j].Value;
-      Inc(Count);
-    end;
-end;
-
-function TAuditCategories.SubCategoriesCount: Cardinal;
-var
-  i, j: Integer;
-begin
-  Result := 0;
-  for i := 0 to High(SubCategories) do
-    for j := 0 to High(SubCategories[i]) do
-      Inc(Result);
-end;
-
-{ Function }
-
-function LsaxEnumerateAuditCategiries(out Items: TAuditCategories): TNtxStatus;
+function LsaxEnumerateAuditCategiries(out Categories: TGuidDynArray;
+  out SubCategories: TGuidDynArray2): TNtxStatus;
 var
   Guids, SubGuids: PGuidArray;
   Count, SubCount: Cardinal;
   Ind, SubInd: Integer;
-  Buffer: PWideChar;
 begin
   Result.Status := STATUS_SUCCESS;
-  SetLength(Items.Categories, 0);
-  SetLength(Items.SubCategories, 0, 0);
+
+  SetLength(Categories, 0);
+  SetLength(SubCategories, 0, 0);
 
   // Query categories
 
@@ -403,22 +362,13 @@ begin
     Exit;
   end;
 
-  SetLength(Items.Categories, Count);
-  SetLength(Items.SubCategories, Count, 0);
+  SetLength(Categories, Count);
+  SetLength(SubCategories, Count, 0);
 
   // Go through all categories
-  for Ind := 0 to High(Items.Categories) do
+  for Ind := 0 to High(Categories) do
   begin
-    Items.Categories[Ind].Value := Guids[Ind];
-
-    // Query category name
-    if AuditLookupCategoryNameW(Guids[Ind], Buffer) then
-    begin
-       Items.Categories[Ind].Name := String(Buffer);
-       AuditFree(Buffer);
-    end
-    else
-      Items.Categories[Ind].Name := GUIDToString(Guids[Ind]);
+    Categories[Ind] := Guids[Ind];
 
     // Query subcategories of this category
 
@@ -430,27 +380,66 @@ begin
       Exit;
     end;
 
-    SetLength(Items.SubCategories[Ind], SubCount);
+    SetLength(SubCategories[Ind], SubCount);
 
     // Go through all subcategories
-    for SubInd := 0 to High(Items.SubCategories[Ind]) do
-    begin
-      Items.SubCategories[Ind, SubInd].Value := SubGuids[SubInd];
-
-      // Query subcategory name
-      if AuditLookupSubCategoryNameW(SubGuids[SubInd], Buffer) then
-      begin
-        Items.SubCategories[Ind, SubInd].Name := String(Buffer);
-        AuditFree(Buffer);
-      end
-      else
-        Items.SubCategories[Ind, SubInd].Name := GUIDToString(SubGuids[SubInd]);
-    end;
+    for SubInd := 0 to High(SubCategories[Ind]) do
+      SubCategories[Ind, SubInd] := SubGuids[SubInd];
 
     AuditFree(SubGuids);
   end;
 
   AuditFree(Guids);
+end;
+
+function LsaxEnumerateAuditSubCategiries(out SubCategories: TGuidDynArray):
+  TNtxStatus;
+var
+  Buffer: PGuidArray;
+  Count, i: Integer;
+begin
+  Result.Status := STATUS_SUCCESS;
+  SetLength(SubCategories, 0);
+
+  Result.Location := 'LsarEnumerateAuditSubCategories';
+  if not AuditEnumerateSubCategories(nil, True, Buffer, Count) then
+  begin
+    Result.Status := RtlxGetLastNtStatus;
+    Exit;
+  end;
+
+  SetLength(SubCategories, Count);
+
+  for i := 0 to Count - 1 do
+    SubCategories[i] := Buffer[i];
+
+  AuditFree(Buffer);
+end;
+
+function LsaxLookupAuditCategoryName(const Category: TGuid): String;
+var
+  Buffer: PWideChar;
+begin
+  if AuditLookupCategoryNameW(Category, Buffer) then
+  begin
+    Result := String(Buffer);
+    AuditFree(Buffer);
+  end
+  else
+    Result := GUIDToString(Category);
+end;
+
+function LsaxLookupAuditSubCategoryName(const SubCategory: TGuid): String;
+var
+  Buffer: PWideChar;
+begin
+  if AuditLookupSubCategoryNameW(SubCategory, Buffer) then
+  begin
+    Result := String(Buffer);
+    AuditFree(Buffer);
+  end
+  else
+    Result := GUIDToString(SubCategory);
 end;
 
 end.

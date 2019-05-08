@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-  NtUtils.ErrorMsg, Ntapi.ntstatus;
+  Ntapi.ntstatus;
 
 {$R *.dfm}
 
@@ -110,9 +110,8 @@ begin
   end
   else if not StatusEx.IsSuccess then
   begin
-    LabelStatus.Caption := StatusEx.Location + ': ' +
-      StatusToString(StatusEx.Status);
-    LabelStatus.Hint := SysNativeErrorMessage(StatusEx.Status);
+    LabelStatus.Caption := StatusEx.ToString;
+    LabelStatus.Hint := StatusEx.MessageHint;
   end
   else
   begin
