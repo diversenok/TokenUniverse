@@ -321,7 +321,7 @@ end;
 
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
 begin
-  ShowErrorSuggestions(E);
+  ShowErrorSuggestions(Application.Handle, E);
 end;
 
 procedure TFormMain.CurrentUserChanged(Sender: TObject);

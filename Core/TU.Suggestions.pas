@@ -3,9 +3,9 @@ unit TU.Suggestions;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, Winapi.Windows;
 
-procedure ShowErrorSuggestions(E: Exception);
+procedure ShowErrorSuggestions(ParentWnd: HWND; E: Exception);
 
 const
   USE_TYPE_MISMATCH = 'Wrong token type';
@@ -22,8 +22,7 @@ const
 implementation
 
 uses
-  System.UITypes, Vcl.Dialogs, TU.Tokens, TU.Tokens.Types,
-  TU.Winapi, Winapi.WinNt, Winapi.WinError,
+  TU.Tokens, TU.Tokens.Types, Winapi.WinError, Winapi.CommCtrl,
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntseapi,
   NtUtils.Exceptions, NtUtils.ErrorMsg;
 
@@ -231,57 +230,65 @@ begin
 
 end;
 
-procedure ShowEWinError(E: EWinError);
+procedure ShowErrorSuggestions(ParentWnd: HWND; E: Exception);
 var
-  Title: String;
+  Dlg: TASKDIALOGCONFIG;
 begin
-  // Try to query short error descrtiption
-  Title := Win32ErrorToDescription(E.ErrorCode);
+  FillChar(Dlg, SizeOf(Dlg), 0);
+  Dlg.cbSize := SizeOf(Dlg);
+  Dlg.pszMainIcon := TD_ERROR_ICON;
+  Dlg.dwFlags := TDF_ALLOW_DIALOG_CANCELLATION;
+  Dlg.hwndParent := ParentWnd;
+  Dlg.pszWindowTitle := 'Error';
 
-  if Title = '' then
-    Title := TITLE_OS_ERROR;
-
-  TaskMessageDlg(Title, Format(ERR_FMT, [E.ErrorOrigin,
-    Win32ErrorToString(E.ErrorCode), SysErrorMessage(E.ErrorCode)]) +
-    SuggestAll(E), mtError, [mbOk], 0);
-end;
-
-procedure ShowENtError(E: ENtError);
-var
-  MsgType: TMsgDlgType;
-  Title: String;
-begin
-  // Select appropriate icon
-  if not NT_ERROR(E.ErrorCode) then
-    MsgType := mtWarning
-  else
-    MsgType := mtError;
-
-  // Try to query short error descrtiption
-  Title := StatusToDescription(E.ErrorCode);
-
-  if Title = '' then
-    Title := TITLE_OS_ERROR;
-
-  TaskMessageDlg(Title, Format(ERR_FMT, [E.ErrorOrigin,
-    StatusToString(E.ErrorCode), SysNativeErrorMessage(E.ErrorCode)]) +
-    SuggestAll(E),
-    MsgType, [mbOk], 0);
-end;
-
-procedure ShowErrorSuggestions(E: Exception);
-begin
   if (E is EAccessViolation) or (E is EInvalidPointer) or
     (E is EAssertionFailed) then
-    TaskMessageDlg(TITLE_BUG, E.Message + BUGTRACKER, mtError, [mbOk], 0)
+  begin
+    Dlg.pszMainInstruction := PWideChar(TITLE_BUG);
+    Dlg.pszContent := PWideChar(E.Message + BUGTRACKER);
+  end
   else if E is EConvertError then
-    TaskMessageDlg(TITLE_CONVERT, E.Message, mtError, [mbOk], 0)
+  begin
+    Dlg.pszMainInstruction := PWideChar(TITLE_CONVERT);
+    Dlg.pszContent := PWideChar(E.Message);
+  end
   else if E is EWinError then
-    ShowEWinError(EWinError(E))
+  begin
+    Dlg.pszMainInstruction := PWideChar(
+      Win32ErrorToDescription(EWinError(E).ErrorCode));
+
+    if Dlg.pszMainInstruction = '' then
+      Dlg.pszMainInstruction := PWideChar(TITLE_OS_ERROR);
+
+    Dlg.pszContent := PWideChar(Format(ERR_FMT, [EWinError(E).ErrorOrigin,
+      Win32ErrorToString(EWinError(E).ErrorCode),
+      SysErrorMessage(EWinError(E).ErrorCode)]) +
+      SuggestAll(EWinError(E)));
+  end
   else if E is ENtError then
-    ShowENtError(ENtError(E))
+  begin
+    if not NT_ERROR(ENtError(E).ErrorCode) then
+      Dlg.pszMainIcon := TD_WARNING_ICON;
+
+    Dlg.pszMainInstruction := PWideChar(
+      StatusToDescription(ENtError(E).ErrorCode));
+
+    if Dlg.pszMainInstruction = '' then
+      Dlg.pszMainInstruction := PWideChar(TITLE_OS_ERROR);
+
+    Dlg.pszContent := PWideChar(Format(ERR_FMT, [ENtError(E).ErrorOrigin,
+      StatusToString(ENtError(E).ErrorCode),
+      SysNativeErrorMessage(ENtError(E).ErrorCode)]) + SuggestAll(ENtError(E)));
+  end
   else
-    TaskMessageDlg(E.ClassName, E.Message, mtError, [mbOk], 0);
+  begin
+    Dlg.pszMainInstruction := PWideChar(E.ClassName);
+    Dlg.pszContent := PWideChar(E.Message);
+  end;
+
+  if not Succeeded(TaskDialogIndirect(Dlg, nil, nil, nil)) then
+    MessageBoxW(Dlg.hwndParent, Dlg.pszContent, Dlg.pszWindowTitle,
+      MB_OK or MB_ICONERROR);
 end;
 
 end.
