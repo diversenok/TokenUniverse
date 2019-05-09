@@ -72,7 +72,8 @@ uses
   UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView},
   UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame},
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
-  NtUtils.Lsa.Audit in 'NtUtils\NtUtils.Lsa.Audit.pas';
+  NtUtils.Lsa.Audit in 'NtUtils\NtUtils.Lsa.Audit.pas',
+  UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit};
 
 {$R *.res}
 

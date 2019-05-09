@@ -110,7 +110,7 @@ type
     procedure ChangedPrimaryGroup(NewPrimary: ISid);
     procedure ChangedVAllowed(NewVAllowed: LongBool);
     procedure ChangedVEnabled(NewVEnabled: LongBool);
-    procedure SetAuditPolicy(NewAudit: IPerUserAudit);
+    procedure SetAuditPolicy(NewAudit: IAudit);
     procedure Refresh;
     procedure UpdateObjectTab;
     procedure UpdateAuditTab;
@@ -603,10 +603,10 @@ begin
   PageControlChange(Self);
 end;
 
-procedure TInfoDialog.SetAuditPolicy(NewAudit: IPerUserAudit);
+procedure TInfoDialog.SetAuditPolicy(NewAudit: IAudit);
 begin
   try
-    Token.InfoClass.AuditPolicy := NewAudit;
+    Token.InfoClass.AuditPolicy := NewAudit as IPerUserAudit;
   finally
     TabAudit.Tag := TAB_INVALIDATED;
     UpdateAuditTab;

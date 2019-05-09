@@ -8,37 +8,40 @@ uses
   Vcl.ComCtrls, UI.ListViewEx, NtUtils.Lsa.Audit;
 
 type
-  TApplyProc = procedure (AuditPolicy: IPerUserAudit) of object;
+  TApplyProc = procedure (AuditPolicy: IAudit) of object;
 
   TFrameAudit = class(TFrame)
     ListView: TListViewEx;
-    AuditPopup: TPopupMenu;
-    AuditIncSucc: TMenuItem;
-    AuditExcSucc: TMenuItem;
-    AuditIncFail: TMenuItem;
-    AuditExcFail: TMenuItem;
+    PopupPerUser: TPopupMenu;
+    MenuIncSucc: TMenuItem;
+    MenuExcSucc: TMenuItem;
+    MenuIncFail: TMenuItem;
+    MenuExcFail: TMenuItem;
     ButtonApply: TButton;
     LabelStatus: TLabel;
+    PopupSystem: TPopupMenu;
+    MenuSuccess: TMenuItem;
+    MenuFailure: TMenuItem;
     procedure ListViewContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
-    procedure AuditIncSuccClick(Sender: TObject);
-    procedure AuditExcSuccClick(Sender: TObject);
-    procedure AuditIncFailClick(Sender: TObject);
-    procedure AuditExcFailClick(Sender: TObject);
+    procedure MenuIncSuccClick(Sender: TObject);
+    procedure MenuExcSuccClick(Sender: TObject);
+    procedure MenuIncFailClick(Sender: TObject);
+    procedure MenuExcFailClick(Sender: TObject);
     procedure ButtonApplyClick(Sender: TObject);
+    procedure MenuSuccessClick(Sender: TObject);
+    procedure MenuFailureClick(Sender: TObject);
   private
-    Categories: TGuidDynArray;
-    SubCategories: TGuidDynArray2;
-    Policy: IPerUserAudit;
+    Policy: IAudit;
     ApplyProc: TApplyProc;
-
-    procedure ProcessPopupAction(Flag: Integer; NewState: Boolean);
     procedure FillRow(Index: Integer);
     procedure SetApplyEvent(Value: TApplyProc);
   public
     procedure DelayedCreate;
-    procedure Load(AuditPoicy: IPerUserAudit);
+    procedure Load(AuditPoicy: IAudit);
     procedure LoadForSid(Sid: PSid);
+    procedure LoadForSystem;
+    procedure ModifySelected(Flag: Integer; NewState: Boolean);
     property OnApplyClick: TApplyProc read ApplyProc write SetApplyEvent;
   end;
 
@@ -50,26 +53,6 @@ uses
 {$R *.dfm}
 
 { TFrameAudit }
-
-procedure TFrameAudit.AuditExcFailClick(Sender: TObject);
-begin
-  ProcessPopupAction(PER_USER_AUDIT_FAILURE_EXCLUDE, not AuditExcFail.Checked);
-end;
-
-procedure TFrameAudit.AuditExcSuccClick(Sender: TObject);
-begin
-  ProcessPopupAction(PER_USER_AUDIT_SUCCESS_EXCLUDE, not AuditExcSucc.Checked);
-end;
-
-procedure TFrameAudit.AuditIncFailClick(Sender: TObject);
-begin
-  ProcessPopupAction(PER_USER_AUDIT_FAILURE_INCLUDE, not AuditIncFail.Checked);
-end;
-
-procedure TFrameAudit.AuditIncSuccClick(Sender: TObject);
-begin
-  ProcessPopupAction(PER_USER_AUDIT_SUCCESS_INCLUDE, not AuditIncSucc.Checked);
-end;
 
 procedure TFrameAudit.ButtonApplyClick(Sender: TObject);
 var
@@ -91,6 +74,11 @@ const
 var
   ColumnInd: Integer;
 begin
+  // Note: since
+  // PER_USER_AUDIT_SUCCESS_INCLUDE = POLICY_AUDIT_EVENT_SUCCESS and
+  // PER_USER_AUDIT_SUCCESS_EXCLUDE = POLICY_AUDIT_EVENT_FAILURE
+  // this code works for system audit as well
+
   with ListView.Items[Index] do
     for ColumnInd := 1 to 4 do
       if Assigned(Policy) then
@@ -111,29 +99,47 @@ begin
     Exit;
   end;
 
-  AuditIncSucc.Checked := False;
-  AuditExcSucc.Checked := False;
-  AuditIncFail.Checked := False;
-  AuditExcFail.Checked := False;
+  if ListView.PopupMenu = PopupPerUser then
+  begin
+    MenuIncSucc.Checked := False;
+    MenuExcSucc.Checked := False;
+    MenuIncFail.Checked := False;
+    MenuExcFail.Checked := False;
 
-  for i := 0 to ListView.Items.Count - 1 do
-    if ListView.Items[i].Selected then
-    begin
-      if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_INCLUDE) then
-        AuditIncSucc.Checked := True;
+    for i := 0 to ListView.Items.Count - 1 do
+      if ListView.Items[i].Selected then
+      begin
+        if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_INCLUDE) then
+          MenuIncSucc.Checked := True;
 
-      if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_EXCLUDE) then
-        AuditExcSucc.Checked := True;
+        if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_EXCLUDE) then
+          MenuExcSucc.Checked := True;
 
-      if Policy.ContainsFlag(i, PER_USER_AUDIT_FAILURE_INCLUDE) then
-        AuditIncFail.Checked := True;
+        if Policy.ContainsFlag(i, PER_USER_AUDIT_FAILURE_INCLUDE) then
+          MenuIncFail.Checked := True;
 
-      if Policy.ContainsFlag(i, PER_USER_AUDIT_FAILURE_EXCLUDE) then
-        AuditExcFail.Checked := True;
-    end;
+        if Policy.ContainsFlag(i, PER_USER_AUDIT_FAILURE_EXCLUDE) then
+          MenuExcFail.Checked := True;
+      end;
+  end
+  else if ListView.PopupMenu = PopupSystem then
+  begin
+    MenuSuccess.Checked := False;
+    MenuFailure.Checked := False;
+
+    for i := 0 to ListView.Items.Count - 1 do
+      if ListView.Items[i].Selected then
+      begin
+        if Policy.ContainsFlag(i, POLICY_AUDIT_EVENT_SUCCESS) then
+          MenuSuccess.Checked := True;
+
+        if Policy.ContainsFlag(i, POLICY_AUDIT_EVENT_FAILURE) then
+          MenuFailure.Checked := True;
+      end;
+  end;
 end;
 
-procedure TFrameAudit.Load(AuditPoicy: IPerUserAudit);
+procedure TFrameAudit.Load(AuditPoicy: IAudit);
 var
   Ind: Integer;
 begin
@@ -157,14 +163,13 @@ procedure TFrameAudit.LoadForSid(Sid: PSid);
 var
   StatusEx: TNtxStatus;
 begin
-  Policy := nil;
-  StatusEx := TPerUserAudit.CreateLoadForUser(Sid, Policy);
+  Policy := TPerUserAudit.CreateLoadForUser(Sid, StatusEx);
 
   if StatusEx.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsarQueryAuditPolicy') then
   begin
     LabelStatus.Caption := 'Audit policy is not defined for the account';
     LabelStatus.Hint := '';
-    StatusEx := TPerUserAudit.CreateEmpty(Policy);
+    Policy := TPerUserAudit.CreateEmpty(StatusEx);
   end;
 
   if not StatusEx.IsSuccess then
@@ -176,7 +181,52 @@ begin
   Load(Policy);
 end;
 
-procedure TFrameAudit.ProcessPopupAction(Flag: Integer; NewState: Boolean);
+procedure TFrameAudit.LoadForSystem;
+var
+  StatusEx: TNtxStatus;
+begin
+  Policy := TSystemAudit.CreateQuery(StatusEx);
+
+  if not StatusEx.IsSuccess then
+  begin
+    LabelStatus.Caption := StatusEx.ToString;
+    LabelStatus.Hint := StatusEx.MessageHint;
+  end;
+
+  Load(Policy);
+end;
+
+procedure TFrameAudit.MenuExcFailClick(Sender: TObject);
+begin
+  ModifySelected(PER_USER_AUDIT_FAILURE_EXCLUDE, not MenuExcFail.Checked);
+end;
+
+procedure TFrameAudit.MenuExcSuccClick(Sender: TObject);
+begin
+  ModifySelected(PER_USER_AUDIT_SUCCESS_EXCLUDE, not MenuExcSucc.Checked);
+end;
+
+procedure TFrameAudit.MenuFailureClick(Sender: TObject);
+begin
+  ModifySelected(POLICY_AUDIT_EVENT_FAILURE, not MenuFailure.Checked);
+end;
+
+procedure TFrameAudit.MenuIncFailClick(Sender: TObject);
+begin
+  ModifySelected(PER_USER_AUDIT_FAILURE_INCLUDE, not MenuIncFail.Checked);
+end;
+
+procedure TFrameAudit.MenuIncSuccClick(Sender: TObject);
+begin
+  ModifySelected(PER_USER_AUDIT_SUCCESS_INCLUDE, not MenuIncSucc.Checked);
+end;
+
+procedure TFrameAudit.MenuSuccessClick(Sender: TObject);
+begin
+  ModifySelected(POLICY_AUDIT_EVENT_SUCCESS, not MenuSuccess.Checked);
+end;
+
+procedure TFrameAudit.ModifySelected(Flag: Integer; NewState: Boolean);
 var
   i: Integer;
 begin
@@ -202,13 +252,23 @@ end;
 
 procedure TFrameAudit.DelayedCreate;
 var
-  Ind, SubInd: Integer;
+  i: Integer;
   StatusEx: TNtxStatus;
+  SubCategories: TGuidDynArray;
+  Mapping: TAuditCategoryMapping;
 begin
-  if Length(Categories) > 0 then
+  if ListView.Items.Count > 0 then
     Exit; // Already done
 
-  StatusEx := LsaxEnumerateAuditCategiries(Categories, SubCategories);
+  StatusEx := LsaxEnumerateAuditSubCategories(SubCategories);
+  if not StatusEx.IsSuccess then
+  begin
+    LabelStatus.Caption := StatusEx.ToString;
+    LabelStatus.Hint := StatusEx.MessageHint;
+    Exit;
+  end;
+
+  StatusEx := LsaxQueryAuditCategoryMapping(Mapping);
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
@@ -224,24 +284,23 @@ begin
     ListView.Groups.BeginUpdate;
     ListView.Groups.Clear;
 
-    for Ind := 0 to High(Categories) do
+    for i := 0 to High(Mapping.Categories) do
       with ListView.Groups.Add do
       begin
-        Header := LsaxLookupAuditCategoryName(Categories[Ind]);
+        Header := LsaxLookupAuditCategoryName(Mapping.Categories[i]);
         State := State + [lgsCollapsible];
       end;
 
     ListView.Groups.EndUpdate;
   end;
 
-  // Each subcategory is and item
-  for Ind := 0 to High(SubCategories) do
-    for SubInd := 0 to High(SubCategories[Ind]) do
-      with ListView.Items.Add do
-      begin
-        Caption := LsaxLookupAuditSubCategoryName(SubCategories[Ind, SubInd]);
-        GroupID := Ind;
-      end;
+  // Each subcategory is an item
+  for i := 0 to High(SubCategories) do
+    with ListView.Items.Add do
+    begin
+      Caption := LsaxLookupAuditSubCategoryName(SubCategories[i]);
+      GroupID := Mapping.Find(SubCategories[i]);
+    end;
 
   ListView.Items.EndUpdate;
 end;

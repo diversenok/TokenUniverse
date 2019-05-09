@@ -50,13 +50,23 @@ type
   end;
   TGroupArray = array of TGroup;
 
-  IPerUserAudit = interface
+  IAudit = interface
+  ['{9FF081D8-F2D6-4E0B-A8FB-06B88F3DBD78}']
+    function ContainsFlag(Index: Integer; Flag: Integer): Boolean;
+    procedure SetFlag(Index: Integer; Flag: Integer; Enabled: Boolean);
+  end;
+
+  IPerUserAudit = interface(IAudit)
+  ['{D1EF9420-62D5-4751-AA43-E4F965E6D586}']
     function RawBuffer: PTokenAuditPolicy;
     function RawBufferSize: Integer;
     procedure FreeRawBuffer(Buffer: PTokenAuditPolicy);
     function AssignToUser(Sid: PSid): TNtxStatus;
-    function ContainsFlag(Index: Integer; Flag: Integer): Boolean;
-    procedure SetFlag(Index: Integer; Flag: Integer; Enabled: Boolean);
+  end;
+
+  ISystemAudit = interface(IAudit)
+  ['{22FAA3C7-0702-44A6-922F-47C40972D1F9}']
+    function AssignToSystem: TNtxStatus;
   end;
 
 implementation

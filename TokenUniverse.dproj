@@ -252,6 +252,10 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtils\NtUtils.Lsa.Audit.pas"/>
+        <DCCReference Include="UI\UI.Audit.System.pas">
+            <Form>DialogSystemAudit</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

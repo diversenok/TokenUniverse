@@ -68,6 +68,8 @@ type
     TokenRestrictSafer: TMenuItem;
     NewOpenEffective: TMenuItem;
     MenuSafeImpersonation: TMenuItem;
+    MenuTools: TMenuItem;
+    MenuSystemAudit: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -112,6 +114,7 @@ type
     procedure TokenRestrictSaferClick(Sender: TObject);
     procedure ActionOpenEffective(Sender: TObject);
     procedure MenuSafeImpersonationClick(Sender: TObject);
+    procedure MenuSystemAuditClick(Sender: TObject);
   private
     procedure CurrentUserChanged(Sender: TObject);
   public
@@ -130,7 +133,7 @@ uses
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
-  UI.New.Safer, Ntapi.ntpsapi;
+  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System;
 
 {$R *.dfm}
 
@@ -490,6 +493,11 @@ procedure TFormMain.MenuSafeImpersonationClick(Sender: TObject);
 begin
   TSettings.UseSafeImpersonation := not TSettings.UseSafeImpersonation;
   MenuSafeImpersonation.Checked := TSettings.UseSafeImpersonation;
+end;
+
+procedure TFormMain.MenuSystemAuditClick(Sender: TObject);
+begin
+  TDialogSystemAudit.Create(Self).Show;
 end;
 
 procedure TFormMain.NewAnonymousClick(Sender: TObject);

@@ -42,7 +42,7 @@ type
       LinkType: TSysLinkType);
   private
     Sid: ISid;
-    procedure SetUserAudit(NewAudit: IPerUserAudit);
+    procedure SetUserAudit(NewAudit: IAudit);
   public
     class procedure CreateView(SrcSid: ISid); static;
   end;
@@ -130,13 +130,13 @@ begin
     TDialogSidView.CreateView(Sid.ParentSid);
 end;
 
-procedure TDialogSidView.SetUserAudit(NewAudit: IPerUserAudit);
+procedure TDialogSidView.SetUserAudit(NewAudit: IAudit);
 begin
   FrameLsaAudit.LabelStatus.Caption := '';
   FrameLsaAudit.LabelStatus.Hint := '';
 
   try
-    NewAudit.AssignToUser(Sid.Sid).RaiseOnError;
+    (NewAudit as IPerUserAudit).AssignToUser(Sid.Sid).RaiseOnError;
   finally
     FrameLsaAudit.LoadForSid(Sid.Sid);
   end;

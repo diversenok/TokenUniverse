@@ -50,7 +50,7 @@ object FrameAudit: TFrameAudit
     GroupView = True
     ReadOnly = True
     RowSelect = True
-    PopupMenu = AuditPopup
+    PopupMenu = PopupPerUser
     TabOrder = 0
     ViewStyle = vsReport
     OnContextPopup = ListViewContextPopup
@@ -69,24 +69,36 @@ object FrameAudit: TFrameAudit
     TabOrder = 1
     OnClick = ButtonApplyClick
   end
-  object AuditPopup: TPopupMenu
-    Left = 231
-    Top = 213
-    object AuditIncSucc: TMenuItem
+  object PopupPerUser: TPopupMenu
+    Left = 167
+    Top = 205
+    object MenuIncSucc: TMenuItem
       Caption = 'Include success events'
-      OnClick = AuditIncSuccClick
+      OnClick = MenuIncSuccClick
     end
-    object AuditExcSucc: TMenuItem
+    object MenuExcSucc: TMenuItem
       Caption = 'Exclude inherited success events'
-      OnClick = AuditExcSuccClick
+      OnClick = MenuExcSuccClick
     end
-    object AuditIncFail: TMenuItem
+    object MenuIncFail: TMenuItem
       Caption = 'Include failure events'
-      OnClick = AuditIncFailClick
+      OnClick = MenuIncFailClick
     end
-    object AuditExcFail: TMenuItem
+    object MenuExcFail: TMenuItem
       Caption = 'Exclude inherited failure events'
-      OnClick = AuditExcFailClick
+      OnClick = MenuExcFailClick
+    end
+  end
+  object PopupSystem: TPopupMenu
+    Left = 248
+    Top = 208
+    object MenuSuccess: TMenuItem
+      Caption = 'Audit success'
+      OnClick = MenuSuccessClick
+    end
+    object MenuFailure: TMenuItem
+      Caption = 'Audit faillure'
+      OnClick = MenuFailureClick
     end
   end
 end

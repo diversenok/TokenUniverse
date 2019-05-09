@@ -128,6 +128,13 @@ object FormMain: TFormMain
         OnClick = MenuExitClick
       end
     end
+    object MenuTools: TMenuItem
+      Caption = 'Tools'
+      object MenuSystemAudit: TMenuItem
+        Caption = 'Manage System Audit'
+        OnClick = MenuSystemAuditClick
+      end
+    end
     object View1: TMenuItem
       Caption = 'Settings'
       object SelectColumns: TMenuItem
@@ -238,6 +245,7 @@ object FormMain: TFormMain
     end
     object RevertThread: TMenuItem
       Caption = 'Revoke token from thread'
+      ShortCut = 24658
       OnClick = ActionRevertThread
     end
     object N3: TMenuItem
@@ -285,6 +293,7 @@ object FormMain: TFormMain
       end
       object NewAnonymous: TMenuItem
         Caption = 'Anonymous token'
+        ShortCut = 24641
         OnClick = NewAnonymousClick
       end
       object HLine4: TMenuItem
