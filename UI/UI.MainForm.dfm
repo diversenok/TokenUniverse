@@ -245,7 +245,7 @@ object FormMain: TFormMain
     end
     object RevertThread: TMenuItem
       Caption = 'Revoke token from thread'
-      ShortCut = 24658
+      ShortCut = 49234
       OnClick = ActionRevertThread
     end
     object N3: TMenuItem
@@ -293,7 +293,7 @@ object FormMain: TFormMain
       end
       object NewAnonymous: TMenuItem
         Caption = 'Anonymous token'
-        ShortCut = 24641
+        ShortCut = 49217
         OnClick = NewAnonymousClick
       end
       object HLine4: TMenuItem

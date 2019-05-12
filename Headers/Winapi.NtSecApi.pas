@@ -226,7 +226,11 @@ function AuditEnumerateCategories(out pAuditCategoriesArray: PGuidArray;
 // 5323
 function AuditEnumerateSubCategories(const AuditCategoryGuid: TGuid;
   bRetrieveAllSubCategories: Boolean; out pAuditSubCategoriesArray: PGuidArray;
-  out dwCountReturned: Cardinal): Boolean; stdcall; external advapi32;
+  out dwCountReturned: Cardinal): Boolean; stdcall; external advapi32; overload;
+
+function AuditEnumerateSubCategories(AuditCategoryGuid: PGuid;
+  bRetrieveAllSubCategories: Boolean; out pAuditSubCategoriesArray: PGuidArray;
+  out dwCountReturned: Integer): Boolean; stdcall; external advapi32; overload;
 
 // 5334
 function AuditLookupCategoryNameW(const AuditCategoryGuid: TGuid;

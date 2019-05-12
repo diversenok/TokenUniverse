@@ -120,7 +120,7 @@ begin
 
   if Length(Policies) > AuditPolicySize shl 1 then
   begin
-    // The amoun of audit subcategories on the system should always
+    // The amount of audit subcategories on the system should always
     // correlate with the amount of entries in TokenAuditPolicy
     Result.Status := STATUS_INFO_LENGTH_MISMATCH;
     Result.Location := '[Assertion]';
