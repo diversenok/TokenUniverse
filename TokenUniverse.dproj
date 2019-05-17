@@ -263,6 +263,8 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Headers\Winapi.Shlwapi.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Win32.pas"/>
+        <DCCReference Include="Headers\Winapi.ProcessThreadsApi.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

@@ -79,7 +79,7 @@ type
 implementation
 
 uses
-  Winapi.Shlwapi;
+  Winapi.Shlwapi, NtUtils.Exec.Win32;
 
 {$R *.dfm}
 
@@ -114,7 +114,14 @@ end;
 
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
 begin
-  ExecMethod := nil;
+  if Sender = RadioButtonUsual then
+    ExecMethod := TExecCreateProcess.Create
+  else if Sender = RadioButtonAsUser then
+    ExecMethod := TExecCreateProcessAsUser.Create
+  else if Sender = RadioButtonWithToken then
+    ExecMethod := TExecCreateProcessWithToken.Create
+  else
+    ExecMethod := nil;
   UpdateEnabledState;
 end;
 
@@ -148,7 +155,8 @@ end;
 
 function TDialogRun.LogonFlags: Cardinal;
 begin
-  Result := 0; // TODO
+  // 0, LOGON_WITH_PROFILE, LOGON_NETCREDENTIALS_ONLY
+  Result := ComboBoxLogonFlags.ItemIndex;
 end;
 
 procedure TDialogRun.MenuCmdClick(Sender: TObject);

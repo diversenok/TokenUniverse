@@ -64,7 +64,6 @@ object DialogRun: TDialogRun
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcess'
         Checked = True
-        Enabled = False
         TabOrder = 0
         TabStop = True
         OnClick = ChangedExecMethod
@@ -120,7 +119,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcessAsUser'
-        Enabled = False
         TabOrder = 2
         OnClick = ChangedExecMethod
       end
@@ -131,7 +129,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcessWithToken'
-        Enabled = False
         TabOrder = 3
         OnClick = ChangedExecMethod
       end
