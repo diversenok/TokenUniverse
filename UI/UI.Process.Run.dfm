@@ -106,7 +106,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'WMI'
-        Enabled = False
         TabOrder = 8
         OnClick = ChangedExecMethod
       end
