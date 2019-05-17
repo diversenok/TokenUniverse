@@ -134,6 +134,10 @@ object FormMain: TFormMain
         Caption = 'Manage System Audit'
         OnClick = MenuSystemAuditClick
       end
+      object MenuRunProgram: TMenuItem
+        Caption = 'Run program'
+        OnClick = MenuRunProgramClick
+      end
     end
     object View1: TMenuItem
       Caption = 'Settings'
@@ -308,25 +312,6 @@ object FormMain: TFormMain
         Caption = 'Search for token handles'
         ShortCut = 16454
         OnClick = ActionSearch
-      end
-    end
-    object ProgramRun: TMenuItem
-      Caption = 'Run program'
-      object MenuItem21: TMenuItem
-        Caption = 'CreateProcess'
-        Enabled = False
-      end
-      object MenuItem22: TMenuItem
-        Caption = 'ShellExecuteEx'
-        Enabled = False
-      end
-      object RunTaskAsInteractiveUser1: TMenuItem
-        Caption = 'RunTaskAsInteractiveUser'
-        Enabled = False
-      end
-      object MenuItem23: TMenuItem
-        Caption = 'CreateProcessWithLogonW'
-        Enabled = False
       end
     end
     object TokenRun: TMenuItem

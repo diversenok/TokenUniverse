@@ -38,11 +38,6 @@ type
     HLine4: TMenuItem;
     NewCopyHandle: TMenuItem;
     NewSearchHandle: TMenuItem;
-    ProgramRun: TMenuItem;
-    MenuItem21: TMenuItem;
-    MenuItem22: TMenuItem;
-    MenuItem23: TMenuItem;
-    RunTaskAsInteractiveUser1: TMenuItem;
     TokenDuplicateHandle: TMenuItem;
     MenuPromptHandleClose: TMenuItem;
     Showiconsinprocesslist1: TMenuItem;
@@ -70,6 +65,7 @@ type
     MenuSafeImpersonation: TMenuItem;
     MenuTools: TMenuItem;
     MenuSystemAudit: TMenuItem;
+    MenuRunProgram: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -115,6 +111,7 @@ type
     procedure ActionOpenEffective(Sender: TObject);
     procedure MenuSafeImpersonationClick(Sender: TObject);
     procedure MenuSystemAuditClick(Sender: TObject);
+    procedure MenuRunProgramClick(Sender: TObject);
   private
     procedure CurrentUserChanged(Sender: TObject);
   public
@@ -133,7 +130,7 @@ uses
   UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
-  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System;
+  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run;
 
 {$R *.dfm}
 
@@ -468,7 +465,7 @@ var
   Menu: TMenuItem;
 begin
   for Menu in PopupMenu.Items do
-    if (Menu <> NewMenu) and (Menu <> ProgramRun) and (Menu <> RevertThread) then
+    if (Menu <> NewMenu) and (Menu <> RevertThread) then
       Menu.Enabled := Selected;
 end;
 
@@ -487,6 +484,11 @@ procedure TFormMain.MenuPromptHandleCloseClick(Sender: TObject);
 begin
   TSettings.PromptOnHandleClose := not TSettings.PromptOnHandleClose;
   MenuPromptHandleClose.Checked := TSettings.PromptOnHandleClose;
+end;
+
+procedure TFormMain.MenuRunProgramClick(Sender: TObject);
+begin
+  TDialogRun.Create(Self).Show;
 end;
 
 procedure TFormMain.MenuSafeImpersonationClick(Sender: TObject);
