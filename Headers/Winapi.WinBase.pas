@@ -9,6 +9,14 @@ uses
 type
   TLogonProvider = (lpDefault, lpWinNT35, lpWinNT40, lpWinNT50, lpVirtual);
 
+  // WTypesBase.217
+  TSecurityAttributes = record
+    nLength: Cardinal;
+    lpSecurityDescriptor: PSecurityDescriptor;
+    bInheritHandle: LongBool;
+  end;
+  PSecurityAttributes = ^TSecurityAttributes;
+
 // 1180
 function LocalFree(hMem: Pointer): Pointer; stdcall; external kernel32;
 

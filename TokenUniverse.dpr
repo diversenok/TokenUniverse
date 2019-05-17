@@ -73,7 +73,8 @@ uses
   UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame},
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
   NtUtils.Lsa.Audit in 'NtUtils\NtUtils.Lsa.Audit.pas',
-  UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit};
+  UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit},
+  Winapi.WinUser in 'Headers\Winapi.WinUser.pas';
 
 {$R *.res}
 

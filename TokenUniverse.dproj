@@ -256,6 +256,7 @@
             <Form>DialogSystemAudit</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Headers\Winapi.WinUser.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
