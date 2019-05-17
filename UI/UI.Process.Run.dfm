@@ -96,7 +96,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'WdcRunTaskAsInteractiveUser'
-        Enabled = False
         TabOrder = 7
         OnClick = ChangedExecMethod
       end

@@ -18,6 +18,13 @@ const
   ERROR_PRIVILEGE_NOT_HELD = 1314;
   ERROR_BAD_IMPERSONATION_LEVEL = 1346;
 
+function Succeeded(Status: HRESULT): LongBool;
+
 implementation
+
+function Succeeded(Status: HRESULT): LongBool;
+begin
+  Result := Status and HRESULT($80000000) = 0;
+end;
 
 end.

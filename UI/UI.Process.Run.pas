@@ -79,7 +79,7 @@ type
 implementation
 
 uses
-  Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell;
+  Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc;
 
 {$R *.dfm}
 
@@ -122,6 +122,8 @@ begin
     ExecMethod := TExecCreateProcessWithToken.Create
   else if Sender = RadioButtonShell then
     ExecMethod := TExecShellExecute.Create
+  else if Sender = RadioButtonWdc then
+    ExecMethod := TExecCallWdc.Create
   else
     ExecMethod := nil;
   UpdateEnabledState;

@@ -267,6 +267,8 @@
         <DCCReference Include="Headers\Winapi.ProcessThreadsApi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Shell.pas"/>
         <DCCReference Include="Headers\Winapi.ShellApiEx.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Wdc.pas"/>
+        <DCCReference Include="Headers\Winapi.Wdc.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
