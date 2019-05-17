@@ -86,7 +86,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'ShellExecuteEx'
-        Enabled = False
         TabOrder = 6
         OnClick = ChangedExecMethod
       end

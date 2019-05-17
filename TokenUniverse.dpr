@@ -79,7 +79,9 @@ uses
   UI.Process.Run in 'UI\UI.Process.Run.pas' {DialogRun},
   Winapi.Shlwapi in 'Headers\Winapi.Shlwapi.pas',
   NtUtils.Exec.Win32 in 'NtUtils\NtUtils.Exec.Win32.pas',
-  Winapi.ProcessThreadsApi in 'Headers\Winapi.ProcessThreadsApi.pas';
+  Winapi.ProcessThreadsApi in 'Headers\Winapi.ProcessThreadsApi.pas',
+  NtUtils.Exec.Shell in 'NtUtils\NtUtils.Exec.Shell.pas',
+  Winapi.ShellApiEx in 'Headers\Winapi.ShellApiEx.pas';
 
 {$R *.res}
 
