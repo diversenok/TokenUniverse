@@ -158,7 +158,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'WMI under impersonation'
-        Enabled = False
         TabOrder = 4
         OnClick = ChangedExecMethod
       end

@@ -128,6 +128,8 @@ begin
     ExecMethod := TExecCreateProcessAsUser.Create
   else if Sender = RadioButtonWithToken then
     ExecMethod := TExecCreateProcessWithToken.Create
+  else if Sender = RadioButtonWmiImp then
+    ExecMethod := TExecCallWmiImpersonated.Create
   else if Sender = RadioButtonShell then
     ExecMethod := TExecShellExecute.Create
   else if Sender = RadioButtonWdc then
