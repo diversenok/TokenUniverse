@@ -13,6 +13,7 @@ object DialogRun: TDialogRun
   Font.Style = []
   OldCreateOrder = False
   ShowHint = True
+  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -310,6 +311,17 @@ object DialogRun: TDialogRun
           'Show normal'
           'Show minimized'
           'Show maximized')
+      end
+      object LinkLabelToken: TLinkLabel
+        Left = 3
+        Top = 144
+        Width = 153
+        Height = 40
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        AutoSize = False
+        Caption = 'Token: None'
+        TabOrder = 8
+        OnLinkClick = LinkLabelTokenLinkClick
       end
     end
     object TabEnv: TTabSheet

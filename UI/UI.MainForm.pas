@@ -127,7 +127,7 @@ implementation
 uses
   System.UITypes, TU.Tokens.Types, Winapi.WinNt,
   NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
-  UI.Information, UI.ProcessList, UI.Run, UI.HandleSearch, UI.Modal.ComboDlg,
+  UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run;
@@ -289,7 +289,12 @@ end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
 begin
-  TRunDialog.Execute(Self, TokenView.Selected);
+  if Assigned(ListViewTokens.Selected) then
+    with TDialogRun.Create(Self) do
+    begin
+      UseToken := TokenView.Selected;
+      Show;
+    end;
 end;
 
 procedure TFormMain.ActionSearch(Sender: TObject);

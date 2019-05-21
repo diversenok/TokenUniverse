@@ -126,10 +126,6 @@
             <Form>ProcessListDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UI\UI.Run.pas">
-            <Form>RunDialog</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="Core\TU.RestartSvc.pas"/>
         <DCCReference Include="Core\TU.Suggestions.pas"/>
         <DCCReference Include="UI\UI.Restrict.pas">

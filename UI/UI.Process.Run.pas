@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.ChildForm,
-  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec;
+  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens;
 
 type
   TDialogRun = class(TChildTaskbarForm, IExecProvider)
@@ -48,6 +48,7 @@ type
     OpenDlg: TOpenDialog;
     LabelShowMode: TLabel;
     ComboBoxShowMode: TComboBox;
+    LinkLabelToken: TLinkLabel;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -55,6 +56,9 @@ type
     procedure ButtonRunClick(Sender: TObject);
     procedure ButtonBrowseClick(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
+    procedure LinkLabelTokenLinkClick(Sender: TObject; const Link: string;
+      LinkType: TSysLinkType);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     // IExecProvider implementation
     function Provides(Parameter: TExecParam): Boolean;
@@ -71,16 +75,19 @@ type
     function ShowWindowMode: Word;
   private
     ExecMethod: IExecMethod;
+    FToken: TToken;
     procedure UpdateEnabledState;
+    procedure OnCaptionChange(NewCaption: String);
+    procedure SetToken(const Value: TToken);
   public
-    { Public declarations }
+    property UseToken: TToken read FToken write SetToken;
   end;
 
 implementation
 
 uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
-  NtUtils.Exec.Wmi;
+  NtUtils.Exec.Wmi, UI.Information;
 
 {$R *.dfm}
 
@@ -147,6 +154,11 @@ begin
   Result := ComboBoxDesktop.Text;
 end;
 
+procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  UseToken := nil;
+end;
+
 procedure TDialogRun.FormCreate(Sender: TObject);
 begin
   MenuCmdClick(Sender);
@@ -158,6 +170,13 @@ end;
 function TDialogRun.InheritHandles: Boolean;
 begin
   Result := CheckBoxInherit.Checked;
+end;
+
+procedure TDialogRun.LinkLabelTokenLinkClick(Sender: TObject;
+  const Link: string; LinkType: TSysLinkType);
+begin
+  if Assigned(FToken) then
+    TInfoDialog.CreateFromToken(Self, FToken);
 end;
 
 function TDialogRun.LogonFlags: Cardinal;
@@ -174,6 +193,11 @@ end;
 procedure TDialogRun.MenuSelfClick(Sender: TObject);
 begin
   EditExe.Text := ParamStr(0);
+end;
+
+procedure TDialogRun.OnCaptionChange(NewCaption: String);
+begin
+  LinkLabelToken.Caption := 'Token: <a>' + NewCaption + '</a>';
 end;
 
 function TDialogRun.Parameters: String;
@@ -194,6 +218,9 @@ begin
 
     ppCurrentDirectory:
       Result := EditDir.Text <> '';
+
+    ppToken:
+      Result := Assigned(FToken);
   else
     Result := False;
   end;
@@ -204,6 +231,26 @@ begin
   Result := CheckBoxRunas.Checked;
 end;
 
+procedure TDialogRun.SetToken(const Value: TToken);
+begin
+  if Assigned(FToken) then
+  begin
+    FToken.OnCaptionChange.Unsubscribe(OnCaptionChange);
+    UnsubscribeTokenCanClose(FToken);
+  end;
+
+  FToken := Value;
+
+  if not Assigned(Value) then
+    LinkLabelToken.Caption := 'Token: None'
+  else
+  begin
+    SubscribeTokenCanClose(Value, 'Run dialod');
+    Value.OnCaptionChange.Subscribe(OnCaptionChange);
+    OnCaptionChange(Value.Caption);
+  end;
+end;
+
 function TDialogRun.ShowWindowMode: Word;
 begin
   // SW_HIDE..SW_SHOWMAXIMIZED
@@ -212,7 +259,10 @@ end;
 
 function TDialogRun.Token: THandle;
 begin
-  Result := 0; // TODO
+  if Assigned(FToken) then
+    Result := FToken.Handle
+  else
+    Result := 0;
 end;
 
 procedure TDialogRun.UpdateEnabledState;
