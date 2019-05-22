@@ -7,21 +7,16 @@ uses
 
 type
   TExecCallWmi = class(TInterfacedObject, IExecMethod)
-    function Supports(Parameter: TExecParam): Boolean; virtual;
-    procedure Execute(ParamSet: IExecProvider); virtual;
-  end;
-
-  TExecCallWmiImpersonated = class(TExecCallWmi, IExecMethod)
-    function Supports(Parameter: TExecParam): Boolean; override;
-    procedure Execute(ParamSet: IExecProvider); override;
+    function Supports(Parameter: TExecParam): Boolean;
+    procedure Execute(ParamSet: IExecProvider);
   end;
 
 implementation
 
 uses
   Winapi.ActiveX, System.Win.ComObj, System.SysUtils,
-  Winapi.ProcessThreadsApi, NtUtils.Exec.Win32, NtUtils.Exceptions,
-  Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi;
+  Winapi.ProcessThreadsApi, NtUtils.Exec.Win32, NtUtils.ApiExtension,
+  Ntapi.ntpsapi;
 
 function GetWMIObject(const objectName: String): IDispatch;
 var
@@ -61,61 +56,37 @@ end;
 procedure TExecCallWmi.Execute(ParamSet: IExecProvider);
 var
   objProcess: OleVariant;
+  hOldToken: THandle;
   ProcessId: Integer;
 begin
-  objProcess := GetWMIObject('winmgmts:Win32_Process');
-  objProcess.Create(
-    PrepareCommandLine(ParamSet),
-    PrepareCurrentDir(ParamSet),
-    PrepareProcessStartup(ParamSet),
-    ProcessId
+  if ParamSet.Provides(ppToken) then
+    NtxImpersonateToken(ParamSet.Token, hOldToken).RaiseOnError;
+
+  try
+    objProcess := GetWMIObject('winmgmts:Win32_Process');
+    objProcess.Create(
+      PrepareCommandLine(ParamSet),
+      PrepareCurrentDir(ParamSet),
+      PrepareProcessStartup(ParamSet),
+      ProcessId
     );
+  finally
+    // Revert impersonation
+    if ParamSet.Provides(ppToken) then
+      NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
+        @hOldToken, SizeOf(hOldToken));
+  end;
 end;
 
 function TExecCallWmi.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
-    ppParameters, ppCurrentDirectory, ppCreateSuspended, ppShowWindowMode:
+    ppParameters, ppCurrentDirectory, ppToken, ppCreateSuspended,
+    ppShowWindowMode:
       Result := True;
   else
     Result := False;
   end;
-end;
-
-{ TExecCallWmiImpersonated }
-
-procedure TExecCallWmiImpersonated.Execute(ParamSet: IExecProvider);
-var
-  hOldToken, hNewToken: THandle;
-begin
-  // Save old impersonation context
-  if not NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread, TOKEN_IMPERSONATE,
-    True, 0, hOldToken)) then
-    hOldToken := 0;
-
-  if ParamSet.Provides(ppToken) then
-    hNewToken := ParamSet.Token
-  else
-    hNewToken := 0;
-
-  NativeCheck(NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
-    @hNewToken, SizeOf(hNewToken)), 'NtSetInformationThread');
-
-  try
-    inherited;
-  finally
-    // Revert impersonation
-    NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
-      @hOldToken, SizeOf(hOldToken));
-  end;
-end;
-
-function TExecCallWmiImpersonated.Supports(Parameter: TExecParam): Boolean;
-begin
-  if Parameter = ppToken then
-    Result := True
-  else
-    Result := inherited;
 end;
 
 end.

@@ -13,13 +13,11 @@ type
     TabMethod: TTabSheet;
     TabEnv: TTabSheet;
     TabParent: TTabSheet;
-    RadioButtonUsual: TRadioButton;
     RadioButtonRtl: TRadioButton;
     LabelOther: TLabel;
     RadioButtonShell: TRadioButton;
     RadioButtonWdc: TRadioButton;
-    RadioButtonWMI: TRadioButton;
-    LabelToken: TLabel;
+    RadioButtonWmi: TRadioButton;
     RadioButtonAsUser: TRadioButton;
     RadioButtonWithToken: TRadioButton;
     LabelCred: TLabel;
@@ -35,7 +33,6 @@ type
     ComboBoxLogonFlags: TComboBox;
     EditDir: TLabeledEdit;
     ComboBoxDesktop: TComboBox;
-    LabelUsual: TLabel;
     ButtonClose: TButton;
     ButtonRun: TButton;
     LabelDesktop: TLabel;
@@ -44,7 +41,6 @@ type
     MenuCmd: TMenuItem;
     MenuSelf: TMenuItem;
     CheckBoxRunas: TCheckBox;
-    RadioButtonWmiImp: TRadioButton;
     OpenDlg: TOpenDialog;
     LabelShowMode: TLabel;
     ComboBoxShowMode: TComboBox;
@@ -122,16 +118,12 @@ end;
 
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
 begin
-  if Sender = RadioButtonUsual then
-    ExecMethod := TExecCreateProcess.Create
-  else if Sender = RadioButtonRtl then
-    ExecMethod := TExecRtlCreateUserProcess.Create
-  else if Sender = RadioButtonAsUser then
+  if Sender = RadioButtonAsUser then
     ExecMethod := TExecCreateProcessAsUser.Create
   else if Sender = RadioButtonWithToken then
     ExecMethod := TExecCreateProcessWithToken.Create
-  else if Sender = RadioButtonWmiImp then
-    ExecMethod := TExecCallWmiImpersonated.Create
+  else if Sender = RadioButtonRtl then
+    ExecMethod := TExecRtlCreateUserProcess.Create
   else if Sender = RadioButtonShell then
     ExecMethod := TExecShellExecute.Create
   else if Sender = RadioButtonWdc then
@@ -168,7 +160,7 @@ begin
   MenuCmdClick(Sender);
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
-  ChangedExecMethod(RadioButtonUsual);
+  ChangedExecMethod(RadioButtonAsUser);
   // TODO: enumerate desktops and check the one from our startup info
 end;
 
@@ -202,7 +194,7 @@ end;
 
 procedure TDialogRun.OnCaptionChange(NewCaption: String);
 begin
-  LinkLabelToken.Caption := 'Token: <a>' + NewCaption + '</a>';
+  LinkLabelToken.Caption := 'Using token: <a>' + NewCaption + '</a>';
 end;
 
 function TDialogRun.Parameters: String;
@@ -246,7 +238,7 @@ begin
   FToken := Value;
 
   if not Assigned(Value) then
-    LinkLabelToken.Caption := 'Token: None'
+    LinkLabelToken.Caption := 'Using token: <not specified>'
   else
   begin
     SubscribeTokenCanClose(Value, 'Run dialod');

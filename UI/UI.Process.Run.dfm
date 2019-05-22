@@ -31,134 +31,111 @@ object DialogRun: TDialogRun
       Caption = 'Method'
       object LabelOther: TLabel
         Left = 8
-        Top = 209
+        Top = 185
         Width = 76
         Height = 13
         Caption = 'Other methods:'
       end
-      object LabelToken: TLabel
-        Left = 8
-        Top = 73
-        Width = 60
-        Height = 13
-        Caption = 'Using token:'
-      end
       object LabelCred: TLabel
         Left = 8
-        Top = 162
+        Top = 130
         Width = 121
         Height = 13
         Caption = 'Using explicit credentials:'
       end
-      object LabelUsual: TLabel
-        Left = 8
-        Top = 8
-        Width = 106
-        Height = 13
-        Caption = 'Inherit process token:'
-      end
-      object RadioButtonUsual: TRadioButton
+      object RadioButtonRtl: TRadioButton
         Left = 24
-        Top = 27
+        Top = 97
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'CreateProcess'
+        Caption = 'RtlCreateUserProcess'
+        TabOrder = 3
+        OnClick = ChangedExecMethod
+      end
+      object RadioButtonShell: TRadioButton
+        Left = 24
+        Top = 204
+        Width = 113
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'ShellExecuteEx'
+        TabOrder = 5
+        OnClick = ChangedExecMethod
+      end
+      object RadioButtonWdc: TRadioButton
+        Left = 24
+        Top = 227
+        Width = 276
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'WdcRunTaskAsInteractiveUser'
+        TabOrder = 6
+        OnClick = ChangedExecMethod
+      end
+      object RadioButtonWmi: TRadioButton
+        Left = 24
+        Top = 74
+        Width = 276
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'WMI'
+        TabOrder = 2
+        OnClick = ChangedExecMethod
+      end
+      object RadioButtonAsUser: TRadioButton
+        Left = 24
+        Top = 28
+        Width = 276
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'CreateProcessAsUser'
         Checked = True
         TabOrder = 0
         TabStop = True
         OnClick = ChangedExecMethod
       end
-      object RadioButtonRtl: TRadioButton
-        Left = 24
-        Top = 50
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'RtlCreateUserProcess'
-        TabOrder = 1
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonShell: TRadioButton
-        Left = 24
-        Top = 228
-        Width = 113
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'ShellExecuteEx'
-        TabOrder = 6
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonWdc: TRadioButton
-        Left = 24
-        Top = 251
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'WdcRunTaskAsInteractiveUser'
-        TabOrder = 7
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonWMI: TRadioButton
-        Left = 24
-        Top = 274
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'WMI'
-        TabOrder = 8
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonAsUser: TRadioButton
-        Left = 24
-        Top = 92
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'CreateProcessAsUser'
-        TabOrder = 2
-        OnClick = ChangedExecMethod
-      end
       object RadioButtonWithToken: TRadioButton
         Left = 24
-        Top = 115
+        Top = 51
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcessWithToken'
-        TabOrder = 3
+        TabOrder = 1
         OnClick = ChangedExecMethod
       end
       object RadioButtonWithLogon: TRadioButton
         Left = 24
-        Top = 181
+        Top = 149
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcessWithLogon'
         Enabled = False
-        TabOrder = 5
+        TabOrder = 4
         OnClick = ChangedExecMethod
       end
       object CheckBoxRunas: TCheckBox
         Left = 165
-        Top = 229
+        Top = 204
         Width = 135
         Height = 15
         Anchors = [akTop]
         Caption = 'Request elevation'
         Enabled = False
-        TabOrder = 9
+        TabOrder = 7
       end
-      object RadioButtonWmiImp: TRadioButton
-        Left = 24
-        Top = 138
-        Width = 276
-        Height = 17
+      object LinkLabelToken: TLinkLabel
+        Left = 8
+        Top = 9
+        Width = 292
+        Height = 14
         Anchors = [akLeft, akTop, akRight]
-        Caption = 'WMI under impersonation'
-        TabOrder = 4
-        OnClick = ChangedExecMethod
+        AutoSize = False
+        Caption = 'Using token: <not specified>'
+        TabOrder = 8
+        OnLinkClick = LinkLabelTokenLinkClick
       end
     end
     object TabParams: TTabSheet
@@ -309,17 +286,6 @@ object DialogRun: TDialogRun
           'Show normal'
           'Show minimized'
           'Show maximized')
-      end
-      object LinkLabelToken: TLinkLabel
-        Left = 3
-        Top = 144
-        Width = 153
-        Height = 40
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        AutoSize = False
-        Caption = 'Token: None'
-        TabOrder = 8
-        OnLinkClick = LinkLabelTokenLinkClick
       end
     end
     object TabEnv: TTabSheet

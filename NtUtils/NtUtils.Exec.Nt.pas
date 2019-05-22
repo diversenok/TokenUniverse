@@ -31,6 +31,7 @@ procedure TExecRtlCreateUserProcess.Execute(ParamSet: IExecProvider);
 var
   ProcessParams: PRtlUserProcessParameters;
   ProcessInfo: TRtlUserProcessInformation;
+  hToken: THandle;
   NtImageName, CurrDir, CmdLine, Desktop: UNICODE_STRING;
   Status: NTSTATUS;
 begin
@@ -70,6 +71,11 @@ begin
     raise ENtError.Create(Status, 'RtlCreateProcessParametersEx');
   end;
 
+  if ParamSet.Provides(ppToken) then
+    hToken := ParamSet.Token
+  else
+    hToken := 0;
+
   // Create the process
   Status := RtlCreateUserProcess(
     NtImageName,
@@ -80,7 +86,7 @@ begin
     0,
     ParamSet.Provides(ppInheritHandles) and ParamSet.InheritHandles,
     0,
-    ParamSet.Token,
+    hToken,
     ProcessInfo
   );
 
@@ -94,7 +100,7 @@ begin
   // Resume it unless the caller explicitly states it should stay suspended.
   if not ParamSet.Provides(ppCreateSuspended) or
     not ParamSet.CreateSuspended then
-    NtResumeThread(ProcessInfo.Thread, 0);
+    NtResumeThread(ProcessInfo.Thread, nil);
 
   NtClose(ProcessInfo.Thread);
   NtClose(ProcessInfo.Process);

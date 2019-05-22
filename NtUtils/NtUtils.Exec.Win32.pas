@@ -6,11 +6,6 @@ uses
   NtUtils.Exec;
 
 type
-  TExecCreateProcess = class(TInterfacedObject, IExecMethod)
-    function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
-  end;
-
   TExecCreateProcessAsUser = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
     procedure Execute(ParamSet: IExecProvider);
@@ -53,52 +48,11 @@ begin
   end;
 end;
 
-{ TExecCreateProcess }
-
-procedure TExecCreateProcess.Execute(ParamSet: IExecProvider);
-var
-  CommandLine: String;
-  CurrentDir: PWideChar;
-  ProcessInfo: TProcessInformation;
-begin
-  // Command line should be in writable memory
-  CommandLine := PrepareCommandLine(ParamSet);
-
-  if ParamSet.Provides(ppCurrentDirectory) then
-    CurrentDir := PWideChar(ParamSet.CurrentDircetory)
-  else
-    CurrentDir := nil;
-
-  WinCheck(CreateProcessW(
-    PWideChar(ParamSet.Application),
-    PWideChar(CommandLine),
-    nil,
-    nil,
-    ParamSet.Provides(ppInheritHandles) and ParamSet.InheritHandles,
-    PrepareCreationFlags(ParamSet),
-    nil,
-    CurrentDir,
-    PrepareStartupInfo(ParamSet),
-    ProcessInfo
-    ), 'CreateProcessW'
-  );
-end;
-
-function TExecCreateProcess.Supports(Parameter: TExecParam): Boolean;
-begin
-  case Parameter of
-    ppParameters, ppCurrentDirectory, ppDesktop,
-    ppInheritHandles, ppCreateSuspended, ppBreakaway, ppShowWindowMode:
-      Result := True;
-  else
-    Result := False;
-  end;
-end;
-
 { TExecCreateProcessAsUser }
 
 procedure TExecCreateProcessAsUser.Execute(ParamSet: IExecProvider);
 var
+  hToken: THandle;
   CommandLine: String;
   CurrentDir: PWideChar;
   ProcessInfo: TProcessInformation;
@@ -111,8 +65,13 @@ begin
   else
     CurrentDir := nil;
 
+  if ParamSet.Provides(ppToken) then
+    hToken := ParamSet.Token
+  else
+    hToken := 0; // Fall back to CreateProcessW behavior
+
   WinCheck(CreateProcessAsUserW(
-    ParamSet.Token,
+    hToken,
     PWideChar(ParamSet.Application),
     PWideChar(CommandLine),
     nil,
@@ -142,23 +101,25 @@ end;
 
 procedure TExecCreateProcessWithToken.Execute(ParamSet: IExecProvider);
 var
-  CommandLine: String;
+  hToken: THandle;
   CurrentDir: PWideChar;
   ProcessInfo: TProcessInformation;
 begin
-  // Command line should be in writable memory
-  CommandLine := PrepareCommandLine(ParamSet);
-
   if ParamSet.Provides(ppCurrentDirectory) then
     CurrentDir := PWideChar(ParamSet.CurrentDircetory)
   else
     CurrentDir := nil;
 
+  if ParamSet.Provides(ppToken) then
+    hToken := ParamSet.Token
+  else
+    hToken := 0;
+
   WinCheck(CreateProcessWithTokenW(
     ParamSet.Token,
     ParamSet.LogonFlags,
     PWideChar(ParamSet.Application),
-    PWideChar(CommandLine),
+    PWideChar(PrepareCommandLine(ParamSet)),
     PrepareCreationFlags(ParamSet),
     nil,
     CurrentDir,

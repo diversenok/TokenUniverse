@@ -136,6 +136,7 @@ object FormMain: TFormMain
       end
       object MenuRunProgram: TMenuItem
         Caption = 'Run program'
+        ShortCut = 120
         OnClick = MenuRunProgramClick
       end
     end

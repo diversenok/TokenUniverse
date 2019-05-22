@@ -4,7 +4,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntobapi, Ntapi.ntseapi;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntobapi, Ntapi.ntseapi, NtUtils.Exceptions;
 
 { -------------------------------- Objects --------------------------------- }
 
@@ -29,8 +29,18 @@ function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
 // NtCompareObjects for comparing tokens on all versions of Windows
 function NtxCompareTokens(hToken1, hToken2: THandle): NTSTATUS;
 
+// NtDuplicateToken
+function NtxDuplicateToken(hExistingToken: THandle;
+  DesiredAccess: TAccessMask; TokenType: TTokenType;
+  ImpersonationLevel: TSecurityImpersonationLevel; EffectiveOnly: LongBool;
+  out hNewToken: THandle): NTSTATUS;
+
 // NtSetInformationThread that doesn't duplicate tokens to Identification level
 function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): NTSTATUS;
+
+// NtSetInformationThread + NtOpenThreadTokenEx
+function NtxImpersonateToken(hToken: THandle; out hOldToken: THandle):
+  TNtxStatus;
 
 { -------------------------- Processes & Threads --------------------------- }
 
@@ -53,7 +63,7 @@ implementation
 
 uses
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl,
-  NtUtils.Exceptions, NtUtils.Handles, NtUtils.DelayedImport, System.SysUtils;
+  NtUtils.Handles, NtUtils.DelayedImport, System.SysUtils;
 
 { Objects }
 
@@ -296,6 +306,21 @@ begin
   Result := THandleSnapshot.Compare(hToken1, hToken2);
 end;
 
+function NtxDuplicateToken(hExistingToken: THandle;
+  DesiredAccess: TAccessMask; TokenType: TTokenType;
+  ImpersonationLevel: TSecurityImpersonationLevel; EffectiveOnly: LongBool;
+  out hNewToken: THandle): NTSTATUS;
+var
+  ObjAttr: TObjectAttributes;
+  QoS: TSecurityQualityOfService;
+begin
+  InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
+  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @QoS);
+
+  Result := NtDuplicateToken(hExistingToken, DesiredAccess, @ObjAttr,
+    EffectiveOnly, TokenType, hNewToken);
+end;
+
 { Some notes about impersonation...
 
  * In case of absence of SeImpersonatePrivilege some security contexts
@@ -381,6 +406,42 @@ begin
 
   if hOldStateToken <> 0 then
     NtxSafeClose(hOldStateToken);
+end;
+
+function NtxImpersonateToken(hToken: THandle; out hOldToken: THandle):
+  TNtxStatus;
+var
+  hTokenDuplicate: THandle;
+begin
+  Result.Status := STATUS_SUCCESS;
+
+  // Save old token
+  if not NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread, TOKEN_IMPERSONATE,
+    True, 0, hOldToken)) then
+    hOldToken := 0;
+
+  // Impersonate
+  Result.Location := 'NtSetInformationThread';
+  Result.Status := NtSetInformationThread(NtCurrentThread,
+    ThreadImpersonationToken, @hToken, SizeOf(hToken));
+
+  if Result.Status = STATUS_BAD_TOKEN_TYPE then
+  begin
+    // This was a primary token, duplicate it
+    Result.Location := 'NtDuplicateToken';
+    Result.Status := NtxDuplicateToken(hToken, TOKEN_IMPERSONATE,
+      TokenImpersonation, SecurityImpersonation, False, hTokenDuplicate);
+
+    if not NT_SUCCESS(Result.Status) then
+      Exit;
+
+    // Impersonate, second attempt
+    Result.Location := 'NtSetInformationThread';
+    Result.Status := NtSetInformationThread(NtCurrentThread,
+      ThreadImpersonationToken, @hTokenDuplicate, SizeOf(hTokenDuplicate));
+
+    NtClose(hTokenDuplicate);
+  end;
 end;
 
 { Processes & Threads }
