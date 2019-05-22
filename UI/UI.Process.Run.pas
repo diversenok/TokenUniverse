@@ -167,6 +167,7 @@ begin
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
   ChangedExecMethod(RadioButtonUsual);
+  // TODO: enumerate desktops and check the one from our startup info
 end;
 
 function TDialogRun.InheritHandles: Boolean;
@@ -209,7 +210,6 @@ end;
 
 function TDialogRun.Provides(Parameter: TExecParam): Boolean;
 begin
-  // TODO: Token
   case Parameter of
     ppDesktop, ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
     ppRequireElevation, ppShowWindowMode:
@@ -269,6 +269,9 @@ end;
 
 procedure TDialogRun.UpdateEnabledState;
 begin
+  EditParams.Enabled := Assigned(ExecMethod) and
+    ExecMethod.Supports(ppParameters);
+
   EditDir.Enabled := Assigned(ExecMethod) and
     ExecMethod.Supports(ppCurrentDirectory);
 

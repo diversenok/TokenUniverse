@@ -1,6 +1,8 @@
 unit TU.Credentials;
 
 interface
+{$WARN SYMBOL_PLATFORM OFF}
+// TODO: check delayed import
 
 uses
   Winapi.Windows, TU.Tokens;
@@ -39,13 +41,13 @@ function CredUIPromptForWindowsCredentialsW(const UiInfo: TCredUIInfoW;
   dwAuthError: Cardinal; var ulAuthPackage: Cardinal; pvInAuthBuffer: Pointer;
   ulInAuthBufferSize: Cardinal; out pvOutAuthBuffer: Pointer;
   out ulOutAuthBufferSize: Cardinal; pfSave: PLongBool; dwFlags: Cardinal)
-  : Cardinal; stdcall; external credui;
+  : Cardinal; stdcall; external credui delayed;
 
 function CredUnPackAuthenticationBufferW(dwFlags: Cardinal;
   pAuthBuffer: Pointer; cbAuthBuffer: Cardinal; pszUserName: PWideChar;
   var cchMaxUserName: Cardinal; pszDomainName: PWideChar;
   var cchMaxDomainname: Cardinal; pszPassword: PWideChar;
-  var cchMaxPassword: Cardinal): LongBool; stdcall; external credui;
+  var cchMaxPassword: Cardinal): LongBool; stdcall; external credui delayed;
 
 procedure PromptCredentialsUI(ParentWindow: HWND;
   Callback: TCredentialsCallback; AllowNoPassword: Boolean = False);
