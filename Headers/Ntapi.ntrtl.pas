@@ -4,9 +4,86 @@ unit Ntapi.ntrtl;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, NtApi.ntpebteb;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpebteb, Ntapi.ntmmapi;
+
+const
+  RTL_MAX_DRIVE_LETTERS = 32;
 
 type
+  // Processes
+
+  TCurDir = record
+    DosPath: UNICODE_STRING;
+    Handle: THandle;
+  end;
+  PCurDir = ^TCurDir;
+
+  TRtlDriveLetterCurDir = record
+    Flags: Word;
+    Length: Word;
+    TimeStamp: Cardinal;
+    DosPath: ANSI_STRING;
+  end;
+  PRtlDriveLetterCurDir = ^TRtlDriveLetterCurDir;
+
+  TRtlUserProcessParameters = record
+    MaximumLength: Cardinal;
+    Length: Cardinal;
+
+    Flags: Cardinal;
+    DebugFlags: Cardinal;
+
+    ConsoleHandle: THandle;
+    ConsoleFlags: Cardinal;
+    StandardInput: THandle;
+    StandardOutput: THandle;
+    StandardError: THandle;
+
+    CurrentDirectory: TCurDir;
+    DllPath: UNICODE_STRING;
+    ImagePathName: UNICODE_STRING;
+    CommandLine: UNICODE_STRING;
+    Environment: Pointer;
+
+    StartingX: Cardinal;
+    StartingY: Cardinal;
+    CountX: Cardinal;
+    CountY: Cardinal;
+    CountCharsX: Cardinal;
+    CountCharsY: Cardinal;
+    FillAttribute: Cardinal;
+
+    WindowFlags: Cardinal;
+    ShowWindowFlags: Cardinal;
+    WindowTitle: UNICODE_STRING;
+    DesktopInfo: UNICODE_STRING;
+    ShellInfo: UNICODE_STRING;
+    RuntimeData: UNICODE_STRING;
+    CurrentDirectories: array [0..RTL_MAX_DRIVE_LETTERS - 1] of
+      TRtlDriveLetterCurDir;
+
+    EnvironmentSize: NativeUInt;
+    EnvironmentVersion: NativeUInt;
+    PackageDependencyData: Pointer;
+    ProcessGroupId: Cardinal;
+    LoaderThreads: Cardinal;
+
+    RedirectionDllName: UNICODE_STRING;
+    HeapPartitionName: UNICODE_STRING;
+    DefaultThreadpoolCpuSetMasks: NativeUInt;
+    DefaultThreadpoolCpuSetMaskCount: Cardinal;
+  end;
+  PRtlUserProcessParameters = ^TRtlUserProcessParameters;
+
+  TRtlUserProcessInformation = record
+    Length: Cardinal;
+    Process: THandle;
+    Thread: THandle;
+    ClientId: TClientId;
+    ImageInformation: TSectionImageInformation;
+  end;
+  PRtlUserProcessInformation = ^TRtlUserProcessInformation;
+
   // Time
 
   TTimeFields = record
@@ -31,9 +108,44 @@ type
   end;
   PTRtlTimeZoneInformation = ^TRtlTimeZoneInformation;
 
+// Strings
+
+procedure RtlFreeUnicodeString(const UnicodeString: UNICODE_STRING); stdcall;
+  external ntdll;
+
 // PEB
 
 function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
+
+// Processes
+
+function RtlCreateProcessParametersEx(
+  out pProcessParameters: PRtlUserProcessParameters;
+  const ImagePathName: UNICODE_STRING; DllPath: PUNICODE_STRING;
+  CurrentDirectory: PUNICODE_STRING; CommandLine: PUNICODE_STRING;
+  Environment: Pointer; WindowTitle: PUNICODE_STRING;
+  DesktopInfo: PUNICODE_STRING; ShellInfo: PUNICODE_STRING;
+  RuntimeData: PUNICODE_STRING; Flags: Cardinal): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlDestroyProcessParameters(
+  ProcessParameters: PRtlUserProcessParameters): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlCreateUserProcess(const NtImagePathName: UNICODE_STRING;
+  AttributesDeprecated: Cardinal; ProcessParameters: PRtlUserProcessParameters;
+  ProcessSecurityDescriptor: PSecurityDescriptor;
+  ThreadSecurityDescriptor: PSecurityDescriptor;
+  ParentProcess: THandle; InheritHandles: Boolean; DebugPort:
+  THandle; TokenHandle: THandle;
+  out ProcessInformation: TRtlUserProcessInformation): NTSTATUS; stdcall;
+  external ntdll;
+
+// Paths
+
+function RtlDosPathNameToNtPathName_U_WithStatus(DosFileName: PWideChar;
+  var NtFileName: UNICODE_STRING; FilePart: PPWideChar;
+  RelativeName: Pointer): NTSTATUS; stdcall; external ntdll;
 
 // Errors
 

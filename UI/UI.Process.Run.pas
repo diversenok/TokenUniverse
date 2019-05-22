@@ -87,7 +87,7 @@ implementation
 
 uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
-  NtUtils.Exec.Wmi, UI.Information;
+  NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information;
 
 {$R *.dfm}
 
@@ -124,6 +124,8 @@ procedure TDialogRun.ChangedExecMethod(Sender: TObject);
 begin
   if Sender = RadioButtonUsual then
     ExecMethod := TExecCreateProcess.Create
+  else if Sender = RadioButtonRtl then
+    ExecMethod := TExecRtlCreateUserProcess.Create
   else if Sender = RadioButtonAsUser then
     ExecMethod := TExecCreateProcessAsUser.Create
   else if Sender = RadioButtonWithToken then

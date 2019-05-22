@@ -76,7 +76,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'RtlCreateUserProcess'
-        Enabled = False
         TabOrder = 1
         OnClick = ChangedExecMethod
       end
