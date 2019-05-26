@@ -5,6 +5,10 @@ interface
 uses
   Ntapi.ntdef;
 
+function LdrLoadDll(DllPath: PWideChar; DllCharacteristics: PCardinal;
+  const DllName: UNICODE_STRING; out DllHandle: HMODULE): NTSTATUS; stdcall;
+  external ntdll;
+
 function LdrGetDllHandle(DllPath: PWideChar;
   DllCharacteristics: PCardinal; const DllName: UNICODE_STRING;
   out DllHandle: HMODULE): NTSTATUS; stdcall; external ntdll;

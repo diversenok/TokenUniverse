@@ -279,7 +279,7 @@ begin
     Exit(STATUS_SUCCESS);
 
   // Win 10 TH+ makes things way easier
-  if NtxCheckDelayedImport('NtCompareObjects') then
+  if NtxCheckNtDelayedImport('NtCompareObjects').IsSuccess then
     Exit(NtCompareObjects(hToken1, hToken2));
 
   // Try to perform a comparison based on TokenIDs. NtxpQueryStatisticsToken
