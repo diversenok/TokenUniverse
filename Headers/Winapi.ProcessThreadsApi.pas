@@ -34,6 +34,9 @@ const
   STARTF_USESTDHANDLES = $00000100;
   STARTF_UNTRUSTEDSOURCE = $00008000;
 
+  // WinBase.3398
+  PROC_THREAD_ATTRIBUTE_PARENT_PROCESS = $20000;
+
   // WinBase.7268
   LOGON_WITH_PROFILE = $00000001;
   LOGON_NETCREDENTIALS_ONLY = $00000002;
@@ -77,7 +80,7 @@ type
 
   // WinBase.3038
   TStartupInfoExW = record
-    StartupInfo: PStartupInfoW;
+    StartupInfo: TStartupInfoW;
     lpAttributeList: PProcThreadAttributeList;
   end;
   PStartupInfoExW = ^TStartupInfoExW;
@@ -87,7 +90,7 @@ function CreateProcessW(lpApplicationName: PWideChar;
   lpCommandLine: PWideChar; lpProcessAttributes: PSecurityAttributes;
   lpThreadAttributes: PSecurityAttributes; bInheritHandles: LongBool;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoW;
+  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external kernel32;
 
@@ -100,7 +103,7 @@ function CreateProcessAsUserW(hToken: THandle; lpApplicationName: PWideChar;
   lpCommandLine: PWideChar; lpProcessAttributes: PSecurityAttributes;
   lpThreadAttributes: PSecurityAttributes; bInheritHandles: LongBool;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoW;
+  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external advapi32;
 
@@ -118,15 +121,15 @@ procedure DeleteProcThreadAttributeList(
 function UpdateProcThreadAttribute(
   lpAttributeList: PProcThreadAttributeList; dwFlags: Cardinal;
   Attribute: NativeUInt; lpValue: Pointer; cbSize: NativeUInt;
-  lpPreviousValue: Pointer; lpReturnSize: PNativeUInt): LongBool; stdcall;
-  external kernel32;
+  lpPreviousValue: Pointer = nil; lpReturnSize: PNativeUInt = nil): LongBool;
+  stdcall; external kernel32;
 
 // WinBase.7276
 function CreateProcessWithLogonW(lpUsername: PWideChar;
   lpDomain: PWideChar; lpPassword: PWideChar; dwLogonFlags: Cardinal;
   pApplicationName: PWideChar; lpCommandLine: PWideChar;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoW;
+  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external advapi32;
 
@@ -134,7 +137,7 @@ function CreateProcessWithLogonW(lpUsername: PWideChar;
 function CreateProcessWithTokenW(hToken: THandle; dwLogonFlags: Cardinal;
   pApplicationName: PWideChar; lpCommandLine: PWideChar;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoW;
+  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external advapi32;
 

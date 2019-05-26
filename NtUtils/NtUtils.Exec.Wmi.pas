@@ -31,13 +31,19 @@ begin
 end;
 
 function PrepareProcessStartup(ParamSet: IExecProvider): OleVariant;
+var
+  Flags: Cardinal;
 begin
   Result := GetWMIObject('winmgmts:Win32_ProcessStartup');
 
   // For some reason when specifing Win32_ProcessStartup.CreateFlags
   // processes would not start without CREATE_BREAKAWAY_FROM_JOB.
-  Result.CreateFlags := PrepareCreationFlags(ParamSet) or
-    CREATE_BREAKAWAY_FROM_JOB;
+  Flags := CREATE_BREAKAWAY_FROM_JOB;
+
+  if ParamSet.Provides(ppCreateSuspended) and ParamSet.CreateSuspended then
+    Flags := Flags or CREATE_SUSPENDED;
+
+  Result.CreateFlags := Flags;
 
   if ParamSet.Provides(ppShowWindowMode) then
     Result.ShowWindow := ParamSet.ShowWindowMode;

@@ -7,8 +7,8 @@ uses
 
 type
   TExecParam = (
-    ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppLogonFlags,
-    ppInheritHandles, ppCreateSuspended, ppBreakaway,
+    ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
+    ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
     ppRequireElevation, ppShowWindowMode
   );
 
@@ -19,6 +19,7 @@ type
     function CurrentDircetory: String;
     function Desktop: String;
     function Token: THandle;
+    function ParentProcess: THandle;
     function LogonFlags: Cardinal;
     function InheritHandles: Boolean;
     function CreateSuspended: Boolean;
@@ -35,10 +36,11 @@ type
   TDefaultExecProvider = class(TInterfacedObject, IExecProvider)
     function Provides(Parameter: TExecParam): Boolean; virtual;
     function Application: String; virtual; abstract;
-    function Parameters: String; virtual; abstract;
+    function Parameters: String; virtual;
     function CurrentDircetory: String; virtual;
     function Desktop: String; virtual;
     function Token: THandle; virtual;
+    function ParentProcess: THandle; virtual;
     function LogonFlags: Cardinal; virtual;
     function InheritHandles: Boolean; virtual;
     function CreateSuspended: Boolean; virtual;
@@ -86,6 +88,16 @@ begin
   Result := 0;
 end;
 
+function TDefaultExecProvider.Parameters: String;
+begin
+  Result := '';
+end;
+
+function TDefaultExecProvider.ParentProcess: THandle;
+begin
+  Result := 0;
+end;
+
 function TDefaultExecProvider.Provides(Parameter: TExecParam): Boolean;
 begin
   Result := False;
@@ -111,7 +123,7 @@ end;
 function PrepareCommandLine(ParamSet: IExecProvider): String;
 begin
   Result := '"' + ParamSet.Application + '"';
-  if ParamSet.Provides(ppParameters) then
+  if ParamSet.Provides(ppParameters) and (ParamSet.Parameters <> '') then
     Result := Result + ' ' + ParamSet.Parameters;
 end;
 

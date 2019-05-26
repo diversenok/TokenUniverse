@@ -295,6 +295,28 @@ object DialogRun: TDialogRun
     object TabParent: TTabSheet
       Caption = 'Parent process'
       ImageIndex = 2
+      object ButtonChooseParent: TButton
+        Left = 223
+        Top = 14
+        Width = 83
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Choose'
+        DropDownMenu = PopupClearParent
+        Style = bsSplitButton
+        TabOrder = 0
+        OnClick = ButtonChooseParentClick
+      end
+      object EditParent: TEdit
+        Left = 16
+        Top = 16
+        Width = 201
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        ReadOnly = True
+        TabOrder = 1
+        Text = '<not specified>'
+      end
     end
   end
   object ButtonClose: TButton
@@ -321,8 +343,8 @@ object DialogRun: TDialogRun
     OnClick = ButtonRunClick
   end
   object PopupMenuExe: TPopupMenu
-    Left = 215
-    Top = 43
+    Left = 279
+    Top = 91
     object MenuCmd: TMenuItem
       Caption = 'Command Prompt'
       OnClick = MenuCmdClick
@@ -339,5 +361,13 @@ object DialogRun: TDialogRun
     Options = [ofEnableSizing]
     Left = 223
     Top = 91
+  end
+  object PopupClearParent: TPopupMenu
+    Left = 271
+    Top = 147
+    object MenuClearParent: TMenuItem
+      Caption = 'Clear'
+      OnClick = MenuClearParentClick
+    end
   end
 end

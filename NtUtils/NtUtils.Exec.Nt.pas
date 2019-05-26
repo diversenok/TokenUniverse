@@ -31,7 +31,6 @@ procedure TExecRtlCreateUserProcess.Execute(ParamSet: IExecProvider);
 var
   ProcessParams: PRtlUserProcessParameters;
   ProcessInfo: TRtlUserProcessInformation;
-  hToken: THandle;
   NtImageName, CurrDir, CmdLine, Desktop: UNICODE_STRING;
   Status: NTSTATUS;
 begin
@@ -71,11 +70,6 @@ begin
     raise ENtError.Create(Status, 'RtlCreateProcessParametersEx');
   end;
 
-  if ParamSet.Provides(ppToken) then
-    hToken := ParamSet.Token
-  else
-    hToken := 0;
-
   // Create the process
   Status := RtlCreateUserProcess(
     NtImageName,
@@ -83,10 +77,10 @@ begin
     ProcessParams,
     nil,
     nil,
-    0,
+    ParamSet.ParentProcess,
     ParamSet.Provides(ppInheritHandles) and ParamSet.InheritHandles,
     0,
-    hToken,
+    ParamSet.Token,
     ProcessInfo
   );
 
@@ -109,8 +103,8 @@ end;
 function TExecRtlCreateUserProcess.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
-    ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppInheritHandles,
-    ppCreateSuspended:
+    ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
+    ppInheritHandles, ppCreateSuspended:
       Result := True;
   else
     Result := False;

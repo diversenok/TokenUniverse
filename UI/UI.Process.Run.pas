@@ -45,6 +45,10 @@ type
     LabelShowMode: TLabel;
     ComboBoxShowMode: TComboBox;
     LinkLabelToken: TLinkLabel;
+    ButtonChooseParent: TButton;
+    EditParent: TEdit;
+    PopupClearParent: TPopupMenu;
+    MenuClearParent: TMenuItem;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -55,6 +59,8 @@ type
     procedure LinkLabelTokenLinkClick(Sender: TObject; const Link: string;
       LinkType: TSysLinkType);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure ButtonChooseParentClick(Sender: TObject);
+    procedure MenuClearParentClick(Sender: TObject);
   private
     // IExecProvider implementation
     function Provides(Parameter: TExecParam): Boolean;
@@ -63,6 +69,7 @@ type
     function CurrentDircetory: String;
     function Desktop: String;
     function Token: THandle;
+    function ParentProcess: THandle;
     function LogonFlags: Cardinal;
     function InheritHandles: Boolean;
     function CreateSuspended: Boolean;
@@ -72,6 +79,7 @@ type
   private
     ExecMethod: IExecMethod;
     FToken: TToken;
+    hParentProcess: THandle;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(NewCaption: String);
     procedure SetToken(const Value: TToken);
@@ -83,7 +91,9 @@ implementation
 
 uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
-  NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information;
+  NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpsapi, NtUtils.Exceptions,
+  NtUtils.ApiExtension;
 
 {$R *.dfm}
 
@@ -101,6 +111,25 @@ procedure TDialogRun.ButtonBrowseClick(Sender: TObject);
 begin
   if OpenDlg.Execute(Handle) then
     EditExe.Text := OpenDlg.FileName;
+end;
+
+procedure TDialogRun.ButtonChooseParentClick(Sender: TObject);
+var
+  ObjAttr: TObjectAttributes;
+  ClientIdEx: TClientIdEx;
+  ClientId: TClientId;
+begin
+  MenuClearParentClick(Sender);
+
+  ClientIdEx := TProcessListDialog.Execute(Self, False);
+
+  InitializeObjectAttributes(ObjAttr);
+  ClientId.Create(ClientIdEx.ProcessID, 0);
+  NativeCheck(NtOpenProcess(hParentProcess, PROCESS_CREATE_PROCESS, ObjAttr,
+    ClientId), 'NtOpenProcess for PROCESS_CREATE_PROCESS');
+
+  EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
+    ClientIdEx.ProcessID]);
 end;
 
 procedure TDialogRun.ButtonCloseClick(Sender: TObject);
@@ -153,6 +182,7 @@ end;
 procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   UseToken := nil;
+  MenuClearParentClick(Sender);
 end;
 
 procedure TDialogRun.FormCreate(Sender: TObject);
@@ -182,6 +212,16 @@ begin
   Result := ComboBoxLogonFlags.ItemIndex;
 end;
 
+procedure TDialogRun.MenuClearParentClick(Sender: TObject);
+begin
+  if hParentProcess <> 0 then
+  begin
+    NtxSafeClose(hParentProcess);
+    hParentProcess := 0;
+    EditParent.Text := '<not specified>';
+  end;
+end;
+
 procedure TDialogRun.MenuCmdClick(Sender: TObject);
 begin
   EditExe.Text := GetEnvironmentVariable('ComSpec');
@@ -202,6 +242,11 @@ begin
   Result := EditParams.Text;
 end;
 
+function TDialogRun.ParentProcess: THandle;
+begin
+  Result := hParentProcess;
+end;
+
 function TDialogRun.Provides(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
@@ -217,6 +262,9 @@ begin
 
     ppToken:
       Result := Assigned(FToken);
+
+    ppParentProcess:
+      Result := hParentProcess <> 0;
   else
     Result := False;
   end;
@@ -289,6 +337,10 @@ begin
 
   ComboBoxShowMode.Enabled := Assigned(ExecMethod) and
     ExecMethod.Supports(ppShowWindowMode);
+
+  EditParent.Enabled := Assigned(ExecMethod) and
+    ExecMethod.Supports(ppParentProcess);
+  ButtonChooseParent.Enabled := EditParent.Enabled;
 end;
 
 end.
