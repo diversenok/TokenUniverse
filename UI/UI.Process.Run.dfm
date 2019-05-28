@@ -2,7 +2,7 @@ object DialogRun: TDialogRun
   Left = 0
   Top = 0
   Caption = 'Run program...'
-  ClientHeight = 378
+  ClientHeight = 381
   ClientWidth = 331
   Color = clBtnFace
   DoubleBuffered = True
@@ -22,7 +22,7 @@ object DialogRun: TDialogRun
     Left = 3
     Top = 3
     Width = 325
-    Height = 344
+    Height = 347
     Margins.Bottom = 31
     ActivePage = TabMethod
     Align = alClient
@@ -143,23 +143,22 @@ object DialogRun: TDialogRun
       ImageIndex = 4
       object LabelDesktop: TLabel
         Left = 3
-        Top = 190
+        Top = 146
         Width = 43
         Height = 13
-        Anchors = [akLeft, akBottom]
         Caption = 'Desktop:'
       end
       object LabelLogonFlags: TLabel
         Left = 161
-        Top = 190
+        Top = 193
         Width = 59
         Height = 13
         Anchors = [akRight, akBottom]
         Caption = 'Logon flags:'
       end
       object LabelShowMode: TLabel
-        Left = 162
-        Top = 146
+        Left = 3
+        Top = 193
         Width = 71
         Height = 13
         Anchors = [akRight, akBottom]
@@ -201,7 +200,7 @@ object DialogRun: TDialogRun
       end
       object GroupBoxFlags: TGroupBox
         Left = 3
-        Top = 234
+        Top = 237
         Width = 307
         Height = 79
         Anchors = [akLeft, akRight, akBottom]
@@ -234,7 +233,7 @@ object DialogRun: TDialogRun
       end
       object ComboBoxLogonFlags: TComboBox
         Left = 161
-        Top = 207
+        Top = 210
         Width = 149
         Height = 21
         Style = csDropDownList
@@ -260,24 +259,20 @@ object DialogRun: TDialogRun
       end
       object ComboBoxDesktop: TComboBox
         Left = 3
-        Top = 207
-        Width = 144
+        Top = 165
+        Width = 307
         Height = 21
-        Anchors = [akLeft, akBottom]
-        ItemIndex = 0
+        Anchors = [akLeft, akTop, akRight]
         TabOrder = 6
         Text = 'WinSta0\Default'
-        Items.Strings = (
-          'WinSta0\Default'
-          'WinSta0\Winlogon')
       end
       object ComboBoxShowMode: TComboBox
-        Left = 161
-        Top = 163
+        Left = 6
+        Top = 210
         Width = 149
         Height = 21
         Style = csDropDownList
-        Anchors = [akRight, akBottom]
+        Anchors = [akLeft, akBottom]
         ItemIndex = 1
         TabOrder = 7
         Text = 'Show normal'
@@ -321,7 +316,7 @@ object DialogRun: TDialogRun
   end
   object ButtonClose: TButton
     Left = 253
-    Top = 349
+    Top = 352
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -333,7 +328,7 @@ object DialogRun: TDialogRun
   end
   object ButtonRun: TButton
     Left = 172
-    Top = 349
+    Top = 352
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

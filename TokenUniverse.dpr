@@ -85,7 +85,8 @@ uses
   Winapi.Wdc in 'Headers\Winapi.Wdc.pas',
   NtUtils.Exec.Wmi in 'NtUtils\NtUtils.Exec.Wmi.pas',
   Ntapi.ntmmapi in 'Headers\Ntapi.ntmmapi.pas',
-  NtUtils.Exec.Nt in 'NtUtils\NtUtils.Exec.Nt.pas';
+  NtUtils.Exec.Nt in 'NtUtils\NtUtils.Exec.Nt.pas',
+  NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas';
 
 {$R *.res}
 

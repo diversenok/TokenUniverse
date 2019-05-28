@@ -83,6 +83,7 @@ type
     procedure UpdateEnabledState;
     procedure OnCaptionChange(NewCaption: String);
     procedure SetToken(const Value: TToken);
+    procedure UpdateDesktopList;
   public
     property UseToken: TToken read FToken write SetToken;
   end;
@@ -93,7 +94,7 @@ uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpsapi, NtUtils.Exceptions,
-  NtUtils.ApiExtension;
+  NtUtils.ApiExtension, NtUtils.WinUser;
 
 {$R *.dfm}
 
@@ -191,7 +192,7 @@ begin
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
   ChangedExecMethod(RadioButtonAsUser);
-  // TODO: enumerate desktops and check the one from our startup info
+  UpdateDesktopList;
 end;
 
 function TDialogRun.InheritHandles: Boolean;
@@ -307,6 +308,44 @@ begin
     Result := FToken.Handle
   else
     Result := 0;
+end;
+
+procedure TDialogRun.UpdateDesktopList;
+var
+  Desktops: TStringArray;
+  Current: string;
+  Found: Boolean;
+  i: Integer;
+begin
+  Desktops := UsrxEnumAllDesktops;
+  Current := UsrxCurrentDesktopName;
+
+  with ComboBoxDesktop do
+  begin
+    Items.BeginUpdate;
+    Items.Clear;
+
+    Found := False;
+
+    // Add all enumerated desktops
+    for i := 0 to High(Desktops) do
+    begin
+      Items.Add(Desktops[i]);
+
+      if Desktops[i] = Current then
+      begin
+        // Select the current one
+        ItemIndex := i;
+        Found := True;
+      end;
+    end;
+
+    // Make sure the current desktop is in the list
+    if not Found then
+      ItemIndex := Items.Add(Current);
+
+    Items.EndUpdate;
+  end;
 end;
 
 procedure TDialogRun.UpdateEnabledState;
