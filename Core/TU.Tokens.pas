@@ -456,7 +456,7 @@ type
     ///  Opens a linked token for the current token.
     ///  Requires SeTcbPrivilege to open a primary token.
     /// </summary>
-    function OpenLinkedToken: CanFail<TToken>;
+    function OpenLinkedToken: TNtxStatusWithValue<TToken>;
   end;
 
 {----------------------  End of interface section  ----------------------------}
@@ -702,7 +702,7 @@ begin
   ClientId.Create(PID, 0);
 
   // Open the target process
-  NativeCheck(NtOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
+  NtxCheck(NtOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
     PROCESS_SET_INFORMATION, ObjAttr, ClientId), 'NtOpenProcess with ' +
     'PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION');
 
@@ -728,7 +728,7 @@ begin
   NtClose(hProcess);
   NtClose(AccessToken.Thread);
 
-  NativeCheck(Status, 'NtSetInformationProcess#ProcessAccessToken', Self);
+  NtxCheck(Status, 'NtSetInformationProcess [ProcessAccessToken]');
 
   // Assigning primary token to a process migh change token's Session ID
   InfoClass.ValidateCache(tdTokenSessionId);
@@ -742,12 +742,12 @@ procedure TToken.AssignToThread(TID: NativeUInt);
 var
   hThread: THandle;
 begin
-  NativeCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
+  NtxCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
     'NtOpenThread with SET_THREAD_TOKEN');
 
   try
     // Set the impersonation token
-    NativeCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
+    NtxCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
       @hToken, SizeOf(hToken)),
       'NtSetInformationThread [ThreadImpersonationToken]');
   finally
@@ -759,12 +759,12 @@ procedure TToken.AssignToThreadSafe(TID: NativeUInt);
 var
   hThread: THandle;
 begin
-  NativeCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN or
+  NtxCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN or
     THREAD_QUERY_LIMITED_INFORMATION, TID),
     'NtOpenThread with SET_THREAD_TOKEN | QUERY_LIMITED_INFORMATION');
 
   try
-    NativeCheck(NtxSafeSetThreadToken(hThread, hToken),
+    NtxCheck(NtxSafeSetThreadToken(hThread, hToken),
       'NtxSafeSetThreadToken');
   finally
     NtxSafeClose(hThread);
@@ -795,10 +795,10 @@ begin
     hOldStateToken := 0;
 
   try
-    NativeCheck(NtImpersonateAnonymousToken(NtCurrentThread),
+    NtxCheck(NtImpersonateAnonymousToken(NtCurrentThread),
       'NtImpersonateAnonymousToken');
 
-    NativeCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True,
+    NtxCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True,
       HandleAttributes, hToken), 'NtOpenThreadTokenEx');
   finally
     // Undo current impersonation
@@ -825,7 +825,7 @@ end;
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
   SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 begin
-  NativeCheck(NtxDuplicateObject(NtCurrentProcess, SrcToken.hToken,
+  NtxCheck(NtxDuplicateObject(NtCurrentProcess, SrcToken.hToken,
     NtCurrentProcess, hToken, Access, HandleAttributes, 0),
     'NtDuplicateObject');
 
@@ -855,8 +855,8 @@ begin
 
   InitializeObjectAttributes(ObjAttr, nil, 0, 0, @SecQos);
 
-  NativeCheck(NtDuplicateToken(SrcToken.hToken, Access, @ObjAttr, EffectiveOnly,
-    TokenType, hToken), 'NtDuplicateToken', SrcToken);
+  NtxCheck(NtDuplicateToken(SrcToken.hToken, Access, @ObjAttr, EffectiveOnly,
+    TokenType, hToken), 'NtDuplicateToken');
 
   if EffectiveOnly then
     FCaption := SrcToken.Caption + ' (eff. copy)'
@@ -892,7 +892,7 @@ begin
     TokenGroups := AllocGroups(Groups);
     TokenPrivileges := AllocPrivileges(Privileges);
 
-    NativeCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
+    NtxCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
       LogonID, Expires, TokenUser, TokenGroups, TokenPrivileges,
       @TokenOwner, @TokenPrimaryGroup, nil, Source), 'NtCreateToken');
   finally
@@ -922,7 +922,7 @@ var
   hThread: THandle;
   QoS: TSecurityQualityOfService;
 begin
-  NativeCheck(NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID),
+  NtxCheck(NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID),
     'NtOpenThreadEx with DIRECT_IMPERSONATION');
 
   try
@@ -936,11 +936,11 @@ begin
 
       // Direct impersonation sets our impersonation context to
       // an effective security context of the target thread
-      NativeCheck(NtImpersonateThread(NtCurrentThread, hThread, QoS),
+      NtxCheck(NtImpersonateThread(NtCurrentThread, hThread, QoS),
         'NtImpersonateThread');
 
       // Read it back
-      NativeCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True, Attributes,
+      NtxCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True, Attributes,
         hToken), 'NtOpenThreadTokenEx');
 
       FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
@@ -973,13 +973,13 @@ begin
     InitializeObjectAttributes(ObjAttr);
     ClientId.Create(PID, 0);
 
-    NativeCheck(NtOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+    NtxCheck(NtOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
       ObjAttr, ClientId),
       'NtOpenProcess with PROCESS_QUERY_LIMITED_INFORMATION');
   end;
 
   try
-    NativeCheck(NtOpenProcessTokenEx(hProcess, Access, Attributes, hToken),
+    NtxCheck(NtOpenProcessTokenEx(hProcess, Access, Attributes, hToken),
       'NtOpenProcessTokenEx');
   finally
     NtClose(hProcess);
@@ -993,11 +993,11 @@ constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
 var
   hThread: THandle;
 begin
-  NativeCheck(NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID),
+  NtxCheck(NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID),
     'NtOpenThread with QUERY_LIMITED_INFORMATION');
 
   try
-    NativeCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
+    NtxCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
       hToken), 'NtOpenThreadTokenEx');
   finally
     NtxSafeClose(hThread);
@@ -1042,8 +1042,8 @@ begin
     RestrictGroups := AllocGroups(SIDsToRestrict, True);
 
     // aka CreateRestrictedToken API
-    NativeCheck(NtFilterToken(SrcToken.hToken, Flags, DisableGroups,
-      DeletePrivileges, RestrictGroups, hToken), 'NtFilterToken', SrcToken);
+    NtxCheck(NtFilterToken(SrcToken.hToken, Flags, DisableGroups,
+      DeletePrivileges, RestrictGroups, hToken), 'NtFilterToken');
 
     FCaption := 'Restricted ' + SrcToken.Caption;
   finally
@@ -1074,7 +1074,7 @@ begin
     raise ENotSupportedException.Create('S4U is not supported under WoW64');
 
   // Connect to the LSA
-  NativeCheck(LsaConnectUntrusted(LsaHandle), 'LsaConnectUntrusted');
+  NtxCheck(LsaConnectUntrusted(LsaHandle), 'LsaConnectUntrusted');
 
   // Lookup for Negotiate package
   PkgName.FromString(NEGOSSP_NAME_A);
@@ -1159,7 +1159,7 @@ begin
 
   try
     WinCheck(SaferComputeTokenFromLevel(hLevel, SrcToken.hToken, hToken,
-      Flags, nil), 'SaferComputeTokenFromLevel', SrcToken);
+      Flags, nil), 'SaferComputeTokenFromLevel');
   finally
     SaferCloseLevel(hLevel);
   end;
@@ -1262,8 +1262,8 @@ begin
       GroupArray.Groups[i].Attributes := 0;
 
   try
-    NativeCheck(NtAdjustGroupsToken(hToken, IsResetFlag[Action], GroupArray, 0,
-      nil, nil), 'NtAdjustGroupsToken', Self);
+    NtxCheck(NtAdjustGroupsToken(hToken, IsResetFlag[Action], GroupArray, 0,
+      nil, nil), 'NtAdjustGroupsToken');
 
     // Update the cache and notify event listeners
     InfoClass.ValidateCache(tdTokenGroups);
@@ -1276,14 +1276,15 @@ begin
   end;
 end;
 
-function TToken.OpenLinkedToken: CanFail<TToken>;
+function TToken.OpenLinkedToken: TNtxStatusWithValue<TToken>;
 var
   Handle: THandle;
 begin
-  Result.Init(Self);
+  Result.Status.Location := GetterMessage(TokenLinkedToken);
+  Result.Status.Win32Result := QueryFixedSize<THandle>(TokenLinkedToken,
+    Handle);
 
-  if Result.CheckError(QueryFixedSize<THandle>(TokenLinkedToken, Handle),
-    GetterMessage(TokenLinkedToken)) then
+  if Result.Status.IsSuccess then
     Result.Value := TToken.Create(Handle, 'Linked token for ' + Caption);
 end;
 
@@ -1310,7 +1311,7 @@ begin
     // not considered as an error. Such behavior does not fit into our
     // model so we should overwrite it.
     if not NT_SUCCESS(Status) or (Status = STATUS_NOT_ALL_ASSIGNED) then
-      raise ENtError.Create(Status, 'NtAdjustPrivilegesToken', Self);
+      raise ENtError.Create(Status, 'NtAdjustPrivilegesToken');
   finally
     FreeMem(PrivArray);
 
@@ -1410,13 +1411,13 @@ var
   hThread: THandle;
   hNoToken: THandle;
 begin
-  NativeCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
+  NtxCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
     'NtOpenThread with SET_THREAD_TOKEN');
 
   try
     hNoToken := 0;
 
-    NativeCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
+    NtxCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
       @hNoToken, SizeOf(hNoToken)),
       'NtSetInformationThread [ThreadImpersonationToken]');
   finally
@@ -1434,14 +1435,14 @@ begin
   ClientId.Create(PID, 0);
 
   // Open the target process
-  NativeCheck(NtOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, ObjAttr,
-    ClientId), 'NtOpenProcess with PROCESS_DUP_HANDLE', Self);
+  NtxCheck(NtOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, ObjAttr,
+    ClientId), 'NtOpenProcess with PROCESS_DUP_HANDLE');
 
   try
     // Send the handle
-    NativeCheck(NtDuplicateObject(NtCurrentProcess, hToken, hTargetProcess,
+    NtxCheck(NtDuplicateObject(NtCurrentProcess, hToken, hTargetProcess,
       Result, 0, 0, DUPLICATE_SAME_ACCESS or DUPLICATE_SAME_ATTRIBUTES),
-      'NtDuplicateObject', Self);
+      'NtDuplicateObject');
   finally
     NtClose(hTargetProcess);
   end;
@@ -1460,7 +1461,7 @@ var
 begin
   status := NtSetInformationToken(hToken, InfoClass, @Value, SizeOf(Value));
   if not NT_SUCCESS(status) then
-    raise ENtError.Create(status, SetterMessage(InfoClass), Self);
+    raise ENtError.Create(status, SetterMessage(InfoClass));
 end;
 
 { TTokenData }
@@ -2009,7 +2010,7 @@ begin
   pAuditPolicy := Value.RawBuffer;
 
   try
-    NativeCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy,
+    NtxCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy,
       pAuditPolicy, Value.RawBufferSize), SetterMessage(TokenAuditPolicy));
   finally
     Value.FreeRawBuffer(pAuditPolicy);
@@ -2031,7 +2032,7 @@ begin
   // It contains 1 sub authority and looks like S-1-16-X.
   mandatoryLabel.Sid := AllocMem(RtlLengthRequiredSid(1));
   try
-    NativeCheck(RtlInitializeSid(mandatoryLabel.Sid,
+    NtxCheck(RtlInitializeSid(mandatoryLabel.Sid,
       @SECURITY_MANDATORY_LABEL_AUTHORITY, 1), 'RtlInitializeSid');
 
     RtlSubAuthoritySid(mandatoryLabel.Sid, 0)^ := Cardinal(Value);

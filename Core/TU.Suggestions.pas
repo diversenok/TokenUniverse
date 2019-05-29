@@ -99,85 +99,85 @@ resourcestring
     'The "Use safe impersonation technique" setting prevents such situations ' +
     'and shows this message instead.';
 
-function SuggestConstructor(E: ELocatedOSError): String;
+function SuggestConstructor(E: ENtError): String;
 begin
-  if E.Match('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
+  if E.Matches('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_DUPLICATE_IMP);
 
-  if E.Match('NtFilterToken', STATUS_ACCESS_DENIED)  then
+  if E.Matches('NtFilterToken', STATUS_ACCESS_DENIED)  then
     Exit(NEW_RESTCICT_ACCESS);
 
-  if E.Match('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
+  if E.Matches('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
     Exit(NEW_NT_CREATE);
 
-  if E.Match('SaferComputeTokenFromLevel', ERROR_BAD_IMPERSONATION_LEVEL) then
+  if E.Matches('SaferComputeTokenFromLevel', ERROR_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_SAFER_IMP);
 end;
 
-function SuggestGetter(E: ELocatedOSError): String;
+function SuggestGetter(E: ENtError): String;
 begin
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
-    if E.ErrorOrigin = GetterMessage(TokenSource) then
+    if E.ErrorLocation = GetterMessage(TokenSource) then
       Exit(GETTER_QUERY_SOURCE);
 
-    if E.ErrorOrigin.StartsWith('GetTokenInformation:') then
+    if E.ErrorLocation.StartsWith('GetTokenInformation:') then
       Exit(GETTER_QUERY);
   end;
 end;
 
-function SuggestSetter(E: ELocatedOSError): String;
+function SuggestSetter(E: ENtError): String;
 begin
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
-    if E.ErrorOrigin = SetterMessage(TokenSessionId) then
+    if E.ErrorLocation = SetterMessage(TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if (E.ErrorOrigin = SetterMessage(TokenIntegrityLevel))
-      or (E.ErrorOrigin = SetterMessage(TokenUIAccess))
-      or (E.ErrorOrigin = SetterMessage(TokenMandatoryPolicy))
-      or (E.ErrorOrigin = SetterMessage(TokenOwner))
-      or (E.ErrorOrigin = SetterMessage(TokenPrimaryGroup))
-      or (E.ErrorOrigin = SetterMessage(TokenOrigin))
-      or (E.ErrorOrigin = SetterMessage(TokenVirtualizationAllowed))
-      or (E.ErrorOrigin = SetterMessage(TokenVirtualizationEnabled)) then
+    if (E.ErrorLocation = SetterMessage(TokenIntegrityLevel))
+      or (E.ErrorLocation = SetterMessage(TokenUIAccess))
+      or (E.ErrorLocation = SetterMessage(TokenMandatoryPolicy))
+      or (E.ErrorLocation = SetterMessage(TokenOwner))
+      or (E.ErrorLocation = SetterMessage(TokenPrimaryGroup))
+      or (E.ErrorLocation = SetterMessage(TokenOrigin))
+      or (E.ErrorLocation = SetterMessage(TokenVirtualizationAllowed))
+      or (E.ErrorLocation = SetterMessage(TokenVirtualizationEnabled)) then
       Exit(SETTER_DEFAULT);
   end;
 
-  if E.Match(SetterMessage(TokenOwner), ERROR_INVALID_OWNER) then
+  if E.Matches(SetterMessage(TokenOwner), ERROR_INVALID_OWNER) then
     Exit(SETTER_OWNER);
 
-  if E.Match(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
+  if E.Matches(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
     Exit(SETTER_PRIMARY);
 
-  if E.Match(SetterMessage(TokenAuditPolicy), ERROR_INVALID_PARAMETER) then
+  if E.Matches(SetterMessage(TokenAuditPolicy), ERROR_INVALID_PARAMETER) then
     Exit(SETTER_AUDIT_ONCE);
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
   begin
-    if E.ErrorOrigin = SetterMessage(TokenSessionId) then
+    if E.ErrorLocation = SetterMessage(TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if E.ErrorOrigin = SetterMessage(TokenIntegrityLevel) then
+    if E.ErrorLocation = SetterMessage(TokenIntegrityLevel) then
       Exit(SETTER_INTEGRITY_TCB);
 
-    if E.ErrorOrigin = SetterMessage(TokenUIAccess) then
+    if E.ErrorLocation = SetterMessage(TokenUIAccess) then
       Exit(SETTER_UIACCESS_TCB);
 
-    if E.ErrorOrigin = SetterMessage(TokenMandatoryPolicy) then
+    if E.ErrorLocation = SetterMessage(TokenMandatoryPolicy) then
       Exit(SETTER_POLICY_TCB);
 
-    if E.ErrorOrigin = SetterMessage(TokenVirtualizationAllowed) then
+    if E.ErrorLocation = SetterMessage(TokenVirtualizationAllowed) then
       Exit(SETTOR_VIRT_PRIV);
 
-    if E.ErrorOrigin = SetterMessage(TokenOrigin) then
+    if E.ErrorLocation = SetterMessage(TokenOrigin) then
       Exit(SETTER_ORIGIN_TCB);
 
-    if E.ErrorOrigin = SetterMessage(TokenAuditPolicy) then
+    if E.ErrorLocation = SetterMessage(TokenAuditPolicy) then
       Exit(SETTER_AUDIT_PRIV);
   end;
 
-  if E.ErrorOrigin = 'NtAdjustPrivilegesToken' then
+  if E.ErrorLocation = 'NtAdjustPrivilegesToken' then
   begin
     if E.ErrorCode = STATUS_ACCESS_DENIED then
       Exit(SETTER_PRIVILEGES_ACCESS);
@@ -186,7 +186,7 @@ begin
       Exit(SETTER_PRIVILEGES_OTHER);
   end;
 
-  if E.ErrorOrigin = 'NtAdjustGroupsToken' then
+  if E.ErrorLocation = 'NtAdjustGroupsToken' then
   begin
     if E.ErrorCode = STATUS_ACCESS_DENIED then
       Exit(SETTER_GROUPS_ACCESS);
@@ -198,7 +198,7 @@ begin
       Exit(SETTER_GROUPS_MODIFY);
   end;
 
-  if E.ErrorOrigin = 'NtSetInformationProcess#ProcessAccessToken' then
+  if E.ErrorLocation = 'NtSetInformationProcess#ProcessAccessToken' then
   begin
    if E.ErrorCode = STATUS_NOT_SUPPORTED then
      Exit(ACTION_ASSIGN_NOT_SUPPORTED);
@@ -210,21 +210,21 @@ begin
      Exit(ACTION_ASSIGN_TYPE);
   end;
 
-  if E.Match('NtxSafeSetThreadToken', STATUS_PRIVILEGE_NOT_HELD) then
+  if E.Matches('NtxSafeSetThreadToken', STATUS_PRIVILEGE_NOT_HELD) then
     Exit(ACTION_SAFE_IMP);
 end;
 
-function SuggestAll(E: ELocatedOSError): String;
+function SuggestAll(E: ENtError): String;
 begin
-  Result := SuggestGetter(ELocatedOSError(E));
+  Result := SuggestGetter(ENtError(E));
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
 
-  Result := SuggestSetter(ELocatedOSError(E));
+  Result := SuggestSetter(ENtError(E));
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
 
-  Result := SuggestConstructor(ELocatedOSError(E));
+  Result := SuggestConstructor(ENtError(E));
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
 
@@ -252,19 +252,6 @@ begin
     Dlg.pszMainInstruction := PWideChar(TITLE_CONVERT);
     Dlg.pszContent := PWideChar(E.Message);
   end
-  else if E is EWinError then
-  begin
-    Dlg.pszMainInstruction := PWideChar(
-      Win32ErrorToDescription(EWinError(E).ErrorCode));
-
-    if Dlg.pszMainInstruction = '' then
-      Dlg.pszMainInstruction := PWideChar(TITLE_OS_ERROR);
-
-    Dlg.pszContent := PWideChar(Format(ERR_FMT, [EWinError(E).ErrorOrigin,
-      Win32ErrorToString(EWinError(E).ErrorCode),
-      SysErrorMessage(EWinError(E).ErrorCode)]) +
-      SuggestAll(EWinError(E)));
-  end
   else if E is ENtError then
   begin
     if not NT_ERROR(ENtError(E).ErrorCode) then
@@ -276,7 +263,7 @@ begin
     if Dlg.pszMainInstruction = '' then
       Dlg.pszMainInstruction := PWideChar(TITLE_OS_ERROR);
 
-    Dlg.pszContent := PWideChar(Format(ERR_FMT, [ENtError(E).ErrorOrigin,
+    Dlg.pszContent := PWideChar(Format(ERR_FMT, [ENtError(E).ErrorLocation,
       StatusToString(ENtError(E).ErrorCode),
       SysNativeErrorMessage(ENtError(E).ErrorCode)]) + SuggestAll(ENtError(E)));
   end

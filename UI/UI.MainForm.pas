@@ -357,7 +357,7 @@ begin
     if InfoClass.Query(tdTokenElevation) and
       (InfoClass.Elevation <> TokenElevationTypeDefault) then
       with OpenLinkedToken do
-        if IsValid then
+        if Status.IsSuccess then
           TokenView.Add(Value);
 
   CurrentUserChanged(Self);

@@ -13,8 +13,7 @@ function NtxCheckModuleDelayedImport(ModuleName: String;
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections, Ntapi.ntdef, Ntapi.ntldr,
-  Ntapi.ntstatus;
+  System.SysUtils, System.Generics.Collections, Ntapi.ntdef, Ntapi.ntldr;
 
 var
   ImportCache: TDictionary<AnsiString, NTSTATUS>;
@@ -74,9 +73,11 @@ begin
   // Report delayed load errors
   case dliNotify of
     dliFailLoadLibrary:
-      EWinError.Report(pdli.dwLastError, DELAY_MSG + pdli.szDll);
+      ENtError.Report(NTSTATUS_FROM_WIN32(pdli.dwLastError),
+        DELAY_MSG + pdli.szDll);
     dliFailGetProcAddress:
-      EWinError.Report(pdli.dwLastError, DELAY_MSG + pdli.dlp.szProcName);
+      ENtError.Report(NTSTATUS_FROM_WIN32(pdli.dwLastError),
+        DELAY_MSG + pdli.dlp.szProcName);
   end;
 
   if Assigned(OldFailureHook) then

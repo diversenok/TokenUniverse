@@ -101,7 +101,7 @@ function LsaxLookupAuditSubCategoryName(const SubCategory: TGuid): String;
 implementation
 
 uses
-  Ntapi.ntstatus, NtUtils.ApiExtension, DelphiUtils.Strings, System.SysUtils;
+   Ntapi.ntstatus, DelphiUtils.Strings, System.SysUtils;
 
 { TTokenPerUserAudit }
 
@@ -137,8 +137,8 @@ begin
       Policies[i].AuditingInformation := PER_USER_AUDIT_NONE;
   end;
 
-  Result := TNtxStatus.FromWin32(AuditSetPerUserPolicy(Sid, Policies,
-    Length(Policies)), 'LsarSetAuditPolicy');
+  Result.Location := 'LsarSetAuditPolicy';
+  Result.Win32Result := AuditSetPerUserPolicy(Sid, Policies, Length(Policies));
 end;
 
 function TTokenPerUserAudit.ContainsFlag(Index, Flag: Integer): Boolean;
@@ -248,8 +248,8 @@ begin
     if Data[i].AuditingInformation = PER_USER_POLICY_UNCHANGED then
       Data[i].AuditingInformation := PER_USER_AUDIT_NONE;
 
-  Result := TNtxStatus.FromWin32(AuditSetPerUserPolicy(Sid, Data, Count),
-    'LsarSetAuditPolicy');
+  Result.Location := 'LsarSetAuditPolicy';
+  Result.Win32Result := AuditSetPerUserPolicy(Sid, Data, Count);
 end;
 
 function TPerUserAudit.ContainsFlag(Index, Flag: Integer): Boolean;
@@ -294,8 +294,9 @@ begin
   if not Status.IsSuccess then
     Exit(nil);
 
-  Status := TNtxStatus.FromWin32(AuditQueryPerUserPolicy(Sid, SubCategories,
-    Length(SubCategories), Buffer), 'LsarQueryAuditPolicy');
+  Status.Location := 'LsarQueryAuditPolicy';
+  Status.Win32Result := AuditQueryPerUserPolicy(Sid, SubCategories,
+    Length(SubCategories), Buffer);
 
   if not Status.IsSuccess then
     Exit(nil);
@@ -375,8 +376,8 @@ begin
       Audit[i].AuditingInformation := POLICY_AUDIT_EVENT_NONE;
   end;
 
-  Result := TNtxStatus.FromWin32(AuditSetSystemPolicy(Audit, Length(Audit)),
-    'LsarSetAuditPolicy');
+  Result.Location := 'LsarSetAuditPolicy';
+  Result.Win32Result := AuditSetSystemPolicy(Audit, Length(Audit));
 end;
 
 function TSystemAudit.ContainsFlag(Index, Flag: Integer): Boolean;
@@ -398,8 +399,9 @@ begin
   if not Status.IsSuccess then
     Exit(nil);
 
-  Status := TNtxStatus.FromWin32(AuditQuerySystemPolicy(SubCategories,
-    Length(SubCategories), Buffer), 'LsarQueryAuditPolicy');
+  Status.Location := 'LsarQueryAuditPolicy';
+  Status.Win32Result := AuditQuerySystemPolicy(SubCategories,
+    Length(SubCategories), Buffer);
 
   if not Status.IsSuccess then
     Exit(nil);
@@ -449,19 +451,16 @@ var
   Count, SubCount: Cardinal;
   Ind, SubInd: Integer;
 begin
-  Result.Status := STATUS_SUCCESS;
-
   SetLength(Mapping.Categories, 0);
   SetLength(Mapping.SubCategories, 0, 0);
 
   // Query categories
 
   Result.Location := 'LsarEnumerateAuditCategories';
-  if not AuditEnumerateCategories(Guids, Count) then
-  begin
-    Result.Status := RtlxGetLastNtStatus;
+  Result.Win32Result := AuditEnumerateCategories(Guids, Count);
+
+  if not Result.IsSuccess then
     Exit;
-  end;
 
   SetLength(Mapping.Categories, Count);
   SetLength(Mapping.SubCategories, Count, 0);
@@ -474,12 +473,11 @@ begin
     // Query subcategories of this category
 
     Result.Location := 'LsarEnumerateAuditSubCategories';
-    if not AuditEnumerateSubCategories(Guids[Ind], False, SubGuids,
-      SubCount) then
-    begin
-      Result.Status := RtlxGetLastNtStatus;
+    Result.Win32Result := AuditEnumerateSubCategories(Guids[Ind], False,
+      SubGuids, SubCount);
+
+    if not Result.IsSuccess then
       Exit;
-    end;
 
     SetLength(Mapping.SubCategories[Ind], SubCount);
 
@@ -501,15 +499,13 @@ var
 begin
   // Note: The order in which subcategories appear is essential for our purposes
 
-  Result.Status := STATUS_SUCCESS;
   SetLength(SubCategories, 0);
 
   Result.Location := 'LsarEnumerateAuditSubCategories';
-  if not AuditEnumerateSubCategories(nil, True, Buffer, Count) then
-  begin
-    Result.Status := RtlxGetLastNtStatus;
+  Result.Win32Result := AuditEnumerateSubCategories(nil, True, Buffer, Count);
+
+  if not Result.IsSuccess then
     Exit;
-  end;
 
   SetLength(SubCategories, Count);
 

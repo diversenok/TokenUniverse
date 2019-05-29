@@ -143,7 +143,7 @@ begin
     end;
   end
   else
-    NativeCheck(Status, 'LsaLookupNames2');
+    NtxCheck(Status, 'LsaLookupNames2');
 end;
 
 destructor TSid.Destroy;

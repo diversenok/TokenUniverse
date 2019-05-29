@@ -126,7 +126,7 @@ begin
 
   InitializeObjectAttributes(ObjAttr);
   ClientId.Create(ClientIdEx.ProcessID, 0);
-  NativeCheck(NtOpenProcess(hParentProcess, PROCESS_CREATE_PROCESS, ObjAttr,
+  NtxCheck(NtOpenProcess(hParentProcess, PROCESS_CREATE_PROCESS, ObjAttr,
     ClientId), 'NtOpenProcess for PROCESS_CREATE_PROCESS');
 
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
