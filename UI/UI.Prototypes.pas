@@ -125,13 +125,14 @@ begin
   // THINK: Should we preserve the selection? Note that Info window re-assigns
   // the value on Refresh action because it re-queries it.
 
-  Sessions := EnumerateSessions;
+  if not WsxEnumerateSessions(Sessions).IsSuccess then
+    SetLength(Sessions, 0);
 
   ComboBox.Items.BeginUpdate;
   ComboBox.Items.Clear;
 
   for i := 0 to High(Sessions) do
-    ComboBox.Items.Add(QuerySessionFullName(Sessions[i].SessionId));
+    ComboBox.Items.Add(WsxQuerySessionName(Sessions[i].SessionId));
 
   if SelectCurrent and (Length(Sessions) > 0) then
     SetSession(RtlGetCurrentPeb.SessionId);
@@ -140,10 +141,20 @@ begin
 end;
 
 procedure TSessionSource.SetSession(const Value: Cardinal);
+var
+  i: Integer;
 begin
   Assert(Assigned(ComboBox));
 
-  ComboBox.ItemIndex := FindSessionById(Sessions, Value);
+  ComboBox.ItemIndex := -1;
+
+  for i := 0 to High(Sessions) do
+    if Sessions[i].SessionId = Value then
+    begin
+      ComboBox.ItemIndex := i;
+      Break;
+    end;
+
   if ComboBox.ItemIndex = -1 then
     ComboBox.Text := IntToStr(Value);
 end;

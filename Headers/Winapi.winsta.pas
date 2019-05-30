@@ -52,48 +52,48 @@ type
 
   // 110
   TWinStationInfoClass = (
-    WinStationCreateData,
-    WinStationConfiguration,
-    WinStationPdParams,
-    WinStationWd,
-    WinStationPd,
-    WinStationPrinter,
-    WinStationClient,
-    WinStationModules,
-    WinStationInformation = 8, // TWinStationInformation
-    WinStationTrace,
-    WinStationBeep,
-    WinStationEncryptionOff,
-    WinStationEncryptionPerm,
-    WinStationNtSecurity,
-    WinStationUserToken = 14, // TWinStationUserToken
-    WinStationUnused1,
-    WinStationVideoData,
-    WinStationInitialProgram,
-    WinStationCd,
-    WinStationSystemTrace,
-    WinStationVirtualData,
-    WinStationClientData,
-    WinStationSecureDesktopEnter,
-    WinStationSecureDesktopExit,
-    WinStationLoadBalanceSessionTarget,
-    WinStationLoadIndicator,
-    WinStationShadowInfo,
-    WinStationDigProductId,
-    WinStationLockedState,
-    WinStationRemoteAddress,
-    WinStationIdleTime,
-    WinStationLastReconnectType,
-    WinStationDisallowAutoReconnect,
-    WinStationMprNotifyInfo,
-    WinStationExecSrvSystemPipe,
-    WinStationSmartCardAutoLogon,
-    WinStationIsAdminLoggedOn,
-    WinStationReconnectedFromId,
-    WinStationEffectsPolicy,
-    WinStationType,
-    WinStationInformationEx,
-    WinStationValidationInf
+    WinStationCreateData = 0,                // q:
+    WinStationConfiguration = 1,             // q, s:
+    WinStationPdParams = 2,                  // q, s:
+    WinStationWd = 3,                        // q:
+    WinStationPd = 4,                        // q:
+    WinStationPrinter = 5,                   // q:
+    WinStationClient = 6,                    // q:
+    WinStationModules = 7,                   // q:
+    WinStationInformation = 8,               // q: TWinStationInformation
+    WinStationTrace = 9,                     // s:
+    WinStationBeep = 10,                     // s:
+    WinStationEncryptionOff = 11,            // s:
+    WinStationEncryptionPerm = 12,           // s:
+    WinStationNtSecurity = 13,               // s: < anything >
+    WinStationUserToken = 14,                // q: TWinStationUserToken
+    WinStationUnused1 = 15,
+    WinStationVideoData = 16,                // q:
+    WinStationInitialProgram = 17,           // s:
+    WinStationCd = 18,                       // q:
+    WinStationSystemTrace = 19,              // s:
+    WinStationVirtualData = 20,              // q:
+    WinStationClientData = 21,               // s:
+    WinStationSecureDesktopEnter = 22,       // s:
+    WinStationSecureDesktopExit = 23,        // s:
+    WinStationLoadBalanceSessionTarget = 24, // q:
+    WinStationLoadIndicator = 25,            // q:
+    WinStationShadowInfo = 26,               // q, s:
+    WinStationDigProductId = 27,             // q:
+    WinStationLockedState = 28,              // q, s: LongBool
+    WinStationRemoteAddress = 29,            // q:
+    WinStationIdleTime = 30,                 // q:
+    WinStationLastReconnectType = 31,        // q:
+    WinStationDisallowAutoReconnect = 32,    // q, s: LongBool
+    WinStationMprNotifyInfo = 33,
+    WinStationExecSrvSystemPipe = 34,
+    WinStationSmartCardAutoLogon = 35,
+    WinStationIsAdminLoggedOn = 36,
+    WinStationReconnectedFromId = 37,        // q:
+    WinStationEffectsPolicy = 38,            // q:
+    WinStationType = 39,                     // q:
+    WinStationInformationEx = 40,            // q:
+    WinStationValidationInf = 41
   );
 
   // 460
@@ -178,6 +178,22 @@ function WinStationQueryInformationW(ServerHandle: TWinStaHandle;
   SessionId: Cardinal; WinStationInformationClass: TWinStationInfoClass;
   pWinStationInformation: Pointer; WinStationInformationLength: Cardinal;
   out ReturnLength: Cardinal): Boolean; stdcall; external winsta;
+
+// 922
+function WinStationSendMessageW(ServerHandle: TWinStaHandle;
+  SessionId: Cardinal; Title: PWideChar; TitleLength: Cardinal;
+  MessageStr: PWideChar; MessageLength: Cardinal;
+  Style: Cardinal; Timeout: Cardinal; out Response: Cardinal;
+  DoNotWait: Boolean): Boolean; stdcall; external winsta;
+
+// 937
+function WinStationConnectW(ServerHandle: TWinStaHandle; SessionId: Cardinal;
+  TargetSessionId: Cardinal; pPassword: PWideChar; bWait: Boolean): Boolean;
+  stdcall; external winsta;
+
+// 947
+function WinStationDisconnect(ServerHandle: TWinStaHandle; SessionId: Cardinal;
+  bWait: Boolean): Boolean; stdcall; external winsta;
 
 implementation
 
