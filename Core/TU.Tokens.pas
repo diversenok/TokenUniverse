@@ -61,7 +61,7 @@ type
     UIAccess: LongBool;
     MandatoryPolicy: Cardinal;
     IsRestricted: LongBool;
-    LogonSessionInfo: TLogonSessionInfo;
+    LogonSessionInfo: ILogonSession;
     ObjectInformation: TObjectBasicInformaion;
 
     FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
@@ -143,7 +143,7 @@ type
     function GetTokenType: TTokenTypeEx;
     function GetUIAccess: LongBool;
     function GetUser: TGroup;
-    function GetLogonSessionInfo: TLogonSessionInfo;
+    function GetLogonSessionInfo: ILogonSession;
     function GetIsRestricted: LongBool;
     procedure InvokeStringEvent(StringClass: TTokenStringClass);
     procedure SetVirtualizationAllowed(const Value: LongBool);
@@ -178,7 +178,7 @@ type
     property MandatoryPolicy: Cardinal read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
     // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
-    property LogonSessionInfo: TLogonSessionInfo read GetLogonSessionInfo;
+    property LogonSessionInfo: ILogonSession read GetLogonSessionInfo;
     property ObjectInformation: TObjectBasicInformaion read GetObjectInfo;
 
     /// <summary>
@@ -509,8 +509,6 @@ destructor TTokenCacheAndEvents.Destroy;
 var
   i: TTokenStringClass;
 begin
-  LogonSessionInfo.Free;
-
   CheckAbandoned(FOnOwnerChange.Count, 'OnOwnerChange');
   CheckAbandoned(FOnPrimaryChange.Count, 'OnPrimaryChange');
   CheckAbandoned(FOnSessionChange.Count, 'OnSessionChange');
@@ -1070,7 +1068,7 @@ var
   Quotas: TQuotaLimits;
 begin
   // TODO -c WoW64: LsaLogonUser overwrites our memory
-  if NtxCheckIsWoW64 then
+  if not NtxAssertNotWoW64.IsSuccess then
     raise ENotSupportedException.Create('S4U is not supported under WoW64');
 
   // Connect to the LSA
@@ -1502,7 +1500,7 @@ begin
   Result := Token.Cache.IsRestricted;
 end;
 
-function TTokenData.GetLogonSessionInfo: TLogonSessionInfo;
+function TTokenData.GetLogonSessionInfo: ILogonSession;
 begin
   Assert(Token.Cache.IsCached[tdLogonInfo]);
   Result := Token.Cache.LogonSessionInfo;
@@ -1747,7 +1745,6 @@ var
   pAudit: PTokenAuditPolicy;
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
-  lLogonInfo: TLogonSessionInfo;
   lObjInfo: TObjectBasicInformaion;
   i, subAuthCount: Integer;
   bufferSize: Cardinal;
@@ -1978,17 +1975,8 @@ begin
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then
-      begin
-        lLogonInfo := TLogonSessionInfo.Query(Token.Cache.Statistics.
-          AuthenticationId);
-
-        if Assigned(lLogonInfo) then
-        begin
-          Token.Cache.LogonSessionInfo.Free;
-          Token.Cache.LogonSessionInfo := lLogonInfo;
-          Result := True;
-        end;
-      end;
+        Result := TLogonSession.Query(Token.Cache.Statistics.AuthenticationId,
+          Token.Cache.LogonSessionInfo).IsSuccess;
 
     tdObjectInfo:
     begin

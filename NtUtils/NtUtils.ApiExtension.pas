@@ -48,8 +48,8 @@ function NtxImpersonateToken(hToken: THandle; out hOldToken: THandle):
 function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
   TID: NativeUInt): NTSTATUS;
 
-// Checks if current process is running under WoW64
-function NtxCheckIsWoW64: Boolean;
+// Fail if current process is running under WoW64
+function NtxAssertNotWoW64: TNtxStatus;
 
 { ---------------------------------- RTL ----------------------------------- }
 
@@ -462,15 +462,19 @@ begin
   end;
 end;
 
-function NtxCheckIsWoW64: Boolean;
+function NtxAssertNotWoW64: TNtxStatus;
 var
   IsWoW64: NativeUInt;
 begin
-  if NT_SUCCESS(NtQueryInformationProcess(NtCurrentProcess,
-    ProcessWow64Information, @IsWoW64, SizeOf(IsWoW64), nil)) then
-    Result := IsWoW64 <> 0
-  else
-    Result := True;
+  Result.Location := 'NtQueryInformationProcess [ProcessWow64Information]';
+  Result.Status := NtQueryInformationProcess(NtCurrentProcess,
+    ProcessWow64Information, @IsWoW64, SizeOf(IsWoW64), nil);
+
+  if NT_SUCCESS(Result.Status) and (IsWoW64 <> 0) then
+  begin
+    Result.Location := '[WoW64 assertion]';
+    Result.Status := STATUS_NOT_SUPPORTED;
+  end;
 end;
 
 { RTL }

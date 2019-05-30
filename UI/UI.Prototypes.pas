@@ -95,7 +95,7 @@ type
 implementation
 
 uses
-  DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntrtl;
+  DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntrtl, NtUtils.Lsa;
 
 { TSessionSource }
 
@@ -342,27 +342,25 @@ procedure TLogonSessionSource.UpdateLogonSessions;
 var
   i: integer;
   S: String;
-  LogonData: TLogonSessionInfo;
+  LogonData: ILogonSession;
 begin
-  FLogonSessions := TLogonSessionInfo.Enumerate;
+  if not LsaxEnumerateLogonSessions(FLogonSessions).IsSuccess then
+    SetLength(FLogonSessions, 0);
+
+  ComboBox.Items.BeginUpdate;
   ComboBox.Items.Clear;
   for i := 0 to High(FLogonSessions) do
   begin
     S := IntToHexEx(FLogonSessions[i]);
 
-    LogonData := TLogonSessionInfo.Query(FLogonSessions[i]);
-
-    if Assigned(LogonData) then
-      try
-        if LogonData.UserPresent and (LogonData.User.Lookup.UserName <> '') then
-            S := Format('%s (%s @ %d)', [S, LogonData.User.Lookup.UserName,
-              LogonData.Data.Session]);
-      finally
-        LogonData.Free;
-      end;
+    if TLogonSession.Query(FLogonSessions[i], LogonData).IsSuccess then
+      if LogonData.UserPresent and (LogonData.User.Lookup.UserName <> '') then
+        S := Format('%s (%s @ %d)', [S, LogonData.User.Lookup.UserName,
+          LogonData.RawData.Session]);
 
     ComboBox.Items.Add(S);
   end;
+  ComboBox.Items.EndUpdate;
 end;
 
 { TCellSource }

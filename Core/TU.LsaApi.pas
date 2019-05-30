@@ -5,7 +5,8 @@ unit TU.LsaApi;
 interface
 
 uses
-  NtUtils.Types, Winapi.WinNt, Ntapi.ntseapi, Winapi.NtSecApi;
+  NtUtils.Types, Winapi.WinNt, Ntapi.ntseapi, Winapi.NtSecApi,
+  NtUtils.Exceptions;
 
 type
   TLogonDataClass = (lsLogonId, lsSecurityIdentifier, lsUserName, lsLogonDomain,
@@ -16,23 +17,27 @@ type
     lsKickOffTime, lsPasswordLastSet, lsPasswordCanChange, lsPasswordMustChange
   );
 
-  TLogonSessionInfo = class
-  private
-    FData: PSecurityLogonSessionData;
-    function GetUser: ISid;
-    function GetUserPresent: Boolean;
-  public
-    constructor Create(OwnedData: PSecurityLogonSessionData);
-    destructor Destroy; override;
-
-    property UserPresent: Boolean read GetUserPresent;
-    property User: ISid read GetUser;
-    property Data: PSecurityLogonSessionData read FData;
+  ILogonSession = interface
+    function RawData: PSecurityLogonSessionData;
+    function UserPresent: Boolean;
+    function User: ISid;
     function GetString(InfoClass: TLogonDataClass): String;
     function UserFlagsHint: String;
+  end;
 
-    class function Query(LogonId: TLuid): TLogonSessionInfo; static;
-    class function Enumerate: TLuidDynArray; static;
+  TLogonSession = class(TInterfacedObject, ILogonSession)
+  private
+    Data: PSecurityLogonSessionData;
+  public
+    class function Query(LogonId: TLuid;
+      out Self: ILogonSession): TNtxStatus; static;
+    destructor Destroy; override;
+
+    function RawData: PSecurityLogonSessionData;
+    function UserPresent: Boolean;
+    function User: ISid;
+    function GetString(InfoClass: TLogonDataClass): String;
+    function UserFlagsHint: String;
   end;
 
   TPrivilegeRec = record
@@ -56,54 +61,26 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings,
-  TU.Tokens.Types, NtUtils.ApiExtension, Winapi.ntlsa, NtUtils.Strings;
+  NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings,
+  TU.Tokens.Types, NtUtils.ApiExtension, NtUtils.Strings;
 
 { TLogonSessionInfo }
 
-constructor TLogonSessionInfo.Create(OwnedData: PSecurityLogonSessionData);
+destructor TLogonSession.Destroy;
 begin
-  Assert(Assigned(OwnedData));
-  FData := OwnedData;
-end;
-
-destructor TLogonSessionInfo.Destroy;
-begin
-  LsaFreeReturnBuffer(FData);
+  LsaFreeReturnBuffer(Data);
   inherited;
 end;
 
-class function TLogonSessionInfo.Enumerate: TLuidDynArray;
-var
-  Count, i: Integer;
-  Sessions: PLuidArray;
+function TLogonSession.GetString(InfoClass: TLogonDataClass): String;
 begin
-  SetLength(Result, 0);
-
-  if NT_SUCCESS(LsaEnumerateLogonSessions(Count, Sessions)) then
-  try
-    SetLength(Result, Count);
-
-    // Invert the order so that later logons appear later in the list
-    for i := 0 to Count - 1 do
-      Result[i] := Sessions[Count - 1 - i];
-  finally
-    LsaFreeReturnBuffer(Sessions);
-  end;
-end;
-
-function TLogonSessionInfo.GetString(InfoClass: TLogonDataClass): String;
-begin
-  if not Assigned(Self) then
-    Exit('Unknown');
-
   case InfoClass of
     lsLogonId:
       Result := IntToHexEx(Data.LogonId);
 
     lsSecurityIdentifier:
       if UserPresent then
-        Result := GetUser.Lookup.FullName
+        Result := User.Lookup.FullName
       else
         Result := 'No User';
 
@@ -177,38 +154,52 @@ begin
   end;
 end;
 
-function TLogonSessionInfo.GetUser: ISid;
-begin
-  Assert(UserPresent);
-  Result := TSid.CreateCopy(Data.Sid);
-end;
-
-function TLogonSessionInfo.GetUserPresent: Boolean;
-begin
-  Result := Assigned(Self) and Assigned(Data.Sid)
-end;
-
-class function TLogonSessionInfo.Query(LogonId: TLuid): TLogonSessionInfo;
+class function TLogonSession.Query(LogonId: TLuid;
+  out Self: ILogonSession): TNtxStatus;
 var
   Buffer: PSecurityLogonSessionData;
+  Obj: TLogonSession;
 begin
   // TODO -c WoW64: LsaGetLogonSessionData returns a weird pointer
-  if NtxCheckIsWoW64 then
-    Exit(nil);
+  Result := NtxAssertNotWoW64;
 
-  if NT_SUCCESS(LsaGetLogonSessionData(LogonId, Buffer)) then
-    Result := TLogonSessionInfo.Create(Buffer)
+  if not Result.IsSuccess then
+    Exit;
+
+  Result.Location := 'LsaGetLogonSessionData';
+  Result.Status := LsaGetLogonSessionData(LogonId, Buffer);
+
+  if Result.IsSuccess then
+  begin
+    Obj := TLogonSession.Create;
+    Obj.Data := Buffer;
+    Self := Obj;
+  end;
+end;
+
+function TLogonSession.RawData: PSecurityLogonSessionData;
+begin
+  Result := Data;
+end;
+
+function TLogonSession.User: ISid;
+begin
+  if UserPresent then
+    Result := TSid.CreateCopy(Data.Sid)
   else
     Result := nil;
 end;
 
-function TLogonSessionInfo.UserFlagsHint: String;
+function TLogonSession.UserFlagsHint: String;
 begin
-  if not Assigned(Self) then
-    Exit('');
-
   Result := MapKnownFlagsHint(Data.UserFlags, bmLogonFlags);
 end;
+
+function TLogonSession.UserPresent: Boolean;
+begin
+  Result := Assigned(Data.Sid)
+end;
+
 
 { TPrivilegeCache }
 
@@ -219,7 +210,7 @@ var
   Value: TLuid;
 begin
   // Ask LSA to enumerate the privileges.
-  if NT_SUCCESS(LsaxEnumeratePrivileges(Privileges)) then
+  if LsaxEnumeratePrivileges(Privileges).IsSuccess then
   begin
     SetLength(Result, Length(Privileges));
 
@@ -263,7 +254,7 @@ begin
   if InRange(Value) and Cache[Value].DisplayNameValid then
     Result := Cache[Value].DisplayName
   else if TryQueryName(Value, Name) and
-    NT_SUCCESS(LsaxQueryDescriptionPrivilege(Name, Result)) then
+    LsaxQueryDescriptionPrivilege(Name, Result).IsSuccess then
   begin
     // Cache it if applicable
     if InRange(Value) then
@@ -290,7 +281,7 @@ begin
   // Try cache first, then query LSA
   if InRange(Value) and Cache[Value].NameValid then
     Name := Cache[Value].Name
-  else if NT_SUCCESS(LsaxQueryNamePrivilege(Value, Name)) then
+  else if LsaxQueryNamePrivilege(Value, Name).IsSuccess then
   begin
     // Cache it if applicable
     if InRange(Value) then

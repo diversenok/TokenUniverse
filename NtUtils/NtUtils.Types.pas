@@ -91,7 +91,7 @@ end;
 
 constructor TSid.CreateFromString(AccountOrSID: String);
 var
-  Status: NTSTATUS;
+  Status: TNtxStatus;
   Buffer: PSid;
   IdentifierAuthorityUInt64: UInt64;
   IdentifierAuthority: TSidIdentifierAuthority;
@@ -101,7 +101,7 @@ begin
 
   Status := LsaxLookupUserName(AccountOrSID, FSid);
 
-  if not NT_SUCCESS(Status) and AccountOrSID.StartsWith('S-1-', True) then
+  if not Status.IsSuccess and AccountOrSID.StartsWith('S-1-', True) then
   begin
     // Despite the fact that RtlConvertSidToUnicodeString can convert SIDs with
     // zero sub authorities to SDDL, ConvertStringSidToSidW (for some reason)
@@ -143,7 +143,7 @@ begin
     end;
   end
   else
-    NtxCheck(Status, 'LsaLookupNames2');
+    Status.RaiseOnError;
 end;
 
 destructor TSid.Destroy;

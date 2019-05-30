@@ -34,7 +34,7 @@ type
     class function InitItems(ListView: TListViewEx; GroupInd: Integer):
       Integer; static;
     class procedure SetItems(ListView: TListViewEx; StartInd: Integer;
-      LogonInfo: TLogonSessionInfo); static;
+      LogonInfo: ILogonSession); static;
   end;
 
 implementation
@@ -175,23 +175,27 @@ begin
 end;
 
 class procedure TLogonInfoSource.SetItems(ListView: TListViewEx;
-  StartInd: Integer; LogonInfo: TLogonSessionInfo);
+  StartInd: Integer; LogonInfo: ILogonSession);
 var
   i: TLogonDataClass;
 begin
-  // Note: LogonInfo can be nil, GetString and UserFlagsHint work fine with it
+  if Assigned(LogonInfo) then
+  begin
+    for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do
+      ListView.Items[StartInd + Integer(i)].Cell[1] := LogonInfo.GetString(i);
 
-  for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do
-    ListView.Items[StartInd + Integer(i)].Cell[1] := LogonInfo.GetString(i);
+    // Build hint for UserFlags
+    ListView.Items[StartInd + Integer(lsUserFlags)].Hint :=
+      LogonInfo.UserFlagsHint;
 
-  // Build hint for UserFlags
-  ListView.Items[StartInd + Integer(lsUserFlags)].Hint :=
-    LogonInfo.UserFlagsHint;
-
-  // Build hint for the user
-  if LogonInfo.UserPresent then
-    ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
-      BuildSidHint(LogonInfo.User.Lookup, SE_GROUP_USER_DEFAULT, False);
+    // Build hint for the user
+    if LogonInfo.UserPresent then
+      ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
+        BuildSidHint(LogonInfo.User.Lookup, SE_GROUP_USER_DEFAULT, False);
+  end
+  else
+    for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do
+      ListView.Items[StartInd + Integer(i)].Cell[1] := 'Unknown';
 end;
 
 end.

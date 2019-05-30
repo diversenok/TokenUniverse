@@ -3,7 +3,7 @@ unit NtUtils.Lsa;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, Winapi.NtSecApi, NtUtils.Exceptions;
+  Winapi.WinNt, NtUtils.Exceptions;
 
 type
   TNtxStatus = NtUtils.Exceptions.TNtxStatus;
@@ -35,14 +35,14 @@ type
 { -------------------------------- Privileges ------------------------------- }
 
 // LsaEnumeratePrivileges
-function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): NTSTATUS;
+function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
 
 // LsaLookupPrivilegeName
-function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): NTSTATUS;
+function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): TNtxStatus;
 
 // LsaLookupPrivilegeDisplayName
 function LsaxQueryDescriptionPrivilege(const Name: String;
-  out DisplayName: String): NTSTATUS;
+  out DisplayName: String): TNtxStatus;
 
 // Get the minimal integrity level required to use a specific privilege
 function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
@@ -74,17 +74,22 @@ function LsaxLookupSid(Sid: PSid): TTranslatedName;
 function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
 
 // LsaLookupNames2, on success the SID buffer must be freed using FreeMem
-function LsaxLookupUserName(UserName: String; out Sid: PSid): NTSTATUS;
+function LsaxLookupUserName(UserName: String; out Sid: PSid): TNtxStatus;
+
+{ ------------------------------ Logon Sessions ----------------------------- }
+
+// LsaEnumerateLogonSessions
+function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
 
 implementation
 
 uses
-  Winapi.ntlsa, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntseapi,
-  System.SysUtils, NtUtils.ApiExtension;
+  Ntapi.ntdef, Ntapi.ntstatus, Winapi.ntlsa, Winapi.NtSecApi, Ntapi.ntrtl,
+  Ntapi.ntseapi, System.SysUtils, NtUtils.ApiExtension;
 
 { Privileges }
 
-function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): NTSTATUS;
+function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
 var
   ObjAttr: TObjectAttributes;
   hPolicy: TLsaHandle;
@@ -94,16 +99,20 @@ var
 begin
   SetLength(Privileges, 0);
   InitializeObjectAttributes(ObjAttr);
-  Result := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION, hPolicy);
 
-  if NT_SUCCESS(Result) then
+  Result.Location := 'LsaOpenPolicy';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
+    hPolicy);
+
+  if NT_SUCCESS(Result.Status) then
   begin
     EnumContext := 0;
 
-    Result := LsaEnumeratePrivileges(hPolicy, EnumContext, Buf,
+    Result.Location := 'LsaEnumeratePrivileges';
+    Result.Status := LsaEnumeratePrivileges(hPolicy, EnumContext, Buf,
       MAX_PREFERRED_LENGTH, Count);
 
-    if NT_SUCCESS(Result) then
+    if NT_SUCCESS(Result.Status) then
     begin
       SetLength(Privileges, Count);
 
@@ -120,7 +129,7 @@ begin
   end;
 end;
 
-function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): NTSTATUS;
+function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): TNtxStatus;
 var
   ObjAttr: TObjectAttributes;
   hPolicy: TLsaHandle;
@@ -128,13 +137,16 @@ var
 begin
   Name := '';
   InitializeObjectAttributes(ObjAttr);
-  Result := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, hPolicy);
 
-  if NT_SUCCESS(Result) then
+  Result.Location := 'LsaOpenPolicy';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, hPolicy);
+
+  if NT_SUCCESS(Result.Status) then
   begin
-    Result := LsaLookupPrivilegeName(hPolicy, Luid, NameBuf);
+    Result.Location := 'LsaLookupPrivilegeName';
+    Result.Status := LsaLookupPrivilegeName(hPolicy, Luid, NameBuf);
 
-    if NT_SUCCESS(Result) then
+    if NT_SUCCESS(Result.Status) then
     begin
       Name := NameBuf.ToString;
       LsaFreeMemory(NameBuf);
@@ -145,7 +157,7 @@ begin
 end;
 
 function LsaxQueryDescriptionPrivilege(const Name: String;
-  out DisplayName: String): NTSTATUS;
+  out DisplayName: String): TNtxStatus;
 var
   ObjAttr: TObjectAttributes;
   hPolicy: TLsaHandle;
@@ -155,16 +167,19 @@ var
 begin
   DisplayName := '';
   InitializeObjectAttributes(ObjAttr);
-  Result := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, hPolicy);
 
-  if NT_SUCCESS(Result) then
+  Result.Location := 'LsaOpenPolicy';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, hPolicy);
+
+  if NT_SUCCESS(Result.Status) then
   begin
     NameBuf.FromString(Name);
 
-    Result := LsaLookupPrivilegeDisplayName(hPolicy, NameBuf, DisplayNameBuf,
-      LangId);
+    Result.Location := 'LsaLookupPrivilegeDisplayName';
+    Result.Status := LsaLookupPrivilegeDisplayName(hPolicy, NameBuf,
+      DisplayNameBuf, LangId);
 
-    if NT_SUCCESS(Result) then
+    if NT_SUCCESS(Result.Status) then
     begin
       DisplayName := DisplayNameBuf.ToString;
       LsaFreeMemory(DisplayNameBuf);
@@ -569,7 +584,7 @@ begin
   end;
 end;
 
-function LsaxLookupUserName(UserName: String; out Sid: PSid): NTSTATUS;
+function LsaxLookupUserName(UserName: String; out Sid: PSid): TNtxStatus;
 var
   LsaHandle: TLsaHandle;
   ObjAttr: TObjectAttributes;
@@ -583,32 +598,35 @@ begin
   InitializeObjectAttributes(ObjAttr);
 
   // Connect to LSA
-  Result := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, LsaHandle);
+  Result.Location := 'LsaOpenPolicy';
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, LsaHandle);
 
-  if not NT_SUCCESS(Result) then
+  if not NT_SUCCESS(Result.Status) then
     Exit;
 
   // Request translation of one name
-  Result := LsaLookupNames2(LsaHandle, 0, 1, Name, ReferencedDomain,
+  Result.Location := 'LsaLookupNames2';
+  Result.Status := LsaLookupNames2(LsaHandle, 0, 1, Name, ReferencedDomain,
     TranslatedSid);
 
-  if Result = STATUS_NONE_MAPPED then
+  if Result.Status = STATUS_NONE_MAPPED then
   begin
     LsaFreeMemory(ReferencedDomain);
     LsaFreeMemory(TranslatedSid);
     Exit;
   end;
 
-  if NT_SUCCESS(Result) then
+  if NT_SUCCESS(Result.Status) then
   begin
     // Allocate memory and copy SID
 
     BufferSize := RtlLengthSid(TranslatedSid.Sid);
     Sid := AllocMem(BufferSize);
 
-    Result := RtlCopySid(BufferSize, Sid, TranslatedSid.Sid);
+    Result.Location := 'RtlCopySid';
+    Result.Status := RtlCopySid(BufferSize, Sid, TranslatedSid.Sid);
 
-    if not NT_SUCCESS(Result) then
+    if not NT_SUCCESS(Result.Status) then
     begin
       FreeMem(Sid);
       Sid := nil;
@@ -636,6 +654,31 @@ end;
 function TTranslatedName.HasName: Boolean;
 begin
   Result := (UserName <> '') or (DomainName <> '');
+end;
+
+{ Logon Sessions }
+
+function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
+var
+  Count, i: Integer;
+  Buffer: PLuidArray;
+begin
+  SetLength(Luids, 0);
+
+  Result.Location := 'LsaEnumerateLogonSessions';
+  Result.Status := LsaEnumerateLogonSessions(Count, Buffer);
+
+  if Result.IsSuccess then
+  try
+    SetLength(Luids, Count);
+
+    // TODO: manually add anonymous 3E6 logon
+    // Invert the order so that later logons appear later in the list
+    for i := 0 to Count - 1 do
+      Luids[i] := Buffer[Count - 1 - i];
+  finally
+    LsaFreeReturnBuffer(Buffer);
+  end;
 end;
 
 end.
