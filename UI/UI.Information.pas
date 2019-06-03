@@ -125,7 +125,7 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Snapshots.Processes,
   NtUtils.Snapshots.Handles, DelphiUtils.Strings, NtUtils.Strings,
-  Ntapi.ntpsapi, NtUtils.AccessMasks;
+  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.AccessMasks;
 
 const
   TAB_INVALIDATED = 0;
@@ -711,7 +711,8 @@ begin
         SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
         SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objToken));
-        ImageIndex := TProcessIcons.GetIcon(Process.QueryFullImageName);
+        ImageIndex := TProcessIcons.GetIcon(
+          NtxTryQueryImageProcessById(Process.ProcessId));
       end;
   end;
 

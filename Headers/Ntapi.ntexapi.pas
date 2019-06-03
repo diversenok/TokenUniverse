@@ -70,7 +70,6 @@ type
     OtherTransferCount: UInt64;
     Threads: array [WORD] of TSystemThreadInformation;
     function GetImageName: String;
-    function QueryFullImageName: String;
   end;
   PSystemProcessInformation = ^TSystemProcessInformation;
 
@@ -151,33 +150,6 @@ begin
     Result := ImageName.ToString;
     if Result = '' then
       Result := 'System Idle Process';
-  end;
-end;
-
-function TSystemProcessInformation.QueryFullImageName: String;
-const
-  MAX_NAME = $1000E; // value used by QueryFullProcessImageNameW
-var
-  hProcess: THandle;
-  ObjAttr: TObjectAttributes;
-  ClientID: TClientId;
-  Buffer: PUNICODE_STRING;
-begin
-  ClientID.Create(ProcessId, 0);
-  InitializeObjectAttributes(ObjAttr);
-  Result := '';
-
-  if NT_SUCCESS(NtOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
-    ObjAttr, ClientID)) then
-  begin
-    Buffer := AllocMem(MAX_NAME);
-
-    if NT_SUCCESS(NtQueryInformationProcess(hProcess, ProcessImageFileNameWin32,
-      Buffer, MAX_NAME, nil)) then
-      Result := Buffer.ToString;
-
-    FreeMem(Buffer);
-    NtClose(hProcess);
   end;
 end;
 

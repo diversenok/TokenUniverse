@@ -61,8 +61,8 @@ type
 implementation
 
 uses
-  NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings,
-  TU.Tokens.Types, NtUtils.ApiExtension, NtUtils.Strings;
+  NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings, NtUtils.Processes,
+  TU.Tokens.Types, NtUtils.Strings;
 
 { TLogonSessionInfo }
 

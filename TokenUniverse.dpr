@@ -87,7 +87,8 @@ uses
   Ntapi.ntmmapi in 'Headers\Ntapi.ntmmapi.pas',
   NtUtils.Exec.Nt in 'NtUtils\NtUtils.Exec.Nt.pas',
   NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas',
-  NtUtils.AccessMasks in 'NtUtils\NtUtils.AccessMasks.pas';
+  NtUtils.AccessMasks in 'NtUtils\NtUtils.AccessMasks.pas',
+  NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas';
 
 {$R *.res}
 

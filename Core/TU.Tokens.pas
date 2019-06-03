@@ -466,7 +466,8 @@ implementation
 uses
   System.TypInfo, NtUtils.Snapshots.Processes, NtUtils.ApiExtension,
   DelphiUtils.Strings, Winapi.WinError, Winapi.winsta, Ntapi.ntstatus,
-  Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings, NtUtils.AccessMasks;
+  Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings, NtUtils.AccessMasks,
+  NtUtils.Processes;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -691,18 +692,12 @@ end;
 procedure TToken.AssignToProcess(PID: NativeUInt);
 var
   hProcess: THandle;
-  ClientId: TClientId;
-  ObjAttr: TObjectAttributes;
   AccessToken: TProcessAccessToken;
   Status: NTSTATUS;
 begin
-  InitializeObjectAttributes(ObjAttr);
-  ClientId.Create(PID, 0);
-
   // Open the target process
-  NtxCheck(NtOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
-    PROCESS_SET_INFORMATION, ObjAttr, ClientId), 'NtOpenProcess with ' +
-    'PROCESS_QUERY_INFORMATION | PROCESS_SET_INFORMATION');
+  NtxOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
+    PROCESS_SET_INFORMATION, PID).RaiseOnError;;
 
   // Open its first thread and store the handle inside AccessToken
   Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_LIMITED_INFORMATION, 0, 0,
@@ -740,8 +735,7 @@ procedure TToken.AssignToThread(TID: NativeUInt);
 var
   hThread: THandle;
 begin
-  NtxCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
-    'NtOpenThread with SET_THREAD_TOKEN');
+  NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID).RaiseOnError;
 
   try
     // Set the impersonation token
@@ -757,9 +751,8 @@ procedure TToken.AssignToThreadSafe(TID: NativeUInt);
 var
   hThread: THandle;
 begin
-  NtxCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN or
-    THREAD_QUERY_LIMITED_INFORMATION, TID),
-    'NtOpenThread with SET_THREAD_TOKEN | QUERY_LIMITED_INFORMATION');
+  NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN or
+    THREAD_QUERY_LIMITED_INFORMATION, TID).RaiseOnError;
 
   try
     NtxCheck(NtxSafeSetThreadToken(hThread, hToken),
@@ -920,8 +913,7 @@ var
   hThread: THandle;
   QoS: TSecurityQualityOfService;
 begin
-  NtxCheck(NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID),
-    'NtOpenThreadEx with DIRECT_IMPERSONATION');
+  NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID).RaiseOnError;
 
   try
     // Save previous impersonation state
@@ -961,20 +953,8 @@ constructor TToken.CreateOpenProcess(PID: NativeUInt; ImageName: String;
   Access: TAccessMask; Attributes: Cardinal);
 var
   hProcess: THandle;
-  ClientId: TClientId;
-  ObjAttr: TObjectAttributes;
 begin
-  if PID = NtCurrentProcessId then
-    hProcess := NtCurrentProcess
-  else
-  begin
-    InitializeObjectAttributes(ObjAttr);
-    ClientId.Create(PID, 0);
-
-    NtxCheck(NtOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
-      ObjAttr, ClientId),
-      'NtOpenProcess with PROCESS_QUERY_LIMITED_INFORMATION');
-  end;
+  NtxOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION, PID).RaiseOnError;
 
   try
     NtxCheck(NtOpenProcessTokenEx(hProcess, Access, Attributes, hToken),
@@ -991,8 +971,7 @@ constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
 var
   hThread: THandle;
 begin
-  NtxCheck(NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID),
-    'NtOpenThread with QUERY_LIMITED_INFORMATION');
+   NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID).RaiseOnError;
 
   try
     NtxCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
@@ -1409,8 +1388,7 @@ var
   hThread: THandle;
   hNoToken: THandle;
 begin
-  NtxCheck(NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID),
-    'NtOpenThread with SET_THREAD_TOKEN');
+  NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID).RaiseOnError;
 
   try
     hNoToken := 0;
@@ -1426,15 +1404,8 @@ end;
 function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;
 var
   hTargetProcess: THandle;
-  ClientId: TClientId;
-  ObjAttr: TObjectAttributes;
 begin
-  InitializeObjectAttributes(ObjAttr);
-  ClientId.Create(PID, 0);
-
-  // Open the target process
-  NtxCheck(NtOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, ObjAttr,
-    ClientId), 'NtOpenProcess with PROCESS_DUP_HANDLE');
+  NtxOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, PID).RaiseOnError;
 
   try
     // Send the handle

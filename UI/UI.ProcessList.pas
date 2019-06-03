@@ -63,13 +63,10 @@ type
       TClientIdEx;
   end;
 
-var
-  ProcessListDialog: TProcessListDialog;
-
 implementation
 
 uses
-  Winapi.ShellApi, UI.Modal.ThreadList;
+  Winapi.ShellApi, UI.Modal.ThreadList, NtUtils.Processes;
 
 {$R *.dfm}
 
@@ -223,7 +220,7 @@ begin
 
   for i := 0 to High(ProcessListEx) do
     ProcessListEx[i].ImageIndex := TProcessIcons.GetIcon(
-      ProcessListEx[i].Process.QueryFullImageName);
+      NtxTryQueryImageProcessById(ProcessListEx[i].Process.ProcessId));
 
   TProcessIcons.ImageList.EndUpdate;
 end;

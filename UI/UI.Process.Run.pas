@@ -94,7 +94,7 @@ uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpsapi, NtUtils.Exceptions,
-  NtUtils.ApiExtension, NtUtils.WinUser;
+  NtUtils.ApiExtension, NtUtils.WinUser, NtUtils.Processes;
 
 {$R *.dfm}
 
@@ -116,18 +116,13 @@ end;
 
 procedure TDialogRun.ButtonChooseParentClick(Sender: TObject);
 var
-  ObjAttr: TObjectAttributes;
   ClientIdEx: TClientIdEx;
-  ClientId: TClientId;
 begin
   MenuClearParentClick(Sender);
 
   ClientIdEx := TProcessListDialog.Execute(Self, False);
-
-  InitializeObjectAttributes(ObjAttr);
-  ClientId.Create(ClientIdEx.ProcessID, 0);
-  NtxCheck(NtOpenProcess(hParentProcess, PROCESS_CREATE_PROCESS, ObjAttr,
-    ClientId), 'NtOpenProcess for PROCESS_CREATE_PROCESS');
+  NtxOpenProcess(hParentProcess, PROCESS_DUP_HANDLE,
+    ClientIdEx.ProcessID).RaiseOnError;
 
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
     ClientIdEx.ProcessID]);

@@ -42,15 +42,6 @@ function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): NTSTATUS;
 function NtxImpersonateToken(hToken: THandle; out hOldToken: THandle):
   TNtxStatus;
 
-{ -------------------------- Processes & Threads --------------------------- }
-
-// NtOpenThread that might return a pseudo-handle
-function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
-  TID: NativeUInt): NTSTATUS;
-
-// Fail if current process is running under WoW64
-function NtxAssertNotWoW64: TNtxStatus;
-
 { ---------------------------------- RTL ----------------------------------- }
 
 // RtlConvertSidToUnicodeString that uses delphi strings
@@ -438,42 +429,6 @@ begin
       ThreadImpersonationToken, @hTokenDuplicate, SizeOf(hTokenDuplicate));
 
     NtClose(hTokenDuplicate);
-  end;
-end;
-
-{ Processes & Threads }
-
-function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
-  TID: NativeUInt): NTSTATUS;
-var
-  ClientId: TClientId;
-  ObjAttr: TObjectAttributes;
-begin
-  if TID = NtCurrentThreadId then
-  begin
-    hThread := NtCurrentThread;
-    Result := STATUS_SUCCESS;
-  end
-  else
-  begin
-    InitializeObjectAttributes(ObjAttr);
-    ClientId.Create(0, TID);
-    Result := NtOpenThread(hThread, DesiredAccess, ObjAttr, ClientId);
-  end;
-end;
-
-function NtxAssertNotWoW64: TNtxStatus;
-var
-  IsWoW64: NativeUInt;
-begin
-  Result.Location := 'NtQueryInformationProcess [ProcessWow64Information]';
-  Result.Status := NtQueryInformationProcess(NtCurrentProcess,
-    ProcessWow64Information, @IsWoW64, SizeOf(IsWoW64), nil);
-
-  if NT_SUCCESS(Result.Status) and (IsWoW64 <> 0) then
-  begin
-    Result.Location := '[WoW64 assertion]';
-    Result.Status := STATUS_NOT_SUPPORTED;
   end;
 end;
 
