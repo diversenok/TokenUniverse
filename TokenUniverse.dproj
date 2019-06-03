@@ -280,6 +280,7 @@
         <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
         <DCCReference Include="NtUtils\NtUtils.AccessMasks.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

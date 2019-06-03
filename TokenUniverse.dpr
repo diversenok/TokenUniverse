@@ -88,7 +88,8 @@ uses
   NtUtils.Exec.Nt in 'NtUtils\NtUtils.Exec.Nt.pas',
   NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas',
   NtUtils.AccessMasks in 'NtUtils\NtUtils.AccessMasks.pas',
-  NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas';
+  NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas',
+  NtUtils.Objects in 'NtUtils\NtUtils.Objects.pas';
 
 {$R *.res}
 

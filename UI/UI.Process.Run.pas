@@ -94,7 +94,7 @@ uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpsapi, NtUtils.Exceptions,
-  NtUtils.ApiExtension, NtUtils.WinUser, NtUtils.Processes;
+  NtUtils.Objects, NtUtils.WinUser, NtUtils.Processes;
 
 {$R *.dfm}
 

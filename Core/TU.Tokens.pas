@@ -5,10 +5,10 @@ interface
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 uses
-  System.SysUtils, System.Generics.Collections, NtUtils.Exceptions,
-  Ntapi.ntdef, Ntapi.ntobapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
-  TU.Winapi, TU.Tokens.Types, NtUtils.Snapshots.Handles, DelphiUtils.Events, TU.LsaApi,
-  NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit;
+  Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
+  TU.Tokens.Types, NtUtils.Snapshots.Handles, DelphiUtils.Events, TU.LsaApi,
+  NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
+  System.Generics.Collections, NtUtils.Exceptions;
 
 type
   /// <summary>
@@ -464,10 +464,10 @@ type
 implementation
 
 uses
-  System.TypInfo, NtUtils.Snapshots.Processes, NtUtils.ApiExtension,
-  DelphiUtils.Strings, Winapi.WinError, Winapi.winsta, Ntapi.ntstatus,
-  Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings, NtUtils.AccessMasks,
-  NtUtils.Processes;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Objects,
+  NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, DelphiUtils.Strings,
+  NtUtils.ApiExtension, System.SysUtils, System.TypInfo, Winapi.WinSta,
+  NtUtils.AccessMasks;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -816,9 +816,8 @@ end;
 constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
   SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 begin
-  NtxCheck(NtxDuplicateObject(NtCurrentProcess, SrcToken.hToken,
-    NtCurrentProcess, hToken, Access, HandleAttributes, 0),
-    'NtDuplicateObject');
+  NtxDuplicateObject(NtCurrentProcess, SrcToken.hToken, NtCurrentProcess,
+    hToken, Access, HandleAttributes, 0).RaiseOnError;
 
   FCaption := SrcToken.Caption + ' (ref)'
   // TODO: No need to snapshot handles, object address is already known
@@ -960,7 +959,7 @@ begin
     NtxCheck(NtOpenProcessTokenEx(hProcess, Access, Attributes, hToken),
       'NtOpenProcessTokenEx');
   finally
-    NtClose(hProcess);
+    NtxSafeClose(hProcess);
   end;
 
   FCaption := Format('%s [%d]', [ImageName, PID]);

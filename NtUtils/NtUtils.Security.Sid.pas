@@ -7,9 +7,10 @@ uses
 
 const
   SE_GROUP_USER_DEFAULT = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
+
   SE_GROUP_ALL_FLAGS = SE_GROUP_MANDATORY or SE_GROUP_OWNER or
-    SE_GROUP_USE_FOR_DENY_ONLY or SE_GROUP_INTEGRITY or SE_GROUP_RESOURCE or
-    SE_GROUP_LOGON_ID;
+                       SE_GROUP_USE_FOR_DENY_ONLY or SE_GROUP_INTEGRITY or
+                       SE_GROUP_RESOURCE or SE_GROUP_LOGON_ID;
 
 type
   TTranslatedName = NtUtils.Lsa.TTranslatedName;
@@ -50,10 +51,13 @@ type
   end;
   TGroupArray = array of TGroup;
 
+// Convert an SID to its SDDL representation
+function RtlxConvertSidToString(SID: PSid): String;
+
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.Sddl,
+  Ntapi.ntdef, Ntapi.ntrtl, Winapi.WinBase, Winapi.Sddl,
   NtUtils.Exceptions, NtUtils.ApiExtension,
   DelphiUtils.Strings, System.SysUtils;
 
@@ -219,6 +223,23 @@ end;
 function TSid.SubAuthorities: Byte;
 begin
   Result := RtlSubAuthorityCountSid(FSid)^;
+end;
+
+{ Functions }
+
+function RtlxConvertSidToString(SID: PSid): String;
+var
+  SDDL: UNICODE_STRING;
+  Buffer: array [0 .. SECURITY_MAX_SID_STRING_CHARACTERS] of WideChar;
+begin
+  SDDL.Length := 0;
+  SDDL.MaximumLength := SECURITY_MAX_SID_STRING_CHARACTERS;
+  SDDL.Buffer := PWideChar(@Buffer);
+
+  if NT_SUCCESS(RtlConvertSidToUnicodeString(SDDL, SID, False)) then
+    Result := SDDL.ToString
+  else
+    Result := '';
 end;
 
 end.

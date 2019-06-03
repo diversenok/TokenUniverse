@@ -85,7 +85,7 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Winapi.ntlsa, Winapi.NtSecApi, Ntapi.ntrtl,
-  Ntapi.ntseapi, System.SysUtils, NtUtils.ApiExtension;
+  Ntapi.ntseapi, System.SysUtils, NtUtils.Security.Sid;
 
 { Privileges }
 
