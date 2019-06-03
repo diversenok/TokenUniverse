@@ -60,8 +60,6 @@ function CompareGroups(Value1, Value2: TGroupArray): Boolean;
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 
 { Conversion functions }
-function AccessToString(Access: Cardinal): String;
-function AccessToDetailedString(Access: Cardinal): String;
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function ObjectAttributesToString(ObjAttributes: Cardinal): String;
 function NativeTimeToString(NativeTime: TLargeInteger): String;
@@ -96,36 +94,6 @@ begin
   // We use a name of info class from the enumeration definition
   Result := 'NtSetInformationToken [' +
     GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
-end;
-
-{ TTokenAccess }
-
-function AccessToDetailedString(Access: Cardinal): String;
-begin
-  Result := Format('%s (0x%0.6x)', [AccessToString(Access), Access]);
-end;
-
-function AccessToString(Access: Cardinal): String;
-var
-  Granted: array of string;
-  Right, StrInd: integer;
-begin
-  if Access = TOKEN_ALL_ACCESS then
-    Exit('Full access');
-
-  if Access = 0 then
-    Exit('No access');
-
-  SetLength(Granted, ACCESS_COUNT);
-  StrInd := 0;
-  for Right := 0 to ACCESS_COUNT - 1 do
-  if Access and AccessValues[Right] = AccessValues[Right] then
-    begin
-      Granted[StrInd] := AccessStrings[Right];
-      Inc(StrInd);
-    end;
-  SetLength(Granted, StrInd);
-  Result := String.Join(', ', Granted);
 end;
 
 { TTokenTypeExHelper }

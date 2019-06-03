@@ -125,7 +125,7 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Snapshots.Processes,
   NtUtils.Snapshots.Handles, DelphiUtils.Strings, NtUtils.Strings,
-  Ntapi.ntpsapi;
+  Ntapi.ntpsapi, NtUtils.AccessMasks;
 
 const
   TAB_INVALIDATED = 0;
@@ -691,7 +691,7 @@ begin
         Caption := 'Current process';
         SubItems.Add(IntToStr(NtCurrentProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(AccessToString(Handles[i].GrantedAccess));
+        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objToken));
         ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
       end
     else
@@ -710,7 +710,7 @@ begin
         Caption := Process.GetImageName;
         SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(AccessToString(Handles[i].GrantedAccess));
+        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objToken));
         ImageIndex := TProcessIcons.GetIcon(Process.QueryFullImageName);
       end;
   end;
@@ -721,7 +721,7 @@ begin
     begin
       ObjectSnapshot := TObjectSnapshot.Create;
 
-      ObjInfo := ObjectSnapshot.FindObject(objToken,
+      ObjInfo := ObjectSnapshot.FindObject(TObjectType.objToken,
         Token.HandleInformation.PObject);
 
       // Determine the cteator

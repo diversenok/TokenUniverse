@@ -466,7 +466,7 @@ implementation
 uses
   System.TypInfo, NtUtils.Snapshots.Processes, NtUtils.ApiExtension,
   DelphiUtils.Strings, Winapi.WinError, Winapi.winsta, Ntapi.ntstatus,
-  Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings;
+  Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings, NtUtils.AccessMasks;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -1636,9 +1636,10 @@ begin
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsAccess:
       if Detailed then
-        Result := AccessToDetailedString(Token.HandleInformation.GrantedAccess)
+        Result := FormatAccessDetailed(Token.HandleInformation.GrantedAccess,
+          objToken)
       else
-        Result := AccessToString(Token.HandleInformation.GrantedAccess);
+        Result := FormatAccess(Token.HandleInformation.GrantedAccess, objToken);
 
     tsUserName:
       Result := Token.Cache.User.SecurityIdentifier.Lookup.FullName;

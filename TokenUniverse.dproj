@@ -278,6 +278,7 @@
         <DCCReference Include="Headers\Ntapi.ntmmapi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Nt.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.AccessMasks.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
