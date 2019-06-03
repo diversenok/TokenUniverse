@@ -32,7 +32,7 @@ function NtxAssertNotWoW64: TNtxStatus;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntobapi,
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntobapi, NtUtils.Objects,
   DelphiUtils.Strings, NtUtils.AccessMasks;
 
 function NtxpOpenProcess(out hProcess: THandle; DesiredAccess: TAccessMask;
@@ -153,9 +153,12 @@ var
 begin
   Result := '';
 
-  if NT_SUCCESS(NtxpOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION,
-    PID)) then
-    NtxQueryImageProcess(hProcess, Result);
+  if not NT_SUCCESS(NtxpOpenProcess(hProcess,
+    PROCESS_QUERY_LIMITED_INFORMATION, PID)) then
+    Exit;
+
+  NtxQueryImageProcess(hProcess, Result);
+  NtxSafeClose(hProcess);
 end;
 
 function NtxAssertNotWoW64: TNtxStatus;
