@@ -40,8 +40,8 @@ type
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors, TU.Tokens.Types, DelphiUtils.Strings, NtUtils.Types,
-  NtUtils.Strings;
+  Vcl.Graphics, UI.Colors, TU.Tokens.Types, DelphiUtils.Strings,
+  NtUtils.Security.Sid, NtUtils.Strings;
 
 {$R *.dfm}
 

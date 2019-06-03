@@ -1,9 +1,9 @@
-unit NtUtils.Types;
+unit NtUtils.Security.Sid;
 
 interface
 
 uses
-  Winapi.WinNt, Winapi.securitybaseapi, NtUtils.Lsa, Winapi.NtSecApi;
+  Winapi.WinNt, Winapi.securitybaseapi, NtUtils.Lsa;
 
 const
   SE_GROUP_USER_DEFAULT = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;

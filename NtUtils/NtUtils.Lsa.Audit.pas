@@ -3,14 +3,29 @@ unit NtUtils.Lsa.Audit;
 interface
 
 uses
-  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Exceptions, NtUtils.Types;
+  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Exceptions, NtUtils.Security.Sid;
 
 type
   TNtxStatus = NtUtils.Exceptions.TNtxStatus;
 
-  IAudit = NtUtils.Types.IAudit;
-  IPerUserAudit = NtUtils.Types.IPerUserAudit;
-  ISystemAudit = NtUtils.Types.ISystemAudit;
+  IAudit = interface
+  ['{9FF081D8-F2D6-4E0B-A8FB-06B88F3DBD78}']
+    function ContainsFlag(Index: Integer; Flag: Integer): Boolean;
+    procedure SetFlag(Index: Integer; Flag: Integer; Enabled: Boolean);
+  end;
+
+  IPerUserAudit = interface(IAudit)
+  ['{D1EF9420-62D5-4751-AA43-E4F965E6D586}']
+    function RawBuffer: PTokenAuditPolicy;
+    function RawBufferSize: Integer;
+    procedure FreeRawBuffer(Buffer: PTokenAuditPolicy);
+    function AssignToUser(Sid: PSid): TNtxStatus;
+  end;
+
+  ISystemAudit = interface(IAudit)
+  ['{22FAA3C7-0702-44A6-922F-47C40972D1F9}']
+    function AssignToSystem: TNtxStatus;
+  end;
 
   TTokenPerUserAudit = class(TInterfacedObject, IAudit, IPerUserAudit)
   protected

@@ -5,8 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UI.Prototypes.ChildForm, NtUtils.Types, UI.Prototypes.Lsa.Rights,
-  UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame;
+  UI.Prototypes.ChildForm, NtUtils.Security.Sid, UI.Prototypes.Lsa.Rights,
+  UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
 
 type
   TDialogSidView = class(TChildTaskbarForm)

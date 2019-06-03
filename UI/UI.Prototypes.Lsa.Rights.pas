@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, UI.ListViewEx, Vcl.StdCtrls,
-  NtUtils.Types, NtUtils.Lsa;
+  NtUtils.Security.Sid, NtUtils.Lsa;
 
 type
   TFrameLsaRights = class(TFrame)

@@ -18,7 +18,7 @@ implementation
 
 uses
   System.SysUtils, Winapi.Ole2, TU.Tokens.Types, Ntutils.Exceptions,
-  NtUtils.Types;
+  NtUtils.Security.Sid;
 
 type
   TCredUIInfoW = record

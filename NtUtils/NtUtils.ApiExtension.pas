@@ -60,7 +60,7 @@ implementation
 
 uses
   Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl,
-  NtUtils.Handles, NtUtils.DelayedImport, System.SysUtils;
+  NtUtils.Snapshots.Handles, NtUtils.DelayedImport, System.SysUtils;
 
 { Objects }
 

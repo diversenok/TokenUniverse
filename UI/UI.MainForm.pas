@@ -126,7 +126,7 @@ implementation
 
 uses
   System.UITypes, TU.Tokens.Types, Winapi.WinNt,
-  NtUtils.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
+  NtUtils.Snapshots.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,

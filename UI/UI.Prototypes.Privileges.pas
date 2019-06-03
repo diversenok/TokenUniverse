@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ComCtrls, UI.ListViewEx, NtUtils.Types, Winapi.WinNt;
+  Vcl.ComCtrls, UI.ListViewEx, NtUtils.Security.Sid, Winapi.WinNt;
 
 type
   TPrivilegeColorMode = (pcDefault, pcGrayChecked, pcGrayUnchecked,

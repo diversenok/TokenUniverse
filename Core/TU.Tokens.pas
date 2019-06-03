@@ -7,8 +7,8 @@ interface
 uses
   System.SysUtils, System.Generics.Collections, NtUtils.Exceptions,
   Ntapi.ntdef, Ntapi.ntobapi, Winapi.WinNt, Winapi.WinBase, Winapi.WinSafer,
-  TU.Winapi, TU.Tokens.Types, NtUtils.Handles, DelphiUtils.Events, TU.LsaApi,
-  NtUtils.Types, Ntapi.ntseapi, Winapi.NtSecApi;
+  TU.Winapi, TU.Tokens.Types, NtUtils.Snapshots.Handles, DelphiUtils.Events, TU.LsaApi,
+  NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit;
 
 type
   /// <summary>
@@ -464,8 +464,8 @@ type
 implementation
 
 uses
-  System.TypInfo, NtUtils.Processes, NtUtils.ApiExtension, DelphiUtils.Strings,
-  Winapi.WinError, Winapi.winsta, Ntapi.ntstatus, NtUtils.Lsa.Audit,
+  System.TypInfo, NtUtils.Snapshots.Processes, NtUtils.ApiExtension,
+  DelphiUtils.Strings, Winapi.WinError, Winapi.winsta, Ntapi.ntstatus,
   Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Strings;
 
 const

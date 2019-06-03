@@ -5,7 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  NtUtils.Types, Winapi.WinNt, Ntapi.ntseapi, Winapi.NtSecApi,
+  NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi, Winapi.NtSecApi,
   NtUtils.Exceptions;
 
 type

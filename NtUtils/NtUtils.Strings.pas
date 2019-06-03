@@ -30,7 +30,7 @@ function PrivilegeFriendlyName(SePrivilegeName: String): String;
 implementation
 
 uses
-  System.SysUtils, DelphiUtils.Strings, NtUtils.Types;
+  System.SysUtils, DelphiUtils.Strings, NtUtils.Security.Sid;
 
 { Bit Flags }
 

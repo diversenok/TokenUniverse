@@ -6,9 +6,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Types,
+  UI.ListViewEx, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Security.Sid,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
-  UI.Prototypes.Privileges, UI.Prototypes.Groups;
+  UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit;
 
 type
   TInfoDialog = class(TChildTaskbarForm)
@@ -123,8 +123,9 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
-  UI.Information.Access, UI.Sid.View, NtUtils.Processes, NtUtils.Handles,
-  DelphiUtils.Strings, NtUtils.Strings, Ntapi.ntpsapi;
+  UI.Information.Access, UI.Sid.View, NtUtils.Snapshots.Processes,
+  NtUtils.Snapshots.Handles, DelphiUtils.Strings, NtUtils.Strings,
+  Ntapi.ntpsapi;
 
 const
   TAB_INVALIDATED = 0;

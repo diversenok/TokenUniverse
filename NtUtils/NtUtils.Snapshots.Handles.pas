@@ -1,4 +1,4 @@
-unit NtUtils.Handles;
+unit NtUtils.Snapshots.Handles;
 
 interface
 
