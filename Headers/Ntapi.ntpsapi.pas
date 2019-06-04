@@ -1,5 +1,6 @@
 unit Ntapi.ntpsapi;
 {$MINENUMSIZE 4}
+{$WARN SYMBOL_PLATFORM OFF}
 
 interface
 
@@ -90,13 +91,15 @@ function NtSuspendProcess(ProcessHandle: THandle): NTSTATUS; stdcall;
 function NtResumeProcess(ProcessHandle: THandle): NTSTATUS; stdcall;
   external ntdll;
 
+// Absent in ReactOS
 function NtGetNextProcess(ProcessHandle: THandle; DesiredAccess: TAccessMask;
   HandleAttributes: Cardinal; Flags: Cardinal; out NewProcessHandle: THandle):
-  NTSTATUS; stdcall; external ntdll;
+  NTSTATUS; stdcall; external ntdll delayed;
 
+// Absent in ReactOS
 function NtGetNextThread(ProcessHandle: THandle; ThreadHandle: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal; Flags: Cardinal;
-  out NewThreadHandle: THandle): NTSTATUS; stdcall; external ntdll;
+  out NewThreadHandle: THandle): NTSTATUS; stdcall; external ntdll delayed;
 
 function NtQueryInformationProcess(ProcessHandle: THandle;
   ProcessInformationClass: TProcessInfoClass; ProcessInformation: Pointer;

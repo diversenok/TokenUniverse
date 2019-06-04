@@ -64,37 +64,12 @@ function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function ObjectAttributesToString(ObjAttributes: Cardinal): String;
 function NativeTimeToString(NativeTime: TLargeInteger): String;
 
-/// <summary>
-///   Formats a string to use as a location of an error that might occur while
-///   quering token info class.
-/// </summary>
-function GetterMessage(InfoClass: TTokenInformationClass): String;
-
-/// <summary>
-///   Formats a string to use as a location of an error that might occur while
-///   setting token info class.
-/// </summary>
-function SetterMessage(InfoClass: TTokenInformationClass): String;
-
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, DelphiUtils.Strings,
+  System.SysUtils, DelphiUtils.Strings,
   Winapi.ntlsa, Ntapi.ntdef, Ntapi.ntrtl, TU.Winapi;
 
-function GetterMessage(InfoClass: TTokenInformationClass): String;
-begin
-  // We use a name of info class from the enumeration definition
-  Result := 'GetTokenInformation:' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass))
-end;
-
-function SetterMessage(InfoClass: TTokenInformationClass): String;
-begin
-  // We use a name of info class from the enumeration definition
-  Result := 'NtSetInformationToken [' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
-end;
 
 { TTokenTypeExHelper }
 

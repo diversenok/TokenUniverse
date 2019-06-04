@@ -222,7 +222,6 @@
         </DCCReference>
         <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
         <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.ApiExtension.pas"/>
         <DCCReference Include="Headers\Winapi.winsta.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="DelphiUtils\DelphiUtils.Events.pas"/>
@@ -281,6 +280,8 @@
         <DCCReference Include="NtUtils\NtUtils.AccessMasks.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Impersonate.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

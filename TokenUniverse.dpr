@@ -55,7 +55,6 @@ uses
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
   NtUtils.Lsa in 'NtUtils\NtUtils.Lsa.pas',
   NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas',
-  NtUtils.ApiExtension in 'NtUtils\NtUtils.ApiExtension.pas',
   Winapi.winsta in 'Headers\Winapi.winsta.pas',
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
   DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas',
@@ -89,7 +88,9 @@ uses
   NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas',
   NtUtils.AccessMasks in 'NtUtils\NtUtils.AccessMasks.pas',
   NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas',
-  NtUtils.Objects in 'NtUtils\NtUtils.Objects.pas';
+  NtUtils.Objects in 'NtUtils\NtUtils.Objects.pas',
+  NtUtils.Tokens in 'NtUtils\NtUtils.Tokens.pas',
+  NtUtils.Tokens.Impersonate in 'NtUtils\NtUtils.Tokens.Impersonate.pas';
 
 {$R *.res}
 

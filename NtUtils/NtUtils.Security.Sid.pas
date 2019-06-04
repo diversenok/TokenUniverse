@@ -58,8 +58,7 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntrtl, Winapi.WinBase, Winapi.Sddl,
-  NtUtils.Exceptions, NtUtils.ApiExtension,
-  DelphiUtils.Strings, System.SysUtils;
+  NtUtils.Exceptions, DelphiUtils.Strings, System.SysUtils;
 
 { TSid }
 

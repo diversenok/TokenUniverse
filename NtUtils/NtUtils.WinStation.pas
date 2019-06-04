@@ -8,16 +8,21 @@ uses
 type
   TSessionArray = array of TSessionIdW;
 
-// WinStationEnumerateW
+// Enumerate all session on the server for which we have Query access
 function WsxEnumerateSessions(out Sessions: TSessionArray;
   hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 
-// WinStationQueryInformationW
+// Query basic information about a session
 function WsxQueryInformation(out Info: TWinStationInformation;
   SessionId: Cardinal; hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 
+// Format a name of a session, always succeeds with at least an ID
 function WsxQuerySessionName(SessionId: Cardinal;
   hServer: TWinStaHandle = SERVER_CURRENT): String;
+
+// Open session token
+function WsxQuerySessionToken(out hToken: THandle; SessionId: Cardinal;
+  hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 
 implementation
 
@@ -68,6 +73,20 @@ begin
 
     Result := Result + ' (' + Info.FullUserName + ')';
   end
+end;
+
+function WsxQuerySessionToken(out hToken: THandle; SessionId: Cardinal;
+  hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
+var
+  UserToken: TWinStationUserToken;
+  Returned: Cardinal;
+begin
+  FillChar(UserToken, SizeOf(UserToken), 0);
+  hToken := 0;
+
+  Result.Location := 'WinStationQueryInformationW';
+  Result.Win32Result := WinStationQueryInformationW(hServer, SessionId,
+    WinStationUserToken, @UserToken, SizeOf(UserToken), Returned);
 end;
 
 end.

@@ -14,9 +14,9 @@ type
 implementation
 
 uses
-  Winapi.ActiveX, System.Win.ComObj, System.SysUtils,
-  Winapi.ProcessThreadsApi, NtUtils.Exec.Win32, NtUtils.ApiExtension,
-  Ntapi.ntpsapi;
+  Winapi.ActiveX, System.Win.ComObj, System.SysUtils, Ntapi.ntpsapi,
+  Winapi.ProcessThreadsApi, NtUtils.Exec.Win32, NtUtils.Tokens.Impersonate,
+  NtUtils.Objects;
 
 function GetWMIObject(const objectName: String): IDispatch;
 var
@@ -66,7 +66,13 @@ var
   ProcessId: Integer;
 begin
   if ParamSet.Provides(ppToken) then
-    NtxImpersonateToken(ParamSet.Token, hOldToken).RaiseOnError;
+  begin
+    // Backup current impersonation
+    hOldToken := NtxBackupImpersonation(NtCurrentThread);
+
+    // Impersonate the passed token
+    NtxImpersonateAnyToken(ParamSet.Token).RaiseOnError;
+  end;
 
   try
     objProcess := GetWMIObject('winmgmts:Win32_Process');
@@ -79,8 +85,12 @@ begin
   finally
     // Revert impersonation
     if ParamSet.Provides(ppToken) then
-      NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
-        @hOldToken, SizeOf(hOldToken));
+    begin
+      NtxRestoreImpersonation(NtCurrentThread, hOldToken);
+
+      if hOldToken <> 0 then
+        NtxSafeClose(hOldToken);
+    end;
   end;
 end;
 

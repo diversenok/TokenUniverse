@@ -27,7 +27,7 @@ begin
   if not Assigned(ImportCache) then
     ImportCache := TDictionary<AnsiString,NTSTATUS>.Create;
 
-  Result.Location := 'LdrGetProcedureAddress';
+  Result.Location := 'LdrGetProcedureAddress("' + String(Name) + '")';
   if ImportCache.TryGetValue(Name, Result.Status) then
     Exit;
 

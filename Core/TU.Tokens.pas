@@ -398,8 +398,8 @@ type
 
       /// <summary> Opens a token of a thread. </summary>
     constructor CreateOpenThread(TID: NativeUInt; ImageName: String;
-      OpenAsSelf: Boolean; Access: TAccessMask = MAXIMUM_ALLOWED;
-      Attributes: Cardinal = 0);
+      Access: TAccessMask = MAXIMUM_ALLOWED; Attributes: Cardinal = 0;
+      Dummy: Integer = 0);
 
     constructor CreateOpenEffective(TID: NativeUInt; ImageName: String;
       ImpersonationLevel: TSecurityImpersonationLevel = SecurityImpersonation;
@@ -465,9 +465,9 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Objects,
-  NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, DelphiUtils.Strings,
-  NtUtils.ApiExtension, System.SysUtils, System.TypInfo, Winapi.WinSta,
-  NtUtils.AccessMasks;
+  NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, NtUtils.Tokens,
+  NtUtils.Tokens.Impersonate, NtUtils.AccessMasks, DelphiUtils.Strings,
+  System.SysUtils, System.TypInfo;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -690,40 +690,10 @@ begin
 end;
 
 procedure TToken.AssignToProcess(PID: NativeUInt);
-var
-  hProcess: THandle;
-  AccessToken: TProcessAccessToken;
-  Status: NTSTATUS;
 begin
-  // Open the target process
-  NtxOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
-    PROCESS_SET_INFORMATION, PID).RaiseOnError;;
+  NtxAssignPrimaryTokenById(PID, hToken).RaiseOnError;
 
-  // Open its first thread and store the handle inside AccessToken
-  Status := NtGetNextThread(hProcess, 0, THREAD_QUERY_LIMITED_INFORMATION, 0, 0,
-    AccessToken.Thread);
-
-  if not NT_SUCCESS(Status) then
-  begin
-    NtClose(hProcess);
-    raise ENtError.Create(Status,
-      'NtGetNextThread with THREAD_QUERY_LIMITED_INFORMATION');
-  end;
-
-  // Prepare the token handle. The thread handle is already in here.
-  AccessToken.Token := hToken;
-
-  // Assign the token for the process
-  Status := NtSetInformationProcess(hProcess, ProcessAccessToken,
-    @AccessToken, SizeOf(AccessToken));
-
-  // Close the process and the thread but not the token
-  NtClose(hProcess);
-  NtClose(AccessToken.Thread);
-
-  NtxCheck(Status, 'NtSetInformationProcess [ProcessAccessToken]');
-
-  // Assigning primary token to a process migh change token's Session ID
+  // Assigning primary token to a process might change token's Session ID
   InfoClass.ValidateCache(tdTokenSessionId);
 
   // Although changing session does not usually change Modified ID it is good to
@@ -738,10 +708,7 @@ begin
   NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID).RaiseOnError;
 
   try
-    // Set the impersonation token
-    NtxCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
-      @hToken, SizeOf(hToken)),
-      'NtSetInformationThread [ThreadImpersonationToken]');
+    NtxSetThreadToken(hThread, hToken).RaiseOnError;
   finally
     NtxSafeClose(hThread);
   end;
@@ -755,8 +722,7 @@ begin
     THREAD_QUERY_LIMITED_INFORMATION, TID).RaiseOnError;
 
   try
-    NtxCheck(NtxSafeSetThreadToken(hThread, hToken),
-      'NtxSafeSetThreadToken');
+    NtxSafeSetThreadToken(hThread, hToken).RaiseOnError;
   finally
     NtxSafeClose(hThread);
   end;
@@ -777,29 +743,8 @@ end;
 
 constructor TToken.CreateAnonymous(Access: TAccessMask;
   HandleAttributes: Cardinal);
-var
-  hOldStateToken: THandle;
 begin
-  // Save current impersonation token if we have it
-  if not NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread, TOKEN_IMPERSONATE,
-    True, 0, hOldStateToken)) then
-    hOldStateToken := 0;
-
-  try
-    NtxCheck(NtImpersonateAnonymousToken(NtCurrentThread),
-      'NtImpersonateAnonymousToken');
-
-    NtxCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True,
-      HandleAttributes, hToken), 'NtOpenThreadTokenEx');
-  finally
-    // Undo current impersonation
-    NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
-      @hOldStateToken, SizeOf(hOldStateToken));
-
-    if hOldStateToken <> 0 then
-      NtxSafeClose(hOldStateToken);
-  end;
-
+  NtxOpenAnonymousToken(hToken, Access, HandleAttributes);
   FCaption := 'Anonymous token';
 end;
 
@@ -826,27 +771,22 @@ end;
 constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: TAccessMask;
   TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
 var
-  ObjAttr: TObjectAttributes;
-  SecQos: TSecurityQualityOfService;
   TokenType: TTokenType;
+  ImpersonationLvl: TSecurityImpersonationLevel;
 begin
-  // Prepare Security QoS to store the impersonation level
-  FillChar(SecQos, SizeOf(SecQos), 0);
-  SecQos.Length := SizeOf(SecQos);
-  SecQos.EffectiveOnly := EffectiveOnly;
-
   if TokenTypeEx = ttPrimary then
-    TokenType := TokenPrimary
+  begin
+    TokenType := TokenPrimary;
+    ImpersonationLvl := SecurityImpersonation;
+  end
   else
   begin
     TokenType := TokenImpersonation;
-    SecQos.ImpersonationLevel := TSecurityImpersonationLevel(TokenTypeEx);
+    ImpersonationLvl := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @SecQos);
-
-  NtxCheck(NtDuplicateToken(SrcToken.hToken, Access, @ObjAttr, EffectiveOnly,
-    TokenType, hToken), 'NtDuplicateToken');
+  NtxDuplicateToken(hToken, SrcToken.hToken, Access, TokenType, ImpersonationLvl,
+    EffectiveOnly).RaiseOnError;
 
   if EffectiveOnly then
     FCaption := SrcToken.Caption + ' (eff. copy)'
@@ -908,40 +848,17 @@ constructor TToken.CreateOpenEffective(TID: NativeUInt; ImageName: String;
   ImpersonationLevel: TSecurityImpersonationLevel; Access: TAccessMask;
   Attributes: Cardinal; EffectiveOnly: Boolean);
 var
-  hOldToken: THandle;
   hThread: THandle;
-  QoS: TSecurityQualityOfService;
 begin
   NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID).RaiseOnError;
 
   try
-    // Save previous impersonation state
-    if not NT_SUCCESS(NtOpenThreadTokenEx(NtCurrentThread, TOKEN_IMPERSONATE,
-      True, 0, hOldToken)) then
-      hOldToken := 0;
+    NtxOpenEffectiveToken(hToken, hThread, ImpersonationLevel, Access,
+      Attributes, EffectiveOnly).RaiseOnError;
 
-    try
-      InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
-
-      // Direct impersonation sets our impersonation context to
-      // an effective security context of the target thread
-      NtxCheck(NtImpersonateThread(NtCurrentThread, hThread, QoS),
-        'NtImpersonateThread');
-
-      // Read it back
-      NtxCheck(NtOpenThreadTokenEx(NtCurrentThread, Access, True, Attributes,
-        hToken), 'NtOpenThreadTokenEx');
-
-      FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
-      if EffectiveOnly then
-        FCaption := FCaption + ' (eff.)';
-
-    finally
-      // Restore impersonation
-      NtSetInformationThread(NtCurrentThread, ThreadImpersonationToken,
-        @hOldToken, SizeOf(hOldToken));
-      NtxSafeClose(hOldToken);
-    end;
+    FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
+    if EffectiveOnly then
+      FCaption := FCaption + ' (eff.)';
 
   finally
     NtxSafeClose(hThread);
@@ -966,15 +883,14 @@ begin
 end;
 
 constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
-  OpenAsSelf: Boolean; Access: TAccessMask; Attributes: Cardinal);
+  Access: TAccessMask; Attributes: Cardinal; Dummy: Integer);
 var
   hThread: THandle;
 begin
    NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID).RaiseOnError;
 
   try
-    NtxCheck(NtOpenThreadTokenEx(hThread, Access, OpenAsSelf, Attributes,
-      hToken), 'NtOpenThreadTokenEx');
+    NtxOpenThreadToken(hToken, hThread, Access, Attributes).RaiseOnError;
   finally
     NtxSafeClose(hThread);
   end;
@@ -983,18 +899,8 @@ begin
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
-var
-  ReturedSize: Cardinal;
-  Buffer: TWinStationUserToken;
 begin
-  Buffer.ClientID.Create(NtCurrentProcessId, NtCurrentThreadId);
-  Buffer.UserToken := 0;
-
-  WinCheck(WinStationQueryInformationW(SERVER_CURRENT, SessionID,
-    WinStationUserToken, @Buffer, SizeOf(Buffer), ReturedSize),
-    'WinStationQueryInformationW [WinStationUserToken]');
-
-  hToken := Buffer.UserToken;
+  WsxQuerySessionToken(hToken, SessionID).RaiseOnError;
   FCaption := Format('Session %d token', [SessionID]);
 end;
 
@@ -1122,23 +1028,10 @@ end;
 constructor TToken.CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
   LevelId: TSaferLevelId; MakeInert: Boolean = False);
 var
-  hLevel: TSaferLevelHandle;
-  Flags: Cardinal;
   LevelName: String;
 begin
-  WinCheck(SaferCreateLevel(ScopeId, LevelId, SAFER_LEVEL_OPEN, hLevel),
-    'SaferCreateLevel');
-
-  Flags := 0;
-  if MakeInert then
-    Flags := Flags or SAFER_TOKEN_MAKE_INERT;
-
-  try
-    WinCheck(SaferComputeTokenFromLevel(hLevel, SrcToken.hToken, hToken,
-      Flags, nil), 'SaferComputeTokenFromLevel');
-  finally
-    SaferCloseLevel(hLevel);
-  end;
+  NtxRestrictSaferToken(hToken, SrcToken.hToken, ScopeId, LevelId,
+    MakeInert).RaiseOnError;
 
   case LevelId of
     SAFER_LEVELID_FULLYTRUSTED:
@@ -1256,7 +1149,7 @@ function TToken.OpenLinkedToken: TNtxStatusWithValue<TToken>;
 var
   Handle: THandle;
 begin
-  Result.Status.Location := GetterMessage(TokenLinkedToken);
+  Result.Status.Location := NtxFormatTokenQuery(TokenLinkedToken);
   Result.Status.Win32Result := QueryFixedSize<THandle>(TokenLinkedToken,
     Handle);
 
@@ -1374,10 +1267,10 @@ end;
 function TToken.QueryVariableSize(InfoClass: TTokenInformationClass;
   out Status: Boolean; ReturnedSize: PCardinal): Pointer;
 var
-  DetaiedStatus: NTSTATUS;
+  DetaiedStatus: TNtxStatus;
 begin
   Result := NtxQueryBufferToken(hToken, InfoClass, DetaiedStatus, ReturnedSize);
-  Status := NT_SUCCESS(DetaiedStatus);
+  Status := DetaiedStatus.IsSuccess;
 
   // Do not free the buffer on success. The caller must do it after use.
 end;
@@ -1385,16 +1278,11 @@ end;
 class procedure TToken.RevertThreadToken(TID: NativeUInt);
 var
   hThread: THandle;
-  hNoToken: THandle;
 begin
   NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID).RaiseOnError;
 
   try
-    hNoToken := 0;
-
-    NtxCheck(NtSetInformationThread(hThread, ThreadImpersonationToken,
-      @hNoToken, SizeOf(hNoToken)),
-      'NtSetInformationThread [ThreadImpersonationToken]');
+    NtxSetThreadToken(hThread, 0).RaiseOnError;
   finally
     NtxSafeClose(hThread);
   end;
@@ -1412,7 +1300,7 @@ begin
       Result, 0, 0, DUPLICATE_SAME_ACCESS or DUPLICATE_SAME_ATTRIBUTES),
       'NtDuplicateObject');
   finally
-    NtClose(hTargetProcess);
+    NtxSafeClose(hTargetProcess);
   end;
 end;
 
@@ -1429,7 +1317,7 @@ var
 begin
   status := NtSetInformationToken(hToken, InfoClass, @Value, SizeOf(Value));
   if not NT_SUCCESS(status) then
-    raise ENtError.Create(status, SetterMessage(InfoClass));
+    raise ENtError.Create(status, NtxFormatTokenSet(InfoClass));
 end;
 
 { TTokenData }
@@ -1970,7 +1858,7 @@ begin
 
   try
     NtxCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy,
-      pAuditPolicy, Value.RawBufferSize), SetterMessage(TokenAuditPolicy));
+      pAuditPolicy, Value.RawBufferSize), NtxFormatTokenSet(TokenAuditPolicy));
   finally
     Value.FreeRawBuffer(pAuditPolicy);
   end;

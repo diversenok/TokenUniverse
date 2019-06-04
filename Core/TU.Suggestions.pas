@@ -22,9 +22,8 @@ const
 implementation
 
 uses
-  TU.Tokens, TU.Tokens.Types, Winapi.WinError, Winapi.CommCtrl,
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntseapi,
-  NtUtils.Exceptions, NtUtils.ErrorMsg;
+  Ntapi.ntseapi, Winapi.WinError, Winapi.CommCtrl, Ntapi.ntdef, Ntapi.ntstatus,
+  NtUtils.Exceptions, NtUtils.ErrorMsg, NtUtils.Tokens;
 
 resourcestring
   TITLE_OS_ERROR = 'System error';
@@ -118,7 +117,7 @@ function SuggestGetter(E: ENtError): String;
 begin
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
-    if E.ErrorLocation = GetterMessage(TokenSource) then
+    if E.ErrorLocation = NtxFormatTokenQuery(TokenSource) then
       Exit(GETTER_QUERY_SOURCE);
 
     if E.ErrorLocation.StartsWith('GetTokenInformation:') then
@@ -130,50 +129,50 @@ function SuggestSetter(E: ENtError): String;
 begin
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
-    if E.ErrorLocation = SetterMessage(TokenSessionId) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if (E.ErrorLocation = SetterMessage(TokenIntegrityLevel))
-      or (E.ErrorLocation = SetterMessage(TokenUIAccess))
-      or (E.ErrorLocation = SetterMessage(TokenMandatoryPolicy))
-      or (E.ErrorLocation = SetterMessage(TokenOwner))
-      or (E.ErrorLocation = SetterMessage(TokenPrimaryGroup))
-      or (E.ErrorLocation = SetterMessage(TokenOrigin))
-      or (E.ErrorLocation = SetterMessage(TokenVirtualizationAllowed))
-      or (E.ErrorLocation = SetterMessage(TokenVirtualizationEnabled)) then
+    if (E.ErrorLocation = NtxFormatTokenSet(TokenIntegrityLevel))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenUIAccess))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenMandatoryPolicy))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenOwner))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenPrimaryGroup))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenOrigin))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenVirtualizationAllowed))
+      or (E.ErrorLocation = NtxFormatTokenSet(TokenVirtualizationEnabled)) then
       Exit(SETTER_DEFAULT);
   end;
 
-  if E.Matches(SetterMessage(TokenOwner), ERROR_INVALID_OWNER) then
+  if E.Matches(NtxFormatTokenSet(TokenOwner), ERROR_INVALID_OWNER) then
     Exit(SETTER_OWNER);
 
-  if E.Matches(SetterMessage(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
+  if E.Matches(NtxFormatTokenSet(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
     Exit(SETTER_PRIMARY);
 
-  if E.Matches(SetterMessage(TokenAuditPolicy), ERROR_INVALID_PARAMETER) then
+  if E.Matches(NtxFormatTokenSet(TokenAuditPolicy), ERROR_INVALID_PARAMETER) then
     Exit(SETTER_AUDIT_ONCE);
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
   begin
-    if E.ErrorLocation = SetterMessage(TokenSessionId) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if E.ErrorLocation = SetterMessage(TokenIntegrityLevel) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenIntegrityLevel) then
       Exit(SETTER_INTEGRITY_TCB);
 
-    if E.ErrorLocation = SetterMessage(TokenUIAccess) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenUIAccess) then
       Exit(SETTER_UIACCESS_TCB);
 
-    if E.ErrorLocation = SetterMessage(TokenMandatoryPolicy) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenMandatoryPolicy) then
       Exit(SETTER_POLICY_TCB);
 
-    if E.ErrorLocation = SetterMessage(TokenVirtualizationAllowed) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenVirtualizationAllowed) then
       Exit(SETTOR_VIRT_PRIV);
 
-    if E.ErrorLocation = SetterMessage(TokenOrigin) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenOrigin) then
       Exit(SETTER_ORIGIN_TCB);
 
-    if E.ErrorLocation = SetterMessage(TokenAuditPolicy) then
+    if E.ErrorLocation = NtxFormatTokenSet(TokenAuditPolicy) then
       Exit(SETTER_AUDIT_PRIV);
   end;
 
