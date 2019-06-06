@@ -3,48 +3,54 @@ unit NtUtils.WinUser;
 interface
 
 uses
-  Winapi.WinUser;
+  Winapi.WinUser, NtUtils.Exceptions;
 
 type
+  TNtxStatus = NtUtils.Exceptions.TNtxStatus;
   TStringArray = Winapi.WinUser.TStringArray;
 
-// GetUserObjectInformationW
-function UsrxQueryObjectName(hObj: THandle; out Name: String): Boolean;
+// Quer user object name
+function UsrxQueryObjectName(hObj: THandle; out Name: String): TNtxStatus;
 
-// EnumWindowStationsW
-function UsrxEnumWindowStations(out WinStations: TStringArray): Boolean;
+// Enumerate window stations of current session
+function UsrxEnumWindowStations(out WinStations: TStringArray): TNtxStatus;
 
-// EnumDesktopsW
-function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TStringArray): Boolean;
+// Enumerate desktops of a window station
+function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TStringArray):
+  TNtxStatus;
 
-// EnumWindowStationsW + EnumDesktopsW
+// Enumerate all accessable desktops from different window stations
 function UsrxEnumAllDesktops: TStringArray;
 
-// GetThreadDesktop + GetUserObjectInformationW
+// Query a name of a current desktop
 function UsrxCurrentDesktopName: String;
 
 implementation
 
 uses
-  NtUtils.Exceptions, Winapi.ProcessThreadsApi, Ntapi.ntpsapi;
+  Winapi.ProcessThreadsApi, Ntapi.ntpsapi;
 
-function UsrxQueryObjectName(hObj: THandle; out Name: String): Boolean;
+function UsrxQueryObjectName(hObj: THandle; out Name: String): TNtxStatus;
 var
   Buffer: PWideChar;
   BufferSize: Cardinal;
 begin
   BufferSize := 0;
-  GetUserObjectInformationW(hObj, UserObjectName, nil, 0, @BufferSize);
 
-  if not WinTryCheckBuffer(BufferSize) then
-    Exit(False);
+  // Determine required buffer size
+  Result.Location := 'GetUserObjectInformationW';
+  Result.Win32Result := GetUserObjectInformationW(hObj, UserObjectName, nil, 0,
+    @BufferSize);
+
+  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
   try
-    Result := GetUserObjectInformationW(hObj, UserObjectName, Buffer,
-      BufferSize, nil);
+    Result.Win32Result := GetUserObjectInformationW(hObj, UserObjectName,
+      Buffer, BufferSize, nil);
 
-    if Result then
+    if Result.IsSuccess then
       Name := String(Buffer);
   finally
     FreeMem(Buffer);
@@ -54,21 +60,25 @@ end;
 function EnumCallback(Name: PWideChar; var Context: TStringArray): LongBool;
   stdcall;
 begin
+  // Save the value and succeed
   SetLength(Context, Length(Context) + 1);
   Context[High(Context)] := String(Name);
   Result := True;
 end;
 
-function UsrxEnumWindowStations(out WinStations: TStringArray): Boolean;
+function UsrxEnumWindowStations(out WinStations: TStringArray): TNtxStatus;
 begin
   SetLength(WinStations, 0);
-  Result := EnumWindowStationsW(EnumCallback, WinStations);
+  Result.Location := 'EnumWindowStationsW';
+  Result.Win32Result := EnumWindowStationsW(EnumCallback, WinStations);
 end;
 
-function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TStringArray): Boolean;
+function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TStringArray):
+  TNtxStatus;
 begin
   SetLength(Desktops, 0);
-  Result := EnumDesktopsW(WinSta, EnumCallback, Desktops);
+  Result.Location := 'EnumDesktopsW';
+  Result.Win32Result := EnumDesktopsW(WinSta, EnumCallback, Desktops);
 end;
 
 function UsrxEnumAllDesktops: TStringArray;
@@ -79,7 +89,8 @@ var
 begin
   SetLength(Result, 0);
 
-  if not UsrxEnumWindowStations(WinStations) then
+  // Enumerate accessable window stations
+  if not UsrxEnumWindowStations(WinStations).IsSuccess then
     Exit;
 
   for i := 0 to High(WinStations) do
@@ -92,7 +103,7 @@ begin
       Continue;
 
     // Enumerate desktops of this window station
-    if UsrxEnumDesktops(hWinStation, Desktops) then
+    if UsrxEnumDesktops(hWinStation, Desktops).IsSuccess then
     begin
       // Expand each name
       for j := 0 to High(Desktops) do
@@ -110,9 +121,11 @@ var
   WinStaName: String;
   StartupInfo: TStartupInfoW;
 begin
-  if UsrxQueryObjectName(GetThreadDesktop(NtCurrentThreadId), Result) then
+  // Read our thread's desktop and query its name
+  if UsrxQueryObjectName(GetThreadDesktop(NtCurrentThreadId), Result).IsSuccess
+    then
   begin
-    if UsrxQueryObjectName(GetProcessWindowStation, WinStaName) then
+    if UsrxQueryObjectName(GetProcessWindowStation, WinStaName).IsSuccess then
       Result := WinStaName + '\' + Result;
   end
   else

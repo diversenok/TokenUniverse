@@ -14,7 +14,7 @@ type
 implementation
 
 uses
-  Winapi.ShellApiEx, Winapi.WinUser, NtUtils.Exceptions;
+  Winapi.Shell, Winapi.WinUser, NtUtils.Exceptions;
 
 { TExecShellExecute }
 

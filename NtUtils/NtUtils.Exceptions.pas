@@ -218,6 +218,9 @@ begin
 
   if RtlNtStatusToDosErrorNoTeb(RtlGetLastNtStatus) = RtlGetLastWin32Error then
     Result := RtlGetLastNtStatus
+  else if RtlGetLastWin32Error = ERROR_INSUFFICIENT_BUFFER then
+    // Explicitly convert to use with buffer checks
+    Result := STATUS_BUFFER_TOO_SMALL
   else
     Result := NTSTATUS_FROM_WIN32(RtlGetLastWin32Error);
 end;

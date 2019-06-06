@@ -79,7 +79,7 @@ uses
   NtUtils.Exec.Win32 in 'NtUtils\NtUtils.Exec.Win32.pas',
   Winapi.ProcessThreadsApi in 'Headers\Winapi.ProcessThreadsApi.pas',
   NtUtils.Exec.Shell in 'NtUtils\NtUtils.Exec.Shell.pas',
-  Winapi.ShellApiEx in 'Headers\Winapi.ShellApiEx.pas',
+  Winapi.Shell in 'Headers\Winapi.Shell.pas',
   NtUtils.Exec.Wdc in 'NtUtils\NtUtils.Exec.Wdc.pas',
   Winapi.Wdc in 'Headers\Winapi.Wdc.pas',
   NtUtils.Exec.Wmi in 'NtUtils\NtUtils.Exec.Wmi.pas',

@@ -313,7 +313,7 @@ var
   i: Integer;
 begin
   Desktops := UsrxEnumAllDesktops;
-  Current := UsrxCurrentDesktopName;
+  Current := UsrxCurrentDesktopName.ToLower;
 
   with ComboBoxDesktop do
   begin
@@ -327,7 +327,7 @@ begin
     begin
       Items.Add(Desktops[i]);
 
-      if Desktops[i] = Current then
+      if Desktops[i].ToLower = Current then
       begin
         // Select the current one
         ItemIndex := i;
