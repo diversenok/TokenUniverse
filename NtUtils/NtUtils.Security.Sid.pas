@@ -23,6 +23,7 @@ type
     function SDDL: String;
     function SubAuthorities: Byte;
     function ParentSid: ISid;
+    function ChildSid(Rid: Cardinal): ISid;
   end;
 
   TSid = class(TInterfacedObject, ISid)
@@ -30,11 +31,12 @@ type
     FSid: PSid;
     FLookupCached: Boolean;
     FLookup: TTranslatedName;
+    constructor CreateOwned(OwnedSid: PSid; Dummy: Integer = 0);
   public
     constructor CreateCopy(SourceSid: PSid);
     constructor CreateFromString(AccountOrSID: String);
     class function GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
-      out Sid: ISid): Boolean;
+      out Sid: ISid): TNtxStatus;
     destructor Destroy; override;
     function Sid: PSid;
     function Lookup: TTranslatedName;
@@ -43,6 +45,7 @@ type
     function SDDL: String;
     function SubAuthorities: Byte;
     function ParentSid: ISid;
+    function ChildSid(Rid: Cardinal): ISid;
   end;
 
   TGroup = record
@@ -54,31 +57,65 @@ type
 // Convert an SID to its SDDL representation
 function RtlxConvertSidToString(SID: PSid): String;
 
+// Convert SDDL string to SID
+function RtlxConvertStringToSid(SDDL: String; out SID: PSid): TNtxStatus;
+
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, Winapi.WinBase, Winapi.Sddl,
+  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.Sddl,
   NtUtils.Exceptions, DelphiUtils.Strings, System.SysUtils;
 
 { TSid }
 
+function TSid.ChildSid(Rid: Cardinal): ISid;
+var
+  Buffer: PSid;
+  Status: NTSTATUS;
+  i: Integer;
+begin
+  Buffer := AllocMem(RtlLengthRequiredSid(SubAuthorities + 1));
+
+  // Copy identifier authority
+  Status := RtlInitializeSid(Buffer, RtlIdentifierAuthoritySid(FSid),
+    SubAuthorities + 1);
+
+  if not NT_SUCCESS(Status) then
+  begin
+    FreeMem(Buffer);
+    raise ENtError.Create(Status, 'RtlInitializeSid');
+  end;
+
+  // Copy existing sub authorities
+  for i := 0 to SubAuthorities - 1 do
+    RtlSubAuthoritySid(Buffer, i)^ := RtlSubAuthoritySid(FSid, i)^;
+
+  // Set the last sub authority to the RID
+  RtlSubAuthoritySid(Buffer, SubAuthorities)^ := Rid;
+
+  Result := TSid.CreateOwned(Buffer);
+end;
+
 constructor TSid.CreateCopy(SourceSid: PSid);
 var
-  BufferSize: Cardinal;
+  Status: NTSTATUS;
 begin
-  Assert(Assigned(SourceSid) and RtlValidSid(SourceSid));
+  if not RtlValidSid(SourceSid) then
+    raise ENtError.Create(STATUS_INVALID_SID, 'RtlValidSid');
 
-  BufferSize := RtlLengthSid(SourceSid);
-  FSid := AllocMem(BufferSize);
-  RtlCopySid(BufferSize, FSid, SourceSid);
+  FSid := AllocMem(RtlLengthSid(SourceSid));
+  Status := RtlCopySid(RtlLengthSid(SourceSid), FSid, SourceSid);
+
+  if not NT_SUCCESS(Status) then
+  begin
+    FreeMem(FSid);
+    raise ENtError.Create(Status, 'RtlCopySid');
+  end;
 end;
 
 constructor TSid.CreateFromString(AccountOrSID: String);
 var
   Status: TNtxStatus;
-  Buffer: PSid;
-  IdentifierAuthorityUInt64: UInt64;
-  IdentifierAuthority: TSidIdentifierAuthority;
 begin
   // Since someone might create an account which name is a valid SDDL string,
   // lookup the account name first. Parse it as SDDL only if this lookup failed.
@@ -86,48 +123,14 @@ begin
   Status := LsaxLookupUserName(AccountOrSID, FSid);
 
   if not Status.IsSuccess and AccountOrSID.StartsWith('S-1-', True) then
-  begin
-    // Despite the fact that RtlConvertSidToUnicodeString can convert SIDs with
-    // zero sub authorities to SDDL, ConvertStringSidToSidW (for some reason)
-    // can't convert them back. Fix this behaviour by parsing them manually.
+    Status := RtlxConvertStringToSid(AccountOrSID, FSid);
 
-    // Expected formats for an SID with 0 sub authorities:
-    //        S-1-(\d+)     |     S-1-(0x[A-F\d]+)
-    // where the value fits into a 6-byte (48-bit) buffer
+  Status.RaiseOnError;
+end;
 
-    if TryStrToUInt64Ex(Copy(AccountOrSID, Length('S-1-') + 1,
-      Length(AccountOrSID)), IdentifierAuthorityUInt64) and
-      (IdentifierAuthorityUInt64 < UInt64(1) shl 48) then
-    begin
-      IdentifierAuthority.Value[0] := Byte(IdentifierAuthorityUInt64 shr 40);
-      IdentifierAuthority.Value[1] := Byte(IdentifierAuthorityUInt64 shr 32);
-      IdentifierAuthority.Value[2] := Byte(IdentifierAuthorityUInt64 shr 24);
-      IdentifierAuthority.Value[3] := Byte(IdentifierAuthorityUInt64 shr 16);
-      IdentifierAuthority.Value[4] := Byte(IdentifierAuthorityUInt64 shr 8);
-      IdentifierAuthority.Value[5] := Byte(IdentifierAuthorityUInt64 shr 0);
-
-      Buffer := AllocMem(RtlLengthRequiredSid(0));
-      try
-        RtlInitializeSid(Buffer, @IdentifierAuthority, 0);
-        CreateCopy(Buffer);
-      finally
-        FreeMem(Buffer);
-      end;
-    end
-    else
-    begin
-      WinCheck(ConvertStringSidToSidW(PWideChar(AccountOrSID), Buffer),
-        'ConvertStringSidToSidW');
-
-      try
-        CreateCopy(Buffer);
-      finally
-        LocalFree(Buffer);
-      end;
-    end;
-  end
-  else
-    Status.RaiseOnError;
+constructor TSid.CreateOwned(OwnedSid: PSid; Dummy: Integer);
+begin
+  FSid := OwnedSid;
 end;
 
 destructor TSid.Destroy;
@@ -138,30 +141,33 @@ end;
 
 function TSid.EqualsTo(Sid2: ISid): Boolean;
 begin
-  Result := RtlEqualSid(FSid, Sid2.Sid)
+  Result := RtlEqualSid(FSid, Sid2.Sid);
 end;
 
 class function TSid.GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
-  out Sid: ISid): Boolean;
+  out Sid: ISid): TNtxStatus;
 var
   Buffer: PSid;
   BufferSize: Cardinal;
 begin
   BufferSize := 0;
-  CreateWellKnownSid(WellKnownSidType, nil, nil, BufferSize);
 
-  if not WinTryCheckBuffer(BufferSize) then
-    Exit(False);
+  Result.Location := 'CreateWellKnownSid';
+  Result.Win32Result := CreateWellKnownSid(WellKnownSidType, nil, nil,
+    BufferSize);
+
+  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
+    Exit;
 
   Buffer := AllocMem(BufferSize);
-  try
-    Result := CreateWellKnownSid(WellKnownSidType, nil, Buffer, BufferSize);
 
-    if Result then
-      Sid := TSid.CreateCopy(Buffer);
-  finally
+  Result.Win32Result := CreateWellKnownSid(WellKnownSidType, nil, Buffer,
+    BufferSize);
+
+  if Result.IsSuccess then
+    Sid := TSid.CreateOwned(Buffer)
+  else
     FreeMem(Buffer);
-  end;
 end;
 
 function TSid.Lookup: TTranslatedName;
@@ -182,31 +188,31 @@ end;
 
 function TSid.ParentSid: ISid;
 var
+  Status: NTSTATUS;
   Buffer: PSid;
   i: Integer;
 begin
   // The rule is simple: we drop the last sub-authority and create a new SID.
 
-  if SubAuthorities = 0 then
-    Result := nil
-  else
+  Assert(SubAuthorities > 0);
+
+  Buffer := AllocMem(RtlLengthRequiredSid(SubAuthorities - 1));
+
+  // Copy identifier authority
+  Status := RtlInitializeSid(Buffer, RtlIdentifierAuthoritySid(FSid),
+    SubAuthorities - 1);
+
+  if not NT_SUCCESS(Status) then
   begin
-    Buffer := AllocMem(RtlLengthRequiredSid(SubAuthorities - 1));
-    try
-      // Copy identifier authority
-      if not NT_SUCCESS(RtlInitializeSid(Buffer,
-        RtlIdentifierAuthoritySid(FSid), SubAuthorities - 1)) then
-        Exit(nil);
-
-      // Copy sub authorities
-      for i := 0 to RtlSubAuthorityCountSid(Buffer)^ - 1 do
-        RtlSubAuthoritySid(Buffer, i)^ := RtlSubAuthoritySid(FSid, i)^;
-
-      Result := TSid.CreateCopy(Buffer);
-    finally
-      FreeMem(Buffer);
-    end;
+    FreeMem(Buffer);
+    raise ENtError.Create(Status, 'RtlInitializeSid');
   end;
+
+  // Copy sub authorities
+  for i := 0 to RtlSubAuthorityCountSid(Buffer)^ - 1 do
+    RtlSubAuthoritySid(Buffer, i)^ := RtlSubAuthoritySid(FSid, i)^;
+
+  Result := TSid.CreateOwned(Buffer);
 end;
 
 function TSid.SDDL: String;
@@ -239,6 +245,65 @@ begin
     Result := SDDL.ToString
   else
     Result := '';
+end;
+
+function RtlxConvertStringToSid(SDDL: String; out SID: PSid): TNtxStatus;
+var
+  Buffer: PSid;
+  IdAuthorityUInt64: UInt64;
+  IdAuthority: TSidIdentifierAuthority;
+begin
+  // Despite the fact that RtlConvertSidToUnicodeString can convert SIDs with
+  // zero sub authorities to SDDL, ConvertStringSidToSidW (for some reason)
+  // can't convert them back. Fix this behaviour by parsing them manually.
+
+  // Expected formats for an SID with 0 sub authorities:
+  //        S-1-(\d+)     |     S-1-(0x[A-F\d]+)
+  // where the value fits into a 6-byte (48-bit) buffer
+
+  if TryStrToUInt64Ex(Copy(SDDL, Length('S-1-') + 1, Length(SDDL)),
+    IdAuthorityUInt64) and (IdAuthorityUInt64 < UInt64(1) shl 48) then
+  begin
+    IdAuthority.Value[0] := Byte(IdAuthorityUInt64 shr 40);
+    IdAuthority.Value[1] := Byte(IdAuthorityUInt64 shr 32);
+    IdAuthority.Value[2] := Byte(IdAuthorityUInt64 shr 24);
+    IdAuthority.Value[3] := Byte(IdAuthorityUInt64 shr 16);
+    IdAuthority.Value[4] := Byte(IdAuthorityUInt64 shr 8);
+    IdAuthority.Value[5] := Byte(IdAuthorityUInt64 shr 0);
+
+    Buffer := AllocMem(RtlLengthRequiredSid(0));
+
+    Result.Location := 'RtlInitializeSid';
+    Result.Status := RtlInitializeSid(Buffer, @IdAuthority, 0);
+
+    if Result.IsSuccess then
+      SID := Buffer
+    else
+      FreeMem(Buffer);
+  end
+  else
+  begin
+    // Usual SDDLs
+
+    Result.Location := 'ConvertStringSidToSidW';
+    Result.Win32Result := ConvertStringSidToSidW(PWideChar(SDDL), Buffer);
+
+    if not Result.IsSuccess then
+      Exit;
+
+    SID := AllocMem(RtlLengthSid(Buffer));
+
+    Result.Location := 'RtlCopySid';
+    Result.Status := RtlCopySid(RtlLengthSid(Buffer), SID, Buffer);
+
+    if not Result.IsSuccess then
+    begin
+      FreeMem(SID);
+      SID := nil;
+    end;
+
+    LocalFree(Buffer);
+  end;
 end;
 
 end.
