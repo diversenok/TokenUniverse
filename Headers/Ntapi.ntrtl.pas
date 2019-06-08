@@ -213,8 +213,8 @@ function RtlSidDominates(Sid1: PSid; Sid2: PSid; out Dominates: Boolean):
 
 // Security Descriptors
 
-function RtlCreateSecurityDescriptor(SecurityDescriptor: PSecurityDescriptor;
-  Revision: Cardinal): NTSTATUS; stdcall; external ntdll;
+function RtlCreateSecurityDescriptor(var SecurityDescriptor:
+  TSecurityDescriptor; Revision: Cardinal): NTSTATUS; stdcall; external ntdll;
 
 function RtlValidSecurityDescriptor(SecurityDescriptor: PSecurityDescriptor):
   Boolean; stdcall; external ntdll;
@@ -235,32 +235,32 @@ function RtlSetAttributesSecurityDescriptor(SecurityDescriptor:
   PSecurityDescriptor; Control: TSecurityDescriptorControl;
   out Revision: Cardinal): NTSTATUS; stdcall; external ntdll;
 
-function RtlSetDaclSecurityDescriptor(SecurityDescriptor:
-  PSecurityDescriptor; DaclPresent: Boolean; Dacl: PAcl; DaclDefaulted: Boolean)
+function RtlSetDaclSecurityDescriptor(const SecurityDescriptor:
+  TSecurityDescriptor; DaclPresent: Boolean; Dacl: PAcl; DaclDefaulted: Boolean)
   : NTSTATUS; stdcall; external ntdll;
 
 function RtlGetDaclSecurityDescriptor(SecurityDescriptor:
   PSecurityDescriptor; out DaclPresent: Boolean; out Dacl: PAcl;
   out DaclDefaulted: Boolean): NTSTATUS; stdcall; external ntdll;
 
-function RtlSetSaclSecurityDescriptor(SecurityDescriptor:
-  PSecurityDescriptor; SaclPresent: Boolean; Sacl: PAcl; SaclDefaulted: Boolean)
+function RtlSetSaclSecurityDescriptor(const SecurityDescriptor:
+  TSecurityDescriptor; SaclPresent: Boolean; Sacl: PAcl; SaclDefaulted: Boolean)
   : NTSTATUS; stdcall; external ntdll;
 
 function RtlGetSaclSecurityDescriptor(SecurityDescriptor:
   PSecurityDescriptor; out SaclPresent: Boolean; out Sacl: PAcl;
   out SaclDefaulted: Boolean): NTSTATUS; stdcall; external ntdll;
 
-function RtlSetOwnerSecurityDescriptor(SecurityDescriptor:
-  PSecurityDescriptor; Owner: PSid; OwnerDefaulted: Boolean): NTSTATUS; stdcall;
+function RtlSetOwnerSecurityDescriptor(const SecurityDescriptor:
+  TSecurityDescriptor; Owner: PSid; OwnerDefaulted: Boolean): NTSTATUS; stdcall;
   external ntdll;
 
 function RtlGetOwnerSecurityDescriptor(SecurityDescriptor:
   PSecurityDescriptor; out Owner: PSid; out OwnerDefaulted: Boolean): NTSTATUS;
   stdcall; external ntdll;
 
-function RtlSetGroupSecurityDescriptor(SecurityDescriptor:
-  PSecurityDescriptor; Group: PSid; GroupDefaulted: Boolean): NTSTATUS; stdcall;
+function RtlSetGroupSecurityDescriptor(const SecurityDescriptor:
+  TSecurityDescriptor; Group: PSid; GroupDefaulted: Boolean): NTSTATUS; stdcall;
   external ntdll;
 
 function RtlGetGroupSecurityDescriptor(SecurityDescriptor:
@@ -292,13 +292,13 @@ function RtlQueryInformationAcl(Acl: PAcl;
   NTSTATUS; stdcall; external ntdll; overload;
 
 function RtlAddAce(Acl: PAcl; AceRevision: Cardinal;
-  StartingAceIndex: Cardinal; AceList: Pointer; AceListLength: Cardinal):
+  StartingAceIndex: Integer; AceList: Pointer; AceListLength: Cardinal):
   NTSTATUS; stdcall; external ntdll;
 
 function RtlDeleteAce(Acl: Pacl; AceIndex: Cardinal): NTSTATUS; stdcall;
   external ntdll;
 
-function RtlGetAce(Acl: PAcl; AceIndex: Cardinal; out Ace: PAce): NTSTATUS;
+function RtlGetAce(Acl: PAcl; AceIndex: Integer; out Ace: PAce): NTSTATUS;
   stdcall; external ntdll;
 
 function RtlAddAccessAllowedAceEx(Acl: PAcl; AceRevision: Cardinal;

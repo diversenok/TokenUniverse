@@ -61,31 +61,16 @@ const
   // 9700
   ACL_REVISION = 2;
 
-  // 9756
-  ACCESS_ALLOWED_ACE_TYPE = $0;
-  ACCESS_DENIED_ACE_TYPE = $1;
-  SYSTEM_AUDIT_ACE_TYPE = $2;
-  SYSTEM_ALARM_ACE_TYPE = $3;
-  ACCESS_ALLOWED_CALLBACK_ACE_TYPE = $9;
-  ACCESS_DENIED_CALLBACK_ACE_TYPE = $A;
-  SYSTEM_AUDIT_CALLBACK_ACE_TYPE = $D;
-  SYSTEM_ALARM_CALLBACK_ACE_TYPE = $E;
-  SYSTEM_MANDATORY_LABEL_ACE_TYPE = $11;
-  SYSTEM_RESOURCE_ATTRIBUTE_ACE_TYPE = $12;
-  SYSTEM_SCOPED_POLICY_ID_ACE_TYPE = $13;
-  SYSTEM_PROCESS_TRUST_LABEL_ACE_TYPE = $14;
-  SYSTEM_ACCESS_FILTER_ACE_TYPE = $15;
-
   // 9797
   OBJECT_INHERIT_ACE = $1;
   CONTAINER_INHERIT_ACE = $2;
   NO_PROPAGATE_INHERIT_ACE = $4;
   INHERIT_ONLY_ACE = $8;
   INHERITED_ACE = $10;
-
-  // 9834
-  SUCCESSFUL_ACCESS_ACE_FLAG = $40;
-  FAILED_ACCESS_ACE_FLAG = $80;
+  CRITICAL_ACE_FLAG = $20;               // for access allowed ace
+  SUCCESSFUL_ACCESS_ACE_FLAG = $40;      // for audit and alarm aces
+  FAILED_ACCESS_ACE_FLAG = $80;          // for audit and alarm aces
+  TRUST_PROTECTED_FILTER_ACE_FLAG = $40; // for access filter ace
 
   // 9944
   SYSTEM_MANDATORY_LABEL_NO_WRITE_UP = $1;
@@ -241,18 +226,53 @@ type
   PSIDAndAttributesHash = ^TSIDAndAttributesHash;
 
   // 9713
-  TAcl = record
+  TAcl_Internal = record
     AclRevision: Byte;
     Sbz1: Byte;
     AclSize: Word;
     AceCount: Word;
     Sbz2: Word;
   end;
-  PAcl = ^TAcl;
+  PAcl = ^TAcl_Internal;
+
+  // 9756
+  {$MINENUMSIZE 1}
+  TAceType = (
+    AceTypeAccessAllowed = 0,
+    AceTypeAccessDenied = 1,
+    AceTypeSystemAudit = 2,
+    AceTypeSystemAlarm = 3,
+
+    AceTypeCompoundAccessAllowed = 4, // Unknown
+
+    AceTypeObjectAccessAllowed = 5, // Object ace
+    AceTypeObjectAccessDenied = 6,  // Object ace
+    AceTypeObjectSystemAudit = 7,   // Object ace
+    AceTypeObjectSystemAlarm = 8,   // Object ace
+
+    AceTypeAccessAllowedCallback = 9,
+    AceTypeAccessDeniedCallback = 10,
+
+    AceTypeObjectAccessAllowedCallback = 11, // Object ace
+    AceTypeObjectAccessDeniedCallback = 12,  // Object ace
+
+    AceTypeSystemAuditCallback = 13,
+    AceTypeSystemAlarmCallback = 14,
+
+    AceTypeObjectSystemAuditCallback = 15, // Object ace
+    AceTypeObjectSystemAlarmCallback = 16, // Object ace
+
+    AceTypeSystemMandatoryLabel = 17,
+    AceTypeSystemResourceAttribute = 18,
+    AceTypeSystemScopedPolicyId = 19,
+    AceTypeSystemProcessTrustLabel = 20,
+    AceTypeSystemAccessFilter = 21
+  );
+  {$MINENUMSIZE 4}
 
   // 9743
   TAceHeader = record
-    AceType: Byte;
+    AceType: TAceType;
     AceFlags: Byte;
     AceSize: Word;
   end;
@@ -269,13 +289,29 @@ type
   //  ACCESS_ALLOWED_CALLBACK_ACE & ACCESS_DENIED_CALLBACK_ACE
   //  SYSTEM_AUDIT_CALLBACK_ACE & SYSTEM_ALARM_CALLBACK_ACE
   // i.e. everything except OBJECT ACEs.
-  TAce = record
+  TAce_Internal = record
     Header: TAceHeader;
     Mask: TAccessMask;
     SidStart: Cardinal;
     function Sid: PSid;
   end;
-  PAce = ^TAce;
+  PAce = ^TAce_Internal;
+
+  // This structure covers:
+  //  ACCESS_ALLOWED_OBJECT_ACE & ACCESS_DENIED_OBJECT_ACE
+  //  SYSTEM_AUDIT_OBJECT_ACE & SYSTEM_ALARM_OBJECT_ACE
+  //  ACCESS_ALLOWED_CALLBACK_OBJECT_ACE & ACCESS_DENIED_CALLBACK_OBJECT_ACE
+  //  SYSTEM_AUDIT_CALLBACK_OBJECT_ACE & SYSTEM_ALARM_CALLBACK_OBJECT_ACE
+  TObjectAce_Internal = record
+    Header: TAceHeader;
+    Mask: TAccessMask;
+    Flags: Cardinal;
+    ObjectType: TGuid;
+    InheritedObjectType: TGuid;
+    SidStart: Cardinal;
+    function Sid: PSid;
+  end;
+  PObjectAce = ^TObjectAce_Internal;
 
   // 10083
   TAclInformationClass = (
@@ -291,7 +327,7 @@ type
 
   // 10102
   TAclSizeInformation = record
-    AceCount: Cardinal;
+    AceCount: Integer;
     AclBytesInUse: Cardinal;
     AclBytesFree: Cardinal;
   end;
@@ -520,9 +556,16 @@ implementation
 uses
   Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntexapi;
 
-{ TAce }
+{ TAce_Internal }
 
-function TAce.Sid: PSid;
+function TAce_Internal.Sid: PSid;
+begin
+  Result := PSid(@Self.SidStart);
+end;
+
+{ TObjectAce_Internal }
+
+function TObjectAce_Internal.Sid: PSid;
 begin
   Result := PSid(@Self.SidStart);
 end;

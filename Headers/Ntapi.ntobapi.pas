@@ -94,7 +94,8 @@ function NtWaitForSingleObject(Handle: THandle; Alertable: LongBool;
 
 function NtSetSecurityObject(Handle: THandle;
   SecurityInformation: TSecurityInformation;
-  SecurityDescriptor: PSecurityDescriptor): NTSTATUS; stdcall; external ntdll;
+  const SecurityDescriptor: TSecurityDescriptor): NTSTATUS; stdcall;
+  external ntdll;
 
 function NtQuerySecurityObject(Handle: THandle;
   SecurityInformation: TSecurityInformation;

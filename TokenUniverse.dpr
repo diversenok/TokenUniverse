@@ -90,7 +90,8 @@ uses
   NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas',
   NtUtils.Objects in 'NtUtils\NtUtils.Objects.pas',
   NtUtils.Tokens in 'NtUtils\NtUtils.Tokens.pas',
-  NtUtils.Tokens.Impersonate in 'NtUtils\NtUtils.Tokens.Impersonate.pas';
+  NtUtils.Tokens.Impersonate in 'NtUtils\NtUtils.Tokens.Impersonate.pas',
+  NtUtils.Security.Acl in 'NtUtils\NtUtils.Security.Acl.pas';
 
 {$R *.res}
 
