@@ -14,7 +14,8 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntpsapi, Ntapi.ntobapi, NtUtils.Exceptions;
+  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntpsapi, Ntapi.ntobapi, NtUtils.Exceptions,
+  Winapi.ProcessThreadsApi;
 
 function RefStr(const Str: UNICODE_STRING; Present: Boolean): PUNICODE_STRING;
   inline;
@@ -64,6 +65,12 @@ begin
     0
   );
 
+  if ParamSet.Provides(ppShowWindowMode) then
+  begin
+    ProcessParams.WindowFlags := STARTF_USESHOWWINDOW;
+    ProcessParams.ShowWindowFlags := ParamSet.ShowWindowMode;
+  end;
+
   if not NT_SUCCESS(Status) then
   begin
     RtlFreeUnicodeString(NtImageName);
@@ -104,7 +111,7 @@ function TExecRtlCreateUserProcess.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-    ppInheritHandles, ppCreateSuspended:
+    ppInheritHandles, ppCreateSuspended, ppShowWindowMode:
       Result := True;
   else
     Result := False;

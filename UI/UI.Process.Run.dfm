@@ -2,31 +2,36 @@ object DialogRun: TDialogRun
   Left = 0
   Top = 0
   Caption = 'Run program...'
-  ClientHeight = 381
+  ClientHeight = 390
   ClientWidth = 331
   Color = clBtnFace
+  Constraints.MinHeight = 428
+  Constraints.MinWidth = 347
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  KeyPreview = True
   OldCreateOrder = False
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
     AlignWithMargins = True
     Left = 3
-    Top = 3
+    Top = 52
     Width = 325
-    Height = 347
+    Height = 307
+    Margins.Top = 52
     Margins.Bottom = 31
     ActivePage = TabMethod
     Align = alClient
-    TabOrder = 0
+    TabOrder = 2
     object TabMethod: TTabSheet
       Caption = 'Method'
       object LabelOther: TLabel
@@ -142,70 +147,45 @@ object DialogRun: TDialogRun
       Caption = 'Parameters'
       ImageIndex = 4
       object LabelDesktop: TLabel
-        Left = 3
-        Top = 146
+        Left = 4
+        Top = 100
         Width = 43
         Height = 13
         Caption = 'Desktop:'
       end
       object LabelLogonFlags: TLabel
         Left = 161
-        Top = 193
+        Top = 148
         Width = 59
         Height = 13
-        Anchors = [akRight, akBottom]
         Caption = 'Logon flags:'
       end
       object LabelShowMode: TLabel
-        Left = 3
-        Top = 193
+        Left = 4
+        Top = 148
         Width = 71
         Height = 13
-        Anchors = [akRight, akBottom]
         Caption = 'Window mode:'
       end
-      object EditExe: TLabeledEdit
-        Left = 3
-        Top = 24
-        Width = 230
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        EditLabel.Width = 57
-        EditLabel.Height = 13
-        EditLabel.Caption = 'Executable:'
-        TabOrder = 0
-      end
-      object ButtonBrowse: TButton
-        Left = 239
-        Top = 22
-        Width = 71
-        Height = 25
-        Anchors = [akTop, akRight]
-        Caption = 'Browse'
-        DropDownMenu = PopupMenuExe
-        Style = bsSplitButton
-        TabOrder = 1
-        OnClick = ButtonBrowseClick
-      end
       object EditParams: TLabeledEdit
-        Left = 3
-        Top = 68
+        Left = 4
+        Top = 20
         Width = 307
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 59
         EditLabel.Height = 13
         EditLabel.Caption = 'Parameters:'
-        TabOrder = 2
+        TabOrder = 0
       end
       object GroupBoxFlags: TGroupBox
         Left = 3
-        Top = 237
+        Top = 197
         Width = 307
         Height = 79
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Flags: '
-        TabOrder = 3
+        TabOrder = 5
         object CheckBoxInherit: TCheckBox
           Left = 11
           Top = 24
@@ -232,12 +212,11 @@ object DialogRun: TDialogRun
         end
       end
       object ComboBoxLogonFlags: TComboBox
-        Left = 161
-        Top = 210
+        Left = 162
+        Top = 164
         Width = 149
         Height = 21
         Style = csDropDownList
-        Anchors = [akRight, akBottom]
         ItemIndex = 0
         TabOrder = 4
         Text = 'Default'
@@ -247,34 +226,33 @@ object DialogRun: TDialogRun
           'Network only credentials')
       end
       object EditDir: TLabeledEdit
-        Left = 3
-        Top = 117
+        Left = 4
+        Top = 68
         Width = 307
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 87
         EditLabel.Height = 13
         EditLabel.Caption = 'Current directory:'
-        TabOrder = 5
+        TabOrder = 1
       end
       object ComboBoxDesktop: TComboBox
-        Left = 3
-        Top = 165
+        Left = 4
+        Top = 116
         Width = 307
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 6
+        TabOrder = 2
         Text = 'WinSta0\Default'
       end
       object ComboBoxShowMode: TComboBox
-        Left = 6
-        Top = 210
+        Left = 4
+        Top = 164
         Width = 149
         Height = 21
         Style = csDropDownList
-        Anchors = [akLeft, akBottom]
         ItemIndex = 1
-        TabOrder = 7
+        TabOrder = 3
         Text = 'Show normal'
         Items.Strings = (
           'Hide'
@@ -316,26 +294,49 @@ object DialogRun: TDialogRun
   end
   object ButtonClose: TButton
     Left = 253
-    Top = 352
+    Top = 361
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Close'
     ModalResult = 8
-    TabOrder = 1
+    TabOrder = 4
     OnClick = ButtonCloseClick
   end
   object ButtonRun: TButton
     Left = 172
-    Top = 352
+    Top = 361
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Run'
     Default = True
-    TabOrder = 2
+    TabOrder = 3
     OnClick = ButtonRunClick
+  end
+  object EditExe: TLabeledEdit
+    Left = 8
+    Top = 23
+    Width = 239
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    EditLabel.Width = 57
+    EditLabel.Height = 13
+    EditLabel.Caption = 'Executable:'
+    TabOrder = 0
+  end
+  object ButtonBrowse: TButton
+    Left = 253
+    Top = 21
+    Width = 71
+    Height = 25
+    Anchors = [akTop, akRight]
+    Caption = 'Browse'
+    DropDownMenu = PopupMenuExe
+    Style = bsSplitButton
+    TabOrder = 1
+    OnClick = ButtonBrowseClick
   end
   object PopupMenuExe: TPopupMenu
     Left = 279

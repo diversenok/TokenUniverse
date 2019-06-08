@@ -61,6 +61,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonChooseParentClick(Sender: TObject);
     procedure MenuClearParentClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     // IExecProvider implementation
     function Provides(Parameter: TExecParam): Boolean;
@@ -93,8 +94,8 @@ implementation
 uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpsapi, NtUtils.Exceptions,
-  NtUtils.Objects, NtUtils.WinUser, NtUtils.Processes;
+  Ntapi.ntpsapi, NtUtils.Objects, Winapi.WinUser, NtUtils.WinUser,
+  NtUtils.Processes;
 
 {$R *.dfm}
 
@@ -190,6 +191,18 @@ begin
   UpdateDesktopList;
 end;
 
+procedure TDialogRun.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  // Ctrl+N to switch between tabs
+  if (Shift = [ssCtrl]) and (Key >= Ord('1')) and (Key <= Ord('4')) then
+    PageControl.ActivePageIndex := Key - Ord('1');
+
+  // Ctrl+O to choose a file
+  if (Shift = [ssCtrl]) and (Key = Ord('O')) then
+    ButtonBrowse.Click;
+end;
+
 function TDialogRun.InheritHandles: Boolean;
 begin
   Result := CheckBoxInherit.Checked;
@@ -247,7 +260,7 @@ function TDialogRun.Provides(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
     ppDesktop, ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppRequireElevation, ppShowWindowMode:
+    ppRequireElevation:
       Result := True;
 
     ppParameters:
@@ -261,6 +274,9 @@ begin
 
     ppParentProcess:
       Result := hParentProcess <> 0;
+
+    ppShowWindowMode:
+      Result := ComboBoxShowMode.ItemIndex <> SW_SHOWNORMAL;
   else
     Result := False;
   end;
