@@ -65,16 +65,16 @@ begin
     0
   );
 
-  if ParamSet.Provides(ppShowWindowMode) then
-  begin
-    ProcessParams.WindowFlags := STARTF_USESHOWWINDOW;
-    ProcessParams.ShowWindowFlags := ParamSet.ShowWindowMode;
-  end;
-
   if not NT_SUCCESS(Status) then
   begin
     RtlFreeUnicodeString(NtImageName);
     raise ENtError.Create(Status, 'RtlCreateProcessParametersEx');
+  end;
+  
+  if ParamSet.Provides(ppShowWindowMode) then
+  begin
+    ProcessParams.WindowFlags := STARTF_USESHOWWINDOW;
+    ProcessParams.ShowWindowFlags := ParamSet.ShowWindowMode;
   end;
 
   // Create the process

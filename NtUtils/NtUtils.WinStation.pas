@@ -82,11 +82,13 @@ var
   Returned: Cardinal;
 begin
   FillChar(UserToken, SizeOf(UserToken), 0);
-  hToken := 0;
 
   Result.Location := 'WinStationQueryInformationW';
   Result.Win32Result := WinStationQueryInformationW(hServer, SessionId,
     WinStationUserToken, @UserToken, SizeOf(UserToken), Returned);
+
+  if Result.IsSuccess then
+    hToken := UserToken.UserToken;
 end;
 
 end.

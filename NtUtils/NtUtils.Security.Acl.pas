@@ -88,6 +88,7 @@ begin
   if not Assigned(Sid) then
     raise ENtError.Create(STATUS_INVALID_SID, 'TAce.Allocate');
 
+  // TODO: Object aces?
   Result := AllocMem(Size);
   Result.Header.AceType := AceType;
   Result.Header.AceFlags := AceFlags;
