@@ -91,7 +91,8 @@ uses
   NtUtils.Objects in 'NtUtils\NtUtils.Objects.pas',
   NtUtils.Tokens in 'NtUtils\NtUtils.Tokens.pas',
   NtUtils.Tokens.Impersonate in 'NtUtils\NtUtils.Tokens.Impersonate.pas',
-  NtUtils.Security.Acl in 'NtUtils\NtUtils.Security.Acl.pas';
+  NtUtils.Security.Acl in 'NtUtils\NtUtils.Security.Acl.pas',
+  Winapi.Svc in 'Headers\Winapi.Svc.pas';
 
 {$R *.res}
 

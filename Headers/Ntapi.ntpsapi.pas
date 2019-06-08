@@ -50,7 +50,9 @@ const
 
 type
   TProcessInfoClass = (
+    ProcessBasicInformation = 0, // q: TProcessBasinInformation
     ProcessAccessToken = 9, // s: TProcessAccessToken
+    ProcessSessionInformation = 24, // q: Cardinal
     ProcessWow64Information = 26, // q: NativeUInt
     ProcessImageFileName = 27, // q: UNICODE_STRING
     ProcessImageFileNameWin32 = 43 // q: UNICODE_STRING
@@ -61,6 +63,17 @@ type
     ThreadImpersonationToken = 5, // s: THandle
     ThreadIsTerminated = 20 // q: LongBool
   );
+
+  // ProcessBasicInformation
+  TProcessBasinInformation = record
+    ExitStatus: NTSTATUS;
+    PebBaseAddress: PPeb;
+    AffinityMask: NativeUInt;
+    BasePriority: KPRIORITY;
+    UniqueProcessId: NativeUInt;
+    InheritedFromUniqueProcessId: NativeUInt;
+  end;
+  PProcessBasinInformation = ^TProcessBasinInformation;
 
   // ProcessAccessToken
   TProcessAccessToken = record

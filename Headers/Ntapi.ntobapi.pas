@@ -90,7 +90,10 @@ function NtMakePermanentObject(Handle: THandle): NTSTATUS; stdcall;
   external ntdll;
 
 function NtWaitForSingleObject(Handle: THandle; Alertable: LongBool;
-  Timeout: PLargeInteger): NTSTATUS; stdcall; external ntdll;
+  var Timeout: TLargeInteger): NTSTATUS; stdcall; external ntdll; overload;
+
+function NtWaitForSingleObject(Handle: THandle; Alertable: LongBool;
+  pTimeout: PLargeInteger = nil): NTSTATUS; stdcall; external ntdll; overload;
 
 function NtSetSecurityObject(Handle: THandle;
   SecurityInformation: TSecurityInformation;
