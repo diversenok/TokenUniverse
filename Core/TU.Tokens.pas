@@ -1494,7 +1494,7 @@ begin
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsAccess:
       if Detailed then
-        Result := FormatAccessDetailed(Token.HandleInformation.GrantedAccess,
+        Result := FormatAccessPrefixed(Token.HandleInformation.GrantedAccess,
           objToken)
       else
         Result := FormatAccess(Token.HandleInformation.GrantedAccess, objToken);
