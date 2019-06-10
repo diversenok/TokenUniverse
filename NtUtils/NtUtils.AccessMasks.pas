@@ -32,7 +32,7 @@ const
     (Value: GENERIC_ALL;            Name: 'Generic all')
   );
 
-  SpecificAccessProcess: array [0..12] of TFlagName = (
+  SpecificAccessProcess: array [0..13] of TFlagName = (
     (Value: PROCESS_TERMINATE;                 Name: 'Terminate'),
     (Value: PROCESS_CREATE_THREAD;             Name: 'Create threads'),
     (Value: PROCESS_SET_SESSIONID;             Name: 'Set session ID'),
@@ -45,10 +45,11 @@ const
     (Value: PROCESS_SET_INFORMATION;           Name: 'Set information'),
     (Value: PROCESS_QUERY_INFORMATION;         Name: 'Query information'),
     (Value: PROCESS_SUSPEND_RESUME;            Name: 'Suspend/resume'),
-    (Value: PROCESS_QUERY_LIMITED_INFORMATION; Name: 'Query limited information')
+    (Value: PROCESS_QUERY_LIMITED_INFORMATION; Name: 'Query limited information'),
+    (Value: PROCESS_SET_LIMITED_INFORMATION;   Name: 'Set limited information')
   );
 
-  SpecificAccessThread: array [0..11] of TFlagName = (
+  SpecificAccessThread: array [0..12] of TFlagName = (
     (Value: THREAD_TERMINATE;                 Name: 'Terminate'),
     (Value: THREAD_SUSPEND_RESUME;            Name: 'Suspend/resume'),
     (Value: THREAD_ALERT;                     Name: 'Alert'),
@@ -60,7 +61,8 @@ const
     (Value: THREAD_IMPERSONATE;               Name: 'Impersonate'),
     (Value: THREAD_DIRECT_IMPERSONATION;      Name: 'Direct impersonation'),
     (Value: THREAD_SET_LIMITED_INFORMATION;   Name: 'Set limited information'),
-    (Value: THREAD_QUERY_LIMITED_INFORMATION; Name: 'Query limited information')
+    (Value: THREAD_QUERY_LIMITED_INFORMATION; Name: 'Query limited information'),
+    (Value: THREAD_RESUME;                    Name: 'Resume')
   );
 
   SpecificAccessToken: array [0..8] of TFlagName = (
@@ -147,7 +149,7 @@ end;
 function FormatAccessPrefixed(Access: TAccessMask;
   MaskType: TAccessMaskType): String;
 begin
-  Result := IntToHexEx(Access, 8) + ' (' + FormatAccess(Access, MaskType) + ')';
+  Result := IntToHexEx(Access, 6) + ' (' + FormatAccess(Access, MaskType) + ')';
 end;
 
 end.
