@@ -128,7 +128,7 @@ function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
   var AuthenticationId: TLuid; var ExpirationTime: TLargeInteger;
   const User: TTokenUser; Groups: PTokenGroups; Privileges: PTokenPrivileges;
-  Owner: PTokenOwner; PrimaryGroup: PTokenPrimaryGroup;
+  Owner: PTokenOwner; var PrimaryGroup: TTokenPrimaryGroup;
   DefaultDacl: PTokenDefaultDacl; const Source: TTokenSource): NTSTATUS;
   stdcall; external ntdll;
 

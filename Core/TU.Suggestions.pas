@@ -23,7 +23,7 @@ implementation
 
 uses
   Ntapi.ntseapi, Winapi.WinError, Winapi.CommCtrl, Ntapi.ntdef, Ntapi.ntstatus,
-  NtUtils.Exceptions, NtUtils.ErrorMsg, NtUtils.Tokens;
+  NtUtils.Exceptions, NtUtils.ErrorMsg, NtUtils.Tokens.Misc;
 
 resourcestring
   TITLE_OS_ERROR = 'System error';

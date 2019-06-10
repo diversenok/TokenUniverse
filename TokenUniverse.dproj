@@ -284,6 +284,8 @@
         <DCCReference Include="NtUtils\NtUtils.Tokens.Impersonate.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Security.Acl.pas"/>
         <DCCReference Include="Headers\Winapi.Svc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Logon.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

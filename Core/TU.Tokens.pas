@@ -281,42 +281,6 @@ type
     /// </remarks>
     function QueryVariableSize(InfoClass: TTokenInformationClass;
       out Status: Boolean; ReturnedSize: PCardinal = nil): Pointer;
-
-    /// <summary> Queries a security identifier. </summary>
-    /// <remarks>
-    ///  The function doesn't write to <paramref name="Sid"/> parameter
-    ///  if it fails.
-    /// </remarks>
-    function QuerySid(InfoClass: TTokenInformationClass;
-      out Sid: ISid): Boolean;
-
-    /// <summary> Queries a security identifier and attributes. </summary>
-    /// <remarks>
-    ///  The function doesn't write to <paramref name="Group"/> parameter
-    ///  if it fails.
-    /// </remarks>
-    function QuerySidAndAttributes(InfoClass: TTokenInformationClass;
-      out Group: TGroup): Boolean;
-
-    /// <summary> Queries a security identifier and attributes array. </summary>
-    /// <remarks>
-    ///  The function doesn't write to <paramref name="GroupArray"/> parameter
-    ///  if it fails.
-    /// </remarks>
-    function QueryGroups(InfoClass: TTokenInformationClass;
-      out GroupArray: TGroupArray): Boolean;
-
-    /// <summary>
-    ///  Allocates and fills <see cref="Winapi.PTokenGroups"/>.
-    /// </summary>
-    /// <remarks> Call <see cref="FreeMem"/> after use. </remarks>
-    class function AllocGroups(const Groups: TGroupArray;
-      ResetAttributes: Boolean = False): PTokenGroups; static;
-
-    /// <summary> Allocates <see cref="Winapi.PTokenPrivileges"/>. </summary>
-    /// <remarks> Call <see cref="System.FreeMem"/> after use. </remarks>
-    class function AllocPrivileges(Privileges: TPrivilegeArray):
-      PTokenPrivileges; static;
   public
 
     {--------------------  TToken public section ---------------------------}
@@ -467,7 +431,7 @@ uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Objects,
   NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, NtUtils.Tokens,
   NtUtils.Tokens.Impersonate, NtUtils.AccessMasks, DelphiUtils.Strings,
-  System.SysUtils, System.TypInfo;
+  System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -650,45 +614,6 @@ begin
   TTokenFactory.RegisterToken(Self);
 end;
 
-class function TToken.AllocGroups(const Groups: TGroupArray;
-  ResetAttributes: Boolean): PTokenGroups;
-var
-  i: integer;
-begin
-  // The caller is responsible to free the result by calling FreeGroups.
-  Result := AllocMem(SizeOf(Integer) +
-    Length(Groups) * SizeOf(TSIDAndAttributes));
-
-  Result.GroupCount := Length(Groups);
-
-  for i := 0 to High(Groups) do
-  begin
-    // This function calls ConvertStringSidToSid to allocates memory that
-    // we need to clean up by calling LocalFree inside FreeGroups routine.
-    Result.Groups[i].Sid := Groups[i].SecurityIdentifier.Sid;
-
-    if not ResetAttributes then
-      Result.Groups[i].Attributes := Groups[i].Attributes;
-  end;
-end;
-
-class function TToken.AllocPrivileges(Privileges: TPrivilegeArray):
-  PTokenPrivileges;
-var
-  i: Integer;
-  BufferSize: Cardinal;
-begin
-  BufferSize := SizeOf(Integer) +
-    Length(Privileges) * SizeOf(TLUIDAndAttributes);
-
-  // Allocate memory for PTokenPrivileges
-  Result := AllocMem(BufferSize);
-
-  Result.PrivilegeCount := Length(Privileges);
-  for i := 0 to High(Privileges) do
-    Result.Privileges[i] := Privileges[i];
-end;
-
 procedure TToken.AssignToProcess(PID: NativeUInt);
 begin
   NtxAssignPrimaryTokenById(PID, hToken).RaiseOnError;
@@ -702,30 +627,13 @@ begin
 end;
 
 procedure TToken.AssignToThread(TID: NativeUInt);
-var
-  hThread: THandle;
 begin
-  NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID).RaiseOnError;
-
-  try
-    NtxSetThreadToken(hThread, hToken).RaiseOnError;
-  finally
-    NtxSafeClose(hThread);
-  end;
+  NtxSetThreadTokenById(TID, hToken).RaiseOnError;
 end;
 
 procedure TToken.AssignToThreadSafe(TID: NativeUInt);
-var
-  hThread: THandle;
 begin
-  NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN or
-    THREAD_QUERY_LIMITED_INFORMATION, TID).RaiseOnError;
-
-  try
-    NtxSafeSetThreadToken(hThread, hToken).RaiseOnError;
-  finally
-    NtxSafeClose(hThread);
-  end;
+  NtxSafeSetThreadTokenById(TID, hToken).RaiseOnError;
 end;
 
 function TToken.CanBeFreed: Boolean;
@@ -799,36 +707,19 @@ constructor TToken.CreateNtCreateToken(User: ISid; DisableUser: Boolean;
   Owner: ISid; PrimaryGroup: ISid; Source: TTokenSource;
   Expires: TLargeInteger);
 var
-  TokenUser: TTokenUser;
-  TokenGroups: PTokenGroups;
-  TokenPrivileges: PTokenPrivileges;
-  TokenOwner: TTokenOwner;
-  TokenPrimaryGroup: TTokenPrimaryGroup;
+  TokenUser: TGroup;
 begin
+  TokenUser.SecurityIdentifier := User;
+
   // Fill user attributes. Zero value is default here and means "Enabled"
   if DisableUser then
-    TokenUser.User.Attributes := SE_GROUP_USE_FOR_DENY_ONLY
+    TokenUser.Attributes := SE_GROUP_USE_FOR_DENY_ONLY
   else
-    TokenUser.User.Attributes := 0;
+    TokenUser.Attributes := 0;
 
-  TokenUser.User.Sid := User.Sid;
-  TokenOwner.Owner := Owner.Sid;
-  TokenPrimaryGroup.PrimaryGroup := PrimaryGroup.Sid;
-
-  TokenGroups := nil;
-  TokenPrivileges := nil;
-
-  try
-    TokenGroups := AllocGroups(Groups);
-    TokenPrivileges := AllocPrivileges(Privileges);
-
-    NtxCheck(NtCreateToken(hToken, TOKEN_ALL_ACCESS, nil, TokenPrimary,
-      LogonID, Expires, TokenUser, TokenGroups, TokenPrivileges,
-      @TokenOwner, @TokenPrimaryGroup, nil, Source), 'NtCreateToken');
-  finally
-    FreeMem(TokenPrivileges);
-    FreeMem(TokenGroups);
-  end;
+  NtxCreateToken(hToken, TOKEN_ALL_ACCESS, TokenPrimary, SecurityImpersonation,
+    LogonID, Expires, TokenUser, Groups, Privileges, Owner, PrimaryGroup, nil,
+    Source).RaiseOnError;
 
   FCaption := 'New token: ';
   if User.Lookup.UserName <> '' then
@@ -847,54 +738,26 @@ end;
 constructor TToken.CreateOpenEffective(TID: NativeUInt; ImageName: String;
   ImpersonationLevel: TSecurityImpersonationLevel; Access: TAccessMask;
   Attributes: Cardinal; EffectiveOnly: Boolean);
-var
-  hThread: THandle;
 begin
-  NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID).RaiseOnError;
+  NtxOpenEffectiveTokenById(hToken, TID, ImpersonationLevel, Access,
+    Attributes, EffectiveOnly).RaiseOnError;
 
-  try
-    NtxOpenEffectiveToken(hToken, hThread, ImpersonationLevel, Access,
-      Attributes, EffectiveOnly).RaiseOnError;
-
-    FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
-    if EffectiveOnly then
-      FCaption := FCaption + ' (eff.)';
-
-  finally
-    NtxSafeClose(hThread);
-  end;
+  FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
+  if EffectiveOnly then
+    FCaption := FCaption + ' (eff.)';
 end;
 
 constructor TToken.CreateOpenProcess(PID: NativeUInt; ImageName: String;
   Access: TAccessMask; Attributes: Cardinal);
-var
-  hProcess: THandle;
 begin
-  NtxOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION, PID).RaiseOnError;
-
-  try
-    NtxCheck(NtOpenProcessTokenEx(hProcess, Access, Attributes, hToken),
-      'NtOpenProcessTokenEx');
-  finally
-    NtxSafeClose(hProcess);
-  end;
-
+  NtxOpenProcessTokenById(hToken, PID, Access, Attributes).RaiseOnError;
   FCaption := Format('%s [%d]', [ImageName, PID]);
 end;
 
 constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
   Access: TAccessMask; Attributes: Cardinal; Dummy: Integer);
-var
-  hThread: THandle;
 begin
-   NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID).RaiseOnError;
-
-  try
-    NtxOpenThreadToken(hToken, hThread, Access, Attributes).RaiseOnError;
-  finally
-    NtxSafeClose(hThread);
-  end;
-
+  NtxOpenThreadTokenById(hToken, TID, Access, Attributes).RaiseOnError;
   FCaption := Format('Thread %d of %s', [TID, ImageName]);
 end;
 
@@ -908,119 +771,32 @@ constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
   SIDsToDisabe, SIDsToRestrict: TGroupArray;
   PrivilegesToDelete: TPrivilegeArray);
 var
-  DisableGroups, RestrictGroups: PTokenGroups;
-  DeletePrivileges: PTokenPrivileges;
+  Disable, Restrict: ISidArray;
+  Remove: TLuidDynArray;
+  i: Integer;
 begin
-  DisableGroups := nil;
-  DeletePrivileges := nil;
-  RestrictGroups := nil;
+  SetLength(Disable, Length(SIDsToDisabe));
+  for i := 0 to High(SIDsToDisabe) do
+    Disable[i] := SIDsToDisabe[i].SecurityIdentifier;
 
-  try
-    // Prepare SIDs and LUIDs
-    DisableGroups := AllocGroups(SIDsToDisabe);
-    DeletePrivileges := AllocPrivileges(PrivilegesToDelete);
+  SetLength(Restrict, Length(SIDsToRestrict));
+  for i := 0 to High(SIDsToRestrict) do
+    Restrict[i] := SIDsToRestrict[i].SecurityIdentifier;
 
-    // Attributes for Restricting SIDs must be set to zero
-    RestrictGroups := AllocGroups(SIDsToRestrict, True);
+  SetLength(Remove, Length(PrivilegesToDelete));
+  for i := 0 to High(PrivilegesToDelete) do
+    Remove[i] := PrivilegesToDelete[i].Luid;
 
-    // aka CreateRestrictedToken API
-    NtxCheck(NtFilterToken(SrcToken.hToken, Flags, DisableGroups,
-      DeletePrivileges, RestrictGroups, hToken), 'NtFilterToken');
+  NtxFilterToken(hToken, SrcToken.hToken, Flags, Disable, Remove,
+    Restrict).RaiseOnError;
 
-    FCaption := 'Restricted ' + SrcToken.Caption;
-  finally
-    FreeMem(RestrictGroups);
-    FreeMem(DeletePrivileges);
-    FreeMem(DisableGroups);
-  end;
+  FCaption := 'Restricted ' + SrcToken.Caption;
 end;
 
 constructor TToken.CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
   User: String; const Source: TTokenSource; AddGroups: TGroupArray);
-var
-  Status, SubStatus: NTSTATUS;
-  LsaHandle: TLsaHandle;
-  PkgName: ANSI_STRING;
-  AuthPkg: Cardinal;
-  Buffer: PKERB_S4U_LOGON;
-  BufferSize: Cardinal;
-  OriginName: ANSI_STRING;
-  GroupArray: PTokenGroups;
-  ProfileBuffer: Pointer;
-  ProfileSize: Cardinal;
-  LogonId: TLuid;
-  Quotas: TQuotaLimits;
 begin
-  // TODO -c WoW64: LsaLogonUser overwrites our memory
-  if not NtxAssertNotWoW64.IsSuccess then
-    raise ENotSupportedException.Create('S4U is not supported under WoW64');
-
-  // Connect to the LSA
-  NtxCheck(LsaConnectUntrusted(LsaHandle), 'LsaConnectUntrusted');
-
-  // Lookup for Negotiate package
-  PkgName.FromString(NEGOSSP_NAME_A);
-  Status := LsaLookupAuthenticationPackage(LsaHandle, PkgName, AuthPkg);
-
-  if not NT_SUCCESS(Status) then
-  begin
-    LsaDeregisterLogonProcess(LsaHandle);
-    raise ENtError.Create(Status, 'LsaLookupAuthenticationPackage');
-  end;
-
-  // We need to prepare a blob where KERB_S4U_LOGON is followed by the username
-  // and the domain.
-  BufferSize := SizeOf(KERB_S4U_LOGON) + Length(User) * SizeOf(WideChar) +
-    Length(Domain) * SizeOf(WideChar);
-  Buffer := AllocMem(BufferSize);
-
-  Buffer.MessageType := KerbS4ULogon;
-
-  Buffer.ClientUpn.Length := Length(User) * SizeOf(WideChar);
-  Buffer.ClientUpn.MaximumLength := Buffer.ClientUpn.Length;
-
-  // Place the username just after the structure
-  Buffer.ClientUpn.Buffer := Pointer(NativeUInt(Buffer) +
-    SizeOf(KERB_S4U_LOGON));
-  Move(PWideChar(User)^, Buffer.ClientUpn.Buffer^, Buffer.ClientUpn.Length);
-
-  Buffer.ClientRealm.Length := Length(Domain) * SizeOf(WideChar);
-  Buffer.ClientRealm.MaximumLength := Buffer.ClientRealm.Length;
-
-  // Place the domain after the username
-  Buffer.ClientRealm.Buffer := Pointer(NativeUInt(Buffer) +
-    SizeOf(KERB_S4U_LOGON) + Buffer.ClientUpn.Length);
-  Move(PWideChar(Domain)^, Buffer.ClientRealm.Buffer^,
-    Buffer.ClientRealm.Length);
-
-  OriginName.FromString('S4U');
-
-  if Length(AddGroups) > 0 then
-    GroupArray := AllocGroups(AddGroups)
-  else
-    GroupArray := nil;
-
-  // Perform the logon
-  SubStatus := STATUS_SUCCESS;
-  Status := LsaLogonUser(LsaHandle, OriginName, LogonType, AuthPkg, Buffer,
-    BufferSize, GroupArray, Source, ProfileBuffer, ProfileSize, LogonId, hToken,
-    Quotas, SubStatus);
-
-  // Clean up
-  LsaFreeReturnBuffer(ProfileBuffer);
-
-  if Assigned(GroupArray) then
-    FreeMem(GroupArray);
-
-  FreeMem(Buffer);
-  LsaDeregisterLogonProcess(LsaHandle);
-
-  // Prefer more detailed error information
-  if not NT_SUCCESS(SubStatus) then
-    Status := SubStatus;
-
-  if not NT_SUCCESS(Status) then
-    raise ENtError.Create(Status, 'LsaLogonUser');
+  NtxLogonS4U(hToken, Domain, User, LogonType, Source, AddGroups).RaiseOnError;
 
   FCaption := 'S4U logon of ' + User;
 end;
@@ -1056,28 +832,9 @@ end;
 constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;
   LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
   AddGroups: TGroupArray);
-var
-  GroupArray: PTokenGroups;
 begin
-  // If the user doesn't ask us to add some groups to the token we can use
-  // simplier LogonUserW routine. Otherwise we use LogonUserExExW (that
-  // requires SeTcbPrivilege to add group membership)
-
-  if Length(AddGroups) = 0 then
-    WinCheck(LogonUserW(PWideChar(User), PWideChar(Domain), Password, LogonType,
-      LogonProvider, hToken), 'LogonUserW')
-  else
-  begin
-    // Allocate SIDs for groups
-    GroupArray := AllocGroups(AddGroups);
-    try
-      WinCheck(LogonUserExExW(PWideChar(User), PWideChar(Domain), Password,
-        LogonType, LogonProvider, GroupArray, hToken, nil, nil, nil, nil),
-        'LogonUserExExW');
-    finally
-      FreeMem(GroupArray);
-    end;
-  end;
+  NtxLogonUser(hToken, Domain, User, Password, LogonType, LogonProvider,
+    AddGroups).RaiseOnError;
 
   FCaption := 'Logon of ' + User;
 end;
@@ -1100,10 +857,7 @@ begin
   TTokenFactory.UnRegisterToken(Self);
 
   if hToken <> 0 then
-  begin
     NtxSafeClose(hToken);
-    hToken := 0;
-  end;
 
   CheckAbandoned(FOnCanClose.Count, 'OnCanClose');
   CheckAbandoned(FOnClose.Count, 'FOnClose');
@@ -1115,34 +869,25 @@ end;
 procedure TToken.GroupAdjust(Groups: TGroupArray; Action:
   TGroupAdjustAction);
 const
-  IsResetFlag: array [TGroupAdjustAction] of LongBool = (True, False, False);
+  ActionToAttribute: array [TGroupAdjustAction] of Cardinal = (0,
+    SE_GROUP_ENABLED, 0);
 var
   i: integer;
-  GroupArray: PTokenGroups;
+  Sids: ISidArray;
 begin
-  // Allocate group SIDs
-  GroupArray := AllocGroups(Groups);
+  SetLength(Sids, Length(Groups));
+  for i := 0 to High(Groups) do
+    Sids[i] := Groups[i].SecurityIdentifier;
 
-  // Set approriate attribes depending on the action
-  for i := 0 to GroupArray.GroupCount - 1 do
-    if Action = gaEnable then
-      GroupArray.Groups[i].Attributes := SE_GROUP_ENABLED
-    else
-      GroupArray.Groups[i].Attributes := 0;
+  NtxAdjustGroups(hToken, Sids, ActionToAttribute[Action],
+    Action = gaResetDefault).RaiseOnError;
 
-  try
-    NtxCheck(NtAdjustGroupsToken(hToken, IsResetFlag[Action], GroupArray, 0,
-      nil, nil), 'NtAdjustGroupsToken');
+  // Update the cache and notify event listeners
+  InfoClass.ValidateCache(tdTokenGroups);
+  InfoClass.ValidateCache(tdTokenStatistics);
 
-    // Update the cache and notify event listeners
-    InfoClass.ValidateCache(tdTokenGroups);
-    InfoClass.ValidateCache(tdTokenStatistics);
-
-    // Adjusting groups may change integrity attributes
-    InfoClass.ValidateCache(tdTokenIntegrity);
-  finally
-    FreeMem(GroupArray);
-  end;
+  // Adjusting groups may change integrity attributes
+  InfoClass.ValidateCache(tdTokenIntegrity);
 end;
 
 function TToken.OpenLinkedToken: TNtxStatusWithValue<TToken>;
@@ -1163,32 +908,28 @@ const
   ActionToAttribute: array [TPrivilegeAdjustAction] of Cardinal =
     (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
 var
-  PrivArray: PTokenPrivileges;
-  i: integer;
-  Status: NTSTATUS;
+  Status: TNtxStatus;
+  LuidArray: TLuidDynArray;
+  i: Integer;
 begin
-  // Allocate privileges
-  PrivArray := AllocPrivileges(Privileges);
-  try
-    for i := 0 to PrivArray.PrivilegeCount - 1 do
-      PrivArray.Privileges[i].Attributes := ActionToAttribute[Action];
+  SetLength(LuidArray, Length(Privileges));
+  for i := 0 to High(Privileges) do
+    LuidArray[i] := Privileges[i].Luid;
 
-    // Perform adjustment
-    Status := NtAdjustPrivilegesToken(hToken, False, PrivArray, 0, nil, nil);
+  Status := NtxAdjustPrivileges(hToken, LuidArray, ActionToAttribute[Action]);
 
-    // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
-    // not considered as an error. Such behavior does not fit into our
-    // model so we should overwrite it.
-    if not NT_SUCCESS(Status) or (Status = STATUS_NOT_ALL_ASSIGNED) then
-      raise ENtError.Create(Status, 'NtAdjustPrivilegesToken');
-  finally
-    FreeMem(PrivArray);
+  // The function could modify privileges even without succeeding.
+  // Update the cache and notify event listeners.
+  InfoClass.ValidateCache(tdTokenPrivileges);
+  InfoClass.ValidateCache(tdTokenStatistics);
 
-    // The function could modify privileges even without succeeding.
-    // Update the cache and notify event listeners.
-    InfoClass.ValidateCache(tdTokenPrivileges);
-    InfoClass.ValidateCache(tdTokenStatistics);
-  end;
+  // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
+  // not considered as an error. Such behavior does not fit into our
+  // model so we should overwrite it.
+  if Status.Status = STATUS_NOT_ALL_ASSIGNED then
+    raise ENtError.Create(Status.Status, Status.Location)
+  else
+    Status.RaiseOnError;
 end;
 
 function TToken.QueryFixedSize<ResultType>(InfoClass: TTokenInformationClass;
@@ -1211,59 +952,6 @@ begin
     RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status);
 end;
 
-function TToken.QueryGroups(InfoClass: TTokenInformationClass;
-  out GroupArray: TGroupArray): Boolean;
-var
-  Buffer: PTokenGroups;
-  i: integer;
-begin
-  // PTokenGroups can point to a variable-sized memory
-  Buffer := QueryVariableSize(InfoClass, Result);
-
-  if Result then
-  try
-    SetLength(GroupArray, Buffer.GroupCount);
-
-    for i := 0 to Buffer.GroupCount - 1 do
-    begin
-      // Each SID should be converted to a TSecurityIdentifier
-      GroupArray[i].SecurityIdentifier := TSid.CreateCopy(Buffer.Groups[i].Sid);
-      GroupArray[i].Attributes := Buffer.Groups[i].Attributes;
-    end;
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
-function TToken.QuerySid(InfoClass: TTokenInformationClass;
-  out Sid: ISid): Boolean;
-var
-  Buffer: PTokenOwner; // aka TTokenPrimaryGroup aka PPSID
-begin
-  Buffer := QueryVariableSize(InfoClass, Result);
-  if Result then
-  try
-    Sid := TSid.CreateCopy(Buffer.Owner);
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
-function TToken.QuerySidAndAttributes(InfoClass: TTokenInformationClass;
-  out Group: TGroup): Boolean;
-var
-  Buffer: PSIDAndAttributes;
-begin
-  Buffer := QueryVariableSize(InfoClass, Result);
-  if Result then
-  try
-    Group.SecurityIdentifier := TSid.CreateCopy(Buffer.Sid);
-    Group.Attributes := Buffer.Attributes;
-  finally
-    FreeMem(Buffer);
-  end;
-end;
-
 function TToken.QueryVariableSize(InfoClass: TTokenInformationClass;
   out Status: Boolean; ReturnedSize: PCardinal): Pointer;
 var
@@ -1276,16 +964,8 @@ begin
 end;
 
 class procedure TToken.RevertThreadToken(TID: NativeUInt);
-var
-  hThread: THandle;
 begin
-  NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID).RaiseOnError;
-
-  try
-    NtxSetThreadToken(hThread, 0).RaiseOnError;
-  finally
-    NtxSafeClose(hThread);
-  end;
+  NtxSetThreadTokenById(TID, 0).RaiseOnError;
 end;
 
 function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;
@@ -1626,7 +1306,8 @@ begin
 
     tdTokenUser:
     begin
-      Result := Token.QuerySidAndAttributes(TokenUser, Token.Cache.User);
+      Result := NtxQueryGroupToken(Token.hToken, TokenUser,
+        Token.Cache.User).IsSuccess;
 
       // The default value of attributes for user is 0 and means "Enabled".
       // In this case we replace it with this flag. However, it can also be
@@ -1638,7 +1319,9 @@ begin
 
     tdTokenGroups:
     begin
-      Result := Token.QueryGroups(TokenGroups, Token.Cache.Groups);
+      Result := NtxQueryGroupsToken(Token.hToken, TokenGroups,
+        Token.Cache.Groups).IsSuccess;
+
       if Result then
         Token.Events.OnGroupsChange.Invoke(Token.Cache.Groups);
     end;
@@ -1660,7 +1343,9 @@ begin
 
     tdTokenOwner:
     begin
-      Result := Token.QuerySid(TokenOwner, Token.Cache.Owner);
+      Result := NtxQuerySidToken(Token.hToken, TokenOwner,
+        Token.Cache.Owner).IsSuccess;
+
       if Result then
         if Token.Events.OnOwnerChange.Invoke(Token.Cache.Owner) then
           InvokeStringEvent(tsOwner);
@@ -1668,7 +1353,9 @@ begin
 
     tdTokenPrimaryGroup:
     begin
-     Result := Token.QuerySid(TokenPrimaryGroup, Token.Cache.PrimaryGroup);
+     Result := NtxQuerySidToken(Token.hToken, TokenPrimaryGroup,
+        Token.Cache.PrimaryGroup).IsSuccess;
+
      if Result then
        if Token.Events.OnPrimaryChange.Invoke(Token.Cache.PrimaryGroup) then
          InvokeStringEvent(tsPrimaryGroup);
@@ -1717,8 +1404,8 @@ begin
     end;
 
     tdTokenRestrictedSids:
-      Result :=  Token.QueryGroups(TokenRestrictedSids,
-        Token.Cache.RestrictedSids);
+      Result := NtxQueryGroupsToken(Token.hToken, TokenRestrictedSids,
+        Token.Cache.RestrictedSids).IsSuccess;
 
     tdTokenSessionId:
     begin

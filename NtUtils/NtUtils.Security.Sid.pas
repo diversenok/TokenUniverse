@@ -26,6 +26,8 @@ type
     function ChildSid(Rid: Cardinal): ISid;
   end;
 
+  ISidArray = array of ISid;
+
   TSid = class(TInterfacedObject, ISid)
   protected
     FSid: PSid;

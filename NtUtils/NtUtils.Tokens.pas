@@ -3,31 +3,59 @@ unit NtUtils.Tokens;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntseapi, Winapi.WinSafer, NtUtils.Exceptions;
+  Winapi.WinNt, Ntapi.ntseapi, Winapi.WinSafer, NtUtils.Exceptions,
+  NtUtils.Security.Sid, NtUtils.Security.Acl;
 
 { Creation }
+
+// Open a token of a process
+function NtxOpenProcessToken(out hToken: THandle; hProcess: THandle;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+
+function NtxOpenProcessTokenById(out hToken: THandle; PID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+
+// Open a token of a thread
+function NtxOpenThreadToken(out hToken: THandle; hThread: THandle;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+
+function NtxOpenThreadTokenById(out hToken: THandle; TID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+
+// Copy an effective security context of a thread via direct impersonation
+function NtxOpenEffectiveToken(out hToken: THandle; hThread: THandle;
+  ImpersonationLevel: TSecurityImpersonationLevel; DesiredAccess: TAccessMask;
+  HandleAttributes: Cardinal; EffectiveOnly: Boolean): TNtxStatus;
+
+function NtxOpenEffectiveTokenById(out hToken: THandle; TID: THandle;
+  ImpersonationLevel: TSecurityImpersonationLevel; DesiredAccess: TAccessMask;
+  HandleAttributes: Cardinal; EffectiveOnly: Boolean): TNtxStatus;
 
 // Duplicate existing token
 function NtxDuplicateToken(out hToken: THandle; hExistingToken: THandle;
   DesiredAccess: TAccessMask; TokenType: TTokenType; ImpersonationLevel:
   TSecurityImpersonationLevel; EffectiveOnly: LongBool): TNtxStatus;
 
-// Open a token of a thread
-function NtxOpenThreadToken(out hToken: THandle; hThread: THandle;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
-
-// Open an effective security context of a thread
-function NtxOpenEffectiveToken(out hToken: THandle; hThread: THandle;
-  ImpersonationLevel: TSecurityImpersonationLevel; DesiredAccess: TAccessMask;
-  HandleAttributes: Cardinal; EffectiveOnly: Boolean): TNtxStatus;
-
 // Open anonymous token
 function NtxOpenAnonymousToken(out hToken: THandle; DesiredAccess: TAccessMask;
   HandleAttributes: Cardinal): TNtxStatus;
 
+// Filter a token
+function NtxFilterToken(out hNewToken: THandle; hToken: THandle;
+  Flags: Cardinal; SidsToDisable: ISidArray; PrivilegesToDelete: TLuidDynArray;
+  SidsToRestrict: ISidArray): TNtxStatus;
+
 // Restrict a token using Safer api
 function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
   ScopeId: TSaferScopeId; LevelId: TSaferLevelId; MakeSanboxInert: Boolean):
+  TNtxStatus;
+
+// Create a new token from scratch. Requires SeCreateTokenPrivilege.
+function NtxCreateToken(out hToken: THandle; DesiredAccess: TAccessMask;
+  TokenType: TTokenType; ImpersonationLevel: TSecurityImpersonationLevel;
+  AuthenticationId: TLuid; ExpirationTime: TLargeInteger; User: TGroup;
+  Groups: TGroupArray; Privileges: TPrivilegeArray; Owner: ISid;
+  PrimaryGroup: ISid; DefaultDacl: IAcl; const TokenSource: TTokenSource):
   TNtxStatus;
 
 { Basic operations }
@@ -36,6 +64,18 @@ function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
 function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
   out Status: TNtxStatus; ReturnedSize: PCardinal = nil): Pointer;
 
+// Query an SID (Owner, Primary group, ...)
+function NtxQuerySidToken(hToken: THandle; InfoClass: TTokenInformationClass;
+  out Sid: ISid): TNtxStatus;
+
+// Query SID and attributes (User, ...)
+function NtxQueryGroupToken(hToken: THandle; InfoClass: TTokenInformationClass;
+  out Group: TGroup): TNtxStatus;
+
+// Query groups (Groups, RestrictingSIDs, LogonSIDs, ...)
+function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
+  out Groups: TGroupArray): TNtxStatus;
+
 // Query token statistic (requires either Query or Duplicate access)
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
@@ -43,34 +83,46 @@ function NtxQueryStatisticsToken(hToken: THandle;
 // Check whether two token handles reference the same kernel object
 function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
 
-{ Error formatting }
+// Adjust privileges
+function NtxAdjustPrivileges(hToken: THandle; Privileges: TLuidDynArray;
+  NewAttribute: Cardinal): TNtxStatus;
 
-// Format error locations for querying/setting token information
-function NtxFormatTokenQuery(InfoClass: TTokenInformationClass): String;
-function NtxFormatTokenSet(InfoClass: TTokenInformationClass): String;
+// Adjust groups
+function NtxAdjustGroups(hToken: THandle; Sids: ISidArray;
+  NewAttribute: Cardinal; ResetToDefault: Boolean): TNtxStatus;
 
 implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
-  NtUtils.DelayedImport, NtUtils.Snapshots.Handles, System.TypInfo,
-  NtUtils.Tokens.Impersonate;
+  NtUtils.DelayedImport, NtUtils.Snapshots.Handles, NtUtils.Tokens.Misc,
+  NtUtils.Processes, NtUtils.Tokens.Impersonate, NtUtils.AccessMasks;
 
 { Creation }
 
-function NtxDuplicateToken(out hToken: THandle; hExistingToken: THandle;
-  DesiredAccess: TAccessMask; TokenType: TTokenType; ImpersonationLevel:
-  TSecurityImpersonationLevel; EffectiveOnly: LongBool): TNtxStatus;
-var
-  ObjAttr: TObjectAttributes;
-  QoS: TSecurityQualityOfService;
+function NtxOpenProcessToken(out hToken: THandle; hProcess: THandle;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 begin
-  InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
-  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @QoS);
+  Result.Location := 'NtOpenProcessTokenEx for ' + FormatAccess(DesiredAccess,
+    objToken);
+  Result.Status := NtOpenProcessTokenEx(hProcess, DesiredAccess,
+    HandleAttributes, hToken);
+end;
 
-  Result.Location := 'NtDuplicateToken';
-  Result.Status := NtDuplicateToken(hExistingToken, DesiredAccess, @ObjAttr,
-    EffectiveOnly, TokenType, hToken);
+function NtxOpenProcessTokenById(out hToken: THandle; PID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+var
+  hProcess: THandle;
+begin
+  Result := NtxOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION, PID);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result := NtxOpenProcessToken(hToken, hProcess, DesiredAccess,
+    HandleAttributes);
+
+  NtxSafeClose(hProcess);
 end;
 
 function NtxOpenThreadToken(out hToken: THandle; hThread: THandle;
@@ -79,9 +131,26 @@ begin
   // When opening other threads use effective (thread) security context. When
   // reading a token from the current thread use the process security context
 
-  Result.Location := 'NtOpenThreadTokenEx';
+  Result.Location := 'NtOpenThreadTokenEx for ' + FormatAccess(DesiredAccess,
+    objThread);
   Result.Status := NtOpenThreadTokenEx(hThread, DesiredAccess,
     (hThread = NtCurrentThread), HandleAttributes, hToken);
+end;
+
+function NtxOpenThreadTokenById(out hToken: THandle; TID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+var
+  hThread: THandle;
+begin
+  Result := NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result := NtxOpenThreadToken(hToken, hThread, DesiredAccess,
+    HandleAttributes);
+
+  NtxSafeClose(hThread);
 end;
 
 function NtxOpenEffectiveToken(out hToken: THandle; hThread: THandle;
@@ -111,11 +180,44 @@ begin
   Result := NtxOpenThreadToken(hToken, NtCurrentThread, DesiredAccess,
     HandleAttributes);
 
-  // Restor our previous impersonation
+  // Restore our previous impersonation
   NtxRestoreImpersonation(NtCurrentThread, hOldToken);
 
   if hOldToken <> 0  then
     NtxSafeClose(hOldToken);
+end;
+
+function NtxOpenEffectiveTokenById(out hToken: THandle; TID: THandle;
+  ImpersonationLevel: TSecurityImpersonationLevel; DesiredAccess: TAccessMask;
+  HandleAttributes: Cardinal; EffectiveOnly: Boolean): TNtxStatus;
+var
+  hThread: THandle;
+begin
+  Result := NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result := NtxOpenEffectiveToken(hToken, hThread, ImpersonationLevel,
+    DesiredAccess, HandleAttributes, EffectiveOnly);
+
+  NtxSafeClose(hThread);
+end;
+
+function NtxDuplicateToken(out hToken: THandle; hExistingToken: THandle;
+  DesiredAccess: TAccessMask; TokenType: TTokenType; ImpersonationLevel:
+  TSecurityImpersonationLevel; EffectiveOnly: LongBool): TNtxStatus;
+var
+  ObjAttr: TObjectAttributes;
+  QoS: TSecurityQualityOfService;
+begin
+  InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
+  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @QoS);
+
+  Result.Location := 'NtDuplicateToken for ' + FormatAccess(DesiredAccess,
+    objToken);
+  Result.Status := NtDuplicateToken(hExistingToken, DesiredAccess, @ObjAttr,
+    EffectiveOnly, TokenType, hToken);
 end;
 
 function NtxOpenAnonymousToken(out hToken: THandle; DesiredAccess: TAccessMask;
@@ -142,6 +244,26 @@ begin
     NtxSafeClose(hOldToken);
 end;
 
+function NtxFilterToken(out hNewToken: THandle; hToken: THandle;
+  Flags: Cardinal; SidsToDisable: ISidArray; PrivilegesToDelete: TLuidDynArray;
+  SidsToRestrict: ISidArray): TNtxStatus;
+var
+  DisableSids, RestrictSids: PTokenGroups;
+  DeletePrivileges: PTokenPrivileges;
+begin
+  DisableSids := NtxpAllocGroups(SidsToDisable, 0);
+  RestrictSids := NtxpAllocGroups(SidsToRestrict, 0);
+  DeletePrivileges := NtxpAllocPrivileges(PrivilegesToDelete, 0);
+
+  Result.Location := 'NtFilterToken';
+  Result.Status := NtFilterToken(hToken, Flags, DisableSids, DeletePrivileges,
+    RestrictSids, hNewToken);
+
+  FreeMem(DisableSids);
+  FreeMem(RestrictSids);
+  FreeMem(DeletePrivileges);
+end;
+
 function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
   ScopeId: TSaferScopeId; LevelId: TSaferLevelId; MakeSanboxInert: Boolean):
   TNtxStatus;
@@ -165,6 +287,68 @@ begin
     hToken, Flags, nil);
 
   SaferCloseLevel(hLevel);
+end;
+
+function NtxCreateToken(out hToken: THandle; DesiredAccess: TAccessMask;
+  TokenType: TTokenType; ImpersonationLevel: TSecurityImpersonationLevel;
+  AuthenticationId: TLuid; ExpirationTime: TLargeInteger; User: TGroup;
+  Groups: TGroupArray; Privileges: TPrivilegeArray; Owner: ISid;
+  PrimaryGroup: ISid; DefaultDacl: IAcl; const TokenSource: TTokenSource):
+  TNtxStatus;
+var
+  QoS: TSecurityQualityOfService;
+  ObjAttr: TObjectAttributes;
+  TokenUser: TTokenUser;
+  TokenGroups: PTokenGroups;
+  TokenPrivileges: PTokenPrivileges;
+  TokenOwner: TTokenOwner;
+  pTokenOwnerRef: PTokenOwner;
+  TokenPrimaryGroup: TTokenPrimaryGroup;
+  TokenDefaultDacl: TTokenDefaultDacl;
+  pTokenDefaultDaclRef: PTokenDefaultDacl;
+begin
+  InitializaQoS(QoS, ImpersonationLevel);
+  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @QoS);
+
+  // Prepare user
+  Assert(Assigned(User.SecurityIdentifier));
+  TokenUser.User.Sid := User.SecurityIdentifier.Sid;
+  TokenUser.User.Attributes := User.Attributes;
+
+  // Prepare groups and privileges
+  TokenGroups := NtxpAllocGroups2(Groups);
+  TokenPrivileges:= NtxpAllocPrivileges2(Privileges);
+
+  // Owner is optional
+  if Assigned(Owner) then
+  begin
+    TokenOwner.Owner := Owner.Sid;
+    pTokenOwnerRef := @TokenOwner;
+  end
+  else
+    pTokenOwnerRef := nil;
+
+  // Prepare primary group
+  Assert(Assigned(PrimaryGroup));
+  TokenPrimaryGroup.PrimaryGroup := PrimaryGroup.Sid;
+
+  // Default Dacl is optional
+  if Assigned(DefaultDacl) then
+  begin
+    TokenDefaultDacl.DefaultDacl := DefaultDacl.Acl;
+    pTokenDefaultDaclRef := @TokenDefaultDacl;
+  end
+  else
+    pTokenDefaultDaclRef := nil;
+
+  Result.Location := 'NtCreateToken';
+  Result.Status := NtCreateToken(hToken, DesiredAccess, @ObjAttr, TokenType,
+    AuthenticationId, ExpirationTime, TokenUser, TokenGroups, TokenPrivileges,
+    pTokenOwnerRef, TokenPrimaryGroup, pTokenDefaultDaclRef, TokenSource);
+
+  // Clean up
+  FreeMem(TokenGroups);
+  FreeMem(TokenPrivileges);
 end;
 
 { Basic operations }
@@ -203,6 +387,64 @@ begin
 
     BufferSize := Required;
     Result := AllocMem(BufferSize);
+  end;
+end;
+
+function NtxQuerySidToken(hToken: THandle; InfoClass: TTokenInformationClass;
+  out Sid: ISid): TNtxStatus;
+var
+  Buffer: PTokenOwner; // aka PTokenPrimaryGroup and ^PSid
+begin
+  Buffer := NtxQueryBufferToken(hToken, InfoClass, Result);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  try
+    Sid := TSid.CreateCopy(Buffer.Owner);
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+function NtxQueryGroupToken(hToken: THandle; InfoClass: TTokenInformationClass;
+  out Group: TGroup): TNtxStatus;
+var
+  Buffer: PSidAndAttributes; // aka PTokenUser
+begin
+  Buffer := NtxQueryBufferToken(hToken, InfoClass, Result);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  try
+    Group.SecurityIdentifier := TSid.CreateCopy(Buffer.Sid);
+    Group.Attributes := Buffer.Attributes;
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
+  out Groups: TGroupArray): TNtxStatus;
+var
+  Buffer: PTokenGroups;
+  i: Integer;
+begin
+  Buffer := NtxQueryBufferToken(hToken, InfoClass, Result);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  try
+    SetLength(Groups, Buffer.GroupCount);
+    for i := 0 to High(Groups) do
+    begin
+      Groups[i].SecurityIdentifier := TSid.CreateCopy(Buffer.Groups[i].Sid);
+      Groups[i].Attributes := Buffer.Groups[i].Attributes;
+    end;
+  finally
+    FreeMem(Buffer);
   end;
 end;
 
@@ -276,20 +518,31 @@ begin
   Result.Status := THandleSnapshot.Compare(hToken1, hToken2);
 end;
 
-{ Error formatting }
-
-function NtxFormatTokenQuery(InfoClass: TTokenInformationClass): String;
+function NtxAdjustPrivileges(hToken: THandle; Privileges: TLuidDynArray;
+  NewAttribute: Cardinal): TNtxStatus;
+var
+  Buffer: PTokenPrivileges;
 begin
-  // Use the name of the info class from the enumeration definition
-  Result := 'NtQueryInformationToken [' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
+  Buffer := NtxpAllocPrivileges(Privileges, NewAttribute);
+
+  Result.Location := 'NtAdjustPrivilegesToken';
+  Result.Status := NtAdjustPrivilegesToken(hToken, False, Buffer, 0, nil, nil);
+
+  FreeMem(Buffer);
 end;
 
-function NtxFormatTokenSet(InfoClass: TTokenInformationClass): String;
+function NtxAdjustGroups(hToken: THandle; Sids: ISidArray;
+  NewAttribute: Cardinal; ResetToDefault: Boolean): TNtxStatus;
+var
+  Buffer: PTokenGroups;
 begin
-  // Use the name of the info class from the enumeration definition
-  Result := 'NtSetInformationToken [' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
+  Buffer := NtxpAllocGroups(Sids, NewAttribute);
+
+  Result.Location := 'NtAdjustGroupsToken';
+  Result.Status := NtAdjustGroupsToken(hToken, ResetToDefault, Buffer, 0, nil,
+    nil);
+
+  FreeMem(Buffer);
 end;
 
 end.

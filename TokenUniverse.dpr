@@ -92,7 +92,9 @@ uses
   NtUtils.Tokens in 'NtUtils\NtUtils.Tokens.pas',
   NtUtils.Tokens.Impersonate in 'NtUtils\NtUtils.Tokens.Impersonate.pas',
   NtUtils.Security.Acl in 'NtUtils\NtUtils.Security.Acl.pas',
-  Winapi.Svc in 'Headers\Winapi.Svc.pas';
+  Winapi.Svc in 'Headers\Winapi.Svc.pas',
+  NtUtils.Tokens.Logon in 'NtUtils\NtUtils.Tokens.Logon.pas',
+  NtUtils.Tokens.Misc in 'NtUtils\NtUtils.Tokens.Misc.pas';
 
 {$R *.res}
 

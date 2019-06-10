@@ -11,26 +11,25 @@ procedure NtxRestoreImpersonation(hThread: THandle; hToken: THandle);
 
 // Set thread token
 function NtxSetThreadToken(hThread: THandle; hToken: THandle): TNtxStatus;
+function NtxSetThreadTokenById(TID: NativeUInt; hToken: THandle): TNtxStatus;
 
 // Set thread token and make sure it was not duplicated to Identification level
 function NtxSafeSetThreadToken(hThread: THandle; hToken: THandle): TNtxStatus;
+function NtxSafeSetThreadTokenById(TID: NativeUInt; hToken: THandle): TNtxStatus;
 
 // Impersonate the token of any type on the current thread
 function NtxImpersonateAnyToken(hToken: THandle): TNtxStatus;
 
 // Assign primary token to a process
-function NtxAssignPrimaryToken(hProcess: THandle;
-  hToken: THandle): TNtxStatus;
-
-// Assign primary token to a process by a PID
-function NtxAssignPrimaryTokenById(PID: NativeUInt;
-  hToken: THandle): TNtxStatus;
+function NtxAssignPrimaryToken(hProcess: THandle; hToken: THandle): TNtxStatus;
+function NtxAssignPrimaryTokenById(PID: NativeUInt; hToken: THandle): TNtxStatus;
 
 implementation
 
 uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi,
-  NtUtils.Objects, NtUtils.Tokens, NtUtils.DelayedImport, NtUtils.Processes;
+  NtUtils.Objects, NtUtils.Tokens, NtUtils.DelayedImport, NtUtils.Processes,
+  NtUtils.AccessMasks;
 
 { Impersonation }
 
@@ -79,6 +78,19 @@ begin
   Result.Location := 'NtSetInformationThread [ThreadImpersonationToken]';
   Result.Status := NtSetInformationThread(hThread, ThreadImpersonationToken,
     @hToken, SizeOf(hToken));
+end;
+
+function NtxSetThreadTokenById(TID: NativeUInt; hToken: THandle): TNtxStatus;
+var
+  hThread: THandle;
+begin
+  Result := NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result := NtxSetThreadToken(hThread, hToken);
+  NtxSafeClose(hThread);
 end;
 
 { Some notes about safe impersonation...
@@ -180,6 +192,21 @@ begin
     NtxSafeClose(hOldStateToken);
 end;
 
+function NtxSafeSetThreadTokenById(TID: NativeUInt; hToken: THandle):
+  TNtxStatus;
+var
+  hThread: THandle;
+begin
+  Result := NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION or
+    THREAD_SET_THREAD_TOKEN, TID);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result := NtxSafeSetThreadToken(hThread, hToken);
+  NtxSafeClose(hThread);
+end;
+
 function NtxImpersonateAnyToken(hToken: THandle): TNtxStatus;
 var
   hImpToken: THandle;
@@ -215,7 +242,8 @@ begin
     Exit;
 
   // Despite the process handle, we need a handle to the initial thread
-  Result.Location := 'NtGetNextThread with QUERY_LIMITED_INFORMATION';
+  Result.Location := 'NtGetNextThread for ' +
+    FormatAccess(THREAD_QUERY_LIMITED_INFORMATION, objThread);
   Result.Status := NtGetNextThread(hProcess, 0,
     THREAD_QUERY_LIMITED_INFORMATION, 0, 0, AccessToken.Thread);
 
@@ -241,7 +269,7 @@ begin
   Result := NtxOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
     PROCESS_SET_INFORMATION, PID);
 
-  if Result.IsSuccess then
+  if not Result.IsSuccess then
     Exit;
 
   Result := NtxAssignPrimaryToken(hProcess, hToken);
