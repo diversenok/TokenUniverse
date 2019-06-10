@@ -3,7 +3,7 @@ unit TU.RestartSvc;
 interface
 
 uses
-  Winapi.Windows;
+  Winapi.WinUser;
 
 const
   RESVC_PARAM = '/service';
@@ -50,19 +50,16 @@ function ReSvcMain: Boolean;
 implementation
 
 uses
-  System.SysUtils, Winapi.WinSvc, Winapi.ShellApi,
-  TU.Tokens, TU.Tokens.Types, NtUtils.Snapshots.Processes;
-
-type
-  TServiceDynArgsW = array of PWideChar;
-
-function StartServiceW(hService: SC_HANDLE; dwNumServiceArgs: Cardinal;
-  lpServiceArgVectors: TServiceDynArgsW): BOOL; stdcall; external advapi32;
+  Winapi.WinNt, Winapi.Svc, Winapi.WinBase, Winapi.ProcessThreadsApi,
+  Winapi.Shell, Winapi.WinError, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntdef,
+  Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects, Ntapi.ntrtl, System.SysUtils,
+  NtUtils.Snapshots.Processes, NtUtils.Tokens, NtUtils.Exceptions,
+  NtUtils.Tokens.Misc;
 
 procedure DebugOut(DebugMessage: String); inline;
 begin
   {$IFDEF DEBUG}
-  OutputDebugString(PChar(DebugMessage));
+  OutputDebugStringW(PChar(DebugMessage));
   {$ENDIF}
 end;
 
@@ -70,8 +67,7 @@ end;
 
 procedure ReSvcCreateService(IsSystemPlus: Boolean);
 var
-  hSCM, hSvc: SC_HANDLE;
-  SessionStr: String;
+  hSCM, hSvc: TScmHandle;
   SI : TStartupInfoW;
   CommandLine: String;
   Params: TServiceDynArgsW;
@@ -99,19 +95,12 @@ begin
   // Pass the service parameters (session and desktop) so it would know who
   // requested the restart action
   try
-    // Query current session
-    with TToken.CreateOpenCurrent do
-    begin
-      SessionStr := InfoClass.QueryString(tsSession);
-      Free;
-    end;
-
     // Query startup info to get desktop. This function does not fail.
     GetStartupInfoW(SI);
 
     // Allocate memory for parameters
     SetLength(Params, 2);
-    Params[0] := PWideChar(SessionStr);
+    Params[0] := PWideChar(IntToStr(RtlGetCurrentPeb.SessionId));
     Params[1] := SI.lpDesktop;
 
     // Start the service
@@ -144,24 +133,17 @@ begin
         lpParameters := DELEGATE_PARAM;
     end;
 
-    fMask := SEE_MASK_FLAG_DDEWAIT or SEE_MASK_UNICODE or SEE_MASK_FLAG_NO_UI;
+    fMask := SEE_MASK_NOASYNC or SEE_MASK_UNICODE or SEE_MASK_FLAG_NO_UI;
     nShow := SW_SHOWNORMAL;
   end;
-  if not ShellExecuteExW(@ExecInfo) then
+  if not ShellExecuteExW(ExecInfo) then
     RaiseLastOSError;
 end;
 
 { Restart Service server functions }
 
-type
-  TServiceArgsW = array [Byte] of PWideChar;
-  PServiceArgsW = ^TServiceArgsW;
-
 procedure ReSvcServiceMain(dwNumServicesArgs: Cardinal;
-  lpServiceArgVectors: PLPWSTR) stdcall; forward;
-
-function StartServiceCtrlDispatcherW(lpServiceStartTable: PServiceTableEntryW):
-  BOOL; stdcall; external advapi32;
+  lpServiceArgVectors: PServiceArgsW) stdcall; forward;
 
 var
   RESVC_SERVICE_TABLE: array [0 .. 1] of TServiceTableEntryW = (
@@ -189,25 +171,24 @@ function ReSvcHandlerEx(dwControl: Cardinal; dwEventType: Cardinal;
   lpEventData: Pointer; lpContext: Pointer): Cardinal; stdcall;
 begin
   if dwControl = SERVICE_CONTROL_INTERROGATE then
-    Result := NO_ERROR
+    Result := ERROR_SUCCESS
   else
     Result := ERROR_CALL_NOT_IMPLEMENTED;
 end;
 
-function TryGetCsrssToken: TToken;
+function TryGetCsrssToken: THandle;
 const
   SrcProcess = 'csrss.exe';
 var
   Csrss: PProcessInfo;
 begin
-  Result := nil;
   with TProcessSnapshot.Create do
   begin
     Csrss := FindByName(SrcProcess);
     try
       if Assigned(Csrss) then
-        Result := TToken.CreateOpenProcess(Csrss.ProcessId, SrcProcess,
-          TOKEN_DUPLICATE)
+        NtxOpenProcessTokenById(Result, Csrss.ProcessId, TOKEN_DUPLICATE,
+          0).RaiseOnError
       else
         raise Exception.Create(SrcProcess + ' is not found on the system.');
     finally
@@ -224,14 +205,14 @@ end;
 /// </summary>
 procedure ReSvcRunInSession(Session: Integer; Desktop: PWideChar);
 var
-  Token, NewToken: TToken;
-  SI: TStartupInfoW;
+  Token, NewToken: THandle;
+  SIEX: TStartupInfoExW;
   PI: TProcessInformation;
-  ExitCode: Cardinal;
+  BasicInfo: TProcessBasinInformation;
+  Timeout: TLargeInteger;
 begin
-  Token := nil;
-  NewToken := nil;
-
+  Token := 0;
+  NewToken := 0;
   try
     // We are already running as SYSTEM, but if we want to obtain a rare
     // `SeCreateTokenPrivilege` (aka SYSTEM+ token) we need to steal it from
@@ -239,52 +220,66 @@ begin
     if ParamStr(2) = RESVC_SYSPLUS_PARAM then
       Token := TryGetCsrssToken
     else
-      Token := TToken.CreateOpenCurrent;
+      NtxOpenProcessToken(Token, NtCurrentProcess, TOKEN_DUPLICATE,
+        0).RaiseOnError;
 
     // Duplicate
-    NewToken := TToken.CreateDuplicateToken(Token,
-      TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID or
-      TOKEN_QUERY or TOKEN_DUPLICATE or TOKEN_ASSIGN_PRIMARY, ttPrimary, False);
+    NtxDuplicateToken(NewToken, Token, TOKEN_ADJUST_DEFAULT or
+      TOKEN_ADJUST_SESSIONID or TOKEN_QUERY or TOKEN_DUPLICATE or
+      TOKEN_ASSIGN_PRIMARY, TokenPrimary, SecurityImpersonation,
+      False).RaiseOnError;
 
     // Change session
-    NewToken.InfoClass.Session := Session;
+    NtxCheck(NtSetInformationToken(NewToken, TokenSessionId, @Session,
+      SizeOf(Session)), NtxFormatTokenSet(TokenSessionId));
 
     FillChar(PI, SizeOf(PI), 0);
-    FillChar(SI, SizeOf(SI), 0);
-    SI.cb := SizeOf(SI);
+    FillChar(SIEX, SizeOf(SIEX), 0);
+    SIEX.StartupInfo.cb := SizeOf(SIEX.StartupInfo);
 
     // Use the specified desktop
     if Assigned(Desktop) then
-      SI.lpDesktop := Desktop
+      SIEX.StartupInfo.lpDesktop := Desktop
     else
-      SI.lpDesktop := 'WinSta0\Default';
+      SIEX.StartupInfo.lpDesktop := 'WinSta0\Default';
 
     // Launch
-    if not CreateProcessAsUserW(NewToken.Handle, PWideChar(ParamStr(0)), nil,
-      nil, nil, False, 0, nil, nil, SI, PI) then
+    if not CreateProcessAsUserW(NewToken, PWideChar(ParamStr(0)), nil,
+      nil, nil, False, 0, nil, nil, SIEX, PI) then
       RaiseLastOSError
     else
     begin
-      // Check that the process didn't crash immediately
       {$IFDEF DEBUG}
-      case WaitForSingleObject(PI.hProcess, 200) of
-        WAIT_FAILED: DebugOut('Wait for the new process failed');
-        WAIT_OBJECT_0:
+
+      // Check that the process didn't crash immediately
+      Timeout.QuadPart := 200;
+
+      case NtWaitForSingleObject(PI.hProcess, False, Timeout) of
+        STATUS_TIMEOUT: ; // Nothing
+        STATUS_SUCCESS:
           begin
             DebugOut('Abnormal process termination');
-            if not GetExitCodeProcess(PI.hProcess, ExitCode) then
+
+            if not NT_SUCCESS(NtQueryInformationProcess(PI.hProcess,
+              ProcessBasicInformation, @BasicInfo, SizeOf(BasicInfo), nil)) then
               DebugOut('Unable to determine the exit code')
             else
-              DebugOut(PChar('Exit code: 0x' + IntToHex(ExitCode, 8)));
+              DebugOut(PWideChar('Exit code: 0x' +
+                IntToHex(BasicInfo.ExitStatus, 8)));
           end;
+        else
+          DebugOut('Wait for the new process failed');
       end;
       {$ENDIF}
-      CloseHandle(PI.hProcess);
-      CloseHandle(PI.hThread);
+      NtxSafeClose(PI.hProcess);
+      NtxSafeClose(PI.hThread);
     end;
   finally
-    Token.Free;
-    NewToken.Free;
+    if Token <> 0 then
+      NtxSafeClose(Token);
+
+    if NewToken <> 0 then
+      NtxSafeClose(NewToken);
   end;
 end;
 
@@ -292,9 +287,9 @@ end;
 ///  The main service routine.
 /// </summary>
 procedure ReSvcServiceMain(dwNumServicesArgs: Cardinal;
-  lpServiceArgVectors: PLPWSTR) stdcall;
+  lpServiceArgVectors: PServiceArgsW) stdcall;
 var
-  hSCM, hSvc: SC_HANDLE;
+  hSCM, hSvc: TScmHandle;
   SeriveArgs: PServiceArgsW;
   Session, i: Integer;
 begin
@@ -306,10 +301,10 @@ begin
   SetServiceStatus(ReSvcStatusHandle, ReSvcStatus);
 
   // Delete self
-  hSCM := OpenSCManager(nil, nil, SC_MANAGER_CONNECT);
+  hSCM := OpenSCManagerW(nil, nil, SC_MANAGER_CONNECT);
   if hSCM <> 0 then
   begin
-    hSvc := OpenService(hSCM, RESVC_NAME, _DELETE);
+    hSvc := OpenServiceW(hSCM, RESVC_NAME, _DELETE);
     if hSvc <> 0 then
     begin
       DeleteService(hSvc);
@@ -323,9 +318,9 @@ begin
     SeriveArgs := PServiceArgsW(lpServiceArgVectors);
 
     {$IFDEF DEBUG}
-    OutputDebugString('Service parameters: ');
+    OutputDebugStringW('Service parameters: ');
     for i := 0 to dwNumServicesArgs - 1 do
-      OutputDebugString(SeriveArgs[i]);
+      OutputDebugStringW(SeriveArgs[i]);
     {$ENDIF}
 
     if (dwNumServicesArgs = 3) and TryStrToInt(SeriveArgs[1], Session) then
