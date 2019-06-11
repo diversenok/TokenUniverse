@@ -8,7 +8,7 @@ uses
 type
   TExecShellExecute = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
 implementation
@@ -18,13 +18,14 @@ uses
 
 { TExecShellExecute }
 
-procedure TExecShellExecute.Execute(ParamSet: IExecProvider);
+function TExecShellExecute.Execute(ParamSet: IExecProvider): TProcessInfo;
 var
   ShellExecInfo: TShellExecuteInfoW;
 begin
   FillChar(ShellExecInfo, SizeOf(ShellExecInfo), 0);
   ShellExecInfo.cbSize := SizeOf(ShellExecInfo);
-  ShellExecInfo.fMask := SEE_MASK_NOASYNC or SEE_MASK_UNICODE;
+  ShellExecInfo.fMask := SEE_MASK_NOASYNC or SEE_MASK_UNICODE or
+    SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_NO_UI;
 
   ShellExecInfo.lpFile := PWideChar(ParamSet.Application);
 
@@ -43,6 +44,11 @@ begin
     ShellExecInfo.nShow := SW_SHOWNORMAL;
 
   WinCheck(ShellExecuteExW(ShellExecInfo), 'ShellExecuteExW');
+
+  // We use SEE_MASK_NOCLOSEPROCESS to get a handle to the process.
+  // The caller must close it after use.
+  FillChar(Result, SizeOf(Result), 0);
+  Result.hProcess := ShellExecInfo.hProcess;
 end;
 
 function TExecShellExecute.Supports(Parameter: TExecParam): Boolean;

@@ -8,7 +8,7 @@ uses
 type
   TExecRtlCreateUserProcess = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
 implementation
@@ -28,7 +28,8 @@ end;
 
 { TExecRtlCreateUserProcess }
 
-procedure TExecRtlCreateUserProcess.Execute(ParamSet: IExecProvider);
+function TExecRtlCreateUserProcess.Execute(ParamSet: IExecProvider):
+  TProcessInfo;
 var
   ProcessParams: PRtlUserProcessParameters;
   ProcessInfo: TRtlUserProcessInformation;
@@ -103,8 +104,11 @@ begin
     not ParamSet.CreateSuspended then
     NtResumeThread(ProcessInfo.Thread, nil);
 
-  NtClose(ProcessInfo.Thread);
-  NtClose(ProcessInfo.Process);
+  // The caller must close the handles to the newly created process and thread
+  Result.hProcess := ProcessInfo.Process;
+  Result.hThread := ProcessInfo.Thread;
+  Result.dwProcessId := Cardinal(ProcessInfo.ClientId.UniqueProcess);
+  Result.dwThreadId := Cardinal(ProcessInfo.ClientId.UniqueThread);
 end;
 
 function TExecRtlCreateUserProcess.Supports(Parameter: TExecParam): Boolean;

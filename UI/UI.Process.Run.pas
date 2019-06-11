@@ -135,9 +135,20 @@ begin
 end;
 
 procedure TDialogRun.ButtonRunClick(Sender: TObject);
+var
+  ProcInfo: TProcessInfo;
 begin
   if Assigned(ExecMethod) then
-    ExecMethod.Execute(Self)
+  begin
+    ProcInfo := ExecMethod.Execute(Self);
+
+    // TODO: check that the process didn't crash immediately
+    if ProcInfo.hProcess <> 0 then
+      NtxSafeClose(ProcInfo.hProcess);
+
+    if ProcInfo.hThread <> 0 then
+      NtxSafeClose(ProcInfo.hThread);
+  end
   else
     raise Exception.Create('No exec method available');
 end;

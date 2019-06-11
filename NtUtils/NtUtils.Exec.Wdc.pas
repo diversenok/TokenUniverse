@@ -8,7 +8,7 @@ uses
 type
   TExecCallWdc = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
 implementation
@@ -18,11 +18,11 @@ uses
 
 { TExecCallWdc }
 
-procedure TExecCallWdc.Execute(ParamSet: IExecProvider);
+function TExecCallWdc.Execute(ParamSet: IExecProvider): TProcessInfo;
 var
   CommandLine: String;
   CurrentDir: PWideChar;
-  Result: HRESULT;
+  ResultCode: HRESULT;
 begin
   CommandLine := PrepareCommandLine(ParamSet);
 
@@ -33,10 +33,14 @@ begin
 
   NtxCheckModuleDelayedImport(wdc, 'WdcRunTaskAsInteractiveUser').RaiseOnError;
 
-  Result := WdcRunTaskAsInteractiveUser(PWideChar(CommandLine), CurrentDir, 0);
+  ResultCode := WdcRunTaskAsInteractiveUser(PWideChar(CommandLine), CurrentDir,
+    0);
 
-  if not Succeeded(Result) then
-    raise ENtError.Create(Cardinal(Result), 'WdcRunTaskAsInteractiveUser');
+  if not Succeeded(ResultCode) then
+    raise ENtError.Create(Cardinal(ResultCode), 'WdcRunTaskAsInteractiveUser');
+
+  // The method does not provide any information about the newly created process
+  FillChar(Result, SizeOf(Result), 0);
 end;
 
 function TExecCallWdc.Supports(Parameter: TExecParam): Boolean;

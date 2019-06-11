@@ -3,7 +3,7 @@ unit NtUtils.Exec;
 interface
 
 uses
-  NtUtils.Exceptions;
+  NtUtils.Exceptions, Winapi.ProcessThreadsApi;
 
 type
   TExecParam = (
@@ -28,9 +28,11 @@ type
     function ShowWindowMode: Word;
   end;
 
+  TProcessInfo = Winapi.ProcessThreadsApi.TProcessInformation;
+
   IExecMethod = interface
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
   TDefaultExecProvider = class(TInterfacedObject, IExecProvider)

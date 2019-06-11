@@ -8,7 +8,7 @@ uses
 type
   TExecCallWmi = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
 implementation
@@ -59,7 +59,7 @@ end;
 
 { TExecCallWmi }
 
-procedure TExecCallWmi.Execute(ParamSet: IExecProvider);
+function TExecCallWmi.Execute(ParamSet: IExecProvider): TProcessInfo;
 var
   objProcess: OleVariant;
   hOldToken: THandle;
@@ -92,6 +92,10 @@ begin
         NtxSafeClose(hOldToken);
     end;
   end;
+
+  // Only process ID is available to return to the caller
+  FillChar(Result, SizeOf(Result), 0);
+  Result.dwProcessId := Cardinal(ProcessId);
 end;
 
 function TExecCallWmi.Supports(Parameter: TExecParam): Boolean;

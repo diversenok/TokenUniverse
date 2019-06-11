@@ -8,12 +8,12 @@ uses
 type
   TExecCreateProcessAsUser = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
   TExecCreateProcessWithToken = class(TInterfacedObject, IExecMethod)
     function Supports(Parameter: TExecParam): Boolean;
-    procedure Execute(ParamSet: IExecProvider);
+    function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
   TStartupInfoHolder = class
@@ -134,11 +134,11 @@ end;
 
 { TExecCreateProcessAsUser }
 
-procedure TExecCreateProcessAsUser.Execute(ParamSet: IExecProvider);
+function TExecCreateProcessAsUser.Execute(ParamSet: IExecProvider):
+  TProcessInfo;
 var
   CommandLine: String;
   CurrentDir: PWideChar;
-  ProcessInfo: TProcessInformation;
   Startup: TStartupInfoHolder;
 begin
   // Command line should be in writable memory
@@ -163,15 +163,14 @@ begin
       nil,
       CurrentDir,
       Startup.StartupInfoEx,
-      ProcessInfo
+      Result
       ), 'CreateProcessAsUserW'
     );
   finally
     Startup.Free;
   end;
 
-  NtClose(ProcessInfo.hProcess);
-  NtClose(ProcessInfo.hThread);
+  // The caller must close handles passed via TProcessInfo
 end;
 
 function TExecCreateProcessAsUser.Supports(Parameter: TExecParam): Boolean;
@@ -187,10 +186,10 @@ end;
 
 { TExecCreateProcessWithToken }
 
-procedure TExecCreateProcessWithToken.Execute(ParamSet: IExecProvider);
+function TExecCreateProcessWithToken.Execute(ParamSet: IExecProvider):
+  TProcessInfo;
 var
   CurrentDir: PWideChar;
-  ProcessInfo: TProcessInformation;
   Startup: TStartupInfoHolder;
 begin
   if ParamSet.Provides(ppCurrentDirectory) then
@@ -210,15 +209,14 @@ begin
       nil,
       CurrentDir,
       Startup.StartupInfoEx,
-      ProcessInfo
+      Result
       ), 'CreateProcessWithTokenW'
     );
   finally
     Startup.Free;
   end;
 
-  NtClose(ProcessInfo.hProcess);
-  NtClose(ProcessInfo.hThread);
+  // The caller must close handles passed via TProcessInfo
 end;
 
 function TExecCreateProcessWithToken.Supports(Parameter: TExecParam): Boolean;
