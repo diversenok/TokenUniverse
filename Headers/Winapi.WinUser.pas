@@ -47,7 +47,7 @@ type
   WPARAM = NativeUInt;
   LPARAM = NativeInt;
 
-  TStringArray = array of String;
+  TStringArray = Winapi.WinNt.TStringArray;
   TStringEnumProcW = function (Name: PWideChar; var Context: TStringArray):
     LongBool; stdcall;
 

@@ -130,6 +130,8 @@ const
   UNPROTECTED_SACL_SECURITY_INFORMATION = $10000000;
 
 type
+  TStringArray = array of String;
+
   // 823
   TLargeInteger = record
     QuadPart: Int64;

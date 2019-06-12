@@ -22,6 +22,11 @@ function NtxQueryNameObject(hObject: THandle; out Name: String): TNtxStatus;
 function NtxQueryBasicInfoObject(hObject: THandle;
   out Info: TObjectBasicInformaion): TNtxStatus;
 
+// Wait for an object to enter signaled state
+function NtxWaitForSingleObject(hObject: THandle; Alertable: Boolean;
+  Timeout: Int64): TNtxStatus; overload;
+function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;
+
 implementation
 
 uses
@@ -185,6 +190,23 @@ begin
   Result.Location := 'NtQueryObject [ObjectBasicInformation]';
   Result.Status := NtQueryObject(hObject, ObjectBasicInformation, @Info,
     SizeOf(Info), nil);
+end;
+
+function NtxWaitForSingleObject(hObject: THandle; Alertable: Boolean;
+  Timeout: Int64): TNtxStatus; overload;
+var
+  TimeOutValue: TLargeInteger;
+begin
+  TimeOutValue.QuadPart := Timeout;
+
+  Result.Location := 'NtWaitForSingleObject';
+  Result.Status := NtWaitForSingleObject(hObject, Alertable, TimeOutValue);
+end;
+
+function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;
+begin
+  Result.Location := 'NtWaitForSingleObject';
+  Result.Status := NtWaitForSingleObject(hObject, True, nil);
 end;
 
 end.

@@ -80,6 +80,11 @@ function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
 
+// Set token information
+function NtxSetInformationToken(hToken: THandle;
+  InfoClass: TTokenInformationClass; TokenInformation: Pointer;
+  TokenInformationLength: Cardinal): TNtxStatus;
+
 // Check whether two token handles reference the same kernel object
 function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
 
@@ -468,6 +473,15 @@ begin
 
     NtxSafeClose(hTokenRef);
   end;
+end;
+
+function NtxSetInformationToken(hToken: THandle;
+  InfoClass: TTokenInformationClass; TokenInformation: Pointer;
+  TokenInformationLength: Cardinal): TNtxStatus;
+begin
+  Result.Location := NtxFormatTokenSet(InfoClass);
+  Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
+    TokenInformationLength);
 end;
 
 function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;

@@ -3,7 +3,15 @@ unit NtUtils.Processes;
 interface
 
 uses
-  Winapi.WinNt, NtUtils.Exceptions;
+  Winapi.WinNt, Ntapi.ntpsapi, NtUtils.Exceptions;
+
+const
+  // Ntapi.ntpsapi
+  NtCurrentProcess: THandle = THandle(-1);
+  NtCurrentThread: THandle = THandle(-2);
+
+type
+  TProcessBasinInformation = Ntapi.ntpsapi.TProcessBasinInformation;
 
 // Open the process. Always succeeds for current process.
 function NtxOpenProcess(out hProcess: THandle; DesiredAccess: TAccessMask;
@@ -21,10 +29,14 @@ function NtxOpenCurrentProcess(out hProcess: THandle;
 function NtxOpenCurrentThread(out hThread: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 
-// Query process's image name in Win32 format
+// Query process' image name in Win32 format
 function NtxQueryImageProcess(hProcess: THandle;
   out FileName: String): TNtxStatus;
 function NtxTryQueryImageProcessById(PID: NativeUInt): String;
+
+// Query process' basic information
+function NtxQueryBasicInformationProcess(hProcess: THandle;
+  out BasicInfo: TProcessBasinInformation): TNtxStatus;
 
 // Fail if the current process is running under WoW64
 function NtxAssertNotWoW64: TNtxStatus;
@@ -32,7 +44,7 @@ function NtxAssertNotWoW64: TNtxStatus;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntobapi, NtUtils.Objects,
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, NtUtils.Objects,
   DelphiUtils.Strings, NtUtils.AccessMasks;
 
 function NtxpOpenProcess(out hProcess: THandle; DesiredAccess: TAccessMask;
@@ -159,6 +171,14 @@ begin
 
   NtxQueryImageProcess(hProcess, Result);
   NtxSafeClose(hProcess);
+end;
+
+function NtxQueryBasicInformationProcess(hProcess: THandle;
+  out BasicInfo: TProcessBasinInformation): TNtxStatus;
+begin
+  Result.Location := 'NtQueryInformationProcess';
+  Result.Status := NtQueryInformationProcess(hProcess, ProcessBasicInformation,
+    @BasicInfo, SizeOf(BasicInfo), nil);
 end;
 
 function NtxAssertNotWoW64: TNtxStatus;

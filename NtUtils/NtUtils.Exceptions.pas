@@ -23,6 +23,7 @@ type
     property WinError: Cardinal read GetWinError write SetWinError;
     function IsSuccess: Boolean;
     procedure RaiseOnError;
+    procedure ReportOnError;
     function Matches(Status: NTSTATUS; Location: String): Boolean;
     function ToString: String;
     function MessageHint: String;
@@ -109,6 +110,12 @@ procedure TNtxStatus.RaiseOnError;
 begin
   if not NT_SUCCESS(Status) then
     raise ENtError.Create(Status, Location);
+end;
+
+procedure TNtxStatus.ReportOnError;
+begin
+  if not NT_SUCCESS(Status) then
+    ENtError.Report(Status, Location);
 end;
 
 procedure TNtxStatus.SetWinError(Value: Cardinal);
@@ -221,6 +228,8 @@ begin
   else if RtlGetLastWin32Error = ERROR_INSUFFICIENT_BUFFER then
     // Explicitly convert to use with buffer checks
     Result := STATUS_BUFFER_TOO_SMALL
+  else if RtlGetLastWin32Error = ERROR_ACCESS_DENIED   then
+    Result := STATUS_ACCESS_DENIED
   else
     Result := NTSTATUS_FROM_WIN32(RtlGetLastWin32Error);
 end;
