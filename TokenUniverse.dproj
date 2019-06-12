@@ -286,6 +286,8 @@
         <DCCReference Include="Headers\Winapi.Svc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.Logon.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Svc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Svc.SingleTaskSvc.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

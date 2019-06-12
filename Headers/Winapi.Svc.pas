@@ -118,7 +118,7 @@ type
   PServiceArgsW = ^TServiceArgsW;
 
   // 868
-  TServiceMainFunction = procedure (dwNumServicesArgs: Cardinal;
+  TServiceMainFunction = procedure (dwNumServicesArgs: Integer;
     lpServiceArgVectors: PServiceArgsW) stdcall;
 
   // 893

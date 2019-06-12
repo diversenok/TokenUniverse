@@ -94,7 +94,9 @@ uses
   NtUtils.Security.Acl in 'NtUtils\NtUtils.Security.Acl.pas',
   Winapi.Svc in 'Headers\Winapi.Svc.pas',
   NtUtils.Tokens.Logon in 'NtUtils\NtUtils.Tokens.Logon.pas',
-  NtUtils.Tokens.Misc in 'NtUtils\NtUtils.Tokens.Misc.pas';
+  NtUtils.Tokens.Misc in 'NtUtils\NtUtils.Tokens.Misc.pas',
+  NtUtils.Svc in 'NtUtils\NtUtils.Svc.pas',
+  NtUtils.Svc.SingleTaskSvc in 'NtUtils\NtUtils.Svc.SingleTaskSvc.pas';
 
 {$R *.res}
 
