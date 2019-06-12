@@ -122,7 +122,7 @@ begin
   MenuClearParentClick(Sender);
 
   ClientIdEx := TProcessListDialog.Execute(Self, False);
-  NtxOpenProcess(hParentProcess, PROCESS_DUP_HANDLE,
+  NtxOpenProcess(hParentProcess, PROCESS_CREATE_PROCESS,
     ClientIdEx.ProcessID).RaiseOnError;
 
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
@@ -143,11 +143,7 @@ begin
     ProcInfo := ExecMethod.Execute(Self);
 
     // TODO: check that the process didn't crash immediately
-    if ProcInfo.hProcess <> 0 then
-      NtxSafeClose(ProcInfo.hProcess);
-
-    if ProcInfo.hThread <> 0 then
-      NtxSafeClose(ProcInfo.hThread);
+    FreeProcessInfo(ProcInfo);
   end
   else
     raise Exception.Create('No exec method available');
