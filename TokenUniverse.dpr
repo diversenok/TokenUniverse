@@ -104,14 +104,14 @@ begin
   // Running as a service
   if ParamStr(1) = RESVC_PARAM then
   begin
-    ReSvcMain;
+    SvcxMain(RESVC_NAME, ReSvcRunInSession);
     Exit;
   end;
 
   // The user delegated us to create a service
   if ParamStr(1) = DELEGATE_PARAM then
   begin
-    ReSvcCreateService(ParamStr(2) = RESVC_SYSPLUS_PARAM);
+    ReSvcCreateService(ParamStr(2) = RESVC_SYSPLUS_PARAM).RaiseOnError;
     Exit;
   end;
 

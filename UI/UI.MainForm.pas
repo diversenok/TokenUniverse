@@ -92,7 +92,6 @@ type
     procedure MenuExitClick(Sender: TObject);
     procedure NewNtCreateTokenClick(Sender: TObject);
     procedure SelectColumnsClick(Sender: TObject);
-    procedure RunAsSystemPlusClick(Sender: TObject);
     procedure MenuCloseCreationDlgClick(Sender: TObject);
     procedure MenuPromptHandleCloseClick(Sender: TObject);
     procedure FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
@@ -125,12 +124,12 @@ var
 implementation
 
 uses
-  System.UITypes, TU.Tokens.Types, Winapi.WinNt,
+  System.UITypes, TU.Tokens.Types, Winapi.WinNt, NtUtils.Exceptions,
   NtUtils.Snapshots.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
-  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run;
+  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus;
 
 {$R *.dfm}
 
@@ -391,35 +390,26 @@ end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
 begin
-  ReSvcDelegate(Handle, False, False);
+  ReSvcDelegate(rmElevate);
   Close;
 end;
 
 procedure TFormMain.RunAsSystemClick(Sender: TObject);
+var
+  Status: TNtxStatus;
 begin
-  try
-    ReSvcCreateService(False);
-  except
-    on E: EOSError do
-      if E.ErrorCode = ERROR_ACCESS_DENIED then
-        ReSvcDelegate(Handle, True, False);
-      else
-        raise;
-  end;
-  Close;
-end;
+  Status := ReSvcCreateService(Sender = RunAsSystemPlus);
 
-procedure TFormMain.RunAsSystemPlusClick(Sender: TObject);
-begin
-  try
-    ReSvcCreateService(True);
-  except
-    on E: EOSError do
-      if E.ErrorCode = ERROR_ACCESS_DENIED then
-        ReSvcDelegate(Handle, True, True);
-      else
-        raise;
-  end;
+  if Status.Status = STATUS_ACCESS_DENIED then
+  begin
+    if Sender = RunAsSystemPlus then
+      ReSvcDelegate(rmDelegateSystemPlus)
+    else
+      ReSvcDelegate(rmDelegateSystem);
+  end
+  else
+    Status.RaiseOnError;
+
   Close;
 end;
 
