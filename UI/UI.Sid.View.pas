@@ -70,7 +70,7 @@ begin
   begin
     Sid := SrcSid;
 
-    Caption := Caption + '"' + Sid.Lookup.FullName +'"';
+    Caption := Caption + ' for "' + Sid.Lookup.FullName +'"';
 
     if Sid.Lookup.HasName then
       EditFullName.Text := Sid.Lookup.FullName;

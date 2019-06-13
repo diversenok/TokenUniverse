@@ -510,7 +510,7 @@ type
   PTokenAppContainer = ^TTokenAppContainer;
 
   // 11051
-  TClainSecurityAttributeV1 = record
+  TClaimSecurityAttributeV1 = record
     Name: PWideChar;
     ValueType: Word;
     Reserved: Word;
@@ -518,14 +518,14 @@ type
     ValueCount: Integer;
     Values: Pointer;
   end;
-  PClainSecurityAttributeV1 = ^TClainSecurityAttributeV1;
+  PClaimSecurityAttributeV1 = ^TClaimSecurityAttributeV1;
 
   // 11170
   TClaimSecurityAttributes = record
     Version: Word;
     Reserved: Word;
     AttributeCount: Cardinal;
-    Attribute: PClainSecurityAttributeV1;
+    Attribute: PClaimSecurityAttributeV1;
   end;
   PClaimSecurityAttributes = ^TClaimSecurityAttributes;
 
