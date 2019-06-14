@@ -36,11 +36,15 @@ const
   POLICY_LOOKUP_NAMES = $00000800;
   POLICY_NOTIFICATION = $00001000;
 
+  POLICY_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $0FFF;
+
   // 2452
   ACCOUNT_VIEW = $00000001;
   ACCOUNT_ADJUST_PRIVILEGES = $00000002;
   ACCOUNT_ADJUST_QUOTAS = $00000004;
   ACCOUNT_ADJUST_SYSTEM_ACCESS = $00000008;
+
+  ACCOUNT_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $000F;
 
   // 3627, see SECURITY_ACCESS_*
   SE_INTERACTIVE_LOGON_NAME = 'SeInteractiveLogonRight';
@@ -125,9 +129,9 @@ function LsaQuerySecurityObject(ObjectHandle: TLsaHandle;
   PSecurityDescriptor): NTSTATUS; stdcall; external advapi32;
 
 // 3031
-function LsaSetSecurityObject(ObjectHandle: TLargeInteger;
-  SecurityInformation: TSecurityInformation; SecurityDescriptor:
-  PSecurityDescriptor): NTSTATUS; stdcall; external advapi32;
+function LsaSetSecurityObject(ObjectHandle: TLsaHandle;
+  SecurityInformation: TSecurityInformation; const SecurityDescriptor:
+  TSecurityDescriptor): NTSTATUS; stdcall; external advapi32;
 
 // 3108
 function LsaOpenPolicy(SystemName: PLsaUnicodeString;

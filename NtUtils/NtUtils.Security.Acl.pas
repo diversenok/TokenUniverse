@@ -61,6 +61,14 @@ function NtxQueryLabelObject(hObject: THandle; out Sacl: IAcl): TNtxStatus;
 
   { Set security }
 
+// Prepare security descriptor
+function RtlxCreateSecurityDescriptor(var SecDesc: TSecurityDescriptor):
+  TNtxStatus;
+
+// Set security descriptor
+function NtxSetSecurityObject(hObject: THandle; SecInfo: TSecurityInformation;
+  const SecDesc: TSecurityDescriptor): TNtxStatus;
+
 // Set owner of an object
 function NtxSetOwnerObject(hObject: THandle; Owner: ISid): TNtxStatus;
 
@@ -249,30 +257,28 @@ begin
   begin
     FreeMem(SecDesc);
     SecDesc := nil;
-    Exit;
   end;
 end;
 
 // Owner
 function NtxQueryOwnerObject(hObject: THandle; out Owner: ISid): TNtxStatus;
 var
-  SecDesc: PSecurityDescriptor;
+  pSD: PSecurityDescriptor;
   Defaulted: Boolean;
   OwnerSid: PSid;
 begin
-  Result := NtxQuerySecurityObject(hObject, OWNER_SECURITY_INFORMATION,
-    SecDesc);
+  Result := NtxQuerySecurityObject(hObject, OWNER_SECURITY_INFORMATION, pSD);
 
   if not Result.IsSuccess then
     Exit;
 
   Result.Location := 'RtlGetOwnerSecurityDescriptor';
-  Result.Status := RtlGetOwnerSecurityDescriptor(SecDesc, OwnerSid,  Defaulted);
+  Result.Status := RtlGetOwnerSecurityDescriptor(pSD, OwnerSid,  Defaulted);
 
   if Result.IsSuccess then
     Owner := TSid.CreateCopy(OwnerSid);
 
-  FreeMem(SecDesc);
+  FreeMem(pSD);
 end;
 
 // Primary group
@@ -371,16 +377,28 @@ end;
 
 { Set security funtions }
 
+function RtlxCreateSecurityDescriptor(var SecDesc: TSecurityDescriptor):
+  TNtxStatus;
+begin
+  FillChar(SecDesc, SizeOf(SecDesc), 0);
+  Result.Location := 'RtlCreateSecurityDescriptor';
+  Result.Status := RtlCreateSecurityDescriptor(SecDesc,
+    SECURITY_DESCRIPTOR_REVISION);
+end;
+
+function NtxSetSecurityObject(hObject: THandle; SecInfo: TSecurityInformation;
+  const SecDesc: TSecurityDescriptor): TNtxStatus;
+begin
+  Result.Location := 'NtSetSecurityObject';
+  Result.Status := NtSetSecurityObject(hObject, SecInfo, SecDesc);
+end;
+
 // Owner
 function NtxSetOwnerObject(hObject: THandle; Owner: ISid): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  FillChar(SD, SizeOf(SD), 0);
-
-  Result.Location := 'RtlCreateSecurityDescriptor';
-  Result.Status := RtlCreateSecurityDescriptor(SD,
-    SECURITY_DESCRIPTOR_REVISION);
+  Result := RtlxCreateSecurityDescriptor(SD);
 
   if not Result.IsSuccess then
     Exit;
@@ -395,8 +413,7 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'NtSetSecurityObject';
-  Result.Status := NtSetSecurityObject(hObject, OWNER_SECURITY_INFORMATION, SD);
+  Result := NtxSetSecurityObject(hObject, OWNER_SECURITY_INFORMATION, SD);
 end;
 
 // Primary group
@@ -404,11 +421,7 @@ function NtxSetPrimaryGroupObject(hObject: THandle; Group: ISid): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  FillChar(SD, SizeOf(SD), 0);
-
-  Result.Location := 'RtlCreateSecurityDescriptor';
-  Result.Status := RtlCreateSecurityDescriptor(SD,
-    SECURITY_DESCRIPTOR_REVISION);
+  Result := RtlxCreateSecurityDescriptor(SD);
 
   if not Result.IsSuccess then
     Exit;
@@ -423,8 +436,7 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'NtSetSecurityObject';
-  Result.Status := NtSetSecurityObject(hObject, GROUP_SECURITY_INFORMATION, SD);
+  Result := NtxSetSecurityObject(hObject, GROUP_SECURITY_INFORMATION, SD);
 end;
 
 // DACL
@@ -432,11 +444,7 @@ function NtxSetDaclObject(hObject: THandle; Dacl: IAcl): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  FillChar(SD, SizeOf(SD), 0);
-
-  Result.Location := 'RtlCreateSecurityDescriptor';
-  Result.Status := RtlCreateSecurityDescriptor(SD,
-    SECURITY_DESCRIPTOR_REVISION);
+  Result := RtlxCreateSecurityDescriptor(SD);
 
   if not Result.IsSuccess then
     Exit;
@@ -451,8 +459,7 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'NtSetSecurityObject';
-  Result.Status := NtSetSecurityObject(hObject, DACL_SECURITY_INFORMATION, SD);
+  Result := NtxSetSecurityObject(hObject, DACL_SECURITY_INFORMATION, SD);
 end;
 
 // SACL
@@ -460,11 +467,7 @@ function NtxSetSaclObject(hObject: THandle; Sacl: IAcl): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  FillChar(SD, SizeOf(SD), 0);
-
-  Result.Location := 'RtlCreateSecurityDescriptor';
-  Result.Status := RtlCreateSecurityDescriptor(SD,
-    SECURITY_DESCRIPTOR_REVISION);
+  Result := RtlxCreateSecurityDescriptor(SD);
 
   if not Result.IsSuccess then
     Exit;
@@ -479,8 +482,7 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'NtSetSecurityObject';
-  Result.Status := NtSetSecurityObject(hObject, SACL_SECURITY_INFORMATION, SD);
+  Result := NtxSetSecurityObject(hObject, SACL_SECURITY_INFORMATION, SD);
 end;
 
 // Mandatory label
@@ -488,11 +490,7 @@ function NtxSetLabelObject(hObject: THandle; Sacl: IAcl): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  FillChar(SD, SizeOf(SD), 0);
-
-  Result.Location := 'RtlCreateSecurityDescriptor';
-  Result.Status := RtlCreateSecurityDescriptor(SD,
-    SECURITY_DESCRIPTOR_REVISION);
+  Result := RtlxCreateSecurityDescriptor(SD);
 
   if not Result.IsSuccess then
     Exit;
@@ -507,8 +505,7 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'NtSetSecurityObject';
-  Result.Status := NtSetSecurityObject(hObject, LABEL_SECURITY_INFORMATION, SD);
+  Result := NtxSetSecurityObject(hObject, LABEL_SECURITY_INFORMATION, SD);
 end;
 
 end.

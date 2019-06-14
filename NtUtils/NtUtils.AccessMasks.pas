@@ -6,7 +6,7 @@ uses
   Winapi.WinNt;
 
 type
-  TAccessMaskType = (objProcess, objThread, objToken);
+  TAccessMaskType = (objProcess, objThread, objToken, objPolicy, objAccount);
 
 function FormatAccess(Access: TAccessMask; MaskType: TAccessMaskType): String;
 function FormatAccessPrefixed(Access: TAccessMask;
@@ -15,7 +15,7 @@ function FormatAccessPrefixed(Access: TAccessMask;
 implementation
 
 uses
-  DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi;
+  DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -77,8 +77,32 @@ const
     (Value: TOKEN_ADJUST_SESSIONID;  Name: 'Adjust session ID')
   );
 
+  SpecificAccessPolicy: array [0..12] of TFlagName = (
+    (Value: POLICY_VIEW_LOCAL_INFORMATION;   Name: 'View local information'),
+    (Value: POLICY_VIEW_AUDIT_INFORMATION;   Name: 'View audit information'),
+    (Value: POLICY_GET_PRIVATE_INFORMATION;  Name: 'Get private information'),
+    (Value: POLICY_TRUST_ADMIN;              Name: 'Trust admin'),
+    (Value: POLICY_CREATE_ACCOUNT;           Name: 'Create account'),
+    (Value: POLICY_CREATE_SECRET;            Name: 'Create secret'),
+    (Value: POLICY_CREATE_PRIVILEGE;         Name: 'Create privilege'),
+    (Value: POLICY_SET_DEFAULT_QUOTA_LIMITS; Name: 'Set default quota'),
+    (Value: POLICY_SET_AUDIT_REQUIREMENTS;   Name: 'Set audit requirements'),
+    (Value: POLICY_AUDIT_LOG_ADMIN;          Name: 'Audit log admin'),
+    (Value: POLICY_SERVER_ADMIN;             Name: 'Server admin'),
+    (Value: POLICY_LOOKUP_NAMES;             Name: 'Lookup names'),
+    (Value: POLICY_NOTIFICATION;             Name: 'Notification')
+  );
+
+  SpecificAccessAccount: array [0..3] of TFlagName = (
+    (Value: ACCOUNT_VIEW;                 Name: 'View'),
+    (Value: ACCOUNT_ADJUST_PRIVILEGES;    Name: 'Adjust privileges'),
+    (Value: ACCOUNT_ADJUST_QUOTAS;        Name: 'Adjust quotas'),
+    (Value: ACCOUNT_ADJUST_SYSTEM_ACCESS; Name: 'Adjust system access')
+  );
+
   FullAccessForType: array [TAccessMaskType] of Cardinal = (
-    PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS
+    PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS, POLICY_ALL_ACCESS,
+    ACCOUNT_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -103,6 +127,8 @@ var
 begin
   if Access = 0 then
     Exit('No access');
+
+  Result := '';
 
   // Map and exclude full access
   if Contains(Access, FullAccessForType[MaskType]) then
@@ -133,17 +159,34 @@ begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessToken));
       ExcludeFlags(Access, SpecificAccessToken);
     end;
+
+    objPolicy:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessPolicy));
+      ExcludeFlags(Access, SpecificAccessPolicy);
+    end;
+
+    objAccount:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessAccount));
+      ExcludeFlags(Access, SpecificAccessAccount);
+    end;
   end;
+
+  if Access = 0 then
+    Exit;
 
   // Map and exclude standard, generic, and other access rights
   ConcatFlags(Result, MapFlags(Access, NonSpecificAccess));
   ExcludeFlags(Access, NonSpecificAccess);
 
+  if Access = 0 then
+    Exit;
+
   // Map unknown and reserved bits as hex values
-  if Access <> 0 then
-    for i := 0 to 31 do
-      if Contains(Access, 1 shl i) then
-        ConcatFlags(Result, IntToHexEx(1 shl i, 8));
+  for i := 0 to 31 do
+    if Contains(Access, 1 shl i) then
+      ConcatFlags(Result, IntToHexEx(1 shl i, 8));
 end;
 
 function FormatAccessPrefixed(Access: TAccessMask;
