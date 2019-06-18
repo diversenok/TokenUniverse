@@ -3,7 +3,7 @@ unit NtUtils.Security.Sid;
 interface
 
 uses
-  Winapi.WinNt, Winapi.securitybaseapi, NtUtils.Lsa;
+  Winapi.WinNt, Winapi.securitybaseapi, NtUtils.Exceptions;
 
 const
   SE_GROUP_USER_DEFAULT = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
@@ -13,7 +13,14 @@ const
                        SE_GROUP_RESOURCE or SE_GROUP_LOGON_ID;
 
 type
-  TTranslatedName = NtUtils.Lsa.TTranslatedName;
+  TTranslatedName = record
+    DomainName, UserName, SDDL: String;
+    SidType: TSidNameUse;
+    function HasName: Boolean;
+    function FullName: String;
+  end;
+
+  TTranslatedNames = array of TTranslatedName;
 
   ISid = interface
     function Sid: PSid;
@@ -66,7 +73,26 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.Sddl,
-  NtUtils.Exceptions, DelphiUtils.Strings, System.SysUtils;
+  NtUtils.Lsa, DelphiUtils.Strings, System.SysUtils;
+
+{ TTranslatedName }
+
+function TTranslatedName.FullName: String;
+begin
+  if (UserName <> '') and (DomainName <> '') then
+    Result := DomainName + '\' + UserName
+  else if (DomainName <> '') then
+    Result := DomainName
+  else if (UserName <> '') then
+    Result := UserName
+  else
+    Result := SDDL;
+end;
+
+function TTranslatedName.HasName: Boolean;
+begin
+  Result := (UserName <> '') or (DomainName <> '');
+end;
 
 { TSid }
 
@@ -118,13 +144,16 @@ end;
 constructor TSid.CreateFromString(AccountOrSID: String);
 var
   Status: TNtxStatus;
+  LookupSid: ISid;
 begin
   // Since someone might create an account which name is a valid SDDL string,
   // lookup the account name first. Parse it as SDDL only if this lookup failed.
 
-  Status := LsaxLookupUserName(AccountOrSID, FSid);
+  Status := LsaxLookupUserName(AccountOrSID, LookupSid);
 
-  if not Status.IsSuccess and AccountOrSID.StartsWith('S-1-', True) then
+  if Status.IsSuccess then
+    CreateCopy(LookupSid.Sid)
+  else if AccountOrSID.StartsWith('S-1-', True) then
     Status := RtlxConvertStringToSid(AccountOrSID, FSid);
 
   Status.RaiseOnError;

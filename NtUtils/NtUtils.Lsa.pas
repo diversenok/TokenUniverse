@@ -3,10 +3,12 @@ unit NtUtils.Lsa;
 interface
 
 uses
-  Winapi.WinNt, NtUtils.Exceptions;
+  Winapi.WinNt, Winapi.ntlsa, NtUtils.Exceptions, NtUtils.Security.Sid;
 
 type
   TNtxStatus = NtUtils.Exceptions.TNtxStatus;
+  TTranslatedName = NtUtils.Security.Sid.TTranslatedName;
+  TLsaHandle = Winapi.ntlsa.TLsaHandle;
 
   TPrivilegeDefinition = record
     Name: String;
@@ -23,18 +25,26 @@ type
 
   TLogonRightRecArray = array of TLogonRightRec;
 
-  TTranslatedName = record
-    DomainName, UserName, SDDL: String;
-    SidType: TSidNameUse;
-    function HasName: Boolean;
-    function FullName: String;
-  end;
+{ ---------------------------- Basic operations ----------------------------- }
 
-  TTranslatedNames = array of TTranslatedName;
+// Open LSA for desired access
+function LsaxOpenPolicy(out PolicyHandle: TLsaHandle;
+  DesiredAccess: TAccessMask): TNtxStatus;
+
+// Close LSA handle
+procedure LsaxClose(var LsaHandle: TLsaHandle);
+
+// Open an account from LSA database
+function LsaxOpenAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
+  DesiredAccess: TAccessMask): TNtxStatus;
+
+// Add an account to LSA database
+function LsaxCreateAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
+  DesiredAccess: TAccessMask): TNtxStatus;
 
 { -------------------------------- Privileges ------------------------------- }
 
-// LsaEnumeratePrivileges
+// Enumerate all privileges on the system
 function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
 
 // LsaLookupPrivilegeName
@@ -74,7 +84,7 @@ function LsaxLookupSid(Sid: PSid): TTranslatedName;
 function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
 
 // LsaLookupNames2, on success the SID buffer must be freed using FreeMem
-function LsaxLookupUserName(UserName: String; out Sid: PSid): TNtxStatus;
+function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
 
 { ------------------------------ Logon Sessions ----------------------------- }
 
@@ -84,109 +94,167 @@ function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Winapi.ntlsa, Winapi.NtSecApi, Ntapi.ntrtl,
-  Ntapi.ntseapi, System.SysUtils, NtUtils.Security.Sid;
+  Ntapi.ntdef, Ntapi.ntstatus, Winapi.NtSecApi, Ntapi.ntseapi, System.SysUtils,
+  NtUtils.AccessMasks;
+
+{ Basic operation }
+
+var
+  // A cache handle for lookup queries
+  hPolicyLookupCached: TLsaHandle = 0;
+
+function LsaxOpenPolicy(out PolicyHandle: TLsaHandle; DesiredAccess: TAccessMask):
+  TNtxStatus;
+var
+  ObjAttr: TObjectAttributes;
+begin
+  // Use cached lookup handle if applicable
+  if (DesiredAccess = POLICY_LOOKUP_NAMES) and (hPolicyLookupCached <> 0) then
+  begin
+    PolicyHandle := hPolicyLookupCached;
+    Result.Status := STATUS_SUCCESS;
+    Exit;
+  end;
+
+  InitializeObjectAttributes(ObjAttr);
+
+  Result.Location := 'LsaOpenPolicy for ' + FormatAccess(DesiredAccess,
+    objPolicy);
+  Result.Status := LsaOpenPolicy(nil, ObjAttr, DesiredAccess, PolicyHandle);
+
+  // Cache lookup handle to optimize queries and to make sure we can lookup
+  // names as much time as possible as we change our security context.
+  if (DesiredAccess = POLICY_LOOKUP_NAMES) and Result.IsSuccess then
+    hPolicyLookupCached := PolicyHandle;
+end;
+
+procedure LsaxClose(var LsaHandle: TLsaHandle);
+begin
+  if LsaHandle <> hPolicyLookupCached then
+  begin
+    LsaClose(LsaHandle);
+    LsaHandle := 0;
+  end;
+end;
+
+function LsaxOpenAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
+  DesiredAccess: TAccessMask): TNtxStatus;
+var
+  hPolicy: TLsaHandle;
+begin
+  Result := LsaxOpenPolicy(hPolicy, POLICY_VIEW_LOCAL_INFORMATION);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result.Location := 'LsaOpenAccount for ' + FormatAccess(DesiredAccess,
+    objAccount);
+  Result.Status := LsaOpenAccount(hPolicy, AccountSid, DesiredAccess,
+    AccountHandle);
+
+  LsaxClose(hPolicy);
+end;
+
+function LsaxCreateAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
+  DesiredAccess: TAccessMask): TNtxStatus;
+var
+  hPolicy: TLsaHandle;
+begin
+  Result := LsaxOpenPolicy(hPolicy, POLICY_CREATE_ACCOUNT);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result.Location := 'LsaCreateAccount';
+  Result.Status := LsaCreateAccount(hPolicy, AccountSid, DesiredAccess,
+    AccountHandle);
+
+  LsaxClose(hPolicy);
+end;
 
 { Privileges }
 
 function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
 var
-  ObjAttr: TObjectAttributes;
   hPolicy: TLsaHandle;
   EnumContext: Cardinal;
   Count, i: Integer;
-  Buf: PPolicyPrivilegeDefinitionArray;
+  Buffer: PPolicyPrivilegeDefinitionArray;
 begin
-  SetLength(Privileges, 0);
-  InitializeObjectAttributes(ObjAttr);
+  Result := LsaxOpenPolicy(hPolicy, POLICY_VIEW_LOCAL_INFORMATION);
 
-  Result.Location := 'LsaOpenPolicy';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
-    hPolicy);
+  if not Result.IsSuccess then
+    Exit;
 
-  if NT_SUCCESS(Result.Status) then
+  EnumContext := 0;
+  Result.Location := 'LsaEnumeratePrivileges';
+  Result.Status := LsaEnumeratePrivileges(hPolicy, EnumContext, Buffer,
+    MAX_PREFERRED_LENGTH, Count);
+
+  if Result.IsSuccess then
   begin
-    EnumContext := 0;
+    SetLength(Privileges, Count);
 
-    Result.Location := 'LsaEnumeratePrivileges';
-    Result.Status := LsaEnumeratePrivileges(hPolicy, EnumContext, Buf,
-      MAX_PREFERRED_LENGTH, Count);
-
-    if NT_SUCCESS(Result.Status) then
+    for i := 0 to Count - 1 do
     begin
-      SetLength(Privileges, Count);
-
-      for i := 0 to Count - 1 do
-      begin
-        Privileges[i].Name := Buf[i].Name.ToString;
-        Privileges[i].LocalValue := Buf[i].LocalValue;
-      end;
-
-      LsaFreeMemory(Buf);
+      Privileges[i].Name := Buffer[i].Name.ToString;
+      Privileges[i].LocalValue := Buffer[i].LocalValue;
     end;
 
-    LsaClose(hPolicy);
+    LsaFreeMemory(Buffer);
   end;
+
+  LsaxClose(hPolicy);
 end;
 
 function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): TNtxStatus;
 var
-  ObjAttr: TObjectAttributes;
   hPolicy: TLsaHandle;
-  NameBuf: PLsaUnicodeString;
+  Buffer: PLsaUnicodeString;
 begin
-  Name := '';
-  InitializeObjectAttributes(ObjAttr);
+  Result := LsaxOpenPolicy(hPolicy, POLICY_LOOKUP_NAMES);
 
-  Result.Location := 'LsaOpenPolicy';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, hPolicy);
+  if not Result.IsSuccess then
+    Exit;
 
-  if NT_SUCCESS(Result.Status) then
+  Result.Location := 'LsaLookupPrivilegeName';
+  Result.Status := LsaLookupPrivilegeName(hPolicy, Luid, Buffer);
+
+  if Result.IsSuccess then
   begin
-    Result.Location := 'LsaLookupPrivilegeName';
-    Result.Status := LsaLookupPrivilegeName(hPolicy, Luid, NameBuf);
-
-    if NT_SUCCESS(Result.Status) then
-    begin
-      Name := NameBuf.ToString;
-      LsaFreeMemory(NameBuf);
-    end;
-
-    LsaClose(hPolicy);
+    Name := Buffer.ToString;
+    LsaFreeMemory(Buffer);
   end;
+
+  LsaxClose(hPolicy);
 end;
 
 function LsaxQueryDescriptionPrivilege(const Name: String;
   out DisplayName: String): TNtxStatus;
 var
-  ObjAttr: TObjectAttributes;
   hPolicy: TLsaHandle;
-  NameBuf: TLsaUnicodeString;
-  DisplayNameBuf: PLsaUnicodeString;
+  NameStr: TLsaUnicodeString;
+  BufferDisplayName: PLsaUnicodeString;
   LangId: SmallInt;
 begin
-  DisplayName := '';
-  InitializeObjectAttributes(ObjAttr);
+  Result := LsaxOpenPolicy(hPolicy, POLICY_LOOKUP_NAMES);
 
-  Result.Location := 'LsaOpenPolicy';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, hPolicy);
+  if not Result.IsSuccess then
+    Exit;
 
-  if NT_SUCCESS(Result.Status) then
+  NameStr.FromString(Name);
+
+  Result.Location := 'LsaLookupPrivilegeDisplayName';
+  Result.Status := LsaLookupPrivilegeDisplayName(hPolicy, NameStr,
+    BufferDisplayName, LangId);
+
+  if Result.IsSuccess then
   begin
-    NameBuf.FromString(Name);
-
-    Result.Location := 'LsaLookupPrivilegeDisplayName';
-    Result.Status := LsaLookupPrivilegeDisplayName(hPolicy, NameBuf,
-      DisplayNameBuf, LangId);
-
-    if NT_SUCCESS(Result.Status) then
-    begin
-      DisplayName := DisplayNameBuf.ToString;
-      LsaFreeMemory(DisplayNameBuf);
-    end;
-
-    LsaClose(hPolicy);
+    DisplayName := BufferDisplayName.ToString;
+    LsaFreeMemory(BufferDisplayName);
   end;
+
+  LsaxClose(hPolicy);
 end;
 
 function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
@@ -226,39 +294,27 @@ end;
 function LsaxEnumerateAccountPrivileges(Sid: PSid;
   out Privileges: TPrivilegeArray): TNtxStatus;
 var
-  LsaHandle, AccountHandle: TLsaHandle;
-  ObjAttr: TObjectAttributes;
+  hAccount: TLsaHandle;
   PrivilegeSet: PPrivilegeSet;
   i: Integer;
 begin
-  SetLength(Privileges, 0);
-  InitializeObjectAttributes(ObjAttr);
+  Result := LsaxOpenAccount(hAccount, Sid, ACCOUNT_VIEW);
 
-  Result.Location := 'LsaOpenPolicy';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
-    LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
-    Exit;
-
-  Result.Location := 'LsaOpenAccount';
-  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_VIEW, AccountHandle);
-  LsaClose(LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
+  if not Result.IsSuccess then
     Exit;
 
   Result.Location := 'LsaEnumeratePrivilegesOfAccount';
-  Result.Status := LsaEnumeratePrivilegesOfAccount(AccountHandle, PrivilegeSet);
-  LsaClose(AccountHandle);
+  Result.Status := LsaEnumeratePrivilegesOfAccount(hAccount, PrivilegeSet);
 
-  if not NT_SUCCESS(Result.Status) then
-    Exit;
+  LsaxClose(hAccount);
 
-  SetLength(Privileges, PrivilegeSet.PrivilegeCount);
+  if Result.IsSuccess then
+  begin
+    SetLength(Privileges, PrivilegeSet.PrivilegeCount);
 
-  for i := 0 to High(Privileges) do
-    Privileges[i] := PrivilegeSet.Privilege[i];
+    for i := 0 to High(Privileges) do
+      Privileges[i] := PrivilegeSet.Privilege[i];
+  end;
 
   LsaFreeMemory(PrivilegeSet);
 end;
@@ -266,45 +322,17 @@ end;
 function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
   PrivilegesToAdd, PrivilegesToRemove: TPrivilegeArray): TNtxStatus;
 var
-  ObjAttr: TObjectAttributes;
-  LsaHandle, AccountHandle: TLsaHandle;
+  hAccount: TLsaHandle;
   PrivSet: PPrivilegeSet;
   i: Integer;
 begin
-  InitializeObjectAttributes(ObjAttr);
-
-  Result.Location := 'LsaOpenPolicy for POLICY_VIEW_LOCAL_INFORMATION';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
-    LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
-    Exit;
-
-  Result.Location := 'LsaOpenAccount for ACCOUNT_ADJUST_PRIVILEGES';
-  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_ADJUST_PRIVILEGES,
-    AccountHandle);
-
-  LsaClose(LsaHandle);
+  Result := LsaxOpenAccount(hAccount, Sid, ACCOUNT_ADJUST_PRIVILEGES);
 
   // If the account does not exist in the LSA database we should create it
   if Result.Status = STATUS_OBJECT_NAME_NOT_FOUND then
-  begin
-    // Connect to LSA for creating a new account
-    Result.Location := 'LsaOpenPolicy for POLICY_CREATE_ACCOUNT';
-    Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_CREATE_ACCOUNT,
-      LsaHandle);
+    Result := LsaxCreateAccount(hAccount, Sid, ACCOUNT_ADJUST_PRIVILEGES);
 
-    if not NT_SUCCESS(Result.Status) then
-      Exit;
-
-    Result.Location := 'LsaCreateAccount for ACCOUNT_ADJUST_PRIVILEGES';
-    Result.Status := LsaCreateAccount(LsaHandle, Sid,
-      ACCOUNT_ADJUST_PRIVILEGES, AccountHandle);
-
-    LsaClose(LsaHandle);
-  end;
-
-  if not NT_SUCCESS(Result.Status) then
+  if not Result.IsSuccess then
     Exit;
 
   // Add privileges
@@ -321,15 +349,15 @@ begin
         PrivSet.Privilege[i] := PrivilegesToAdd[i];
 
       Result.Location := 'LsaAddPrivilegesToAccount';
-      Result.Status := LsaAddPrivilegesToAccount(AccountHandle, PrivSet);
+      Result.Status := LsaAddPrivilegesToAccount(hAccount, PrivSet);
     finally
       FreeMem(PrivSet);
     end;
 
     // Quit on error
-    if not NT_SUCCESS(Result.Status) then
+    if not Result.IsSuccess then
     begin
-      LsaClose(AccountHandle);
+      LsaxClose(hAccount);
       Exit;
     end;
   end;
@@ -338,7 +366,7 @@ begin
   if RemoveAll then
   begin
     Result.Location := 'LsaRemovePrivilegesFromAccount';
-    Result.Status := LsaRemovePrivilegesFromAccount(AccountHandle, True, nil);
+    Result.Status := LsaRemovePrivilegesFromAccount(hAccount, True, nil);
   end
   else if Length(PrivilegesToRemove) > 0 then
   begin
@@ -353,14 +381,14 @@ begin
         PrivSet.Privilege[i] := PrivilegesToRemove[i];
 
       Result.Location := 'LsaRemovePrivilegesFromAccount';
-      Result.Status := LsaRemovePrivilegesFromAccount(AccountHandle, False,
+      Result.Status := LsaRemovePrivilegesFromAccount(hAccount, False,
         PrivSet);
     finally
       FreeMem(PrivSet);
     end;
   end;
 
-  LsaClose(AccountHandle);
+  LsaxClose(hAccount);
 end;
 
 { Logon rights }
@@ -426,75 +454,34 @@ end;
 function LsaxQueryRightsAccount(Sid: PSid; out SystemAccess: Cardinal):
   TNtxStatus;
 var
-  LsaHandle, AccountHandle: TLsaHandle;
-  ObjAttr: TObjectAttributes;
+  hAccount: TLsaHandle;
 begin
-  SystemAccess := 0;
-  InitializeObjectAttributes(ObjAttr);
+  Result := LsaxOpenAccount(hAccount, Sid, ACCOUNT_VIEW);
 
-  Result.Location := 'LsaOpenPolicy';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
-    LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
-    Exit;
-
-  Result.Location := 'LsaOpenAccount';
-  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_VIEW, AccountHandle);
-  LsaClose(LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
+  if not Result.IsSuccess then
     Exit;
 
   Result.Location := 'LsaGetSystemAccessAccount';
-  Result.Status := LsaGetSystemAccessAccount(AccountHandle, SystemAccess);
-  LsaClose(AccountHandle);
+  Result.Status := LsaGetSystemAccessAccount(hAccount, SystemAccess);
+
+  LsaxClose(hAccount);
 end;
 
 function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
 var
-  LsaHandle, AccountHandle: TLsaHandle;
-  ObjAttr: TObjectAttributes;
+  hAccount: TLsaHandle;
 begin
-  InitializeObjectAttributes(ObjAttr);
-
-  // Connect to LSA for opening existing account
-  Result.Location := 'LsaOpenPolicy for POLICY_VIEW_LOCAL_INFORMATION';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_VIEW_LOCAL_INFORMATION,
-    LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
-    Exit;
-
-  Result.Location := 'LsaOpenAccount for ACCOUNT_ADJUST_SYSTEM_ACCESS';
-  Result.Status := LsaOpenAccount(LsaHandle, Sid, ACCOUNT_ADJUST_SYSTEM_ACCESS,
-    AccountHandle);
-
-  LsaClose(LsaHandle);
+  Result := LsaxOpenAccount(hAccount, Sid, ACCOUNT_ADJUST_SYSTEM_ACCESS);
 
   // If the account does not exist in the LSA database we should create it
   if Result.Status = STATUS_OBJECT_NAME_NOT_FOUND then
-  begin
-    // Connect to LSA for creating a new account
-    Result.Location := 'LsaOpenPolicy for POLICY_CREATE_ACCOUNT';
-    Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_CREATE_ACCOUNT,
-      LsaHandle);
+    Result := LsaxCreateAccount(hAccount, Sid, ACCOUNT_ADJUST_SYSTEM_ACCESS);
 
-    if not NT_SUCCESS(Result.Status) then
-      Exit;
-
-    Result.Location := 'LsaCreateAccount for ACCOUNT_ADJUST_SYSTEM_ACCESS';
-    Result.Status := LsaCreateAccount(LsaHandle, Sid,
-      ACCOUNT_ADJUST_SYSTEM_ACCESS, AccountHandle);
-
-    LsaClose(LsaHandle);
-  end;
-
-  if not NT_SUCCESS(Result.Status) then
+  if not Result.IsSuccess then
     Exit;
 
   Result.Location := 'LsaSetSystemAccessAccount';
-  Result.Status := LsaSetSystemAccessAccount(AccountHandle, SystemAccess);
+  Result.Status := LsaSetSystemAccessAccount(hAccount, SystemAccess);
 end;
 
 { SID translation}
@@ -511,61 +498,58 @@ end;
 
 function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
 var
-  Status: NTSTATUS;
-  LsaHandle: TLsaHandle;
-  ObjAttr: TObjectAttributes;
-  ReferencedDomains: PLsaReferencedDomainList;
-  Names: PLsaTranslatedNameArray;
+  hPolicy: TLsaHandle;
+  Status: TNtxStatus;
+  BufferDomains: PLsaReferencedDomainList;
+  BufferNames: PLsaTranslatedNameArray;
   i: Integer;
 begin
-  InitializeObjectAttributes(ObjAttr);
+  Status := LsaxOpenPolicy(hPolicy, POLICY_LOOKUP_NAMES);
 
-  // Connect to LSA
-  Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, LsaHandle);
-
-  if NT_SUCCESS(Status) then
+  if Status.IsSuccess then
   begin
     // Request translation of all SIDs at once
-    Status := LsaLookupSids(LsaHandle, Length(Sids), Sids, ReferencedDomains,
-      Names);
+    Status.Location := 'LsaLookupSids';
+    Status.Status := LsaLookupSids(hPolicy, Length(Sids), Sids, BufferDomains,
+      BufferNames);
 
-    // Even without mapping names it converts most of them to SDDL
-    if Status = STATUS_NONE_MAPPED then
-      Status := STATUS_SOME_NOT_MAPPED;
+    // Even without mapping BufferNames it converts most of them to SDDL
+    if Status.Status = STATUS_NONE_MAPPED then
+      Status.Status := STATUS_SOME_NOT_MAPPED;
 
-    LsaClose(LsaHandle);
+    LsaxClose(hPolicy);
   end;
 
   SetLength(Result, Length(SIDs));
 
-  if NT_SUCCESS(Status) then
+  if Status.IsSuccess then
   begin
     for i := 0 to High(Sids) do
     begin
-      Result[i].SidType := Names[i].Use;
+      Result[i].SidType := BufferNames[i].Use;
 
       // If an SID has a known name, LsaLookupSids returns it.
-      // Otherwise, Names[i].Name field contains SID's SDDL representation.
+      // Otherwise, BufferNames[i].Name field contains SID's SDDL representation.
       // However, sometimes it does not. In this case we convert it explicitly.
 
-      if Names[i].Use in [SidTypeInvalid, SidTypeUnknown] then
+      if BufferNames[i].Use in [SidTypeInvalid, SidTypeUnknown] then
       begin
         // Only SDDL representation is suitable for these SID types
 
-        Result[i].SDDL := Names[i].Name.ToString;
+        Result[i].SDDL := BufferNames[i].Name.ToString;
 
         if not Result[i].SDDL.StartsWith('S-1-') then
           Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
       end
       else
       begin
-        Result[i].UserName := Names[i].Name.ToString;
+        Result[i].UserName := BufferNames[i].Name.ToString;
 
         // Negative DomainIndex means the SID does not reference a domain
-        if (Names[i].DomainIndex >= 0) and
-          (Names[i].DomainIndex < ReferencedDomains.Entries) then
-          Result[i].DomainName := ReferencedDomains.Domains[
-            Names[i].DomainIndex].Name.ToString
+        if (BufferNames[i].DomainIndex >= 0) and
+          (BufferNames[i].DomainIndex < BufferDomains.Entries) then
+          Result[i].DomainName := BufferDomains.Domains[
+            BufferNames[i].DomainIndex].Name.ToString
         else
           Result[i].DomainName := '';
 
@@ -573,8 +557,8 @@ begin
       end;
     end;
 
-    LsaFreeMemory(ReferencedDomains);
-    LsaFreeMemory(Names);
+    LsaFreeMemory(BufferDomains);
+    LsaFreeMemory(BufferNames);
   end
   else
   begin
@@ -584,76 +568,34 @@ begin
   end;
 end;
 
-function LsaxLookupUserName(UserName: String; out Sid: PSid): TNtxStatus;
+function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
 var
-  LsaHandle: TLsaHandle;
-  ObjAttr: TObjectAttributes;
+  hPolicy: TLsaHandle;
   Name: TLsaUnicodeString;
-  ReferencedDomain: PLsaReferencedDomainList;
-  TranslatedSid: PLsaTranslatedSid2;
-  BufferSize: Cardinal;
+  BufferDomain: PLsaReferencedDomainList;
+  BufferTranslatedSid: PLsaTranslatedSid2;
 begin
-  Sid := nil;
-  Name.FromString(UserName);
-  InitializeObjectAttributes(ObjAttr);
+  Result := LsaxOpenPolicy(hPolicy, POLICY_LOOKUP_NAMES);
 
-  // Connect to LSA
-  Result.Location := 'LsaOpenPolicy';
-  Result.Status := LsaOpenPolicy(nil, ObjAttr, POLICY_LOOKUP_NAMES, LsaHandle);
-
-  if not NT_SUCCESS(Result.Status) then
+  if not Result.IsSuccess then
     Exit;
+
+  Name.FromString(UserName);
 
   // Request translation of one name
   Result.Location := 'LsaLookupNames2';
-  Result.Status := LsaLookupNames2(LsaHandle, 0, 1, Name, ReferencedDomain,
-    TranslatedSid);
+  Result.Status := LsaLookupNames2(hPolicy, 0, 1, Name, BufferDomain,
+    BufferTranslatedSid);
 
-  if Result.Status = STATUS_NONE_MAPPED then
+  if Result.IsSuccess then
+    Sid := TSid.CreateCopy(BufferTranslatedSid.Sid);
+
+  // LsaLookupNames2 allocates memory even on some errors
+  if Result.IsSuccess or (Result.Status = STATUS_NONE_MAPPED)  then
   begin
-    LsaFreeMemory(ReferencedDomain);
-    LsaFreeMemory(TranslatedSid);
-    Exit;
+    LsaFreeMemory(BufferDomain);
+    LsaFreeMemory(BufferTranslatedSid);
   end;
-
-  if NT_SUCCESS(Result.Status) then
-  begin
-    // Allocate memory and copy SID
-
-    BufferSize := RtlLengthSid(TranslatedSid.Sid);
-    Sid := AllocMem(BufferSize);
-
-    Result.Location := 'RtlCopySid';
-    Result.Status := RtlCopySid(BufferSize, Sid, TranslatedSid.Sid);
-
-    if not NT_SUCCESS(Result.Status) then
-    begin
-      FreeMem(Sid);
-      Sid := nil;
-    end;
-
-    LsaFreeMemory(ReferencedDomain);
-    LsaFreeMemory(TranslatedSid);
-  end;
-end;
-
-{ TTranslatedName }
-
-function TTranslatedName.FullName: String;
-begin
-  if (UserName <> '') and (DomainName <> '') then
-    Result := DomainName + '\' + UserName
-  else if (DomainName <> '') then
-    Result := DomainName
-  else if (UserName <> '') then
-    Result := UserName
-  else
-    Result := SDDL;
-end;
-
-function TTranslatedName.HasName: Boolean;
-begin
-  Result := (UserName <> '') or (DomainName <> '');
 end;
 
 { Logon Sessions }
@@ -663,22 +605,27 @@ var
   Count, i: Integer;
   Buffer: PLuidArray;
 begin
-  SetLength(Luids, 0);
-
   Result.Location := 'LsaEnumerateLogonSessions';
   Result.Status := LsaEnumerateLogonSessions(Count, Buffer);
 
-  if Result.IsSuccess then
-  try
-    SetLength(Luids, Count);
+  if not Result.IsSuccess then
+    Exit;
 
-    // TODO: manually add anonymous 3E6 logon
-    // Invert the order so that later logons appear later in the list
-    for i := 0 to Count - 1 do
-      Luids[i] := Buffer[Count - 1 - i];
-  finally
-    LsaFreeReturnBuffer(Buffer);
-  end;
+  // TODO: manually add anonymous 3E6 logon
+
+  SetLength(Luids, Count);
+
+  // Invert the order so that later logons appear later in the list
+  for i := 0 to Count - 1 do
+    Luids[i] := Buffer[Count - 1 - i];
+
+  LsaFreeReturnBuffer(Buffer);
 end;
 
+initialization
+
+finalization
+  // Clean up policy lookup handle
+  if hPolicyLookupCached <> 0 then
+    LsaClose(hPolicyLookupCached);
 end.
