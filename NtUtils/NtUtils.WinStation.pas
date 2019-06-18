@@ -83,6 +83,9 @@ var
 begin
   FillChar(UserToken, SizeOf(UserToken), 0);
 
+  // TODO: fall back to WTS Api to workaround a bug with Sandboxie where this
+  // call inserts a handle to SbieSvc.exe's handle table and not into ours
+
   Result.Location := 'WinStationQueryInformationW';
   Result.Win32Result := WinStationQueryInformationW(hServer, SessionId,
     WinStationUserToken, @UserToken, SizeOf(UserToken), Returned);

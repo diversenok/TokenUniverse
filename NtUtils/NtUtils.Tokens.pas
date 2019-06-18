@@ -91,6 +91,8 @@ function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
 // Adjust privileges
 function NtxAdjustPrivileges(hToken: THandle; Privileges: TLuidDynArray;
   NewAttribute: Cardinal): TNtxStatus;
+function NtxAdjustPrivilege(hToken: THandle; Privilege: TLuid;
+  NewAttribute: Cardinal): TNtxStatus;
 
 // Adjust groups
 function NtxAdjustGroups(hToken: THandle; Sids: ISidArray;
@@ -180,6 +182,9 @@ begin
 
   Result.Location := 'NtImpersonateThread';
   Result.Status := NtImpersonateThread(NtCurrentThread, hThread, QoS);
+
+  if not Result.IsSuccess then
+    Exit;
 
   // Read it back from our thread
   Result := NtxOpenThreadToken(hToken, NtCurrentThread, DesiredAccess,
@@ -543,6 +548,16 @@ begin
   Result.Status := NtAdjustPrivilegesToken(hToken, False, Buffer, 0, nil, nil);
 
   FreeMem(Buffer);
+end;
+
+function NtxAdjustPrivilege(hToken: THandle; Privilege: TLuid;
+  NewAttribute: Cardinal): TNtxStatus;
+var
+  Privileges: TLuidDynArray;
+begin
+  SetLength(Privileges, 1);
+  Privileges[0] := Privilege;
+  Result := NtxAdjustPrivileges(hToken, Privileges, NewAttribute);
 end;
 
 function NtxAdjustGroups(hToken: THandle; Sids: ISidArray;
