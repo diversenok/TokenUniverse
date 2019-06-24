@@ -61,11 +61,7 @@ begin
   // Start the service
   Result := ScmxStartService(hSvc, Parameters);
 
-  if not Result.IsSuccess then
-    Exit;
-
   ScmxDeleteService(hSvc).ReportOnError;
-
   ScmxClose(hSvc);
 end;
 
