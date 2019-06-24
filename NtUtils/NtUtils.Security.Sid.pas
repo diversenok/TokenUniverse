@@ -29,6 +29,8 @@ type
     function EqualsTo(Sid2: ISid): Boolean;
     function SDDL: String;
     function SubAuthorities: Byte;
+    function SubAuthority(Index: Integer): Cardinal;
+    function Rid: Cardinal;
     function ParentSid: ISid;
     function ChildSid(Rid: Cardinal): ISid;
   end;
@@ -44,6 +46,10 @@ type
   public
     constructor CreateCopy(SourceSid: PSid);
     constructor CreateFromString(AccountOrSID: String);
+    constructor CreateNew(const IdentifyerAuthority: TSidIdentifierAuthority;
+      SubAuthorities: Byte; SubAuthourity0: Cardinal = 0;
+      SubAuthourity1: Cardinal = 0; SubAuthourity2: Cardinal = 0;
+      SubAuthourity3: Cardinal = 0; SubAuthourity4: Cardinal = 0);
     class function GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
       out Sid: ISid): TNtxStatus;
     destructor Destroy; override;
@@ -53,6 +59,8 @@ type
     function EqualsTo(Sid2: ISid): Boolean;
     function SDDL: String;
     function SubAuthorities: Byte;
+    function SubAuthority(Index: Integer): Cardinal;
+    function Rid: Cardinal;
     function ParentSid: ISid;
     function ChildSid(Rid: Cardinal): ISid;
   end;
@@ -159,6 +167,38 @@ begin
   Status.RaiseOnError;
 end;
 
+constructor TSid.CreateNew(const IdentifyerAuthority: TSidIdentifierAuthority;
+  SubAuthorities: Byte; SubAuthourity0, SubAuthourity1, SubAuthourity2,
+  SubAuthourity3, SubAuthourity4: Cardinal);
+var
+  Status: NTSTATUS;
+begin
+  FSid := AllocMem(RtlLengthRequiredSid(SubAuthorities));
+
+  Status := RtlInitializeSid(FSid, @IdentifyerAuthority, SubAuthorities);
+
+  if not NT_SUCCESS(Status) then
+  begin
+    FreeMem(FSid);
+    raise ENtError.Create(Status, 'RtlInitializeSid');
+  end;
+
+  if SubAuthorities > 0 then
+    RtlSubAuthoritySid(FSid, 0)^ := SubAuthourity0;
+
+  if SubAuthorities > 1 then
+    RtlSubAuthoritySid(FSid, 1)^ := SubAuthourity1;
+
+  if SubAuthorities > 2 then
+    RtlSubAuthoritySid(FSid, 2)^ := SubAuthourity2;
+
+  if SubAuthorities > 3 then
+    RtlSubAuthoritySid(FSid, 3)^ := SubAuthourity3;
+
+  if SubAuthorities > 4 then
+    RtlSubAuthoritySid(FSid, 4)^ := SubAuthourity4;
+end;
+
 constructor TSid.CreateOwned(OwnedSid: PSid; Dummy: Integer);
 begin
   FSid := OwnedSid;
@@ -246,6 +286,14 @@ begin
   Result := TSid.CreateOwned(Buffer);
 end;
 
+function TSid.Rid: Cardinal;
+begin
+  if SubAuthorities > 0 then
+    Result := SubAuthority(SubAuthorities - 1)
+  else
+    Result := 0;
+end;
+
 function TSid.SDDL: String;
 begin
   Result := RtlxConvertSidToString(FSid);
@@ -259,6 +307,14 @@ end;
 function TSid.SubAuthorities: Byte;
 begin
   Result := RtlSubAuthorityCountSid(FSid)^;
+end;
+
+function TSid.SubAuthority(Index: Integer): Cardinal;
+begin
+  if (Index >= 0) and (Index < SubAuthorities) then
+    Result := RtlSubAuthoritySid(FSid, Cardinal(Index))^
+  else
+    Result := 0;
 end;
 
 { Functions }
