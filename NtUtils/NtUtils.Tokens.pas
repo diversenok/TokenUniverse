@@ -521,10 +521,14 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  SetLength(Privileges, Buffer.PrivilegeCount);
+  try
+    SetLength(Privileges, Buffer.PrivilegeCount);
 
-  for i := 0 to High(Privileges) do
-    Privileges[i] := Buffer.Privileges[i];
+    for i := 0 to High(Privileges) do
+      Privileges[i] := Buffer.Privileges[i];
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
 function NtxQueryStatisticsToken(hToken: THandle;

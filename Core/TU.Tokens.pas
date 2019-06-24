@@ -1210,7 +1210,6 @@ var
   pAudit: PTokenAuditPolicy;
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
-  i: Integer;
   bufferSize: Cardinal;
   Status: TNtxStatus;
 begin
@@ -1407,6 +1406,9 @@ begin
             Token.Cache.Integrity.Level := TTokenIntegrityLevel(Rid)
           else
             Token.Cache.Integrity.Level := ilUntrusted;
+
+          if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
+            InvokeStringEvent(tsIntegrity);
         end;
     end;
 
