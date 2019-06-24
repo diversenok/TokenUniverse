@@ -47,21 +47,21 @@ function LsaxCreateAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
 // Enumerate all privileges on the system
 function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
 
-// LsaLookupPrivilegeName
+// Convert a numerical privilege value to internal name
 function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): TNtxStatus;
 
-// LsaLookupPrivilegeDisplayName
+// Convert an privilege's internal name to a description
 function LsaxQueryDescriptionPrivilege(const Name: String;
   out DisplayName: String): TNtxStatus;
 
 // Get the minimal integrity level required to use a specific privilege
 function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
 
-// LsaEnumeratePrivilegesOfAccount
+// Enumerate privileges assigned to an account
 function LsaxEnumerateAccountPrivileges(Sid: PSid;
   out Privileges: TPrivilegeArray): TNtxStatus;
 
-// LsaAddPrivilegesToAccount & LsaRemovePrivilegesFromAccount
+// Add and remove privileges from account
 function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
   PrivilegesToAdd, PrivilegesToRemove: TPrivilegeArray): TNtxStatus;
 
@@ -70,25 +70,28 @@ function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
 // Enumerate known logon rights
 function LsaxEnumerateLogonRights: TLogonRightRecArray;
 
-// LsaGetSystemAccessAccount
+// Query logon rights of an account
 function LsaxQueryRightsAccount(Sid: PSid; out SystemAccess: Cardinal):
   TNtxStatus;
 
-// LsaSetSystemAccessAccount
+// Set logon rights of an account
 function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
 
 { ----------------------------- SID translation ----------------------------- }
 
-// LsaLookupSids mixed with RtlConvertSidToUnicodeString, always succeeds
+// Convert SIDs to account names or at least to SDDL; always succeeds
 function LsaxLookupSid(Sid: PSid): TTranslatedName;
 function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
 
-// LsaLookupNames2, on success the SID buffer must be freed using FreeMem
+// Lookup an account on the machine
 function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
+
+// Get current user name and domain
+function LsaxGetUserName(out Domain, UserName: String): TNtxStatus;
 
 { ------------------------------ Logon Sessions ----------------------------- }
 
-// LsaEnumerateLogonSessions
+// Enumerate logon sessions
 function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
 
 implementation
@@ -596,6 +599,23 @@ begin
     LsaFreeMemory(BufferDomain);
     LsaFreeMemory(BufferTranslatedSid);
   end;
+end;
+
+function LsaxGetUserName(out Domain, UserName: String): TNtxStatus;
+var
+  BufferUser, BufferDomain: PLsaUnicodeString;
+begin
+  Result.Location := 'LsaGetUserName';
+  Result.Status := LsaGetUserName(BufferUser, BufferDomain);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Domain := BufferDomain.ToString;
+  UserName := BufferUser.ToString;
+
+  LsaFreeMemory(BufferUser);
+  LsaFreeMemory(BufferDomain);
 end;
 
 { Logon Sessions }
