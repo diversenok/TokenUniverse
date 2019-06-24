@@ -136,9 +136,6 @@ function NtAllocateLocallyUniqueId(out Luid: TLuid): NTSTATUS; stdcall;
 
 implementation
 
-uses
-  Ntapi.ntpsapi, Ntapi.ntobapi;
-
 { TSystemProcessInformation }
 
 function TSystemProcessInformation.GetImageName: String;

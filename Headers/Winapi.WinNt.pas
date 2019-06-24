@@ -553,6 +553,15 @@ type
   end;
   PQuotaLimits = ^TQuotaLimits;
 
+const
+  // 9175
+  SECURITY_NT_AUTHORITY: TSIDIdentifierAuthority =
+    (Value: (0, 0, 0, 0, 0, 5));
+
+  // 9424
+  SECURITY_MANDATORY_LABEL_AUTHORITY: TSIDIdentifierAuthority =
+    (Value: (0, 0, 0, 0, 0, 16));
+
 implementation
 
 uses

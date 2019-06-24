@@ -6,7 +6,7 @@ uses
   Winapi.WinNt, Ntapi.ntseapi, Winapi.WinSafer, NtUtils.Exceptions,
   NtUtils.Security.Sid, NtUtils.Security.Acl;
 
-{ Creation }
+{ ------------------------------ Creation ---------------------------------- }
 
 // Open a token of a process
 function NtxOpenProcessToken(out hToken: THandle; hProcess: THandle;
@@ -58,11 +58,27 @@ function NtxCreateToken(out hToken: THandle; DesiredAccess: TAccessMask;
   PrimaryGroup: ISid; DefaultDacl: IAcl; const TokenSource: TTokenSource):
   TNtxStatus;
 
-{ Basic operations }
+{ ------------------------- Query / set information ------------------------ }
 
-// Query variable token information without race conditions
+type
+  NtxToken = class
+    // Query fixed-size information
+    class function Query<T>(hToken: THandle;
+      InfoClass: TTokenInformationClass; out Buffer: T): TNtxStatus; static;
+
+    // Set fixed-size information
+    class function SetInfo<T>(hToken: THandle;
+      InfoClass: TTokenInformationClass; const Buffer: T): TNtxStatus; static;
+  end;
+
+// Query variable-length token information without race conditions
 function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
   out Status: TNtxStatus; ReturnedSize: PCardinal = nil): Pointer;
+
+// Set variable-length token information
+function NtxSetInformationToken(hToken: THandle;
+  InfoClass: TTokenInformationClass; TokenInformation: Pointer;
+  TokenInformationLength: Cardinal): TNtxStatus;
 
 // Query an SID (Owner, Primary group, ...)
 function NtxQuerySidToken(hToken: THandle; InfoClass: TTokenInformationClass;
@@ -76,14 +92,23 @@ function NtxQueryGroupToken(hToken: THandle; InfoClass: TTokenInformationClass;
 function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
   out Groups: TGroupArray): TNtxStatus;
 
+// Query privileges
+function NtxQueryPrivilegesToken(hToken: THandle;
+  out Privileges: TPrivilegeArray): TNtxStatus;
+
 // Query token statistic (requires either Query or Duplicate access)
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
 
-// Set token information
-function NtxSetInformationToken(hToken: THandle;
-  InfoClass: TTokenInformationClass; TokenInformation: Pointer;
-  TokenInformationLength: Cardinal): TNtxStatus;
+// Query integrity level of a token
+function NtxQueryIntegrityToken(hToken: THandle; out  IntegrityLevel: Cardinal):
+  TNtxStatus;
+
+// Set integrity level of a token
+function NtxSetIntegrityToken(hToken: THandle; IntegrityLevel: Cardinal):
+  TNtxStatus;
+
+{ --------------------------- Other operations ---------------------------- }
 
 // Check whether two token handles reference the same kernel object
 function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
@@ -361,7 +386,25 @@ begin
   FreeMem(TokenPrivileges);
 end;
 
-{ Basic operations }
+{ Query / set operations }
+
+class function NtxToken.Query<T>(hToken: THandle;
+  InfoClass: TTokenInformationClass; out Buffer: T): TNtxStatus;
+var
+  ReturnedBytes: Cardinal;
+begin
+  Result.Location := NtxFormatTokenQuery(InfoClass);
+  Result.Status := NtQueryInformationToken(hToken, InfoClass, @Buffer,
+    SizeOf(Buffer), ReturnedBytes);
+end;
+
+class function NtxToken.SetInfo<T>(hToken: THandle;
+  InfoClass: TTokenInformationClass; const Buffer: T): TNtxStatus;
+begin
+  Result.Location := NtxFormatTokenSet(InfoClass);
+  Result.Status := NtSetInformationToken(hToken, InfoClass, @Buffer,
+    SizeOf(Buffer));
+end;
 
 function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
   out Status: TNtxStatus; ReturnedSize: PCardinal): Pointer;
@@ -398,6 +441,15 @@ begin
     BufferSize := Required;
     Result := AllocMem(BufferSize);
   end;
+end;
+
+function NtxSetInformationToken(hToken: THandle;
+  InfoClass: TTokenInformationClass; TokenInformation: Pointer;
+  TokenInformationLength: Cardinal): TNtxStatus;
+begin
+  Result.Location := NtxFormatTokenSet(InfoClass);
+  Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
+    TokenInformationLength);
 end;
 
 function NtxQuerySidToken(hToken: THandle; InfoClass: TTokenInformationClass;
@@ -458,6 +510,23 @@ begin
   end;
 end;
 
+function NtxQueryPrivilegesToken(hToken: THandle;
+  out Privileges: TPrivilegeArray): TNtxStatus;
+var
+  Buffer: PTokenPrivileges;
+  i: Integer;
+begin
+  Buffer := NtxQueryBufferToken(hToken, TokenPrivileges, Result);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  SetLength(Privileges, Buffer.PrivilegeCount);
+
+  for i := 0 to High(Privileges) do
+    Privileges[i] := Buffer.Privileges[i];
+end;
+
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
 var
@@ -480,14 +549,44 @@ begin
   end;
 end;
 
-function NtxSetInformationToken(hToken: THandle;
-  InfoClass: TTokenInformationClass; TokenInformation: Pointer;
-  TokenInformationLength: Cardinal): TNtxStatus;
+function NtxQueryIntegrityToken(hToken: THandle; out IntegrityLevel: Cardinal):
+  TNtxStatus;
+var
+  Integrity: TGroup;
 begin
-  Result.Location := NtxFormatTokenSet(InfoClass);
-  Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
-    TokenInformationLength);
+  Result := NtxQueryGroupToken(hToken, TokenIntegrityLevel, Integrity);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Integrity level is the last sub-authority (RID) of the integrity SID
+  with Integrity.SecurityIdentifier do
+    if SubAuthorities > 0 then
+      IntegrityLevel := Rid
+    else
+      IntegrityLevel := SECURITY_MANDATORY_UNTRUSTED_RID
 end;
+
+function NtxSetIntegrityToken(hToken: THandle; IntegrityLevel: Cardinal):
+  TNtxStatus;
+var
+  LabelSid: ISid;
+  MandatoryLabel: TSidAndAttributes;
+begin
+  // Prepare SID for integrity level with 1 sub authority: S-1-16-X.
+
+  LabelSid := TSid.CreateNew(SECURITY_MANDATORY_LABEL_AUTHORITY, 1,
+    IntegrityLevel);
+
+  MandatoryLabel.Sid := LabelSid.Sid;
+  MandatoryLabel.Attributes := SE_GROUP_INTEGRITY_ENABLED;
+
+  Result.Location := NtxFormatTokenSet(TokenIntegrityLevel);
+  Result.Status := NtSetInformationToken(hToken, TokenIntegrityLevel,
+    @MandatoryLabel, SizeOf(MandatoryLabel));
+end;
+
+{ Other opeations }
 
 function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
 var

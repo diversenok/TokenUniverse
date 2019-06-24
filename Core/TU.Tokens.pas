@@ -252,35 +252,6 @@ type
     FOnCaptionChange: TCachingEvent<String>;
     FOnCanClose: TEvent<TToken>;
     FOnClose: TEvent<TToken>;
-  protected
-
-    {---  TToken routines to query / set data for token info classes  ---- }
-
-    /// <summary> Queries a fixed-size info class. </summary>
-    /// <remarks>
-    ///  The function doesn't write to <paramref name="Data"/> parameter
-    ///  if it fails.
-    /// </remarks>
-    function QueryFixedSize<ResultType>(InfoClass: TTokenInformationClass;
-      out Data: ResultType): Boolean;
-
-    /// <summary> Sets a fixed-size info class. </summary>
-    /// <exception cref="TU.Common.ELocatedOSError">
-    ///  Can raise <see cref="TU.Common.ELocatedOSError"/>.
-    /// </exception>
-    procedure SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
-      const Value: ResultType);
-
-    /// <summary> Queries a variable-size info class. </summary>
-    /// <param name="Status">
-    ///   Boolean that saves the result of the operation.
-    /// </param>
-    /// <remarks>
-    ///   The buffer that us returned as a function value must be freed after
-    ///   usege by calling <see cref="System.FreeMem"/>.
-    /// </remarks>
-    function QueryVariableSize(InfoClass: TTokenInformationClass;
-      out Status: Boolean; ReturnedSize: PCardinal = nil): Pointer;
   public
 
     {--------------------  TToken public section ---------------------------}
@@ -428,7 +399,7 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Objects,
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Objects,
   NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, NtUtils.Tokens,
   NtUtils.Tokens.Impersonate, NtUtils.AccessMasks, DelphiUtils.Strings,
   System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc;
@@ -894,9 +865,7 @@ function TToken.OpenLinkedToken: TNtxStatusWithValue<TToken>;
 var
   Handle: THandle;
 begin
-  Result.Status.Location := NtxFormatTokenQuery(TokenLinkedToken);
-  Result.Status.Win32Result := QueryFixedSize<THandle>(TokenLinkedToken,
-    Handle);
+  Result.Status := NtxToken.Query<THandle>(hToken, TokenLinkedToken, Handle);
 
   if Result.Status.IsSuccess then
     Result.Value := TToken.Create(Handle, 'Linked token for ' + Caption);
@@ -932,37 +901,6 @@ begin
     Status.RaiseOnError;
 end;
 
-function TToken.QueryFixedSize<ResultType>(InfoClass: TTokenInformationClass;
-  out Data: ResultType): Boolean;
-var
-  BufferData: ResultType;
-  ReturnLength: Cardinal;
-  Status: NTSTATUS;
-begin
-  // TODO: Save error code and error location
-  Status := NtQueryInformationToken(hToken, InfoClass, @BufferData,
-    SizeOf(ResultType), ReturnLength);
-
-  Result := NT_SUCCESS(Status);
-
-  // Modify the specified Data parameter only on success
-  if Result then
-    Data := BufferData
-  else
-    RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status);
-end;
-
-function TToken.QueryVariableSize(InfoClass: TTokenInformationClass;
-  out Status: Boolean; ReturnedSize: PCardinal): Pointer;
-var
-  DetaiedStatus: TNtxStatus;
-begin
-  Result := NtxQueryBufferToken(hToken, InfoClass, DetaiedStatus, ReturnedSize);
-  Status := DetaiedStatus.IsSuccess;
-
-  // Do not free the buffer on success. The caller must do it after use.
-end;
-
 class procedure TToken.RevertThreadToken(TID: NativeUInt);
 begin
   NtxSetThreadTokenById(TID, 0).RaiseOnError;
@@ -988,16 +926,6 @@ procedure TToken.SetCaption(const Value: String);
 begin
   FCaption := Value;
   OnCaptionChange.Invoke(FCaption);
-end;
-
-procedure TToken.SetFixedSize<ResultType>(InfoClass: TTokenInformationClass;
-  const Value: ResultType);
-var
-  status: NTSTATUS;
-begin
-  status := NtSetInformationToken(hToken, InfoClass, @Value, SizeOf(Value));
-  if not NT_SUCCESS(status) then
-    raise ENtError.Create(status, NtxFormatTokenSet(InfoClass));
 end;
 
 { TTokenData }
@@ -1279,14 +1207,12 @@ end;
 
 function TTokenData.ReQuery(DataClass: TTokenDataClass): Boolean;
 var
-  pIntegrity: PSIDAndAttributes;
-  pPrivBuf: PTokenPrivileges;
   pAudit: PTokenAuditPolicy;
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
-  lObjInfo: TObjectBasicInformaion;
-  i, subAuthCount: Integer;
+  i: Integer;
   bufferSize: Cardinal;
+  Status: TNtxStatus;
 begin
   Result := False;
 
@@ -1328,17 +1254,11 @@ begin
 
     tdTokenPrivileges:
     begin
-      pPrivBuf := Token.QueryVariableSize(TokenPrivileges, Result);
-      if Result then
-      try
-        SetLength(Token.Cache.Privileges, pPrivBuf.PrivilegeCount);
-        for i := 0 to pPrivBuf.PrivilegeCount - 1 do
-          Token.Cache.Privileges[i] := pPrivBuf.Privileges[i];
+      Result := NtxQueryPrivilegesToken(Token.hToken,
+        Token.Cache.Privileges).IsSuccess;
 
-        Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges)
-      finally
-        FreeMem(pPrivBuf);
-      end;
+      if Result then
+        Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges);
     end;
 
     tdTokenOwner:
@@ -1364,20 +1284,21 @@ begin
     tdTokenDefaultDacl: ; // Not implemented
 
     tdTokenSource:
-      Result := Token.QueryFixedSize<TTokenSource>(TokenSource,
-        Token.Cache.Source);
+      Result := NtxToken.Query<TTokenSource>(Token.hToken, TokenSource,
+        Token.Cache.Source).IsSuccess;
 
     tdTokenType:
     begin
-      Result := Token.QueryFixedSize<TTokenType>(TokenType, lType);
+      Result := NtxToken.Query<TTokenType>(Token.hToken, TokenType,
+        lType).IsSuccess;
       if Result then
       begin
         if lType = TokenPrimary then
           Token.Cache.TokenType := ttPrimary
         else
         begin
-          Result := Token.QueryFixedSize<TSecurityImpersonationLevel>(
-            TokenImpersonationLevel, lImpersonation);
+          Result := NtxToken.Query<TSecurityImpersonationLevel>(Token.hToken,
+            TokenImpersonationLevel, lImpersonation).IsSuccess;
           if Result then
             Token.Cache.TokenType := TTokenTypeEx(lImpersonation);
         end;
@@ -1386,8 +1307,8 @@ begin
 
     tdTokenStatistics:
     begin
-      Result := Token.QueryFixedSize<TTokenStatistics>(TokenStatistics,
-        Token.Cache.Statistics);
+      Result := NtxToken.Query<TTokenStatistics>(Token.hToken, TokenStatistics,
+        Token.Cache.Statistics).IsSuccess;
 
       if Result then
         if Token.Events.OnStatisticsChange.Invoke(Token.Cache.Statistics) then
@@ -1409,8 +1330,8 @@ begin
 
     tdTokenSessionId:
     begin
-      Result := Token.QueryFixedSize<Cardinal>(TokenSessionId,
-        Token.Cache.Session);
+      Result := NtxToken.Query<Cardinal>(Token.hToken, TokenSessionId,
+        Token.Cache.Session).IsSuccess;
       if Result then
         if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
           InvokeStringEvent(tsSession);
@@ -1418,7 +1339,9 @@ begin
 
     tdTokenAuditPolicy:
     begin
-      pAudit := Token.QueryVariableSize(TokenAuditPolicy, Result, @bufferSize);
+      pAudit := NtxQueryBufferToken(Token.hToken, TokenAuditPolicy, Status,
+        @bufferSize);
+      Result := Status.IsSuccess;
       if Result then
       begin
         Token.Cache.AuditPolicy := TTokenPerUserAudit.CreateCopy(pAudit,
@@ -1430,30 +1353,30 @@ begin
     end;
 
     tdTokenSandBoxInert:
-      Result := Token.QueryFixedSize<LongBool>(TokenSandBoxInert,
-        Token.Cache.SandboxInert);
+      Result := NtxToken.Query<LongBool>(Token.hToken, TokenSandBoxInert,
+        Token.Cache.SandboxInert).IsSuccess;
 
     tdTokenOrigin:
     begin
-      Result := Token.QueryFixedSize<TLuid>(TokenOrigin,
-        Token.Cache.Origin);
+      Result := NtxToken.Query<TLuid>(Token.hToken, TokenOrigin,
+        Token.Cache.Origin).IsSuccess;
       if Result then
         if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
           InvokeStringEvent(tsOrigin);
     end;
 
     tdTokenElevation:
-      Result := Token.QueryFixedSize<TTokenElevationType>(TokenElevationType,
-        Token.Cache.Elevation);
+      Result := NtxToken.Query<TTokenElevationType>(Token.hToken,
+        TokenElevationType, Token.Cache.Elevation).IsSuccess;
 
     tdTokenHasRestrictions:
-      Result := Token.QueryFixedSize<LongBool>(TokenHasRestrictions,
-        Token.Cache.HasRestrictions);
+      Result := NtxToken.Query<LongBool>(Token.hToken, TokenHasRestrictions,
+        Token.Cache.HasRestrictions).IsSuccess;
 
     tdTokenVirtualizationAllowed:
     begin
-      Result := Token.QueryFixedSize<LongBool>(TokenVirtualizationAllowed,
-        Token.Cache.VirtualizationAllowed);
+      Result := NtxToken.Query<LongBool>(Token.hToken,
+        TokenVirtualizationAllowed, Token.Cache.VirtualizationAllowed).IsSuccess;
       if Result then
         if Token.Events.OnVirtualizationAllowedChange.Invoke(
           Token.Cache.VirtualizationAllowed) then
@@ -1462,8 +1385,8 @@ begin
 
     tdTokenVirtualizationEnabled:
     begin
-      Result := Token.QueryFixedSize<LongBool>(TokenVirtualizationEnabled,
-        Token.Cache.VirtualizationEnabled);
+      Result := NtxToken.Query<LongBool>(Token.hToken,
+        TokenVirtualizationEnabled, Token.Cache.VirtualizationEnabled).IsSuccess;
       if Result then
         if Token.Events.OnVirtualizationEnabledChange.Invoke(
           Token.Cache.VirtualizationEnabled) then
@@ -1472,32 +1395,25 @@ begin
 
     tdTokenIntegrity:
     begin
-      pIntegrity := Token.QueryVariableSize(TokenIntegrityLevel, Result);
+      Result := NtxQueryGroupToken(Token.hToken, TokenIntegrityLevel,
+        Token.Cache.Integrity.Group).IsSuccess;
+
       if Result then
-        with Token.Cache.Integrity do
-        try
-          Group.SecurityIdentifier := TSid.CreateCopy(pIntegrity.Sid);
-          Group.Attributes := pIntegrity.Attributes;
-
-          // Get level value from the last sub-authority
-          subAuthCount := RtlSubAuthorityCountSid(pIntegrity.Sid)^;
-          if subAuthCount > 0 then
-            Level := TTokenIntegrityLevel(RtlSubAuthoritySid(pIntegrity.Sid,
-              subAuthCount - 1)^)
+        with Token.Cache.Integrity.Group.SecurityIdentifier do
+        begin
+          // Integrity level is the last sub-authority (RID) of the
+          // integrity SID
+          if SubAuthorities > 0 then
+            Token.Cache.Integrity.Level := TTokenIntegrityLevel(Rid)
           else
-            Level := ilUntrusted;
-
-          if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
-            InvokeStringEvent(tsIntegrity);
-        finally
-         FreeMem(pIntegrity);
+            Token.Cache.Integrity.Level := ilUntrusted;
         end;
     end;
 
     tdTokenUIAccess:
     begin
-      Result := Token.QueryFixedSize<LongBool>(TokenUIAccess,
-        Token.Cache.UIAccess);
+      Result := NtxToken.Query<LongBool>(Token.hToken, TokenUIAccess,
+        Token.Cache.UIAccess).IsSuccess;
       if Result then
         if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
           InvokeStringEvent(tsUIAccess);
@@ -1505,8 +1421,8 @@ begin
 
     tdTokenMandatoryPolicy:
     begin
-      Result := Token.QueryFixedSize<Cardinal>(TokenMandatoryPolicy,
-        Token.Cache.MandatoryPolicy);
+      Result := NtxToken.Query<Cardinal>(Token.hToken, TokenMandatoryPolicy,
+        Token.Cache.MandatoryPolicy).IsSuccess;
       if Result then
         if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
         begin
@@ -1516,8 +1432,8 @@ begin
     end;
 
     tdTokenIsRestricted:
-      Result := Token.QueryFixedSize<LongBool>(TokenIsRestricted,
-        Token.Cache.IsRestricted);
+      Result := NtxToken.Query<LongBool>(Token.hToken, TokenIsRestricted,
+        Token.Cache.IsRestricted).IsSuccess;
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then
@@ -1525,13 +1441,8 @@ begin
           Token.Cache.LogonSessionInfo).IsSuccess;
 
     tdObjectInfo:
-    begin
-      Result := NT_SUCCESS(NtQueryObject(Token.hToken, ObjectBasicInformation,
-        @lObjInfo, SizeOf(lObjInfo), nil));
-
-      if Result then
-        Token.Cache.ObjectInformation := lObjInfo;
-    end;
+      Result := NtxQueryBasicInfoObject(Token.hToken,
+        Token.Cache.ObjectInformation).IsSuccess;
   end;
 
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
@@ -1556,26 +1467,8 @@ begin
 end;
 
 procedure TTokenData.SetIntegrityLevel(const Value: TTokenIntegrityLevel);
-const
-  SECURITY_MANDATORY_LABEL_AUTHORITY: TSIDIdentifierAuthority =
-    (Value: (0, 0, 0, 0, 0, 16));
-var
-  mandatoryLabel: TSIDAndAttributes;
 begin
-  // Wee need to prepare the SID for the integrity level.
-  // It contains 1 sub authority and looks like S-1-16-X.
-  mandatoryLabel.Sid := AllocMem(RtlLengthRequiredSid(1));
-  try
-    NtxCheck(RtlInitializeSid(mandatoryLabel.Sid,
-      @SECURITY_MANDATORY_LABEL_AUTHORITY, 1), 'RtlInitializeSid');
-
-    RtlSubAuthoritySid(mandatoryLabel.Sid, 0)^ := Cardinal(Value);
-    mandatoryLabel.Attributes := SE_GROUP_INTEGRITY_ENABLED;
-
-    Token.SetFixedSize<TSIDAndAttributes>(TokenIntegrityLevel, mandatoryLabel);
-  finally
-    FreeMem(mandatoryLabel.Sid);
-  end;
+  NtxSetIntegrityToken(Token.hToken, Cardinal(Value)).RaiseOnError;
 
   // Update the cache and notify event listeners.
   ValidateCache(tdTokenIntegrity);
@@ -1600,7 +1493,8 @@ end;
 
 procedure TTokenData.SetMandatoryPolicy(const Value: Cardinal);
 begin
-  Token.SetFixedSize<Cardinal>(TokenMandatoryPolicy, Value);
+  NtxToken.SetInfo<Cardinal>(Token.hToken, TokenMandatoryPolicy,
+    Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenMandatoryPolicy);
@@ -1609,7 +1503,7 @@ end;
 
 procedure TTokenData.SetOrigin(const Value: TLuid);
 begin
-  Token.SetFixedSize<TLuid>(TokenOrigin, Value);
+  NtxToken.SetInfo<TLuid>(Token.hToken, TokenOrigin, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOrigin);
@@ -1621,7 +1515,7 @@ var
   NewOwner: TTokenOwner;
 begin
   NewOwner.Owner := Value.Sid;
-  Token.SetFixedSize<TTokenOwner>(TokenOwner, NewOwner);
+  NtxToken.SetInfo<TTokenOwner>(Token.hToken, TokenOwner,NewOwner).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOwner);
@@ -1633,7 +1527,8 @@ var
   NewPrimaryGroup: TTokenPrimaryGroup;
 begin
   NewPrimaryGroup.PrimaryGroup := Value.Sid;
-  Token.SetFixedSize<TTokenPrimaryGroup>(TokenPrimaryGroup, NewPrimaryGroup);
+  NtxToken.SetInfo<TTokenPrimaryGroup>(Token.hToken, TokenPrimaryGroup,
+    NewPrimaryGroup).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenPrimaryGroup);
@@ -1642,7 +1537,7 @@ end;
 
 procedure TTokenData.SetSession(const Value: Cardinal);
 begin
-  Token.SetFixedSize<Cardinal>(TokenSessionId, Value);
+  NtxToken.SetInfo<Cardinal>(Token.hToken, TokenSessionId, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenSessionId);
@@ -1654,7 +1549,7 @@ end;
 
 procedure TTokenData.SetUIAccess(const Value: LongBool);
 begin
-  Token.SetFixedSize<LongBool>(TokenUIAccess, Value);
+  NtxToken.SetInfo<LongBool>(Token.hToken, TokenUIAccess, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenUIAccess);
@@ -1663,7 +1558,8 @@ end;
 
 procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
 begin
-  Token.SetFixedSize<LongBool>(TokenVirtualizationAllowed, Value);
+  NtxToken.SetInfo<LongBool>(Token.hToken, TokenVirtualizationAllowed,
+    Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenVirtualizationAllowed);
@@ -1673,7 +1569,8 @@ end;
 
 procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
 begin
-  Token.SetFixedSize<LongBool>(TokenVirtualizationEnabled, Value);
+  NtxToken.SetInfo<LongBool>(Token.hToken, TokenVirtualizationEnabled,
+    Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenVirtualizationEnabled);
