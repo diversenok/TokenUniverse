@@ -37,57 +37,46 @@ type
     function AddAt(const Ace: TAce; Index: Integer): TNtxStatus;
   end;
 
-  { Query security }
-
-// Query security descriptor of an object. Free it with FreeMem after use.
-function NtxQuerySecurityObject(hObject: THandle; SecurityInformation:
-  TSecurityInformation; out SecDesc: PSecurityDescriptor): TNtxStatus;
-
-// Query owner of an object
-function NtxQueryOwnerObject(hObject: THandle; out Owner: ISid): TNtxStatus;
-
-// Query primary group of an object
-function NtxQueryPrimaryGroupObject(hObject: THandle;
-  out PrimaryGroup: ISid): TNtxStatus;
-
-// Query DACL of an object
-function NtxQueryDaclObject(hObject: THandle; out Dacl: IAcl): TNtxStatus;
-
-// Query SACL of an object
-function NtxQuerySaclObject(hObject: THandle; out Sacl: IAcl): TNtxStatus;
-
-// Query mandatory label of an object
-function NtxQueryLabelObject(hObject: THandle; out Sacl: IAcl): TNtxStatus;
-
-  { Set security }
-
 // Prepare security descriptor
 function RtlxCreateSecurityDescriptor(var SecDesc: TSecurityDescriptor):
   TNtxStatus;
 
-// Set security descriptor
-function NtxSetSecurityObject(hObject: THandle; SecInfo: TSecurityInformation;
-  const SecDesc: TSecurityDescriptor): TNtxStatus;
+// Get owner from the security descriptor
+function RtlxGetOwnerSD(pSecDesc: PSecurityDescriptor; out Owner: ISid):
+  TNtxStatus;
 
-// Set owner of an object
-function NtxSetOwnerObject(hObject: THandle; Owner: ISid): TNtxStatus;
+// Get primary group from the security descriptor
+function RtlxGetPrimaryGroupSD(pSecDesc: PSecurityDescriptor; out Group: ISid):
+  TNtxStatus;
 
-// Set primary group of an object
-function NtxSetPrimaryGroupObject(hObject: THandle; Group: ISid): TNtxStatus;
+// Get DACL from the security descriptor
+function RtlxGetDaclSD(pSecDesc: PSecurityDescriptor; out Dacl: IAcl):
+  TNtxStatus;
 
-// Set DACL of an object
-function NtxSetDaclObject(hObject: THandle; Dacl: IAcl): TNtxStatus;
+// Get SACL from the security descriptor
+function RtlxGetSaclSD(pSecDesc: PSecurityDescriptor; out Sacl: IAcl):
+  TNtxStatus;
 
-// Set SACL of an object
-function NtxSetSaclObject(hObject: THandle; Sacl: IAcl): TNtxStatus;
+// Prepare a security descriptor with an owner
+function RtlxPrepareOwnerSD(var SecDesc: TSecurityDescriptor; Owner: ISid):
+  TNtxStatus;
 
-// Set mandatory label of an object
-function NtxSetLabelObject(hObject: THandle; Sacl: IAcl): TNtxStatus;
+// Prepare a security descriptor with a primary group
+function RtlxPreparePrimaryGroupSD(var SecDesc: TSecurityDescriptor; Group: ISid):
+  TNtxStatus;
+
+// Prepare a security descriptor with a DACL
+function RtlxPrepareDaclSD(var SecDesc: TSecurityDescriptor; Dacl: IAcl):
+  TNtxStatus;
+
+// Prepare a security descriptor with a SACL
+function RtlxPrepareSaclSD(var SecDesc: TSecurityDescriptor; Sacl: IAcl):
+  TNtxStatus;
 
 implementation
 
 uses
-  Ntapi.ntrtl, Ntapi.ntstatus, Ntapi.ntobapi;
+  Ntapi.ntrtl, Ntapi.ntstatus;
 
 { TAce }
 
@@ -232,150 +221,7 @@ begin
   Result := FAcl;
 end;
 
-{ Query security functions }
-
-// Security sescriptor
-function NtxQuerySecurityObject(hObject: THandle; SecurityInformation:
-  TSecurityInformation; out SecDesc: PSecurityDescriptor): TNtxStatus;
-var
-  BufferSize: Cardinal;
-begin
-  // Make a probe call to estimate buffer size
-  Result.Location := 'NtQuerySecurityObject';
-  Result.Status := NtQuerySecurityObject(hObject, SecurityInformation, nil, 0,
-    BufferSize);
-
-  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
-    Exit;
-
-  SecDesc := AllocMem(BufferSize);
-
-  Result.Status := NtQuerySecurityObject(hObject, SecurityInformation, SecDesc,
-   BufferSize, BufferSize);
-
-  if not Result.IsSuccess then
-  begin
-    FreeMem(SecDesc);
-    SecDesc := nil;
-  end;
-end;
-
-// Owner
-function NtxQueryOwnerObject(hObject: THandle; out Owner: ISid): TNtxStatus;
-var
-  pSD: PSecurityDescriptor;
-  Defaulted: Boolean;
-  OwnerSid: PSid;
-begin
-  Result := NtxQuerySecurityObject(hObject, OWNER_SECURITY_INFORMATION, pSD);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlGetOwnerSecurityDescriptor';
-  Result.Status := RtlGetOwnerSecurityDescriptor(pSD, OwnerSid,  Defaulted);
-
-  if Result.IsSuccess then
-    Owner := TSid.CreateCopy(OwnerSid);
-
-  FreeMem(pSD);
-end;
-
-// Primary group
-function NtxQueryPrimaryGroupObject(hObject: THandle;
-  out PrimaryGroup: ISid): TNtxStatus;
-var
-  pSD: PSecurityDescriptor;
-  Defaulted: Boolean;
-  GroupSid: PSid;
-begin
-  Result := NtxQuerySecurityObject(hObject, GROUP_SECURITY_INFORMATION, pSD);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlGetGroupSecurityDescriptor';
-  Result.Status := RtlGetGroupSecurityDescriptor(pSD, GroupSid, Defaulted);
-
-  if Result.IsSuccess then
-    PrimaryGroup := TSid.CreateCopy(GroupSid);
-
-  FreeMem(pSD);
-end;
-
-// DACL
-function NtxQueryDaclObject(hObject: THandle; out Dacl: IAcl): TNtxStatus;
-var
-  pSD: PSecurityDescriptor;
-  pDaclRef: PAcl;
-  DaclPresent, Defaulted: Boolean;
-begin
-  Result := NtxQuerySecurityObject(hObject, DACL_SECURITY_INFORMATION, pSD);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlGetDaclSecurityDescriptor';
-  Result.Status := RtlGetDaclSecurityDescriptor(pSD, DaclPresent, pDaclRef,
-    Defaulted);
-
-  if Result.IsSuccess and DaclPresent and Assigned(pDaclRef) then
-    Dacl := TAcl.CreateCopy(pDaclRef)
-  else
-    Dacl := nil;
-
-  FreeMem(pSD);
-end;
-
-// SACL
-function NtxQuerySaclObject(hObject: THandle; out Sacl: IAcl): TNtxStatus;
-var
-  pSD: PSecurityDescriptor;
-  pSaclRef: PAcl;
-  SaclPresent, Defaulted: Boolean;
-begin
-  Result := NtxQuerySecurityObject(hObject, SACL_SECURITY_INFORMATION, pSD);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlGetSaclSecurityDescriptor';
-  Result.Status := RtlGetSaclSecurityDescriptor(pSD, SaclPresent, pSaclRef,
-    Defaulted);
-
-  if Result.IsSuccess and SaclPresent and Assigned(pSaclRef) then
-    Sacl := TAcl.CreateCopy(pSaclRef)
-  else
-    Sacl := nil;
-
-  FreeMem(pSD);
-end;
-
-// Mandatiry laber
-function NtxQueryLabelObject(hObject: THandle; out Sacl: IAcl): TNtxStatus;
-var
-  pSD: PSecurityDescriptor;
-  pSaclRef: PAcl;
-  SaclPresent, Defaulted: Boolean;
-begin
-  Result := NtxQuerySecurityObject(hObject, LABEL_SECURITY_INFORMATION, pSD);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlGetSaclSecurityDescriptor';
-  Result.Status := RtlGetSaclSecurityDescriptor(pSD, SaclPresent, pSaclRef,
-    Defaulted);
-
-  if Result.IsSuccess and SaclPresent and Assigned(pSaclRef) then
-    Sacl := TAcl.CreateCopy(pSaclRef)
-  else
-    Sacl := nil;
-
-  FreeMem(pSD);
-end;
-
-{ Set security funtions }
+{ functions }
 
 function RtlxCreateSecurityDescriptor(var SecDesc: TSecurityDescriptor):
   TNtxStatus;
@@ -386,19 +232,68 @@ begin
     SECURITY_DESCRIPTOR_REVISION);
 end;
 
-function NtxSetSecurityObject(hObject: THandle; SecInfo: TSecurityInformation;
-  const SecDesc: TSecurityDescriptor): TNtxStatus;
+function RtlxGetOwnerSD(pSecDesc: PSecurityDescriptor; out Owner: ISid):
+  TNtxStatus;
+var
+  Defaulted: Boolean;
+  OwnerSid: PSid;
 begin
-  Result.Location := 'NtSetSecurityObject';
-  Result.Status := NtSetSecurityObject(hObject, SecInfo, SecDesc);
+  Result.Location := 'RtlGetOwnerSecurityDescriptor';
+  Result.Status := RtlGetOwnerSecurityDescriptor(pSecDesc, OwnerSid, Defaulted);
+
+  if Result.IsSuccess then
+    Owner := TSid.CreateCopy(OwnerSid);
 end;
 
-// Owner
-function NtxSetOwnerObject(hObject: THandle; Owner: ISid): TNtxStatus;
+function RtlxGetPrimaryGroupSD(pSecDesc: PSecurityDescriptor; out Group: ISid):
+  TNtxStatus;
 var
-  SD: TSecurityDescriptor;
+  Defaulted: Boolean;
+  GroupSid: PSid;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result.Location := 'RtlGetGroupSecurityDescriptor';
+  Result.Status := RtlGetGroupSecurityDescriptor(pSecDesc, GroupSid, Defaulted);
+
+  if Result.IsSuccess then
+    Group := TSid.CreateCopy(GroupSid);
+end;
+
+function RtlxGetDaclSD(pSecDesc: PSecurityDescriptor; out Dacl: IAcl):
+  TNtxStatus;
+var
+  pDaclRef: PAcl;
+  DaclPresent, Defaulted: Boolean;
+begin
+  Result.Location := 'RtlGetDaclSecurityDescriptor';
+  Result.Status := RtlGetDaclSecurityDescriptor(pSecDesc, DaclPresent, pDaclRef,
+    Defaulted);
+
+  if Result.IsSuccess and DaclPresent and Assigned(pDaclRef) then
+    Dacl := TAcl.CreateCopy(pDaclRef)
+  else
+    Dacl := nil;
+end;
+
+function RtlxGetSaclSD(pSecDesc: PSecurityDescriptor; out Sacl: IAcl):
+  TNtxStatus;
+var
+  pSaclRef: PAcl;
+  SaclPresent, Defaulted: Boolean;
+begin
+  Result.Location := 'RtlGetSaclSecurityDescriptor';
+  Result.Status := RtlGetSaclSecurityDescriptor(pSecDesc, SaclPresent, pSaclRef,
+    Defaulted);
+
+  if Result.IsSuccess and SaclPresent and Assigned(pSaclRef) then
+    Sacl := TAcl.CreateCopy(pSaclRef)
+  else
+    Sacl := nil;
+end;
+
+function RtlxPrepareOwnerSD(var SecDesc: TSecurityDescriptor; Owner: ISid):
+  TNtxStatus;
+begin
+  Result := RtlxCreateSecurityDescriptor(SecDesc);
 
   if not Result.IsSuccess then
     Exit;
@@ -406,22 +301,15 @@ begin
   Result.Location := 'RtlSetOwnerSecurityDescriptor';
 
   if Assigned(Owner) then
-    Result.Status := RtlSetOwnerSecurityDescriptor(SD, Owner.Sid, False)
+    Result.Status := RtlSetOwnerSecurityDescriptor(SecDesc, Owner.Sid, False)
   else
-    Result.Status := RtlSetOwnerSecurityDescriptor(SD, nil, True);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := NtxSetSecurityObject(hObject, OWNER_SECURITY_INFORMATION, SD);
+    Result.Status := RtlSetOwnerSecurityDescriptor(SecDesc, nil, True);
 end;
 
-// Primary group
-function NtxSetPrimaryGroupObject(hObject: THandle; Group: ISid): TNtxStatus;
-var
-  SD: TSecurityDescriptor;
+function RtlxPreparePrimaryGroupSD(var SecDesc: TSecurityDescriptor; Group: ISid):
+  TNtxStatus;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxCreateSecurityDescriptor(SecDesc);
 
   if not Result.IsSuccess then
     Exit;
@@ -429,22 +317,15 @@ begin
   Result.Location := 'RtlSetGroupSecurityDescriptor';
 
   if Assigned(Group) then
-    Result.Status := RtlSetGroupSecurityDescriptor(SD, Group.Sid, False)
+    Result.Status := RtlSetGroupSecurityDescriptor(SecDesc, Group.Sid, False)
   else
-    Result.Status := RtlSetGroupSecurityDescriptor(SD, nil, True);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := NtxSetSecurityObject(hObject, GROUP_SECURITY_INFORMATION, SD);
+    Result.Status := RtlSetGroupSecurityDescriptor(SecDesc, nil, True);
 end;
 
-// DACL
-function NtxSetDaclObject(hObject: THandle; Dacl: IAcl): TNtxStatus;
-var
-  SD: TSecurityDescriptor;
+function RtlxPrepareDaclSD(var SecDesc: TSecurityDescriptor; Dacl: IAcl):
+  TNtxStatus;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxCreateSecurityDescriptor(SecDesc);
 
   if not Result.IsSuccess then
     Exit;
@@ -452,22 +333,16 @@ begin
   Result.Location := 'RtlSetDaclSecurityDescriptor';
 
   if Assigned(Dacl) then
-    Result.Status := RtlSetDaclSecurityDescriptor(SD, True, Dacl.Acl, False)
+    Result.Status := RtlSetDaclSecurityDescriptor(SecDesc, True, Dacl.Acl,
+      False)
   else
-    Result.Status := RtlSetDaclSecurityDescriptor(SD, True, nil, False);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := NtxSetSecurityObject(hObject, DACL_SECURITY_INFORMATION, SD);
+    Result.Status := RtlSetDaclSecurityDescriptor(SecDesc, True, nil, False);
 end;
 
-// SACL
-function NtxSetSaclObject(hObject: THandle; Sacl: IAcl): TNtxStatus;
-var
-  SD: TSecurityDescriptor;
+function RtlxPrepareSaclSD(var SecDesc: TSecurityDescriptor; Sacl: IAcl):
+  TNtxStatus;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxCreateSecurityDescriptor(SecDesc);
 
   if not Result.IsSuccess then
     Exit;
@@ -475,37 +350,10 @@ begin
   Result.Location := 'RtlSetSaclSecurityDescriptor';
 
   if Assigned(Sacl) then
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, Sacl.Acl, False)
+    Result.Status := RtlSetSaclSecurityDescriptor(SecDesc, True, Sacl.Acl,
+      False)
   else
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, nil, False);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := NtxSetSecurityObject(hObject, SACL_SECURITY_INFORMATION, SD);
-end;
-
-// Mandatory label
-function NtxSetLabelObject(hObject: THandle; Sacl: IAcl): TNtxStatus;
-var
-  SD: TSecurityDescriptor;
-begin
-  Result := RtlxCreateSecurityDescriptor(SD);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlSetSaclSecurityDescriptor';
-
-  if Assigned(Sacl) then
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, Sacl.Acl, False)
-  else
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, nil, False);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := NtxSetSecurityObject(hObject, LABEL_SECURITY_INFORMATION, SD);
+    Result.Status := RtlSetSaclSecurityDescriptor(SecDesc, True, nil, False);
 end;
 
 end.

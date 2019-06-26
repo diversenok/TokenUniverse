@@ -6,6 +6,12 @@ uses
   Winapi.WinNt, Winapi.ntlsa, NtUtils.Exceptions, NtUtils.Security.Acl,
   NtUtils.Security.Sid;
 
+type
+  TAce = NtUtils.Security.Acl.TAce;
+  IAcl = NtUtils.Security.Acl.IAcl;
+  TAcl = NtUtils.Security.Acl.TAcl;
+  ISid = NtUtils.Security.Sid.ISid;
+
 { Query security }
 
 // Security descriptor (free with LsaFreeMemory)
@@ -24,7 +30,7 @@ function LsaxQueryPrimaryGroupObject(LsaHandle: TLsaHandle;
 function LsaxQueryDaclObject(LsaHandle: TLsaHandle; out Dacl: IAcl): TNtxStatus;
 
 // SACL
-function LsaxQuerySaclObject(LsaHandle: TLsaHandle; out SACL: IAcl): TNtxStatus;
+function LsaxQuerySaclObject(LsaHandle: TLsaHandle; out Sacl: IAcl): TNtxStatus;
 
 // Mandatory label
 function LsaxQueryLabelObject(LsaHandle: TLsaHandle; out Sacl: IAcl):
@@ -72,20 +78,13 @@ function LsaxQueryOwnerObject(LsaHandle: TLsaHandle; out Owner: ISid):
   TNtxStatus;
 var
   pSD: PSecurityDescriptor;
-  Defaulted: Boolean;
-  OwnerSid: PSid;
 begin
   Result := LsaxQuerySecurityObject(LsaHandle, OWNER_SECURITY_INFORMATION, pSD);
 
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'RtlGetOwnerSecurityDescriptor';
-  Result.Status := RtlGetOwnerSecurityDescriptor(pSD, OwnerSid,  Defaulted);
-
-  if Result.IsSuccess then
-    Owner := TSid.CreateCopy(OwnerSid);
-
+  Result := RtlxGetOwnerSD(pSD, Owner);
   LsaFreeMemory(pSD);
 end;
 
@@ -94,20 +93,13 @@ function LsaxQueryPrimaryGroupObject(LsaHandle: TLsaHandle;
   out PrimaryGroup: ISid): TNtxStatus;
 var
   pSD: PSecurityDescriptor;
-  Defaulted: Boolean;
-  GroupSid: PSid;
 begin
   Result := LsaxQuerySecurityObject(LsaHandle, GROUP_SECURITY_INFORMATION, pSD);
 
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'RtlGetGroupSecurityDescriptor';
-  Result.Status := RtlGetGroupSecurityDescriptor(pSD, GroupSid,  Defaulted);
-
-  if Result.IsSuccess then
-    PrimaryGroup := TSid.CreateCopy(GroupSid);
-
+  Result := RtlxGetPrimaryGroupSD(pSD, PrimaryGroup);
   LsaFreeMemory(pSD);
 end;
 
@@ -115,23 +107,13 @@ end;
 function LsaxQueryDaclObject(LsaHandle: TLsaHandle; out Dacl: IAcl): TNtxStatus;
 var
   pSD: PSecurityDescriptor;
-  DaclPresent, Defaulted: Boolean;
-  pDacl: PAcl;
 begin
   Result := LsaxQuerySecurityObject(LsaHandle, DACL_SECURITY_INFORMATION, pSD);
 
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'RtlGetDaclSecurityDescriptor';
-  Result.Status := RtlGetDaclSecurityDescriptor(pSD, DaclPresent, pDacl,
-    Defaulted);
-
-  if Result.IsSuccess and DaclPresent and Assigned(pDacl) then
-    Dacl := TAcl.CreateCopy(pDacl)
-  else
-    Dacl := nil;
-
+  Result := RtlxGetDaclSD(pSD, Dacl);
   LsaFreeMemory(pSD);
 end;
 
@@ -139,23 +121,13 @@ end;
 function LsaxQuerySaclObject(LsaHandle: TLsaHandle; out Sacl: IAcl): TNtxStatus;
 var
   pSD: PSecurityDescriptor;
-  SaclPresent, Defaulted: Boolean;
-  pSacl: PAcl;
 begin
   Result := LsaxQuerySecurityObject(LsaHandle, SACL_SECURITY_INFORMATION, pSD);
 
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'RtlGetSaclSecurityDescriptor';
-  Result.Status := RtlGetSaclSecurityDescriptor(pSD, SaclPresent, pSacl,
-    Defaulted);
-
-  if Result.IsSuccess and SaclPresent and Assigned(pSacl) then
-    Sacl := TAcl.CreateCopy(pSacl)
-  else
-    Sacl := nil;
-
+  Result := RtlxGetSaclSD(pSD, Sacl);
   LsaFreeMemory(pSD);
 end;
 
@@ -164,23 +136,13 @@ function LsaxQueryLabelObject(LsaHandle: TLsaHandle; out Sacl: IAcl):
   TNtxStatus;
 var
   pSD: PSecurityDescriptor;
-  SaclPresent, Defaulted: Boolean;
-  pSacl: PAcl;
 begin
   Result := LsaxQuerySecurityObject(LsaHandle, LABEL_SECURITY_INFORMATION, pSD);
 
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'RtlGetSaclSecurityDescriptor';
-  Result.Status := RtlGetSaclSecurityDescriptor(pSD, SaclPresent, pSacl,
-    Defaulted);
-
-  if Result.IsSuccess and SaclPresent and Assigned(pSacl) then
-    Sacl := TAcl.CreateCopy(pSacl)
-  else
-    Sacl := nil;
-
+  Result := RtlxGetSaclSD(pSD, Sacl);
   LsaFreeMemory(pSD);
 end;
 
@@ -198,22 +160,10 @@ function LsaxSetOwnerObject(LsaHandle: TLsaHandle; Owner: ISid): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxPrepareOwnerSD(SD, Owner);
 
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlSetOwnerSecurityDescriptor';
-
-  if Assigned(Owner) then
-    Result.Status := RtlSetOwnerSecurityDescriptor(SD, Owner.Sid, False)
-  else
-    Result.Status := RtlSetOwnerSecurityDescriptor(SD, nil, True);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := LsaxSetSecurityObject(LsaHandle, OWNER_SECURITY_INFORMATION, SD);
+  if Result.IsSuccess then
+    Result := LsaxSetSecurityObject(LsaHandle, OWNER_SECURITY_INFORMATION, SD);
 end;
 
 // Primary group
@@ -222,22 +172,10 @@ function LsaxSetPrimaryGroupObject(LsaHandle: TLsaHandle; Group: ISid):
 var
   SD: TSecurityDescriptor;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxPreparePrimaryGroupSD(SD, Group);
 
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlSetGroupSecurityDescriptor';
-
-  if Assigned(Group) then
-    Result.Status := RtlSetGroupSecurityDescriptor(SD, Group.Sid, False)
-  else
-    Result.Status := RtlSetGroupSecurityDescriptor(SD, nil, True);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := LsaxSetSecurityObject(LsaHandle, GROUP_SECURITY_INFORMATION, SD);
+  if Result.IsSuccess then
+    Result := LsaxSetSecurityObject(LsaHandle, GROUP_SECURITY_INFORMATION, SD);
 end;
 
 // DACL
@@ -245,22 +183,10 @@ function LsaxSetDaclObject(LsaHandle: TLsaHandle; Dacl: IAcl): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxPrepareDaclSD(SD, Dacl);
 
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlSetDaclSecurityDescriptor';
-
-  if Assigned(Dacl) then
-    Result.Status := RtlSetDaclSecurityDescriptor(SD, True, Dacl.Acl, False)
-  else
-    Result.Status := RtlSetDaclSecurityDescriptor(SD, True, nil, False);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := LsaxSetSecurityObject(LsaHandle, DACL_SECURITY_INFORMATION, SD);
+  if Result.IsSuccess then
+    Result := LsaxSetSecurityObject(LsaHandle, DACL_SECURITY_INFORMATION, SD);
 end;
 
 // SACL
@@ -268,22 +194,10 @@ function LsaxSetSaclObject(LsaHandle: TLsaHandle; Sacl: IAcl): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxPrepareSaclSD(SD, Sacl);
 
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlSetSaclSecurityDescriptor';
-
-  if Assigned(Sacl) then
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, Sacl.Acl, False)
-  else
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, nil, False);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := LsaxSetSecurityObject(LsaHandle, SACL_SECURITY_INFORMATION, SD);
+  if Result.IsSuccess then
+    Result := LsaxSetSecurityObject(LsaHandle, SACL_SECURITY_INFORMATION, SD);
 end;
 
 // Mandatory label
@@ -291,22 +205,10 @@ function LsaxSetLabelObject(LsaHandle: TLsaHandle; Sacl: IAcl): TNtxStatus;
 var
   SD: TSecurityDescriptor;
 begin
-  Result := RtlxCreateSecurityDescriptor(SD);
+  Result := RtlxPrepareSaclSD(SD, Sacl);
 
-  if not Result.IsSuccess then
-    Exit;
-
-  Result.Location := 'RtlSetSaclSecurityDescriptor';
-
-  if Assigned(Sacl) then
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, Sacl.Acl, False)
-  else
-    Result.Status := RtlSetSaclSecurityDescriptor(SD, True, nil, False);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Result := LsaxSetSecurityObject(LsaHandle, LABEL_SECURITY_INFORMATION, SD);
+  if Result.IsSuccess then
+    Result := LsaxSetSecurityObject(LsaHandle, LABEL_SECURITY_INFORMATION, SD);
 end;
 
 end.

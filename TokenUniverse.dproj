@@ -288,6 +288,8 @@
         <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Svc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Svc.SingleTaskSvc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Lsa.Security.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.Security.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
