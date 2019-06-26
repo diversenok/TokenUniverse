@@ -10,7 +10,8 @@ type
   TStringArray = Winapi.WinNt.TStringArray;
 
 // Open a handle to SCM
-function ScmxConnect(out hScm: TScmHandle; DesiredAccess: Cardinal): TNtxStatus;
+function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
+  TNtxStatus;
 
 // Open a service
 function ScmxOpenService(out hSvc: TScmHandle; ServiceName: String;
@@ -33,7 +34,8 @@ function ScmxClose(var hObject: TScmHandle): Boolean;
 
 implementation
 
-function ScmxConnect(out hScm: TScmHandle; DesiredAccess: Cardinal): TNtxStatus;
+function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
+  TNtxStatus;
 begin
   hScm := OpenSCManagerW(nil, nil, DesiredAccess);
 
@@ -55,10 +57,10 @@ begin
   // Create service
   hSvc := OpenServiceW(hScm, PWideChar(ServiceName), DesiredAccess);
 
-  Result.Location := 'CreateServiceW';
+  Result.Location := 'OpenServiceW';
   Result.Win32Result := (hSvc <> 0);
 
-  CloseServiceHandle(hScm);
+  ScmxClose(hScm);
 end;
 
 function ScmxCreateService(out hSvc: TScmHandle; CommandLine, ServiceName,
@@ -80,7 +82,7 @@ begin
   Result.Location := 'CreateServiceW';
   Result.Win32Result := (hSvc <> 0);
 
-  CloseServiceHandle(hScm);
+  ScmxClose(hScm);
 end;
 
 function ScmxStartService(hSvc: TScmHandle): TNtxStatus; overload;

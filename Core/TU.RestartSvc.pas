@@ -151,9 +151,11 @@ var
   Provider: TDefaultExecProvider;
   Method: IExecMethod;
   ProcessInfo: TProcessInfo;
-  BasicInfo: TProcessBasinInformation;
   Session: Integer;
+  {$IFDEF DEBUG}
+  BasicInfo: TProcessBasinInformation;
   Status: TNtxStatus;
+  {$ENDIF}
 begin
   Provider := TDefaultExecProvider.Create;
 
