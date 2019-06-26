@@ -14,20 +14,20 @@ type
   TProcessBasinInformation = Ntapi.ntpsapi.TProcessBasinInformation;
 
 // Open the process. Always succeeds for current process.
-function NtxOpenProcess(out hProcess: THandle; DesiredAccess: TAccessMask;
-  PID: NativeUInt): TNtxStatus;
+function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Open the thread. Always succeeds for current thread.
-function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
-  TID: NativeUInt): TNtxStatus;
+function NtxOpenThread(out hThread: THandle; TID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Reopen a handle to the current process with the specific access
 function NtxOpenCurrentProcess(out hProcess: THandle;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Reopen a handle to the current thread with the specific access
 function NtxOpenCurrentThread(out hThread: THandle;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Query process' image name in Win32 format
 function NtxQueryImageProcess(hProcess: THandle;
@@ -47,8 +47,8 @@ uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, NtUtils.Objects,
   DelphiUtils.Strings, NtUtils.AccessMasks;
 
-function NtxpOpenProcess(out hProcess: THandle; DesiredAccess: TAccessMask;
-  PID: NativeUInt): NTSTATUS;
+function NtxpOpenProcess(out hProcess: THandle; PID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): NTSTATUS;
 var
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
@@ -66,17 +66,17 @@ begin
   end;
 end;
 
-function NtxOpenProcess(out hProcess: THandle; DesiredAccess: TAccessMask;
-  PID: NativeUInt): TNtxStatus;
+function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 begin
   Result.Location := 'NtOpenProcess for ' + FormatAccess(DesiredAccess,
     ObjProcess);
-  Result.Status := NtxpOpenProcess(hProcess, DesiredAccess, PID);
+  Result.Status := NtxpOpenProcess(hProcess, PID, DesiredAccess,
+    HandleAttributes);
 end;
 
-
-function NtxOpenThread(out hThread: THandle; DesiredAccess: TAccessMask;
-  TID: NativeUInt): TNtxStatus;
+function NtxOpenThread(out hThread: THandle; TID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 var
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
@@ -165,8 +165,8 @@ var
 begin
   Result := '';
 
-  if not NT_SUCCESS(NtxpOpenProcess(hProcess,
-    PROCESS_QUERY_LIMITED_INFORMATION, PID)) then
+  if not NT_SUCCESS(NtxpOpenProcess(hProcess, PID,
+    PROCESS_QUERY_LIMITED_INFORMATION, 0)) then
     Exit;
 
   NtxQueryImageProcess(hProcess, Result);

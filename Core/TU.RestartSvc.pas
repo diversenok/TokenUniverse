@@ -109,8 +109,8 @@ begin
     Csrss := FindByName(SrcProcess);
     try
       if Assigned(Csrss) then
-        NtxOpenProcessTokenById(Result, Csrss.ProcessId, TOKEN_DUPLICATE,
-          0).RaiseOnError
+        NtxOpenProcessTokenById(Result, Csrss.ProcessId,
+          TOKEN_DUPLICATE).RaiseOnError
       else
         raise Exception.Create(SrcProcess + ' is not found on the system.');
     finally
@@ -129,15 +129,14 @@ begin
   if ParamStr(2) = RESVC_SYSPLUS_PARAM then
     hToken := GetCsrssToken
   else
-    NtxOpenProcessToken(hToken, NtCurrentProcess, TOKEN_DUPLICATE,
-      0).RaiseOnError;
+    NtxOpenProcessToken(hToken, NtCurrentProcess,
+      TOKEN_DUPLICATE).RaiseOnError;
 
   try
     // Duplicate
     NtxDuplicateToken(Result, hToken, TOKEN_ADJUST_DEFAULT or
       TOKEN_ADJUST_SESSIONID or TOKEN_QUERY or TOKEN_DUPLICATE or
-      TOKEN_ASSIGN_PRIMARY, TokenPrimary, SecurityImpersonation,
-      False).RaiseOnError;
+      TOKEN_ASSIGN_PRIMARY, TokenPrimary).RaiseOnError;
 
     // Change session
     NtxSetInformationToken(Result, TokenSessionId, @SessionId,

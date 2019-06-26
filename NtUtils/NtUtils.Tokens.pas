@@ -10,35 +10,36 @@ uses
 
 // Open a token of a process
 function NtxOpenProcessToken(out hToken: THandle; hProcess: THandle;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 function NtxOpenProcessTokenById(out hToken: THandle; PID: NativeUInt;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Open a token of a thread
 function NtxOpenThreadToken(out hToken: THandle; hThread: THandle;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 function NtxOpenThreadTokenById(out hToken: THandle; TID: NativeUInt;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Copy an effective security context of a thread via direct impersonation
 function NtxOpenEffectiveToken(out hToken: THandle; hThread: THandle;
   ImpersonationLevel: TSecurityImpersonationLevel; DesiredAccess: TAccessMask;
-  HandleAttributes: Cardinal; EffectiveOnly: Boolean): TNtxStatus;
+  HandleAttributes: Cardinal = 0; EffectiveOnly: Boolean = False): TNtxStatus;
 
 function NtxOpenEffectiveTokenById(out hToken: THandle; TID: THandle;
   ImpersonationLevel: TSecurityImpersonationLevel; DesiredAccess: TAccessMask;
-  HandleAttributes: Cardinal; EffectiveOnly: Boolean): TNtxStatus;
+  HandleAttributes: Cardinal = 0; EffectiveOnly: Boolean = False): TNtxStatus;
 
 // Duplicate existing token
 function NtxDuplicateToken(out hToken: THandle; hExistingToken: THandle;
   DesiredAccess: TAccessMask; TokenType: TTokenType; ImpersonationLevel:
-  TSecurityImpersonationLevel; EffectiveOnly: LongBool): TNtxStatus;
+  TSecurityImpersonationLevel = SecurityImpersonation;
+  HandleAttributes: Cardinal = 0; EffectiveOnly: Boolean = False): TNtxStatus;
 
 // Open anonymous token
 function NtxOpenAnonymousToken(out hToken: THandle; DesiredAccess: TAccessMask;
-  HandleAttributes: Cardinal): TNtxStatus;
+  HandleAttributes: Cardinal = 0): TNtxStatus;
 
 // Filter a token
 function NtxFilterToken(out hNewToken: THandle; hToken: THandle;
@@ -51,12 +52,13 @@ function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
   TNtxStatus;
 
 // Create a new token from scratch. Requires SeCreateTokenPrivilege.
-function NtxCreateToken(out hToken: THandle; DesiredAccess: TAccessMask;
-  TokenType: TTokenType; ImpersonationLevel: TSecurityImpersonationLevel;
-  AuthenticationId: TLuid; ExpirationTime: TLargeInteger; User: TGroup;
-  Groups: TGroupArray; Privileges: TPrivilegeArray; Owner: ISid;
-  PrimaryGroup: ISid; DefaultDacl: IAcl; const TokenSource: TTokenSource):
-  TNtxStatus;
+function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;
+  ImpersonationLevel: TSecurityImpersonationLevel; AuthenticationId: TLuid;
+  ExpirationTime: TLargeInteger; User: TGroup; Groups: TGroupArray;
+  Privileges: TPrivilegeArray; Owner: ISid; PrimaryGroup: ISid;
+  DefaultDacl: IAcl; const TokenSource: TTokenSource;
+  DesiredAccess: TAccessMask = TOKEN_ALL_ACCESS; HandleAttributes: Cardinal = 0)
+  : TNtxStatus;
 
 { ------------------------- Query / set information ------------------------ }
 
@@ -146,7 +148,7 @@ function NtxOpenProcessTokenById(out hToken: THandle; PID: NativeUInt;
 var
   hProcess: THandle;
 begin
-  Result := NtxOpenProcess(hProcess, PROCESS_QUERY_LIMITED_INFORMATION, PID);
+  Result := NtxOpenProcess(hProcess, PID, PROCESS_QUERY_LIMITED_INFORMATION);
 
   if not Result.IsSuccess then
     Exit;
@@ -174,7 +176,7 @@ function NtxOpenThreadTokenById(out hToken: THandle; TID: NativeUInt;
 var
   hThread: THandle;
 begin
-  Result := NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION, TID);
+  Result := NtxOpenThread(hThread, TID, THREAD_QUERY_LIMITED_INFORMATION);
 
   if not Result.IsSuccess then
     Exit;
@@ -228,7 +230,7 @@ function NtxOpenEffectiveTokenById(out hToken: THandle; TID: THandle;
 var
   hThread: THandle;
 begin
-  Result := NtxOpenThread(hThread, THREAD_DIRECT_IMPERSONATION, TID);
+  Result := NtxOpenThread(hThread, TID, THREAD_DIRECT_IMPERSONATION);
 
   if not Result.IsSuccess then
     Exit;
@@ -241,13 +243,14 @@ end;
 
 function NtxDuplicateToken(out hToken: THandle; hExistingToken: THandle;
   DesiredAccess: TAccessMask; TokenType: TTokenType; ImpersonationLevel:
-  TSecurityImpersonationLevel; EffectiveOnly: LongBool): TNtxStatus;
+  TSecurityImpersonationLevel; HandleAttributes: Cardinal;
+  EffectiveOnly: Boolean): TNtxStatus;
 var
   ObjAttr: TObjectAttributes;
   QoS: TSecurityQualityOfService;
 begin
   InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
-  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @QoS);
+  InitializeObjectAttributes(ObjAttr, nil, HandleAttributes, 0, @QoS);
 
   Result.Location := 'NtDuplicateToken for ' + FormatAccess(DesiredAccess,
     objToken);
@@ -324,12 +327,12 @@ begin
   SaferCloseLevel(hLevel);
 end;
 
-function NtxCreateToken(out hToken: THandle; DesiredAccess: TAccessMask;
-  TokenType: TTokenType; ImpersonationLevel: TSecurityImpersonationLevel;
-  AuthenticationId: TLuid; ExpirationTime: TLargeInteger; User: TGroup;
-  Groups: TGroupArray; Privileges: TPrivilegeArray; Owner: ISid;
-  PrimaryGroup: ISid; DefaultDacl: IAcl; const TokenSource: TTokenSource):
-  TNtxStatus;
+function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;
+  ImpersonationLevel: TSecurityImpersonationLevel; AuthenticationId: TLuid;
+  ExpirationTime: TLargeInteger; User: TGroup; Groups: TGroupArray;
+  Privileges: TPrivilegeArray; Owner: ISid; PrimaryGroup: ISid;
+  DefaultDacl: IAcl; const TokenSource: TTokenSource;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 var
   QoS: TSecurityQualityOfService;
   ObjAttr: TObjectAttributes;
@@ -343,7 +346,7 @@ var
   pTokenDefaultDaclRef: PTokenDefaultDacl;
 begin
   InitializaQoS(QoS, ImpersonationLevel);
-  InitializeObjectAttributes(ObjAttr, nil, 0, 0, @QoS);
+  InitializeObjectAttributes(ObjAttr, nil, HandleAttributes, 0, @QoS);
 
   // Prepare user
   Assert(Assigned(User.SecurityIdentifier));

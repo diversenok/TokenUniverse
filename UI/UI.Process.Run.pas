@@ -122,8 +122,8 @@ begin
   MenuClearParentClick(Sender);
 
   ClientIdEx := TProcessListDialog.Execute(Self, False);
-  NtxOpenProcess(hParentProcess, PROCESS_CREATE_PROCESS,
-    ClientIdEx.ProcessID).RaiseOnError;
+  NtxOpenProcess(hParentProcess, ClientIdEx.ProcessID,
+    PROCESS_CREATE_PROCESS).RaiseOnError;
 
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
     ClientIdEx.ProcessID]);

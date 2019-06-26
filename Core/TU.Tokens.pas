@@ -664,8 +664,8 @@ begin
     ImpersonationLvl := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  NtxDuplicateToken(hToken, SrcToken.hToken, Access, TokenType, ImpersonationLvl,
-    EffectiveOnly).RaiseOnError;
+  NtxDuplicateToken(hToken, SrcToken.hToken, Access, TokenType,
+    ImpersonationLvl, 0, EffectiveOnly).RaiseOnError;
 
   if EffectiveOnly then
     FCaption := SrcToken.Caption + ' (eff. copy)'
@@ -688,8 +688,8 @@ begin
   else
     TokenUser.Attributes := 0;
 
-  NtxCreateToken(hToken, TOKEN_ALL_ACCESS, TokenPrimary, SecurityImpersonation,
-    LogonID, Expires, TokenUser, Groups, Privileges, Owner, PrimaryGroup, nil,
+  NtxCreateToken(hToken, TokenPrimary, SecurityImpersonation, LogonID,
+    Expires, TokenUser, Groups, Privileges, Owner, PrimaryGroup, nil,
     Source).RaiseOnError;
 
   FCaption := 'New token: ';
@@ -910,7 +910,7 @@ function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;
 var
   hTargetProcess: THandle;
 begin
-  NtxOpenProcess(hTargetProcess, PROCESS_DUP_HANDLE, PID).RaiseOnError;
+  NtxOpenProcess(hTargetProcess, PID, PROCESS_DUP_HANDLE).RaiseOnError;
 
   try
     // Send the handle

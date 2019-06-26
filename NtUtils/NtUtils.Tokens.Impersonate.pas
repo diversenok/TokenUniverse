@@ -38,7 +38,7 @@ var
   Status: NTSTATUS;
 begin
   // Open the thread's token
-  Status := NtxOpenThreadToken(Result, hThread, TOKEN_IMPERSONATE, 0).Status;
+  Status := NtxOpenThreadToken(Result, hThread, TOKEN_IMPERSONATE).Status;
 
   if Status = STATUS_NO_TOKEN then
     Result := 0
@@ -84,7 +84,7 @@ function NtxSetThreadTokenById(TID: NativeUInt; hToken: THandle): TNtxStatus;
 var
   hThread: THandle;
 begin
-  Result := NtxOpenThread(hThread, THREAD_SET_THREAD_TOKEN, TID);
+  Result := NtxOpenThread(hThread, TID, THREAD_SET_THREAD_TOKEN);
 
   if not Result.IsSuccess then
     Exit;
@@ -143,7 +143,7 @@ begin
   end;
 
   // Read it back for comparison. Any access works for us.
-  Result := NtxOpenThreadToken(hActuallySetToken, hThread, MAXIMUM_ALLOWED, 0);
+  Result := NtxOpenThreadToken(hActuallySetToken, hThread, MAXIMUM_ALLOWED);
 
   if not Result.IsSuccess then
   begin
@@ -197,8 +197,8 @@ function NtxSafeSetThreadTokenById(TID: NativeUInt; hToken: THandle):
 var
   hThread: THandle;
 begin
-  Result := NtxOpenThread(hThread, THREAD_QUERY_LIMITED_INFORMATION or
-    THREAD_SET_THREAD_TOKEN, TID);
+  Result := NtxOpenThread(hThread, TID, THREAD_QUERY_LIMITED_INFORMATION or
+    THREAD_SET_THREAD_TOKEN);
 
   if not Result.IsSuccess then
     Exit;
@@ -218,7 +218,7 @@ begin
   begin
     // Nope, it is a primary token, duplicate it
     Result := NtxDuplicateToken(hImpToken, hToken, TOKEN_IMPERSONATE,
-      TokenImpersonation, SecurityImpersonation, False);
+      TokenImpersonation, SecurityImpersonation);
 
     if Result.IsSuccess then
     begin
@@ -266,8 +266,8 @@ function NtxAssignPrimaryTokenById(PID: NativeUInt;
 var
   hProcess: THandle;
 begin
-  Result := NtxOpenProcess(hProcess, PROCESS_QUERY_INFORMATION or
-    PROCESS_SET_INFORMATION, PID);
+  Result := NtxOpenProcess(hProcess, PID, PROCESS_QUERY_INFORMATION or
+    PROCESS_SET_INFORMATION);
 
   if not Result.IsSuccess then
     Exit;
