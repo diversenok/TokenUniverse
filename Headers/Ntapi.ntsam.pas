@@ -19,6 +19,8 @@ const
   SAM_SERVER_ENUMERATE_DOMAINS = $0010;
   SAM_SERVER_LOOKUP_DOMAIN = $0020;
 
+  SAM_SERVER_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $3F;
+
   // 202
   DOMAIN_READ_PASSWORD_PARAMETERS = $0001;
   DOMAIN_WRITE_PASSWORD_PARAMS = $0002;
@@ -32,6 +34,8 @@ const
   DOMAIN_LOOKUP = $0200;
   DOMAIN_ADMINISTER_SERVER = $0400;
 
+  DOMAIN_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $7FF;
+
   // 528
   GROUP_READ_INFORMATION = $0001;
   GROUP_WRITE_ACCOUNT = $0002;
@@ -39,12 +43,16 @@ const
   GROUP_REMOVE_MEMBER = $0008;
   GROUP_LIST_MEMBERS = $0010;
 
+  GROUP_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $1F;
+
   // 604
   ALIAS_ADD_MEMBER = $0001;
   ALIAS_REMOVE_MEMBER = $0002;
   ALIAS_LIST_MEMBERS = $0004;
   ALIAS_READ_INFORMATION = $0008;
   ALIAS_WRITE_ACCOUNT = $0010;
+
+  ALIAS_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $1F;
 
   // 706
   USER_READ_GENERAL = $0001;
@@ -58,6 +66,8 @@ const
   USER_LIST_GROUPS = $0100;
   USER_READ_GROUP_INFORMATION = $0200;
   USER_WRITE_GROUP_INFORMATION = $0400;
+
+  USER_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $7FF;
 
 type
   TSamHandle = NativeUInt;
@@ -246,6 +256,16 @@ type
 
 // 1777
 function SamFreeMemory(Buffer: Pointer): NTSTATUS; stdcall; external samlib;
+
+// 1784
+function SamSetSecurityObject(ObjectHandle: TSamHandle;
+  SecurityInformation: TSecurityInformation; const SecurityDescriptor:
+  TSecurityDescriptor): NTSTATUS; stdcall; external samlib;
+
+// 1792
+function SamQuerySecurityObject(ObjectHandle: TSamHandle;
+  SecurityInformation: TSamHandle; out SecurityDescriptor: PSecurityDescriptor):
+  NTSTATUS; stdcall; external samlib;
 
 // 1799
 function SamCloseHandle(SamHandle: TSamHandle): NTSTATUS; stdcall;

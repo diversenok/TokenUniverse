@@ -691,7 +691,7 @@ begin
         Caption := 'Current process';
         SubItems.Add(IntToStr(NtCurrentProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objToken));
+        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
         ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
       end
     else
@@ -710,7 +710,7 @@ begin
         Caption := Process.GetImageName;
         SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objToken));
+        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
         ImageIndex := TProcessIcons.GetIcon(
           NtxTryQueryImageProcessById(Process.ProcessId));
       end;

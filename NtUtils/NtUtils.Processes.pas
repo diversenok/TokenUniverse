@@ -70,7 +70,7 @@ function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 begin
   Result.Location := 'NtOpenProcess for ' + FormatAccess(DesiredAccess,
-    ObjProcess);
+    objNtProcess);
   Result.Status := NtxpOpenProcess(hProcess, PID, DesiredAccess,
     HandleAttributes);
 end;
@@ -94,7 +94,7 @@ begin
 
     if not Result.IsSuccess then
       Result.Location := 'NtOpenThread for ' +
-        FormatAccess(DesiredAccess, objThread);
+        FormatAccess(DesiredAccess, objNtThread);
   end;
 end;
 

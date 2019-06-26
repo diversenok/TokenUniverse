@@ -6,8 +6,9 @@ uses
   Winapi.WinNt;
 
 type
-  TAccessMaskType = (objProcess, objThread, objToken, objPolicy, objAccount,
-    objSCManager, objService);
+  TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtToken,
+    objLsaPolicy, objLsaAccount, objScmManager, objScmService, objSamServer,
+    objSamDomain, objSamGroup, objSamAlias, objSamUser);
 
 function FormatAccess(Access: TAccessMask; MaskType: TAccessMaskType): String;
 function FormatAccessPrefixed(Access: TAccessMask;
@@ -16,7 +17,8 @@ function FormatAccessPrefixed(Access: TAccessMask;
 implementation
 
 uses
-  DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc;
+  DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc,
+  Ntapi.ntsam;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -33,7 +35,7 @@ const
     (Value: GENERIC_ALL;            Name: 'Generic all')
   );
 
-  SpecificAccessProcess: array [0..13] of TFlagName = (
+  SpecificAccessNtProcess: array [0..13] of TFlagName = (
     (Value: PROCESS_TERMINATE;                 Name: 'Terminate'),
     (Value: PROCESS_CREATE_THREAD;             Name: 'Create threads'),
     (Value: PROCESS_SET_SESSIONID;             Name: 'Set session ID'),
@@ -50,7 +52,7 @@ const
     (Value: PROCESS_SET_LIMITED_INFORMATION;   Name: 'Set limited information')
   );
 
-  SpecificAccessThread: array [0..12] of TFlagName = (
+  SpecificAccessNtThread: array [0..12] of TFlagName = (
     (Value: THREAD_TERMINATE;                 Name: 'Terminate'),
     (Value: THREAD_SUSPEND_RESUME;            Name: 'Suspend/resume'),
     (Value: THREAD_ALERT;                     Name: 'Alert'),
@@ -66,7 +68,7 @@ const
     (Value: THREAD_RESUME;                    Name: 'Resume')
   );
 
-  SpecificAccessToken: array [0..8] of TFlagName = (
+  SpecificAccessNtToken: array [0..8] of TFlagName = (
     (Value: TOKEN_DUPLICATE;         Name: 'Duplicate'),
     (Value: TOKEN_QUERY;             Name: 'Query'),
     (Value: TOKEN_QUERY_SOURCE;      Name: 'Query source'),
@@ -78,7 +80,7 @@ const
     (Value: TOKEN_ADJUST_SESSIONID;  Name: 'Adjust session ID')
   );
 
-  SpecificAccessPolicy: array [0..12] of TFlagName = (
+  SpecificAccessLsaPolicy: array [0..12] of TFlagName = (
     (Value: POLICY_VIEW_LOCAL_INFORMATION;   Name: 'View local information'),
     (Value: POLICY_VIEW_AUDIT_INFORMATION;   Name: 'View audit information'),
     (Value: POLICY_GET_PRIVATE_INFORMATION;  Name: 'Get private information'),
@@ -94,14 +96,14 @@ const
     (Value: POLICY_NOTIFICATION;             Name: 'Notification')
   );
 
-  SpecificAccessAccount: array [0..3] of TFlagName = (
+  SpecificAccessLsaAccount: array [0..3] of TFlagName = (
     (Value: ACCOUNT_VIEW;                 Name: 'View'),
     (Value: ACCOUNT_ADJUST_PRIVILEGES;    Name: 'Adjust privileges'),
     (Value: ACCOUNT_ADJUST_QUOTAS;        Name: 'Adjust quotas'),
     (Value: ACCOUNT_ADJUST_SYSTEM_ACCESS; Name: 'Adjust system access')
   );
 
-  SpecificAccessSCManager: array [0..5] of TFlagName = (
+  SpecificAccessScmManager: array [0..5] of TFlagName = (
     (Value: SC_MANAGER_CONNECT;            Name: 'Connect'),
     (Value: SC_MANAGER_CREATE_SERVICE;     Name: 'Create service'),
     (Value: SC_MANAGER_ENUMERATE_SERVICE;  Name: 'Enumerate services'),
@@ -110,7 +112,7 @@ const
     (Value: SC_MANAGER_MODIFY_BOOT_CONFIG; Name: 'Modify boot config')
   );
 
-  SpecificAccessService: array [0..8] of TFlagName = (
+  SpecificAccessScmService: array [0..8] of TFlagName = (
     (Value: SERVICE_QUERY_CONFIG;         Name: 'Query config'),
     (Value: SERVICE_CHANGE_CONFIG;        Name: 'Change config'),
     (Value: SERVICE_QUERY_STATUS;         Name: 'Query status'),
@@ -122,9 +124,64 @@ const
     (Value: SERVICE_USER_DEFINED_CONTROL; Name: 'User-defined control')
   );
 
-  FullAccessForType: array [TAccessMaskType] of Cardinal = (
+  SpecificAccessSamServer: array [0..5] of TFlagName = (
+    (Value: SAM_SERVER_CONNECT;           Name: 'Connect'),
+    (Value: SAM_SERVER_SHUTDOWN;          Name: 'Shutdown'),
+    (Value: SAM_SERVER_INITIALIZE;        Name: 'Initialize'),
+    (Value: SAM_SERVER_CREATE_DOMAIN;     Name: 'Create domain'),
+    (Value: SAM_SERVER_ENUMERATE_DOMAINS; Name: 'Enumerate domains'),
+    (Value: SAM_SERVER_LOOKUP_DOMAIN;     Name: 'Lookup domain')
+  );
+
+  SpecificAccessSamDomain: array [0..10] of TFlagName = (
+    (Value: DOMAIN_READ_PASSWORD_PARAMETERS; Name: 'Read password parameters'),
+    (Value: DOMAIN_WRITE_PASSWORD_PARAMS;    Name: 'Write password parameters'),
+    (Value: DOMAIN_READ_OTHER_PARAMETERS;    Name: 'Read other parameters'),
+    (Value: DOMAIN_WRITE_OTHER_PARAMETERS;   Name: 'Write other parameters'),
+    (Value: DOMAIN_CREATE_USER;              Name: 'Create user'),
+    (Value: DOMAIN_CREATE_GROUP;             Name: 'Create group'),
+    (Value: DOMAIN_CREATE_ALIAS;             Name: 'Create alias'),
+    (Value: DOMAIN_GET_ALIAS_MEMBERSHIP;     Name: 'Get alias membership'),
+    (Value: DOMAIN_LIST_ACCOUNTS;            Name: 'List accounts'),
+    (Value: DOMAIN_LOOKUP;                   Name: 'Lookup'),
+    (Value: DOMAIN_ADMINISTER_SERVER;        Name: 'Administer server')
+  );
+
+  SpecificAccessSamGroup: array [0..4] of TFlagName = (
+    (Value: GROUP_READ_INFORMATION; Name: 'Read information'),
+    (Value: GROUP_WRITE_ACCOUNT;    Name: 'Write account'),
+    (Value: GROUP_ADD_MEMBER;       Name: 'Add member'),
+    (Value: GROUP_REMOVE_MEMBER;    Name: 'Remove member'),
+    (Value: GROUP_LIST_MEMBERS;     Name: 'List members')
+  );
+
+  SpecificAccessSamAlias: array [0..4] of TFlagName = (
+    (Value: ALIAS_ADD_MEMBER;       Name: 'Add member'),
+    (Value: ALIAS_REMOVE_MEMBER;    Name: 'Remove member'),
+    (Value: ALIAS_LIST_MEMBERS;     Name: 'List members'),
+    (Value: ALIAS_READ_INFORMATION; Name: 'Read information'),
+    (Value: ALIAS_WRITE_ACCOUNT;    Name: 'Write account')
+  );
+
+  SpecificAccessSamUser: array [0..10] of TFlagName = (
+    (Value: USER_READ_GENERAL;            Name: 'Read general'),
+    (Value: USER_READ_PREFERENCES;        Name: 'Read preferences'),
+    (Value: USER_WRITE_PREFERENCES;       Name: 'Write preferences'),
+    (Value: USER_READ_LOGON;              Name: 'Read logon'),
+    (Value: USER_READ_ACCOUNT;            Name: 'Read account'),
+    (Value: USER_WRITE_ACCOUNT;           Name: 'Write account'),
+    (Value: USER_CHANGE_PASSWORD;         Name: 'Change password'),
+    (Value: USER_FORCE_PASSWORD_CHANGE;   Name: 'Force password change'),
+    (Value: USER_LIST_GROUPS;             Name: 'List groups'),
+    (Value: USER_READ_GROUP_INFORMATION;  Name: 'Read group information'),
+    (Value: USER_WRITE_GROUP_INFORMATION; Name: 'Write group information')
+  );
+
+  FullAccessForType: array [TAccessMaskType] of Cardinal = (SPECIFIC_RIGHTS_ALL,
     PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS, POLICY_ALL_ACCESS,
-    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS
+    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS,
+    SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS,
+    ALIAS_ALL_ACCESS, USER_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -164,46 +221,76 @@ begin
 
   // Map and exclude type-specific access
   case MaskType of
-    objProcess:
+    objNtProcess:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessProcess));
-      ExcludeFlags(Access, SpecificAccessProcess);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtProcess));
+      ExcludeFlags(Access, SpecificAccessNtProcess);
     end;
 
-    objThread:
+    objNtThread:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessThread));
-      ExcludeFlags(Access, SpecificAccessThread);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtThread));
+      ExcludeFlags(Access, SpecificAccessNtThread);
     end;
 
-    objToken:
+    objNtToken:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessToken));
-      ExcludeFlags(Access, SpecificAccessToken);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtToken));
+      ExcludeFlags(Access, SpecificAccessNtToken);
     end;
 
-    objPolicy:
+    objLsaPolicy:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessPolicy));
-      ExcludeFlags(Access, SpecificAccessPolicy);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessLsaPolicy));
+      ExcludeFlags(Access, SpecificAccessLsaPolicy);
     end;
 
-    objAccount:
+    objLsaAccount:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessAccount));
-      ExcludeFlags(Access, SpecificAccessAccount);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessLsaAccount));
+      ExcludeFlags(Access, SpecificAccessLsaAccount);
     end;
 
-    objSCManager:
+    objScmManager:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessSCManager));
-      ExcludeFlags(Access, SpecificAccessSCManager);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessScmManager));
+      ExcludeFlags(Access, SpecificAccessScmManager);
     end;
 
-    objService:
+    objScmService:
     begin
-      ConcatFlags(Result, MapFlags(Access, SpecificAccessService));
-      ExcludeFlags(Access, SpecificAccessService);
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessScmService));
+      ExcludeFlags(Access, SpecificAccessScmService);
+    end;
+
+    objSamServer:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessSamServer));
+      ExcludeFlags(Access, SpecificAccessSamServer);
+    end;
+
+    objSamDomain:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessSamDomain));
+      ExcludeFlags(Access, SpecificAccessSamDomain);
+    end;
+
+    objSamGroup:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessSamGroup));
+      ExcludeFlags(Access, SpecificAccessSamGroup);
+    end;
+
+    objSamAlias:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessSamAlias));
+      ExcludeFlags(Access, SpecificAccessSamAlias);
+    end;
+
+    objSamUser:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessSamUser));
+      ExcludeFlags(Access, SpecificAccessSamUser);
     end;
   end;
 
@@ -220,7 +307,7 @@ begin
   // Map unknown and reserved bits as hex values
   for i := 0 to 31 do
     if Contains(Access, 1 shl i) then
-      ConcatFlags(Result, IntToHexEx(1 shl i, 8));
+      ConcatFlags(Result, IntToHexEx(1 shl i, 6));
 end;
 
 function FormatAccessPrefixed(Access: TAccessMask;

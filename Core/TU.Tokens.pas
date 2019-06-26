@@ -1103,9 +1103,10 @@ begin
     tsAccess:
       if Detailed then
         Result := FormatAccessPrefixed(Token.HandleInformation.GrantedAccess,
-          objToken)
+          objNtToken)
       else
-        Result := FormatAccess(Token.HandleInformation.GrantedAccess, objToken);
+        Result := FormatAccess(Token.HandleInformation.GrantedAccess,
+          objNtToken);
 
     tsUserName:
       Result := Token.Cache.User.SecurityIdentifier.Lookup.FullName;

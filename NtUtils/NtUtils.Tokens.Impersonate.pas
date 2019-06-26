@@ -243,7 +243,7 @@ begin
 
   // Despite the process handle, we need a handle to the initial thread
   Result.Location := 'NtGetNextThread for ' +
-    FormatAccess(THREAD_QUERY_LIMITED_INFORMATION, objThread);
+    FormatAccess(THREAD_QUERY_LIMITED_INFORMATION, objNtThread);
   Result.Status := NtGetNextThread(hProcess, 0,
     THREAD_QUERY_LIMITED_INFORMATION, 0, 0, AccessToken.Thread);
 

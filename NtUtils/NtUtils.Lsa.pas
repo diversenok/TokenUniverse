@@ -122,7 +122,7 @@ begin
   InitializeObjectAttributes(ObjAttr);
 
   Result.Location := 'LsaOpenPolicy for ' + FormatAccess(DesiredAccess,
-    objPolicy);
+    objLsaPolicy);
   Result.Status := LsaOpenPolicy(nil, ObjAttr, DesiredAccess, PolicyHandle);
 
   // Cache lookup handle to optimize queries and to make sure we can lookup
@@ -151,7 +151,7 @@ begin
     Exit;
 
   Result.Location := 'LsaOpenAccount for ' + FormatAccess(DesiredAccess,
-    objAccount);
+    objLsaAccount);
   Result.Status := LsaOpenAccount(hPolicy, AccountSid, DesiredAccess,
     AccountHandle);
 

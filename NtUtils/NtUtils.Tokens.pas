@@ -138,7 +138,7 @@ function NtxOpenProcessToken(out hToken: THandle; hProcess: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 begin
   Result.Location := 'NtOpenProcessTokenEx for ' + FormatAccess(DesiredAccess,
-    objToken);
+    objNtToken);
   Result.Status := NtOpenProcessTokenEx(hProcess, DesiredAccess,
     HandleAttributes, hToken);
 end;
@@ -166,7 +166,7 @@ begin
   // reading a token from the current thread use the process security context
 
   Result.Location := 'NtOpenThreadTokenEx for ' + FormatAccess(DesiredAccess,
-    objThread);
+    objNtToken);
   Result.Status := NtOpenThreadTokenEx(hThread, DesiredAccess,
     (hThread = NtCurrentThread), HandleAttributes, hToken);
 end;
@@ -253,7 +253,7 @@ begin
   InitializeObjectAttributes(ObjAttr, nil, HandleAttributes, 0, @QoS);
 
   Result.Location := 'NtDuplicateToken for ' + FormatAccess(DesiredAccess,
-    objToken);
+    objNtToken);
   Result.Status := NtDuplicateToken(hExistingToken, DesiredAccess, @ObjAttr,
     EffectiveOnly, TokenType, hToken);
 end;
