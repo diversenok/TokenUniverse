@@ -6,7 +6,8 @@ uses
   Winapi.WinNt;
 
 type
-  TAccessMaskType = (objProcess, objThread, objToken, objPolicy, objAccount);
+  TAccessMaskType = (objProcess, objThread, objToken, objPolicy, objAccount,
+    objSCManager, objService);
 
 function FormatAccess(Access: TAccessMask; MaskType: TAccessMaskType): String;
 function FormatAccessPrefixed(Access: TAccessMask;
@@ -15,7 +16,7 @@ function FormatAccessPrefixed(Access: TAccessMask;
 implementation
 
 uses
-  DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa;
+  DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -100,9 +101,30 @@ const
     (Value: ACCOUNT_ADJUST_SYSTEM_ACCESS; Name: 'Adjust system access')
   );
 
+  SpecificAccessSCManager: array [0..5] of TFlagName = (
+    (Value: SC_MANAGER_CONNECT;            Name: 'Connect'),
+    (Value: SC_MANAGER_CREATE_SERVICE;     Name: 'Create service'),
+    (Value: SC_MANAGER_ENUMERATE_SERVICE;  Name: 'Enumerate services'),
+    (Value: SC_MANAGER_LOCK;               Name: 'Lock'),
+    (Value: SC_MANAGER_QUERY_LOCK_STATUS;  Name: 'Query lock status'),
+    (Value: SC_MANAGER_MODIFY_BOOT_CONFIG; Name: 'Modify boot config')
+  );
+
+  SpecificAccessService: array [0..8] of TFlagName = (
+    (Value: SERVICE_QUERY_CONFIG;         Name: 'Query config'),
+    (Value: SERVICE_CHANGE_CONFIG;        Name: 'Change config'),
+    (Value: SERVICE_QUERY_STATUS;         Name: 'Query status'),
+    (Value: SERVICE_ENUMERATE_DEPENDENTS; Name: 'Enumerate dependents'),
+    (Value: SERVICE_START;                Name: 'Start'),
+    (Value: SERVICE_STOP;                 Name: 'Stop'),
+    (Value: SERVICE_PAUSE_CONTINUE;       Name: 'Pause/continue'),
+    (Value: SERVICE_INTERROGATE;          Name: 'Interrogate'),
+    (Value: SERVICE_USER_DEFINED_CONTROL; Name: 'User-defined control')
+  );
+
   FullAccessForType: array [TAccessMaskType] of Cardinal = (
     PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS, POLICY_ALL_ACCESS,
-    ACCOUNT_ALL_ACCESS
+    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -170,6 +192,18 @@ begin
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessAccount));
       ExcludeFlags(Access, SpecificAccessAccount);
+    end;
+
+    objSCManager:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessSCManager));
+      ExcludeFlags(Access, SpecificAccessSCManager);
+    end;
+
+    objService:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessService));
+      ExcludeFlags(Access, SpecificAccessService);
     end;
   end;
 

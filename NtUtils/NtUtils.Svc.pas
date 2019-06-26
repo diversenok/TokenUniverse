@@ -9,18 +9,57 @@ type
   TScmHandle = Winapi.Svc.TScmHandle;
   TStringArray = Winapi.WinNt.TStringArray;
 
+// Open a handle to SCM
+function ScmxConnect(out hScm: TScmHandle; DesiredAccess: Cardinal): TNtxStatus;
+
+// Open a service
+function ScmxOpenService(out hSvc: TScmHandle; ServiceName: String;
+  DesiredAccess: TAccessMask): TNtxStatus;
+
+// Create a service
 function ScmxCreateService(out hSvc: TScmHandle; CommandLine, ServiceName,
    DisplayName: String; StartType: Cardinal = SERVICE_DEMAND_START): TNtxStatus;
 
+// Start a service
 function ScmxStartService(hSvc: TScmHandle): TNtxStatus; overload;
 function ScmxStartService(hSvc: TScmHandle; Parameters: TStringArray):
   TNtxStatus; overload;
 
+// Delete a service
 function ScmxDeleteService(hSvc: TScmHandle): TNtxStatus;
 
+// Close SCM/service handle
 function ScmxClose(var hObject: TScmHandle): Boolean;
 
 implementation
+
+function ScmxConnect(out hScm: TScmHandle; DesiredAccess: Cardinal): TNtxStatus;
+begin
+  hScm := OpenSCManagerW(nil, nil, DesiredAccess);
+
+  Result.Location := 'OpenSCManagerW';
+  Result.Win32Result := (hScm <> 0);
+end;
+
+function ScmxOpenService(out hSvc: TScmHandle; ServiceName: String;
+  DesiredAccess: TAccessMask): TNtxStatus;
+var
+  hScm: TScmHandle;
+begin
+  // Connect to SCM
+  Result := ScmxConnect(hScm, SC_MANAGER_CONNECT);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Create service
+  hSvc := OpenServiceW(hScm, PWideChar(ServiceName), DesiredAccess);
+
+  Result.Location := 'CreateServiceW';
+  Result.Win32Result := (hSvc <> 0);
+
+  CloseServiceHandle(hScm);
+end;
 
 function ScmxCreateService(out hSvc: TScmHandle; CommandLine, ServiceName,
    DisplayName: String; StartType: Cardinal): TNtxStatus;
@@ -28,10 +67,7 @@ var
   hScm: TScmHandle;
 begin
   // Connect to SCM
-  hScm := OpenSCManagerW(nil, nil, SC_MANAGER_CREATE_SERVICE);
-
-  Result.Location := 'OpenSCManagerW';
-  Result.Win32Result := (hScm <> 0);
+  Result := ScmxConnect(hScm, SC_MANAGER_CREATE_SERVICE);
 
   if not Result.IsSuccess then
     Exit;
