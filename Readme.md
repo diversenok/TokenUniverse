@@ -97,12 +97,17 @@ My goal is to create a useful tool that implements almost everything I know abou
 
 ## Security Account Manager
  - [ ] Domain information
- - [ ] User information
- - [ ] Alias information
  - [ ] Group information
- - [ ] Enumerate domain members
- - [ ] Enumerate alias members
+ - [ ] Alias information
+ - [ ] User information
+ - [ ] Enumerate domain groups/aliases/users
  - [ ] Enumerate group members
+ - [ ] Enumerate alias members
+ - [ ] Manage group members
+ - [ ] Manage alias members
+ - [ ] Create groups
+ - [ ] Create aliases
+ - [ ] Create users
  - [ ] Security
 
 ## Process creation

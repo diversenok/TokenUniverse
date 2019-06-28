@@ -148,8 +148,17 @@ type
   end;
   PDomainModifiedInformation = ^TDomainModifiedInformation;
 
+  // 558
+  TGroupMembership = record
+    RelativeId: Cardinal;
+    Attributes: Cardinal;
+  end;
+  PGroupMembership = ^TGroupMembership;
+
+  PGroupMembershipArray = array [Word] of PGroupMembership;
+
   // 565
-  TGroupInfrmationClass = (
+  TGroupInformationClass = (
     GroupGeneralInformation = 1,     // q: TGroupGeneralInformation
     GroupNameInformation = 2,        // q, s: UNICODE_STRING;
     GroupAttributeInformation = 3,   // q, s: Cardinal
@@ -255,7 +264,10 @@ type
   PUserLogonInformation = ^TUserLogonInformation;
 
 // 1777
-function SamFreeMemory(Buffer: Pointer): NTSTATUS; stdcall; external samlib;
+function SamFreeMemory(Buffer: Pointer): NTSTATUS; stdcall;
+  external samlib; overload;
+function SamFreeMemory(Buffer: PGroupMembershipArray): NTSTATUS; stdcall;
+  external samlib; overload;
 
 // 1784
 function SamSetSecurityObject(ObjectHandle: TSamHandle;
@@ -274,6 +286,10 @@ function SamCloseHandle(SamHandle: TSamHandle): NTSTATUS; stdcall;
 // 1805
 function SamConnect(ServerName: PUNICODE_STRING; out ServerHandle: TSamHandle;
   DesiredAccess: TAccessMask; const ObjectAttributes: TObjectAttributes):
+  NTSTATUS; stdcall; external samlib;
+
+// 1814
+function SamShutdownSamServer(ServerHandle: TSamHandle):
   NTSTATUS; stdcall; external samlib;
 
 // 1820
@@ -302,11 +318,22 @@ function SamSetInformationDomain(DomainHandle: TSamHandle;
   DomainInformationClass: TDomainInformationClass; DomainInformation: Pointer):
   NTSTATUS; stdcall; external samlib;
 
+// 1863
+function SamCreateGroupInDomain(DomainHandle: TSamHandle; const AccountName:
+  UNICODE_STRING; DesiredAccess: TAccessMask; out GroupHandle: TSamHandle;
+  out RelativeId: Cardinal): NTSTATUS; stdcall; external samlib;
+
 // 1874
 function SamEnumerateGroupsInDomain(DomainHandle: TSamHandle;
   var EnumerationContext: TSamEnumerationHandle;
   out Buffer: PSamRidEnumerationArray; PreferedMaximumLength: Integer;
   out CountReturned: Integer): NTSTATUS; stdcall; external samlib;
+
+// 1884
+function SamCreateUser2InDomain(DomainHandle: TSamHandle; const AccountName:
+  UNICODE_STRING; AccountType: Cardinal; DesiredAccess: TAccessMask;
+  out UserHandle: TSamHandle; out GrantedAccess: TAccessMask;
+  out RelativeId: Cardinal): NTSTATUS; stdcall; external samlib;
 
 // 1906
 function SamEnumerateUsersInDomain(DomainHandle: TSamHandle;
@@ -314,7 +341,12 @@ function SamEnumerateUsersInDomain(DomainHandle: TSamHandle;
   out Buffer: PSamRidEnumerationArray; PreferedMaximumLength: Integer;
   out CountReturned: Integer): NTSTATUS; stdcall; external samlib;
 
-// 1929
+// 1917
+function SamCreateAliasInDomain(DomainHandle: TSamHandle; const AccountName:
+  UNICODE_STRING; DesiredAccess: TAccessMask; out AliasHandle: TSamHandle;
+  out RelativeId: Cardinal): NTSTATUS; stdcall; external samlib;
+
+// 1927
 function SamEnumerateAliasesInDomain(DomainHandle: TSamHandle;
   var EnumerationContext: TSamEnumerationHandle;
   out Buffer: PSamRidEnumerationArray; PreferedMaximumLength: Integer;
@@ -327,18 +359,34 @@ function SamOpenGroup(DomainHandle: TSamHandle; DesiredAccess: TAccessMask;
 
 // 1976
 function SamQueryInformationGroup(GroupHandle: TSamHandle;
-  GroupInformationClass: TGroupGeneralInformation;
+  GroupInformationClass: TGroupInformationClass;
   out Buffer: Pointer): NTSTATUS; stdcall; external samlib;
 
 // 1984
 function SamSetInformationGroup(GroupHandle: TSamHandle;
-  GroupInformationClass: TGroupInfrmationClass; Buffer: Pointer): NTSTATUS;
+  GroupInformationClass: TGroupInformationClass; Buffer: Pointer): NTSTATUS;
   stdcall; external samlib;
+
+// 1992
+function SamAddMemberToGroup(GroupHandle: TSamHandle; MemberId: Cardinal;
+  Attributes: Cardinal): NTSTATUS; stdcall; external samlib;
+
+// 2000
+function SamDeleteGroup(GroupHandle: TSamHandle): NTSTATUS; stdcall;
+  external samlib;
+
+// 2006
+function SamRemoveMemberFromGroup(GroupHandle: TSamHandle; MemberId: Cardinal):
+  NTSTATUS; stdcall; external samlib;
 
 // 2013
 function SamGetMembersInGroup(GroupHandle: TSamHandle;
   out MemberIds: PCardinalArray; out Attributes: PCardinalArray;
-  out MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
+  out MemberCount: Integer): NTSTATUS; stdcall; external samlib;
+
+// 2022
+function SamSetMemberAttributesOfGroup(GroupHandle: TSamHandle;
+  MemberId: Cardinal; Attributes: Cardinal): NTSTATUS; stdcall; external samlib;
 
 // 2030
 function SamOpenAlias(DomainHandle: TSamHandle; DesiredAccess: TAccessMask;
@@ -355,13 +403,29 @@ function SamSetInformationAlias(AliasHandle: TSamHandle;
   AliasInformationClass: TAliasInformationClass; Buffer: Pointer): NTSTATUS;
   stdcall; external samlib;
 
+// 2055
+function SamDeleteAlias(AliasHandle: TSamHandle): NTSTATUS; stdcall;
+  external samlib;
+
+// 2061
+function SamAddMemberToAlias(AliasHandle: TSamHandle; MemberId: PSid): NTSTATUS;
+  stdcall; external samlib;
+
+// 2076
+function SamRemoveMemberFromAlias(AliasHandle: TSamHandle; MemberId: PSid):
+  NTSTATUS; stdcall; external samlib;
+
 // 2098
 function SamGetMembersInAlias(AliasHandle: TSamHandle; out MemberIds: PSidArray;
-  out MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
+  out MemberCount: Integer): NTSTATUS; stdcall; external samlib;
 
 // 2106
 function SamOpenUser(DomainHandle: TSamHandle; DesiredAccess: TAccessMask;
   UserId: Cardinal; out UserHandle: TSamHandle): NTSTATUS; stdcall;
+  external samlib;
+
+// 2115
+function SamDeleteUser(UserHandle: TSamHandle): NTSTATUS; stdcall;
   external samlib;
 
 // 2121
@@ -372,6 +436,11 @@ function SamQueryInformationUser(UserHandle: TSamHandle;
 // 2129
 function SamSetInformationUser(UserHandle: TSamHandle;
   UserInformationClass: TUserInformationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
+
+// 2167
+function SamGetGroupsForUser(UserHandle: TSamHandle; out Groups:
+  PGroupMembershipArray; out MembershipCount: Integer): NTSTATUS;
   stdcall; external samlib;
 
 // 2198
