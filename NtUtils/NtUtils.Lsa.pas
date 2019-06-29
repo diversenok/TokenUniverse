@@ -102,42 +102,22 @@ uses
 
 { Basic operation }
 
-var
-  // A cache handle for lookup queries
-  hPolicyLookupCached: TLsaHandle = 0;
-
 function LsaxOpenPolicy(out PolicyHandle: TLsaHandle; DesiredAccess: TAccessMask):
   TNtxStatus;
 var
   ObjAttr: TObjectAttributes;
 begin
-  // Use cached lookup handle if applicable
-  if (DesiredAccess = POLICY_LOOKUP_NAMES) and (hPolicyLookupCached <> 0) then
-  begin
-    PolicyHandle := hPolicyLookupCached;
-    Result.Status := STATUS_SUCCESS;
-    Exit;
-  end;
-
   InitializeObjectAttributes(ObjAttr);
 
   Result.Location := 'LsaOpenPolicy for ' + FormatAccess(DesiredAccess,
     objLsaPolicy);
   Result.Status := LsaOpenPolicy(nil, ObjAttr, DesiredAccess, PolicyHandle);
-
-  // Cache lookup handle to optimize queries and to make sure we can lookup
-  // names as much time as possible as we change our security context.
-  if (DesiredAccess = POLICY_LOOKUP_NAMES) and Result.IsSuccess then
-    hPolicyLookupCached := PolicyHandle;
 end;
 
 procedure LsaxClose(var LsaHandle: TLsaHandle);
 begin
-  if LsaHandle <> hPolicyLookupCached then
-  begin
-    LsaClose(LsaHandle);
-    LsaHandle := 0;
-  end;
+  LsaClose(LsaHandle);
+  LsaHandle := 0;
 end;
 
 function LsaxOpenAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
@@ -642,10 +622,4 @@ begin
   LsaFreeReturnBuffer(Buffer);
 end;
 
-initialization
-
-finalization
-  // Clean up policy lookup handle
-  if hPolicyLookupCached <> 0 then
-    LsaClose(hPolicyLookupCached);
 end.
