@@ -52,7 +52,8 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
-  Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings;
+  Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings,
+  NtUtils.Exceptions;
 
 {$R *.dfm}
 

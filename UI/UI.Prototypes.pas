@@ -95,7 +95,8 @@ type
 implementation
 
 uses
-  DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntrtl, NtUtils.Lsa;
+  DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntrtl, NtUtils.Lsa,
+  NtUtils.Exceptions;
 
 { TSessionSource }
 

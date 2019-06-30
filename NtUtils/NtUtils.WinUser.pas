@@ -39,6 +39,10 @@ begin
 
   // Determine required buffer size
   Result.Location := 'GetUserObjectInformationW';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(UserObjectName);
+  Result.LastCall.InfoClassType := TypeInfo(TUserObjectInfoClass);
+
   Result.Win32Result := GetUserObjectInformationW(hObj, UserObjectName, nil, 0,
     @BufferSize);
 

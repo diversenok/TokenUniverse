@@ -38,9 +38,12 @@ function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
   TNtxStatus;
 begin
   hScm := OpenSCManagerW(nil, nil, DesiredAccess);
+  Result.Win32Result := (hScm <> 0);
 
   Result.Location := 'OpenSCManagerW';
-  Result.Win32Result := (hScm <> 0);
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objScmManager;
 end;
 
 function ScmxOpenService(out hSvc: TScmHandle; ServiceName: String;
@@ -56,9 +59,12 @@ begin
 
   // Create service
   hSvc := OpenServiceW(hScm, PWideChar(ServiceName), DesiredAccess);
+  Result.Win32Result := (hSvc <> 0);
 
   Result.Location := 'OpenServiceW';
-  Result.Win32Result := (hSvc <> 0);
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objScmService;
 
   ScmxClose(hScm);
 end;

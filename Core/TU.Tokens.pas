@@ -1458,8 +1458,8 @@ begin
   pAuditPolicy := Value.RawBuffer;
 
   try
-    NtxCheck(NtSetInformationToken(Token.hToken, TokenAuditPolicy,
-      pAuditPolicy, Value.RawBufferSize), NtxFormatTokenSet(TokenAuditPolicy));
+    NtxSetInformationToken(Token.hToken, TokenAuditPolicy, pAuditPolicy,
+      Value.RawBufferSize).RaiseOnError;
   finally
     Value.FreeRawBuffer(pAuditPolicy);
   end;

@@ -97,8 +97,7 @@ function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Winapi.NtSecApi, Ntapi.ntseapi, System.SysUtils,
-  NtUtils.AccessMasks;
+  Ntapi.ntdef, Ntapi.ntstatus, Winapi.NtSecApi, Ntapi.ntseapi, System.SysUtils;
 
 { Basic operation }
 
@@ -109,8 +108,11 @@ var
 begin
   InitializeObjectAttributes(ObjAttr);
 
-  Result.Location := 'LsaOpenPolicy for ' + FormatAccess(DesiredAccess,
-    objLsaPolicy);
+  Result.Location := 'LsaOpenPolicy';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objLsaPolicy;
+
   Result.Status := LsaOpenPolicy(nil, ObjAttr, DesiredAccess, PolicyHandle);
 end;
 
@@ -130,8 +132,11 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result.Location := 'LsaOpenAccount for ' + FormatAccess(DesiredAccess,
-    objLsaAccount);
+  Result.Location := 'LsaOpenAccount';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objLsaAccount;
+
   Result.Status := LsaOpenAccount(hPolicy, AccountSid, DesiredAccess,
     AccountHandle);
 

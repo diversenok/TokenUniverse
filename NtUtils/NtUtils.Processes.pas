@@ -45,10 +45,10 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, NtUtils.Objects,
-  DelphiUtils.Strings, NtUtils.AccessMasks;
+  DelphiUtils.Strings;
 
-function NtxpOpenProcess(out hProcess: THandle; PID: NativeUInt;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): NTSTATUS;
+function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
 var
   ClientId: TClientId;
   ObjAttr: TObjectAttributes;
@@ -56,23 +56,20 @@ begin
   if PID = NtCurrentProcessId then
   begin
     hProcess := NtCurrentProcess;
-    Result := STATUS_SUCCESS;
+    Result.Status := STATUS_SUCCESS;
   end
   else
   begin
     InitializeObjectAttributes(ObjAttr);
     ClientId.Create(PID, 0);
-    Result := NtOpenProcess(hProcess, DesiredAccess, ObjAttr, ClientId);
-  end;
-end;
 
-function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
-  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
-begin
-  Result.Location := 'NtOpenProcess for ' + FormatAccess(DesiredAccess,
-    objNtProcess);
-  Result.Status := NtxpOpenProcess(hProcess, PID, DesiredAccess,
-    HandleAttributes);
+    Result.Location := 'NtOpenProcess';
+    Result.LastCall.CallType := lcOpenCall;
+    Result.LastCall.AccessMask := DesiredAccess;
+    Result.LastCall.AccessMaskType := TAccessMaskType.objNtProcess;
+
+    Result.Status := NtOpenProcess(hProcess, DesiredAccess, ObjAttr, ClientId);
+  end;
 end;
 
 function NtxOpenThread(out hThread: THandle; TID: NativeUInt;
@@ -90,11 +87,13 @@ begin
   begin
     InitializeObjectAttributes(ObjAttr);
     ClientId.Create(0, TID);
-    Result.Status := NtOpenThread(hThread, DesiredAccess, ObjAttr, ClientId);
 
-    if not Result.IsSuccess then
-      Result.Location := 'NtOpenThread for ' +
-        FormatAccess(DesiredAccess, objNtThread);
+    Result.Location := 'NtOpenThread';
+    Result.LastCall.CallType := lcOpenCall;
+    Result.LastCall.AccessMask := DesiredAccess;
+    Result.LastCall.AccessMaskType := TAccessMaskType.objNtThread;
+
+    Result.Status := NtOpenThread(hThread, DesiredAccess, ObjAttr, ClientId);
   end;
 end;
 
@@ -149,7 +148,11 @@ begin
 
   try
     // Requires PROCESS_QUERY_LIMITED_INFORMATION
-    Result.Location := 'NtQueryInformationProcess [ProcessImageFileNameWin32]';
+    Result.Location := 'NtQueryInformationProcess';
+    Result.LastCall.CallType := lcQuerySetCall;
+    Result.LastCall.InfoClass := Integer(ProcessImageFileNameWin32);
+    Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+
     Result.Status := NtQueryInformationProcess(hProcess,
       ProcessImageFileNameWin32, Buffer, MAX_NAME, nil);
 
@@ -165,8 +168,8 @@ var
 begin
   Result := '';
 
-  if not NT_SUCCESS(NtxpOpenProcess(hProcess, PID,
-    PROCESS_QUERY_LIMITED_INFORMATION, 0)) then
+  if not NtxOpenProcess(hProcess, PID, PROCESS_QUERY_LIMITED_INFORMATION
+    ).IsSuccess then
     Exit;
 
   NtxQueryImageProcess(hProcess, Result);
@@ -177,6 +180,10 @@ function NtxQueryBasicInformationProcess(hProcess: THandle;
   out BasicInfo: TProcessBasinInformation): TNtxStatus;
 begin
   Result.Location := 'NtQueryInformationProcess';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ProcessBasicInformation);
+  Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+
   Result.Status := NtQueryInformationProcess(hProcess, ProcessBasicInformation,
     @BasicInfo, SizeOf(BasicInfo), nil);
 end;
@@ -185,7 +192,11 @@ function NtxAssertNotWoW64: TNtxStatus;
 var
   IsWoW64: NativeUInt;
 begin
-  Result.Location := 'NtQueryInformationProcess [ProcessWow64Information]';
+  Result.Location := 'NtQueryInformationProcess';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ProcessWow64Information);
+  Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+
   Result.Status := NtQueryInformationProcess(NtCurrentProcess,
     ProcessWow64Information, @IsWoW64, SizeOf(IsWoW64), nil);
 

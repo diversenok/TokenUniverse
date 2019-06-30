@@ -55,6 +55,10 @@ var
   Rerurned: Cardinal;
 begin
   Result.Location := 'WinStationQueryInformationW';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(WinStationInformation);
+  Result.LastCall.InfoClassType := TypeInfo(TWinStationInfoClass);
+
   Result.Win32Result := WinStationQueryInformationW(hServer, SessionId,
     WinStationInformation, @Info, SizeOf(Info), Rerurned);
 end;
@@ -87,6 +91,10 @@ begin
   // call inserts a handle to SbieSvc.exe's handle table and not into ours
 
   Result.Location := 'WinStationQueryInformationW';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(WinStationUserToken);
+  Result.LastCall.InfoClassType := TypeInfo(TWinStationInfoClass);
+
   Result.Win32Result := WinStationQueryInformationW(hServer, SessionId,
     WinStationUserToken, @UserToken, SizeOf(UserToken), Returned);
 

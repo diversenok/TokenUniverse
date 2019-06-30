@@ -165,7 +165,12 @@ var
   BufferSize: Cardinal;
 begin
   BufferSize := 0;
-  Result.Location := 'NtQueryObject [ObjectNameInformation]';
+
+  Result.Location := 'NtQueryObject';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ObjectNameInformation);
+  Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+
   Result.Status := NtQueryObject(hObject, ObjectNameInformation, nil, 0,
     @BufferSize);
 
@@ -187,7 +192,11 @@ end;
 function NtxQueryBasicInfoObject(hObject: THandle;
   out Info: TObjectBasicInformaion): TNtxStatus;
 begin
-  Result.Location := 'NtQueryObject [ObjectBasicInformation]';
+  Result.Location := 'NtQueryObject';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ObjectBasicInformation);
+  Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+
   Result.Status := NtQueryObject(hObject, ObjectBasicInformation, @Info,
     SizeOf(Info), nil);
 end;

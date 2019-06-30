@@ -23,14 +23,13 @@ implementation
 
 uses
   Ntapi.ntseapi, Winapi.WinError, Winapi.CommCtrl, Ntapi.ntdef, Ntapi.ntstatus,
-  NtUtils.Exceptions, NtUtils.ErrorMsg, NtUtils.Tokens.Misc;
+  NtUtils.Exceptions, NtUtils.ErrorMsg, Ntapi.ntpsapi, NtUtils.AccessMasks,
+  System.TypInfo;
 
 resourcestring
   TITLE_OS_ERROR = 'System error';
   TITLE_CONVERT = 'Conversion error';
   TITLE_BUG = 'This is definitely a bug...';
-  ERR_FMT = 'Last call: %s' + #$D#$A +
-   'Result: %s' + #$D#$A#$D#$A + '%s';
 
   BUGTRACKER = #$D#$A#$D#$A'If you known how to reproduce this error please ' +
     'help the project by opening an issue on our GitHub page'#$D#$A +
@@ -113,66 +112,85 @@ begin
     Exit(NEW_SAFER_IMP);
 end;
 
+function MatchesInfoClass(E: ENtError; InfoClass: TTokenInformationClass):
+  Boolean;
+begin
+  Result := (E.LastCall.CallType = lcQuerySetCall) and
+    (E.LastCall.InfoClass = Cardinal(InfoClass)) and
+    (E.LastCall.InfoClassType = TypeInfo(TTokenInformationClass));
+end;
+
+function MatchesInfoClassAndCode(E: ENtError; InfoClass: TTokenInformationClass;
+  ErrorCode: Cardinal): Boolean;
+begin
+  Result := (E.ErrorCode = ErrorCode) and MatchesInfoClass(E, InfoClass);
+end;
+
 function SuggestGetter(E: ENtError): String;
 begin
+  if E.ErrorLocation <> 'NtQueryInformationToken' then
+    Exit('');
+
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
-    if E.ErrorLocation = NtxFormatTokenQuery(TokenSource) then
-      Exit(GETTER_QUERY_SOURCE);
-
-    if E.ErrorLocation.StartsWith('GetTokenInformation:') then
+    if MatchesInfoClass(E, TokenSource) then
+      Exit(GETTER_QUERY_SOURCE)
+    else
       Exit(GETTER_QUERY);
   end;
 end;
 
 function SuggestSetter(E: ENtError): String;
 begin
+  if E.ErrorLocation <> 'NtSetInformationToken' then
+    Exit('');
+
   if E.ErrorCode = ERROR_ACCESS_DENIED then
   begin
-    if E.ErrorLocation = NtxFormatTokenSet(TokenSessionId) then
+    if MatchesInfoClass(E, TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if (E.ErrorLocation = NtxFormatTokenSet(TokenIntegrityLevel))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenUIAccess))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenMandatoryPolicy))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenOwner))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenPrimaryGroup))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenOrigin))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenVirtualizationAllowed))
-      or (E.ErrorLocation = NtxFormatTokenSet(TokenVirtualizationEnabled)) then
+    if MatchesInfoClass(E, TokenIntegrityLevel)
+      or MatchesInfoClass(E, TokenUIAccess)
+      or MatchesInfoClass(E, TokenMandatoryPolicy)
+      or MatchesInfoClass(E, TokenOwner)
+      or MatchesInfoClass(E, TokenPrimaryGroup)
+      or MatchesInfoClass(E, TokenOrigin)
+      or MatchesInfoClass(E, TokenVirtualizationAllowed)
+      or MatchesInfoClass(E, TokenVirtualizationEnabled) then
       Exit(SETTER_DEFAULT);
   end;
 
-  if E.Matches(NtxFormatTokenSet(TokenOwner), ERROR_INVALID_OWNER) then
+  if MatchesInfoClassAndCode(E, TokenOwner, ERROR_INVALID_OWNER) then
     Exit(SETTER_OWNER);
 
-  if E.Matches(NtxFormatTokenSet(TokenPrimaryGroup), ERROR_INVALID_PRIMARY_GROUP) then
+  if MatchesInfoClassAndCode(E, TokenPrimaryGroup, ERROR_INVALID_PRIMARY_GROUP) then
     Exit(SETTER_PRIMARY);
 
-  if E.Matches(NtxFormatTokenSet(TokenAuditPolicy), ERROR_INVALID_PARAMETER) then
+  if MatchesInfoClassAndCode(E, TokenAuditPolicy, ERROR_INVALID_PARAMETER) then
     Exit(SETTER_AUDIT_ONCE);
 
   if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
   begin
-    if E.ErrorLocation = NtxFormatTokenSet(TokenSessionId) then
+    if MatchesInfoClass(E, TokenSessionId) then
       Exit(SETTER_SESSION);
 
-    if E.ErrorLocation = NtxFormatTokenSet(TokenIntegrityLevel) then
+    if MatchesInfoClass(E, TokenIntegrityLevel) then
       Exit(SETTER_INTEGRITY_TCB);
 
-    if E.ErrorLocation = NtxFormatTokenSet(TokenUIAccess) then
+    if MatchesInfoClass(E, TokenUIAccess) then
       Exit(SETTER_UIACCESS_TCB);
 
-    if E.ErrorLocation = NtxFormatTokenSet(TokenMandatoryPolicy) then
+    if MatchesInfoClass(E, TokenMandatoryPolicy) then
       Exit(SETTER_POLICY_TCB);
 
-    if E.ErrorLocation = NtxFormatTokenSet(TokenVirtualizationAllowed) then
+    if MatchesInfoClass(E, TokenVirtualizationAllowed) then
       Exit(SETTOR_VIRT_PRIV);
 
-    if E.ErrorLocation = NtxFormatTokenSet(TokenOrigin) then
+    if MatchesInfoClass(E, TokenOrigin) then
       Exit(SETTER_ORIGIN_TCB);
 
-    if E.ErrorLocation = NtxFormatTokenSet(TokenAuditPolicy) then
+    if MatchesInfoClass(E, TokenAuditPolicy) then
       Exit(SETTER_AUDIT_PRIV);
   end;
 
@@ -197,7 +215,9 @@ begin
       Exit(SETTER_GROUPS_MODIFY);
   end;
 
-  if E.ErrorLocation = 'NtSetInformationProcess#ProcessAccessToken' then
+  if (E.ErrorLocation = 'NtSetInformationProcess') and
+    (E.LastCall.CallType = lcQuerySetCall) and
+    (E.LastCall.InfoClass = Cardinal(ProcessAccessToken)) then
   begin
    if E.ErrorCode = STATUS_NOT_SUPPORTED then
      Exit(ACTION_ASSIGN_NOT_SUPPORTED);
@@ -232,6 +252,8 @@ end;
 procedure ShowErrorSuggestions(ParentWnd: HWND; E: Exception);
 var
   Dlg: TASKDIALOGCONFIG;
+  ENt: ENtError;
+  Msg: String;
 begin
   FillChar(Dlg, SizeOf(Dlg), 0);
   Dlg.cbSize := SizeOf(Dlg);
@@ -253,18 +275,32 @@ begin
   end
   else if E is ENtError then
   begin
-    if not NT_ERROR(ENtError(E).ErrorCode) then
+    ENt := ENtError(E);
+
+    if not NT_ERROR(ENt.ErrorCode) then
       Dlg.pszMainIcon := TD_WARNING_ICON;
 
-    Dlg.pszMainInstruction := PWideChar(
-      StatusToDescription(ENtError(E).ErrorCode));
+    Dlg.pszMainInstruction := PWideChar(StatusToDescription(ENt.ErrorCode));
 
     if Dlg.pszMainInstruction = '' then
       Dlg.pszMainInstruction := PWideChar(TITLE_OS_ERROR);
 
-    Dlg.pszContent := PWideChar(Format(ERR_FMT, [ENtError(E).ErrorLocation,
-      StatusToString(ENtError(E).ErrorCode),
-      SysNativeErrorMessage(ENtError(E).ErrorCode)]) + SuggestAll(ENtError(E)));
+    Msg := 'Last call: ' + ENt.ErrorLocation;
+
+    case ENt.LastCall.CallType of
+      lcOpenCall:
+        Msg := Msg + #$D#$A + 'Desired access: ' + FormatAccess(
+          ENt.LastCall.AccessMask, ENt.LastCall.AccessMaskType);
+      lcQuerySetCall:
+        Msg := Msg + #$D#$A + 'Information class: ' + GetEnumName(
+          ENt.LastCall.InfoClassType, Integer(ENt.LastCall.InfoClass));
+    end;
+
+    Msg := Msg + #$D#$A + 'Result: ' + StatusToString(ENt.ErrorCode);
+    Msg := Msg + #$D#$A#$D#$A + SysNativeErrorMessage(ENt.ErrorCode);
+    Msg := Msg + SuggestAll(ENt);
+
+    Dlg.pszContent := PWideChar(Msg);
   end
   else
   begin

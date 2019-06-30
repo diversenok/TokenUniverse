@@ -3,42 +3,60 @@ unit NtUtils.Exceptions;
 interface
 
 uses
-  System.SysUtils, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef, System.SysUtils, System.TypInfo,
+  NtUtils.AccessMasks;
 
 const
   BUFFER_LIMIT = 1024 * 1024 * 256; // 256 MB
 
 type
+  TAccessMaskType = NtUtils.AccessMasks.TAccessMaskType;
+  TLastCallType = (lcOtherCall, lcOpenCall, lcQuerySetCall);
+
+  TLastCallInfo = record
+  case CallType: TLastCallType of
+    lcOpenCall:
+      (AccessMask: TAccessMask; AccessMaskType: TAccessMaskType);
+    lcQuerySetCall:
+      (InfoClass: Cardinal; InfoClassType: PTypeInfo);
+  end;
+
   /// <summary>
   ///  An enhanced NTSTATUS that stores the location of the failure.
   /// </summary>
   TNtxStatus = record
   private
+    FLocation: String;
     function GetWinError: Cardinal;
-    procedure SetWinError(Value: Cardinal);
+    procedure SetWinError(Value: Cardinal); inline;
     procedure FromLastWin32(RetValue: Boolean);
+    procedure SetLocation(Value: String); inline;
   public
     Status: NTSTATUS;
-    Location: String;
+    LastCall: TLastCallInfo;
+    function IsSuccess: Boolean; inline;
     property WinError: Cardinal read GetWinError write SetWinError;
-    function IsSuccess: Boolean;
+    property Win32Result: Boolean write FromLastWin32;
     procedure RaiseOnError;
     procedure ReportOnError;
-    function Matches(Status: NTSTATUS; Location: String): Boolean;
+  public
+    property Location: String read FLocation write SetLocation;
+    function Matches(Status: NTSTATUS; Location: String): Boolean; inline;
     function ToString: String;
     function MessageHint: String;
-    property Win32Result: Boolean write FromLastWin32;
   end;
 
 type
   ENtError = class(EOSError)
   public
     ErrorLocation: string;
+    LastCall: TLastCallInfo;
     function Matches(Location: String; Code: Cardinal): Boolean;
     class procedure Report(Status: Cardinal; Location: String);
     function ToWinErrorCode: Cardinal;
 
     constructor Create(Status: NTSTATUS; Location: String); reintroduce;
+    constructor CreateNtx(const Status: TNtxStatus);
     constructor CreateWin32(Win32Error: Cardinal; Location: String;
       Dummy: Integer = 0);
     constructor CreateLastWin32(Location: String);
@@ -78,7 +96,7 @@ begin
     Status := RtlxGetLastNtStatus;
 
     // Make sure that the code is not successful
-    if NT_SUCCESS(Status) then
+    if IsSuccess then
       Status := STATUS_UNSUCCESSFUL;
   end;
 end;
@@ -93,7 +111,7 @@ end;
 
 function TNtxStatus.IsSuccess: Boolean;
 begin
-  Result := NT_SUCCESS(Status);
+  Result := Integer(Status) >= 0; // inlined NT_SUCCESS from Ntapi.ntdef
 end;
 
 function TNtxStatus.Matches(Status: NTSTATUS; Location: String): Boolean;
@@ -108,14 +126,20 @@ end;
 
 procedure TNtxStatus.RaiseOnError;
 begin
-  if not NT_SUCCESS(Status) then
-    raise ENtError.Create(Status, Location);
+  if not IsSuccess then
+    raise ENtError.CreateNtx(Self);
 end;
 
 procedure TNtxStatus.ReportOnError;
 begin
-  if not NT_SUCCESS(Status) then
+  if not IsSuccess then
     ENtError.Report(Status, Location);
+end;
+
+procedure TNtxStatus.SetLocation(Value: String);
+begin
+  FLocation := Value;
+  LastCall.CallType := lcOtherCall;
 end;
 
 procedure TNtxStatus.SetWinError(Value: Cardinal);
@@ -140,6 +164,13 @@ end;
 constructor ENtError.CreateLastWin32(Location: String);
 begin
   Create(RtlxGetLastNtStatus, Location);
+end;
+
+constructor ENtError.CreateNtx(const Status: TNtxStatus);
+begin
+  ErrorLocation := Status.Location;
+  ErrorCode := Status.Status;
+  LastCall := Status.LastCall;
 end;
 
 constructor ENtError.CreateWin32(Win32Error: Cardinal; Location: String;

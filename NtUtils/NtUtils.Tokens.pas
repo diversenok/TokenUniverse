@@ -130,15 +130,18 @@ implementation
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
   NtUtils.DelayedImport, NtUtils.Snapshots.Handles, NtUtils.Tokens.Misc,
-  NtUtils.Processes, NtUtils.Tokens.Impersonate, NtUtils.AccessMasks;
+  NtUtils.Processes, NtUtils.Tokens.Impersonate;
 
 { Creation }
 
 function NtxOpenProcessToken(out hToken: THandle; hProcess: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 begin
-  Result.Location := 'NtOpenProcessTokenEx for ' + FormatAccess(DesiredAccess,
-    objNtToken);
+  Result.Location := 'NtOpenProcessTokenEx';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objNtToken;
+
   Result.Status := NtOpenProcessTokenEx(hProcess, DesiredAccess,
     HandleAttributes, hToken);
 end;
@@ -162,11 +165,14 @@ end;
 function NtxOpenThreadToken(out hToken: THandle; hThread: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 begin
+  Result.Location := 'NtOpenThreadTokenEx';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objNtToken;
+
   // When opening other threads use effective (thread) security context. When
   // reading a token from the current thread use the process security context
 
-  Result.Location := 'NtOpenThreadTokenEx for ' + FormatAccess(DesiredAccess,
-    objNtToken);
   Result.Status := NtOpenThreadTokenEx(hThread, DesiredAccess,
     (hThread = NtCurrentThread), HandleAttributes, hToken);
 end;
@@ -252,8 +258,7 @@ begin
   InitializaQoS(QoS, ImpersonationLevel, EffectiveOnly);
   InitializeObjectAttributes(ObjAttr, nil, HandleAttributes, 0, @QoS);
 
-  Result.Location := 'NtDuplicateToken for ' + FormatAccess(DesiredAccess,
-    objNtToken);
+  Result.Location := 'NtDuplicateToken';
   Result.Status := NtDuplicateToken(hExistingToken, DesiredAccess, @ObjAttr,
     EffectiveOnly, TokenType, hToken);
 end;
@@ -396,7 +401,7 @@ class function NtxToken.Query<T>(hToken: THandle;
 var
   ReturnedBytes: Cardinal;
 begin
-  Result.Location := NtxFormatTokenQuery(InfoClass);
+  NtxFormatTokenQuery(Result, InfoClass);
   Result.Status := NtQueryInformationToken(hToken, InfoClass, @Buffer,
     SizeOf(Buffer), ReturnedBytes);
 end;
@@ -404,7 +409,7 @@ end;
 class function NtxToken.SetInfo<T>(hToken: THandle;
   InfoClass: TTokenInformationClass; const Buffer: T): TNtxStatus;
 begin
-  Result.Location := NtxFormatTokenSet(InfoClass);
+  NtxFormatTokenSet(Result, InfoClass);
   Result.Status := NtSetInformationToken(hToken, InfoClass, @Buffer,
     SizeOf(Buffer));
 end;
@@ -422,7 +427,7 @@ begin
   // the race condition with a loop.
   while True do
   begin
-    Status.Location := NtxFormatTokenQuery(InfoClass);
+    NtxFormatTokenQuery(Status, InfoClass);
     Status.Status := NtQueryInformationToken(hToken, InfoClass, Result,
       BufferSize, Required);
 
@@ -450,7 +455,7 @@ function NtxSetInformationToken(hToken: THandle;
   InfoClass: TTokenInformationClass; TokenInformation: Pointer;
   TokenInformationLength: Cardinal): TNtxStatus;
 begin
-  Result.Location := NtxFormatTokenSet(InfoClass);
+  NtxFormatTokenSet(Result, InfoClass);
   Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
     TokenInformationLength);
 end;
@@ -540,7 +545,7 @@ var
   Returned: Cardinal;
   hTokenRef: THandle;
 begin
-  Result.Location := NtxFormatTokenQuery(TokenStatistics);
+  NtxFormatTokenQuery(Result, TokenStatistics);
   Result.Status := NtQueryInformationToken(hToken, TokenStatistics, @Statistics,
     SizeOf(Statistics), Returned);
 
@@ -588,7 +593,7 @@ begin
   MandatoryLabel.Sid := LabelSid.Sid;
   MandatoryLabel.Attributes := SE_GROUP_INTEGRITY_ENABLED;
 
-  Result.Location := NtxFormatTokenSet(TokenIntegrityLevel);
+  NtxFormatTokenSet(Result, TokenIntegrityLevel);
   Result.Status := NtSetInformationToken(hToken, TokenIntegrityLevel,
     @MandatoryLabel, SizeOf(MandatoryLabel));
 end;

@@ -28,8 +28,7 @@ implementation
 
 uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi,
-  NtUtils.Objects, NtUtils.Tokens, NtUtils.DelayedImport, NtUtils.Processes,
-  NtUtils.AccessMasks;
+  NtUtils.Objects, NtUtils.Tokens, NtUtils.DelayedImport, NtUtils.Processes;
 
 { Impersonation }
 
@@ -75,7 +74,11 @@ end;
 
 function NtxSetThreadToken(hThread: THandle; hToken: THandle): TNtxStatus;
 begin
-  Result.Location := 'NtSetInformationThread [ThreadImpersonationToken]';
+  Result.Location := 'NtSetInformationThread';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ThreadImpersonationToken);
+  Result.LastCall.InfoClassType := TypeInfo(TThreadInfoClass);
+
   Result.Status := NtSetInformationThread(hThread, ThreadImpersonationToken,
     @hToken, SizeOf(hToken));
 end;
@@ -242,8 +245,11 @@ begin
     Exit;
 
   // Despite the process handle, we need a handle to the initial thread
-  Result.Location := 'NtGetNextThread for ' +
-    FormatAccess(THREAD_QUERY_LIMITED_INFORMATION, objNtThread);
+  Result.Location := 'NtGetNextThread';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := THREAD_QUERY_LIMITED_INFORMATION;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objNtThread;
+
   Result.Status := NtGetNextThread(hProcess, 0,
     THREAD_QUERY_LIMITED_INFORMATION, 0, 0, AccessToken.Thread);
 
@@ -254,7 +260,11 @@ begin
   AccessToken.Token := hToken;
 
   // Assign the token for the process
-  Result.Location := 'NtSetInformationProcess [ProcessAccessToken]';
+  Result.Location := 'NtSetInformationProcess';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ProcessAccessToken);
+  Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+
   Result.Status := NtSetInformationProcess(hProcess, ProcessAccessToken,
     @AccessToken, SizeOf(AccessToken));
 

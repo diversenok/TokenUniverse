@@ -30,7 +30,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus;
+  Ntapi.ntstatus, NtUtils.Exceptions;
 
 {$R *.dfm}
 

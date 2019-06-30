@@ -66,7 +66,8 @@ type
 implementation
 
 uses
-  Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes;
+  Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes,
+  NtUtils.Exceptions;
 
 {$R *.dfm}
 

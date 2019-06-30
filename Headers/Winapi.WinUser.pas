@@ -52,6 +52,7 @@ type
     LongBool; stdcall;
 
   TUserObjectInfoClass = (
+    UserObjectReserved = 0,
     UserObjectFlags = 1,    // q, s:
     UserObjectName = 2,     // q: PWideChar
     UserObjectType = 3,     // q: PWideChar

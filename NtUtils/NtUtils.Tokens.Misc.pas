@@ -8,8 +8,10 @@ uses
 { Error formatting }
 
 // Format error locations for querying/setting token information
-function NtxFormatTokenQuery(InfoClass: TTokenInformationClass): String;
-function NtxFormatTokenSet(InfoClass: TTokenInformationClass): String;
+procedure NtxFormatTokenQuery(var Result: TNtxStatus;
+  InfoClass: TTokenInformationClass);
+procedure NtxFormatTokenSet(var Result: TNtxStatus;
+  InfoClass: TTokenInformationClass);
 
 { Allocations }
 
@@ -24,23 +26,24 @@ function NtxpAllocGroups2(Groups: TGroupArray): PTokenGroups;
 
 implementation
 
-uses
-  System.TypInfo;
-
 { Error formatting }
 
-function NtxFormatTokenQuery(InfoClass: TTokenInformationClass): String;
+procedure NtxFormatTokenQuery(var Result: TNtxStatus;
+  InfoClass: TTokenInformationClass);
 begin
-  // Use the name of the info class from the enumeration definition
-  Result := 'NtQueryInformationToken [' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
+  Result.Location := 'NtQueryInformationToken';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
 end;
 
-function NtxFormatTokenSet(InfoClass: TTokenInformationClass): String;
+procedure NtxFormatTokenSet(var Result: TNtxStatus;
+  InfoClass: TTokenInformationClass);
 begin
-  // Use the name of the info class from the enumeration definition
-  Result := 'NtSetInformationToken [' +
-    GetEnumName(TypeInfo(TTokenInformationClass), Integer(InfoClass)) + ']';
+  Result.Location := 'NtSetInformationToken';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
 end;
 
 { Allocations }

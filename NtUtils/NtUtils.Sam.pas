@@ -140,7 +140,7 @@ function SamxSetUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
 implementation
 
 uses
-  Ntapi.ntstatus, System.TypInfo;
+  Ntapi.ntstatus;
 
 { Server }
 
@@ -150,7 +150,12 @@ var
   ObjAttr: TObjectAttributes;
 begin
   InitializeObjectAttributes(ObjAttr);
+
   Result.Location := 'SamConnect';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objSamServer;
+
   Result.Status := SamConnect(nil, hServer, DesiredAccess, ObjAttr);
 end;
 
@@ -164,6 +169,10 @@ begin
   NameStr.FromString(ServerName);
 
   Result.Location := 'SamConnect';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objSamServer;
+
   Result.Status := SamConnect(@NameStr, hServer, DesiredAccess, ObjAttr);
 end;
 
@@ -184,6 +193,10 @@ function SamxOpenDomain(out hDomain: TSamHandle; hServer: TSamHandle;
   DomainId: PSid; DesiredAccess: TAccessMask): TNtxStatus;
 begin
   Result.Location := 'SamOpenDomain';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objSamDomain;
+
   Result.Status := SamOpenDomain(hServer, DesiredAccess, DomainId, hDomain);
 end;
 
@@ -259,16 +272,22 @@ end;
 function SamxQueryDomain(hDomain: TSamHandle; InfoClass:
   TDomainInformationClass; out Status: TNtxStatus): Pointer;
 begin
-  Status.Location := 'SamQueryInformationDomain [' +
-    GetEnumName(TypeInfo(TDomainInformationClass), Integer(InfoClass)) + ']';
+  Status.Location := 'SamQueryInformationDomain';
+  Status.LastCall.CallType := lcQuerySetCall;
+  Status.LastCall.InfoClass := Cardinal(InfoClass);
+  Status.LastCall.InfoClassType := TypeInfo(TDomainInformationClass);
+
   Status.Status := SamQueryInformationDomain(hDomain, InfoClass, Result);
 end;
 
 function SamxSetDomain(hDomain: TSamHandle; InfoClass: TDomainInformationClass;
   Data: Pointer): TNtxStatus;
 begin
-  Result.Location := 'SamSetInformationDomain [' +
-    GetEnumName(TypeInfo(TDomainInformationClass), Integer(InfoClass)) + ']';
+  Result.Location := 'SamSetInformationDomain';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TDomainInformationClass);
+
   Result.Status := SamSetInformationDomain(hDomain, InfoClass, Data);
 end;
 
@@ -305,6 +324,10 @@ function SamxOpenGroup(out hGroup: TSamHandle; hDomain: TSamHandle;
   GroupId: Cardinal; DesiredAccess: TAccessMask): TNtxStatus;
 begin
   Result.Location := 'SamOpenGroup';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objSamGroup;
+
   Result.Status := SamOpenGroup(hDomain, DesiredAccess, GroupId, hGroup);
 end;
 
@@ -350,16 +373,22 @@ end;
 function SamxQueryGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
   out Status: TNtxStatus): Pointer;
 begin
-  Status.Location := 'SamQueryInformationGroup [' +
-    GetEnumName(TypeInfo(TGroupInformationClass), Integer(InfoClass)) + ']';
+  Status.Location := 'SamQueryInformationGroup';
+  Status.LastCall.CallType := lcQuerySetCall;
+  Status.LastCall.InfoClass := Cardinal(InfoClass);
+  Status.LastCall.InfoClassType := TypeInfo(TGroupInformationClass);
+
   Status.Status := SamQueryInformationGroup(hGroup, InfoClass, Result);
 end;
 
 function SamxSetGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
   Data: Pointer): TNtxStatus;
 begin
-  Result.Location := 'SamSetInformationGroup [' +
-    GetEnumName(TypeInfo(TGroupInformationClass), Integer(InfoClass)) + ']';
+  Result.Location := 'SamSetInformationGroup';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TGroupInformationClass);
+
   Result.Status := SamSetInformationGroup(hGroup, InfoClass, Data);
 end;
 
@@ -396,6 +425,10 @@ function SamxOpenAlias(out hAlias: TSamHandle; hDomain: TSamHandle;
   AliasId: Cardinal; DesiredAccess: TAccessMask): TNtxStatus;
 begin
   Result.Location := 'SamOpenAlias';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objSamAlias;
+
   Result.Status := SamOpenAlias(hDomain, DesiredAccess, AliasId, hAlias);
 end;
 
@@ -436,8 +469,11 @@ end;
 function SamxQueryAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
   out Status: TNtxStatus): Pointer;
 begin
-  Status.Location := 'SamQueryInformationAlias [' +
-    GetEnumName(TypeInfo(TAliasInformationClass), Integer(InfoClass)) + ']';
+  Status.Location := 'SamQueryInformationAlias';
+  Status.LastCall.CallType := lcQuerySetCall;
+  Status.LastCall.InfoClass := Cardinal(InfoClass);
+  Status.LastCall.InfoClassType := TypeInfo(TAliasInformationClass);
+
   Status.Status := SamQueryInformationAlias(hAlias, InfoClass, Result);
 end;
 
@@ -445,8 +481,11 @@ end;
 function SamxSetAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
   Data: Pointer): TNtxStatus;
 begin
-  Result.Location := 'SamSetInformationAlias [' +
-    GetEnumName(TypeInfo(TAliasInformationClass), Integer(InfoClass)) + ']';
+  Result.Location := 'SamSetInformationAlias';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TAliasInformationClass);
+
   Result.Status := SamSetInformationAlias(hAlias, InfoClass, Data);
 end;
 
@@ -483,6 +522,10 @@ function SamxOpenUser(out hUser: TSamHandle; hDomain: TSamHandle;
   UserId: Cardinal; DesiredAccess: TAccessMask): TNtxStatus;
 begin
   Result.Location := 'SamOpenUser';
+  Result.LastCall.CallType := lcOpenCall;
+  Result.LastCall.AccessMask := DesiredAccess;
+  Result.LastCall.AccessMaskType := TAccessMaskType.objSamUser;
+
   Result.Status := SamOpenUser(hDomain, DesiredAccess, UserId, hUser);
 end;
 
@@ -524,8 +567,11 @@ end;
 function SamxQueryUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
   out Status: TNtxStatus): Pointer;
 begin
-  Status.Location := 'SamQueryInformationUser [' +
-    GetEnumName(TypeInfo(TUserInformationClass), Integer(InfoClass)) + ']';
+  Status.Location := 'SamQueryInformationUser';
+  Status.LastCall.CallType := lcQuerySetCall;
+  Status.LastCall.InfoClass := Cardinal(InfoClass);
+  Status.LastCall.InfoClassType := TypeInfo(TUserInformationClass);
+
   Status.Status := SamQueryInformationUser(hUser, InfoClass, Result);
 end;
 
@@ -533,8 +579,11 @@ end;
 function SamxSetUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
   Data: Pointer): TNtxStatus;
 begin
-  Result.Location := 'SamSetInformationUser [' +
-    GetEnumName(TypeInfo(TUserInformationClass), Integer(InfoClass)) + ']';
+  Result.Location := 'SamSetInformationUser';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TUserInformationClass);
+
   Result.Status := SamSetInformationUser(hUser, InfoClass, Data);
 end;
 

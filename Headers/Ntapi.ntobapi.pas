@@ -9,9 +9,10 @@ uses
 
 type
   TObjectInformationClass = (
-    ObjectBasicInformation = 0, // q: TObjectBasicInformaion
-    ObjectNameInformation = 1, // q: UNICODE_STRING
-    ObjectTypeInformation = 2, // q: TObjectTypeInformation
+    ObjectBasicInformation = 0,     // q: TObjectBasicInformaion
+    ObjectNameInformation = 1,      // q: UNICODE_STRING
+    ObjectTypeInformation = 2,      // q: TObjectTypeInformation
+    ObjectTypesInformation = 3,     // q:
     ObjectHandleFlagInformation = 4 // q+s: TObjectHandleFlagInformation
   );
 
