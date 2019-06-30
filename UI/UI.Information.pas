@@ -99,7 +99,7 @@ type
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
     procedure ChangedCaption(NewCaption: String);
-    procedure ChangedIntegrity(NewIntegrity: TTokenIntegrity);
+    procedure ChangedIntegrity(NewIntegrity: TGroup);
     procedure ChangedSession(NewSession: Cardinal);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: Cardinal);
@@ -336,12 +336,12 @@ begin
   ComboOwner.Items.EndUpdate;
 end;
 
-procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TTokenIntegrity);
+procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TGroup);
 begin
   ComboIntegrity.Color := clWindow;
-  IntegritySource.SetIntegrity(NewIntegrity);
-  ComboIntegrity.Hint := BuildSidHint(
-    NewIntegrity.Group.SecurityIdentifier.Lookup, NewIntegrity.Group.Attributes);
+  IntegritySource.SelectedIntegrity := NewIntegrity.SecurityIdentifier.Rid;
+  ComboIntegrity.Hint := BuildSidHint(NewIntegrity.SecurityIdentifier.Lookup,
+    NewIntegrity.Attributes);
 end;
 
 procedure TInfoDialog.ChangedOwner(NewOwner: ISid);

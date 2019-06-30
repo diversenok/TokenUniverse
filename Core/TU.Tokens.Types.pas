@@ -11,7 +11,7 @@ interface
   on the same simple type. }
 
 uses
-  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Security.Sid, Ntapi.ntseapi;
+  Winapi.WinNt, NtUtils.Security.Sid;
 
 type
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
@@ -27,23 +27,6 @@ type
     function SecurityImpersonationLevel: TSecurityImpersonationLevel;
   end;
 
-  TTokenIntegrityLevel = (
-    ilUntrusted = $0000,
-    ilLow = $1000,
-    ilMedium = $2000,
-    ilMediumPlus = $2100,
-    ilHigh = $3000,
-    ilSystem = $4000,
-    ilProtected = $5000
-  );
-
-  TTokenIntegrity = record
-    Group: TGroup;
-    Level: TTokenIntegrityLevel;
-    function IsWellKnown: Boolean;
-    function ToString: String;
-  end;
-
 function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
 
@@ -53,23 +36,20 @@ function FormatCurrentState: String;
 function CompareSIDs(Value1, Value2: ISid): Boolean;
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 function CompareLUIDs(Value1, Value2: TLuid): Boolean;
-function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
 function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean;
-function CompareGroups(Value1, Value2: TGroupArray): Boolean;
+function CompareGroups(Value1, Value2: TGroup): Boolean;
+function CompareGroupArrays(Value1, Value2: TGroupArray): Boolean;
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 
 { Conversion functions }
 function TokeSourceNameToString(TokenSource: TTokenSource): String;
 function ObjectAttributesToString(ObjAttributes: Cardinal): String;
-function NativeTimeToString(NativeTime: TLargeInteger): String;
 
 implementation
 
 uses
-  System.SysUtils, DelphiUtils.Strings,
-  Winapi.ntlsa, Ntapi.ntdef, Ntapi.ntrtl, TU.Winapi;
-
+  System.SysUtils, Ntapi.ntdef, Ntapi.ntrtl, NtUtils.Lsa, NtUtils.Exceptions;
 
 { TTokenTypeExHelper }
 
@@ -101,35 +81,6 @@ begin
   end
 end;
 
-{ TTokenIntegrity }
-
-function TTokenIntegrity.IsWellKnown: Boolean;
-begin
-  case Level of
-    ilUntrusted, ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem, ilProtected:
-      Result := True;
-  else
-    Result := False;
-  end;
-end;
-
-function TTokenIntegrity.ToString: String;
-begin
-  case Level of
-    ilUntrusted: Result := 'Untrusted';
-    ilLow: Result := 'Low';
-    ilMedium: Result := 'Medium';
-    ilMediumPlus: Result := 'Medium +';
-    ilHigh: Result := 'High';
-    ilSystem: Result := 'System';
-    ilProtected: Result := 'Protected';
-  else
-    Result := IntToHexEx(UInt64(Level));
-  end;
-end;
-
-{ TTokenSource }
-
 function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
   TTokenSource;
 var
@@ -149,21 +100,18 @@ end;
 
 function FormatCurrentState: String;
 var
-  User, Domain: PLsaUnicodeString;
+  User, Domain: String;
 begin
-  if NT_SUCCESS(LsaGetUserName(User, Domain))  then
+  if LsaxGetUserName(User, Domain).IsSuccess  then
   begin
-    if (Domain.Length > 0) and (User.Length > 0) then
-      Result := Domain.ToString + '\' + User.ToString
-    else if Domain.Length > 0 then
-      Result := Domain.ToString
-    else if User.Length > 0 then
-      Result := User.ToString
+    if (Domain <> '') and (User <> '') then
+      Result := Domain + '\' + User
+    else if Domain <> '' then
+      Result := Domain
+    else if User <> '' then
+      Result := User
     else
       Result := 'N/A';
-
-    LsaFreeMemory(User);
-    LsaFreeMemory(Domain);
   end
   else
     Result := 'Unknown user';
@@ -188,7 +136,7 @@ begin
   Result := Value1 = Value2;
 end;
 
-function CompareGroups(Value1, Value2: TGroupArray): Boolean;
+function CompareGroupArrays(Value1, Value2: TGroupArray): Boolean;
 var
   i: integer;
 begin
@@ -201,11 +149,11 @@ begin
           Exit(False);
 end;
 
-function CompareIntegrities(Value1, Value2: TTokenIntegrity): Boolean;
+function CompareGroups(Value1, Value2: TGroup): Boolean;
 begin
-  Result := (Value1.Group.SecurityIdentifier.Lookup.SDDL =
-    Value2.Group.SecurityIdentifier.Lookup.SDDL) and
-    (Value1.Group.Attributes = Value2.Group.Attributes);
+  Result := (Value1.SecurityIdentifier.EqualsTo(
+    Value2.SecurityIdentifier)) and
+    (Value1.Attributes = Value2.Attributes);
 end;
 
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
@@ -249,16 +197,6 @@ begin
     Result := 'Exclusive'
   else
     Result := 'None';
-end;
-
-function NativeTimeToString(NativeTime: TLargeInteger): String;
-begin
-  if NativeTime.QuadPart = 0 then
-    Result := 'Never'
-  else if NativeTime.QuadPart = Int64.MaxValue then
-    Result := 'Infinite'
-  else
-    Result := DateTimeToStr(NativeTime.ToDateTime);
 end;
 
 end.

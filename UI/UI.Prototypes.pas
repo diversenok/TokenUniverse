@@ -22,15 +22,15 @@ type
   TIntegritySource = class
   private
     IsIntermediate: Boolean;
-    IntermediateValue: TTokenIntegrityLevel;
+    IntermediateValue: Cardinal;
     IntermediateIndex: Integer;
     ComboBox: TComboBox;
-    function GetIntegrityLevel: TTokenIntegrityLevel;
+    function GetIntegrity: Cardinal;
+    procedure SetIntegrity(Value: Cardinal);
     procedure RefreshList;
   public
     constructor Create(OwnedComboBox: TComboBox);
-    procedure SetIntegrity(Value: TTokenIntegrity);
-    property SelectedIntegrity: TTokenIntegrityLevel read GetIntegrityLevel;
+    property SelectedIntegrity: Cardinal read GetIntegrity write SetIntegrity;
   end;
 
   TAccessMaskSource = class
@@ -168,17 +168,20 @@ begin
   RefreshList;
 end;
 
-function TIntegritySource.GetIntegrityLevel: TTokenIntegrityLevel;
+function TIntegritySource.GetIntegrity: Cardinal;
 const
-  IndexToIntegrity: array [0 .. 6] of TTokenIntegrityLevel = (ilUntrusted,
-    ilLow, ilMedium, ilMediumPlus, ilHigh, ilSystem, ilProtected);
+  IndexToIntegrity: array [0 .. 6] of Cardinal = (
+    SECURITY_MANDATORY_UNTRUSTED_RID, SECURITY_MANDATORY_LOW_RID,
+    SECURITY_MANDATORY_MEDIUM_RID, SECURITY_MANDATORY_MEDIUM_PLUS_RID,
+    SECURITY_MANDATORY_HIGH_RID, SECURITY_MANDATORY_SYSTEM_RID,
+    SECURITY_MANDATORY_PROTECTED_PROCESS_RID);
 begin
   Assert(Assigned(ComboBox));
 
   with ComboBox do
   begin
     if ItemIndex = -1 then
-      Result := TTokenIntegrityLevel(StrToUIntEx(Text, 'integrity'))
+      Result := Cardinal(StrToUIntEx(Text, 'integrity'))
     else if not IsIntermediate or (ItemIndex < IntermediateIndex) then
       Result := IndexToIntegrity[ItemIndex]
     else if ItemIndex > IntermediateIndex then
@@ -209,7 +212,7 @@ begin
   end;
 end;
 
-procedure TIntegritySource.SetIntegrity(Value: TTokenIntegrity);
+procedure TIntegritySource.SetIntegrity(Value: Cardinal);
 begin
   Assert(Assigned(ComboBox));
 
@@ -219,44 +222,53 @@ begin
     RefreshList;
 
     // If the value is not a well-known one insert it in between two well knowns
-    IsIntermediate := not Value.IsWellKnown;
+    case Value of
+      SECURITY_MANDATORY_UNTRUSTED_RID, SECURITY_MANDATORY_LOW_RID,
+      SECURITY_MANDATORY_MEDIUM_RID, SECURITY_MANDATORY_MEDIUM_PLUS_RID,
+      SECURITY_MANDATORY_HIGH_RID, SECURITY_MANDATORY_SYSTEM_RID,
+      SECURITY_MANDATORY_PROTECTED_PROCESS_RID:
+        IsIntermediate := True;
+    else
+      IsIntermediate := False;
+    end;
+
     if IsIntermediate then
     begin
-      IntermediateValue := Value.Level;
+      IntermediateValue := Value;
 
-      if Value.Level < ilLow then
+      if Value < SECURITY_MANDATORY_LOW_RID then
         IntermediateIndex := 1
-      else if Value.Level < ilMedium then
+      else if Value < SECURITY_MANDATORY_MEDIUM_RID then
         IntermediateIndex := 2
-      else if Value.Level < ilMediumPlus then
+      else if Value < SECURITY_MANDATORY_MEDIUM_PLUS_RID then
         IntermediateIndex := 3
-      else if Value.Level < ilHigh then
+      else if Value < SECURITY_MANDATORY_HIGH_RID then
         IntermediateIndex := 4
-      else if Value.Level < ilSystem then
+      else if Value < SECURITY_MANDATORY_SYSTEM_RID then
         IntermediateIndex := 5
-      else if Value.Level < ilProtected then
+      else if Value < SECURITY_MANDATORY_PROTECTED_PROCESS_RID then
         IntermediateIndex := 6
       else
         IntermediateIndex := 7;
 
       Items.Insert(IntermediateIndex,
-        Format('Itermediate (0x%0.4x)', [Cardinal(Value.Level)]));
+        Format('Itermediate (0x%0.4x)', [Value]));
     end;
 
     // Select appropriate item
-    if Value.Level = ilUntrusted then
+    if Value = SECURITY_MANDATORY_UNTRUSTED_RID then
       ItemIndex := 0
-    else if Value.Level <= ilLow then
+    else if Value <= SECURITY_MANDATORY_LOW_RID then
       ItemIndex := 1
-    else if Value.Level <= ilMedium then
+    else if Value <= SECURITY_MANDATORY_MEDIUM_RID then
       ItemIndex := 2
-    else if Value.Level <= ilMediumPlus then
+    else if Value <= SECURITY_MANDATORY_MEDIUM_PLUS_RID then
       ItemIndex := 3
-    else if Value.Level <= ilHigh then
+    else if Value <= SECURITY_MANDATORY_HIGH_RID then
       ItemIndex := 4
-    else if Value.Level <= ilSystem then
+    else if Value <= SECURITY_MANDATORY_SYSTEM_RID then
       ItemIndex := 5
-    else if Value.Level <= ilProtected then
+    else if Value <= SECURITY_MANDATORY_PROTECTED_PROCESS_RID then
       ItemIndex := 6
     else
       ItemIndex := 7;

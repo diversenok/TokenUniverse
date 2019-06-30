@@ -17,6 +17,7 @@ function EnumOutOfBoundString(Value: Cardinal): String;
 function EnumElevationToString(Value: TTokenElevationType): String;
 function EnumSidTypeToString(Value: TSidNameUse): String;
 function EnumLogonTypeToString(Value: TSecurityLogonType): String;
+function EnumIntegrityToStrnig(Rid: Cardinal): String;
 
 // States
 function StateOfGroupToString(Value: Cardinal): String;
@@ -26,6 +27,7 @@ function StateOfPrivilegeToString(Value: Cardinal): String;
 function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
   AttributesPresent: Boolean = True): String;
 function PrivilegeFriendlyName(SePrivilegeName: String): String;
+function NativeTimeToString(NativeTime: TLargeInteger): String;
 
 implementation
 
@@ -127,6 +129,21 @@ begin
     Result := Mapping[Value]
   else
     Result := EnumOutOfBoundString(Cardinal(Value));
+end;
+
+function EnumIntegrityToStrnig(Rid: Cardinal): String;
+begin
+  case Rid of
+    SECURITY_MANDATORY_UNTRUSTED_RID:         Result := 'Untrusted';
+    SECURITY_MANDATORY_LOW_RID:               Result := 'Low';
+    SECURITY_MANDATORY_MEDIUM_RID:            Result := 'Medium';
+    SECURITY_MANDATORY_MEDIUM_PLUS_RID:       Result := 'Medium +';
+    SECURITY_MANDATORY_HIGH_RID:              Result := 'High';
+    SECURITY_MANDATORY_SYSTEM_RID:            Result := 'System';
+    SECURITY_MANDATORY_PROTECTED_PROCESS_RID: Result := 'Protected';
+  else
+    Result := IntToHexEx(Rid, 4);
+  end;
 end;
 
 { States }
@@ -252,6 +269,16 @@ begin
     end;
     Inc(i);
   end;
+end;
+
+function NativeTimeToString(NativeTime: TLargeInteger): String;
+begin
+  if NativeTime.QuadPart = 0 then
+    Result := 'Never'
+  else if NativeTime.QuadPart = Int64.MaxValue then
+    Result := 'Infinite'
+  else
+    Result := DateTimeToStr(NativeTime.ToDateTime);
 end;
 
 end.

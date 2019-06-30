@@ -14,7 +14,7 @@ type
     ButtonOK: TButton;
   public
     class function PickSession(AOwner: TComponent): Cardinal;
-    class function PickIntegrity(AOwner: TComponent): TTokenIntegrityLevel;
+    class function PickIntegrity(AOwner: TComponent): Cardinal;
   end;
 
 var
@@ -26,8 +26,7 @@ implementation
 
 { TSessionDialog }
 
-class function TComboDialog.PickIntegrity(AOwner: TComponent):
-  TTokenIntegrityLevel;
+class function TComboDialog.PickIntegrity(AOwner: TComponent): Cardinal;
 var
   IntegritySource: TIntegritySource;
 begin

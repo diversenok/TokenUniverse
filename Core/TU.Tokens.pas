@@ -57,7 +57,7 @@ type
     HasRestrictions: LongBool;
     VirtualizationAllowed: LongBool;
     VirtualizationEnabled: LongBool;
-    Integrity: TTokenIntegrity;
+    Integrity: TGroup;
     UIAccess: LongBool;
     MandatoryPolicy: Cardinal;
     IsRestricted: LongBool;
@@ -69,7 +69,7 @@ type
     FOnAuditChange: TCachingEvent<IPerUserAudit>;
     FOnOriginChange: TCachingEvent<TLuid>;
     FOnUIAccessChange: TCachingEvent<LongBool>;
-    FOnIntegrityChange: TCachingEvent<TTokenIntegrity>;
+    FOnIntegrityChange: TCachingEvent<TGroup>;
     FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
     FOnVirtualizationEnabledChange: TCachingEvent<LongBool>;
     FOnPolicyChange: TCachingEvent<Cardinal>;
@@ -90,7 +90,7 @@ type
     property OnAuditChange: TCachingEvent<IPerUserAudit> read FOnAuditChange;
     property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
     property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
-    property OnIntegrityChange: TCachingEvent<TTokenIntegrity> read FOnIntegrityChange;
+    property OnIntegrityChange: TCachingEvent<TGroup> read FOnIntegrityChange;
     property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
     property OnVirtualizationEnabledChange: TCachingEvent<LongBool> read FOnVirtualizationEnabledChange;
     property OnPolicyChange: TCachingEvent<Cardinal> read FOnPolicyChange;
@@ -115,7 +115,7 @@ type
   TTokenData = record
   private
     Token: TToken; // Owner
-    procedure SetIntegrityLevel(const Value: TTokenIntegrityLevel);
+    procedure SetIntegrityLevel(const Value: Cardinal);
     procedure SetMandatoryPolicy(const Value: Cardinal);
     procedure SetSession(const Value: Cardinal);
     procedure SetAuditPolicy(Value: IPerUserAudit);
@@ -128,7 +128,7 @@ type
     function GetElevation: TTokenElevationType;
     function GetGroups: TGroupArray;
     function GetHasRestrictions: LongBool;
-    function GetIntegrity: TTokenIntegrity;
+    function GetIntegrity: TGroup;
     function GetMandatoryPolicy: Cardinal;
     function GetOrigin: TLuid;
     function GetOwner: ISid;
@@ -172,8 +172,8 @@ type
     // TODO: class 22 AccessInformation (depends on OS version, duplicates most of the info)
     property VirtualizationAllowed: LongBool read GetVirtualizationAllowed write SetVirtualizationAllowed; // class 23 #settable
     property VirtualizationEnabled: LongBool read GetVirtualizationEnabled write SetVirtualizationEnabled; // class 24 #settable
-    property Integrity: TTokenIntegrity read GetIntegrity;                      // class 25 #settable
-    property IntegrityLevel: TTokenIntegrityLevel write SetIntegrityLevel;
+    property Integrity: TGroup read GetIntegrity;                      // class 25 #settable
+    property IntegrityLevel: Cardinal write SetIntegrityLevel;
     property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
     property MandatoryPolicy: Cardinal read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
     // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
@@ -432,10 +432,10 @@ begin
   FOnSessionChange.ComparisonFunction := CompareCardinals;
   FOnOriginChange.ComparisonFunction := CompareLUIDs;
   FOnUIAccessChange.ComparisonFunction := CompareLongBools;
-  FOnIntegrityChange.ComparisonFunction := CompareIntegrities;
+  FOnIntegrityChange.ComparisonFunction := CompareGroups;
   FOnPolicyChange.ComparisonFunction := CompareCardinals;
   FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
-  FOnGroupsChange.ComparisonFunction := CompareGroups;
+  FOnGroupsChange.ComparisonFunction := CompareGroupArrays;
   FOnStatisticsChange.ComparisonFunction := CompareStatistics;
   FOnVirtualizationAllowedChange.ComparisonFunction := CompareLongBools;
   FOnVirtualizationEnabledChange.ComparisonFunction := CompareLongBools;
@@ -954,7 +954,7 @@ begin
   Result := Token.Cache.HasRestrictions;
 end;
 
-function TTokenData.GetIntegrity: TTokenIntegrity;
+function TTokenData.GetIntegrity: TGroup;
 begin
   Assert(Token.Cache.IsCached[tdTokenIntegrity]);
   Result := Token.Cache.Integrity;
@@ -1121,7 +1121,7 @@ begin
       Result := EnumElevationToString(Token.Cache.Elevation);
 
     tsIntegrity:
-      Result := Token.Cache.Integrity.ToString;
+      Result := EnumIntegrityToStrnig(Token.Cache.Integrity.SecurityIdentifier.Rid);
 
     tsObjectAddress:
       Result := IntToHexEx(UInt64(Token.HandleInformation.PObject));
@@ -1396,21 +1396,11 @@ begin
     tdTokenIntegrity:
     begin
       Result := NtxQueryGroupToken(Token.hToken, TokenIntegrityLevel,
-        Token.Cache.Integrity.Group).IsSuccess;
+        Token.Cache.Integrity).IsSuccess;
 
-      if Result then
-        with Token.Cache.Integrity.Group.SecurityIdentifier do
-        begin
-          // Integrity level is the last sub-authority (RID) of the
-          // integrity SID
-          if SubAuthorities > 0 then
-            Token.Cache.Integrity.Level := TTokenIntegrityLevel(Rid)
-          else
-            Token.Cache.Integrity.Level := ilUntrusted;
-
-          if Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
-            InvokeStringEvent(tsIntegrity);
-        end;
+      if Result and
+        Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
+          InvokeStringEvent(tsIntegrity);
     end;
 
     tdTokenUIAccess:
@@ -1469,9 +1459,9 @@ begin
   ValidateCache(tdTokenStatistics);
 end;
 
-procedure TTokenData.SetIntegrityLevel(const Value: TTokenIntegrityLevel);
+procedure TTokenData.SetIntegrityLevel(const Value: Cardinal);
 begin
-  NtxSetIntegrityToken(Token.hToken, Cardinal(Value)).RaiseOnError;
+  NtxSetIntegrityToken(Token.hToken, Value).RaiseOnError;
 
   // Update the cache and notify event listeners.
   ValidateCache(tdTokenIntegrity);
