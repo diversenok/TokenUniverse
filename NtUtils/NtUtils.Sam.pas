@@ -28,14 +28,16 @@ function SamxConnectRemote(out hServer: TSamHandle; ServerName: String;
 // Close SAM handle
 function SamxClose(var SamHandle: TSamHandle): NTSTATUS;
 
+// Free a buffer returned by a SamxQuery* function
+function SamxFreeMemory(Buffer: Pointer): NTSTATUS;
+
 { --------------------------------- Domains -------------------------------- }
 
 // Open a domain
+function SamxOpenDomain(out hDomain: TSamHandle; DomainId: PSid;
+  DesiredAccess: TAccessMask): TNtxStatus; overload;
 function SamxOpenDomain(out hDomain: TSamHandle; hServer: TSamHandle;
-  DomainId: PSid; DesiredAccess: TAccessMask): TNtxStatus;
-
-function SamxOpenLocalDomain(out hDomain: TSamHandle; DomainId: PSid;
-  DesiredAccess: TAccessMask): TNtxStatus;
+  DomainId: PSid; DesiredAccess: TAccessMask): TNtxStatus; overload;
 
 // Open the parent of the SID as a domain
 function SamxOpenParentDomain(out hDomain: TSamHandle; SID: ISid;
@@ -48,6 +50,14 @@ function SamxLookupDomain(hServer: TSamHandle; Name: String;
 // Enumerate domains
 function SamxEnumerateDomains(hServer: TSamHandle; out Names: TStringArray):
   TNtxStatus;
+
+// Query domain information; free the result with SamxFreeMemory
+function SamxQueryDomain(hDomain: TSamHandle; InfoClass:
+  TDomainInformationClass; out Status: TNtxStatus): Pointer;
+
+// Set domain information
+function SamxSetDomain(hDomain: TSamHandle; InfoClass: TDomainInformationClass;
+  Data: Pointer): TNtxStatus;
 
 { --------------------------------- Groups ---------------------------------- }
 
@@ -67,6 +77,14 @@ function SamxOpenGroupBySid(out hGroup: TSamHandle; Sid: ISid;
 function SamxGetMembersGroup(hGroup: TSamHandle;
   out Members: TGroupMemberships): TNtxStatus;
 
+// Query group information; free the result with SamxFreeMemory
+function SamxQueryGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
+  out Status: TNtxStatus): Pointer;
+
+// Set group information
+function SamxSetGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
+  Data: Pointer): TNtxStatus;
+
 { --------------------------------- Aliases --------------------------------- }
 
 // Enumerate aliases in domain
@@ -84,6 +102,14 @@ function SamxOpenAliasBySid(out hAlias: TSamHandle; Sid: ISid;
 // Get alias members
 function SamxGetMembersAlias(hAlias: TSamHandle; out Members: ISidArray):
   TNtxStatus;
+
+// Query alias information; free the result with SamxFreeMemory
+function SamxQueryAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
+  out Status: TNtxStatus): Pointer;
+
+// Set alias information
+function SamxSetAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
+  Data: Pointer): TNtxStatus;
 
 { ---------------------------------- Users ---------------------------------- }
 
@@ -103,10 +129,18 @@ function SamxOpenUserBySid(out hUser: TSamHandle; Sid: ISid;
 function SamxGetGroupsForUser(hUser: TSamHandle; out Groups: TGroupMemberships):
   TNtxStatus;
 
+// Query user information; free the result with SamxFreeMemory
+function SamxQueryUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
+  out Status: TNtxStatus): Pointer;
+
+// Set user information
+function SamxSetUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
+  Data: Pointer): TNtxStatus;
+
 implementation
 
 uses
-  Ntapi.ntstatus;
+  Ntapi.ntstatus, System.TypInfo;
 
 { Server }
 
@@ -139,6 +173,11 @@ begin
   SamHandle := 0;
 end;
 
+function SamxFreeMemory(Buffer: Pointer): NTSTATUS;
+begin
+  Result := SamFreeMemory(Buffer);
+end;
+
 { Domains }
 
 function SamxOpenDomain(out hDomain: TSamHandle; hServer: TSamHandle;
@@ -148,7 +187,7 @@ begin
   Result.Status := SamOpenDomain(hServer, DesiredAccess, DomainId, hDomain);
 end;
 
-function SamxOpenLocalDomain(out hDomain: TSamHandle; DomainId: PSid;
+function SamxOpenDomain(out hDomain: TSamHandle; DomainId: PSid;
   DesiredAccess: TAccessMask): TNtxStatus;
 var
   hServer: TSamHandle;
@@ -172,7 +211,7 @@ begin
     Exit;
   end;
 
-  Result := SamxOpenLocalDomain(hDomain, Sid.ParentSid.Sid, DOMAIN_LOOKUP);
+  Result := SamxOpenDomain(hDomain, Sid.ParentSid.Sid, DOMAIN_LOOKUP);
 end;
 
 function SamxLookupDomain(hServer: TSamHandle; Name: String;
@@ -215,6 +254,22 @@ begin
     Names[i] := Buffer[i].Name.ToString;
 
   SamFreeMemory(Buffer);
+end;
+
+function SamxQueryDomain(hDomain: TSamHandle; InfoClass:
+  TDomainInformationClass; out Status: TNtxStatus): Pointer;
+begin
+  Status.Location := 'SamQueryInformationDomain [' +
+    GetEnumName(TypeInfo(TDomainInformationClass), Integer(InfoClass)) + ']';
+  Status.Status := SamQueryInformationDomain(hDomain, InfoClass, Result);
+end;
+
+function SamxSetDomain(hDomain: TSamHandle; InfoClass: TDomainInformationClass;
+  Data: Pointer): TNtxStatus;
+begin
+  Result.Location := 'SamSetInformationDomain [' +
+    GetEnumName(TypeInfo(TDomainInformationClass), Integer(InfoClass)) + ']';
+  Result.Status := SamSetInformationDomain(hDomain, InfoClass, Data);
 end;
 
 { Groups }
@@ -292,6 +347,22 @@ begin
   SamFreeMemory(BufferAttributes);
 end;
 
+function SamxQueryGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
+  out Status: TNtxStatus): Pointer;
+begin
+  Status.Location := 'SamQueryInformationGroup [' +
+    GetEnumName(TypeInfo(TGroupInformationClass), Integer(InfoClass)) + ']';
+  Status.Status := SamQueryInformationGroup(hGroup, InfoClass, Result);
+end;
+
+function SamxSetGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
+  Data: Pointer): TNtxStatus;
+begin
+  Result.Location := 'SamSetInformationGroup [' +
+    GetEnumName(TypeInfo(TGroupInformationClass), Integer(InfoClass)) + ']';
+  Result.Status := SamSetInformationGroup(hGroup, InfoClass, Data);
+end;
+
 { Aliases }
 
 function SamxEnumerateAliases(hDomain: TSamHandle;
@@ -360,6 +431,23 @@ begin
     Members[i] := TSid.CreateCopy(Buffer[i]);
 
   SamFreeMemory(Buffer);
+end;
+
+function SamxQueryAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
+  out Status: TNtxStatus): Pointer;
+begin
+  Status.Location := 'SamQueryInformationAlias [' +
+    GetEnumName(TypeInfo(TAliasInformationClass), Integer(InfoClass)) + ']';
+  Status.Status := SamQueryInformationAlias(hAlias, InfoClass, Result);
+end;
+
+// Set alias information
+function SamxSetAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
+  Data: Pointer): TNtxStatus;
+begin
+  Result.Location := 'SamSetInformationAlias [' +
+    GetEnumName(TypeInfo(TAliasInformationClass), Integer(InfoClass)) + ']';
+  Result.Status := SamSetInformationAlias(hAlias, InfoClass, Data);
 end;
 
 { Users }
@@ -431,6 +519,23 @@ begin
     Groups[i] := Buffer[i]^;
 
   SamFreeMemory(Buffer);
+end;
+
+function SamxQueryUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
+  out Status: TNtxStatus): Pointer;
+begin
+  Status.Location := 'SamQueryInformationUser [' +
+    GetEnumName(TypeInfo(TUserInformationClass), Integer(InfoClass)) + ']';
+  Status.Status := SamQueryInformationUser(hUser, InfoClass, Result);
+end;
+
+// Set user information
+function SamxSetUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
+  Data: Pointer): TNtxStatus;
+begin
+  Result.Location := 'SamSetInformationUser [' +
+    GetEnumName(TypeInfo(TUserInformationClass), Integer(InfoClass)) + ']';
+  Result.Status := SamSetInformationUser(hUser, InfoClass, Data);
 end;
 
 end.

@@ -36,6 +36,15 @@ const
 
   DOMAIN_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $7FF;
 
+  // 352, password properties
+  DOMAIN_PASSWORD_COMPLEX = $00000001;
+  DOMAIN_PASSWORD_NO_ANON_CHANGE = $00000002;
+  DOMAIN_PASSWORD_NO_CLEAR_CHANGE = $00000004;
+  DOMAIN_LOCKOUT_ADMINS = $00000008;
+  DOMAIN_PASSWORD_STORE_CLEARTEXT = $00000010;
+  DOMAIN_REFUSE_PASSWORD_CHANGE = $00000020;
+  DOMAIN_NO_LM_OWF_CHANGE = $00000040;
+
   // 528
   GROUP_READ_INFORMATION = $0001;
   GROUP_WRITE_ACCOUNT = $0002;
@@ -69,6 +78,30 @@ const
 
   USER_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $7FF;
 
+  // 761, user control flags
+  USER_ACCOUNT_DISABLED = $00000001;
+  USER_HOME_DIRECTORY_REQUIRED = $00000002;
+  USER_PASSWORD_NOT_REQUIRED = $00000004;
+  USER_TEMP_DUPLICATE_ACCOUNT = $00000008;
+  USER_NORMAL_ACCOUNT = $00000010;
+  USER_MNS_LOGON_ACCOUNT = $00000020;
+  USER_INTERDOMAIN_TRUST_ACCOUNT = $00000040;
+  USER_WORKSTATION_TRUST_ACCOUNT = $00000080;
+  USER_SERVER_TRUST_ACCOUNT = $00000100;
+  USER_DONT_EXPIRE_PASSWORD = $00000200;
+  USER_ACCOUNT_AUTO_LOCKED = $00000400;
+  USER_ENCRYPTED_TEXT_PASSWORD_ALLOWED = $00000800;
+  USER_SMARTCARD_REQUIRED = $00001000;
+  USER_TRUSTED_FOR_DELEGATION = $00002000;
+  USER_NOT_DELEGATED = $00004000;
+  USER_USE_DES_KEY_ONLY = $00008000;
+  USER_DONT_REQUIRE_PREAUTH = $00010000;
+  USER_PASSWORD_EXPIRED = $00020000;
+  USER_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION = $00040000;
+  USER_NO_AUTH_DATA_REQUIRED = $00080000;
+  USER_PARTIAL_SECRETS_ACCOUNT = $00100000;
+  USER_USE_AES_KEYS = $00200000;
+
 type
   TSamHandle = NativeUInt;
 
@@ -99,7 +132,8 @@ type
 
   // 263
   TDomainInformationClass = (
-    DomainPasswordInformation = 1,    // q, s:
+    DomainEnumPadding = 0,
+    DomainPasswordInformation = 1,    // q, s: TDomainPasswordInformation
     DomainGeneralInformation = 2,     // q: TDomainGeneralInformation
     DomainLogoffInformation = 3,      // q, s: TLargeInteger
     DomainOemInformation = 4,         // q, s: UNICODE_STRING
@@ -140,6 +174,17 @@ type
     GroupCount: Cardinal;
     AliasCount: Cardinal;
   end;
+  PDomainGeneralInformation = ^TDomainGeneralInformation;
+
+  // 333
+  TDomainPasswordInformation = record
+    MinPasswordLength: Word;
+    PasswordHistoryLength: Word;
+    PasswordProperties: Cardinal;
+    MaxPasswordAge: TLargeInteger;
+    MinPasswordAge: TLargeInteger;
+  end;
+  PDomainPasswordInformation = TDomainPasswordInformation;
 
   // 394
   TDomainModifiedInformation = record
@@ -148,7 +193,7 @@ type
   end;
   PDomainModifiedInformation = ^TDomainModifiedInformation;
 
-  // 558
+  // 559
   TGroupMembership = record
     RelativeId: Cardinal;
     Attributes: Cardinal;
@@ -159,6 +204,7 @@ type
 
   // 565
   TGroupInformationClass = (
+    GroupEnumPadding = 0,
     GroupGeneralInformation = 1,     // q: TGroupGeneralInformation
     GroupNameInformation = 2,        // q, s: UNICODE_STRING;
     GroupAttributeInformation = 3,   // q, s: Cardinal
@@ -176,6 +222,7 @@ type
 
   // 634
   TAliasInformationClass = (
+    AliasEnumPadding = 0,
     AliasGeneralInformation = 1,      // q: TAliasGeneralInformation
     AliasNameInformation = 2,         // q, s: UNICODE_STRING
     AliasAdminCommentInformation = 3, // q, s: UNICODE_STRING
@@ -199,21 +246,22 @@ type
 
   // 860
   TUserInformationClass = (
+    UserEnumPadding = 0,
     UserGeneralInformation = 1,       // q: TUserGeneralInformation
     UserPreferencesInformation = 2,   // q, s:
     UserLogonInformation = 3,         // q: TUserLogonInformation
     UserLogonHoursInformation = 4,    // q, s: TLogonHours
-    UserAccountInformation = 5,       // q: TUserAccountInformation (almost identical to TUserLogonInformation)
-    UserNameInformation = 6,          // q, s:
+    UserAccountInformation = 5,       // q: TUserAccountInformation
+    UserNameInformation = 6,          // q, s: {Name + Full name}
     UserAccountNameInformation = 7,   // q, s: UNICODE_STRING
     UserFullNameInformation = 8,      // q, s: UNICODE_STRING
     UserPrimaryGroupInformation = 9,  // q, s: Cardinal
-    UserHomeInformation = 10,         // q, s:
+    UserHomeInformation = 10,         // q, s: TUserHomeInformation
     UserScriptInformation = 11,       // q, s: UNICODE_STRING
     UserProfileInformation = 12,      // q, s: UNICODE_STRING
     UserAdminCommentInformation = 13, // q, s: UNICODE_STRING
-    UserWorkStationsInformation = 14, // q, s:
-    UserSetPasswordInformation = 15,  // s:
+    UserWorkStationsInformation = 14, // q, s: UNICODE_STRING
+    UserSetPasswordInformation = 15,  // s: TUserSetPasswordInformation
     UserControlInformation = 16,      // q, s: Cardinal
     UserExpiresInformation = 17,      // q, s: TLargeInteger
     UserInternal1Information = 18,    // q, s:
@@ -262,6 +310,43 @@ type
     UserAccountControl: Cardinal;
   end;
   PUserLogonInformation = ^TUserLogonInformation;
+
+  // 1148
+  TUserAccountInformation = record
+    UserName: UNICODE_STRING;
+    FullName: UNICODE_STRING;
+    UserId: Cardinal;
+    PrimaryGroupId: Cardinal;
+    HomeDirectory: UNICODE_STRING;
+    HomeDirectoryDrive: UNICODE_STRING;
+    ScriptPath: UNICODE_STRING;
+    ProfilePath: UNICODE_STRING;
+    AdminComment: UNICODE_STRING;
+    WorkStations: UNICODE_STRING;
+    LastLogon: TLargeInteger;
+    LastLogoff: TLargeInteger;
+    LogonHours: TLogonHours;
+    BadPasswordCount: Word;
+    LogonCount: Word;
+    PasswordLastSet: TLargeInteger;
+    AccountExpires: TLargeInteger;
+    UserAccountControl: Cardinal;
+  end;
+  PUserAccountInformation = ^TUserAccountInformation;
+
+  // 1187
+  TUserHomeInformation = record
+    HomeDirectory: UNICODE_STRING;
+    HomeDirectoryDrive: UNICODE_STRING;
+  end;
+  PUserHomeInformation = ^TUserHomeInformation;
+
+  // 1208
+  TUserSetPasswordInformation = record
+    Password: UNICODE_STRING;
+    PasswordExpired: Boolean;
+  end;
+  PUserSetPasswordInformation = ^TUserSetPasswordInformation;
 
 // 1777
 function SamFreeMemory(Buffer: Pointer): NTSTATUS; stdcall;
@@ -411,9 +496,17 @@ function SamDeleteAlias(AliasHandle: TSamHandle): NTSTATUS; stdcall;
 function SamAddMemberToAlias(AliasHandle: TSamHandle; MemberId: PSid): NTSTATUS;
   stdcall; external samlib;
 
+// 2068
+function SamAddMultipleMembersToAlias(AliasHandle: TSamHandle; MemberIds:
+  TSidDynArray; MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
+
 // 2076
 function SamRemoveMemberFromAlias(AliasHandle: TSamHandle; MemberId: PSid):
   NTSTATUS; stdcall; external samlib;
+
+// 2083
+function SamRemoveMultipleMembersFromAlias(AliasHandle: TSamHandle; MemberIds:
+  TSidDynArray; MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
 
 // 2098
 function SamGetMembersInAlias(AliasHandle: TSamHandle; out MemberIds: PSidArray;
@@ -436,6 +529,11 @@ function SamQueryInformationUser(UserHandle: TSamHandle;
 // 2129
 function SamSetInformationUser(UserHandle: TSamHandle;
   UserInformationClass: TUserInformationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external samlib;
+
+// 2137
+function SamChangePasswordUser(UserHandle: TSamHandle; const OldPassword:
+  UNICODE_STRING; const NewPassword: UNICODE_STRING): NTSTATUS;
   stdcall; external samlib;
 
 // 2167
