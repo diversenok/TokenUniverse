@@ -17,7 +17,7 @@ type
 
   IAcl = interface
     function Acl: PAcl;
-    function Count: Integer;
+    function SizeInfo: TAclSizeInformation;
     function GetAce(Index: Integer): TAce;
     function Delete(Index: Integer): TNtxStatus;
     function AddAt(const Ace: TAce; Index: Integer): TNtxStatus;
@@ -26,16 +26,23 @@ type
   TAcl = class(TInterfacedObject, IAcl)
   private
     FAcl: PAcl;
-    AclSize: Cardinal;
+    procedure Expand(AtLeast: Cardinal);
   public
-    constructor CreateEmpy(InitialSize: Cardinal = 1024);
+    constructor CreateEmpy(InitialSize: Cardinal = 512);
     constructor CreateCopy(SrcAcl: PAcl);
     function Acl: PAcl;
-    function Count: Integer;
+    function SizeInfo: TAclSizeInformation;
     function GetAce(Index: Integer): TAce;
     function Delete(Index: Integer): TNtxStatus;
     function AddAt(const Ace: TAce; Index: Integer): TNtxStatus;
   end;
+
+// Query ACL size information
+function RtlxQuerySizeInfoAcl(Acl: PAcl; out SizeInfo: TAclSizeInformation):
+  TNtxStatus;
+
+// Appen all ACEs from one ACL to another
+function RtlxAppendAcl(SourceAcl, TargetAcl: PAcl): TNtxStatus;
 
 // Prepare security descriptor
 function RtlxCreateSecurityDescriptor(var SecDesc: TSecurityDescriptor):
@@ -104,10 +111,42 @@ end;
 
 { TAcl }
 
+function ExpandingEq(Value: Cardinal): Cardinal; inline;
+begin
+  // Exrta capacity: +12.5% + 256 Bytes
+  Result := Value shr 3 + 256;
+end;
+
+function ExpandSize(SizeInfo: TAclSizeInformation;
+  Requires: Cardinal): Cardinal;
+begin
+  // Satisfy the requirements + some extra capacity
+  if SizeInfo.AclBytesFree < Requires then
+    SizeInfo.AclBytesFree := Requires + ExpandingEq(Requires);
+
+  // Make sure we have enough extra capacity
+  if SizeInfo.AclBytesFree < ExpandingEq(SizeInfo.AclBytesInUse) then
+    SizeInfo.AclBytesFree := ExpandingEq(SizeInfo.AclBytesInUse);
+
+  Result := SizeInfo.AclBytesTotal;
+
+  if Result > MAX_ACL_SIZE then
+    Result := MAX_ACL_SIZE;
+end;
+
+function TAcl.Acl: PAcl;
+begin
+  Result := FAcl;
+end;
+
 function TAcl.AddAt(const Ace: TAce; Index: Integer): TNtxStatus;
 var
   AceBuffer: PAce;
 begin
+  // Expand the ACL if we are going to run out of space
+  if SizeInfo.AclBytesFree < Ace.Size then
+    Expand(Ace.Size);
+
   AceBuffer := Ace.Allocate;
 
   Result.Location := 'RtlAddAce';
@@ -116,51 +155,32 @@ begin
   FreeMem(AceBuffer);
 end;
 
-function TAcl.Count: Integer;
-var
-  SizeInfo: TAclSizeInformation;
-begin
-  NtxCheck(RtlQueryInformationAcl(FAcl, SizeInfo), 'RtlQueryInformationAcl');
-  Result := SizeInfo.AceCount;
-end;
-
 constructor TAcl.CreateCopy(SrcAcl: PAcl);
 var
   i: Integer;
   SizeInfo: TAclSizeInformation;
-  Ace: PAce;
 begin
   if not Assigned(SrcAcl) or not RtlValidAcl(SrcAcl) then
     raise ENtError.Create(STATUS_INVALID_ACL, 'RtlValidAcl');
 
-  NtxCheck(RtlQueryInformationAcl(SrcAcl, SizeInfo), 'RtlQueryInformationAcl');
+  RtlxQuerySizeInfoAcl(SrcAcl, SizeInfo).RaiseOnError;
 
-  AclSize := SizeInfo.AclBytesInUse;
-  AclSize := AclSize + AclSize shr 4 + 256; // + 6% + 256 Bytes
-  AclSize := (AclSize shr 10 + 1) shl 10; // Round up to 1024n Bytes
+  // Create an ACL, potentially with some extra capacity
+  CreateEmpy(ExpandSize(SizeInfo, 0));
 
-  CreateEmpy(AclSize);
-
-  for i := 0 to SizeInfo.AceCount - 1 do
-  begin
-    NtxCheck(RtlGetAce(SrcAcl, i, Ace), 'RtlGetAce');
-    NtxCheck(RtlAddAce(FAcl, ACL_REVISION, -1, Ace, Ace.Header.AceSize),
-      'RtlAddAce');
-  end;
+  // Add all aces from the source ACL
+  RtlxAppendAcl(SrcAcl, FAcl).RaiseOnError;
 end;
 
 constructor TAcl.CreateEmpy(InitialSize: Cardinal);
-const
-  MAX_ACL_SIZE = $FFFC; // TODO: reversed; does this value present in headers?
 var
   Status: NTSTATUS;
 begin
   if InitialSize > MAX_ACL_SIZE then
     InitialSize := MAX_ACL_SIZE;
 
-  AclSize := InitialSize;
-  FAcl := AllocMem(AclSize);
-  Status := RtlCreateAcl(FAcl, AclSize, ACL_REVISION);
+  FAcl := AllocMem(InitialSize);
+  Status := RtlCreateAcl(FAcl, InitialSize, ACL_REVISION);
 
   if not NT_SUCCESS(Status) then
   begin
@@ -173,6 +193,35 @@ function TAcl.Delete(Index: Integer): TNtxStatus;
 begin
   Result.Location := 'RtlDeleteAce';
   Result.Status := RtlDeleteAce(FAcl, Index);
+end;
+
+procedure TAcl.Expand(AtLeast: Cardinal);
+var
+  NewAcl: PAcl;
+  NewAclSize: Cardinal;
+  Status: NTSTATUS;
+begin
+  NewAclSize := ExpandSize(SizeInfo, AtLeast);
+
+  // Check if expanding is possible/needs reallocation
+  if NewAclSize = SizeInfo.AclBytesTotal then
+    Exit;
+
+  NewAcl := AllocMem(NewAclSize);
+  Status := RtlCreateAcl(NewAcl, NewAclSize, ACL_REVISION);
+
+  if not NT_SUCCESS(Status) then
+  begin
+    FreeMem(NewAcl);
+    raise ENtError.Create(Status, 'RtlCreateAcl');
+  end;
+
+  // Copy all ACEs to the new ACL
+  RtlxAppendAcl(FAcl, NewAcl).RaiseOnError;
+
+  // Replace current ACL with the new one
+  FreeMem(FAcl);
+  FAcl := NewAcl;
 end;
 
 function TAcl.GetAce(Index: Integer): TAce;
@@ -216,12 +265,48 @@ begin
   end;
 end;
 
-function TAcl.Acl: PAcl;
+function TAcl.SizeInfo: TAclSizeInformation;
 begin
-  Result := FAcl;
+  RtlxQuerySizeInfoAcl(FAcl, Result).RaiseOnError;
 end;
 
 { functions }
+
+function RtlxQuerySizeInfoAcl(Acl: PAcl; out SizeInfo: TAclSizeInformation):
+  TNtxStatus;
+begin
+  Result.Location := 'RtlQueryInformationAcl';
+  Result.Status := RtlQueryInformationAcl(Acl, SizeInfo);
+end;
+
+function RtlxAppendAcl(SourceAcl, TargetAcl: PAcl): TNtxStatus;
+var
+  i: Integer;
+  Ace: PAce;
+  SizeInfo: TAclSizeInformation;
+begin
+  Result.Location := 'RtlQueryInformationAcl';
+  Result.Status := RtlQueryInformationAcl(SourceAcl, SizeInfo);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  for i := 0 to SizeInfo.AceCount - 1 do
+  begin
+    Result.Location := 'RtlGetAce';
+    Result.Status := RtlGetAce(SourceAcl, i, Ace);
+
+    if not Result.IsSuccess then
+      Exit;
+
+    Result.Location := 'RtlAddAce';
+    Result.Status := RtlAddAce(TargetAcl, ACL_REVISION, -1, Ace,
+      Ace.Header.AceSize);
+
+    if not Result.IsSuccess then
+      Exit;
+  end;
+end;
 
 function RtlxCreateSecurityDescriptor(var SecDesc: TSecurityDescriptor):
   TNtxStatus;

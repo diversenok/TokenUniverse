@@ -61,6 +61,9 @@ const
   // 9700
   ACL_REVISION = 2;
 
+  // TODO: reversed; does this value present in headers?
+  MAX_ACL_SIZE = $FFFC;
+
   // 9797
   OBJECT_INHERIT_ACE = $1;
   CONTAINER_INHERIT_ACE = $2;
@@ -332,6 +335,7 @@ type
     AceCount: Integer;
     AclBytesInUse: Cardinal;
     AclBytesFree: Cardinal;
+    function AclBytesTotal: Cardinal;
   end;
   PAclSizeInformation = ^TAclSizeInformation;
 
@@ -579,6 +583,13 @@ end;
 function TObjectAce_Internal.Sid: PSid;
 begin
   Result := PSid(@Self.SidStart);
+end;
+
+{ TAclSizeInformation }
+
+function TAclSizeInformation.AclBytesTotal: Cardinal;
+begin
+  Result := AclBytesInUse + AclBytesFree;
 end;
 
 { TLargeInteger }
