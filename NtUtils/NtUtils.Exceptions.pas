@@ -168,8 +168,7 @@ end;
 
 constructor ENtError.CreateNtx(const Status: TNtxStatus);
 begin
-  ErrorLocation := Status.Location;
-  ErrorCode := Status.Status;
+  Create(Status.Status, Status.Location);
   LastCall := Status.LastCall;
 end;
 
