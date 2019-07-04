@@ -210,6 +210,16 @@ object DialogRun: TDialogRun
           Caption = 'Breakaway from job'
           TabOrder = 2
         end
+        object CheckBoxNewConsole: TCheckBox
+          Left = 158
+          Top = 47
+          Width = 134
+          Height = 17
+          Caption = 'Create new console'
+          Checked = True
+          State = cbChecked
+          TabOrder = 3
+        end
       end
       object ComboBoxLogonFlags: TComboBox
         Left = 162

@@ -9,7 +9,7 @@ type
   TExecParam = (
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppRequireElevation, ppShowWindowMode
+    ppNewConsole, ppRequireElevation, ppShowWindowMode
   );
 
   IExecProvider = interface
@@ -24,6 +24,7 @@ type
     function InheritHandles: Boolean;
     function CreateSuspended: Boolean;
     function Breakaway: Boolean;
+    function NewConsole: Boolean;
     function RequireElevation: Boolean;
     function ShowWindowMode: Word;
   end;
@@ -50,6 +51,7 @@ type
     bInheritHandles: Boolean;
     bCreateSuspended: Boolean;
     bBreakaway: Boolean;
+    bNewConsole: Boolean;
     bRequireElevation: Boolean;
     wShowWindowMode: Word;
   public
@@ -64,6 +66,7 @@ type
     function InheritHandles: Boolean; virtual;
     function CreateSuspended: Boolean; virtual;
     function Breakaway: Boolean; virtual;
+    function NewConsole: Boolean; virtual;
     function RequireElevation: Boolean; virtual;
     function ShowWindowMode: Word; virtual;
   end;
@@ -129,6 +132,11 @@ begin
     Result := dwLogonFlags
   else
     Result := 0;
+end;
+
+function TDefaultExecProvider.NewConsole: Boolean;
+begin
+  Result := bNewConsole;
 end;
 
 function TDefaultExecProvider.Parameters: String;

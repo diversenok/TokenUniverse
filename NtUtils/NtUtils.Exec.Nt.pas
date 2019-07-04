@@ -71,7 +71,7 @@ begin
     RtlFreeUnicodeString(NtImageName);
     raise ENtError.Create(Status, 'RtlCreateProcessParametersEx');
   end;
-  
+
   if ParamSet.Provides(ppShowWindowMode) then
   begin
     ProcessParams.WindowFlags := STARTF_USESHOWWINDOW;

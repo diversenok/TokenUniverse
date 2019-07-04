@@ -65,6 +65,10 @@ begin
     ParamSet.Breakaway then
     dwCreationFlags := dwCreationFlags or CREATE_BREAKAWAY_FROM_JOB;
 
+  if Method.Supports(ppNewConsole) and ParamSet.Provides(ppNewConsole) and
+    ParamSet.NewConsole then
+    dwCreationFlags := dwCreationFlags or CREATE_NEW_CONSOLE;
+
   // Extended attributes
   PrepateAttributes(ParamSet, Method);
   if Assigned(SIEX.lpAttributeList) then
@@ -177,7 +181,8 @@ function TExecCreateProcessAsUser.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-    ppInheritHandles, ppCreateSuspended, ppBreakaway, ppShowWindowMode:
+    ppInheritHandles, ppCreateSuspended, ppBreakaway, ppNewConsole,
+    ppShowWindowMode:
       Result := True;
   else
     Result := False;

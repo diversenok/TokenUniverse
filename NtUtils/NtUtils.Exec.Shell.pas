@@ -27,6 +27,10 @@ begin
   ShellExecInfo.fMask := SEE_MASK_NOASYNC or SEE_MASK_UNICODE or
     SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_NO_UI;
 
+  // SEE_MASK_NO_CONSOLE is opposite to CREATE_NEW_CONSOLE
+  if ParamSet.Provides(ppNewConsole) and not ParamSet.NewConsole then
+    ShellExecInfo.fMask := ShellExecInfo.fMask or SEE_MASK_NO_CONSOLE;
+
   ShellExecInfo.lpFile := PWideChar(ParamSet.Application);
 
   if ParamSet.Provides(ppParameters) then
@@ -54,7 +58,8 @@ end;
 function TExecShellExecute.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
-    ppParameters, ppCurrentDirectory, ppRequireElevation, ppShowWindowMode:
+    ppParameters, ppCurrentDirectory, ppNewConsole, ppRequireElevation,
+    ppShowWindowMode:
       Result := True;
   else
     Result := False;

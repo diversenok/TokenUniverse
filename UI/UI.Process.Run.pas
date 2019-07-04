@@ -49,6 +49,7 @@ type
     EditParent: TEdit;
     PopupClearParent: TPopupMenu;
     MenuClearParent: TMenuItem;
+    CheckBoxNewConsole: TCheckBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -75,6 +76,7 @@ type
     function InheritHandles: Boolean;
     function CreateSuspended: Boolean;
     function Breakaway: Boolean;
+    function NewConsole: Boolean;
     function RequireElevation: Boolean;
     function ShowWindowMode: Word;
   private
@@ -248,6 +250,11 @@ begin
   EditExe.Text := ParamStr(0);
 end;
 
+function TDialogRun.NewConsole: Boolean;
+begin
+  Result := CheckBoxNewConsole.Checked;
+end;
+
 procedure TDialogRun.OnCaptionChange(NewCaption: String);
 begin
   LinkLabelToken.Caption := 'Using token: <a>' + NewCaption + '</a>';
@@ -267,7 +274,7 @@ function TDialogRun.Provides(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
     ppDesktop, ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppRequireElevation:
+    ppNewConsole, ppRequireElevation:
       Result := True;
 
     ppParameters:
@@ -388,6 +395,9 @@ begin
 
   CheckBoxBreakaway.Enabled := Assigned(ExecMethod) and
     ExecMethod.Supports(ppBreakaway);
+
+  CheckBoxNewConsole.Enabled := Assigned(ExecMethod) and
+    ExecMethod.Supports(ppNewConsole);
 
   CheckBoxRunas.Enabled := Assigned(ExecMethod) and
     ExecMethod.Supports(ppRequireElevation);
