@@ -157,7 +157,6 @@ end;
 
 constructor TAcl.CreateCopy(SrcAcl: PAcl);
 var
-  i: Integer;
   SizeInfo: TAclSizeInformation;
 begin
   if not Assigned(SrcAcl) or not RtlValidAcl(SrcAcl) then

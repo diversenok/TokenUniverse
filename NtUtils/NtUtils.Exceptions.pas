@@ -260,6 +260,9 @@ begin
     Result := STATUS_BUFFER_TOO_SMALL
   else if RtlGetLastWin32Error = ERROR_ACCESS_DENIED   then
     Result := STATUS_ACCESS_DENIED
+  else if RtlGetLastWin32Error = ERROR_SUCCESS then
+    // After converting to NTSTATUS, ERROR_SUCCESS becomes unsuccessful, fix it
+    Result := STATUS_SUCCESS
   else
     Result := NTSTATUS_FROM_WIN32(RtlGetLastWin32Error);
 end;
