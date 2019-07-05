@@ -14,7 +14,7 @@ type
 implementation
 
 uses
-  Winapi.Wdc, NtUtils.Exceptions, Winapi.WinError, NtUtils.DelayedImport;
+  Winapi.Wdc, NtUtils.Exceptions, Winapi.WinError, NtUtils.Ldr;
 
 { TExecCallWdc }
 
@@ -31,7 +31,7 @@ begin
   else
     CurrentDir := nil;
 
-  NtxCheckModuleDelayedImport(wdc, 'WdcRunTaskAsInteractiveUser').RaiseOnError;
+  LdrxCheckModuleDelayedImport(wdc, 'WdcRunTaskAsInteractiveUser').RaiseOnError;
 
   ResultCode := WdcRunTaskAsInteractiveUser(PWideChar(CommandLine), CurrentDir,
     0);

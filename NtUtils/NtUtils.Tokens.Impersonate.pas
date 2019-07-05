@@ -28,7 +28,7 @@ implementation
 
 uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi,
-  NtUtils.Objects, NtUtils.Tokens, NtUtils.DelayedImport, NtUtils.Processes;
+  NtUtils.Objects, NtUtils.Tokens, NtUtils.Ldr, NtUtils.Processes;
 
 { Impersonation }
 
@@ -239,7 +239,7 @@ var
   AccessToken: TProcessAccessToken;
 begin
   // Check delayed import for ReactOS
-  Result := NtxCheckNtDelayedImport('NtGetNextThread');
+  Result := LdrxCheckNtDelayedImport('NtGetNextThread');
 
   if not Result.IsSuccess then
     Exit;

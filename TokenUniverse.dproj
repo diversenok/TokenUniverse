@@ -226,7 +226,7 @@
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="DelphiUtils\DelphiUtils.Events.pas"/>
         <DCCReference Include="DelphiUtils\DelphiUtils.Strings.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.DelayedImport.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Ldr.pas"/>
         <DCCReference Include="Headers\Ntapi.ntldr.pas"/>
         <DCCReference Include="Headers\Winapi.securitybaseapi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Strings.pas"/>

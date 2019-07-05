@@ -59,7 +59,7 @@ uses
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
   DelphiUtils.Events in 'DelphiUtils\DelphiUtils.Events.pas',
   DelphiUtils.Strings in 'DelphiUtils\DelphiUtils.Strings.pas',
-  NtUtils.DelayedImport in 'NtUtils\NtUtils.DelayedImport.pas',
+  NtUtils.Ldr in 'NtUtils\NtUtils.Ldr.pas',
   Ntapi.ntldr in 'Headers\Ntapi.ntldr.pas',
   Winapi.securitybaseapi in 'Headers\Winapi.securitybaseapi.pas',
   NtUtils.Strings in 'NtUtils\NtUtils.Strings.pas',

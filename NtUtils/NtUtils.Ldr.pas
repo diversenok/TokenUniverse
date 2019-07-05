@@ -1,14 +1,27 @@
-unit NtUtils.DelayedImport;
+unit NtUtils.Ldr;
 
 interface
 
 uses
   NtUtils.Exceptions;
 
-function NtxCheckNtDelayedImport(Name: AnsiString): TNtxStatus;
+{ Delayed import }
 
-function NtxCheckModuleDelayedImport(ModuleName: String;
+// Check if a function presents in ntdll
+function LdrxCheckNtDelayedImport(Name: AnsiString): TNtxStatus;
+
+// Check if a function presents in a dll
+function LdrxCheckModuleDelayedImport(ModuleName: String;
   ProcedureName: AnsiString): TNtxStatus;
+
+{ Other }
+
+// Get base address of a loaded dll
+function LdrxGetDllHandle(DllName: String; out DllHandle: HMODULE): TNtxStatus;
+
+// Get a function address
+function LdrxGetProcedureAddress(DllHandle: HMODULE; ProcedureName: AnsiString;
+  out Address: Pointer): TNtxStatus;
 
 implementation
 
@@ -19,7 +32,7 @@ var
   ImportCache: TDictionary<AnsiString, NTSTATUS>;
   OldFailureHook: TDelayedLoadHook;
 
-function NtxCheckNtDelayedImport(Name: AnsiString): TNtxStatus;
+function LdrxCheckNtDelayedImport(Name: AnsiString): TNtxStatus;
 var
   ProcName: ANSI_STRING;
   ProcAddr: Pointer;
@@ -36,7 +49,7 @@ begin
   ImportCache.Add(Name, Result.Status);
 end;
 
-function NtxCheckModuleDelayedImport(ModuleName: String;
+function LdrxCheckModuleDelayedImport(ModuleName: String;
   ProcedureName: AnsiString): TNtxStatus;
 var
   DllName: UNICODE_STRING;
@@ -84,6 +97,27 @@ begin
     OldFailureHook(dliNotify, pdli);
 
   Result := nil;
+end;
+
+function LdrxGetDllHandle(DllName: String; out DllHandle: HMODULE): TNtxStatus;
+var
+  DllNameStr: UNICODE_STRING;
+begin
+  DllNameStr.FromString(DllName);
+
+  Result.Location := 'LdrGetDllHandle("' + DllName + '")';
+  Result.Status := LdrGetDllHandle(nil, nil, DllNameStr, DllHandle);
+end;
+
+function LdrxGetProcedureAddress(DllHandle: HMODULE; ProcedureName: AnsiString;
+  out Address: Pointer): TNtxStatus;
+var
+  ProcNameStr: ANSI_STRING;
+begin
+  ProcNameStr.FromString(ProcedureName);
+
+  Result.Location := 'LdrGetProcedureAddress("' + String(ProcedureName) + '")';
+  Result.Status := LdrGetProcedureAddress(DllHandle, ProcNameStr, 0, Address);
 end;
 
 initialization

@@ -129,7 +129,7 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
-  NtUtils.DelayedImport, NtUtils.Snapshots.Handles, NtUtils.Tokens.Misc,
+  NtUtils.Ldr, NtUtils.Snapshots.Handles, NtUtils.Tokens.Misc,
   NtUtils.Processes, NtUtils.Tokens.Impersonate;
 
 { Creation }
@@ -611,7 +611,7 @@ begin
   end;
 
   // Win 10 TH+ makes things way easier
-  if NtxCheckNtDelayedImport('NtCompareObjects').IsSuccess then
+  if LdrxCheckNtDelayedImport('NtCompareObjects').IsSuccess then
   begin
     Result.Location := 'NtCompareObjects';
     Result.Status := NtCompareObjects(hToken1, hToken2);
