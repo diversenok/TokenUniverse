@@ -9,7 +9,7 @@ uses
 type
   TLogonProvider = (lpDefault, lpWinNT35, lpWinNT40, lpWinNT50, lpVirtual);
 
-  // WTypesBase.217
+  // minwinbase.46
   TSecurityAttributes = record
     nLength: Cardinal;
     lpSecurityDescriptor: PSecurityDescriptor;

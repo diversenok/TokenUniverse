@@ -7,8 +7,9 @@ uses
 
 type
   TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtToken,
-    objLsaPolicy, objLsaAccount, objScmManager, objScmService, objSamServer,
-    objSamDomain, objSamGroup, objSamAlias, objSamUser);
+    objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
+    objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
+    objSamAlias, objSamUser);
 
 function FormatAccess(Access: TAccessMask; MaskType: TAccessMaskType): String;
 function FormatAccessPrefixed(Access: TAccessMask;
@@ -18,7 +19,7 @@ implementation
 
 uses
   DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc,
-  Ntapi.ntsam;
+  Ntapi.ntsam, Winapi.WinUser;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -78,6 +79,30 @@ const
     (Value: TOKEN_ADJUST_PRIVILEGES; Name: 'Adjust privileges'),
     (Value: TOKEN_ADJUST_GROUPS;     Name: 'Adjust groups'),
     (Value: TOKEN_ADJUST_SESSIONID;  Name: 'Adjust session ID')
+  );
+
+  SpecificAccessUsrDesktop: array [0..8] of TFlagName = (
+    (Value: DESKTOP_READOBJECTS;     Name: 'Read objects'),
+    (Value: DESKTOP_CREATEWINDOW;    Name: 'Create window'),
+    (Value: DESKTOP_CREATEMENU;      Name: 'Create menu'),
+    (Value: DESKTOP_HOOKCONTROL;     Name: 'Hook control'),
+    (Value: DESKTOP_JOURNALRECORD;   Name: 'Journal record'),
+    (Value: DESKTOP_JOURNALPLAYBACK; Name: 'Journal playback'),
+    (Value: DESKTOP_ENUMERATE;       Name: 'Enumerate'),
+    (Value: DESKTOP_WRITEOBJECTS;    Name: 'Write objects'),
+    (Value: DESKTOP_SWITCHDESKTOP;   Name: 'Switch desktop')
+  );
+
+  SpecificAccessUsrWinsta: array [0..8] of TFlagName = (
+    (Value: WINSTA_ENUMDESKTOPS;      Name: 'Enumerate desktops'),
+    (Value: WINSTA_READATTRIBUTES;    Name: 'Read attributes'),
+    (Value: WINSTA_ACCESSCLIPBOARD;   Name: 'Access clipboard'),
+    (Value: WINSTA_CREATEDESKTOP;     Name: 'Create desktop'),
+    (Value: WINSTA_WRITEATTRIBUTES;   Name: 'Write attributes'),
+    (Value: WINSTA_ACCESSGLOBALATOMS; Name: 'Access global atoms'),
+    (Value: WINSTA_EXITWINDOWS;       Name: 'Exit Windows'),
+    (Value: WINSTA_ENUMERATE;         Name: 'Enumerate'),
+    (Value: WINSTA_READSCREEN;        Name: 'Read screen')
   );
 
   SpecificAccessLsaPolicy: array [0..12] of TFlagName = (
@@ -178,10 +203,10 @@ const
   );
 
   FullAccessForType: array [TAccessMaskType] of Cardinal = (SPECIFIC_RIGHTS_ALL,
-    PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS, POLICY_ALL_ACCESS,
-    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS,
-    SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS,
-    ALIAS_ALL_ACCESS, USER_ALL_ACCESS
+    PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS, DESKTOP_ALL_ACCESS,
+    WINSTA_ALL_ACCESS, POLICY_ALL_ACCESS, ACCOUNT_ALL_ACCESS,
+    SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS, SAM_SERVER_ALL_ACCESS,
+    DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS, ALIAS_ALL_ACCESS, USER_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -237,6 +262,18 @@ begin
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessNtToken));
       ExcludeFlags(Access, SpecificAccessNtToken);
+    end;
+
+    objUsrDesttop:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessUsrDesktop));
+      ExcludeFlags(Access, SpecificAccessUsrDesktop);
+    end;
+
+    objUsrWindowStation:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessUsrWinsta));
+      ExcludeFlags(Access, SpecificAccessUsrWinsta);
     end;
 
     objLsaPolicy:
