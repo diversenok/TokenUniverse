@@ -226,7 +226,7 @@ begin
     if Result.IsSuccess then
     begin
       // Impersonate, second attempt
-      Result := NtxSetThreadToken(NtCurrentThread, hToken);
+      Result := NtxSetThreadToken(NtCurrentThread, hImpToken);
 
       NtxSafeClose(hImpToken);
     end;
