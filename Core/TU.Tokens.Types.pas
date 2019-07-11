@@ -102,7 +102,7 @@ function FormatCurrentState: String;
 var
   User, Domain: String;
 begin
-  if LsaxGetUserName(User, Domain).IsSuccess  then
+  if LsaxGetUserName(Domain, User).IsSuccess  then
   begin
     if (Domain <> '') and (User <> '') then
       Result := Domain + '\' + User

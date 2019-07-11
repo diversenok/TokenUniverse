@@ -61,6 +61,7 @@ begin
   else
   begin
     InitializeObjectAttributes(ObjAttr);
+    ObjAttr.Attributes := HandleAttributes;
     ClientId.Create(PID, 0);
 
     Result.Location := 'NtOpenProcess';
@@ -86,6 +87,7 @@ begin
   else
   begin
     InitializeObjectAttributes(ObjAttr);
+    ObjAttr.Attributes := HandleAttributes;
     ClientId.Create(0, TID);
 
     Result.Location := 'NtOpenThread';

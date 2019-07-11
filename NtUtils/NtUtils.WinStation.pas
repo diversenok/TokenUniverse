@@ -76,7 +76,7 @@ begin
       Result := Result + ': ' + String(Info.WinStationName);
 
     Result := Result + ' (' + Info.FullUserName + ')';
-  end
+  end;
 end;
 
 function WsxQuerySessionToken(out hToken: THandle; SessionId: Cardinal;
