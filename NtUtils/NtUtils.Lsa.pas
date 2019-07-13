@@ -609,14 +609,13 @@ function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
 var
   Count, i: Integer;
   Buffer: PLuidArray;
+  HasAnonymousLogon: Boolean;
 begin
   Result.Location := 'LsaEnumerateLogonSessions';
   Result.Status := LsaEnumerateLogonSessions(Count, Buffer);
 
   if not Result.IsSuccess then
     Exit;
-
-  // TODO: manually add anonymous 3E6 logon
 
   SetLength(Luids, Count);
 
@@ -625,6 +624,19 @@ begin
     Luids[i] := Buffer[Count - 1 - i];
 
   LsaFreeReturnBuffer(Buffer);
+
+  // Make sure anonymous logon is in the list (most likely it is not)
+  HasAnonymousLogon := False;
+
+  for i := 0 to High(Luids) do
+    if Luids[i] = ANONYMOUS_LOGON_LUID then
+    begin
+      HasAnonymousLogon := True;
+      Break;
+    end;
+
+  if not HasAnonymousLogon then
+    Insert(ANONYMOUS_LOGON_LUID, Luids, 0);
 end;
 
 end.
