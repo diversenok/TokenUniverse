@@ -1,4 +1,5 @@
 unit Winapi.WinSafer;
+
 {$MINENUMSIZE 4}
 
 interface

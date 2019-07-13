@@ -1,4 +1,5 @@
 unit Winapi.WinNt;
+
 {$MINENUMSIZE 4}
 
 interface

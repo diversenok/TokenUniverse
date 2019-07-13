@@ -1,4 +1,5 @@
 unit Winapi.ntlsa;
+
 {$MINENUMSIZE 4}
 
 interface

@@ -1,6 +1,7 @@
 unit Ntapi.ntpsapi;
-{$MINENUMSIZE 4}
+
 {$WARN SYMBOL_PLATFORM OFF}
+{$MINENUMSIZE 4}
 
 interface
 
@@ -153,6 +154,11 @@ type
   end;
   PThreadBasicInformation = ^TThreadBasicInformation;
 
+  TPsApcRoutine = procedure (ApcArgument1, ApcArgument2, ApcArgument3: Pointer);
+    stdcall;
+
+// Processes
+
 function NtOpenProcess(out ProcessHandle: THandle; DesiredAccess: TAccessMask;
   const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
   NTSTATUS; stdcall; external ntdll;
@@ -166,6 +172,11 @@ function NtSuspendProcess(ProcessHandle: THandle): NTSTATUS; stdcall;
 function NtResumeProcess(ProcessHandle: THandle): NTSTATUS; stdcall;
   external ntdll;
 
+function NtQueryInformationProcess(ProcessHandle: THandle;
+  ProcessInformationClass: TProcessInfoClass; ProcessInformation: Pointer;
+  ProcessInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
+  stdcall; external ntdll;
+
 // Absent in ReactOS
 function NtGetNextProcess(ProcessHandle: THandle; DesiredAccess: TAccessMask;
   HandleAttributes: Cardinal; Flags: Cardinal; out NewProcessHandle: THandle):
@@ -176,18 +187,26 @@ function NtGetNextThread(ProcessHandle: THandle; ThreadHandle: THandle;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal; Flags: Cardinal;
   out NewThreadHandle: THandle): NTSTATUS; stdcall; external ntdll delayed;
 
-function NtQueryInformationProcess(ProcessHandle: THandle;
-  ProcessInformationClass: TProcessInfoClass; ProcessInformation: Pointer;
-  ProcessInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
-  stdcall; external ntdll;
-
 function NtSetInformationProcess(ProcessHandle: THandle;
   ProcessInformationClass: TProcessInfoClass; ProcessInformation: Pointer;
   ProcessInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
 
+// Threads
+
 function NtOpenThread(out ThreadHandle: THandle; DesiredAccess: TAccessMask;
   const ObjectAttributes: TObjectAttributes; const ClientId: TClientId):
   NTSTATUS; stdcall; external ntdll;
+
+function NtTerminateThread(ThreadHandle: THandle; ExitStatus: NTSTATUS):
+  NTSTATUS; stdcall; external ntdll;
+
+function NtSuspendThread(ThreadHandle: THandle; PreviousSuspendCount:
+  PCardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
+  PCardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtGetCurrentProcessorNumber: Cardinal; stdcall; external ntdll;
 
 function NtQueryInformationThread(ThreadHandle: THandle;
   ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;
@@ -198,12 +217,6 @@ function NtSetInformationThread(ThreadHandle: THandle;
   ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;
   ThreadInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
 
-function NtSuspendThread(ThreadHandle: THandle; PreviousSuspendCount:
-  PCardinal): NTSTATUS; stdcall; external ntdll;
-
-function NtResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
-  PCardinal): NTSTATUS; stdcall; external ntdll;
-
 function NtAlertThread(ThreadHandle: THandle): NTSTATUS; stdcall;
   external ntdll;
 
@@ -213,6 +226,10 @@ function NtAlertResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
 function NtImpersonateThread(ServerThreadHandle: THandle;
   ClientThreadHandle: THandle; const SecurityQos: TSecurityQualityOfService):
   NTSTATUS; stdcall; external ntdll;
+
+function NtQueueApcThread(ThreadHandle: THandle; ApcRoutine: TPsApcRoutine;
+  ApcArgument1, ApcArgument2, ApcArgument3: Pointer): NTSTATUS; stdcall;
+  external ntdll;
 
 implementation
 

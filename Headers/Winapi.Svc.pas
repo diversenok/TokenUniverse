@@ -1,5 +1,7 @@
 unit Winapi.Svc;
 
+{$MINENUMSIZE 4}
+
 interface
 
 uses

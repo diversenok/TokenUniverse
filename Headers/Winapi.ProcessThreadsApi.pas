@@ -1,5 +1,7 @@
 unit Winapi.ProcessThreadsApi;
 
+{$MINENUMSIZE 4}
+
 interface
 
 uses

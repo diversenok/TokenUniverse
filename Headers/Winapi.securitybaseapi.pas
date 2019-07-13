@@ -1,7 +1,8 @@
 unit Winapi.securitybaseapi;
 
-interface
 {$MINENUMSIZE 4}
+
+interface
 
 uses
   Winapi.WinNt;

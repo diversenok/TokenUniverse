@@ -1,5 +1,7 @@
 unit Winapi.Sddl;
 
+{$MINENUMSIZE 4}
+
 interface
 
 uses

@@ -1,8 +1,9 @@
 unit Ntapi.ntobapi;
 
-interface
-{$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
+{$MINENUMSIZE 4}
+
+interface
 
 uses
   Winapi.WinNt, Ntapi.ntdef;

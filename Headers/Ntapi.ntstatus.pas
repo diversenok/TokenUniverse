@@ -1,5 +1,7 @@
 unit Ntapi.ntstatus;
 
+{$MINENUMSIZE 4}
+
 interface
 
 const

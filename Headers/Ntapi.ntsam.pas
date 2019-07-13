@@ -1,7 +1,8 @@
 unit Ntapi.ntsam;
 
-interface
 {$MINENUMSIZE 4}
+
+interface
 
 uses
   Winapi.WinNt, Ntapi.ntdef;

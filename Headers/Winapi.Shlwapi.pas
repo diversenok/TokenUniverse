@@ -1,5 +1,7 @@
 unit Winapi.Shlwapi;
 
+{$MINENUMSIZE 4}
+
 interface
 
 uses

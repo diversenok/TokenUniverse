@@ -1,4 +1,5 @@
 unit Winapi.WinBase;
+
 {$MINENUMSIZE 4}
 
 interface

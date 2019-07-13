@@ -1,5 +1,7 @@
 unit Winapi.Shell;
 
+{$MINENUMSIZE 4}
+
 interface
 
 uses

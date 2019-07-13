@@ -1,4 +1,5 @@
 unit Ntapi.ntpebteb;
+
 {$MINENUMSIZE 4}
 
 interface

@@ -1,4 +1,5 @@
 unit Ntapi.ntdef;
+
 {$MINENUMSIZE 4}
 
 interface

@@ -1,7 +1,8 @@
 unit Winapi.NtSecApi;
 
-interface
 {$MINENUMSIZE 4}
+
+interface
 
 uses
   Ntapi.ntdef, Winapi.WinNt;

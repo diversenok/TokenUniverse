@@ -1,4 +1,5 @@
 unit Ntapi.ntexapi;
+
 {$MINENUMSIZE 4}
 
 interface
@@ -126,13 +127,20 @@ type
   end;
   PSystemHandleInformationEx = ^TSystemHandleInformationEx;
 
+function NtQueryTimerResolution(out MaximumTime: Cardinal;
+  out MinimumTime: Cardinal; out CurrentTime: Cardinal): NTSTATUS; stdcall;
+  external ntdll;
+
+function NtSetTimerResolution(DesiredTime: Cardinal; SetResolution: Boolean;
+  out ActualTime: Cardinal): NTSTATUS; stdcall; external ntdll;
+
+function NtAllocateLocallyUniqueId(out Luid: TLuid): NTSTATUS; stdcall;
+  external ntdll;
+
 function NtQuerySystemInformation(SystemInformationClass
   : TSystemInformationClass; SystemInformation: Pointer;
   SystemInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
   stdcall; external ntdll;
-
-function NtAllocateLocallyUniqueId(out Luid: TLuid): NTSTATUS; stdcall;
-  external ntdll;
 
 implementation
 

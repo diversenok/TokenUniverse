@@ -1,7 +1,9 @@
 unit Winapi.Wdc;
 
-interface
 {$WARN SYMBOL_PLATFORM OFF}
+{$MINENUMSIZE 4}
+
+interface
 
 const
   wdc = 'wdc.dll';

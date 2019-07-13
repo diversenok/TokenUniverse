@@ -1,5 +1,7 @@
 unit Winapi.WinError;
 
+{$MINENUMSIZE 4}
+
 interface
 
 const

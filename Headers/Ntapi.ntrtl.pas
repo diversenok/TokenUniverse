@@ -1,4 +1,5 @@
 unit Ntapi.ntrtl;
+
 {$MINENUMSIZE 4}
 
 interface
@@ -8,6 +9,10 @@ uses
 
 const
   RTL_MAX_DRIVE_LETTERS = 32;
+
+  RTL_CLONE_PROCESS_FLAGS_CREATE_SUSPENDED = $00000001;
+  RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES = $00000002;
+  RTL_CLONE_PROCESS_FLAGS_NO_SYNCHRONIZE = $00000004;
 
 type
   // Processes
@@ -84,6 +89,17 @@ type
   end;
   PRtlUserProcessInformation = ^TRtlUserProcessInformation;
 
+  TRtlpProcessReflectionInformation = record
+    ReflectionProcessHandle: THandle;
+    ReflectionThreadHandle: THandle;
+    ReflectionClientId: TClientId;
+  end;
+  PRtlpProcessReflectionInformation = ^TRtlpProcessReflectionInformation;
+
+  // Thread
+  TUserThreadStartRoutine = function (ThreadParameter: Pointer): NTSTATUS;
+    stdcall;
+
   // Time
 
   TTimeFields = record
@@ -113,9 +129,31 @@ type
 procedure RtlFreeUnicodeString(const UnicodeString: UNICODE_STRING); stdcall;
   external ntdll;
 
+function RtlCompareUnicodeString(const String1: UNICODE_STRING;
+  const String2: UNICODE_STRING; CaseInSensitive: Boolean): Integer; stdcall;
+  external ntdll;
+
+function RtlAppendUnicodeStringToString(var Destination: UNICODE_STRING;
+  const Source: UNICODE_STRING): NTSTATUS; stdcall; external ntdll;
+
+function RtlAppendUnicodeToString(var Destination: UNICODE_STRING;
+  Source: PWideChar): NTSTATUS; stdcall; external ntdll;
+
+function RtlUpcaseUnicodeString(var DestinationString: UNICODE_STRING;
+  const SourceString: UNICODE_STRING; AllocateDestinationString: Boolean):
+  NTSTATUS; stdcall; external ntdll;
+
+function RtlDowncaseUnicodeString(var DestinationString: UNICODE_STRING;
+  const SourceString: UNICODE_STRING; AllocateDestinationString: Boolean):
+  NTSTATUS; stdcall; external ntdll;
+
 // PEB
 
 function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
+
+procedure RtlAcquirePebLock; stdcall; external ntdll;
+
+procedure RtlReleasePebLock; stdcall; external ntdll;
 
 // Processes
 
@@ -141,11 +179,72 @@ function RtlCreateUserProcess(const NtImagePathName: UNICODE_STRING;
   out ProcessInformation: TRtlUserProcessInformation): NTSTATUS; stdcall;
   external ntdll;
 
+function RtlCloneUserProcess(ProcessFlags: Cardinal;
+  ProcessSecurityDescriptor: PSecurityDescriptor;
+  ThreadSecurityDescriptor: PSecurityDescriptor; DebugPort: THandle;
+  out ProcessInformation: TRtlUserProcessInformation): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlCreateProcessReflection(ProcessHandle: THandle; Flags: Cardinal;
+  StartRoutine: Pointer; StartContext: Pointer; EventHandle: THandle;
+  out ReflectionInformation: TRtlpProcessReflectionInformation): NTSTATUS;
+  stdcall; external ntdll;
+
+// Threads
+
+function RtlCreateUserThread(Process: THandle; ThreadSecurityDescriptor:
+  PSecurityDescriptor; CreateSuspended: Boolean; ZeroBits: Cardinal;
+  MaximumStackSize: NativeUInt; CommittedStackSize: NativeUInt;
+  StartAddress: TUserThreadStartRoutine; Parameter: Pointer; out Thread:
+  THandle; ClientId: PClientId): NTSTATUS; stdcall; external ntdll;
+
+// Memory
+
+function RtlCompareMemoryUlong(Source: Pointer; Length: NativeUInt;
+  Pattern: Cardinal): NativeUInt; stdcall; external ntdll;
+
+procedure RtlFillMemoryUlong(Destination: Pointer; Length: NativeUInt;
+  Pattern: Cardinal); stdcall; external ntdll;
+
+procedure RtlFillMemoryUlonglong(Destination: Pointer; Length: NativeUInt;
+  Pattern: UInt64); stdcall; external ntdll;
+
+// Environment
+
+function RtlCreateEnvironment(CloneCurrentEnvironment: Boolean;
+  out Environment: Pointer): NTSTATUS; stdcall; external ntdll;
+
+function RtlDestroyEnvironment(Environment: Pointer): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlSetCurrentEnvironment(Environment: Pointer;
+  PreviousEnvironment: PPointer): NTSTATUS; stdcall; external ntdll;
+
+function RtlSetEnvironmentVariable(const Environment: Pointer;
+  const Name: UNICODE_STRING; const Value: UNICODE_STRING): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlQueryEnvironmentVariable_U(Environment: Pointer;
+  const Name: UNICODE_STRING; var Value: UNICODE_STRING): NTSTATUS; stdcall;
+  external ntdll;
+
+function RtlExpandEnvironmentStrings_U(Environment: Pointer;
+  const Source: UNICODE_STRING; var Destination: UNICODE_STRING;
+  ReturnedLength: PCardinal): NTSTATUS; stdcall; external ntdll;
+
 // Paths
+
+function RtlGetCurrentDirectory_U(BufferLength: Cardinal;
+  Buffer: Pointer): Cardinal; stdcall; external ntdll;
+
+function RtlSetCurrentDirectory_U(const PathName: UNICODE_STRING): NTSTATUS;
+  stdcall; external ntdll;
 
 function RtlDosPathNameToNtPathName_U_WithStatus(DosFileName: PWideChar;
   var NtFileName: UNICODE_STRING; FilePart: PPWideChar;
   RelativeName: Pointer): NTSTATUS; stdcall; external ntdll;
+
+function RtlIsThreadWithinLoaderCallout: Boolean; stdcall; external ntdll;
 
 // Errors
 
@@ -161,6 +260,23 @@ function RtlGetLastWin32Error: Cardinal; stdcall; external ntdll;
 
 procedure RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status: NTSTATUS);
    stdcall; external ntdll;
+
+procedure RtlSetLastWin32Error(Win32Error: Cardinal); stdcall; external ntdll;
+
+// Random
+
+function RtlUniform(var Seed: Cardinal): Cardinal; stdcall; external ntdll;
+
+// Integers
+
+function RtlIntegerToUnicodeString(Value: Cardinal; Base: Cardinal;
+  var Str: UNICODE_STRING): NTSTATUS; stdcall; external ntdll;
+
+function RtlInt64ToUnicodeString(Value: UInt64; Base: Cardinal;
+  var Str: UNICODE_STRING): NTSTATUS; stdcall; external ntdll;
+
+function RtlUnicodeStringToInteger(const Str: UNICODE_STRING; Base: Cardinal;
+  out Value: Cardinal): NTSTATUS; stdcall; external ntdll;
 
 // SIDs
 
@@ -201,7 +317,7 @@ function RtlCopySid(DestinationSidLength: Cardinal; DestinationSid: PSid;
   SourceSid: PSid): NTSTATUS; stdcall; external ntdll;
 
 function RtlCreateServiceSid(const ServiceName: UNICODE_STRING;
-  ServiceSid: PSid; ServiceSidLength: PCardinal): NTSTATUS; stdcall;
+  ServiceSid: PSid; var ServiceSidLength: Cardinal): NTSTATUS; stdcall;
   external ntdll;
 
 function RtlConvertSidToUnicodeString(var UnicodeString: UNICODE_STRING;
@@ -209,6 +325,12 @@ function RtlConvertSidToUnicodeString(var UnicodeString: UNICODE_STRING;
   external ntdll;
 
 function RtlSidDominates(Sid1: PSid; Sid2: PSid; out Dominates: Boolean):
+  NTSTATUS; stdcall; external ntdll;
+
+function RtlSidEqualLevel(Sid1: PSid; Sid2: PSid; out EqualLevel: Boolean):
+  NTSTATUS; stdcall; external ntdll;
+
+function RtlSidIsHigherLevel(Sid1: PSid; Sid2: PSid; out HigherLevel: Boolean):
   NTSTATUS; stdcall; external ntdll;
 
 // Security Descriptors
@@ -321,6 +443,11 @@ function RtlAddMandatoryAce(Acl: PAcl; AceRevision: Cardinal;
 // System information
 
 function RtlGetNtGlobalFlags: Cardinal; stdcall; external ntdll;
+
+// Stack support
+
+procedure RtlGetCallersAddress(out CallersAddress: Pointer;
+  out CallersCaller: Pointer); stdcall; external ntdll;
 
 implementation
 

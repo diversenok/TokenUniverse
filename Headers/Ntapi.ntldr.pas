@@ -1,5 +1,7 @@
 unit Ntapi.ntldr;
 
+{$MINENUMSIZE 4}
+
 interface
 
 uses
