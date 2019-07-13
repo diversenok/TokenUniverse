@@ -558,6 +558,17 @@ type
   end;
   PQuotaLimits = ^TQuotaLimits;
 
+  // 11519
+  TIoCounters = record
+    ReadOperationCount: UInt64;
+    WriteOperationCount: UInt64;
+    OtherOperationCount: UInt64;
+    ReadTransferCount: UInt64;
+    WriteTransferCount: UInt64;
+    OtherTransferCount: UInt64;
+  end;
+  PIoCounters = ^TIoCounters;
+
 const
   // 9175
   SECURITY_NT_AUTHORITY: TSIDIdentifierAuthority =

@@ -101,7 +101,8 @@ uses
   NtUtils.Lsa.Security in 'NtUtils\NtUtils.Lsa.Security.pas',
   NtUtils.Objects.Security in 'NtUtils\NtUtils.Objects.Security.pas',
   NtUtils.Sam.Security in 'NtUtils\NtUtils.Sam.Security.pas',
-  NtUtils.Sam in 'NtUtils\NtUtils.Sam.pas';
+  NtUtils.Sam in 'NtUtils\NtUtils.Sam.pas',
+  NtUtils.Job in 'NtUtils\NtUtils.Job.pas';
 
 {$R *.res}
 

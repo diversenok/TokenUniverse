@@ -293,6 +293,7 @@
         <DCCReference Include="NtUtils\NtUtils.Objects.Security.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Sam.Security.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Sam.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Job.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

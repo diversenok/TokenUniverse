@@ -42,6 +42,27 @@ const
 
   THREAD_ALL_ACCESS = STANDARD_RIGHTS_ALL or SPECIFIC_RIGHTS_ALL;
 
+  JOB_OBJECT_ASSIGN_PROCESS = $0001;
+  JOB_OBJECT_SET_ATTRIBUTES = $0002;
+  JOB_OBJECT_QUERY = $0004;
+  JOB_OBJECT_TERMINATE = $0008;
+  JOB_OBJECT_SET_SECURITY_ATTRIBUTES = $0010;
+  JOB_OBJECT_IMPERSONATE = $0020;
+
+  JOB_OBJECT_ALL_ACCESS = STANDARD_RIGHTS_ALL or $3F;
+
+  JOB_OBJECT_UILIMIT_HANDLES = $00000001;
+  JOB_OBJECT_UILIMIT_READCLIPBOARD = $00000002;
+  JOB_OBJECT_UILIMIT_WRITECLIPBOARD = $00000004;
+  JOB_OBJECT_UILIMIT_SYSTEMPARAMETERS = $00000008;
+  JOB_OBJECT_UILIMIT_DISPLAYSETTINGS = $00000010;
+  JOB_OBJECT_UILIMIT_GLOBALATOMS = $00000020;
+  JOB_OBJECT_UILIMIT_DESKTOP = $00000040;
+  JOB_OBJECT_UILIMIT_EXITWINDOWS = $00000080;
+
+  JOB_OBJECT_TERMINATE_AT_END_OF_JOB = 0;
+  JOB_OBJECT_POST_AT_END_OF_JOB = 1;
+
   NtCurrentProcess: THandle = THandle(-1);
   NtCurrentThread: THandle = THandle(-2);
 
@@ -157,6 +178,63 @@ type
   TPsApcRoutine = procedure (ApcArgument1, ApcArgument2, ApcArgument3: Pointer);
     stdcall;
 
+  TJobObjectInfoClass = (
+    JobObjectReserved = 0,
+    JobObjectBasicAccountingInformation = 1, // q: TJobBasicAccountingInfo
+    JobObjectBasicLimitInformation = 2,      // q, s: TJobBasicLimitInformation
+    JobObjectBasicProcessIdList = 3,         // q: TJobBasicProcessIdList
+    JobObjectBasicUIRestrictions = 4,        // q, s: Cardinal
+    JobObjectSecurityLimitInformation = 5,   // not supported
+    JobObjectEndOfJobTimeInformation = 6,    // s: Cardinal
+    JobObjectAssociateCompletionPortInformation = 7, // s:
+    JobObjectBasicAndIoAccountingInformation = 8, // q:
+    JobObjectExtendedLimitInformation = 9, // q, s: TJobExtendedLimitInformation
+    JobObjectJobSetInformation = 10,       // q: Cardinal
+    JobObjectGroupInformation = 11         // q, s: Word
+  );
+
+  TJobBasicAccountingInfo = record
+    TotalUserTime: TLargeInteger;
+    TotalKernelTime: TLargeInteger;
+    ThisPeriodTotalUserTime: TLargeInteger;
+    ThisPeriodTotalKernelTime: TLargeInteger;
+    TotalPageFaultCount: Cardinal;
+    TotalProcesses: Cardinal;
+    ActiveProcesses: Cardinal;
+    TotalTerminatedProcesses: Cardinal;
+  end;
+  PJobBasicAccountingInfo = ^TJobBasicAccountingInfo;
+
+  TJobBasicLimitInformation = record
+    PerProcessUserTimeLimit: TLargeInteger;
+    PerJobUserTimeLimit: TLargeInteger;
+    LimitFlags: Cardinal;
+    MinimumWorkingSetSize: NativeUInt;
+    MaximumWorkingSetSize: NativeUInt;
+    ActiveProcessLimit: Cardinal;
+    Affinity: NativeUInt;
+    PriorityClass: Cardinal;
+    SchedulingClass: Cardinal;
+  end;
+  PJobBasicLimitInformation = ^TJobBasicLimitInformation;
+
+  TJobBasicProcessIdList = record
+    NumberOfAssignedProcesses: Cardinal;
+    NumberOfProcessIdsInList: Cardinal;
+    ProcessIdList: array [Word] of NativeUInt;
+  end;
+  PJobBasicProcessIdList = ^TJobBasicProcessIdList;
+
+  TJobExtendedLimitInformation = record
+    BasicLimitInformation: TJobBasicLimitInformation;
+    IoInfo: TIoCounters;
+    ProcessMemoryLimit: NativeUInt;
+    JobMemoryLimit: NativeUInt;
+    PeakProcessMemoryUsed: NativeUInt;
+    PeakJobMemoryUsed: NativeUInt;
+  end;
+  PJobExtendedLimitInformation = ^TJobExtendedLimitInformation;
+
 // Processes
 
 function NtOpenProcess(out ProcessHandle: THandle; DesiredAccess: TAccessMask;
@@ -230,6 +308,32 @@ function NtImpersonateThread(ServerThreadHandle: THandle;
 function NtQueueApcThread(ThreadHandle: THandle; ApcRoutine: TPsApcRoutine;
   ApcArgument1, ApcArgument2, ApcArgument3: Pointer): NTSTATUS; stdcall;
   external ntdll;
+
+// Job objects
+
+function NtCreateJobObject(out JobHandle: THandle; DesiredAccess: TAccessMask;
+  ObjectAttributes: PObjectAttributes): NTSTATUS; stdcall; external ntdll;
+
+function NtOpenJobObject(out JobHandle: THandle; DesiredAccess: TAccessMask;
+  const ObjectAttributes: TObjectAttributes): NTSTATUS; stdcall; external ntdll;
+
+function NtAssignProcessToJobObject(JobHandle: THandle; ProcessHandle: THandle):
+  NTSTATUS; stdcall; external ntdll;
+
+function NtTerminateJobObject(JobHandle: THandle; ExitStatus: NTSTATUS):
+  NTSTATUS; stdcall; external ntdll;
+
+function NtIsProcessInJob(ProcessHandle: THandle;
+  JobHandle: THandle): NTSTATUS; stdcall; external ntdll;
+
+function NtQueryInformationJobObject(JobHandle: THandle;
+  JobObjectInformationClass: TJobObjectInfoClass; JobObjectInformation: Pointer;
+  JobObjectInformationLength: Cardinal; ReturnLength: PCardinal): NTSTATUS;
+  stdcall; external ntdll;
+
+function NtSetInformationJobObject(JobHandle: THandle;
+  JobObjectInformationClass: TJobObjectInfoClass; JobObjectInformation: Pointer;
+  JobObjectInformationLength: Cardinal): NTSTATUS; stdcall; external ntdll;
 
 implementation
 

@@ -159,5 +159,5 @@ My goal is to create a useful tool that implements almost everything I know abou
 
 ## Misc. ideas
  - [?] Logon session creation (requires an authentication package?)
- - [?] Job-based token filtration (unsupported on Vista+?)
+ - [?] ~~Job-based token filtration~~ (unsupported on Vista+)
  - [?] Privilege and audit category description from wsecedit.dll

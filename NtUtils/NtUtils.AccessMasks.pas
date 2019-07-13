@@ -6,7 +6,7 @@ uses
   Winapi.WinNt;
 
 type
-  TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtToken,
+  TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
     objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
     objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
     objSamAlias, objSamUser);
@@ -67,6 +67,15 @@ const
     (Value: THREAD_SET_LIMITED_INFORMATION;   Name: 'Set limited information'),
     (Value: THREAD_QUERY_LIMITED_INFORMATION; Name: 'Query limited information'),
     (Value: THREAD_RESUME;                    Name: 'Resume')
+  );
+
+  SpecificAccessNtJob: array [0..5] of TFlagName = (
+    (Value: JOB_OBJECT_ASSIGN_PROCESS;          Name: 'Assign process'),
+    (Value: JOB_OBJECT_SET_ATTRIBUTES;          Name: 'Set attributes'),
+    (Value: JOB_OBJECT_QUERY;                   Name: 'Query'),
+    (Value: JOB_OBJECT_TERMINATE;               Name: 'Terminate'),
+    (Value: JOB_OBJECT_SET_SECURITY_ATTRIBUTES; Name: 'Set security attributes'),
+    (Value: JOB_OBJECT_IMPERSONATE;             Name: 'Impersonate')
   );
 
   SpecificAccessNtToken: array [0..8] of TFlagName = (
@@ -203,10 +212,11 @@ const
   );
 
   FullAccessForType: array [TAccessMaskType] of Cardinal = (SPECIFIC_RIGHTS_ALL,
-    PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, TOKEN_ALL_ACCESS, DESKTOP_ALL_ACCESS,
-    WINSTA_ALL_ACCESS, POLICY_ALL_ACCESS, ACCOUNT_ALL_ACCESS,
-    SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS, SAM_SERVER_ALL_ACCESS,
-    DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS, ALIAS_ALL_ACCESS, USER_ALL_ACCESS
+    PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, JOB_OBJECT_ALL_ACCESS,
+    TOKEN_ALL_ACCESS, DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS, POLICY_ALL_ACCESS,
+    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS,
+    SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS,
+    ALIAS_ALL_ACCESS, USER_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -256,6 +266,12 @@ begin
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessNtThread));
       ExcludeFlags(Access, SpecificAccessNtThread);
+    end;
+
+    objNtJob:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtJob));
+      ExcludeFlags(Access, SpecificAccessNtJob);
     end;
 
     objNtToken:
