@@ -43,8 +43,8 @@ function NtxOpenAnonymousToken(out hToken: THandle; DesiredAccess: TAccessMask;
 
 // Filter a token
 function NtxFilterToken(out hNewToken: THandle; hToken: THandle;
-  Flags: Cardinal; SidsToDisable: ISidArray; PrivilegesToDelete: TLuidDynArray;
-  SidsToRestrict: ISidArray): TNtxStatus;
+  Flags: Cardinal; SidsToDisable: TArray<ISid>;
+  PrivilegesToDelete: TArray<TLuid>; SidsToRestrict: TArray<ISid>): TNtxStatus;
 
 // Restrict a token using Safer api
 function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
@@ -54,8 +54,8 @@ function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
 // Create a new token from scratch. Requires SeCreateTokenPrivilege.
 function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;
   ImpersonationLevel: TSecurityImpersonationLevel; AuthenticationId: TLuid;
-  ExpirationTime: TLargeInteger; User: TGroup; Groups: TGroupArray;
-  Privileges: TPrivilegeArray; Owner: ISid; PrimaryGroup: ISid;
+  ExpirationTime: TLargeInteger; User: TGroup; Groups: TArray<TGroup>;
+  Privileges: TArray<TPrivilege>; Owner: ISid; PrimaryGroup: ISid;
   DefaultDacl: IAcl; const TokenSource: TTokenSource;
   DesiredAccess: TAccessMask = TOKEN_ALL_ACCESS; HandleAttributes: Cardinal = 0)
   : TNtxStatus;
@@ -92,11 +92,11 @@ function NtxQueryGroupToken(hToken: THandle; InfoClass: TTokenInformationClass;
 
 // Query groups (Groups, RestrictingSIDs, LogonSIDs, ...)
 function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
-  out Groups: TGroupArray): TNtxStatus;
+  out Groups: TArray<TGroup>): TNtxStatus;
 
 // Query privileges
 function NtxQueryPrivilegesToken(hToken: THandle;
-  out Privileges: TPrivilegeArray): TNtxStatus;
+  out Privileges: TArray<TPrivilege>): TNtxStatus;
 
 // Query token statistic (requires either Query or Duplicate access)
 function NtxQueryStatisticsToken(hToken: THandle;
@@ -116,13 +116,13 @@ function NtxSetIntegrityToken(hToken: THandle; IntegrityLevel: Cardinal):
 function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
 
 // Adjust privileges
-function NtxAdjustPrivileges(hToken: THandle; Privileges: TLuidDynArray;
+function NtxAdjustPrivileges(hToken: THandle; Privileges: TArray<TLuid>;
   NewAttribute: Cardinal): TNtxStatus;
 function NtxAdjustPrivilege(hToken: THandle; Privilege: TLuid;
   NewAttribute: Cardinal): TNtxStatus;
 
 // Adjust groups
-function NtxAdjustGroups(hToken: THandle; Sids: ISidArray;
+function NtxAdjustGroups(hToken: THandle; Sids: TArray<ISid>;
   NewAttribute: Cardinal; ResetToDefault: Boolean): TNtxStatus;
 
 implementation
@@ -288,8 +288,8 @@ begin
 end;
 
 function NtxFilterToken(out hNewToken: THandle; hToken: THandle;
-  Flags: Cardinal; SidsToDisable: ISidArray; PrivilegesToDelete: TLuidDynArray;
-  SidsToRestrict: ISidArray): TNtxStatus;
+  Flags: Cardinal; SidsToDisable: TArray<ISid>;
+  PrivilegesToDelete: TArray<TLuid>; SidsToRestrict: TArray<ISid>): TNtxStatus;
 var
   DisableSids, RestrictSids: PTokenGroups;
   DeletePrivileges: PTokenPrivileges;
@@ -334,8 +334,8 @@ end;
 
 function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;
   ImpersonationLevel: TSecurityImpersonationLevel; AuthenticationId: TLuid;
-  ExpirationTime: TLargeInteger; User: TGroup; Groups: TGroupArray;
-  Privileges: TPrivilegeArray; Owner: ISid; PrimaryGroup: ISid;
+  ExpirationTime: TLargeInteger; User: TGroup; Groups: TArray<TGroup>;
+  Privileges: TArray<TPrivilege>; Owner: ISid; PrimaryGroup: ISid;
   DefaultDacl: IAcl; const TokenSource: TTokenSource;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
 var
@@ -496,7 +496,7 @@ begin
 end;
 
 function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
-  out Groups: TGroupArray): TNtxStatus;
+  out Groups: TArray<TGroup>): TNtxStatus;
 var
   Buffer: PTokenGroups;
   i: Integer;
@@ -519,7 +519,7 @@ begin
 end;
 
 function NtxQueryPrivilegesToken(hToken: THandle;
-  out Privileges: TPrivilegeArray): TNtxStatus;
+  out Privileges: TArray<TPrivilege>): TNtxStatus;
 var
   Buffer: PTokenPrivileges;
   i: Integer;
@@ -648,7 +648,7 @@ begin
   Result.Status := THandleSnapshot.Compare(hToken1, hToken2);
 end;
 
-function NtxAdjustPrivileges(hToken: THandle; Privileges: TLuidDynArray;
+function NtxAdjustPrivileges(hToken: THandle; Privileges: TArray<TLuid>;
   NewAttribute: Cardinal): TNtxStatus;
 var
   Buffer: PTokenPrivileges;
@@ -664,14 +664,14 @@ end;
 function NtxAdjustPrivilege(hToken: THandle; Privilege: TLuid;
   NewAttribute: Cardinal): TNtxStatus;
 var
-  Privileges: TLuidDynArray;
+  Privileges: TArray<TLuid>;
 begin
   SetLength(Privileges, 1);
   Privileges[0] := Privilege;
   Result := NtxAdjustPrivileges(hToken, Privileges, NewAttribute);
 end;
 
-function NtxAdjustGroups(hToken: THandle; Sids: ISidArray;
+function NtxAdjustGroups(hToken: THandle; Sids: TArray<ISid>;
   NewAttribute: Cardinal; ResetToDefault: Boolean): TNtxStatus;
 var
   Buffer: PTokenGroups;

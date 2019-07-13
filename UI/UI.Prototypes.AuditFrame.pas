@@ -255,7 +255,7 @@ procedure TFrameAudit.DelayedCreate;
 var
   i: Integer;
   StatusEx: TNtxStatus;
-  SubCategories: TGuidDynArray;
+  SubCategories: TArray<TGuid>;
   Mapping: TAuditCategoryMapping;
 begin
   if ListView.Items.Count > 0 then

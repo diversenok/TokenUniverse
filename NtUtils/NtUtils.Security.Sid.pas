@@ -20,8 +20,6 @@ type
     function FullName: String;
   end;
 
-  TTranslatedNames = array of TTranslatedName;
-
   ISid = interface
     function Sid: PSid;
     function Lookup: TTranslatedName;
@@ -34,8 +32,6 @@ type
     function ParentSid: ISid;
     function ChildSid(Rid: Cardinal): ISid;
   end;
-
-  ISidArray = array of ISid;
 
   TSid = class(TInterfacedObject, ISid)
   protected
@@ -69,7 +65,6 @@ type
     SecurityIdentifier: ISid;
     Attributes: Cardinal; // SE_GROUP_*
   end;
-  TGroupArray = array of TGroup;
 
 // Convert an SID to its SDDL representation
 function RtlxConvertSidToString(SID: PSid): String;

@@ -16,7 +16,7 @@ type
     procedure ListViewItemChecked(Sender: TObject; Item: TListItem);
   private
     Sid: ISid;
-    AllRights: TLogonRightRecArray;
+    AllRights: TArray<TLogonRightRec>;
     CurrentRights: Cardinal;
     Updating: Boolean;
     function CheckedRights: Cardinal;

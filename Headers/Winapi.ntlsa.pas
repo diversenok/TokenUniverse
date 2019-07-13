@@ -218,14 +218,14 @@ function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
 
 // 3394
 function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
-  Count: Integer; Names: TLsaUnicodeStringDynArray;
+  Count: Integer; Names: TArray<TLsaUnicodeString>;
   out ReferencedDomains: PLsaReferencedDomainList;
   out Sids: PLsaTranslatedSid2Array): NTSTATUS; stdcall;
   external advapi32; overload;
 
 // 3406
 function LsaLookupSids(PolicyHandle: TLsaHandle; Count: Cardinal;
-  Sids: TSidDynArray; out ReferencedDomains: PLsaReferencedDomainList;
+  Sids: TArray<PSid>; out ReferencedDomains: PLsaReferencedDomainList;
   out Names: PLsaTranslatedNameArray): NTSTATUS; stdcall; external advapi32;
 
 implementation

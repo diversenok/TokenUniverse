@@ -71,8 +71,7 @@ type
   WPARAM = NativeUInt;
   LPARAM = NativeInt;
 
-  TStringArray = Winapi.WinNt.TStringArray;
-  TStringEnumProcW = function (Name: PWideChar; var Context: TStringArray):
+  TStringEnumProcW = function (Name: PWideChar; var Context: TArray<String>):
     LongBool; stdcall;
 
   // 1669
@@ -108,7 +107,7 @@ function OpenDesktopW(pszDesktop: PWideChar; dwFlags: Cardinal;
 
 // 1480
 function EnumDesktopsW(hWinStation: HWINSTA; lpEnumFunc: TStringEnumProcW;
-  var Context: TStringArray): LongBool; stdcall; external user32;
+  var Context: TArray<String>): LongBool; stdcall; external user32;
 
 // 1502
 function SwitchDesktop(hDesktop: HDESK): LongBool; stdcall; external user32;
@@ -140,7 +139,7 @@ function OpenWindowStationW(pszWinSta: PWideChar; fInherit: LongBool;
 
 // 1611
 function EnumWindowStationsW(lpEnumFunc: TStringEnumProcW; var Context:
-  TStringArray): LongBool; stdcall; external user32;
+  TArray<String>): LongBool; stdcall; external user32;
 
 // 1623
 function CloseWindowStation(hWinStation: HWINSTA): LongBool; stdcall;

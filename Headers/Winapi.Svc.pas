@@ -104,8 +104,6 @@ type
   TScmHandle = NativeUInt;
   TServiceStatusHandle = NativeUInt;
 
-  TServiceDynArgsW = array of PWideChar;
-
   // 723
   TServiceStatus = record
     dwServiceType: Cardinal;
@@ -196,7 +194,7 @@ function StartServiceCtrlDispatcherW(lpServiceStartTable: PServiceTableEntryW):
 
 // 1644
 function StartServiceW(hService: TScmHandle; dwNumServiceArgs: Cardinal;
-  lpServiceArgVectors: TServiceDynArgsW): LongBool; stdcall; external advapi32;
+  lpServiceArgVectors: TArray<PWideChar>): LongBool; stdcall; external advapi32;
 
 implementation
 

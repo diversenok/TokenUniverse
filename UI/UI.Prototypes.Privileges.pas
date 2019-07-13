@@ -15,7 +15,7 @@ type
     ListView: TListViewEx;
     procedure ListViewItemChecked(Sender: TObject; Item: TListItem);
   private
-    FPrivileges: TPrivilegeArray;
+    FPrivileges: TArray<TPrivilege>;
     FNameMode: TPrivilegeNameMode;
     FColorMode: TPrivilegeColorMode;
     function GetPrivilege(Ind: Integer): TPrivilege;
@@ -29,19 +29,19 @@ type
   public
     property Privilege[Ind: Integer]: TPrivilege read GetPrivilege write SetPrivilege;
     property PrivAttributes[Ind: Integer]: Cardinal read GetAttributes write SetAttributes;
-    function Privileges: TPrivilegeArray;
+    function Privileges: TArray<TPrivilege>;
     function PrivilegeCount: Integer;
 
     function AddPrivilege(const NewPrivilege: TPrivilege): TListItemEx;
-    procedure AddPrivileges(NewPrivileges: TPrivilegeArray);
+    procedure AddPrivileges(NewPrivileges: TArray<TPrivilege>);
     procedure AddAllPrivileges;
 
     procedure RemovePrivilege(Index: Integer);
     procedure Clear;
 
     function Find(Luid: TLuid): Integer;
-    function SelectedPrivileges: TPrivilegeArray;
-    function CheckedPrivileges: TPrivilegeArray;
+    function SelectedPrivileges: TArray<TPrivilege>;
+    function CheckedPrivileges: TArray<TPrivilege>;
 
     property ColorMode: TPrivilegeColorMode read FColorMode write SetColorMode;
     property NamingMode: TPrivilegeNameMode read FNameMode write SetNameMode;
@@ -83,7 +83,7 @@ end;
 
 procedure TFramePrivileges.AddAllPrivileges;
 var
-  LuidArray: TLuidDynArray;
+  LuidArray: TArray<TLuid>;
   Priv: TPrivilege;
   i: Integer;
 begin
@@ -118,7 +118,7 @@ begin
   Result := SetItemData(ListView.Items.Add, NewPrivilege);
 end;
 
-procedure TFramePrivileges.AddPrivileges(NewPrivileges: TPrivilegeArray);
+procedure TFramePrivileges.AddPrivileges(NewPrivileges: TArray<TPrivilege>);
 var
   i: Integer;
 begin
@@ -132,7 +132,7 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-function TFramePrivileges.CheckedPrivileges: TPrivilegeArray;
+function TFramePrivileges.CheckedPrivileges: TArray<TPrivilege>;
 var
   i, Count: integer;
 begin
@@ -202,7 +202,7 @@ begin
   Result := Length(FPrivileges);
 end;
 
-function TFramePrivileges.Privileges: TPrivilegeArray;
+function TFramePrivileges.Privileges: TArray<TPrivilege>;
 begin
   // Do not let anyone edit our array by reference
   Result := Copy(FPrivileges, 0, Length(FPrivileges));
@@ -217,7 +217,7 @@ begin
   ListView.Items.Delete(Index);
 end;
 
-function TFramePrivileges.SelectedPrivileges: TPrivilegeArray;
+function TFramePrivileges.SelectedPrivileges: TArray<TPrivilege>;
 var
   i, j: integer;
 begin

@@ -20,7 +20,7 @@ type
     procedure ButtonApplyClick(Sender: TObject);
   private
     Sid: ISid;
-    CurrentlyAssigned: TPrivilegeArray;
+    CurrentlyAssigned: TArray<TPrivilege>;
     procedure SetSelectedPrivState(Attributes: Cardinal);
   public
     procedure DeleyedCreate;
@@ -36,7 +36,7 @@ uses
 
 { TFrameLsaPolicy }
 
-function FindPrivInArray(PrivArray: TPrivilegeArray; Value: TLuid): PPrivilege;
+function FindPrivInArray(PrivArray: TArray<TPrivilege>; Value: TLuid): PPrivilege;
 var
   i: Integer;
 begin
@@ -49,7 +49,7 @@ end;
 
 procedure TFrameLsaPrivileges.ButtonApplyClick(Sender: TObject);
 var
-  PrivToAdd, PrivToRemove: TPrivilegeArray;
+  PrivToAdd, PrivToRemove: TArray<TPrivilege>;
   i: Integer;
   Current: PPrivilege;
 begin

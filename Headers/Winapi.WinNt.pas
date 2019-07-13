@@ -140,8 +140,6 @@ const
   UNPROTECTED_SACL_SECURITY_INFORMATION = $10000000;
 
 type
-  TStringArray = array of String;
-
   // 823
   TLargeInteger = record
     QuadPart: Int64;
@@ -160,8 +158,6 @@ type
 
   TLuidArray = array [Word] of TLuid;
   PLuidArray = ^TLuidArray;
-
-  TLuidDynArray = array of TLuid;
 
   // 1119
   PListEntry = ^TListEntry;
@@ -191,7 +187,6 @@ type
 
   TPrivilege = TLuidAndAttributes;
   PPrivilege = PLuidAndAttributes;
-  TPrivilegeArray = array of TPrivilege;
 
   // 8999
   TSidIdentifierAuthority = record
@@ -211,8 +206,6 @@ type
   TSidArray = array [Word] of PSid;
   PSidArray = ^TSidArray;
 
-  TSidDynArray = array of PSid;
-
   // 9055
   TSidNameUse = (SidTypeZero, SidTypeUser, SidTypeGroup, SidTypeDomain,
     SidTypeAlias, SidTypeWellKnownGroup, SidTypeDeletedAccount, SidTypeInvalid,
@@ -224,8 +217,6 @@ type
     Attributes: Cardinal;
   end;
   PSidAndAttributes = ^TSidAndAttributes;
-
-  TSIDAndAttributesDynArray = array of TSIDAndAttributes;
 
   // 9084
   TSIDAndAttributesHash = record

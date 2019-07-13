@@ -6,7 +6,7 @@ uses
   NtUtils.Svc;
 
 type
-  TSvcxPayload = procedure(ScvParams: TStringArray);
+  TSvcxPayload = procedure(ScvParams: TArray<String>);
 
 // Starts service control dispatcher.
 function SvcxMain(ServiceName: String; Payload: TSvcxPayload): Boolean;
@@ -44,7 +44,7 @@ procedure SvcxServiceMain(dwNumServicesArgs: Integer;
   lpServiceArgVectors: PServiceArgsW) stdcall;
 var
   i: Integer;
-  Parameters: TStringArray;
+  Parameters: TArray<String>;
 begin
   // Register service control handler
   SvcxStatusHandle := RegisterServiceCtrlHandlerExW(PWideChar(SvcxName),

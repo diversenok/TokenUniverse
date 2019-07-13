@@ -11,23 +11,23 @@ type
     ListView: TListViewEx;
     procedure ListViewDblClick(Sender: TObject);
   private
-    FGroups: TGroupArray;
+    FGroups: TArray<TGroup>;
     function SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
     function GetGroup(Ind: Integer): TGroup;
     procedure SetGroup(Ind: Integer; const Value: TGroup);
   public
     property Group[Ind: Integer]: TGroup read GetGroup write SetGroup;
-    function Groups: TGroupArray;
+    function Groups: TArray<TGroup>;
 
     function AddGroup(const NewGroup: TGroup): TListItemEx;
-    procedure AddGroups(NewGroups: TGroupArray);
+    procedure AddGroups(NewGroups: TArray<TGroup>);
 
     procedure RemoveGroup(Index: Integer);
     procedure Clear;
 
     function Find(Sid: ISid): Integer;
-    function SelectedGroups: TGroupArray;
-    function CheckedGroups: TGroupArray;
+    function SelectedGroups: TArray<TGroup>;
+    function CheckedGroups: TArray<TGroup>;
     procedure UiEditSelected(AOwner: TComponent;
       DisableAttributes: Boolean = False);
   end;
@@ -48,7 +48,7 @@ begin
   Result := SetItemData(ListView.Items.Add, NewGroup);
 end;
 
-procedure TFrameGroups.AddGroups(NewGroups: TGroupArray);
+procedure TFrameGroups.AddGroups(NewGroups: TArray<TGroup>);
 var
   i: Integer;
 begin
@@ -62,7 +62,7 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-function TFrameGroups.CheckedGroups: TGroupArray;
+function TFrameGroups.CheckedGroups: TArray<TGroup>;
 var
   i, Count: integer;
 begin
@@ -111,7 +111,7 @@ begin
     raise ERangeError.Create('TFrameGroups.GetGroup');
 end;
 
-function TFrameGroups.Groups: TGroupArray;
+function TFrameGroups.Groups: TArray<TGroup>;
 begin
   // Do not let anyone edit our array by reference
   Result := Copy(FGroups, 0, Length(FGroups));
@@ -132,7 +132,7 @@ begin
   ListView.Items.Delete(Index);
 end;
 
-function TFrameGroups.SelectedGroups: TGroupArray;
+function TFrameGroups.SelectedGroups: TArray<TGroup>;
 var
   i, j: integer;
 begin

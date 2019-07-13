@@ -9,7 +9,7 @@ uses
 type
   TSessionSource = class
   private
-    Sessions: TSessionArray;
+    Sessions: TArray<TSessionIdW>;
     ComboBox: TComboBox;
     function GetSession: Cardinal;
     procedure SetSession(const Value: Cardinal);
@@ -40,7 +40,7 @@ type
 
   TLogonSessionSource = class
   private
-    FLogonSessions: TLuidDynArray;
+    FLogonSessions: TArray<TLuid>;
     ComboBox: TComboBox;
     function GetSelected: TLuid;
     procedure SetSelected(const Value: TLuid);

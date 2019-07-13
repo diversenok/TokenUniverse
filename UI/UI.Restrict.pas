@@ -42,8 +42,8 @@ type
     FirstEditableItem: Integer; // in list of restricting SIDs
     function GetFlags: Cardinal;
     procedure ChangedCaption(NewCaption: String);
-    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
-    procedure ChangedGroups(NewGroups: TGroupArray);
+    procedure ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
+    procedure ChangedGroups(NewGroups: TArray<TGroup>);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -95,9 +95,9 @@ begin
   Caption := Format('Create Restricted Token for "%s"', [NewCaption]);
 end;
 
-procedure TDialogRestrictToken.ChangedGroups(NewGroups: TGroupArray);
+procedure TDialogRestrictToken.ChangedGroups(NewGroups: TArray<TGroup>);
 var
-  ManuallyAddes: TGroupArray;
+  ManuallyAddes: TArray<TGroup>;
   i: Integer;
 begin
   // Disabled SIDs: add all groups
@@ -147,7 +147,7 @@ begin
 end;
 
 procedure TDialogRestrictToken.ChangedPrivileges(
-  NewPrivileges: TPrivilegeArray);
+  NewPrivileges: TArray<TPrivilege>);
 begin
   FramePrivileges.ListView.Items.BeginUpdate(True);
 

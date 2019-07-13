@@ -24,7 +24,7 @@ function ReSvcCreateService(IsSystemPlus: Boolean): TNtxStatus;
 procedure ReSvcDelegate(RestartMethod: TRestartMethod);
 
 // The payload of TokenUniverse Run-As-System Service.
-procedure ReSvcRunInSession(ScvParams: TStringArray);
+procedure ReSvcRunInSession(ScvParams: TArray<String>);
 
 implementation
 
@@ -40,7 +40,7 @@ function ReSvcCreateService(IsSystemPlus: Boolean): TNtxStatus;
 var
   CommandLine: String;
   hSvc: TScmHandle;
-  Parameters: TStringArray;
+  Parameters: TArray<String>;
 begin
   CommandLine := '"' + ParamStr(0) + '" ' + RESVC_PARAM;
   if IsSystemPlus then
@@ -146,7 +146,7 @@ begin
   end;
 end;
 
-procedure ReSvcRunInSession(ScvParams: TStringArray);
+procedure ReSvcRunInSession(ScvParams: TArray<String>);
 var
   Provider: TDefaultExecProvider;
   Method: IExecMethod;

@@ -7,7 +7,6 @@ uses
 
 type
   TNtxStatus = NtUtils.Exceptions.TNtxStatus;
-  TStringArray = Winapi.WinUser.TStringArray;
 
 { Open }
 
@@ -37,14 +36,14 @@ function UsrxCurrentDesktopName: String;
 { Enumerations }
 
 // Enumerate window stations of current session
-function UsrxEnumWindowStations(out WinStations: TStringArray): TNtxStatus;
+function UsrxEnumWindowStations(out WinStations: TArray<String>): TNtxStatus;
 
 // Enumerate desktops of a window station
-function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TStringArray):
+function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TArray<String>):
   TNtxStatus;
 
 // Enumerate all accessable desktops from different window stations
-function UsrxEnumAllDesktops: TStringArray;
+function UsrxEnumAllDesktops: TArray<String>;
 
 implementation
 
@@ -158,7 +157,7 @@ begin
   end;
 end;
 
-function EnumCallback(Name: PWideChar; var Context: TStringArray): LongBool;
+function EnumCallback(Name: PWideChar; var Context: TArray<String>): LongBool;
   stdcall;
 begin
   // Save the value and succeed
@@ -167,14 +166,14 @@ begin
   Result := True;
 end;
 
-function UsrxEnumWindowStations(out WinStations: TStringArray): TNtxStatus;
+function UsrxEnumWindowStations(out WinStations: TArray<String>): TNtxStatus;
 begin
   SetLength(WinStations, 0);
   Result.Location := 'EnumWindowStationsW';
   Result.Win32Result := EnumWindowStationsW(EnumCallback, WinStations);
 end;
 
-function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TStringArray):
+function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TArray<String>):
   TNtxStatus;
 begin
   SetLength(Desktops, 0);
@@ -182,11 +181,11 @@ begin
   Result.Win32Result := EnumDesktopsW(WinSta, EnumCallback, Desktops);
 end;
 
-function UsrxEnumAllDesktops: TStringArray;
+function UsrxEnumAllDesktops: TArray<String>;
 var
   i, j: Integer;
   hWinStation: HWINSTA;
-  WinStations, Desktops: TStringArray;
+  WinStations, Desktops: TArray<String>;
 begin
   SetLength(Result, 0);
 

@@ -15,15 +15,11 @@ type
     LocalValue: TLuid;
   end;
 
-  TPrivDefArray = array of TPrivilegeDefinition;
-
   TLogonRightRec = record
     Value: Cardinal;
     AllowedType: Boolean;
     Name, Description: String;
   end;
-
-  TLogonRightRecArray = array of TLogonRightRec;
 
 { ---------------------------- Basic operations ----------------------------- }
 
@@ -45,7 +41,8 @@ function LsaxCreateAccount(out AccountHandle: TLsaHandle; AccountSid: PSid;
 { -------------------------------- Privileges ------------------------------- }
 
 // Enumerate all privileges on the system
-function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
+function LsaxEnumeratePrivileges(out Privileges: TArray<TPrivilegeDefinition>):
+  TNtxStatus;
 
 // Convert a numerical privilege value to internal name
 function LsaxQueryNamePrivilege(Luid: TLuid; out Name: String): TNtxStatus;
@@ -59,16 +56,16 @@ function LsaxQueryIntegrityPrivilege(Luid: TLuid): Cardinal;
 
 // Enumerate privileges assigned to an account
 function LsaxEnumerateAccountPrivileges(Sid: PSid;
-  out Privileges: TPrivilegeArray): TNtxStatus;
+  out Privileges: TArray<TPrivilege>): TNtxStatus;
 
 // Add and remove privileges from account
 function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
-  PrivilegesToAdd, PrivilegesToRemove: TPrivilegeArray): TNtxStatus;
+  PrivilegesToAdd, PrivilegesToRemove: TArray<TPrivilege>): TNtxStatus;
 
 { ------------------------------- Logon Rights ------------------------------ }
 
 // Enumerate known logon rights
-function LsaxEnumerateLogonRights: TLogonRightRecArray;
+function LsaxEnumerateLogonRights: TArray<TLogonRightRec>;
 
 // Query logon rights of an account
 function LsaxQueryRightsAccount(Sid: PSid; out SystemAccess: Cardinal):
@@ -81,7 +78,7 @@ function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
 
 // Convert SIDs to account names or at least to SDDL; always succeeds
 function LsaxLookupSid(Sid: PSid): TTranslatedName;
-function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
+function LsaxLookupSids(Sids: TArray<PSid>): TArray<TTranslatedName>;
 
 // Lookup an account on the machine
 function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
@@ -92,7 +89,7 @@ function LsaxGetUserName(out Domain, UserName: String): TNtxStatus;
 { ------------------------------ Logon Sessions ----------------------------- }
 
 // Enumerate logon sessions
-function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
+function LsaxEnumerateLogonSessions(out Luids: TArray<TLuid>): TNtxStatus;
 
 implementation
 
@@ -162,7 +159,8 @@ end;
 
 { Privileges }
 
-function LsaxEnumeratePrivileges(out Privileges: TPrivDefArray): TNtxStatus;
+function LsaxEnumeratePrivileges(out Privileges: TArray<TPrivilegeDefinition>):
+  TNtxStatus;
 var
   hPolicy: TLsaHandle;
   EnumContext: Cardinal;
@@ -280,7 +278,7 @@ begin
 end;
 
 function LsaxEnumerateAccountPrivileges(Sid: PSid;
-  out Privileges: TPrivilegeArray): TNtxStatus;
+  out Privileges: TArray<TPrivilege>): TNtxStatus;
 var
   hAccount: TLsaHandle;
   PrivilegeSet: PPrivilegeSet;
@@ -308,7 +306,7 @@ begin
 end;
 
 function LsaxManagePrivilegesAccount(Sid: PSid; RemoveAll: Boolean;
-  PrivilegesToAdd, PrivilegesToRemove: TPrivilegeArray): TNtxStatus;
+  PrivilegesToAdd, PrivilegesToRemove: TArray<TPrivilege>): TNtxStatus;
 var
   hAccount: TLsaHandle;
   PrivSet: PPrivilegeSet;
@@ -381,7 +379,7 @@ end;
 
 { Logon rights }
 
-function LsaxEnumerateLogonRights: TLogonRightRecArray;
+function LsaxEnumerateLogonRights: TArray<TLogonRightRec>;
 begin
   // If someone knows a system function to enumerate logon rights on the system
   // you are welcome to use it here.
@@ -476,7 +474,7 @@ end;
 
 function LsaxLookupSid(Sid: PSid): TTranslatedName;
 var
-  Sids: TSidDynArray;
+  Sids: TArray<PSid>;
 begin
   SetLength(Sids, 1);
   Sids[0] := Sid;
@@ -484,7 +482,7 @@ begin
   Result := LsaxLookupSids(Sids)[0];
 end;
 
-function LsaxLookupSids(Sids: TSidDynArray): TTranslatedNames;
+function LsaxLookupSids(Sids: TArray<PSid>): TArray<TTranslatedName>;
 var
   hPolicy: TLsaHandle;
   Status: TNtxStatus;
@@ -605,7 +603,7 @@ end;
 
 { Logon Sessions }
 
-function LsaxEnumerateLogonSessions(out Luids: TLuidDynArray): TNtxStatus;
+function LsaxEnumerateLogonSessions(out Luids: TArray<TLuid>): TNtxStatus;
 var
   Count, i: Integer;
   Buffer: PLuidArray;

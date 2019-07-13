@@ -54,13 +54,10 @@ type
   TLsaUnicodeString = UNICODE_STRING;
   PLsaUnicodeString = ^TLsaUnicodeString;
 
-  TLsaUnicodeStringDynArray = array of TLsaUnicodeString;
-
   TLsaOperationalMode = Cardinal;
 
   TGuidArray = array [Byte] of TGUID;
   PGuidArray = ^TGuidArray;
-  TGuidDynArray = array of TGUID;
 
   // 948
   TSecurityLogonType = (
@@ -145,8 +142,6 @@ type
   end;
   PAuditPolicyInformation = ^TAuditPolicyInformation;
 
-  TAuditPolicyInformationDynArray = array of TAuditPolicyInformation;
-
   TAuditPolicyInformationArray = array [Byte] of TAuditPolicyInformation;
   PAuditPolicyInformationArray = ^TAuditPolicyInformationArray;
 
@@ -191,7 +186,7 @@ function LsaGetLogonSessionData(var LogonId: TLuid;
   external secur32;
 
 // 5248
-function AuditSetSystemPolicy(AuditPolicy: TAuditPolicyInformationDynArray;
+function AuditSetSystemPolicy(AuditPolicy: TArray<TAuditPolicyInformation>;
   dwPolicyCount: Cardinal): Boolean; stdcall; external advapi32; overload;
 
 function AuditSetSystemPolicy(AuditPolicy: PAuditPolicyInformationArray;
@@ -199,7 +194,7 @@ function AuditSetSystemPolicy(AuditPolicy: PAuditPolicyInformationArray;
 
 // 5255
 function AuditSetPerUserPolicy(Sid: PSid; AuditPolicy:
-  TAuditPolicyInformationDynArray; dwPolicyCount: Cardinal): Boolean; stdcall;
+  TArray<TAuditPolicyInformation>; dwPolicyCount: Cardinal): Boolean; stdcall;
   external advapi32; overload;
 
 function AuditSetPerUserPolicy(Sid: PSid; AuditPolicy:
@@ -207,12 +202,12 @@ function AuditSetPerUserPolicy(Sid: PSid; AuditPolicy:
   external advapi32; overload;
 
 // 5264
-function AuditQuerySystemPolicy(pSubCategoryGuids: TGuidDynArray;
+function AuditQuerySystemPolicy(pSubCategoryGuids: TArray<TGuid>;
   dwPolicyCount: Cardinal; out pAuditPolicy: PAuditPolicyInformationArray):
   Boolean; stdcall; external advapi32;
 
 // 5274
-function AuditQueryPerUserPolicy(pSid: PSid; SubCategoryGuids: TGuidDynArray;
+function AuditQueryPerUserPolicy(pSid: PSid; SubCategoryGuids: TArray<TGuid>;
   dwPolicyCount: Cardinal; out pAuditPolicy: PAuditPolicyInformationArray):
   Boolean; stdcall; external advapi32;
 

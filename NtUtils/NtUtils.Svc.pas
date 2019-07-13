@@ -7,7 +7,6 @@ uses
 
 type
   TScmHandle = Winapi.Svc.TScmHandle;
-  TStringArray = Winapi.WinNt.TStringArray;
 
 // Open a handle to SCM
 function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
@@ -23,7 +22,7 @@ function ScmxCreateService(out hSvc: TScmHandle; CommandLine, ServiceName,
 
 // Start a service
 function ScmxStartService(hSvc: TScmHandle): TNtxStatus; overload;
-function ScmxStartService(hSvc: TScmHandle; Parameters: TStringArray):
+function ScmxStartService(hSvc: TScmHandle; Parameters: TArray<String>):
   TNtxStatus; overload;
 
 // Delete a service
@@ -93,17 +92,17 @@ end;
 
 function ScmxStartService(hSvc: TScmHandle): TNtxStatus; overload;
 var
-  Parameters: TStringArray;
+  Parameters: TArray<String>;
 begin
   SetLength(Parameters, 0);
   Result := ScmxStartService(hSvc, Parameters);
 end;
 
-function ScmxStartService(hSvc: TScmHandle; Parameters: TStringArray):
+function ScmxStartService(hSvc: TScmHandle; Parameters: TArray<String>):
   TNtxStatus;
 var
   i: Integer;
-  Params: TServiceDynArgsW;
+  Params: TArray<PWideChar>;
 begin
   SetLength(Params, Length(Parameters));
 

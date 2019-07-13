@@ -55,7 +55,7 @@ type
   TPerUserAudit = class(TInterfacedObject, IAudit, IPerUserAudit)
   private
     Count: Integer;
-    Data: TAuditPolicyInformationDynArray;
+    Data: TArray<TAuditPolicyInformation>;
   public
     class function CreateEmpty(out Status: TNtxStatus): TPerUserAudit; static;
     class function CreateLoadForUser(Sid: PSid; out Status: TNtxStatus):
@@ -78,7 +78,7 @@ type
 
   TSystemAudit = class(TInterfacedObject, IAudit, ISystemAudit)
   private
-    SubCategories: TGuidDynArray;
+    SubCategories: TArray<TGuid>;
     AuditFlags: array of Cardinal;
   public
     class function CreateQuery(out Status: TNtxStatus): TSystemAudit; static;
@@ -91,11 +91,9 @@ type
     property AuditFailure[SubCatogiry: Integer]: Boolean index POLICY_AUDIT_EVENT_FAILURE read ContainsFlag write SetFlag;
   end;
 
-  TGuidDynArray = Winapi.NtSecApi.TGuidDynArray;
-
   TAuditCategoryMapping = record
-    Categories: TGuidDynArray;
-    SubCategories: array of TGuidDynArray;
+    Categories: TArray<TGuid>;
+    SubCategories: array of TArray<TGuid>;
     function Find(const SubCategory: TGuid): Integer;
   end;
 
@@ -104,7 +102,7 @@ function LsaxQueryAuditCategoryMapping(out Mapping: TAuditCategoryMapping):
   TNtxStatus;
 
 // LsarEnumerateAuditSubCategories
-function LsaxEnumerateAuditSubCategories(out SubCategories: TGuidDynArray):
+function LsaxEnumerateAuditSubCategories(out SubCategories: TArray<TGuid>):
   TNtxStatus;
 
 // LsarLookupAuditCategoryName
@@ -123,8 +121,8 @@ uses
 function TTokenPerUserAudit.AssignToUser(Sid: PSid): TNtxStatus;
 var
   i: Integer;
-  SubCategories: TGuidDynArray;
-  Policies: TAuditPolicyInformationDynArray;
+  SubCategories: TArray<TGuid>;
+  Policies: TArray<TAuditPolicyInformation>;
 begin
   Result := LsaxEnumerateAuditSubCategories(SubCategories);
 
@@ -277,7 +275,7 @@ end;
 
 class function TPerUserAudit.CreateEmpty(out Status: TNtxStatus): TPerUserAudit;
 var
-  SubCategories: TGuidDynArray;
+  SubCategories: TArray<TGuid>;
   i: Integer;
 begin
   Status := LsaxEnumerateAuditSubCategories(SubCategories);
@@ -300,7 +298,7 @@ end;
 class function TPerUserAudit.CreateLoadForUser(Sid: PSid;
   out Status: TNtxStatus): TPerUserAudit;
 var
-  SubCategories: TGuidDynArray;
+  SubCategories: TArray<TGuid>;
   Buffer: PAuditPolicyInformationArray;
   i: Integer;
 begin
@@ -376,7 +374,7 @@ end;
 
 function TSystemAudit.AssignToSystem: TNtxStatus;
 var
-  Audit: TAuditPolicyInformationDynArray;
+  Audit: TArray<TAuditPolicyInformation>;
   i: Integer;
 begin
   SetLength(Audit, Length(SubCategories));
@@ -405,7 +403,7 @@ end;
 
 class function TSystemAudit.CreateQuery(out Status: TNtxStatus): TSystemAudit;
 var
-  SubCategories: TGuidDynArray;
+  SubCategories: TArray<TGuid>;
   Buffer: PAuditPolicyInformationArray;
   i: Integer;
 begin
@@ -506,7 +504,7 @@ begin
   AuditFree(Guids);
 end;
 
-function LsaxEnumerateAuditSubCategories(out SubCategories: TGuidDynArray):
+function LsaxEnumerateAuditSubCategories(out SubCategories: TArray<TGuid>):
   TNtxStatus;
 var
   Buffer: PGuidArray;

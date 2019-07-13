@@ -103,8 +103,8 @@ type
     procedure ChangedSession(NewSession: Cardinal);
     procedure ChangedUIAccess(NewUIAccess: LongBool);
     procedure ChangedPolicy(NewPolicy: Cardinal);
-    procedure ChangedPrivileges(NewPrivileges: TPrivilegeArray);
-    procedure ChangedGroups(NewGroups: TGroupArray);
+    procedure ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
+    procedure ChangedGroups(NewGroups: TArray<TGroup>);
     procedure ChangedStatistics(NewStatistics: TTokenStatistics);
     procedure ChangedOwner(NewOwner: ISid);
     procedure ChangedPrimaryGroup(NewPrimary: ISid);
@@ -292,7 +292,7 @@ begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
-procedure TInfoDialog.ChangedGroups(NewGroups: TGroupArray);
+procedure TInfoDialog.ChangedGroups(NewGroups: TArray<TGroup>);
 var
   i: Integer;
 begin
@@ -368,7 +368,7 @@ begin
   ComboPrimary.Text := NewPrimary.Lookup.FullName;
 end;
 
-procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TPrivilegeArray);
+procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
 begin
   TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
 

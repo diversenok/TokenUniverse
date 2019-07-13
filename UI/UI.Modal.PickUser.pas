@@ -63,7 +63,7 @@ type
       DisableAttributes: Boolean = False): TGroup;
     class function PickEditOne(AOwner: TComponent; const Group: TGroup;
       DisableAttributes: Boolean = False): TGroup;
-    class procedure PickEditMultiple(AOwner: TComponent; Groups: TGroupArray;
+    class procedure PickEditMultiple(AOwner: TComponent; Groups: TArray<TGroup>;
       out AttributesToAdd, AttributesToDelete: Cardinal);
   end;
 
@@ -201,7 +201,7 @@ begin
 end;
 
 class procedure TDialogPickUser.PickEditMultiple(AOwner: TComponent;
-  Groups: TGroupArray; out AttributesToAdd, AttributesToDelete: Cardinal);
+  Groups: TArray<TGroup>; out AttributesToAdd, AttributesToDelete: Cardinal);
 var
   BitwiseAnd, BitwiseOr: Cardinal;
   i: Integer;

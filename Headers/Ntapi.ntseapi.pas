@@ -137,7 +137,7 @@ function NtCreateLowBoxToken(out TokenHandle: THandle;
   ExistingTokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; PackageSid: PSID;
   CapabilityCount: Cardinal; Capabilities: PSIDAndAttributes;
-  HandleCount: Cardinal; Handles: array of THandle): NTSTATUS; stdcall;
+  HandleCount: Cardinal; Handles: TArray<THandle>): NTSTATUS; stdcall;
   external ntdll delayed;
 
 function NtOpenProcessTokenEx(ProcessHandle: THandle;

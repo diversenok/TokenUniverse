@@ -12,10 +12,7 @@ type
     RelativeId: Cardinal;
   end;
 
-  TRidAndNameArray = array of TRidAndName;
-
   TGroupMembership = Ntapi.ntsam.TGroupMembership;
-  TGroupMemberships = array of TGroupMembership;
 
 // Connect to the local SAM server
 function SamxConnect(out hServer: TSamHandle; DesiredAccess: TAccessMask):
@@ -48,7 +45,7 @@ function SamxLookupDomain(hServer: TSamHandle; Name: String;
   out DomainId: ISid): TNtxStatus;
 
 // Enumerate domains
-function SamxEnumerateDomains(hServer: TSamHandle; out Names: TStringArray):
+function SamxEnumerateDomains(hServer: TSamHandle; out Names: TArray<String>):
   TNtxStatus;
 
 // Query domain information; free the result with SamxFreeMemory
@@ -62,8 +59,8 @@ function SamxSetDomain(hDomain: TSamHandle; InfoClass: TDomainInformationClass;
 { --------------------------------- Groups ---------------------------------- }
 
 // Enumerate groups
-function SamxEnumerateGroups(hDomain: TSamHandle; out Groups: TRidAndNameArray):
-  TNtxStatus;
+function SamxEnumerateGroups(hDomain: TSamHandle;
+  out Groups: TArray<TRidAndName>): TNtxStatus;
 
 // Open a group
 function SamxOpenGroup(out hGroup: TSamHandle; hDomain: TSamHandle;
@@ -75,7 +72,7 @@ function SamxOpenGroupBySid(out hGroup: TSamHandle; Sid: ISid;
 
 // Get groups members
 function SamxGetMembersGroup(hGroup: TSamHandle;
-  out Members: TGroupMemberships): TNtxStatus;
+  out Members: TArray<TGroupMembership>): TNtxStatus;
 
 // Query group information; free the result with SamxFreeMemory
 function SamxQueryGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
@@ -89,7 +86,7 @@ function SamxSetGroup(hGroup: TSamHandle; InfoClass: TGroupInformationClass;
 
 // Enumerate aliases in domain
 function SamxEnumerateAliases(hDomain: TSamHandle;
-  out Aliases: TRidAndNameArray): TNtxStatus;
+  out Aliases: TArray<TRidAndName>): TNtxStatus;
 
 // Open an alias
 function SamxOpenAlias(out hAlias: TSamHandle; hDomain: TSamHandle;
@@ -100,7 +97,7 @@ function SamxOpenAliasBySid(out hAlias: TSamHandle; Sid: ISid;
   DesiredAccess: TAccessMask): TNtxStatus;
 
 // Get alias members
-function SamxGetMembersAlias(hAlias: TSamHandle; out Members: ISidArray):
+function SamxGetMembersAlias(hAlias: TSamHandle; out Members: Tarray<ISid>):
   TNtxStatus;
 
 // Query alias information; free the result with SamxFreeMemory
@@ -115,7 +112,7 @@ function SamxSetAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
 
 // Enumerate users in domain
 function SamxEnumerateUsers(hDomain: TSamHandle; UserType: Cardinal;
-  out Users: TRidAndNameArray): TNtxStatus;
+  out Users: TArray<TRidAndName>): TNtxStatus;
 
 // Open a user
 function SamxOpenUser(out hUser: TSamHandle; hDomain: TSamHandle;
@@ -126,8 +123,8 @@ function SamxOpenUserBySid(out hUser: TSamHandle; Sid: ISid;
   DesiredAccess: TAccessMask): TNtxStatus;
 
 // Get groups for a user
-function SamxGetGroupsForUser(hUser: TSamHandle; out Groups: TGroupMemberships):
-  TNtxStatus;
+function SamxGetGroupsForUser(hUser: TSamHandle;
+  out Groups: TArray<TGroupMembership>): TNtxStatus;
 
 // Query user information; free the result with SamxFreeMemory
 function SamxQueryUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
@@ -244,7 +241,7 @@ begin
   SamFreeMemory(Buffer);
 end;
 
-function SamxEnumerateDomains(hServer: TSamHandle; out Names: TStringArray):
+function SamxEnumerateDomains(hServer: TSamHandle; out Names: TArray<String>):
   TNtxStatus;
 var
   EnumContext: TSamEnumerationHandle;
@@ -293,8 +290,8 @@ end;
 
 { Groups }
 
-function SamxEnumerateGroups(hDomain: TSamHandle; out Groups: TRidAndNameArray):
-  TNtxStatus;
+function SamxEnumerateGroups(hDomain: TSamHandle;
+  out Groups: TArray<TRidAndName>): TNtxStatus;
 var
   EnumContext: TSamEnumerationHandle;
   Buffer: PSamRidEnumerationArray;
@@ -346,7 +343,7 @@ begin
 end;
 
 function SamxGetMembersGroup(hGroup: TSamHandle;
-  out Members: TGroupMemberships): TNtxStatus;
+  out Members: TArray<TGroupMembership>): TNtxStatus;
 var
   BufferIDs, BufferAttributes: PCardinalArray;
   Count, i: Integer;
@@ -395,7 +392,7 @@ end;
 { Aliases }
 
 function SamxEnumerateAliases(hDomain: TSamHandle;
-  out Aliases: TRidAndNameArray): TNtxStatus;
+  out Aliases: TArray<TRidAndName>): TNtxStatus;
 var
   EnumContext: TSamEnumerationHandle;
   Buffer: PSamRidEnumerationArray;
@@ -446,7 +443,7 @@ begin
   SamxClose(hDomain);
 end;
 
-function SamxGetMembersAlias(hAlias: TSamHandle; out Members: ISidArray):
+function SamxGetMembersAlias(hAlias: TSamHandle; out Members: Tarray<ISid>):
   TNtxStatus;
 var
   Buffer: PSidArray;
@@ -492,7 +489,7 @@ end;
 { Users }
 
 function SamxEnumerateUsers(hDomain: TSamHandle; UserType: Cardinal;
-  out Users: TRidAndNameArray): TNtxStatus;
+  out Users: TArray<TRidAndName>): TNtxStatus;
 var
   EnumContext: TSamEnumerationHandle;
   Buffer: PSamRidEnumerationArray;
@@ -544,8 +541,8 @@ begin
   SamxClose(hDomain);
 end;
 
-function SamxGetGroupsForUser(hUser: TSamHandle; out Groups: TGroupMemberships):
-  TNtxStatus;
+function SamxGetGroupsForUser(hUser: TSamHandle;
+  out Groups: TArray<TGroupMembership>): TNtxStatus;
 var
   Buffer: PGroupMembershipArray;
   Count, i: Integer;

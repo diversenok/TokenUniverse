@@ -37,9 +37,9 @@ function CompareSIDs(Value1, Value2: ISid): Boolean;
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
 function CompareLUIDs(Value1, Value2: TLuid): Boolean;
 function CompareLongBools(Value1, Value2: LongBool): Boolean;
-function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean;
+function ComparePrivileges(Value1, Value2: TArray<TPrivilege>): Boolean;
 function CompareGroups(Value1, Value2: TGroup): Boolean;
-function CompareGroupArrays(Value1, Value2: TGroupArray): Boolean;
+function CompareGroupArrays(Value1, Value2: TArray<TGroup>): Boolean;
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 
 { Conversion functions }
@@ -136,15 +136,15 @@ begin
   Result := Value1 = Value2;
 end;
 
-function CompareGroupArrays(Value1, Value2: TGroupArray): Boolean;
+function CompareGroupArrays(Value1, Value2: TArray<TGroup>): Boolean;
 var
   i: integer;
 begin
   Result := Length(Value1) = Length(Value2);
   if Result then
     for i := 0 to High(Value1) do
-      if (Value1[i].SecurityIdentifier.Lookup.SDDL <>
-        Value2[i].SecurityIdentifier.Lookup.SDDL)
+      if not Value1[i].SecurityIdentifier.EqualsTo(
+        Value2[i].SecurityIdentifier)
         or (Value1[i].Attributes <> Value2[i].Attributes) then
           Exit(False);
 end;
@@ -161,7 +161,7 @@ begin
   Result := Value1 = Value2;
 end;
 
-function ComparePrivileges(Value1, Value2: TPrivilegeArray): Boolean;
+function ComparePrivileges(Value1, Value2: TArray<TPrivilege>): Boolean;
 var
   i: integer;
 begin

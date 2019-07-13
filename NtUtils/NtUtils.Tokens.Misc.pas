@@ -16,13 +16,13 @@ procedure NtxFormatTokenSet(var Result: TNtxStatus;
 { Allocations }
 
 // Prepare PTokenPrivileges
-function NtxpAllocPrivileges(Privileges: TLuidDynArray;
+function NtxpAllocPrivileges(Privileges: TArray<TLuid>;
   Attribute: Cardinal): PTokenPrivileges;
-function NtxpAllocPrivileges2(Privileges: TPrivilegeArray): PTokenPrivileges;
+function NtxpAllocPrivileges2(Privileges: TArray<TPrivilege>): PTokenPrivileges;
 
 // Prepare PTokenGroups
-function NtxpAllocGroups(Sids: ISidArray; Attribute: Cardinal): PTokenGroups;
-function NtxpAllocGroups2(Groups: TGroupArray): PTokenGroups;
+function NtxpAllocGroups(Sids: TArray<ISid>; Attribute: Cardinal): PTokenGroups;
+function NtxpAllocGroups2(Groups: TArray<TGroup>): PTokenGroups;
 
 implementation
 
@@ -48,7 +48,7 @@ end;
 
 { Allocations }
 
-function NtxpAllocPrivileges(Privileges: TLuidDynArray;
+function NtxpAllocPrivileges(Privileges: TArray<TLuid>;
   Attribute: Cardinal): PTokenPrivileges;
 var
   i: Integer;
@@ -64,7 +64,7 @@ begin
   end;
 end;
 
-function NtxpAllocPrivileges2(Privileges: TPrivilegeArray): PTokenPrivileges;
+function NtxpAllocPrivileges2(Privileges: TArray<TPrivilege>): PTokenPrivileges;
 var
   i: Integer;
 begin
@@ -76,7 +76,7 @@ begin
     Result.Privileges[i] := Privileges[i];
 end;
 
-function NtxpAllocGroups(Sids: ISidArray; Attribute: Cardinal): PTokenGroups;
+function NtxpAllocGroups(Sids: TArray<ISid>; Attribute: Cardinal): PTokenGroups;
 var
   i: Integer;
 begin
@@ -90,7 +90,7 @@ begin
   end;
 end;
 
-function NtxpAllocGroups2(Groups: TGroupArray): PTokenGroups;
+function NtxpAllocGroups2(Groups: TArray<TGroup>): PTokenGroups;
 var
   i: Integer;
 begin

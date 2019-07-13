@@ -499,7 +499,7 @@ function SamAddMemberToAlias(AliasHandle: TSamHandle; MemberId: PSid): NTSTATUS;
 
 // 2068
 function SamAddMultipleMembersToAlias(AliasHandle: TSamHandle; MemberIds:
-  TSidDynArray; MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
+  TArray<PSid>; MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
 
 // 2076
 function SamRemoveMemberFromAlias(AliasHandle: TSamHandle; MemberId: PSid):
@@ -507,7 +507,7 @@ function SamRemoveMemberFromAlias(AliasHandle: TSamHandle; MemberId: PSid):
 
 // 2083
 function SamRemoveMultipleMembersFromAlias(AliasHandle: TSamHandle; MemberIds:
-  TSidDynArray; MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
+  TArray<PSid>; MemberCount: Cardinal): NTSTATUS; stdcall; external samlib;
 
 // 2098
 function SamGetMembersInAlias(AliasHandle: TSamHandle; out MemberIds: PSidArray;

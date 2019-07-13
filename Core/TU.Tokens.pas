@@ -41,14 +41,14 @@ type
   private
     IsCached: array [TTokenDataClass] of Boolean;
     User: TGroup;
-    Groups: TGroupArray;
-    Privileges: TPrivilegeArray;
+    Groups: TArray<TGroup>;
+    Privileges: TArray<TPrivilege>;
     Owner: ISid;
     PrimaryGroup: ISid;
     Source: TTokenSource;
     TokenType: TTokenTypeEx;
     Statistics: TTokenStatistics;
-    RestrictedSids: TGroupArray;
+    RestrictedSids: TArray<TGroup>;
     Session: Cardinal;
     AuditPolicy: IPerUserAudit;
     SandboxInert: LongBool;
@@ -73,8 +73,8 @@ type
     FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
     FOnVirtualizationEnabledChange: TCachingEvent<LongBool>;
     FOnPolicyChange: TCachingEvent<Cardinal>;
-    FOnPrivilegesChange: TCachingEvent<TPrivilegeArray>;
-    FOnGroupsChange: TCachingEvent<TGroupArray>;
+    FOnPrivilegesChange: TCachingEvent<TArray<TPrivilege>>;
+    FOnGroupsChange: TCachingEvent<TArray<TGroup>>;
     FOnStatisticsChange: TCachingEvent<TTokenStatistics>;
     OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
 
@@ -94,8 +94,8 @@ type
     property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
     property OnVirtualizationEnabledChange: TCachingEvent<LongBool> read FOnVirtualizationEnabledChange;
     property OnPolicyChange: TCachingEvent<Cardinal> read FOnPolicyChange;
-    property OnPrivilegesChange: TCachingEvent<TPrivilegeArray> read FOnPrivilegesChange;
-    property OnGroupsChange: TCachingEvent<TGroupArray> read FOnGroupsChange;
+    property OnPrivilegesChange: TCachingEvent<TArray<TPrivilege>> read FOnPrivilegesChange;
+    property OnGroupsChange: TCachingEvent<TArray<TGroup>> read FOnGroupsChange;
     property OnStatisticsChange: TCachingEvent<TTokenStatistics> read FOnStatisticsChange;
 
     /// <summary>
@@ -126,15 +126,15 @@ type
     function GetVirtualizationAllowed: LongBool;
     function GetVirtualizationEnabled: LongBool;
     function GetElevation: TTokenElevationType;
-    function GetGroups: TGroupArray;
+    function GetGroups: TArray<TGroup>;
     function GetHasRestrictions: LongBool;
     function GetIntegrity: TGroup;
     function GetMandatoryPolicy: Cardinal;
     function GetOrigin: TLuid;
     function GetOwner: ISid;
     function GetPrimaryGroup: ISid;
-    function GetPrivileges: TPrivilegeArray;
-    function GetRestrictedSids: TGroupArray;
+    function GetPrivileges: TArray<TPrivilege>;
+    function GetRestrictedSids: TArray<TGroup>;
     function GetSandboxInert: LongBool;
     function GetSession: Cardinal;
     function GetAuditPolicy: IPerUserAudit;
@@ -151,15 +151,15 @@ type
     function GetObjectInfo: TObjectBasicInformaion;
   public
     property User: TGroup read GetUser;                                         // class 1
-    property Groups: TGroupArray read GetGroups;                                // class 2
-    property Privileges: TPrivilegeArray read GetPrivileges;                    // class 3
+    property Groups: TArray<TGroup> read GetGroups;                                // class 2
+    property Privileges: TArray<TPrivilege> read GetPrivileges;                    // class 3
     property Owner: ISid read GetOwner write SetOwner;                          // class 4 #settable
     property PrimaryGroup: ISid read GetPrimaryGroup write SetPrimaryGroup;     // class 5 #settable
     // TODO: class 6: DefaultDacl #settable
     property Source: TTokenSource read GetSource;                               // classes 7 & 8
     property TokenTypeInfo: TTokenTypeEx read GetTokenType;                     // class 9
     property Statistics: TTokenStatistics read GetStatistics;                   // class 10
-    property RestrictedSids: TGroupArray read GetRestrictedSids;                // class 11
+    property RestrictedSids: TArray<TGroup> read GetRestrictedSids;                // class 11
     property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     // TODO: class 14 SessionReference #settable (and not gettable?)
@@ -285,9 +285,9 @@ type
     property OnClose: TEvent<TToken> read FOnClose;
     destructor Destroy; override;
 
-    procedure PrivilegeAdjust(Privileges: TPrivilegeArray;
+    procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
       Action: TPrivilegeAdjustAction);
-    procedure GroupAdjust(Groups: TGroupArray; Action: TGroupAdjustAction);
+    procedure GroupAdjust(Groups: TArray<TGroup>; Action: TGroupAdjustAction);
     function SendHandleToProcess(PID: NativeUInt): NativeUInt;
 
     /// <summary> Assignes primary token to a process. </summary>
@@ -358,22 +358,22 @@ type
 
     /// <summary> Creates a restricted version of the token. </summary>
     constructor CreateRestricted(SrcToken: TToken; Flags: Cardinal;
-      SIDsToDisabe, SIDsToRestrict: TGroupArray;
-      PrivilegesToDelete: TPrivilegeArray);
+      SIDsToDisabe, SIDsToRestrict: TArray<TGroup>;
+      PrivilegesToDelete: TArray<TPrivilege>);
 
     /// <summary> Logons a user with the specified credentials. </summary>
     constructor CreateWithLogon(LogonType: TSecurityLogonType;
       LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
-      AddGroups: TGroupArray);
+      AddGroups: TArray<TGroup>);
 
     /// <summary> Logon a user using Services 4 Users. </summary>
     constructor CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
-      User: String; const Source: TTokenSource; AddGroups: TGroupArray);
+      User: String; const Source: TTokenSource; AddGroups: TArray<TGroup>);
 
     /// <summary> Creates a new token from the scratch. </summary>
     /// <remarks> This action requires SeCreateTokenPrivilege. </remarks>
     constructor CreateNtCreateToken(User: ISid; DisableUser: Boolean;
-      Groups: TGroupArray; Privileges: TPrivilegeArray;
+      Groups: TArray<TGroup>; Privileges: TArray<TPrivilege>;
       LogonID: TLuid; Owner: ISid; PrimaryGroup: ISid;
       Source: TTokenSource; Expires: TLargeInteger);
 
@@ -674,7 +674,7 @@ begin
 end;
 
 constructor TToken.CreateNtCreateToken(User: ISid; DisableUser: Boolean;
-  Groups: TGroupArray; Privileges: TPrivilegeArray; LogonID: TLuid;
+  Groups: TArray<TGroup>; Privileges: TArray<TPrivilege>; LogonID: TLuid;
   Owner: ISid; PrimaryGroup: ISid; Source: TTokenSource;
   Expires: TLargeInteger);
 var
@@ -739,11 +739,11 @@ begin
 end;
 
 constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
-  SIDsToDisabe, SIDsToRestrict: TGroupArray;
-  PrivilegesToDelete: TPrivilegeArray);
+  SIDsToDisabe, SIDsToRestrict: TArray<TGroup>;
+  PrivilegesToDelete: TArray<TPrivilege>);
 var
-  Disable, Restrict: ISidArray;
-  Remove: TLuidDynArray;
+  Disable, Restrict: TArray<ISid>;
+  Remove: TArray<TLuid>;
   i: Integer;
 begin
   SetLength(Disable, Length(SIDsToDisabe));
@@ -765,7 +765,7 @@ begin
 end;
 
 constructor TToken.CreateS4ULogon(LogonType: TSecurityLogonType; Domain,
-  User: String; const Source: TTokenSource; AddGroups: TGroupArray);
+  User: String; const Source: TTokenSource; AddGroups: TArray<TGroup>);
 begin
   NtxLogonS4U(hToken, Domain, User, LogonType, Source, AddGroups).RaiseOnError;
 
@@ -802,7 +802,7 @@ end;
 
 constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;
   LogonProvider: TLogonProvider; Domain, User: String; Password: PWideChar;
-  AddGroups: TGroupArray);
+  AddGroups: TArray<TGroup>);
 begin
   NtxLogonUser(hToken, Domain, User, Password, LogonType, LogonProvider,
     AddGroups).RaiseOnError;
@@ -837,14 +837,14 @@ begin
   inherited;
 end;
 
-procedure TToken.GroupAdjust(Groups: TGroupArray; Action:
+procedure TToken.GroupAdjust(Groups: TArray<TGroup>; Action:
   TGroupAdjustAction);
 const
   ActionToAttribute: array [TGroupAdjustAction] of Cardinal = (0,
     SE_GROUP_ENABLED, 0);
 var
   i: integer;
-  Sids: ISidArray;
+  Sids: TArray<ISid>;
 begin
   SetLength(Sids, Length(Groups));
   for i := 0 to High(Groups) do
@@ -871,14 +871,14 @@ begin
     Result.Value := TToken.Create(Handle, 'Linked token for ' + Caption);
 end;
 
-procedure TToken.PrivilegeAdjust(Privileges: TPrivilegeArray;
+procedure TToken.PrivilegeAdjust(Privileges: TArray<TPrivilege>;
   Action: TPrivilegeAdjustAction);
 const
   ActionToAttribute: array [TPrivilegeAdjustAction] of Cardinal =
     (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
 var
   Status: TNtxStatus;
-  LuidArray: TLuidDynArray;
+  LuidArray: TArray<TLuid>;
   i: Integer;
 begin
   SetLength(LuidArray, Length(Privileges));
@@ -942,7 +942,7 @@ begin
   Result := Token.Cache.Elevation;
 end;
 
-function TTokenData.GetGroups: TGroupArray;
+function TTokenData.GetGroups: TArray<TGroup>;
 begin
   Assert(Token.Cache.IsCached[tdTokenGroups]);
   Result := Token.Cache.Groups;
@@ -1002,13 +1002,13 @@ begin
   Result := Token.Cache.PrimaryGroup;
 end;
 
-function TTokenData.GetPrivileges: TPrivilegeArray;
+function TTokenData.GetPrivileges: TArray<TPrivilege>;
 begin
   Assert(Token.Cache.IsCached[tdTokenPrivileges]);
   Result := Token.Cache.Privileges;
 end;
 
-function TTokenData.GetRestrictedSids: TGroupArray;
+function TTokenData.GetRestrictedSids: TArray<TGroup>;
 begin
   Assert(Token.Cache.IsCached[tdTokenRestrictedSids]);
   Result := Token.Cache.RestrictedSids;

@@ -9,12 +9,12 @@ uses
 // Logon a user
 function NtxLogonUser(out hToken: THandle; Domain, Username: String;
   Password: PWideChar; LogonType: TSecurityLogonType;
-  LogonProvider: TLogonProvider; AdditionalGroups: TGroupArray): TNtxStatus;
+  LogonProvider: TLogonProvider; AdditionalGroups: TArray<TGroup>): TNtxStatus;
 
 // Logon a user without a password using S4U logon
 function NtxLogonS4U(out hToken: THandle; Domain, Username: String;
   LogonType: TSecurityLogonType; const TokenSource: TTokenSource;
-  AdditionalGroups: TGroupArray): TNtxStatus;
+  AdditionalGroups: TArray<TGroup>): TNtxStatus;
 
 implementation
 
@@ -23,7 +23,7 @@ uses
 
 function NtxLogonUser(out hToken: THandle; Domain, Username: String;
   Password: PWideChar; LogonType: TSecurityLogonType;
-  LogonProvider: TLogonProvider; AdditionalGroups: TGroupArray): TNtxStatus;
+  LogonProvider: TLogonProvider; AdditionalGroups: TArray<TGroup>): TNtxStatus;
 var
   GroupsBuffer: PTokenGroups;
   i: Integer;
@@ -61,7 +61,7 @@ end;
 
 function NtxLogonS4U(out hToken: THandle; Domain, Username: String;
   LogonType: TSecurityLogonType; const TokenSource: TTokenSource;
-  AdditionalGroups: TGroupArray): TNtxStatus;
+  AdditionalGroups: TArray<TGroup>): TNtxStatus;
 var
   SubStatus: NTSTATUS;
   LsaHandle: TLsaHandle;

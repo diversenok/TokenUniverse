@@ -337,8 +337,8 @@ end;
 
 procedure TDialogRun.UpdateDesktopList;
 var
-  Desktops: TStringArray;
   Current: string;
+  Desktops: TArray<String>;
   Found: Boolean;
   i: Integer;
 begin

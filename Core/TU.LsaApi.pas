@@ -55,7 +55,7 @@ type
   public
     class function QueryName(Value: Int64): String; static;
     class function QueryDisplayName(Value: Int64): String; static;
-    class function AllPrivileges: TLuidDynArray;
+    class function AllPrivileges: TArray<TLuid>;
   end;
 
 implementation
@@ -203,10 +203,10 @@ end;
 
 { TPrivilegeCache }
 
-class function TPrivilegeCache.AllPrivileges: TLuidDynArray;
+class function TPrivilegeCache.AllPrivileges: TArray<TLuid>;
 var
   i: Integer;
-  Privileges: TPrivDefArray;
+  Privileges: TArray<TPrivilegeDefinition>;
   Value: TLuid;
 begin
   // Ask LSA to enumerate the privileges.

@@ -6,10 +6,10 @@ uses
   Winapi.winsta, NtUtils.Exceptions;
 
 type
-  TSessionArray = array of TSessionIdW;
+  TSessionIdW = Winapi.winsta.TSessionIdW;
 
 // Enumerate all session on the server for which we have Query access
-function WsxEnumerateSessions(out Sessions: TSessionArray;
+function WsxEnumerateSessions(out Sessions: TArray<TSessionIdW>;
   hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 
 // Query basic information about a session
@@ -29,7 +29,7 @@ implementation
 uses
   System.SysUtils;
 
-function WsxEnumerateSessions(out Sessions: TSessionArray;
+function WsxEnumerateSessions(out Sessions: TArray<TSessionIdW>;
   hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 var
   Buffer: PSessionIdArrayW;
