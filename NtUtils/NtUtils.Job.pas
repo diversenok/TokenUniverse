@@ -86,8 +86,7 @@ begin
 
   MaxCount := 5; // Initial buffer capacity. Must be at least one.
 
-  while True do
-  begin
+  repeat
     // Allocate a buffer for MaxCount items
     BufferSize := SizeOf(Cardinal) * 2 + SizeOf(NativeUInt) * MaxCount;
 
@@ -121,7 +120,8 @@ begin
     end
     else
       Break;
-  end;
+
+  until False;
 
   SetLength(ProcessIds, Buffer.NumberOfProcessIdsInList);
 

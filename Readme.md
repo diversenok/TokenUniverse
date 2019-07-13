@@ -108,6 +108,7 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Create groups
  - [ ] Create aliases
  - [ ] Create users
+ - [ ] Sam object tree
  - [ ] Security
 
 ## Process creation
@@ -131,6 +132,7 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Mitigation policies
  - [ ] Child process policy
  - [ ] Job assignment
+ - [ ] Run as invoker compatibility
 
 ### Interface features
  - [ ] Immediate crash notification
