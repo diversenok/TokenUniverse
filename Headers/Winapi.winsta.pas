@@ -196,6 +196,21 @@ function WinStationConnectW(ServerHandle: TWinStaHandle; SessionId: Cardinal;
 function WinStationDisconnect(ServerHandle: TWinStaHandle; SessionId: Cardinal;
   bWait: Boolean): Boolean; stdcall; external winsta;
 
+// 965
+function WinStationShadow(ServerHandle: TWinStaHandle;
+  TargetServerName: PWideChar; TargetSessionId: Cardinal;
+  HotKeyVk: Byte; HotkeyModifiers: Word): Boolean; stdcall; external winsta;
+
+// 976
+function WinStationShadowStop(ServerHandle: TWinStaHandle; SessionId: Cardinal;
+  bWait: Boolean): Boolean; stdcall; external winsta;
+
+// 1037
+function WinStationSwitchToServicesSession: Boolean; stdcall; external winsta;
+
+// 1044
+function WinStationRevertFromServicesSession: Boolean; stdcall; external winsta;
+
 implementation
 
 { TWinStationInformation }

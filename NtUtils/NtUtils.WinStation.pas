@@ -17,12 +17,18 @@ function WsxQueryInformation(out Info: TWinStationInformation;
   SessionId: Cardinal; hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 
 // Format a name of a session, always succeeds with at least an ID
-function WsxQuerySessionName(SessionId: Cardinal;
+function WsxQueryName(SessionId: Cardinal;
   hServer: TWinStaHandle = SERVER_CURRENT): String;
 
 // Open session token
-function WsxQuerySessionToken(out hToken: THandle; SessionId: Cardinal;
+function WsxQueryToken(out hToken: THandle; SessionId: Cardinal;
   hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
+
+// Send a message to a session
+function WsxSendMessage(SessionId: Cardinal; Title, MessageStr: String;
+  Style: Cardinal; Timeout: Cardinal; WaitForResponse: Boolean = False;
+  pResponse: PCardinal = nil; ServerHandle: TWinStaHandle = SERVER_CURRENT):
+  TNtxStatus;
 
 implementation
 
@@ -63,7 +69,7 @@ begin
     WinStationInformation, @Info, SizeOf(Info), Rerurned);
 end;
 
-function WsxQuerySessionName(SessionId: Cardinal;
+function WsxQueryName(SessionId: Cardinal;
   hServer: TWinStaHandle = SERVER_CURRENT): String;
 var
   Info: TWinStationInformation;
@@ -79,7 +85,7 @@ begin
   end;
 end;
 
-function WsxQuerySessionToken(out hToken: THandle; SessionId: Cardinal;
+function WsxQueryToken(out hToken: THandle; SessionId: Cardinal;
   hServer: TWinStaHandle = SERVER_CURRENT): TNtxStatus;
 var
   UserToken: TWinStationUserToken;
@@ -100,6 +106,22 @@ begin
 
   if Result.IsSuccess then
     hToken := UserToken.UserToken;
+end;
+
+function WsxSendMessage(SessionId: Cardinal; Title, MessageStr: String;
+  Style: Cardinal; Timeout: Cardinal; WaitForResponse: Boolean;
+  pResponse: PCardinal; ServerHandle: TWinStaHandle): TNtxStatus;
+var
+  Response: Cardinal;
+begin
+  Result.Location := 'WinStationSendMessageW';
+  Result.Win32Result := WinStationSendMessageW(ServerHandle, SessionId,
+    PWideChar(Title), Length(Title) * SizeOf(WideChar),
+    PWideChar(MessageStr), Length(MessageStr) * SizeOf(WideChar),
+    Style, Timeout, Response, WaitForResponse);
+
+  if Result.IsSuccess and Assigned(pResponse) then
+    pResponse^ := Response;
 end;
 
 end.

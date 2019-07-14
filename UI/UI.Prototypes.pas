@@ -133,7 +133,7 @@ begin
   ComboBox.Items.Clear;
 
   for i := 0 to High(Sessions) do
-    ComboBox.Items.Add(WsxQuerySessionName(Sessions[i].SessionId));
+    ComboBox.Items.Add(WsxQueryName(Sessions[i].SessionId));
 
   if SelectCurrent and (Length(Sessions) > 0) then
     SetSession(RtlGetCurrentPeb.SessionId);

@@ -734,7 +734,7 @@ end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
 begin
-  WsxQuerySessionToken(hToken, SessionID).RaiseOnError;
+  WsxQueryToken(hToken, SessionID).RaiseOnError;
   FCaption := Format('Session %d token', [SessionID]);
 end;
 
