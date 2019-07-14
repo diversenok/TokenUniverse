@@ -217,7 +217,7 @@ begin
     end;
 
     // RESTRICTED is useful to provide access to WinSta0 and Default desktop
-    if TSid.GetWellKnownSid(WinRestrictedCodeSid, Sid).IsSuccess then
+    if SddlxGetWellKnownSid(WinRestrictedCodeSid, Sid).IsSuccess then
     begin
       Group.SecurityIdentifier := Sid;
       Group.Attributes := SE_GROUP_USER_DEFAULT;
@@ -225,7 +225,7 @@ begin
     end;
 
     // And WRITE RESTRICTED
-    if TSid.GetWellKnownSid(WinWriteRestrictedCodeSid, Sid).IsSuccess then
+    if SddlxGetWellKnownSid(WinWriteRestrictedCodeSid, Sid).IsSuccess then
     begin
       Group.SecurityIdentifier := Sid;
       Group.Attributes := SE_GROUP_USER_DEFAULT;

@@ -191,7 +191,7 @@ begin
     // Build hint for the user
     if LogonInfo.UserPresent then
       ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
-        BuildSidHint(LogonInfo.User.Lookup, SE_GROUP_USER_DEFAULT, False);
+        BuildSidHint(LogonInfo.User, SE_GROUP_USER_DEFAULT, False);
   end
   else
     for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do

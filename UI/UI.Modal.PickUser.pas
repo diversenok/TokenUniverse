@@ -297,10 +297,14 @@ begin
 end;
 
 procedure TDialogPickUser.SetSelectedGroup(Value: ISid);
+var
+  SidName: string;
 begin
   IsValidGroup := True;
   SelectedGroup := Value;
-  ComboBoxSID.Text := SelectedGroup.Lookup.FullName;
+  SidName := SelectedGroup.AsString;
+  RtlxpApplySddlOverrides(SelectedGroup.Sid, SidName);
+  ComboBoxSID.Text := SidName;
 end;
 
 end.

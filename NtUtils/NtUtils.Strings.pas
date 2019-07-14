@@ -3,7 +3,7 @@ unit NtUtils.Strings;
 interface
 
 uses
-  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Lsa;
+  Winapi.WinNt, Winapi.NtSecApi, NtUtils.Lsa, NtUtils.Security.Sid;
 
 type
   TBitFlagMode = (bmGroupFlags, bmLogonFlags);
@@ -24,7 +24,7 @@ function StateOfGroupToString(Value: Cardinal): String;
 function StateOfPrivilegeToString(Value: Cardinal): String;
 
 // Misc
-function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
+function BuildSidHint(SID: ISid; Attributes: Cardinal;
   AttributesPresent: Boolean = True): String;
 function PrivilegeFriendlyName(SePrivilegeName: String): String;
 function NativeTimeToString(NativeTime: TLargeInteger): String;
@@ -32,7 +32,7 @@ function NativeTimeToString(NativeTime: TLargeInteger): String;
 implementation
 
 uses
-  System.SysUtils, DelphiUtils.Strings, NtUtils.Security.Sid;
+  System.SysUtils, DelphiUtils.Strings;
 
 { Bit Flags }
 
@@ -201,7 +201,7 @@ end;
 
 { Misc }
 
-function BuildSidHint(SID: TTranslatedName; Attributes: Cardinal;
+function BuildSidHint(SID: ISid; Attributes: Cardinal;
   AttributesPresent: Boolean): String;
 const
   ITEM_FORMAT = '%s:'#$D#$A'  %s';
@@ -213,18 +213,21 @@ begin
   SetLength(Items, 5);
   Index := 0;
 
-  if SID.HasName then
+  if SID.AsString <> SID.SDDL then
   begin
-    Items[Index] := Format(ITEM_FORMAT, ['Pretty name', SID.FullName]);
+    Items[Index] := Format(ITEM_FORMAT, ['Pretty name', SID.AsString]);
     Inc(Index);
   end;
 
   Items[Index] := Format(ITEM_FORMAT, ['SID', SID.SDDL]);
   Inc(Index);
 
-  Items[Index] := Format(ITEM_FORMAT,
-    ['Type', EnumSidTypeToString(SID.SidType)]);
-  Inc(Index);
+  if SID.SidType <> SidTypeZero then
+  begin
+    Items[Index] := Format(ITEM_FORMAT, ['Type',
+      EnumSidTypeToString(SID.SidType)]);
+    Inc(Index);
+  end;
 
   if AttributesPresent then
   begin

@@ -191,6 +191,8 @@ type
   // 8999
   TSidIdentifierAuthority = record
     Value: array [0..5] of Byte;
+    function ToInt64: Int64;
+    procedure FromInt64(IntValue: Int64);
   end;
   PSidIdentifierAuthority = ^TSidIdentifierAuthority;
 
@@ -568,10 +570,15 @@ type
 
 const
   // 9175
+  SECURITY_NT_AUTHORITY_ID = 5;
   SECURITY_NT_AUTHORITY: TSIDIdentifierAuthority =
     (Value: (0, 0, 0, 0, 0, 5));
 
+  SECURITY_LOGON_IDS_RID = 5;
+  SECURITY_LOGON_IDS_RID_COUNT = 3;
+
   // 9424
+  SECURITY_MANDATORY_LABEL_AUTHORITY_ID = 16;
   SECURITY_MANDATORY_LABEL_AUTHORITY: TSIDIdentifierAuthority =
     (Value: (0, 0, 0, 0, 0, 16));
 
@@ -579,6 +586,28 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntexapi;
+
+{ TSidIdentifierAuthority }
+
+procedure TSidIdentifierAuthority.FromInt64(IntValue: Int64);
+begin
+  Value[0] := Byte(IntValue shr 40);
+  Value[1] := Byte(IntValue shr 32);
+  Value[2] := Byte(IntValue shr 24);
+  Value[3] := Byte(IntValue shr 16);
+  Value[4] := Byte(IntValue shr 8);
+  Value[5] := Byte(IntValue shr 0);
+end;
+
+function TSidIdentifierAuthority.ToInt64: Int64;
+begin
+  Result := (Int64(Value[5]) shl  0) or
+            (Int64(Value[4]) shl  8) or
+            (Int64(Value[3]) shl 16) or
+            (Int64(Value[2]) shl 24) or
+            (Int64(Value[1]) shl 32) or
+            (Int64(Value[0]) shl 40);
+end;
 
 { TAce_Internal }
 

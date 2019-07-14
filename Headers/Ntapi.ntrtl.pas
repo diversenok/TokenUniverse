@@ -306,7 +306,7 @@ function RtlInitializeSid(Sid: PSid; IdentifierAuthority:
 function RtlIdentifierAuthoritySid(Sid: PSid): PSidIdentifierAuthority; stdcall;
   external ntdll;
 
-function RtlSubAuthoritySid(Sid: PSid; SubAuthority: Cardinal): PCardinal;
+function RtlSubAuthoritySid(Sid: PSid; SubAuthority: Integer): PCardinal;
   stdcall; external ntdll;
 
 function RtlSubAuthorityCountSid(Sid: PSid): PByte; stdcall; external ntdll;

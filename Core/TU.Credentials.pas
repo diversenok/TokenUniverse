@@ -111,7 +111,7 @@ begin
         Sid := TSid.CreateFromString(UserBuffer);
 
         if Assigned(Callback) then
-          Callback(Sid.Lookup.DomainName, Sid.Lookup.UserName, PasswordBuffer);
+          Callback(Sid.DomainName, Sid.UserName, PasswordBuffer);
 
         Exit;
       except

@@ -80,7 +80,7 @@ begin
 
     lsSecurityIdentifier:
       if UserPresent then
-        Result := User.Lookup.FullName
+        Result := User.AsString
       else
         Result := 'No User';
 

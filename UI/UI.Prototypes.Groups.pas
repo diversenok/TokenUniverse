@@ -97,7 +97,7 @@ var
   i: Integer;
 begin
   for i := 0 to High(FGroups) do
-    if FGroups[i].SecurityIdentifier.EqualsTo(Sid) then
+    if FGroups[i].SecurityIdentifier.EqualsTo(Sid.Sid) then
       Exit(i);
 
   Result := -1;
@@ -160,10 +160,11 @@ end;
 
 function TFrameGroups.SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
 begin
-  Item.Cell[0] := Group.SecurityIdentifier.NewLookup.FullName;
+  Group.SecurityIdentifier.RefreshLookup;
+  Item.Cell[0] := Group.SecurityIdentifier.AsString;
   Item.Cell[1] := StateOfGroupToString(Group.Attributes);
   Item.Cell[2] := MapKnownFlags(Group.Attributes, bmGroupFlags);
-  Item.Hint := BuildSidHint(Group.SecurityIdentifier.Lookup, Group.Attributes);
+  Item.Hint := BuildSidHint(Group.SecurityIdentifier, Group.Attributes);
   Item.Color := GroupAttributesToColor(Group.Attributes);
   Result := Item;
 end;

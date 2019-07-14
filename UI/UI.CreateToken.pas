@@ -94,9 +94,9 @@ begin
   FrameGroups.AddGroup(NewGroup);
 
   if Contains(NewGroup.Attributes, SE_GROUP_OWNER) then
-    ComboOwner.Items.Add(NewGroup.SecurityIdentifier.Lookup.FullName);
+    ComboOwner.Items.Add(NewGroup.SecurityIdentifier.AsString);
 
-  ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.Lookup.FullName);
+  ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.AsString);
 end;
 
 procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
@@ -135,7 +135,7 @@ begin
   // User
   if Source.InfoClass.Query(tdTokenUser) then
   begin
-    ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.Lookup.FullName;
+    ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.AsString;
     ComboUserChange(Sender);
     CheckBoxUserState.Checked := Contains(Source.InfoClass.User.Attributes,
       SE_GROUP_USE_FOR_DENY_ONLY);
@@ -179,11 +179,11 @@ begin
 
   // Owner
   if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := Source.InfoClass.Owner.Lookup.FullName;
+    ComboOwner.Text := Source.InfoClass.Owner.AsString;
 
   // Primary group
   if Source.InfoClass.Query(tdTokenPrimaryGroup) then
-    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.Lookup.FullName;
+    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.AsString;
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
@@ -386,7 +386,7 @@ var
   Sid: ISid;
 begin
   Sid := TSid.CreateFromString(UserName);
-  ComboUser.Text := Sid.Lookup.FullName;
+  ComboUser.Text := Sid.AsString;
   ComboUserChange(ButtonPickUser);
 end;
 

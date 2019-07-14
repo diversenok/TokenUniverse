@@ -693,12 +693,12 @@ begin
     Source).RaiseOnError;
 
   FCaption := 'New token: ';
-  if User.Lookup.UserName <> '' then
-    FCaption := FCaption + User.Lookup.UserName
-  else if User.Lookup.DomainName <> '' then
-    FCaption := FCaption + User.Lookup.DomainName
+  if User.UserName <> '' then
+    FCaption := FCaption + User.UserName
+  else if User.DomainName <> '' then
+    FCaption := FCaption + User.DomainName
   else
-    FCaption := FCaption + User.Lookup.SDDL;
+    FCaption := FCaption + User.SDDL;
 end;
 
 constructor TToken.CreateOpenCurrent(Access: TAccessMask);
@@ -1109,7 +1109,7 @@ begin
           objNtToken);
 
     tsUserName:
-      Result := Token.Cache.User.SecurityIdentifier.Lookup.FullName;
+      Result := Token.Cache.User.SecurityIdentifier.AsString;
 
     tsUserState:
       Result := Token.Cache.User.Attributes.ToString;
@@ -1145,10 +1145,10 @@ begin
       Result := EnabledDisabledToString(Token.Cache.UIAccess);
 
     tsOwner:
-      Result := Token.Cache.Owner.Lookup.FullName;
+      Result := Token.Cache.Owner.AsString;
 
     tsPrimaryGroup:
-      Result := Token.Cache.PrimaryGroup.Lookup.FullName;
+      Result := Token.Cache.PrimaryGroup.AsString;
 
     tsSandboxInert:
       Result := YesNoToString(Token.Cache.SandboxInert);
@@ -1477,7 +1477,8 @@ begin
   // Since the owner is internally stored as an index in the group table,
   // changing it, in this case, also changes the owner.
   if Token.Cache.IsCached[tdTokenOwner] and
-    (Token.Cache.Owner.Lookup.SidType = SidTypeLabel) then
+    (Token.Cache.Owner.IdentifyerAuthority.ToInt64 =
+      SECURITY_MANDATORY_LABEL_AUTHORITY_ID) then
     ValidateCache(tdTokenOwner);
 
   // Note: this logic does not apply to the primary group since it is stored

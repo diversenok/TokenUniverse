@@ -77,8 +77,9 @@ function LsaxSetRightsAccount(Sid: PSid; SystemAccess: Cardinal): TNtxStatus;
 { ----------------------------- SID translation ----------------------------- }
 
 // Convert SIDs to account names or at least to SDDL; always succeeds
-function LsaxLookupSid(Sid: PSid): TTranslatedName;
-function LsaxLookupSids(Sids: TArray<PSid>): TArray<TTranslatedName>;
+function LsaxLookupSid(Sid: PSid; var Name: TTranslatedName): TNtxStatus;
+function LsaxLookupSids(Sids: TArray<PSid>; out Names: TArray<TTranslatedName>):
+   TNtxStatus;
 
 // Lookup an account on the machine
 function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
@@ -98,8 +99,8 @@ uses
 
 { Basic operation }
 
-function LsaxOpenPolicy(out PolicyHandle: TLsaHandle; DesiredAccess: TAccessMask):
-  TNtxStatus;
+function LsaxOpenPolicy(out PolicyHandle: TLsaHandle;
+  DesiredAccess: TAccessMask): TNtxStatus;
 var
   ObjAttr: TObjectAttributes;
 begin
@@ -472,86 +473,72 @@ end;
 
 { SID translation}
 
-function LsaxLookupSid(Sid: PSid): TTranslatedName;
+function LsaxLookupSid(Sid: PSid; var Name: TTranslatedName): TNtxStatus;
 var
   Sids: TArray<PSid>;
+  Names: TArray<TTranslatedName>;
 begin
   SetLength(Sids, 1);
   Sids[0] := Sid;
 
-  Result := LsaxLookupSids(Sids)[0];
+  Result := LsaxLookupSids(Sids, Names);
+
+  if Result.IsSuccess then
+    Name := Names[0];
 end;
 
-function LsaxLookupSids(Sids: TArray<PSid>): TArray<TTranslatedName>;
+function LsaxLookupSids(Sids: TArray<PSid>; out Names: TArray<TTranslatedName>):
+  TNtxStatus;
 var
   hPolicy: TLsaHandle;
-  Status: TNtxStatus;
   BufferDomains: PLsaReferencedDomainList;
   BufferNames: PLsaTranslatedNameArray;
   i: Integer;
 begin
-  Status := LsaxOpenPolicy(hPolicy, POLICY_LOOKUP_NAMES);
+  Result := LsaxOpenPolicy(hPolicy, POLICY_LOOKUP_NAMES);
 
-  if Status.IsSuccess then
+  if not Result.IsSuccess then
+    Exit;
+
+  // Request translation for all SIDs at once
+  Result.Location := 'LsaLookupSids';
+  Result.Status := LsaLookupSids(hPolicy, Length(Sids), Sids, BufferDomains,
+    BufferNames);
+
+  LsaxClose(hPolicy);
+
+  // Even without mapping we get to know SID types
+  if Result.Status = STATUS_NONE_MAPPED then
+    Result.Status := STATUS_SOME_NOT_MAPPED;
+
+  if not Result.IsSuccess then
+    Exit;
+
+  SetLength(Names, Length(SIDs));
+
+  for i := 0 to High(Sids) do
   begin
-    // Request translation of all SIDs at once
-    Status.Location := 'LsaLookupSids';
-    Status.Status := LsaLookupSids(hPolicy, Length(Sids), Sids, BufferDomains,
-      BufferNames);
+    Names[i].SidType := BufferNames[i].Use;
 
-    // Even without mapping BufferNames it converts most of them to SDDL
-    if Status.Status = STATUS_NONE_MAPPED then
-      Status.Status := STATUS_SOME_NOT_MAPPED;
+    // Note: for some SID types LsaLookupSids might return SID's SDDL
+    // representation in the Name field. In rare cases it might be empty.
 
-    LsaxClose(hPolicy);
+    Names[i].UserName := BufferNames[i].Name.ToString;
+
+    if Names[i].SidType in [SidTypeInvalid, SidTypeUnknown] then
+      RtlxpApplySddlOverrides(Sids[i], Names[i].UserName);
+
+    // Negative DomainIndex means the SID does not reference a domain
+    if (BufferNames[i].DomainIndex >= 0) and
+      (BufferNames[i].DomainIndex < BufferDomains.Entries) then
+      Names[i].DomainName := BufferDomains.Domains[
+        BufferNames[i].DomainIndex].Name.ToString
+    else
+      Names[i].DomainName := '';
   end;
 
-  SetLength(Result, Length(SIDs));
-
-  if Status.IsSuccess then
-  begin
-    for i := 0 to High(Sids) do
-    begin
-      Result[i].SidType := BufferNames[i].Use;
-
-      // If an SID has a known name, LsaLookupSids returns it.
-      // Otherwise, BufferNames[i].Name field contains SID's SDDL representation.
-      // However, sometimes it does not. In this case we convert it explicitly.
-
-      if BufferNames[i].Use in [SidTypeInvalid, SidTypeUnknown] then
-      begin
-        // Only SDDL representation is suitable for these SID types
-
-        Result[i].SDDL := BufferNames[i].Name.ToString;
-
-        if not Result[i].SDDL.StartsWith('S-1-') then
-          Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
-      end
-      else
-      begin
-        Result[i].UserName := BufferNames[i].Name.ToString;
-
-        // Negative DomainIndex means the SID does not reference a domain
-        if (BufferNames[i].DomainIndex >= 0) and
-          (BufferNames[i].DomainIndex < BufferDomains.Entries) then
-          Result[i].DomainName := BufferDomains.Domains[
-            BufferNames[i].DomainIndex].Name.ToString
-        else
-          Result[i].DomainName := '';
-
-        Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
-      end;
-    end;
-
-    LsaFreeMemory(BufferDomains);
-    LsaFreeMemory(BufferNames);
-  end
-  else
-  begin
-    // Lookup failed, only SDDL representations available
-    for i := 0 to High(Sids) do
-      Result[i].SDDL := RtlxConvertSidToString(Sids[i]);
-  end;
+  LsaFreeMemory(BufferDomains);
+  LsaFreeMemory(BufferNames);
 end;
 
 function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;

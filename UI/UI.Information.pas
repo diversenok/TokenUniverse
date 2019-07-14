@@ -319,17 +319,17 @@ begin
   // Add User since it is always assignable
   if Token.InfoClass.Query(tdTokenUser) then
   begin
-    ComboOwner.Items.Add(Token.InfoClass.User.SecurityIdentifier.Lookup.FullName);
-    ComboPrimary.Items.Add(Token.InfoClass.User.SecurityIdentifier.Lookup.FullName);
+    ComboOwner.Items.Add(Token.InfoClass.User.SecurityIdentifier.AsString);
+    ComboPrimary.Items.Add(Token.InfoClass.User.SecurityIdentifier.AsString);
   end;
 
   // Add all groups for Primary Group and only those with specific attribtes
   // for Owner.
   for i := 0 to High(NewGroups) do
   begin
-    ComboPrimary.Items.Add(NewGroups[i].SecurityIdentifier.Lookup.FullName);
+    ComboPrimary.Items.Add(NewGroups[i].SecurityIdentifier.AsString);
     if Contains(NewGroups[i].Attributes, SE_GROUP_OWNER) then
-      ComboOwner.Items.Add(NewGroups[i].SecurityIdentifier.Lookup.FullName);
+      ComboOwner.Items.Add(NewGroups[i].SecurityIdentifier.AsString);
   end;
 
   ComboPrimary.Items.EndUpdate;
@@ -340,14 +340,14 @@ procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TGroup);
 begin
   ComboIntegrity.Color := clWindow;
   IntegritySource.SelectedIntegrity := NewIntegrity.SecurityIdentifier.Rid;
-  ComboIntegrity.Hint := BuildSidHint(NewIntegrity.SecurityIdentifier.Lookup,
+  ComboIntegrity.Hint := BuildSidHint(NewIntegrity.SecurityIdentifier,
     NewIntegrity.Attributes);
 end;
 
 procedure TInfoDialog.ChangedOwner(NewOwner: ISid);
 begin
   ComboOwner.Color := clWindow;
-  ComboOwner.Text := NewOwner.Lookup.FullName;
+  ComboOwner.Text := NewOwner.AsString;
 end;
 
 procedure TInfoDialog.ChangedPolicy(NewPolicy: Cardinal);
@@ -365,7 +365,7 @@ end;
 procedure TInfoDialog.ChangedPrimaryGroup(NewPrimary: ISid);
 begin
   ComboPrimary.Color := clWindow;
-  ComboPrimary.Text := NewPrimary.Lookup.FullName;
+  ComboPrimary.Text := NewPrimary.AsString;
 end;
 
 procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
@@ -581,8 +581,8 @@ begin
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass.User, EditUser do
     begin
-      Text := SecurityIdentifier.Lookup.FullName;
-      Hint := BuildSidHint(SecurityIdentifier.Lookup, Attributes);
+      Text := SecurityIdentifier.AsString;
+      Hint := BuildSidHint(SecurityIdentifier, Attributes);
 
       if Contains(Attributes, SE_GROUP_USE_FOR_DENY_ONLY) then
         Color := clDisabled

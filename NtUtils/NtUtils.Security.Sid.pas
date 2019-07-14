@@ -14,23 +14,28 @@ const
 
 type
   TTranslatedName = record
-    DomainName, UserName, SDDL: String;
+    DomainName, UserName: String;
     SidType: TSidNameUse;
-    function HasName: Boolean;
     function FullName: String;
   end;
 
   ISid = interface
     function Sid: PSid;
-    function Lookup: TTranslatedName;
-    function NewLookup: TTranslatedName;
-    function EqualsTo(Sid2: ISid): Boolean;
-    function SDDL: String;
-    function SubAuthorities: Byte;
-    function SubAuthority(Index: Integer): Cardinal;
-    function Rid: Cardinal;
+    function SidLength: Cardinal;
+    function EqualsTo(Sid2: PSid): Boolean;
+    function RefreshLookup: TNtxStatus;
     function ParentSid: ISid;
     function ChildSid(Rid: Cardinal): ISid;
+    function SDDL: String;
+    function AsString: String;
+    function DomainName: String;
+    function UserName: String;
+    function SidType: TSidNameUse;
+    function IdentifyerAuthority: PSidIdentifierAuthority;
+    function Rid: Cardinal;
+    function SubAuthorities: Byte;
+    function SubAuthority(Index: Integer): Cardinal;
+    procedure SetSubAuthority(Index: Integer; NewValue: Cardinal);
   end;
 
   TSid = class(TInterfacedObject, ISid)
@@ -39,26 +44,31 @@ type
     FLookupCached: Boolean;
     FLookup: TTranslatedName;
     constructor CreateOwned(OwnedSid: PSid; Dummy: Integer = 0);
+    procedure ValidateLookup;
   public
     constructor CreateCopy(SourceSid: PSid);
-    constructor CreateFromString(AccountOrSID: String);
     constructor CreateNew(const IdentifyerAuthority: TSidIdentifierAuthority;
       SubAuthorities: Byte; SubAuthourity0: Cardinal = 0;
       SubAuthourity1: Cardinal = 0; SubAuthourity2: Cardinal = 0;
       SubAuthourity3: Cardinal = 0; SubAuthourity4: Cardinal = 0);
-    class function GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
-      out Sid: ISid): TNtxStatus;
+    constructor CreateFromString(AccountOrSID: String); // May raise exceptions
     destructor Destroy; override;
     function Sid: PSid;
-    function Lookup: TTranslatedName;
-    function NewLookup: TTranslatedName;
-    function EqualsTo(Sid2: ISid): Boolean;
-    function SDDL: String;
-    function SubAuthorities: Byte;
-    function SubAuthority(Index: Integer): Cardinal;
-    function Rid: Cardinal;
+    function SidLength: Cardinal;
+    function EqualsTo(Sid2: PSid): Boolean;
+    function RefreshLookup: TNtxStatus;
     function ParentSid: ISid;
     function ChildSid(Rid: Cardinal): ISid;
+    function SDDL: String;
+    function AsString: String;
+    function DomainName: String;
+    function UserName: String;
+    function SidType: TSidNameUse;
+    function IdentifyerAuthority: PSidIdentifierAuthority;
+    function Rid: Cardinal;
+    function SubAuthorities: Byte;
+    function SubAuthority(Index: Integer): Cardinal;
+    procedure SetSubAuthority(Index: Integer; NewValue: Cardinal);
   end;
 
   TGroup = record
@@ -66,11 +76,17 @@ type
     Attributes: Cardinal; // SE_GROUP_*
   end;
 
+function RtlxpApplySddlOverrides(SID: PSid; var SDDL: String): Boolean;
+
 // Convert an SID to its SDDL representation
 function RtlxConvertSidToString(SID: PSid): String;
 
 // Convert SDDL string to SID
 function RtlxConvertStringToSid(SDDL: String; out SID: PSid): TNtxStatus;
+
+// Construct a well-known SID
+function SddlxGetWellKnownSid(WellKnownSidType: TWellKnownSidType;
+  out Sid: ISid): TNtxStatus;
 
 implementation
 
@@ -82,22 +98,26 @@ uses
 
 function TTranslatedName.FullName: String;
 begin
-  if (UserName <> '') and (DomainName <> '') then
-    Result := DomainName + '\' + UserName
-  else if (DomainName <> '') then
+  if SidType = SidTypeDomain then
     Result := DomainName
+  else if (UserName <> '') and (DomainName <> '') then
+    Result := DomainName + '\' + UserName
   else if (UserName <> '') then
     Result := UserName
   else
-    Result := SDDL;
-end;
-
-function TTranslatedName.HasName: Boolean;
-begin
-  Result := (UserName <> '') or (DomainName <> '');
+    Result := '';
 end;
 
 { TSid }
+
+function TSid.AsString: String;
+begin
+  // Return most suitable name we have
+  ValidateLookup;
+  Result := FLookup.FullName;
+  if Result = '' then
+    Result := SDDL;
+end;
 
 function TSid.ChildSid(Rid: Cardinal): ISid;
 var
@@ -114,7 +134,7 @@ begin
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(Buffer);
-    raise ENtError.Create(Status, 'RtlInitializeSid');
+    NtxAssert(Status, 'RtlInitializeSid');
   end;
 
   // Copy existing sub authorities
@@ -132,7 +152,7 @@ var
   Status: NTSTATUS;
 begin
   if not RtlValidSid(SourceSid) then
-    raise ENtError.Create(STATUS_INVALID_SID, 'RtlValidSid');
+    NtxAssert(STATUS_INVALID_SID, 'RtlValidSid');
 
   FSid := AllocMem(RtlLengthSid(SourceSid));
   Status := RtlCopySid(RtlLengthSid(SourceSid), FSid, SourceSid);
@@ -140,7 +160,7 @@ begin
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(FSid);
-    raise ENtError.Create(Status, 'RtlCopySid');
+    NtxAssert(Status, 'RtlCopySid');
   end;
 end;
 
@@ -156,7 +176,8 @@ begin
 
   if Status.IsSuccess then
     CreateCopy(LookupSid.Sid)
-  else if AccountOrSID.StartsWith('S-1-', True) then
+  else if (Length(AccountOrSID) = 2) or AccountOrSID.StartsWith('S-1-', True)
+    then
     Status := RtlxConvertStringToSid(AccountOrSID, FSid);
 
   Status.RaiseOnError;
@@ -175,7 +196,7 @@ begin
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(FSid);
-    raise ENtError.Create(Status, 'RtlInitializeSid');
+    NtxAssert(Status, 'RtlInitializeSid');
   end;
 
   if SubAuthorities > 0 then
@@ -205,51 +226,20 @@ begin
   inherited;
 end;
 
-function TSid.EqualsTo(Sid2: ISid): Boolean;
+function TSid.DomainName: String;
 begin
-  Result := RtlEqualSid(FSid, Sid2.Sid);
+  ValidateLookup;
+  Result := FLookup.DomainName;
 end;
 
-class function TSid.GetWellKnownSid(WellKnownSidType: TWellKnownSidType;
-  out Sid: ISid): TNtxStatus;
-var
-  Buffer: PSid;
-  BufferSize: Cardinal;
+function TSid.EqualsTo(Sid2: PSid): Boolean;
 begin
-  BufferSize := 0;
-
-  Result.Location := 'CreateWellKnownSid';
-  Result.Win32Result := CreateWellKnownSid(WellKnownSidType, nil, nil,
-    BufferSize);
-
-  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
-    Exit;
-
-  Buffer := AllocMem(BufferSize);
-
-  Result.Win32Result := CreateWellKnownSid(WellKnownSidType, nil, Buffer,
-    BufferSize);
-
-  if Result.IsSuccess then
-    Sid := TSid.CreateOwned(Buffer)
-  else
-    FreeMem(Buffer);
+  Result := RtlEqualSid(FSid, Sid2);
 end;
 
-function TSid.Lookup: TTranslatedName;
+function TSid.IdentifyerAuthority: PSidIdentifierAuthority;
 begin
-  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
-  if FLookupCached then
-    Result := FLookup
-  else
-    Result := NewLookup;
-end;
-
-function TSid.NewLookup: TTranslatedName;
-begin
-  FLookup := LsaxLookupSid(FSid);
-  FLookupCached := True;
-  Result := FLookup;
+  Result := RtlIdentifierAuthoritySid(FSid);
 end;
 
 function TSid.ParentSid: ISid;
@@ -271,7 +261,7 @@ begin
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(Buffer);
-    raise ENtError.Create(Status, 'RtlInitializeSid');
+    NtxAssert(Status, 'RtlInitializeSid');
   end;
 
   // Copy sub authorities
@@ -279,6 +269,13 @@ begin
     RtlSubAuthoritySid(Buffer, i)^ := RtlSubAuthoritySid(FSid, i)^;
 
   Result := TSid.CreateOwned(Buffer);
+end;
+
+function TSid.RefreshLookup: TNtxStatus;
+begin
+  // TODO: Optimize multiple queries with LsaLookupSids / LsaLookupNames
+  Result := LsaxLookupSid(FSid, FLookup);
+  FLookupCached := FLookupCached or Result.IsSuccess;
 end;
 
 function TSid.Rid: Cardinal;
@@ -294,9 +291,25 @@ begin
   Result := RtlxConvertSidToString(FSid);
 end;
 
+procedure TSid.SetSubAuthority(Index: Integer; NewValue: Cardinal);
+begin
+  RtlSubAuthoritySid(FSid, Index)^ := NewValue;
+end;
+
 function TSid.Sid: PSid;
 begin
   Result := FSid;
+end;
+
+function TSid.SidLength: Cardinal;
+begin
+  Result := RtlLengthSid(FSid);
+end;
+
+function TSid.SidType: TSidNameUse;
+begin
+  ValidateLookup;
+  Result := FLookup.SidType;
 end;
 
 function TSid.SubAuthorities: Byte;
@@ -307,18 +320,55 @@ end;
 function TSid.SubAuthority(Index: Integer): Cardinal;
 begin
   if (Index >= 0) and (Index < SubAuthorities) then
-    Result := RtlSubAuthoritySid(FSid, Cardinal(Index))^
+    Result := RtlSubAuthoritySid(FSid, Index)^
   else
     Result := 0;
 end;
 
+function TSid.UserName: String;
+begin
+  ValidateLookup;
+  Result := FLookup.UserName;
+end;
+
+procedure TSid.ValidateLookup;
+begin
+  if not FLookupCached then
+    RefreshLookup;
+end;
+
 { Functions }
+
+function RtlxpApplySddlOverrides(SID: PSid; var SDDL: String): Boolean;
+begin
+  Result := False;
+
+  // We override convertion of some SIDs to strings for the sake of readability.
+  // The result is still a parsable SDDL string.
+
+  case RtlIdentifierAuthoritySid(SID).ToInt64 of
+
+    // Integrity: S-1-16-x
+    SECURITY_MANDATORY_LABEL_AUTHORITY_ID:
+      if RtlSubAuthorityCountSid(SID)^ = 1 then
+      begin
+        SDDL := 'S-1-16-' + IntToHexEx(RtlSubAuthoritySid(SID, 0)^, 4);
+        Result := True;
+      end;
+
+  end;
+end;
 
 function RtlxConvertSidToString(SID: PSid): String;
 var
   SDDL: UNICODE_STRING;
   Buffer: array [0 .. SECURITY_MAX_SID_STRING_CHARACTERS] of WideChar;
 begin
+  Result := '';
+
+  if RtlxpApplySddlOverrides(SID, Result) then
+    Exit;
+
   SDDL.Length := 0;
   SDDL.MaximumLength := SECURITY_MAX_SID_STRING_CHARACTERS;
   SDDL.Buffer := PWideChar(@Buffer);
@@ -346,12 +396,7 @@ begin
   if TryStrToUInt64Ex(Copy(SDDL, Length('S-1-') + 1, Length(SDDL)),
     IdAuthorityUInt64) and (IdAuthorityUInt64 < UInt64(1) shl 48) then
   begin
-    IdAuthority.Value[0] := Byte(IdAuthorityUInt64 shr 40);
-    IdAuthority.Value[1] := Byte(IdAuthorityUInt64 shr 32);
-    IdAuthority.Value[2] := Byte(IdAuthorityUInt64 shr 24);
-    IdAuthority.Value[3] := Byte(IdAuthorityUInt64 shr 16);
-    IdAuthority.Value[4] := Byte(IdAuthorityUInt64 shr 8);
-    IdAuthority.Value[5] := Byte(IdAuthorityUInt64 shr 0);
+    IdAuthority.FromInt64(IdAuthorityUInt64);
 
     Buffer := AllocMem(RtlLengthRequiredSid(0));
 
@@ -386,6 +431,32 @@ begin
 
     LocalFree(Buffer);
   end;
+end;
+
+function SddlxGetWellKnownSid(WellKnownSidType: TWellKnownSidType;
+  out Sid: ISid): TNtxStatus;
+var
+  Buffer: PSid;
+  BufferSize: Cardinal;
+begin
+  BufferSize := 0;
+
+  Result.Location := 'CreateWellKnownSid';
+  Result.Win32Result := CreateWellKnownSid(WellKnownSidType, nil, nil,
+    BufferSize);
+
+  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
+    Exit;
+
+  Buffer := AllocMem(BufferSize);
+
+  Result.Win32Result := CreateWellKnownSid(WellKnownSidType, nil, Buffer,
+    BufferSize);
+
+  if Result.IsSuccess then
+    Sid := TSid.CreateOwned(Buffer)
+  else
+    FreeMem(Buffer);
 end;
 
 end.

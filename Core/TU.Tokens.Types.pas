@@ -123,7 +123,7 @@ end;
 
 function CompareSIDs(Value1, Value2: ISid): Boolean;
 begin
-  Result := Value1.EqualsTo(Value2);
+  Result := Value1.EqualsTo(Value2.Sid);
 end;
 
 function CompareCardinals(Value1, Value2: Cardinal): Boolean;
@@ -144,7 +144,7 @@ begin
   if Result then
     for i := 0 to High(Value1) do
       if not Value1[i].SecurityIdentifier.EqualsTo(
-        Value2[i].SecurityIdentifier)
+        Value2[i].SecurityIdentifier.Sid)
         or (Value1[i].Attributes <> Value2[i].Attributes) then
           Exit(False);
 end;
@@ -152,7 +152,7 @@ end;
 function CompareGroups(Value1, Value2: TGroup): Boolean;
 begin
   Result := (Value1.SecurityIdentifier.EqualsTo(
-    Value2.SecurityIdentifier)) and
+    Value2.SecurityIdentifier.Sid)) and
     (Value1.Attributes = Value2.Attributes);
 end;
 

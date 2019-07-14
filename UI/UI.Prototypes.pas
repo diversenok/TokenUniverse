@@ -378,8 +378,8 @@ begin
     S := IntToHexEx(FLogonSessions[i]);
 
     if TLogonSession.Query(FLogonSessions[i], LogonData).IsSuccess then
-      if LogonData.UserPresent and (LogonData.User.Lookup.UserName <> '') then
-        S := Format('%s (%s @ %d)', [S, LogonData.User.Lookup.UserName,
+      if LogonData.UserPresent and (LogonData.User.UserName <> '') then
+        S := Format('%s (%s @ %d)', [S, LogonData.User.UserName,
           LogonData.RawData.Session]);
 
     ComboBox.Items.Add(S);

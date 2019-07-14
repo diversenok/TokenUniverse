@@ -70,32 +70,32 @@ begin
   begin
     Sid := SrcSid;
 
-    Caption := Caption + ' for "' + Sid.Lookup.FullName +'"';
+    Caption := Caption + ' for "' + Sid.AsString +'"';
 
-    if Sid.Lookup.HasName then
-      EditFullName.Text := Sid.Lookup.FullName;
+    if not (Sid.SidType in [SidTypeZero, SidTypeInvalid, SidTypeUnknown]) then
+      EditFullName.Text := Sid.AsString;
 
-    EditSID.Text := Sid.Lookup.SDDL;
-    EditType.Text := EnumSidTypeToString(Sid.Lookup.SidType);
+    EditSID.Text := Sid.SDDL;
+    EditType.Text := EnumSidTypeToString(Sid.SidType);
     EditSubAuthorities.Text := IntToStr(Sid.SubAuthorities);
 
     if Sid.SubAuthorities = 0 then
       LinkLabelMinusOne.Visible := False; // Hide parant SID link
 
-    if Sid.Lookup.DomainName <> '' then
+    if Sid.DomainName <> '' then
     begin
-      LinkLabelDomain.Caption := Sid.Lookup.DomainName;
+      LinkLabelDomain.Caption := Sid.DomainName;
 
       // When viewing anything but domains make it a link
-      if Sid.Lookup.SidType <> SidTypeDomain then
+      if Sid.SidType <> SidTypeDomain then
         LinkLabelDomain.Caption := '<a>' + LinkLabelDomain.Caption + '</a>';
     end;
 
     // Manage tab visibility
-    TabDomain.TabVisible := (Sid.Lookup.SidType = SidTypeDomain);
-    TabGroup.TabVisible := (Sid.Lookup.SidType = SidTypeGroup);
-    TabAlias.TabVisible := (Sid.Lookup.SidType = SidTypeAlias);
-    TabUser.TabVisible := (Sid.Lookup.SidType = SidTypeUser);
+    TabDomain.TabVisible := (Sid.SidType = SidTypeDomain);
+    TabGroup.TabVisible := (Sid.SidType = SidTypeGroup);
+    TabAlias.TabVisible := (Sid.SidType = SidTypeAlias);
+    TabUser.TabVisible := (Sid.SidType = SidTypeUser);
     Pages.ActivePage := TabSid;
 
     FrameLsaRights.DeleyedCreate;
@@ -116,9 +116,9 @@ procedure TDialogSidView.LinkLabelDomainLinkClick(Sender: TObject;
 var
   DomainSid: ISid;
 begin
-  if Sid.Lookup.DomainName <> '' then
+  if Sid.DomainName <> '' then
   begin
-    DomainSid := TSid.CreateFromString(Sid.Lookup.DomainName);
+    DomainSid := TSid.CreateFromString(Sid.DomainName);
     TDialogSidView.CreateView(DomainSid);
   end;
 end;

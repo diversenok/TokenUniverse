@@ -74,6 +74,7 @@ function RtlxGetLastNtStatus: NTSTATUS;
 { Runtime error-checking procedures that may raise exceptions}
 procedure WinCheck(RetVal: LongBool; Where: String);
 procedure NtxCheck(Status: NTSTATUS; Where: String);
+procedure NtxAssert(Status: NTSTATUS; Where: String);
 
 { Buffer checking functions that do not raise exceptions}
 function WinTryCheckBuffer(BufferSize: Cardinal): Boolean;
@@ -228,6 +229,14 @@ end;
 
 procedure NtxCheck(Status: NTSTATUS; Where: String);
 begin
+  if not NT_SUCCESS(Status) then
+    raise ENtError.Create(Status, Where);
+end;
+
+procedure NtxAssert(Status: NTSTATUS; Where: String);
+begin
+  // The same as NtxCheck but for function that are not supposed to fail due
+  // to the program logic.
   if not NT_SUCCESS(Status) then
     raise ENtError.Create(Status, Where);
 end;

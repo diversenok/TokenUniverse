@@ -160,7 +160,7 @@ var
   SizeInfo: TAclSizeInformation;
 begin
   if not Assigned(SrcAcl) or not RtlValidAcl(SrcAcl) then
-    raise ENtError.Create(STATUS_INVALID_ACL, 'RtlValidAcl');
+    NtxAssert(STATUS_INVALID_ACL, 'RtlValidAcl');
 
   RtlxQuerySizeInfoAcl(SrcAcl, SizeInfo).RaiseOnError;
 
@@ -184,7 +184,7 @@ begin
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(FAcl);
-    raise ENtError.Create(Status, 'RtlCreateAcl');
+    NtxAssert(Status, 'RtlCreateAcl');
   end;
 end;
 
@@ -212,7 +212,7 @@ begin
   if not NT_SUCCESS(Status) then
   begin
     FreeMem(NewAcl);
-    raise ENtError.Create(Status, 'RtlCreateAcl');
+    NtxAssert(Status, 'RtlCreateAcl');
   end;
 
   // Copy all ACEs to the new ACL
