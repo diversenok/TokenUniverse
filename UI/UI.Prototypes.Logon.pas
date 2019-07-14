@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
-  UI.ListViewEx, UI.Prototypes,
-  TU.Tokens, TU.LsaApi, Winapi.WinNt, Vcl.StdCtrls;
+  UI.ListViewEx, UI.Prototypes, NtUtils.Lsa.Logon,
+  TU.Tokens, Winapi.WinNt, Vcl.StdCtrls;
 
 type
   TFrameLogon = class(TFrame)
@@ -182,14 +182,15 @@ begin
   if Assigned(LogonInfo) then
   begin
     for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do
-      ListView.Items[StartInd + Integer(i)].Cell[1] := LogonInfo.GetString(i);
+      ListView.Items[StartInd + Integer(i)].Cell[1] := LogonInfo.QueryString(i);
 
     // Build hint for UserFlags
-    ListView.Items[StartInd + Integer(lsUserFlags)].Hint :=
-      LogonInfo.UserFlagsHint;
+    if Assigned(LogonInfo.RawData) then
+      ListView.Items[StartInd + Integer(lsUserFlags)].Hint :=
+        MapKnownFlagsHint(LogonInfo.RawData.UserFlags, bmLogonFlags);
 
     // Build hint for the user
-    if LogonInfo.UserPresent then
+    if Assigned(LogonInfo.User) then
       ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
         BuildSidHint(LogonInfo.User, SE_GROUP_USER_DEFAULT, False);
   end

@@ -87,11 +87,6 @@ function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
 // Get current user name and domain
 function LsaxGetUserName(out Domain, UserName: String): TNtxStatus;
 
-{ ------------------------------ Logon Sessions ----------------------------- }
-
-// Enumerate logon sessions
-function LsaxEnumerateLogonSessions(out Luids: TArray<TLuid>): TNtxStatus;
-
 implementation
 
 uses
@@ -586,42 +581,6 @@ begin
 
   LsaFreeMemory(BufferUser);
   LsaFreeMemory(BufferDomain);
-end;
-
-{ Logon Sessions }
-
-function LsaxEnumerateLogonSessions(out Luids: TArray<TLuid>): TNtxStatus;
-var
-  Count, i: Integer;
-  Buffer: PLuidArray;
-  HasAnonymousLogon: Boolean;
-begin
-  Result.Location := 'LsaEnumerateLogonSessions';
-  Result.Status := LsaEnumerateLogonSessions(Count, Buffer);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  SetLength(Luids, Count);
-
-  // Invert the order so that later logons appear later in the list
-  for i := 0 to Count - 1 do
-    Luids[i] := Buffer[Count - 1 - i];
-
-  LsaFreeReturnBuffer(Buffer);
-
-  // Make sure anonymous logon is in the list (most likely it is not)
-  HasAnonymousLogon := False;
-
-  for i := 0 to High(Luids) do
-    if Luids[i] = ANONYMOUS_LOGON_LUID then
-    begin
-      HasAnonymousLogon := True;
-      Break;
-    end;
-
-  if not HasAnonymousLogon then
-    Insert(ANONYMOUS_LOGON_LUID, Luids, 0);
 end;
 
 end.

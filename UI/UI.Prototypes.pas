@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, UI.ListViewEx, TU.Tokens,
-  TU.LsaApi, TU.Tokens.Types, Winapi.WinNt, NtUtils.WinStation;
+  TU.Tokens.Types, Winapi.WinNt, NtUtils.WinStation;
 
 type
   TSessionSource = class
@@ -96,7 +96,7 @@ implementation
 
 uses
   DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntrtl, NtUtils.Lsa,
-  NtUtils.Exceptions;
+  NtUtils.Exceptions, NtUtils.Lsa.Logon;
 
 { TSessionSource }
 
@@ -377,10 +377,16 @@ begin
   begin
     S := IntToHexEx(FLogonSessions[i]);
 
-    if TLogonSession.Query(FLogonSessions[i], LogonData).IsSuccess then
-      if LogonData.UserPresent and (LogonData.User.UserName <> '') then
+    LsaxQueryLogonSession(FLogonSessions[i], LogonData);
+
+    if Assigned(LogonData.User) and (LogonData.User.UserName <> '') then
+    begin
+      if Assigned(LogonData.RawData) then
         S := Format('%s (%s @ %d)', [S, LogonData.User.UserName,
-          LogonData.RawData.Session]);
+          LogonData.RawData.Session])
+      else
+        S := Format('%s (%s)', [S, LogonData.User.UserName])
+    end;
 
     ComboBox.Items.Add(S);
   end;

@@ -8,7 +8,7 @@ uses
   Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
   TU.Tokens.Types, NtUtils.Snapshots.Handles, DelphiUtils.Events, TU.LsaApi,
   NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
-  System.Generics.Collections, NtUtils.Exceptions;
+  System.Generics.Collections, NtUtils.Exceptions, NtUtils.Lsa.Logon;
 
 type
   /// <summary>
@@ -1430,8 +1430,12 @@ begin
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then
-        Result := TLogonSession.Query(Token.Cache.Statistics.AuthenticationId,
-          Token.Cache.LogonSessionInfo).IsSuccess;
+    begin
+      Result := True;
+      // This function always returns data
+      LsaxQueryLogonSession(Token.Cache.Statistics.AuthenticationId,
+        Token.Cache.LogonSessionInfo);
+    end;
 
     tdObjectInfo:
       Result := NtxQueryBasicInfoObject(Token.hToken,
