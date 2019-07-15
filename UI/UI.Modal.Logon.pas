@@ -39,18 +39,27 @@ type
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: TSecurityLogonType;
     function GetLogonProvider: TLogonProvider;
+    procedure SuggestCurrentLogonGroup;
   end;
 
 implementation
 
 uses
   TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
-  DelphiUtils.Strings, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi;
+  DelphiUtils.Strings, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
+  NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser;
 
 {$R *.dfm}
 
 const
   S4U_INDEX = 5; // Make sure to be consisten with the combobox
+
+function IsLogonSid(Sid: ISid): Boolean;
+begin
+  Result := (Sid.IdentifyerAuthority.ToInt64 = SECURITY_NT_AUTHORITY_ID)
+    and (Sid.SubAuthorities = SECURITY_LOGON_IDS_RID_COUNT) and
+    (Sid.SubAuthority(0) = SECURITY_LOGON_IDS_RID);
+end;
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
@@ -68,6 +77,11 @@ end;
 
 procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
 begin
+  // When logging users with additional groups at least one of them shoud be a
+  // logon group
+  if FrameGroups.Count > 0 then
+    SuggestCurrentLogonGroup;
+
   Enabled := False;
   try
     PromptCredentialsUI(Handle, TokenCreationCallback,
@@ -114,6 +128,35 @@ procedure TLogonDialog.MenuRemoveClick(Sender: TObject);
 begin
   if Assigned(FrameGroups.ListView.Selected) then
     FrameGroups.RemoveGroup(FrameGroups.ListView.Selected.Index);
+end;
+
+procedure TLogonDialog.SuggestCurrentLogonGroup;
+const
+  TITLE = 'Add current logon group?';
+  MSG = 'Do you also want to add a logon group that allows full access to ' +
+        'the current window station? Note, that when providing additional ' +
+        'groups, at least one of them must be a logon group.';
+var
+  i: Integer;
+  LogonGroup: TGroup;
+begin
+  // Check for existing logon groups
+  for i := 0 to FrameGroups.Count - 1 do
+    if IsLogonSid(FrameGroups.Group[i].SecurityIdentifier) then
+      Exit;
+
+  if TaskMessageDlg(TITLE, MSG, mtConfirmation, mbYesNoCancel, -1) = IDYES then
+  begin
+    // Query window station SID
+    UsrxQueryObjectSid(GetProcessWindowStation,
+      LogonGroup.SecurityIdentifier).RaiseOnError;
+
+    LogonGroup.Attributes := SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT or
+      SE_GROUP_LOGON_ID;
+
+    // Add it
+    FrameGroups.AddGroup(LogonGroup);
+  end;
 end;
 
 procedure TLogonDialog.TokenCreationCallback(Domain, User: String;

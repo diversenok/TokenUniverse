@@ -18,6 +18,7 @@ type
   public
     property Group[Ind: Integer]: TGroup read GetGroup write SetGroup;
     function Groups: TArray<TGroup>;
+    function Count: Integer;
 
     function AddGroup(const NewGroup: TGroup): TListItemEx;
     procedure AddGroups(NewGroups: TArray<TGroup>);
@@ -134,6 +135,11 @@ procedure TFrameGroups.Clear;
 begin
   SetLength(FGroups, 0);
   ListView.Items.Clear;
+end;
+
+function TFrameGroups.Count: Integer;
+begin
+  Result := Length(FGroups);
 end;
 
 function TFrameGroups.Find(Sid: ISid): Integer;
