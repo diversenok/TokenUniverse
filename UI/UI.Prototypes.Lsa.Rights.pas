@@ -38,11 +38,20 @@ const
   GROUP_ID_DENY = 1;
 
 function FormatHint(const Right: TLogonRightRec): String;
+var
+  Sections: array of THintSection;
 begin
-  Result := 'Name: ' + #$D#$A +
-    '    ' + Right.Name + '  ' + #$D#$A +
-    'Value:'  + #$D#$A +
-    '    ' + IntToHexEx(Right.Value);
+  SetLength(Sections, 2);
+
+  Sections[0].Title := 'Name';
+  Sections[0].Enabled := True;
+  Sections[0].Content := Right.Name;
+
+  Sections[1].Title := 'Value';
+  Sections[1].Enabled := True;
+  Sections[1].Content := IntToHexEx(Right.Value);
+
+  Result := BuildHint(Sections);
 end;
 
 { TFrameLsaRights }

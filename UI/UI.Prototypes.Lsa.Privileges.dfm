@@ -41,7 +41,7 @@ object FrameLsaPrivileges: TFrameLsaPrivileges
       Checkboxes = True
       Columns = <
         item
-          Caption = 'Privilege name'
+          Caption = 'Name'
           Width = 200
         end
         item

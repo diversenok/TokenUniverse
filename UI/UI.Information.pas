@@ -668,7 +668,7 @@ begin
   if Token.InfoClass.ReQuery(tdObjectInfo) then
     with ListViewObject, Token.InfoClass.ObjectInformation do
     begin
-      Items[1].SubItems[0] := ObjectAttributesToString(Attributes);
+      Items[1].SubItems[0] := MapFlags(Attributes, ObjAttributesFlags, 'None');
       Items[2].SubItems[0] := BytesToString(PagedPoolCharge);
       Items[3].SubItems[0] := BytesToString(NonPagedPoolCharge);
       Items[4].SubItems[0] := IntToStr(PointerCount);

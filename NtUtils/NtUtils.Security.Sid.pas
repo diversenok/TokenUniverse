@@ -5,13 +5,6 @@ interface
 uses
   Winapi.WinNt, Winapi.securitybaseapi, NtUtils.Exceptions;
 
-const
-  SE_GROUP_USER_DEFAULT = SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
-
-  SE_GROUP_ALL_FLAGS = SE_GROUP_MANDATORY or SE_GROUP_OWNER or
-                       SE_GROUP_USE_FOR_DENY_ONLY or SE_GROUP_INTEGRITY or
-                       SE_GROUP_RESOURCE or SE_GROUP_LOGON_ID;
-
 type
   TTranslatedName = record
     DomainName, UserName: String;

@@ -14,7 +14,7 @@ object FramePrivileges: TFramePrivileges
     AllocBy = 36
     Columns = <
       item
-        Caption = 'Privilege name'
+        Caption = 'Name'
         Width = 180
       end
       item

@@ -217,7 +217,7 @@ begin
   // Source
   if Source.InfoClass.Query(tdTokenSource) then
   begin
-    EditSourceName.Text := TokeSourceNameToString(Source.InfoClass.Source);
+    EditSourceName.Text := Source.InfoClass.Source.ToString;
     EditSourceLuid.Text := IntToHexEx(
       Source.InfoClass.Source.SourceIdentifier);
   end;
@@ -229,6 +229,7 @@ var
   Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: Cardinal;
+  Source: TTokenSource;
 begin
   if CheckBoxInfinite.Checked then
     Expires.QuadPart := Int64.MaxValue
@@ -249,6 +250,9 @@ begin
   else
     PrimaryGroupName := ComboPrimary.Text;
 
+  Source.FromString(EditSourceName.Text);
+  Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
+
   Token := TToken.CreateNtCreateToken(
     TSid.CreateFromString(ComboUser.Text),
     CheckBoxUserState.Checked,
@@ -257,8 +261,7 @@ begin
     LogonIDSource.SelectedLogonSession,
     TSid.CreateFromString(OwnerGroupName),
     TSid.CreateFromString(PrimaryGroupName),
-    CreateTokenSource(EditSourceName.Text,
-      StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID')),
+    Source,
     Expires
   );
 

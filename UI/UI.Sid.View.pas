@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  NtUtils.Strings, Winapi.WinNt;
+  DelphiUtils.Strings, Winapi.WinNt;
 
 {$R *.dfm}
 
@@ -72,11 +72,13 @@ begin
 
     Caption := Caption + ' for "' + Sid.AsString +'"';
 
-    if not (Sid.SidType in [SidTypeZero, SidTypeInvalid, SidTypeUnknown]) then
+    if not (Sid.SidType in [SidTypeUndefined, SidTypeInvalid, SidTypeUnknown])
+      then
       EditFullName.Text := Sid.AsString;
 
     EditSID.Text := Sid.SDDL;
-    EditType.Text := EnumSidTypeToString(Sid.SidType);
+    EditType.Text := PrettifyCamelCaseEnum('SidType', TypeInfo(TSidNameUse),
+        Integer(Sid.SidType));
     EditSubAuthorities.Text := IntToStr(Sid.SubAuthorities);
 
     if Sid.SubAuthorities = 0 then

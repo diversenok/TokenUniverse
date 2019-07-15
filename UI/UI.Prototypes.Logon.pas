@@ -40,8 +40,8 @@ type
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors, TU.Tokens.Types, DelphiUtils.Strings,
-  NtUtils.Security.Sid, NtUtils.Strings;
+  Vcl.Graphics, UI.Colors, DelphiUtils.Strings, NtUtils.Security.Sid,
+  UI.Prototypes.Groups;
 
 {$R *.dfm}
 
@@ -187,12 +187,12 @@ begin
     // Build hint for UserFlags
     if Assigned(LogonInfo.RawData) then
       ListView.Items[StartInd + Integer(lsUserFlags)].Hint :=
-        MapKnownFlagsHint(LogonInfo.RawData.UserFlags, bmLogonFlags);
+        MapFlagsList(LogonInfo.RawData.UserFlags, LogonFlags);
 
     // Build hint for the user
     if Assigned(LogonInfo.User) then
       ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
-        BuildSidHint(LogonInfo.User, SE_GROUP_USER_DEFAULT, False);
+        BuildSidHint(LogonInfo.User, 0, False);
   end
   else
     for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do

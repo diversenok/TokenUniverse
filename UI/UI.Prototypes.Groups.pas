@@ -32,12 +32,56 @@ type
       DisableAttributes: Boolean = False);
   end;
 
+function BuildSidHint(Sid: ISid; Attributes: Cardinal;
+  AttributesPresent: Boolean = True): String;
+
 implementation
 
 uses
-  UI.Colors, NtUtils.Strings, UI.Modal.PickUser, UI.Sid.View;
+  UI.Colors, NtUtils.Strings, DelphiUtils.Strings,
+  UI.Modal.PickUser, UI.Sid.View, Winapi.WinNt;
 
 {$R *.dfm}
+
+function BuildSidHint(Sid: ISid; Attributes: Cardinal;
+  AttributesPresent: Boolean): String;
+const
+  SE_GROUP_ALL_FLAGS = SE_GROUP_MANDATORY or SE_GROUP_OWNER or
+                       SE_GROUP_USE_FOR_DENY_ONLY or SE_GROUP_INTEGRITY or
+                       SE_GROUP_RESOURCE or SE_GROUP_LOGON_ID;
+var
+  Sections: array of THintSection;
+begin
+  SetLength(Sections, 5);
+
+  Sections[0].Title := 'Friendly name';
+  Sections[0].Enabled := Sid.AsString <> Sid.SDDL;
+  Sections[0].Content := Sid.AsString;
+
+  Sections[1].Title := 'SID';
+  Sections[1].Enabled := True;
+  Sections[1].Content := Sid.SDDL;
+
+  Sections[2].Title := 'Type';
+  Sections[2].Enabled := Sid.SidType <> SidTypeUndefined;
+  Sections[2].Content := PrettifyCamelCaseEnum('SidType', TypeInfo(TSidNameUse),
+    Integer(Sid.SidType));
+
+  Sections[3].Title := 'State';
+  Sections[3].Enabled := AttributesPresent;
+  Sections[3].Content := StateOfGroupToString(Attributes);
+
+  if AttributesPresent and ContainsAny(Attributes, SE_GROUP_ALL_FLAGS) then
+  begin
+    Sections[4].Title := 'Flags';
+    Sections[4].Enabled := True;
+    Sections[4].Content := MapFlags(Attributes, GroupAttributeFlags);
+  end
+  else
+    Sections[4].Enabled := False;
+
+  Result := BuildHint(Sections);
+end;
 
 { TFrameGroups }
 
@@ -163,7 +207,7 @@ begin
   Group.SecurityIdentifier.RefreshLookup;
   Item.Cell[0] := Group.SecurityIdentifier.AsString;
   Item.Cell[1] := StateOfGroupToString(Group.Attributes);
-  Item.Cell[2] := MapKnownFlags(Group.Attributes, bmGroupFlags);
+  Item.Cell[2] := MapFlags(Group.Attributes, GroupAttributeFlags);
   Item.Hint := BuildSidHint(Group.SecurityIdentifier, Group.Attributes);
   Item.Color := GroupAttributesToColor(Group.Attributes);
   Result := Item;

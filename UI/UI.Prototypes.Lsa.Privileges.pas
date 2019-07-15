@@ -91,7 +91,6 @@ end;
 procedure TFrameLsaPrivileges.DeleyedCreate;
 begin
   FramePrivileges.ColorMode := pcColorChecked;
-  FramePrivileges.NamingMode := pnFriendlyName;
   FramePrivileges.AddAllPrivileges;
 end;
 

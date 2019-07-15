@@ -45,8 +45,7 @@ implementation
 
 uses
   TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
-  TU.Tokens.Types, DelphiUtils.Strings,
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi;
+  DelphiUtils.Strings, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi;
 
 {$R *.dfm}
 
@@ -98,9 +97,10 @@ end;
 
 function TLogonDialog.GetLogonType: TSecurityLogonType;
 const
-  LogonTypeMapping: array [0 .. 6] of TSecurityLogonType = (ltInteractive,
-    ltNetwork, ltNetworkCleartext, ltNewCredentials, ltUnlock, ltBatch,
-    ltService);
+  LogonTypeMapping: array [0 .. 6] of TSecurityLogonType = (
+    LogonTypeInteractive, LogonTypeNetwork, LogonTypeNetworkCleartext,
+    LogonTypeNewCredentials, LogonTypeUnlock, LogonTypeBatch, LogonTypeService
+  );
 begin
   Result := LogonTypeMapping[ComboLogonType.ItemIndex];
 end;
@@ -124,8 +124,9 @@ begin
   if ComboLogonProvider.ItemIndex = S4U_INDEX then
   begin
     // Use Services 4 Users logon
-    Source := CreateTokenSource(EditSourceName.Text, StrToUInt64Ex(
-      EditSourceLuid.Text, 'Source LUID'));
+    Source.FromString(EditSourceName.Text);
+    Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
+      'Source LUID');
 
     FormMain.TokenView.Add(TToken.CreateS4ULogon(GetLogonType, Domain, User,
       Source, FrameGroups.Groups));

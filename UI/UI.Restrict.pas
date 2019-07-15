@@ -220,7 +220,7 @@ begin
     if SddlxGetWellKnownSid(WinRestrictedCodeSid, Sid).IsSuccess then
     begin
       Group.SecurityIdentifier := Sid;
-      Group.Attributes := SE_GROUP_USER_DEFAULT;
+      Group.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or SE_GROUP_ENABLED;
       FrameGroupsRestrict.AddGroup(Group);
     end;
 
@@ -228,7 +228,7 @@ begin
     if SddlxGetWellKnownSid(WinWriteRestrictedCodeSid, Sid).IsSuccess then
     begin
       Group.SecurityIdentifier := Sid;
-      Group.Attributes := SE_GROUP_USER_DEFAULT;
+      Group.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or SE_GROUP_ENABLED;
       FrameGroupsRestrict.AddGroup(Group);
     end;
 

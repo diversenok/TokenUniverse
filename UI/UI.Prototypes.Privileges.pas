@@ -9,21 +9,18 @@ uses
 type
   TPrivilegeColorMode = (pcDefault, pcGrayChecked, pcGrayUnchecked,
     pcColorChecked);
-  TPrivilegeNameMode = (pnName, pnFriendlyName);
 
   TFramePrivileges = class(TFrame)
     ListView: TListViewEx;
     procedure ListViewItemChecked(Sender: TObject; Item: TListItem);
   private
     FPrivileges: TArray<TPrivilege>;
-    FNameMode: TPrivilegeNameMode;
     FColorMode: TPrivilegeColorMode;
     function GetPrivilege(Ind: Integer): TPrivilege;
     procedure SetPrivilege(Ind: Integer; const Value: TPrivilege);
     function SetItemData(Item: TListItemEx; Privilege: TPrivilege): TListItemEx;
     procedure SetItemColor(Index: Cardinal);
     procedure SetColorMode(const Value: TPrivilegeColorMode);
-    procedure SetNameMode(const Value: TPrivilegeNameMode);
     function GetAttributes(Ind: Integer): Cardinal;
     procedure SetAttributes(Ind: Integer; const Value: Cardinal);
   public
@@ -44,13 +41,12 @@ type
     function CheckedPrivileges: TArray<TPrivilege>;
 
     property ColorMode: TPrivilegeColorMode read FColorMode write SetColorMode;
-    property NamingMode: TPrivilegeNameMode read FNameMode write SetNameMode;
   end;
 
 implementation
 
 uses
-  NtUtils.Strings, TU.LsaApi, UI.Colors, NtUtils.Lsa;
+  NtUtils.Strings, DelphiUtils.Strings, TU.LsaApi, UI.Colors, NtUtils.Lsa;
 
 {$R *.dfm}
 
@@ -72,13 +68,24 @@ begin
 end;
 
 function FormatHint(Value: TLuid): String;
+var
+  Sections: array of THintSection;
 begin
-  Result := 'Name: ' + #$D#$A +
-    '    ' + TPrivilegeCache.QueryName(Value) + '  ' + #$D#$A +
-    'Description: ' + #$D#$A +
-    '    ' + TPrivilegeCache.QueryDisplayName(Value) + '  ' + #$D#$A +
-    'Value:'  + #$D#$A +
-    '    ' + IntToStr(Value);
+  SetLength(Sections, 3);
+
+  Sections[0].Title := 'Name';
+  Sections[0].Enabled := True;
+  Sections[0].Content := TPrivilegeCache.QueryName(Value);
+
+  Sections[1].Title := 'Description';
+  Sections[1].Enabled := True;
+  Sections[1].Content := TPrivilegeCache.QueryDisplayName(Value);
+
+  Sections[2].Title := 'Value';
+  Sections[2].Enabled := True;
+  Sections[2].Content := IntToStr(Value);
+
+  Result := BuildHint(Sections);
 end;
 
 procedure TFramePrivileges.AddAllPrivileges;
@@ -284,11 +291,8 @@ end;
 function TFramePrivileges.SetItemData(Item: TListItemEx;
   Privilege: TPrivilege): TListItemEx;
 begin
-  if FNameMode = pnName then
-    Item.Cell[0] := TPrivilegeCache.QueryName(Privilege.Luid)
-  else
-    Item.Cell[0] := PrivilegeFriendlyName(TPrivilegeCache.QueryName(
-      Privilege.Luid));
+  Item.Cell[0] := PrettifyCamelCase('Se', TPrivilegeCache.QueryName(
+    Privilege.Luid));
 
   Item.Cell[1] := StateOfPrivilegeToString(Privilege.Attributes);
   Item.Cell[2] := TPrivilegeCache.QueryDisplayName(Privilege.Luid);
@@ -298,23 +302,6 @@ begin
 
   SetItemColor(Item.Index);
   Result := Item;
-end;
-
-procedure TFramePrivileges.SetNameMode(const Value: TPrivilegeNameMode);
-var
-  i: Integer;
-begin
-  if FNameMode <> Value then
-  begin
-    FNameMode := Value;
-
-    ListView.Items.BeginUpdate;
-
-    for i := 0 to ListView.Items.Count - 1 do
-      SetItemData(ListView.Items[i], FPrivileges[i]);
-
-    ListView.Items.EndUpdate;
-  end;
 end;
 
 procedure TFramePrivileges.SetPrivilege(Ind: Integer; const Value: TPrivilege);

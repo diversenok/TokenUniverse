@@ -27,9 +27,6 @@ type
     function SecurityImpersonationLevel: TSecurityImpersonationLevel;
   end;
 
-function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
-  TTokenSource;
-
 function FormatCurrentState: String;
 
 { Comparison function used by cached event handling system }
@@ -42,14 +39,10 @@ function CompareGroups(Value1, Value2: TGroup): Boolean;
 function CompareGroupArrays(Value1, Value2: TArray<TGroup>): Boolean;
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 
-{ Conversion functions }
-function TokeSourceNameToString(TokenSource: TTokenSource): String;
-function ObjectAttributesToString(ObjAttributes: Cardinal): String;
-
 implementation
 
 uses
-  System.SysUtils, Ntapi.ntdef, Ntapi.ntrtl, NtUtils.Lsa, NtUtils.Exceptions;
+  System.SysUtils, Ntapi.ntrtl, NtUtils.Lsa, NtUtils.Exceptions;
 
 { TTokenTypeExHelper }
 
@@ -79,23 +72,6 @@ begin
     ttDelegation: Result := 'Delegation';
     ttPrimary: Result := 'Primary token';
   end
-end;
-
-function CreateTokenSource(SourceName: String; SourceLuid: TLuid):
-  TTokenSource;
-var
-  i, Count: integer;
-begin
-  FillChar(Result, SizeOf(Result), 0);
-
-  Count := Length(SourceName);
-  if Count > 8 then
-    Count := 8;
-
-  for i := 1 to Count do
-    Result.sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
-
-  Result.SourceIdentifier := SourceLuid;
 end;
 
 function FormatCurrentState: String;
@@ -176,27 +152,6 @@ end;
 function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 begin
   Result := (Value1.ModifiedId = Value2.ModifiedId);
-end;
-
-{ Conversion functions }
-
-function TokeSourceNameToString(TokenSource: TTokenSource): String;
-begin
-  // sourcename field may or may not contain zero-termination byte
-  Result := String(PAnsiChar(AnsiString(TokenSource.sourcename)));
-end;
-
-function ObjectAttributesToString(ObjAttributes: Cardinal): String;
-begin
-  if ObjAttributes and (OBJ_PERMANENT or OBJ_EXCLUSIVE) =
-    (OBJ_PERMANENT or OBJ_EXCLUSIVE) then
-    Result := 'Permanent, Exclusive'
-  else if ObjAttributes and OBJ_PERMANENT <> 0 then
-    Result := 'Permanent'
-  else if ObjAttributes and OBJ_EXCLUSIVE <> 0 then
-    Result := 'Exclusive'
-  else
-    Result := 'None';
 end;
 
 end.

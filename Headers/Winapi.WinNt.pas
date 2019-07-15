@@ -214,7 +214,7 @@ type
   PSidArray = ^TSidArray;
 
   // 9055
-  TSidNameUse = (SidTypeZero, SidTypeUser, SidTypeGroup, SidTypeDomain,
+  TSidNameUse = (SidTypeUndefined, SidTypeUser, SidTypeGroup, SidTypeDomain,
     SidTypeAlias, SidTypeWellKnownGroup, SidTypeDeletedAccount, SidTypeInvalid,
     SidTypeUnknown, SidTypeComputer, SidTypeLabel, SidTypeLogonSession);
 
@@ -488,6 +488,8 @@ type
   var
     sourcename: array[1 .. TOKEN_SOURCE_LENGTH] of AnsiChar;
     SourceIdentifier: TLuid;
+    procedure FromString(Name: String);
+    function ToString: String;
   end;
   PTokenSource = ^TTokenSource;
 
@@ -633,6 +635,28 @@ end;
 function TAclSizeInformation.AclBytesTotal: Cardinal;
 begin
   Result := AclBytesInUse + AclBytesFree;
+end;
+
+{ TTokenSource }
+
+procedure TTokenSource.FromString(Name: String);
+var
+  i, Count: integer;
+begin
+  FillChar(sourcename, SizeOf(sourcename), 0);
+
+  Count := Length(SourceName);
+  if Count > 8 then
+    Count := 8;
+
+  for i := 1 to Count do
+    sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
+end;
+
+function TTokenSource.ToString: String;
+begin
+  // sourcename field may or may not contain a zero-termination byte
+  Result := String(PAnsiChar(AnsiString(sourcename)));
 end;
 
 { TLargeInteger }

@@ -248,7 +248,7 @@ object DialogCreateToken: TDialogCreateToken
           Checkboxes = True
           Columns = <
             item
-              Caption = 'Privilege name'
+              Caption = 'Name'
               Width = 180
             end
             item

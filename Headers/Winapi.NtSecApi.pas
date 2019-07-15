@@ -61,10 +61,11 @@ type
 
   // 948
   TSecurityLogonType = (
-    ltSystem, ltReserved, ltInteractive, ltNetwork, ltBatch,
-    ltService, ltProxy, ltUnlock, ltNetworkCleartext, ltNewCredentials,
-    ltRemoteInteractive, ltCachedInteractive, ltCachedRemoteInteractive,
-    ltCachedUnlock
+    LogonTypeSystem, LogonTypeReserved, LogonTypeInteractive, LogonTypeNetwork,
+    LogonTypeBatch, LogonTypeService, LogonTypeProxy, LogonTypeUnlock,
+    LogonTypeNetworkCleartext, LogonTypeNewCredentials,
+    LogonTypeRemoteInteractive, LogonTypeCachedInteractive,
+    LogonTypeCachedRemoteInteractive, LogonTypeCachedUnlock
   );
 
   // 2760

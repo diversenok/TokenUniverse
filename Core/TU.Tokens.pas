@@ -1118,10 +1118,10 @@ begin
       Result := Token.Cache.Session.ToString;
 
     tsElevation:
-      Result := EnumElevationToString(Token.Cache.Elevation);
+      Result := ElevationToString(Token.Cache.Elevation);
 
     tsIntegrity:
-      Result := EnumIntegrityToStrnig(Token.Cache.Integrity.SecurityIdentifier.Rid);
+      Result := IntegrityToString(Token.Cache.Integrity.SecurityIdentifier.Rid);
 
     tsObjectAddress:
       Result := IntToHexEx(UInt64(Token.HandleInformation.PObject));
@@ -1198,7 +1198,7 @@ begin
       Result := IntToHexEx(Token.Cache.Source.SourceIdentifier);
 
     tsSourceName:
-      Result := TokeSourceNameToString(Token.Cache.Source);
+      Result := Token.Cache.Source.ToString;
 
     tsOrigin:
       Result := IntToHexEx(Token.Cache.Origin);
@@ -1240,7 +1240,8 @@ begin
       // "Use for deny only" and we shouldn't replace it in this case.
 
       if Result and (Token.Cache.User.Attributes = 0) then
-        Token.Cache.User.Attributes := SE_GROUP_USER_DEFAULT;
+        Token.Cache.User.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or
+          SE_GROUP_ENABLED;
     end;
 
     tdTokenGroups:
