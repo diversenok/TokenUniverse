@@ -30,7 +30,7 @@ implementation
 
 uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntobapi,
-  Ntapi.ntrtl, NtUtils.Objects, System.SysUtils, Ntapi.ntdef, NtUtils.WinUser,
+  Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, Ntapi.ntdef, NtUtils.WinUser,
   NtUtils.Snapshots.Processes, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
   NtUtils.Exec.Win32, NtUtils.Svc.SingleTaskSvc, NtUtils.Processes;
 

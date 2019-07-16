@@ -5,7 +5,7 @@ unit Ntapi.ntpebteb;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntrtl;
 
 type
   TPeb = record
@@ -16,7 +16,7 @@ type
     Mutant: THandle;
     ImageBaseAddress: Pointer;
     Ldr: Pointer; // ntpsapi.PPEB_LDR_DATA
-    ProcessParameters: Pointer; // ntrtl.PRTL_USER_PROCESS_PARAMETERS
+    ProcessParameters: PRtlUserProcessParameters;
     SubSystemData: Pointer;
     ProcessHeap: Pointer;
     FastPebLock: Pointer; // WinNt.PRTL_CRITICAL_SECTION
@@ -285,6 +285,13 @@ type
     EffectiveContainerId: TGuid;
   end;
   PTeb = ^TTeb;
+
+
+function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
+
+procedure RtlAcquirePebLock; stdcall; external ntdll;
+
+procedure RtlReleasePebLock; stdcall; external ntdll;
 
 function NtCurrentTeb: PTeb;
 

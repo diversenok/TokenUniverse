@@ -295,6 +295,7 @@
         <DCCReference Include="NtUtils\NtUtils.Sam.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Job.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Lsa.Logon.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

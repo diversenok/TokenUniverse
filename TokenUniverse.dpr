@@ -103,7 +103,8 @@ uses
   NtUtils.Sam.Security in 'NtUtils\NtUtils.Sam.Security.pas',
   NtUtils.Sam in 'NtUtils\NtUtils.Sam.pas',
   NtUtils.Job in 'NtUtils\NtUtils.Job.pas',
-  NtUtils.Lsa.Logon in 'NtUtils\NtUtils.Lsa.Logon.pas';
+  NtUtils.Lsa.Logon in 'NtUtils\NtUtils.Lsa.Logon.pas',
+  NtUtils.Environment in 'NtUtils\NtUtils.Environment.pas';
 
 {$R *.res}
 

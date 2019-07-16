@@ -5,7 +5,7 @@ unit Ntapi.ntrtl;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpebteb, Ntapi.ntmmapi;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntmmapi;
 
 const
   RTL_MAX_DRIVE_LETTERS = 32;
@@ -147,14 +147,6 @@ function RtlDowncaseUnicodeString(var DestinationString: UNICODE_STRING;
   const SourceString: UNICODE_STRING; AllocateDestinationString: Boolean):
   NTSTATUS; stdcall; external ntdll;
 
-// PEB
-
-function RtlGetCurrentPeb: PPeb; stdcall; external ntdll;
-
-procedure RtlAcquirePebLock; stdcall; external ntdll;
-
-procedure RtlReleasePebLock; stdcall; external ntdll;
-
 // Processes
 
 function RtlCreateProcessParametersEx(
@@ -220,7 +212,7 @@ function RtlDestroyEnvironment(Environment: Pointer): NTSTATUS; stdcall;
 function RtlSetCurrentEnvironment(Environment: Pointer;
   PreviousEnvironment: PPointer): NTSTATUS; stdcall; external ntdll;
 
-function RtlSetEnvironmentVariable(const Environment: Pointer;
+function RtlSetEnvironmentVariable(var Environment: Pointer;
   const Name: UNICODE_STRING; const Value: UNICODE_STRING): NTSTATUS; stdcall;
   external ntdll;
 
@@ -245,6 +237,11 @@ function RtlDosPathNameToNtPathName_U_WithStatus(DosFileName: PWideChar;
   RelativeName: Pointer): NTSTATUS; stdcall; external ntdll;
 
 function RtlIsThreadWithinLoaderCallout: Boolean; stdcall; external ntdll;
+
+// Heaps
+
+function RtlSizeHeap(HeapHandle: Pointer; Flags: Cardinal; BaseAddress: Pointer)
+  : NativeUInt; stdcall; external ntdll;
 
 // Errors
 
