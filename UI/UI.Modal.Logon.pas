@@ -145,17 +145,23 @@ begin
     if IsLogonSid(FrameGroups.Group[i].SecurityIdentifier) then
       Exit;
 
-  if TaskMessageDlg(TITLE, MSG, mtConfirmation, mbYesNoCancel, -1) = IDYES then
-  begin
-    // Query window station SID
-    UsrxQueryObjectSid(GetProcessWindowStation,
-      LogonGroup.SecurityIdentifier).RaiseOnError;
+  case TaskMessageDlg(TITLE, MSG, mtConfirmation, [mbYes, mbIgnore, mbCancel],
+    -1) of
+    IDYES:
+    begin
+      // Query window station SID
+      UsrxQueryObjectSid(GetProcessWindowStation,
+        LogonGroup.SecurityIdentifier).RaiseOnError;
 
-    LogonGroup.Attributes := SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT or
-      SE_GROUP_LOGON_ID;
+      LogonGroup.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or
+        SE_GROUP_ENABLED or SE_GROUP_LOGON_ID;
 
-    // Add it
-    FrameGroups.AddGroup(LogonGroup);
+      // Add it
+      FrameGroups.AddGroup(LogonGroup);
+    end;
+
+    IDCANCEL:
+      Abort;
   end;
 end;
 

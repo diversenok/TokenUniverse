@@ -19,7 +19,7 @@ type
   // profinfo.38
   TProfileInfoW = record
     dwSize: Cardinal;
-    dwFlags: Cardinal; // PI_*
+    dwFlags: Cardinal; // PT_*
     lpUserName: PWideChar;
     lpProfilePath: PWideChar;
     lpDefaultPath: PWideChar;
