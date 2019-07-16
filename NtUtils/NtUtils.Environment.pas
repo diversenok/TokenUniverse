@@ -26,7 +26,6 @@ type
   TEnvironment = class (TInterfacedObject, IEnvironment)
   private
     FBlock: Pointer;
-    function Names: TArray<String>;
   public
     constructor OpenCurrent;
     constructor CreateNew(CloneCurrent: Boolean);
@@ -162,7 +161,7 @@ begin
   if Assigned(FBlock) then
     RtlDestroyEnvironment(FBlock);
   inherited;
-end
+end;
 
 constructor TEnvironment.OpenCurrent;
 begin

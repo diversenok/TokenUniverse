@@ -47,7 +47,7 @@ implementation
 uses
   TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
   DelphiUtils.Strings, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
-  NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser;
+  NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes;
 
 {$R *.dfm}
 
