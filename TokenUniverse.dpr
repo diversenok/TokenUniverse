@@ -104,7 +104,8 @@ uses
   NtUtils.Sam in 'NtUtils\NtUtils.Sam.pas',
   NtUtils.Job in 'NtUtils\NtUtils.Job.pas',
   NtUtils.Lsa.Logon in 'NtUtils\NtUtils.Lsa.Logon.pas',
-  NtUtils.Environment in 'NtUtils\NtUtils.Environment.pas';
+  NtUtils.Environment in 'NtUtils\NtUtils.Environment.pas',
+  Winapi.UserEnv in 'Headers\Winapi.UserEnv.pas';
 
 {$R *.res}
 

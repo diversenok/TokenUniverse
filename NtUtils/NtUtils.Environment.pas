@@ -21,11 +21,14 @@ type
     function QueryVariable(Name: String): String;
     function QueryVariableWithStatus(Name: String; out Value: String):
       TNtxStatus;
+    function Expand(Source: String): String;
+    function ExpandWithStatus(Source: String; out Expanded: String): TNtxStatus;
   end;
 
   TEnvironment = class (TInterfacedObject, IEnvironment)
   private
     FBlock: Pointer;
+    constructor CreateOwned(Buffer: Pointer);
   public
     constructor OpenCurrent;
     constructor CreateNew(CloneCurrent: Boolean);
@@ -40,6 +43,8 @@ type
     function QueryVariable(Name: String): String;
     function QueryVariableWithStatus(Name: String; out Value: String):
       TNtxStatus;
+    function Expand(Source: String): String;
+    function ExpandWithStatus(Source: String; out Expanded: String): TNtxStatus;
   end;
 
 // Environmental block parsing routine
@@ -47,11 +52,15 @@ function RtlxEnumerateEnvironment(Environment: PWideChar;
   EnvironmentLength: Cardinal; var CurrentIndex: Cardinal;
   out Name: String; out Value: String): Boolean;
 
+// Prepare an environment for a user
+function UnvxCreateUserEnvironment(out Environment: IEnvironment;
+  hToken: THandle; InheritCurrent: Boolean): TNtxStatus;
+
 implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntstatus, Ntapi.ntpebteb, Ntapi.ntmmapi,
-  Ntapi.ntpsapi;
+  Ntapi.ntpsapi, NtUtils.Ldr, Winapi.UserEnv;
 
 function RtlxEnumerateEnvironment(Environment: PWideChar;
   EnvironmentLength: Cardinal; var CurrentIndex: Cardinal;
@@ -145,6 +154,44 @@ begin
     Result := RtlGetCurrentPeb.ProcessParameters.Environment;
 end;
 
+function TEnvironment.Expand(Source: String): String;
+begin
+  if not ExpandWithStatus(Source, Result).IsSuccess then
+    Result := Source;
+end;
+
+function TEnvironment.ExpandWithStatus(Source: String;
+  out Expanded: String): TNtxStatus;
+var
+  SrcStr, DestStr: UNICODE_STRING;
+  Required: Cardinal;
+begin
+  SrcStr.FromString(Source);
+
+  Required := 0;
+  DestStr.Length := 0;
+  DestStr.MaximumLength := 0;
+  DestStr.Buffer := nil;
+
+  Result.Location := 'RtlExpandEnvironmentStrings_U';
+  Result.Status := RtlExpandEnvironmentStrings_U(FBlock, SrcStr, DestStr,
+    @Required);
+
+  if Result.Status = STATUS_BUFFER_TOO_SMALL then
+  begin
+    DestStr.MaximumLength := Required;
+    DestStr.Buffer := AllocMem(DestStr.MaximumLength);
+
+    Result.Status := RtlExpandEnvironmentStrings_U(FBlock, SrcStr, DestStr,
+      nil);
+
+    if Result.IsSuccess then
+      Expanded := DestStr.ToString;
+
+    FreeMem(DestStr.Buffer);
+  end;
+end;
+
 function TEnvironment.IsCurrent: Boolean;
 begin
   // Referencing null means referencing current environment
@@ -154,6 +201,11 @@ end;
 constructor TEnvironment.CreateNew(CloneCurrent: Boolean);
 begin
   NtxAssert(RtlCreateEnvironment(CloneCurrent, FBlock), 'RtlCreateEnvironment');
+end;
+
+constructor TEnvironment.CreateOwned(Buffer: Pointer);
+begin
+  FBlock := Buffer;
 end;
 
 destructor TEnvironment.Destroy;
@@ -225,7 +277,6 @@ end;
 function TEnvironment.SetAsCurrentExchange(out Old: IEnvironment): TNtxStatus;
 var
   OldEnv: Pointer;
-  OldEnvObj: TEnvironment;
 begin
   if Assigned(FBlock) then
   begin
@@ -235,9 +286,7 @@ begin
     if Result.IsSuccess then
     begin
       // Store the returned pointer into a new IEnvironmnent
-      OldEnvObj := TEnvironment.Create;
-      OldEnvObj.FBlock := OldEnv;
-      Old := OldEnvObj;
+      Old := TEnvironment.CreateOwned(OldEnv);
 
       // Make this object point to the current environment
       FBlock := nil;
@@ -268,6 +317,24 @@ begin
   // Make sure to pass a valid pointer for the call.
   Result := RtlSizeHeap(NtCurrentTeb.ProcessEnvironmentBlock.ProcessHeap, 0,
     Environment);
+end;
+
+function UnvxCreateUserEnvironment(out Environment: IEnvironment;
+  hToken: THandle; InheritCurrent: Boolean): TNtxStatus;
+var
+  EnvBlock: Pointer;
+begin
+  Result := LdrxCheckModuleDelayedImport(userenv, 'CreateEnvironmentBlock');
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Result.Location := 'CreateEnvironmentBlock';
+  Result.Win32Result := CreateEnvironmentBlock(EnvBlock, hToken,
+    InheritCurrent);
+
+  if Result.IsSuccess then
+    Environment := TEnvironment.CreateOwned(EnvBlock);
 end;
 
 end.
