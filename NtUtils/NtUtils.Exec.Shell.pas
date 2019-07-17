@@ -14,13 +14,14 @@ type
 implementation
 
 uses
-  Winapi.Shell, Winapi.WinUser, NtUtils.Exceptions;
+  Winapi.Shell, Winapi.WinUser, NtUtils.Exceptions, NtUtils.Exec.Win32;
 
 { TExecShellExecute }
 
 function TExecShellExecute.Execute(ParamSet: IExecProvider): TProcessInfo;
 var
   ShellExecInfo: TShellExecuteInfoW;
+  RunAsInvoker: IInterface;
 begin
   FillChar(ShellExecInfo, SizeOf(ShellExecInfo), 0);
   ShellExecInfo.cbSize := SizeOf(ShellExecInfo);
@@ -47,6 +48,11 @@ begin
   else
     ShellExecInfo.nShow := SW_SHOWNORMAL;
 
+  // Set RunAsInvoker compatibility mode. It will be reverted
+  // after exiting from the current function.
+  if ParamSet.Provides(ppRunAsInvoker) then
+    RunAsInvoker := TRunAsInvoker.SetCompatState(ParamSet.RunAsInvoker);
+
   WinCheck(ShellExecuteExW(ShellExecInfo), 'ShellExecuteExW');
 
   // We use SEE_MASK_NOCLOSEPROCESS to get a handle to the process.
@@ -59,7 +65,7 @@ function TExecShellExecute.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
     ppParameters, ppCurrentDirectory, ppNewConsole, ppRequireElevation,
-    ppShowWindowMode:
+    ppShowWindowMode, ppRunAsInvoker:
       Result := True;
   else
     Result := False;

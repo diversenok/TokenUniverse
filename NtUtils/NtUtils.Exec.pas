@@ -9,7 +9,7 @@ type
   TExecParam = (
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppNewConsole, ppRequireElevation, ppShowWindowMode
+    ppNewConsole, ppRequireElevation, ppShowWindowMode, ppRunAsInvoker
   );
 
   IExecProvider = interface
@@ -27,6 +27,7 @@ type
     function NewConsole: Boolean;
     function RequireElevation: Boolean;
     function ShowWindowMode: Word;
+    function RunAsInvoker: Boolean;
   end;
 
   TProcessInfo = Winapi.ProcessThreadsApi.TProcessInformation;
@@ -54,6 +55,7 @@ type
     bNewConsole: Boolean;
     bRequireElevation: Boolean;
     wShowWindowMode: Word;
+    bRunAsInvoker: Boolean;
   public
     function Provides(Parameter: TExecParam): Boolean; virtual;
     function Application: String; virtual;
@@ -69,6 +71,7 @@ type
     function NewConsole: Boolean; virtual;
     function RequireElevation: Boolean; virtual;
     function ShowWindowMode: Word; virtual;
+    function RunAsInvoker: Boolean; virtual;
   end;
 
 function PrepareCommandLine(ParamSet: IExecProvider): String;
@@ -164,6 +167,14 @@ function TDefaultExecProvider.RequireElevation: Boolean;
 begin
   if ppRequireElevation in UseParams then
     Result := bRequireElevation
+  else
+    Result := False;
+end;
+
+function TDefaultExecProvider.RunAsInvoker: Boolean;
+begin
+  if ppRunAsInvoker in UseParams then
+    Result := bRunAsInvoker
   else
     Result := False;
 end;

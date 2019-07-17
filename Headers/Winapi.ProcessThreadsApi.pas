@@ -188,7 +188,7 @@ function CreateProcessAsUserW(hToken: THandle; lpApplicationName: PWideChar;
   lpCommandLine: PWideChar; lpProcessAttributes: PSecurityAttributes;
   lpThreadAttributes: PSecurityAttributes; bInheritHandles: LongBool;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
+  lpCurrentDirectory: PWideChar; StartupInfo: PStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external advapi32;
 
@@ -214,7 +214,7 @@ function CreateProcessWithLogonW(lpUsername: PWideChar;
   lpDomain: PWideChar; lpPassword: PWideChar; dwLogonFlags: Cardinal;
   pApplicationName: PWideChar; lpCommandLine: PWideChar;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
+  lpCurrentDirectory: PWideChar; StartupInfo: PStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external advapi32;
 
@@ -222,7 +222,7 @@ function CreateProcessWithLogonW(lpUsername: PWideChar;
 function CreateProcessWithTokenW(hToken: THandle; dwLogonFlags: Cardinal;
   pApplicationName: PWideChar; lpCommandLine: PWideChar;
   dwCreationFlags: Cardinal; lpEnvironment: Pointer;
-  lpCurrentDirectory: PWideChar; const StartupInfo: TStartupInfoExW;
+  lpCurrentDirectory: PWideChar; StartupInfo: PStartupInfoExW;
   out ProcessInformation: TProcessInformation): LongBool; stdcall;
   external advapi32;
 

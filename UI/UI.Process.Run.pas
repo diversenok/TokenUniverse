@@ -50,6 +50,7 @@ type
     PopupClearParent: TPopupMenu;
     MenuClearParent: TMenuItem;
     CheckBoxNewConsole: TCheckBox;
+    CheckBoxRunAsInvoker: TCheckBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -79,6 +80,7 @@ type
     function NewConsole: Boolean;
     function RequireElevation: Boolean;
     function ShowWindowMode: Word;
+    function RunAsInvoker: Boolean;
   private
     ExecMethod: IExecMethod;
     FToken: TToken;
@@ -291,6 +293,9 @@ begin
 
     ppShowWindowMode:
       Result := ComboBoxShowMode.ItemIndex <> SW_SHOWNORMAL;
+
+    ppRunAsInvoker:
+      Result := CheckBoxRunAsInvoker.State <> cbGrayed;
   else
     Result := False;
   end;
@@ -299,6 +304,11 @@ end;
 function TDialogRun.RequireElevation: Boolean;
 begin
   Result := CheckBoxRunas.Checked;
+end;
+
+function TDialogRun.RunAsInvoker: Boolean;
+begin
+  Result := CheckBoxRunAsInvoker.Checked;
 end;
 
 procedure TDialogRun.SetToken(const Value: TToken);
@@ -404,6 +414,9 @@ begin
 
   ComboBoxShowMode.Enabled := Assigned(ExecMethod) and
     ExecMethod.Supports(ppShowWindowMode);
+
+  CheckBoxRunAsInvoker.Enabled := Assigned(ExecMethod) and
+    ExecMethod.Supports(ppRunAsInvoker);
 
   EditParent.Enabled := Assigned(ExecMethod) and
     ExecMethod.Supports(ppParentProcess);

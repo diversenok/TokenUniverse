@@ -3,7 +3,7 @@ unit NtUtils.Exec.Win32;
 interface
 
 uses
-  NtUtils.Exec, Winapi.ProcessThreadsApi;
+  NtUtils.Exec, Winapi.ProcessThreadsApi, NtUtils.Exceptions;
 
 type
   TExecCreateProcessAsUser = class(TInterfacedObject, IExecMethod)
@@ -16,7 +16,13 @@ type
     function Execute(ParamSet: IExecProvider): TProcessInfo;
   end;
 
-  TStartupInfoHolder = class
+  IStartupInfo = interface
+    function StartupInfoEx: PStartupInfoExW;
+    function CreationFlags: Cardinal;
+    function HasExtendedAttbutes: Boolean;
+  end;
+
+  TStartupInfoHolder = class(TInterfacedObject, IStartupInfo)
   strict protected
     SIEX: TStartupInfoExW;
     strDesktop: String;
@@ -25,16 +31,28 @@ type
     procedure PrepateAttributes(ParamSet: IExecProvider; Method: IExecMethod);
   public
     constructor Create(ParamSet: IExecProvider; Method: IExecMethod);
-    property StartupInfoEx: TStartupInfoExW read SIEX;
-    property CreationFlags: Cardinal read dwCreationFlags;
+    function StartupInfoEx: PStartupInfoExW;
+    function CreationFlags: Cardinal;
     function HasExtendedAttbutes: Boolean;
+    destructor Destroy; override;
+  end;
+
+  TRunAsInvoker = class(TInterfacedObject, IInterface)
+  private const
+    COMPAT_NAME = '__COMPAT_LAYER';
+    COMPAT_VALUE = 'RunAsInvoker';
+  private var
+    OldValue: String;
+    OldValuePresent: Boolean;
+  public
+    constructor SetCompatState(Enabled: Boolean);
     destructor Destroy; override;
   end;
 
 implementation
 
 uses
-  NtUtils.Exceptions, Winapi.WinError, Ntapi.ntobapi;
+  Winapi.WinError, Ntapi.ntobapi, Ntapi.ntstatus, NtUtils.Environment;
 
 { TStartupInfoHolder }
 
@@ -78,6 +96,11 @@ begin
   end
   else
     SIEX.StartupInfo.cb := SizeOf(TStartupInfoW);
+end;
+
+function TStartupInfoHolder.CreationFlags: Cardinal;
+begin
+  Result := dwCreationFlags;
 end;
 
 destructor TStartupInfoHolder.Destroy;
@@ -136,6 +159,11 @@ begin
     SIEX.lpAttributeList := nil;
 end;
 
+function TStartupInfoHolder.StartupInfoEx: PStartupInfoExW;
+begin
+  Result := @SIEX;
+end;
+
 { TExecCreateProcessAsUser }
 
 function TExecCreateProcessAsUser.Execute(ParamSet: IExecProvider):
@@ -143,7 +171,8 @@ function TExecCreateProcessAsUser.Execute(ParamSet: IExecProvider):
 var
   CommandLine: String;
   CurrentDir: PWideChar;
-  Startup: TStartupInfoHolder;
+  Startup: IStartupInfo;
+  RunAsInvoker: IInterface;
 begin
   // Command line should be in writable memory
   CommandLine := PrepareCommandLine(ParamSet);
@@ -153,26 +182,27 @@ begin
   else
     CurrentDir := nil;
 
+  // Set RunAsInvoker compatibility mode. It will be reverted
+  // after exiting from the current function.
+  if ParamSet.Provides(ppRunAsInvoker) then
+    RunAsInvoker := TRunAsInvoker.SetCompatState(ParamSet.RunAsInvoker);
+
   Startup := TStartupInfoHolder.Create(ParamSet, Self);
 
-  try
-    WinCheck(CreateProcessAsUserW(
-      ParamSet.Token, // Zero to fall back to CreateProcessW behavior
-      PWideChar(ParamSet.Application),
-      PWideChar(CommandLine),
-      nil,
-      nil,
-      ParamSet.Provides(ppInheritHandles) and ParamSet.InheritHandles,
-      Startup.CreationFlags,
-      nil,
-      CurrentDir,
-      Startup.StartupInfoEx,
-      Result
-      ), 'CreateProcessAsUserW'
-    );
-  finally
-    Startup.Free;
-  end;
+  WinCheck(CreateProcessAsUserW(
+    ParamSet.Token, // Zero to fall back to CreateProcessW behavior
+    PWideChar(ParamSet.Application),
+    PWideChar(CommandLine),
+    nil,
+    nil,
+    ParamSet.Provides(ppInheritHandles) and ParamSet.InheritHandles,
+    Startup.CreationFlags,
+    nil,
+    CurrentDir,
+    Startup.StartupInfoEx,
+    Result
+    ), 'CreateProcessAsUserW'
+  );
 
   // The caller must close handles passed via TProcessInfo
 end;
@@ -182,7 +212,7 @@ begin
   case Parameter of
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppInheritHandles, ppCreateSuspended, ppBreakaway, ppNewConsole,
-    ppShowWindowMode:
+    ppShowWindowMode, ppRunAsInvoker:
       Result := True;
   else
     Result := False;
@@ -233,6 +263,46 @@ begin
   else
     Result := False;
   end;
+end;
+
+{ TRunAsInvoker }
+
+destructor TRunAsInvoker.Destroy;
+var
+  Environment: IEnvironment;
+begin
+  Environment := TEnvironment.OpenCurrent;
+
+  if OldValuePresent then
+    Environment.SetVariable(COMPAT_NAME, OldValue)
+  else
+    Environment.DeleteVariable(COMPAT_NAME);
+
+  inherited;
+end;
+
+constructor TRunAsInvoker.SetCompatState(Enabled: Boolean);
+var
+  Environment: IEnvironment;
+  Status: TNtxStatus;
+begin
+  Environment := TEnvironment.OpenCurrent;
+
+  // Save the current state
+  Status := Environment.QueryVariableWithStatus(COMPAT_NAME, OldValue);
+
+  if Status.IsSuccess then
+    OldValuePresent := True
+  else if Status.Status = STATUS_VARIABLE_NOT_FOUND then
+    OldValuePresent := False
+  else
+    Status.RaiseOnError;
+
+  // Set the new state
+  if Enabled then
+    Environment.SetVariable(COMPAT_NAME, COMPAT_VALUE).RaiseOnError
+  else if OldValuePresent then
+    Environment.DeleteVariable(COMPAT_NAME).RaiseOnError;
 end;
 
 end.

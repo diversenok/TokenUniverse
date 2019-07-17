@@ -91,7 +91,7 @@ object DialogRun: TDialogRun
       object RadioButtonAsUser: TRadioButton
         Left = 24
         Top = 28
-        Width = 276
+        Width = 154
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcessAsUser'
@@ -122,9 +122,9 @@ object DialogRun: TDialogRun
         OnClick = ChangedExecMethod
       end
       object CheckBoxRunas: TCheckBox
-        Left = 165
+        Left = 184
         Top = 204
-        Width = 135
+        Width = 116
         Height = 15
         Anchors = [akTop]
         Caption = 'Request elevation'
@@ -141,6 +141,20 @@ object DialogRun: TDialogRun
         Caption = 'Using token: <not specified>'
         TabOrder = 8
         OnLinkClick = LinkLabelTokenLinkClick
+      end
+      object CheckBoxRunAsInvoker: TCheckBox
+        Left = 184
+        Top = 28
+        Width = 116
+        Height = 17
+        Hint = 
+          'Use this compatibility mechanism if you want to start a program ' +
+          'that requires elevation as a limited user.'
+        AllowGrayed = True
+        Anchors = [akTop]
+        Caption = 'Run as invoker'
+        State = cbGrayed
+        TabOrder = 9
       end
     end
     object TabParams: TTabSheet
@@ -349,8 +363,8 @@ object DialogRun: TDialogRun
     OnClick = ButtonBrowseClick
   end
   object PopupMenuExe: TPopupMenu
-    Left = 279
-    Top = 91
+    Left = 271
+    Top = 195
     object MenuCmd: TMenuItem
       Caption = 'Command Prompt'
       OnClick = MenuCmdClick
@@ -365,8 +379,8 @@ object DialogRun: TDialogRun
       'Executable files (*.exe;*.com;*.scr)|*.exe;*.com;*.scr|All files' +
       ' (*.*)|*'
     Options = [ofEnableSizing]
-    Left = 223
-    Top = 91
+    Left = 199
+    Top = 195
   end
   object PopupClearParent: TPopupMenu
     Left = 271
