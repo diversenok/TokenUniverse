@@ -3,7 +3,7 @@ unit NtUtils.Environment;
 interface
 
 uses
-  NtUtils.Exceptions;
+  NtUtils.Exceptions, Ntapi.ntdef;
 
 type
   TEnvVariable = record
@@ -18,6 +18,9 @@ type
     function SetAsCurrentExchange(out Old: IEnvironment): TNtxStatus;
     function Enumerate: TArray<TEnvVariable>;
     function SetVariable(Name, Value: String): TNtxStatus;
+    function DeleteVariable(Name: String): TNtxStatus;
+    function SetVariableEx(const Name: UNICODE_STRING;
+      Value: PUNICODE_STRING): TNtxStatus;
     function QueryVariable(Name: String): String;
     function QueryVariableWithStatus(Name: String; out Value: String):
       TNtxStatus;
@@ -40,6 +43,9 @@ type
     function SetAsCurrentExchange(out Old: IEnvironment): TNtxStatus;
     function Enumerate: TArray<TEnvVariable>;
     function SetVariable(Name, Value: String): TNtxStatus;
+    function DeleteVariable(Name: String): TNtxStatus;
+    function SetVariableEx(const Name: UNICODE_STRING;
+      Value: PUNICODE_STRING): TNtxStatus;
     function QueryVariable(Name: String): String;
     function QueryVariableWithStatus(Name: String; out Value: String):
       TNtxStatus;
@@ -59,7 +65,7 @@ function UnvxCreateUserEnvironment(out Environment: IEnvironment;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntstatus, Ntapi.ntpebteb, Ntapi.ntmmapi,
+  Ntapi.ntrtl, Ntapi.ntstatus, Ntapi.ntpebteb, Ntapi.ntmmapi,
   Ntapi.ntpsapi, NtUtils.Ldr, Winapi.UserEnv;
 
 function RtlxEnumerateEnvironment(Environment: PWideChar;
@@ -208,6 +214,14 @@ begin
   FBlock := Buffer;
 end;
 
+function TEnvironment.DeleteVariable(Name: String): TNtxStatus;
+var
+  NameStr: UNICODE_STRING;
+begin
+  NameStr.FromString(Name);
+  Result := SetVariableEx(NameStr, nil);
+end;
+
 destructor TEnvironment.Destroy;
 begin
   if Assigned(FBlock) then
@@ -306,9 +320,33 @@ var
 begin
   NameStr.FromString(Name);
   ValueStr.FromString(Value);
-  Result.Location := 'RtlSetEnvironmentVariable';
-  Result.Status := RtlSetEnvironmentVariable(FBlock, NameStr, ValueStr);
-  // Note: this operation might re-allocate the environment
+  Result := SetVariableEx(NameStr, @ValueStr);
+end;
+
+function TEnvironment.SetVariableEx(const Name: UNICODE_STRING;
+  Value: PUNICODE_STRING): TNtxStatus;
+var
+  EnvCopy: TEnvironment;
+begin
+  if Assigned(FBlock) then
+  begin
+    Result.Location := 'RtlSetEnvironmentVariable';
+    Result.Status := RtlSetEnvironmentVariable(FBlock, Name, Value);
+  end
+  else
+  begin
+    // RtlSetEnvironmentVariable can't change variables in the current block,
+    // it simply allocates a new one with a new variable only
+
+    // Make a full copy, make changes to it, and set it is as current
+    EnvCopy := TEnvironment.CreateNew(True);
+    Result := EnvCopy.SetVariableEx(Name, Value);
+
+    if Result.IsSuccess then
+      Result := EnvCopy.SetAsCurrent;
+
+    EnvCopy.Free;
+  end;
 end;
 
 function TEnvironment.Size: NativeUInt;

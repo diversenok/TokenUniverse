@@ -213,7 +213,7 @@ function RtlSetCurrentEnvironment(Environment: Pointer;
   PreviousEnvironment: PPointer): NTSTATUS; stdcall; external ntdll;
 
 function RtlSetEnvironmentVariable(var Environment: Pointer;
-  const Name: UNICODE_STRING; const Value: UNICODE_STRING): NTSTATUS; stdcall;
+  const Name: UNICODE_STRING; Value: PUNICODE_STRING): NTSTATUS; stdcall;
   external ntdll;
 
 function RtlQueryEnvironmentVariable_U(Environment: Pointer;
