@@ -3,13 +3,14 @@ unit NtUtils.Exec;
 interface
 
 uses
-  NtUtils.Exceptions, Winapi.ProcessThreadsApi;
+  NtUtils.Exceptions, Winapi.ProcessThreadsApi, NtUtils.Environment;
 
 type
   TExecParam = (
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppNewConsole, ppRequireElevation, ppShowWindowMode, ppRunAsInvoker
+    ppNewConsole, ppRequireElevation, ppShowWindowMode, ppRunAsInvoker,
+    ppEnvironment
   );
 
   IExecProvider = interface
@@ -28,6 +29,7 @@ type
     function RequireElevation: Boolean;
     function ShowWindowMode: Word;
     function RunAsInvoker: Boolean;
+    function Environment: IEnvironment;
   end;
 
   TProcessInfo = Winapi.ProcessThreadsApi.TProcessInformation;
@@ -56,6 +58,7 @@ type
     bRequireElevation: Boolean;
     wShowWindowMode: Word;
     bRunAsInvoker: Boolean;
+    objEnvironment: IEnvironment;
   public
     function Provides(Parameter: TExecParam): Boolean; virtual;
     function Application: String; virtual;
@@ -72,6 +75,7 @@ type
     function RequireElevation: Boolean; virtual;
     function ShowWindowMode: Word; virtual;
     function RunAsInvoker: Boolean; virtual;
+    function Environment: IEnvironment; virtual;
   end;
 
 function PrepareCommandLine(ParamSet: IExecProvider): String;
@@ -119,6 +123,14 @@ begin
     Result := strDesktop
   else
     Result := '';
+end;
+
+function TDefaultExecProvider.Environment: IEnvironment;
+begin
+  if ppEnvironment in UseParams then
+    Result := objEnvironment
+  else
+    Result := TEnvironment.OpenCurrent;
 end;
 
 function TDefaultExecProvider.InheritHandles: Boolean;

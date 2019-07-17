@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.ChildForm,
-  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens;
+  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens, NtUtils.Environment;
 
 type
   TDialogRun = class(TChildTaskbarForm, IExecProvider)
@@ -81,6 +81,7 @@ type
     function RequireElevation: Boolean;
     function ShowWindowMode: Word;
     function RunAsInvoker: Boolean;
+    function Environment: IEnvironment;
   private
     ExecMethod: IExecMethod;
     FToken: TToken;
@@ -185,6 +186,11 @@ end;
 function TDialogRun.Desktop: String;
 begin
   Result := ComboBoxDesktop.Text;
+end;
+
+function TDialogRun.Environment: IEnvironment;
+begin
+  Result := nil; // TODO: Environment editor
 end;
 
 procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);

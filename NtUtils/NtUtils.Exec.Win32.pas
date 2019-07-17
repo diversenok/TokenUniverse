@@ -3,7 +3,8 @@ unit NtUtils.Exec.Win32;
 interface
 
 uses
-  NtUtils.Exec, Winapi.ProcessThreadsApi, NtUtils.Exceptions;
+  NtUtils.Exec, Winapi.ProcessThreadsApi, NtUtils.Exceptions,
+  NtUtils.Environment;
 
 type
   TExecCreateProcessAsUser = class(TInterfacedObject, IExecMethod)
@@ -20,6 +21,7 @@ type
     function StartupInfoEx: PStartupInfoExW;
     function CreationFlags: Cardinal;
     function HasExtendedAttbutes: Boolean;
+    function Environment: Pointer;
   end;
 
   TStartupInfoHolder = class(TInterfacedObject, IStartupInfo)
@@ -28,12 +30,14 @@ type
     strDesktop: String;
     hParent: THandle;
     dwCreationFlags: Cardinal;
+    objEnvironment: IEnvironment;
     procedure PrepateAttributes(ParamSet: IExecProvider; Method: IExecMethod);
   public
     constructor Create(ParamSet: IExecProvider; Method: IExecMethod);
     function StartupInfoEx: PStartupInfoExW;
     function CreationFlags: Cardinal;
     function HasExtendedAttbutes: Boolean;
+    function Environment: Pointer;
     destructor Destroy; override;
   end;
 
@@ -52,7 +56,7 @@ type
 implementation
 
 uses
-  Winapi.WinError, Ntapi.ntobapi, Ntapi.ntstatus, NtUtils.Environment;
+  Winapi.WinError, Ntapi.ntobapi, Ntapi.ntstatus;
 
 { TStartupInfoHolder }
 
@@ -61,6 +65,7 @@ constructor TStartupInfoHolder.Create(ParamSet: IExecProvider;
 begin
   GetStartupInfoW(SIEX.StartupInfo);
   SIEX.StartupInfo.dwFlags := 0;
+  dwCreationFlags := CREATE_UNICODE_ENVIRONMENT;
 
   if Method.Supports(ppDesktop) and ParamSet.Provides(ppDesktop) then
   begin
@@ -74,6 +79,9 @@ begin
     SIEX.StartupInfo.dwFlags := SIEX.StartupInfo.dwFlags or STARTF_USESHOWWINDOW;
     SIEX.StartupInfo.wShowWindow := ParamSet.ShowWindowMode
   end;
+
+  if Method.Supports(ppEnvironment) and ParamSet.Provides(ppEnvironment) then
+    objEnvironment := ParamSet.Environment;
 
   if Method.Supports(ppCreateSuspended) and ParamSet.Provides(ppCreateSuspended)
     and ParamSet.CreateSuspended then
@@ -112,6 +120,14 @@ begin
     SIEX.lpAttributeList := nil;
   end;
   inherited;
+end;
+
+function TStartupInfoHolder.Environment: Pointer;
+begin
+  if Assigned(objEnvironment) then
+    Result := objEnvironment.Environment
+  else
+    Result := nil;
 end;
 
 function TStartupInfoHolder.HasExtendedAttbutes: Boolean;
@@ -197,7 +213,7 @@ begin
     nil,
     ParamSet.Provides(ppInheritHandles) and ParamSet.InheritHandles,
     Startup.CreationFlags,
-    nil,
+    Startup.Environment,
     CurrentDir,
     Startup.StartupInfoEx,
     Result
@@ -212,7 +228,7 @@ begin
   case Parameter of
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppInheritHandles, ppCreateSuspended, ppBreakaway, ppNewConsole,
-    ppShowWindowMode, ppRunAsInvoker:
+    ppShowWindowMode, ppRunAsInvoker, ppEnvironment:
       Result := True;
   else
     Result := False;
@@ -225,7 +241,7 @@ function TExecCreateProcessWithToken.Execute(ParamSet: IExecProvider):
   TProcessInfo;
 var
   CurrentDir: PWideChar;
-  Startup: TStartupInfoHolder;
+  Startup: IStartupInfo;
 begin
   if ParamSet.Provides(ppCurrentDirectory) then
     CurrentDir := PWideChar(ParamSet.CurrentDircetory)
@@ -234,22 +250,18 @@ begin
 
   Startup := TStartupInfoHolder.Create(ParamSet, Self);
 
-  try
-    WinCheck(CreateProcessWithTokenW(
-      ParamSet.Token,
-      ParamSet.LogonFlags,
-      PWideChar(ParamSet.Application),
-      PWideChar(PrepareCommandLine(ParamSet)),
-      Startup.CreationFlags,
-      nil,
-      CurrentDir,
-      Startup.StartupInfoEx,
-      Result
-      ), 'CreateProcessWithTokenW'
-    );
-  finally
-    Startup.Free;
-  end;
+  WinCheck(CreateProcessWithTokenW(
+    ParamSet.Token,
+    ParamSet.LogonFlags,
+    PWideChar(ParamSet.Application),
+    PWideChar(PrepareCommandLine(ParamSet)),
+    Startup.CreationFlags,
+    Startup.Environment,
+    CurrentDir,
+    Startup.StartupInfoEx,
+    Result
+    ), 'CreateProcessWithTokenW'
+  );
 
   // The caller must close handles passed via TProcessInfo
 end;
@@ -258,7 +270,7 @@ function TExecCreateProcessWithToken.Supports(Parameter: TExecParam): Boolean;
 begin
   case Parameter of
     ppParameters, ppCurrentDirectory, ppDesktop, ppToken, ppLogonFlags,
-    ppCreateSuspended, ppBreakaway, ppShowWindowMode:
+    ppCreateSuspended, ppBreakaway, ppShowWindowMode, ppEnvironment:
       Result := True;
   else
     Result := False;
