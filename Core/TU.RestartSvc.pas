@@ -29,10 +29,10 @@ procedure ReSvcRunInSession(ScvParams: TArray<String>);
 implementation
 
 uses
-  Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntobapi,
-  Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, Ntapi.ntdef, NtUtils.WinUser,
-  NtUtils.Snapshots.Processes, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
-  NtUtils.Exec.Win32, NtUtils.Svc.SingleTaskSvc, NtUtils.Processes;
+  Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi,
+  Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
+  NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
+  NtUtils.Exec.Win32, NtUtils.Processes;
 
 { Restart Service client functions }
 
@@ -102,21 +102,20 @@ function GetCsrssToken: THandle;
 const
   SrcProcess = 'csrss.exe';
 var
-  Csrss: PProcessInfo;
+  Processes: TArray<TProcessEntry>;
+  i: Integer;
 begin
-  with TProcessSnapshot.Create do
-  begin
-    Csrss := FindByName(SrcProcess);
-    try
-      if Assigned(Csrss) then
-        NtxOpenProcessTokenById(Result, Csrss.ProcessId,
-          TOKEN_DUPLICATE).RaiseOnError
-      else
-        raise Exception.Create(SrcProcess + ' is not found on the system.');
-    finally
-      Free;
+  NtxEnumerateProcesses(Processes).RaiseOnError;
+
+  for i := 0 to High(Processes) do
+    if Processes[i].ImageName = SrcProcess then
+    begin
+      NtxOpenProcessTokenById(Result, Processes[i].Process.ProcessId,
+        TOKEN_DUPLICATE).RaiseOnError;
+      Exit;
     end;
-  end;
+
+  raise Exception.Create(SrcProcess + ' is not found on the system.');
 end;
 
 function PrepareToken(SessionID: Integer): THandle;

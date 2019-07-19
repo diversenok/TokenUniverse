@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  UI.Prototypes.ChildForm, UI.ListViewEx, NtUtils.Snapshots.Processes;
+  UI.Prototypes.ChildForm, UI.ListViewEx, NtUtils.Processes.Snapshots;
 
 type
   TThreadListDialog = class(TChildForm)
@@ -16,9 +16,9 @@ type
       Selected: Boolean);
     procedure ListViewThreadsDblClick(Sender: TObject);
   public
-    constructor CreateFrom(AOwner: TComponent; Process: PProcessInfo);
+    constructor CreateFrom(AOwner: TComponent; const Process: TProcessEntry);
     class function Execute(AOwner: TComponent;
-      Process: PProcessInfo): NativeUInt;
+      const Process: TProcessEntry): NativeUInt;
   end;
 
 var
@@ -50,26 +50,24 @@ function GetGUIThreadInfo(idThread: Cardinal; var gui: TGuiThreadInfo):
 { TThreadListDialog }
 
 constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
-  Process: PProcessInfo);
+  const Process: TProcessEntry);
 var
   i: Integer;
-  Thread: PThreadInfo;
   GuiInfo: TGuiThreadInfo;
 begin
   inherited Create(AOwner);
 
-  Caption := Format('Threads of %s [%d]', [Process.GetImageName,
-    Process.ProcessId]);
+  Caption := Format('Threads of %s [%d]', [Process.Process.GetImageName,
+    Process.Process.ProcessId]);
 
   ListViewThreads.Items.BeginUpdate;
 
-  for i := 0 to Process.NumberOfThreads - 1 do
+  for i := 0 to Process.Process.NumberOfThreads - 1 do
   with ListViewThreads.Items.Add do
   begin
-    Thread := @Process.Threads[i];
-    Caption := IntToStr(Thread.ClientId.UniqueThread);
-    SubItems.Add(DateTimeToStr(Thread.CreateTime.ToDateTime));
-    if Thread.WaitReason = Suspended then
+    Caption := IntToStr(Process.Threads[i].ClientId.UniqueThread);
+    SubItems.Add(DateTimeToStr(Process.Threads[i].CreateTime.ToDateTime));
+    if Process.Threads[i].WaitReason = Suspended then
       Color := clSuspended
     else
     begin
@@ -77,7 +75,7 @@ begin
       FillChar(GuiInfo, SizeOf(GuiInfo), 0);
       GuiInfo.cbSize := SizeOf(GuiInfo);
 
-      if GetGUIThreadInfo(Thread.ClientId.UniqueThread, GuiInfo) then
+      if GetGUIThreadInfo(Process.Threads[i].ClientId.UniqueThread, GuiInfo) then
         Color := clGuiThread;
     end;
   end;
@@ -89,7 +87,7 @@ begin
 end;
 
 class function TThreadListDialog.Execute(AOwner: TComponent;
-  Process: PProcessInfo): NativeUInt;
+  const Process: TProcessEntry): NativeUInt;
 begin
   with TThreadListDialog.CreateFrom(AOwner, Process) do
   begin

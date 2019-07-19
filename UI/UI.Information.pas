@@ -123,7 +123,7 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
-  UI.Information.Access, UI.Sid.View, NtUtils.Snapshots.Processes,
+  UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, DelphiUtils.Strings, NtUtils.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, NtUtils.AccessMasks, NtUtils.Exceptions;
 
@@ -652,8 +652,9 @@ procedure TInfoDialog.UpdateObjectTab;
 var
   Handles: TArray<THandleEntry>;
   OpenedSomewhereElse: Boolean;
-  ProcSnapshot: TProcessSnapshot;
-  Process: PProcessInfo;
+  Processes: TArray<TProcessEntry>;
+  Process: PProcessEntry;
+  ProcessesSnapshotted: Boolean;
   ObjTypes: TArray<TObjectTypeEntry>;
   ObjEntry: PObjectEntry;
   CreatorImageName: String;
@@ -662,7 +663,7 @@ begin
   if TabObject.Tag = TAB_UPDATED then
     Exit;
 
-  ProcSnapshot := nil;
+  ProcessesSnapshotted := False;
 
   // Update basic object information
   if Token.InfoClass.ReQuery(tdObjectInfo) then
@@ -704,19 +705,27 @@ begin
     // Add handles from other processes
     if OpenedSomewhereElse then
     begin
-      ProcSnapshot := TProcessSnapshot.Create;
+      if not NtxEnumerateProcesses(Processes).IsSuccess then
+        SetLength(Processes, 0);
+
+      ProcessesSnapshotted := True;
 
       for i := 0 to High(Handles) do
       if (Handles[i].UniqueProcessId <> NtCurrentProcessId) then
         with ListViewProcesses.Items.Add do
         begin
-          Process := ProcSnapshot.FindByPID(Handles[i].UniqueProcessId);
-          Caption := Process.GetImageName;
+          Process := NtxFindProcessById(Processes, Handles[i].UniqueProcessId);
+
+          if Assigned(Process) then
+            Caption := Process.Process.GetImageName
+          else
+            Caption := 'Unknown process';
+
           SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
           SubItems.Add(IntToHexEx(Handles[i].HandleValue));
           SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
           ImageIndex := TProcessIcons.GetIcon(
-            NtxTryQueryImageProcessById(Process.ProcessId));
+            NtxTryQueryImageProcessById(Handles[i].UniqueProcessId));
         end;
     end;
   end;
@@ -738,20 +747,21 @@ begin
           begin
             // The creator is somone else, we need to snapshot processes
             // if it's not done already.
-            if not Assigned(ProcSnapshot) then
-              ProcSnapshot := TProcessSnapshot.Create;
+            if not ProcessesSnapshotted then
+              if not NtxEnumerateProcesses(Processes).IsSuccess then
+                SetLength(Processes, 0);
 
-            Process := ProcSnapshot.FindByPID(
+            Process := NtxFindProcessById(Processes,
               ObjEntry.Other.CreatorUniqueProcess);
 
             if Assigned(Process) then
             begin
               Hint := 'Since process IDs might be reused, ' +
                       'image name might be incorrect';
-              CreatorImageName := Process.GetImageName;
+              CreatorImageName := Process.Process.GetImageName;
             end
             else // Use default unknown name
-              CreatorImageName := PProcessInfo(nil).GetImageName;
+              CreatorImageName := 'Unknown process';
           end;
 
           SubItems[0] := Format('PID %d (%s)', [
@@ -765,9 +775,6 @@ begin
     end
     else
       Hint := 'Enable global flag FLG_MAINTAIN_OBJECT_TYPELIST (0x4000).';
-
-  if Assigned(ProcSnapshot) then
-    ProcSnapshot.Free;
 
   ListViewProcesses.Items.EndUpdate;
   TabObject.Tag := TAB_UPDATED;

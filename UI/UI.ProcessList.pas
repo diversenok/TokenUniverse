@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls,
   Vcl.ExtCtrls, Vcl.ImgList, System.Generics.Collections,
-  UI.ListViewEx, UI.Prototypes.ChildForm, NtUtils.Snapshots.Processes;
+  UI.ListViewEx, UI.Prototypes.ChildForm, NtUtils.Processes.Snapshots;
 
 type
   TProcessIcons = class
@@ -21,14 +21,14 @@ type
   end;
 
   TProcessItemEx = class
-    Process: PProcessInfo;
+    Process: TProcessEntry;
     SearchKeyword: string;
     Enabled: Boolean; // by search
     Added: Boolean;
     Parent: TProcessItemEx;
     ListItemRef: TListItem;
     ImageIndex: Integer;
-    constructor Create(Src: PProcessInfo);
+    constructor Create(const Src: TProcessEntry);
   end;
   PProcessItemEx = ^TProcessItemEx;
 
@@ -53,7 +53,6 @@ type
     procedure SearchBoxRightButtonClick(Sender: TObject);
     procedure ButtonOkClick(Sender: TObject);
   private
-    ProcessSnapshot: TProcessSnapshot;
     ProcessListEx: array of TProcessItemEx;
     PickThread: Boolean;
     ThreadID: NativeUInt;
@@ -162,14 +161,13 @@ begin
   for i := 0 to High(ProcessListEx) do
     ProcessListEx[i].Free;
 
-  ProcessSnapshot.Free;
   inherited;
 end;
 
 class function TProcessListDialog.Execute(AOwner: TComponent;
   AllowSelectThread: Boolean): TClientIdEx;
 var
-  Process: PProcessInfo;
+  Process: PProcessEntry;
 begin
   with TProcessListDialog.Create(AOwner) do
   begin
@@ -183,10 +181,10 @@ begin
     if AllowSelectThread and (ThreadID = 0) then
       Abort;
 
-    Process := PProcessItemEx(ListView.Selected.Data).Process;
-    Result.ProcessID := Process.ProcessId;
+    Process := @PProcessItemEx(ListView.Selected.Data).Process;
+    Result.ProcessID := Process.Process.ProcessId;
     Result.ThreadID := ThreadID;
-    Result.ImageName := Process.GetImageName;
+    Result.ImageName := Process.Process.GetImageName;
   end;
 end;
 
@@ -221,7 +219,7 @@ begin
 
   for i := 0 to High(ProcessListEx) do
     ProcessListEx[i].ImageIndex := TProcessIcons.GetIcon(
-      NtxTryQueryImageProcessById(ProcessListEx[i].Process.ProcessId));
+      NtxTryQueryImageProcessById(ProcessListEx[i].Process.Process.ProcessId));
 
   TProcessIcons.ImageList.EndUpdate;
 end;
@@ -229,25 +227,23 @@ end;
 procedure TProcessListDialog.ReloadProcessList(Sender: TObject);
 var
   i, ChildInd, ParentInd: integer;
+  Processes: TArray<TProcessEntry>;
 begin
   ListView.SmallImages := TProcessIcons.ImageList;
 
   for i := 0 to High(ProcessListEx) do
     ProcessListEx[i].Free;
 
-  ProcessSnapshot.Free;
+  if not NtxEnumerateProcesses(Processes).IsSuccess then
+    Exit;
 
-  // Snapshot processes. NOTE: this object should outlive all references to its
-  // members stored inside ProcessListEx.
-  ProcessSnapshot := TProcessSnapshot.Create;
-
-  SetLength(ProcessListEx, ProcessSnapshot.Count);
+  SetLength(ProcessListEx, Length(Processes));
   for i := 0 to High(ProcessListEx) do
   begin
-    ProcessListEx[i] := TProcessItemEx.Create(ProcessSnapshot[i]);
+    ProcessListEx[i] := TProcessItemEx.Create(Processes[i]);
     ProcessListEx[i].SearchKeyword :=
-      LowerCase(ProcessListEx[i].Process.GetImageName) + ' ' +
-      IntToStr(ProcessListEx[i].Process.ProcessId);
+      LowerCase(ProcessListEx[i].Process.Process.GetImageName) + ' ' +
+      IntToStr(ProcessListEx[i].Process.Process.ProcessId);
   end;
 
   // Check if parent still exists for each process.
@@ -256,10 +252,10 @@ begin
   for ChildInd := 0 to High(ProcessListEx) do
     for ParentInd := 0 to High(ProcessListEx) do
       if (ChildInd <> ParentInd) and
-        (ProcessListEx[ChildInd].Process.InheritedFromProcessId =
-        ProcessListEx[ParentInd].Process.ProcessId) and
-        (ProcessListEx[ChildInd].Process.CreateTime >=
-        ProcessListEx[ParentInd].Process.CreateTime) then
+        (ProcessListEx[ChildInd].Process.Process.InheritedFromProcessId =
+        ProcessListEx[ParentInd].Process.Process.ProcessId) and
+        (ProcessListEx[ChildInd].Process.Process.CreateTime >=
+        ProcessListEx[ParentInd].Process.Process.CreateTime) then
       begin
         ProcessListEx[ChildInd].Parent := ProcessListEx[ParentInd];
         Break;
@@ -294,8 +290,8 @@ begin
       if Enabled and ((Parent = nil) or (not Parent.Enabled))  then
       begin
         ListItemRef := ListView.Items.Add;
-        ListItemRef.Caption := ' ' + Process.GetImageName;
-        ListItemRef.SubItems.Add(IntToStr(Process.ProcessId));
+        ListItemRef.Caption := ' ' + Process.Process.GetImageName;
+        ListItemRef.SubItems.Add(IntToStr(Process.Process.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
         Added := True;
@@ -309,8 +305,8 @@ begin
         if Enabled and (not Added) and (Parent <> nil) and Parent.Added then
       begin
         ListItemRef := AddChild(Parent.ListItemRef.Index);
-        ListItemRef.Caption := ' ' + Process.GetImageName;
-        ListItemRef.SubItems.Add(IntToStr(Process.ProcessId));
+        ListItemRef.Caption := ' ' + Process.Process.GetImageName;
+        ListItemRef.SubItems.Add(IntToStr(Process.Process.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
         Added := True;
@@ -331,7 +327,7 @@ end;
 
 { TProcessItemEx }
 
-constructor TProcessItemEx.Create(Src: PProcessInfo);
+constructor TProcessItemEx.Create(const Src: TProcessEntry);
 begin
   Process := Src;
 end;

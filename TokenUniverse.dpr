@@ -40,7 +40,6 @@ uses
   UI.Modal.ThreadList in 'UI\UI.Modal.ThreadList.pas' {ThreadListDialog},
   NtUtils.Exceptions in 'NtUtils\NtUtils.Exceptions.pas',
   Winapi.WinError in 'Headers\Winapi.WinError.pas',
-  NtUtils.Snapshots.Processes in 'NtUtils\NtUtils.Snapshots.Processes.pas',
   Winapi.WinNt in 'Headers\Winapi.WinNt.pas',
   Winapi.WinBase in 'Headers\Winapi.WinBase.pas',
   Winapi.Sddl in 'Headers\Winapi.Sddl.pas',
@@ -105,7 +104,8 @@ uses
   NtUtils.Lsa.Logon in 'NtUtils\NtUtils.Lsa.Logon.pas',
   NtUtils.Environment in 'NtUtils\NtUtils.Environment.pas',
   Winapi.UserEnv in 'Headers\Winapi.UserEnv.pas',
-  NtUtils.Objects.Snapshots in 'NtUtils\NtUtils.Objects.Snapshots.pas';
+  NtUtils.Objects.Snapshots in 'NtUtils\NtUtils.Objects.Snapshots.pas',
+  NtUtils.Processes.Snapshots in 'NtUtils\NtUtils.Processes.Snapshots.pas';
 
 {$R *.res}
 

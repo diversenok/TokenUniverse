@@ -94,8 +94,7 @@ type
   end;
   PSystemThreadInformation = ^TSystemThreadInformation;
 
-  // SystemProcessInformation
-  TSystemProcessInformation = record
+  TSystemProcessInformationFixed = record
     NextEntryOffset: Cardinal;
     NumberOfThreads: Cardinal;
     WorkingSetPrivateSize: Int64; // since VISTA
@@ -130,8 +129,14 @@ type
     ReadTransferCount: UInt64;
     WriteTransferCount: UInt64;
     OtherTransferCount: UInt64;
-    Threads: array [WORD] of TSystemThreadInformation;
     function GetImageName: String;
+  end;
+  PSystemProcessInformationFixed = ^TSystemProcessInformationFixed;
+
+  // SystemProcessInformation
+  TSystemProcessInformation = record
+    Process: TSystemProcessInformationFixed;
+    Threads: array [0..0] of TSystemThreadInformation;
   end;
   PSystemProcessInformation = ^TSystemProcessInformation;
 
@@ -205,9 +210,9 @@ function NtQuerySystemInformation(SystemInformationClass
 
 implementation
 
-{ TSystemProcessInformation }
+{ TSystemProcessInformationFixed }
 
-function TSystemProcessInformation.GetImageName: String;
+function TSystemProcessInformationFixed.GetImageName: String;
 begin
   if not Assigned(@Self) then
     Result := 'Unknown process'
