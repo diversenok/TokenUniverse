@@ -5,8 +5,7 @@ unit TU.LsaApi;
 interface
 
 uses
-  NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi, Winapi.NtSecApi,
-  NtUtils.Exceptions;
+  Winapi.WinNt, Ntapi.ntseapi;
 
 type
   TPrivilegeRec = record
@@ -30,8 +29,8 @@ type
 implementation
 
 uses
-  NtUtils.Lsa, System.SysUtils, DelphiUtils.Strings, NtUtils.Processes,
-  TU.Tokens.Types, NtUtils.Strings;
+  NtUtils.Lsa, System.SysUtils, NtUtils.Exceptions;
+
 
 { TPrivilegeCache }
 

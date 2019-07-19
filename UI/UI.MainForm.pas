@@ -125,7 +125,7 @@ implementation
 
 uses
   System.UITypes, TU.Tokens.Types, Winapi.WinNt, NtUtils.Exceptions,
-  NtUtils.Snapshots.Handles, TU.RestartSvc, TU.Suggestions, TU.Tokens,
+  NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
@@ -340,15 +340,22 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
-  Handles: THandleInfoArray;
+  Handles: TArray<THandleEntry>;
   i: integer;
 begin
   TokenView := TTokenViewSource.Create(ListViewTokens);
 
   // Search for inherited handles
-  Handles := THandleSnapshot.OfProcess(NtCurrentProcessId);
-  for i := 0 to High(Handles) do
-    TokenView.Add(TToken.CreateByHandle(Handles[i]));
+  if NtxEnumerateSystemHandles(Handles).IsSuccess then
+  begin
+    NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);
+
+    // TODO: obtain token's type index in runtime
+    NtxFilterHandles(Handles, FilterByType, 5);
+
+    for i := 0 to High(Handles) do
+      TokenView.Add(TToken.CreateByHandle(Handles[i]));
+  end;
 
   // Open current process and, maybe, its linked token
   with TokenView.Add(TToken.CreateOpenCurrent) do

@@ -164,7 +164,8 @@ begin
     NtxRestoreImpersonation(hThread, hOldStateToken);
 
   // Compare the one we were trying to set with the one actually set
-  Result := NtxCompareTokens(hToken, hActuallySetToken);
+  Result.Location := 'NtxCompareObjects';
+  Result.Status := NtxCompareObjects(hToken, hActuallySetToken, 'Token');
   NtxSafeClose(hActuallySetToken);
 
   // STATUS_SUCCESS => Impersonation works fine, use it.

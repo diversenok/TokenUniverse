@@ -132,7 +132,7 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Mitigation policies
  - [ ] Child process policy
  - [ ] Job assignment
- - [ ] Run as invoker compatibility
+ - [x] Run as invoker compatibility
 
 ### Interface features
  - [ ] Immediate crash notification

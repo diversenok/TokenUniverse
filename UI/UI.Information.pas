@@ -124,8 +124,8 @@ implementation
 uses
   System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Snapshots.Processes,
-  NtUtils.Snapshots.Handles, DelphiUtils.Strings, NtUtils.Strings,
-  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.AccessMasks;
+  NtUtils.Objects.Snapshots, DelphiUtils.Strings, NtUtils.Strings,
+  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.AccessMasks, NtUtils.Exceptions;
 
 const
   TAB_INVALIDATED = 0;
@@ -650,13 +650,13 @@ end;
 
 procedure TInfoDialog.UpdateObjectTab;
 var
-  Handles: THandleInfoArray;
+  Handles: TArray<THandleEntry>;
   OpenedSomewhereElse: Boolean;
   ProcSnapshot: TProcessSnapshot;
   Process: PProcessInfo;
+  ObjTypes: TArray<TObjectTypeEntry>;
+  ObjEntry: PObjectEntry;
   CreatorImageName: String;
-  ObjectSnapshot: TObjectSnapshot;
-  ObjInfo: PObjectInfo;
   i: Integer;
 begin
   if TabObject.Tag = TAB_UPDATED then
@@ -680,84 +680,88 @@ begin
   ListViewProcesses.SmallImages := TProcessIcons.ImageList;
 
   // Snapshot handles and find the ones pointing to that object
-  Handles := THandleSnapshot.OfObject(Token.HandleInformation.PObject);
-  OpenedSomewhereElse := False;
-
-  // Add handle from current process and check if there are any other
-  for i := 0 to High(Handles) do
-    if Handles[i].UniqueProcessId = NtCurrentProcessId then
-      with ListViewProcesses.Items.Add do
-      begin
-        Caption := 'Current process';
-        SubItems.Add(IntToStr(NtCurrentProcessId));
-        SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
-        ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
-      end
-    else
-      OpenedSomewhereElse := True;
-
-  // Add handles from other processes
-  if OpenedSomewhereElse then
+  if NtxEnumerateSystemHandles(Handles).IsSuccess then
   begin
-    ProcSnapshot := TProcessSnapshot.Create;
+    NtxFilterHandles(Handles, FilterByAddress,
+      NativeUInt(Token.HandleInformation.PObject));
 
+    OpenedSomewhereElse := False;
+
+    // Add handle from current process and check if there are any other
     for i := 0 to High(Handles) do
-    if (Handles[i].UniqueProcessId <> NtCurrentProcessId) then
-      with ListViewProcesses.Items.Add do
-      begin
-        Process := ProcSnapshot.FindByPID(Handles[i].UniqueProcessId);
-        Caption := Process.GetImageName;
-        SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
-        SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
-        ImageIndex := TProcessIcons.GetIcon(
-          NtxTryQueryImageProcessById(Process.ProcessId));
-      end;
+      if Handles[i].UniqueProcessId = NtCurrentProcessId then
+        with ListViewProcesses.Items.Add do
+        begin
+          Caption := 'Current process';
+          SubItems.Add(IntToStr(NtCurrentProcessId));
+          SubItems.Add(IntToHexEx(Handles[i].HandleValue));
+          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
+          ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
+        end
+      else
+        OpenedSomewhereElse := True;
+
+    // Add handles from other processes
+    if OpenedSomewhereElse then
+    begin
+      ProcSnapshot := TProcessSnapshot.Create;
+
+      for i := 0 to High(Handles) do
+      if (Handles[i].UniqueProcessId <> NtCurrentProcessId) then
+        with ListViewProcesses.Items.Add do
+        begin
+          Process := ProcSnapshot.FindByPID(Handles[i].UniqueProcessId);
+          Caption := Process.GetImageName;
+          SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
+          SubItems.Add(IntToHexEx(Handles[i].HandleValue));
+          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
+          ImageIndex := TProcessIcons.GetIcon(
+            NtxTryQueryImageProcessById(Process.ProcessId));
+        end;
+    end;
   end;
 
   // Obtain object creator by snapshotting objects on the system
   with ListViewObject.Items[6] do
-    if TObjectSnapshot.FeatureSupported then
+    if NtxObjectEnumerationSupported then
     begin
-      ObjectSnapshot := TObjectSnapshot.Create;
-
-      ObjInfo := ObjectSnapshot.FindObject(TObjectType.objToken,
-        Token.HandleInformation.PObject);
-
-      // Determine the cteator
-      if not ObjectSnapshot.IsSuccessful then
-        SubItems[0] := 'Unknown'
-      else if Assigned(ObjInfo) then
+      if NtxEnumerateObjects(ObjTypes).IsSuccess then
       begin
-        if ObjInfo.CreatorUniqueProcess = NtCurrentProcessId then
-           CreatorImageName := 'Current process'
-        else
+        ObjEntry := NtxFindObjectByAddress(ObjTypes,
+          Token.HandleInformation.PObject);
+
+        if Assigned(ObjEntry) then
         begin
-          // The creator is somone else, we need to snapshot processes
-          // if it's not done already.
-          if not Assigned(ProcSnapshot) then
-            ProcSnapshot := TProcessSnapshot.Create;
-
-          Process := ProcSnapshot.FindByPID(ObjInfo.CreatorUniqueProcess);
-
-          if Assigned(Process) then
+          if ObjEntry.Other.CreatorUniqueProcess = NtCurrentProcessId then
+             CreatorImageName := 'Current process'
+          else
           begin
-            Hint := 'Since process IDs might be reused, ' +
-                    'image name might be incorrect';
-            CreatorImageName := Process.GetImageName;
-          end
-          else // Use default unknown name
-            CreatorImageName := PProcessInfo(nil).GetImageName;
-        end;
+            // The creator is somone else, we need to snapshot processes
+            // if it's not done already.
+            if not Assigned(ProcSnapshot) then
+              ProcSnapshot := TProcessSnapshot.Create;
 
-        SubItems[0] := Format('PID %d (%s)', [ObjInfo.CreatorUniqueProcess,
-          CreatorImageName]);
+            Process := ProcSnapshot.FindByPID(
+              ObjEntry.Other.CreatorUniqueProcess);
+
+            if Assigned(Process) then
+            begin
+              Hint := 'Since process IDs might be reused, ' +
+                      'image name might be incorrect';
+              CreatorImageName := Process.GetImageName;
+            end
+            else // Use default unknown name
+              CreatorImageName := PProcessInfo(nil).GetImageName;
+          end;
+
+          SubItems[0] := Format('PID %d (%s)', [
+            ObjEntry.Other.CreatorUniqueProcess, CreatorImageName]);
+        end
+        else
+          SubItems[0] := 'Kernel';
       end
       else
-        SubItems[0] := 'Kernel';
-
-      ObjectSnapshot.Free;
+        SubItems[0] := 'Unknown';
     end
     else
       Hint := 'Enable global flag FLG_MAINTAIN_OBJECT_TYPELIST (0x4000).';

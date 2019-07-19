@@ -190,7 +190,6 @@
         </DCCReference>
         <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
         <DCCReference Include="Headers\Winapi.WinError.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Snapshots.Handles.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Snapshots.Processes.pas"/>
         <DCCReference Include="Headers\Winapi.WinNt.pas"/>
         <DCCReference Include="Headers\Winapi.WinBase.pas"/>
@@ -297,6 +296,7 @@
         <DCCReference Include="NtUtils\NtUtils.Lsa.Logon.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
         <DCCReference Include="Headers\Winapi.UserEnv.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.Snapshots.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

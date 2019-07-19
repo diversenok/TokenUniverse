@@ -6,6 +6,12 @@ interface
 uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntobapi, NtUtils.Exceptions;
 
+type
+  TObjectTypeInfo = record
+    TypeName: String;
+    Other: TObjectTypeInformation;
+  end;
+
 // Close a handle safely and set it to zero
 function NtxSafeClose(var hObject: THandle): NTSTATUS;
 
@@ -22,15 +28,24 @@ function NtxQueryNameObject(hObject: THandle; out Name: String): TNtxStatus;
 function NtxQueryBasicInfoObject(hObject: THandle;
   out Info: TObjectBasicInformaion): TNtxStatus;
 
+// Query object type information
+function NtxQueryTypeObject(hObject: THandle;
+  out Info: TObjectTypeInfo): TNtxStatus;
+
 // Wait for an object to enter signaled state
 function NtxWaitForSingleObject(hObject: THandle; Alertable: Boolean;
   Timeout: Int64): TNtxStatus; overload;
 function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;
 
+// Check whether two handles point to the same kernel object
+function NtxCompareObjects(hObject1, hObject2: THandle;
+  ObjectTypeName: String = ''): NTSTATUS;
+
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntpsapi, System.SysUtils;
+  Ntapi.ntstatus, Ntapi.ntpsapi, System.SysUtils, NtUtils.Ldr,
+  NtUtils.Objects.Snapshots, NtUtils.Tokens;
 
 function NtxSafeClose(var hObject: THandle): NTSTATUS;
 begin
@@ -164,13 +179,12 @@ var
   Buffer: PUNICODE_STRING;
   BufferSize: Cardinal;
 begin
-  BufferSize := 0;
-
   Result.Location := 'NtQueryObject';
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(ObjectNameInformation);
   Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
 
+  BufferSize := 0;
   Result.Status := NtQueryObject(hObject, ObjectNameInformation, nil, 0,
     @BufferSize);
 
@@ -178,15 +192,14 @@ begin
     Exit;
 
   Buffer := AllocMem(BufferSize);
-  try
-    Result.Status := NtQueryObject(hObject, ObjectNameInformation, Buffer,
-      BufferSize, nil);
 
-    if Result.IsSuccess then
-      Name := Buffer.ToString;
-  finally
-    FreeMem(Buffer);
-  end;
+  Result.Status := NtQueryObject(hObject, ObjectNameInformation, Buffer,
+    BufferSize, nil);
+
+  if Result.IsSuccess then
+    Name := Buffer.ToString;
+
+  FreeMem(Buffer);
 end;
 
 function NtxQueryBasicInfoObject(hObject: THandle;
@@ -199,6 +212,46 @@ begin
 
   Result.Status := NtQueryObject(hObject, ObjectBasicInformation, @Info,
     SizeOf(Info), nil);
+end;
+
+function NtxQueryTypeObject(hObject: THandle;
+  out Info: TObjectTypeInfo): TNtxStatus;
+var
+  Buffer: PObjectTypeInformation;
+  BufferSize: Cardinal;
+begin
+  Result.Location := 'NtQueryObject';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ObjectTypeInformation);
+  Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+
+  BufferSize := 0;
+  Result.Status := NtQueryObject(hObject, ObjectTypeInformation, nil, 0,
+    @BufferSize);
+
+  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
+    Exit;
+
+  if BufferSize < SizeOf(TObjectTypeInformation) then
+  begin
+    Result.Status := STATUS_INFO_LENGTH_MISMATCH;
+    Exit;
+  end;
+
+  Buffer := AllocMem(BufferSize);
+  Result.Status := NtQueryObject(hObject, ObjectTypeInformation, Buffer,
+    BufferSize, nil);
+
+  if Result.IsSuccess then
+  begin
+    Info.TypeName := Buffer.TypeName.ToString;
+    Info.Other := Buffer^;
+
+    // Fix a UNICODE_STRNING reference by making it point to the local string
+    Info.Other.TypeName.Buffer := PWideChar(Info.TypeName);
+  end;
+
+  FreeMem(Buffer);
 end;
 
 function NtxWaitForSingleObject(hObject: THandle; Alertable: Boolean;
@@ -216,6 +269,78 @@ function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;
 begin
   Result.Location := 'NtWaitForSingleObject';
   Result.Status := NtWaitForSingleObject(hObject, True, nil);
+end;
+
+function NtxCompareObjects(hObject1, hObject2: THandle;
+  ObjectTypeName: String = ''): NTSTATUS;
+var
+  Type1, Type2: TObjectTypeInfo;
+  Name1, Name2: String;
+  Handles: TArray<THandleEntry>;
+  i, j: Integer;
+begin
+  if hObject1 = hObject2 then
+    Exit(STATUS_SUCCESS);
+
+  // Win 10 TH+ makes things way easier
+  if LdrxCheckNtDelayedImport('NtCompareObjects').IsSuccess then
+    Exit(NtCompareObjects(hObject1, hObject2));
+
+  // Get object's type if the caller didn't specify it
+  if ObjectTypeName = '' then
+    if NtxQueryTypeObject(hObject1, Type1).IsSuccess and
+      NtxQueryTypeObject(hObject2, Type2).IsSuccess then
+    begin
+      if Type1.Other.TypeIndex <> Type2.Other.TypeIndex then
+        Exit(STATUS_NOT_SAME_OBJECT);
+
+      ObjectTypeName := Type1.TypeName;
+    end;
+
+  // Perform type-specific comparison
+  if ObjectTypeName <> '' then
+  begin
+    Result := STATUS_OBJECT_TYPE_MISMATCH;
+
+    if ObjectTypeName = 'Token' then
+      Result := NtxpCompareTokenIds(hObject1, hObject2);
+
+    // TODO: add more types
+
+    case Result of
+      STATUS_SUCCESS, STATUS_NOT_SAME_OBJECT:
+        Exit;
+    end;
+  end;
+
+  // Compare named objects
+  if NtxQueryNameObject(hObject1, Name1).IsSuccess and
+    NtxQueryNameObject(hObject2, Name2).IsSuccess then
+    if (Name1 <> Name2) then
+      Exit(STATUS_NOT_SAME_OBJECT)
+    else if Name1 <> '' then
+      Exit(STATUS_SUCCESS);
+
+  // The last resort is to proceed via a handle snapshot
+  Result := NtxEnumerateSystemHandles(Handles).Status;
+
+  if not NT_SUCCESS(Result) then
+    Exit;
+
+  NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);
+
+  for i := 0 to High(Handles) do
+    if Handles[i].HandleValue = hObject1 then
+      for j := i + 1 to High(Handles) do
+        if Handles[j].HandleValue = hObject2 then
+        begin
+          if Handles[i].PObject = Handles[j].PObject then
+            Exit(STATUS_SUCCESS)
+          else
+            Exit(STATUS_NOT_SAME_OBJECT)
+        end;
+
+  Result := STATUS_NOT_FOUND;
 end;
 
 end.

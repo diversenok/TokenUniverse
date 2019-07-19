@@ -3,7 +3,7 @@ unit NtUtils.Tokens;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntseapi, Winapi.WinSafer, NtUtils.Exceptions,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Winapi.WinSafer, NtUtils.Exceptions,
   NtUtils.Security.Sid, NtUtils.Security.Acl;
 
 { ------------------------------ Creation ---------------------------------- }
@@ -112,8 +112,8 @@ function NtxSetIntegrityToken(hToken: THandle; IntegrityLevel: Cardinal):
 
 { --------------------------- Other operations ---------------------------- }
 
-// Check whether two token handles reference the same kernel object
-function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
+// Compare token objects using Token IDs
+function NtxpCompareTokenIds(hToken1, hToken2: THandle): NTSTATUS;
 
 // Adjust privileges
 function NtxAdjustPrivileges(hToken: THandle; Privileges: TArray<TLuid>;
@@ -128,9 +128,8 @@ function NtxAdjustGroups(hToken: THandle; Sids: TArray<ISid>;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
-  NtUtils.Ldr, NtUtils.Snapshots.Handles, NtUtils.Tokens.Misc,
-  NtUtils.Processes, NtUtils.Tokens.Impersonate;
+  Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
+  NtUtils.Tokens.Misc, NtUtils.Processes, NtUtils.Tokens.Impersonate;
 
 { Creation }
 
@@ -421,13 +420,12 @@ var
 begin
   Result := nil;
   BufferSize := 0;
-  Required := 0;
+  NtxFormatTokenQuery(Status, InfoClass);
 
   // The requested information length might change between calls. Prevent
   // the race condition with a loop.
-  while True do
-  begin
-    NtxFormatTokenQuery(Status, InfoClass);
+  repeat
+    Required := 0;
     Status.Status := NtQueryInformationToken(hToken, InfoClass, Result,
       BufferSize, Required);
 
@@ -448,7 +446,7 @@ begin
 
     BufferSize := Required;
     Result := AllocMem(BufferSize);
-  end;
+  until False;
 end;
 
 function NtxSetInformationToken(hToken: THandle;
@@ -600,52 +598,24 @@ end;
 
 { Other opeations }
 
-function NtxCompareTokens(hToken1, hToken2: THandle): TNtxStatus;
+function NtxpCompareTokenIds(hToken1, hToken2: THandle): NTSTATUS;
 var
   Statistics1, Statistics2: TTokenStatistics;
 begin
-  if hToken1 = hToken2 then
+  Result := NtxQueryStatisticsToken(hToken1, Statistics1).Status;
+
+  if NT_SUCCESS(Result) then
   begin
-    Result.Status := STATUS_SUCCESS;
-    Exit;
-  end;
+    Result := NtxQueryStatisticsToken(hToken2, Statistics2).Status;
 
-  // Win 10 TH+ makes things way easier
-  if LdrxCheckNtDelayedImport('NtCompareObjects').IsSuccess then
-  begin
-    Result.Location := 'NtCompareObjects';
-    Result.Status := NtCompareObjects(hToken1, hToken2);
-    Exit;
-  end;
-
-  // Try to perform a comparison based on TokenIDs. NtxQueryStatisticsToken
-  // might be capable of handling it even without TOKEN_QUERY access.
-
-  Result := NtxQueryStatisticsToken(hToken1, Statistics1);
-  if Result.IsSuccess then
-  begin
-    Result := NtxQueryStatisticsToken(hToken2, Statistics2);
-
-    if Result.IsSuccess then
+    if NT_SUCCESS(Result)  then
     begin
       if Statistics1.TokenId = Statistics2.TokenId then
-        Result.Status := STATUS_SUCCESS
+        Exit(STATUS_SUCCESS)
       else
-      begin
-        Result.Location := 'NtxCompareTokens';
-        Result.Status := STATUS_NOT_SAME_OBJECT;
-      end;
-
-      Exit;
+        Exit(STATUS_NOT_SAME_OBJECT);
     end;
   end;
-
-  if Result.Status <> STATUS_ACCESS_DENIED then
-    Exit;
-
-  // The only way to proceed is via a handle snaphot
-  Result.Location := 'NtQuerySystemInformation [SystemExtendedHandleInformation]';
-  Result.Status := THandleSnapshot.Compare(hToken1, hToken2);
 end;
 
 function NtxAdjustPrivileges(hToken: THandle; Privileges: TArray<TLuid>;

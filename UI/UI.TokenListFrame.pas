@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, System.ImageList, Vcl.ImgList, Vcl.ComCtrls,
-  TU.Tokens, NtUtils.Snapshots.Handles, UI.ListViewEx;
+  TU.Tokens, UI.ListViewEx;
 
 type
   TFrameTokenList = class(TFrame)

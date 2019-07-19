@@ -60,6 +60,7 @@ type
     DefaultPagedPoolCharge: Cardinal;
     DefaultNonPagedPoolCharge: Cardinal;
   end;
+  PObjectTypeInformation = ^TObjectTypeInformation;
 
   TObjectHandleFlagInformation = record
     Inherit: Boolean;

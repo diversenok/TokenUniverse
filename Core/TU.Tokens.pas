@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
-  TU.Tokens.Types, NtUtils.Snapshots.Handles, DelphiUtils.Events, TU.LsaApi,
+  TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events, TU.LsaApi,
   NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
   System.Generics.Collections, NtUtils.Exceptions, NtUtils.Lsa.Logon;
 
@@ -244,7 +244,7 @@ type
     procedure SetCaption(const Value: String);
   protected
     hToken: THandle;
-    FHandleInformation: THandleInfo;
+    FHandleInformation: THandleEntry;
     FInfoClassData: TTokenData;
     Cache: TTokenCacheAndEvents;
 
@@ -257,7 +257,7 @@ type
     {--------------------  TToken public section ---------------------------}
 
     property Handle: THandle read hToken;
-    property HandleInformation: THandleInfo read FHandleInformation;
+    property HandleInformation: THandleEntry read FHandleInformation;
 
     property InfoClass: TTokenData read FInfoClassData;
     property Events: TTokenCacheAndEvents read Cache;
@@ -322,7 +322,7 @@ type
     /// <summary>
     ///  Create a TToken object using inherited handle.
     /// </summary>
-    constructor CreateByHandle(HandleInfo: THandleInfo);
+    constructor CreateByHandle(HandleInfo: THandleEntry);
 
     /// <summary> Opens a token of current process. </summary>
     constructor CreateOpenCurrent(Access: TAccessMask = MAXIMUM_ALLOWED);
@@ -551,7 +551,7 @@ end;
 
 procedure TToken.AfterConstruction;
 var
-  OurHandles: THandleInfoArray;
+  Handles: TArray<THandleEntry>;
   i: integer;
 begin
   inherited;
@@ -566,12 +566,13 @@ begin
   // This information might be already known (from a constructor)
   if HandleInformation.PObject = nil then
   begin
-    OurHandles := THandleSnapshot.OfProcess(NtCurrentProcessId);
+    NtxEnumerateSystemHandles(Handles).RaiseOnError;
 
-    for i := 0 to High(OurHandles) do
-      if OurHandles[i].HandleValue = hToken then
+    for i := 0 to High(Handles) do
+      if (Handles[i].UniqueProcessId = NtCurrentProcessId) and
+        (Handles[i].HandleValue = hToken) then
       begin
-        FHandleInformation := OurHandles[i];
+        FHandleInformation := Handles[i];
         Break;
       end;
   end;
@@ -627,7 +628,7 @@ begin
   FCaption := 'Anonymous token';
 end;
 
-constructor TToken.CreateByHandle(HandleInfo: THandleInfo);
+constructor TToken.CreateByHandle(HandleInfo: THandleEntry);
 begin
   if HandleInfo.UniqueProcessId <> NtCurrentProcessId then
     raise ENotImplemented.Create('TODO');
