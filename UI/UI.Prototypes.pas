@@ -227,9 +227,9 @@ begin
       SECURITY_MANDATORY_MEDIUM_RID, SECURITY_MANDATORY_MEDIUM_PLUS_RID,
       SECURITY_MANDATORY_HIGH_RID, SECURITY_MANDATORY_SYSTEM_RID,
       SECURITY_MANDATORY_PROTECTED_PROCESS_RID:
-        IsIntermediate := True;
+        IsIntermediate := False;
     else
-      IsIntermediate := False;
+      IsIntermediate := True;
     end;
 
     if IsIntermediate then
