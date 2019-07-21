@@ -75,21 +75,8 @@ begin
 end;
 
 function FormatCurrentState: String;
-var
-  User, Domain: String;
 begin
-  if LsaxGetUserName(Domain, User).IsSuccess  then
-  begin
-    if (Domain <> '') and (User <> '') then
-      Result := Domain + '\' + User
-    else if Domain <> '' then
-      Result := Domain
-    else if User <> '' then
-      Result := User
-    else
-      Result := 'N/A';
-  end
-  else
+  if not LsaxGetUserName(Result).IsSuccess then
     Result := 'Unknown user';
 
   Result := Result + ' @ ' + IntToStr(RtlGetCurrentPeb.SessionId);

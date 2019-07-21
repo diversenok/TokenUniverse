@@ -878,4 +878,10 @@ object FormMain: TFormMain
       E0FF800180018001FFFFC003C003C00300000000000000000000000000000000
       000000000000}
   end
+  object TimerStateCheck: TTimer
+    Interval = 2000
+    OnTimer = CurrentUserChanged
+    Left = 360
+    Top = 184
+  end
 end

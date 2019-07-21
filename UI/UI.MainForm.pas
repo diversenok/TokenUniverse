@@ -66,6 +66,7 @@ type
     MenuTools: TMenuItem;
     MenuSystemAudit: TMenuItem;
     MenuRunProgram: TMenuItem;
+    TimerStateCheck: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -111,7 +112,6 @@ type
     procedure MenuSafeImpersonationClick(Sender: TObject);
     procedure MenuSystemAuditClick(Sender: TObject);
     procedure MenuRunProgramClick(Sender: TObject);
-  private
     procedure CurrentUserChanged(Sender: TObject);
   public
     TokenView: TTokenViewSource;
@@ -329,7 +329,8 @@ end;
 
 procedure TFormMain.CurrentUserChanged(Sender: TObject);
 begin
-  Caption := 'Token Universe :: Main Window [' + FormatCurrentState + ']';
+  if Active or (Sender <> TimerStateCheck) then
+    Caption := 'Token Universe :: Main Window [' + FormatCurrentState + ']';
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -344,6 +345,7 @@ var
   i: integer;
 begin
   TokenView := TTokenViewSource.Create(ListViewTokens);
+  CurrentUserChanged(Self);
 
   // Search for inherited handles
   if NtxEnumerateSystemHandles(Handles).IsSuccess then
@@ -365,7 +367,6 @@ begin
         if Status.IsSuccess then
           TokenView.Add(Value);
 
-  CurrentUserChanged(Self);
   SetForegroundWindow(Handle);
 end;
 
