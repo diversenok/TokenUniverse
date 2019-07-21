@@ -85,7 +85,8 @@ function LsaxLookupSids(Sids: TArray<PSid>; out Names: TArray<TTranslatedName>):
 function LsaxLookupUserName(UserName: String; out Sid: ISid): TNtxStatus;
 
 // Get current user name and domain
-function LsaxGetUserName(out Domain, UserName: String): TNtxStatus;
+function LsaxGetUserName(out Domain, UserName: String): TNtxStatus; overload;
+function LsaxGetUserName(out FullName: String): TNtxStatus; overload;
 
 implementation
 
@@ -581,6 +582,28 @@ begin
 
   LsaFreeMemory(BufferUser);
   LsaFreeMemory(BufferDomain);
+end;
+
+function LsaxGetUserName(out FullName: String): TNtxStatus;
+var
+  Domain, UserName: String;
+begin
+  Result := LsaxGetUserName(Domain, UserName);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  if (Domain <> '') and (UserName <> '') then
+    FullName := Domain + '\' + UserName
+  else if Domain <> '' then
+    FullName := Domain
+  else if UserName <> '' then
+    FullName := UserName
+  else
+  begin
+    Result.Location := 'LsaxGetUserName';
+    Result.Status := STATUS_UNSUCCESSFUL;
+  end;
 end;
 
 end.

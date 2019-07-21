@@ -214,7 +214,6 @@ end;
 function NtxQueryInformationKey(hKey: THandle; InfoClass: TKeyInformationClass;
   out Status: TNtxStatus): Pointer;
 var
-  NameStr: UNICODE_STRING;
   BufferSize, Required: Cardinal;
 begin
   Status.Location := 'NtQueryKey';

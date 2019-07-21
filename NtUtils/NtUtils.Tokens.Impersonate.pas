@@ -81,6 +81,8 @@ begin
 
   Result.Status := NtSetInformationThread(hThread, ThreadImpersonationToken,
     @hToken, SizeOf(hToken));
+
+  // TODO: what about inconsistency with NtCurrentTeb.IsImpersonating ?
 end;
 
 function NtxSetThreadTokenById(TID: NativeUInt; hToken: THandle): TNtxStatus;

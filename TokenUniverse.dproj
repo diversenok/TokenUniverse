@@ -299,6 +299,7 @@
         <DCCReference Include="NtUtils\NtUtils.Processes.Snapshots.pas"/>
         <DCCReference Include="Headers\Ntapi.ntregapi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
