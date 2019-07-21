@@ -105,7 +105,9 @@ uses
   NtUtils.Environment in 'NtUtils\NtUtils.Environment.pas',
   Winapi.UserEnv in 'Headers\Winapi.UserEnv.pas',
   NtUtils.Objects.Snapshots in 'NtUtils\NtUtils.Objects.Snapshots.pas',
-  NtUtils.Processes.Snapshots in 'NtUtils\NtUtils.Processes.Snapshots.pas';
+  NtUtils.Processes.Snapshots in 'NtUtils\NtUtils.Processes.Snapshots.pas',
+  Ntapi.ntregapi in 'Headers\Ntapi.ntregapi.pas',
+  NtUtils.Registry in 'NtUtils\NtUtils.Registry.pas';
 
 {$R *.res}
 

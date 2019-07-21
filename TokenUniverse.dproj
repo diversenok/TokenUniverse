@@ -297,6 +297,8 @@
         <DCCReference Include="Headers\Winapi.UserEnv.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.Snapshots.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.Snapshots.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntregapi.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

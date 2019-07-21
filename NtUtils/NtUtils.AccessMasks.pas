@@ -7,7 +7,7 @@ uses
 
 type
   TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
-    objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
+    objNtKey, objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
     objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
     objSamAlias, objSamUser);
 
@@ -19,7 +19,7 @@ implementation
 
 uses
   DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc,
-  Ntapi.ntsam, Winapi.WinUser;
+  Ntapi.ntsam, Winapi.WinUser, Ntapi.ntregapi;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -88,6 +88,15 @@ const
     (Value: TOKEN_ADJUST_PRIVILEGES; Name: 'Adjust privileges'),
     (Value: TOKEN_ADJUST_GROUPS;     Name: 'Adjust groups'),
     (Value: TOKEN_ADJUST_SESSIONID;  Name: 'Adjust session ID')
+  );
+
+  SpecificAccessNtKey: array [0..5] of TFlagName = (
+    (Value: KEY_QUERY_VALUE;        Name: 'Query value'),
+    (Value: KEY_SET_VALUE;          Name: 'Set value'),
+    (Value: KEY_CREATE_SUB_KEY;     Name: 'Create sub-key'),
+    (Value: KEY_ENUMERATE_SUB_KEYS; Name: 'Enumerate sub-keys'),
+    (Value: KEY_NOTIFY;             Name: 'Notify'),
+    (Value: KEY_CREATE_LINK;        Name: 'Create link')
   );
 
   SpecificAccessUsrDesktop: array [0..8] of TFlagName = (
@@ -213,10 +222,10 @@ const
 
   FullAccessForType: array [TAccessMaskType] of Cardinal = (SPECIFIC_RIGHTS_ALL,
     PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, JOB_OBJECT_ALL_ACCESS,
-    TOKEN_ALL_ACCESS, DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS, POLICY_ALL_ACCESS,
-    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS,
-    SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS,
-    ALIAS_ALL_ACCESS, USER_ALL_ACCESS
+    TOKEN_ALL_ACCESS, KEY_ALL_ACCESS, DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS,
+    POLICY_ALL_ACCESS, ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS,
+    SERVICE_ALL_ACCESS, SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS,
+    GROUP_ALL_ACCESS, ALIAS_ALL_ACCESS, USER_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -278,6 +287,12 @@ begin
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessNtToken));
       ExcludeFlags(Access, SpecificAccessNtToken);
+    end;
+
+    objNtKey:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtKey));
+      ExcludeFlags(Access, SpecificAccessNtKey);
     end;
 
     objUsrDesttop:
