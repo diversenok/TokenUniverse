@@ -67,25 +67,25 @@ uses
 function ScmxQuerySecurityObject(ScmHandle: TScmHandle; SecurityInformation:
   TSecurityInformation; out SecDesc: PSecurityDescriptor): TNtxStatus;
 var
-  RequiredSize, RequiredSize2: Cardinal;
+  BufferSize, Required: Cardinal;
 begin
   Result.Location := 'QueryServiceObjectSecurity';
-  Result.Win32Result := QueryServiceObjectSecurity(ScmHandle,
-    SecurityInformation, nil, 0, RequiredSize);
 
-  if not NtxTryCheckBuffer(Result.Status, RequiredSize) then
-    Exit;
+  BufferSize := 0;
+  repeat
+    SecDesc := AllocMem(BufferSize);
 
-  SecDesc := AllocMem(RequiredSize);
+    Required := 0;
+    Result.Win32Result := QueryServiceObjectSecurity(ScmHandle,
+      SecurityInformation, SecDesc, BufferSize, Required);
 
-  Result.Win32Result := QueryServiceObjectSecurity(ScmHandle,
-    SecurityInformation, SecDesc, RequiredSize, RequiredSize2);
+    if not Result.IsSuccess then
+    begin
+      FreeMem(SecDesc);
+      SecDesc := nil;
+    end;
 
-  if not Result.IsSuccess then
-  begin
-    FreeMem(SecDesc);
-    SecDesc := nil;
-  end;
+  until not NtxExpandBuffer(Result, BufferSize, Required);
 end;
 
 // Owner

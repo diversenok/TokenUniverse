@@ -147,7 +147,7 @@ begin
 
     BufferSize := 0;
     InitializeProcThreadAttributeList(nil, 1, 0, BufferSize);
-    if (GetLastError <> ERROR_INSUFFICIENT_BUFFER) or (BufferSize = 0) then
+    if not WinTryCheckBuffer(BufferSize) then
       Exit;
 
     SIEX.lpAttributeList := AllocMem(BufferSize);

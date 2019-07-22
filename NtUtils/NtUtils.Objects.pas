@@ -177,7 +177,7 @@ end;
 function NtxQueryNameObject(hObject: THandle; out Name: String): TNtxStatus;
 var
   Buffer: PUNICODE_STRING;
-  BufferSize: Cardinal;
+  BufferSize, Required: Cardinal;
 begin
   Result.Location := 'NtQueryObject';
   Result.LastCall.CallType := lcQuerySetCall;
@@ -185,20 +185,22 @@ begin
   Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
 
   BufferSize := 0;
-  Result.Status := NtQueryObject(hObject, ObjectNameInformation, nil, 0,
-    @BufferSize);
+  repeat
+    Buffer := AllocMem(BufferSize);
 
-  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
+    Required := 0;
+    Result.Status := NtQueryObject(hObject, ObjectNameInformation, Buffer,
+      BufferSize, @Required);
+
+    if not Result.IsSuccess then
+      FreeMem(Buffer);
+
+  until not NtxExpandBuffer(Result, BufferSize, Required);
+
+  if not Result.IsSuccess then
     Exit;
 
-  Buffer := AllocMem(BufferSize);
-
-  Result.Status := NtQueryObject(hObject, ObjectNameInformation, Buffer,
-    BufferSize, nil);
-
-  if Result.IsSuccess then
-    Name := Buffer.ToString;
-
+  Name := Buffer.ToString;
   FreeMem(Buffer);
 end;
 
@@ -218,7 +220,7 @@ function NtxQueryTypeObject(hObject: THandle;
   out Info: TObjectTypeInfo): TNtxStatus;
 var
   Buffer: PObjectTypeInformation;
-  BufferSize: Cardinal;
+  BufferSize, Required: Cardinal;
 begin
   Result.Location := 'NtQueryObject';
   Result.LastCall.CallType := lcQuerySetCall;
@@ -226,29 +228,32 @@ begin
   Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
 
   BufferSize := 0;
-  Result.Status := NtQueryObject(hObject, ObjectTypeInformation, nil, 0,
-    @BufferSize);
+  repeat
+    Buffer := AllocMem(BufferSize);
 
-  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
+    Required := 0;
+    Result.Status := NtQueryObject(hObject, ObjectTypeInformation, Buffer,
+      BufferSize, @Required);
+
+    if not Result.IsSuccess then
+      FreeMem(Buffer);
+
+  until not NtxExpandBuffer(Result, BufferSize, Required);
+
+  if not Result.IsSuccess then
     Exit;
 
-  if BufferSize < SizeOf(TObjectTypeInformation) then
+  if BufferSize >= SizeOf(TObjectTypeInformation) then
   begin
-    Result.Status := STATUS_INFO_LENGTH_MISMATCH;
-    Exit;
-  end;
-
-  Buffer := AllocMem(BufferSize);
-  Result.Status := NtQueryObject(hObject, ObjectTypeInformation, Buffer,
-    BufferSize, nil);
-
-  if Result.IsSuccess then
-  begin
+    // Copy the structure and fix string reference
     Info.TypeName := Buffer.TypeName.ToString;
     Info.Other := Buffer^;
-
-    // Fix a UNICODE_STRNING reference by making it point to the local string
     Info.Other.TypeName.Buffer := PWideChar(Info.TypeName);
+  end
+  else
+  begin
+    Result.Location := 'NtxQueryTypeObject';
+    Result.Status := STATUS_INFO_LENGTH_MISMATCH;
   end;
 
   FreeMem(Buffer);

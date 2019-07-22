@@ -65,26 +65,24 @@ uses
 function NtxQuerySecurityObject(hObject: THandle; SecurityInformation:
   TSecurityInformation; out SecDesc: PSecurityDescriptor): TNtxStatus;
 var
-  BufferSize: Cardinal;
+  BufferSize, Required: Cardinal;
 begin
-  // Make a probe call to estimate buffer size
   Result.Location := 'NtQuerySecurityObject';
-  Result.Status := NtQuerySecurityObject(hObject, SecurityInformation, nil, 0,
-    BufferSize);
 
-  if not NtxTryCheckBuffer(Result.Status, BufferSize) then
-    Exit;
+  BufferSize := 0;
+  repeat
+    SecDesc := AllocMem(BufferSize);
 
-  SecDesc := AllocMem(BufferSize);
+    Result.Status := NtQuerySecurityObject(hObject, SecurityInformation,
+      SecDesc, BufferSize, Required);
 
-  Result.Status := NtQuerySecurityObject(hObject, SecurityInformation, SecDesc,
-   BufferSize, BufferSize);
+    if not Result.IsSuccess then
+    begin
+      FreeMem(SecDesc);
+      SecDesc := nil;
+    end;
 
-  if not Result.IsSuccess then
-  begin
-    FreeMem(SecDesc);
-    SecDesc := nil;
-  end;
+  until not NtxExpandBuffer(Result, BufferSize, Required);
 end;
 
 // Owner

@@ -186,22 +186,17 @@ begin
       Result.Status := NtEnumerateKey(hKey, Index, KeyBasicInformation, Buffer,
         BufferSize, Required);
 
-      if Result.IsSuccess then
-        Break
-      else
+      if not Result.IsSuccess then
         FreeMem(Buffer);
 
-      if Required < BufferSize then
-        Break;
-
-      BufferSize := Required;
-    until not NtxTryCheckBuffer(Result.Status, BufferSize);
+    until not NtxExpandBuffer(Result, BufferSize, Required);
 
     if Result.IsSuccess then
     begin
       SetLength(SubKeys, Length(SubKeys) + 1);
       SetString(SubKeys[High(SubKeys)], PWideChar(@Buffer.Name),
         Buffer.NameLength div SizeOf(WideChar));
+      FreeMem(Buffer);
     end;
 
     Inc(Index);
@@ -228,20 +223,13 @@ begin
     Required := 0;
     Status.Status := NtQueryKey(hKey, InfoClass, Result, BufferSize, Required);
 
-    if Status.IsSuccess then
-      Break
-    else
+    if not Status.IsSuccess then
     begin
       FreeMem(Result);
       Result := nil;
     end;
 
-    if Required < BufferSize then
-      Break;
-
-    BufferSize := Required;
-
-  until not NtxTryCheckBuffer(Status.Status, BufferSize);
+  until not NtxExpandBuffer(Status, BufferSize, Required);
 end;
 
 function NtxQueryBasicKey(hKey: THandle; out Info: TKeyBasicInfo): TNtxStatus;
@@ -313,16 +301,10 @@ begin
       Result.Status := NtEnumerateValueKey(hKey, Index,
         KeyValueBasicInformation, Buffer, BufferSize, Required);
 
-      if Result.IsSuccess then
-        Break
-      else
+      if not Result.IsSuccess then
         FreeMem(Buffer);
 
-      if Required < BufferSize then
-        Break;
-
-      BufferSize := Required;
-    until not NtxTryCheckBuffer(Result.Status, BufferSize);
+    until not NtxExpandBuffer(Result, BufferSize, Required);
 
     if Result.IsSuccess then
     begin
@@ -330,6 +312,7 @@ begin
       ValueNames[High(ValueNames)].ValueType := Buffer.ValueType;
       SetString(ValueNames[High(ValueNames)].ValueName, PWideChar(@Buffer.Name),
         Buffer.NameLength div SizeOf(WideChar));
+      FreeMem(Buffer);
     end;
 
     Inc(Index);
@@ -361,20 +344,13 @@ begin
     Status.Status := NtQueryValueKey(hKey, NameStr, InfoClass, Result,
       BufferSize, Required);
 
-    if Status.IsSuccess then
-      Break
-    else
+    if not Status.IsSuccess then
     begin
       FreeMem(Result);
       Result := nil;
     end;
 
-    if Required < BufferSize then
-      Break;
-
-    BufferSize := Required;
-
-  until not NtxTryCheckBuffer(Status.Status, BufferSize);
+  until not NtxExpandBuffer(Status, BufferSize, Required);
 end;
 
 function NtxQueryDwordValueKey(hKey: THandle; ValueName: String;

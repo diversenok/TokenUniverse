@@ -235,9 +235,10 @@ begin
   Result.Location := 'SamLookupDomainInSamServer';
   Result.Status := SamLookupDomainInSamServer(hServer, NameStr, Buffer);
 
-  if Result.IsSuccess then
-    DomainId := TSid.CreateCopy(Buffer);
+  if not Result.IsSuccess then
+    Exit;
 
+  DomainId := TSid.CreateCopy(Buffer);
   SamFreeMemory(Buffer);
 end;
 

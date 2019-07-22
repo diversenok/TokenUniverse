@@ -422,31 +422,24 @@ begin
   BufferSize := 0;
   NtxFormatTokenQuery(Status, InfoClass);
 
-  // The requested information length might change between calls. Prevent
-  // the race condition with a loop.
+  BufferSize := 0;
   repeat
+    Result := AllocMem(BufferSize);
+
     Required := 0;
     Status.Status := NtQueryInformationToken(hToken, InfoClass, Result,
       BufferSize, Required);
 
-    // Quit the loop on success
-    if Status.IsSuccess then
+    if not Status.IsSuccess then
     begin
-      if Assigned(ReturnedSize) then
-        ReturnedSize^ := BufferSize;
-      Exit;
+      FreeMem(Result);
+      Result := nil;
     end;
 
-    // Quit on errors that are not related to the buffer size
-    if not NtxTryCheckBuffer(Status.Status, Required) then
-      Exit(nil);
+  until not NtxExpandBuffer(Status, BufferSize, Required);
 
-    // Free previous buffer and allocate a new one
-    FreeMem(Result);
-
-    BufferSize := Required;
-    Result := AllocMem(BufferSize);
-  until False;
+  if Status.IsSuccess and Assigned(ReturnedSize) then
+    ReturnedSize^ := BufferSize;
 end;
 
 function NtxSetInformationToken(hToken: THandle;
@@ -527,33 +520,29 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  try
-    SetLength(Privileges, Buffer.PrivilegeCount);
+  SetLength(Privileges, Buffer.PrivilegeCount);
 
-    for i := 0 to High(Privileges) do
-      Privileges[i] := Buffer.Privileges[i];
-  finally
-    FreeMem(Buffer);
-  end;
+  for i := 0 to High(Privileges) do
+    Privileges[i] := Buffer.Privileges{$R-}[i]{$R+};
+
+  FreeMem(Buffer);
 end;
 
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
 var
-  Returned: Cardinal;
   hTokenRef: THandle;
 begin
-  NtxFormatTokenQuery(Result, TokenStatistics);
-  Result.Status := NtQueryInformationToken(hToken, TokenStatistics, @Statistics,
-    SizeOf(Statistics), Returned);
+  Result := NtxToken.Query<TTokenStatistics>(hToken, TokenStatistics,
+    Statistics);
 
   // Try to process the case of a handle with no TOKEN_QUERY access
   if (Result.Status = STATUS_ACCESS_DENIED) and
     NT_SUCCESS(NtDuplicateObject(NtCurrentProcess, hToken,
     NtCurrentProcess, hTokenRef, TOKEN_QUERY, 0, 0)) then
   begin
-    Result.Status := NtQueryInformationToken(hTokenRef, TokenStatistics,
-      @Statistics, SizeOf(Statistics), Returned);
+    Result := NtxToken.Query<TTokenStatistics>(hToken, TokenStatistics,
+      Statistics);
 
     NtxSafeClose(hTokenRef);
   end;
@@ -591,9 +580,8 @@ begin
   MandatoryLabel.Sid := LabelSid.Sid;
   MandatoryLabel.Attributes := SE_GROUP_INTEGRITY_ENABLED;
 
-  NtxFormatTokenSet(Result, TokenIntegrityLevel);
-  Result.Status := NtSetInformationToken(hToken, TokenIntegrityLevel,
-    @MandatoryLabel, SizeOf(MandatoryLabel));
+  Result := NtxToken.SetInfo<TSidAndAttributes>(hToken, TokenIntegrityLevel,
+    MandatoryLabel);
 end;
 
 { Other opeations }

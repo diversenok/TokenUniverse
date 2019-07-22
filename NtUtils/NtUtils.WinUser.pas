@@ -77,33 +77,28 @@ end;
 function UsrxQueryBufferObject(hObj: THandle; InfoClass: TUserObjectInfoClass;
   out Status: TNtxStatus): Pointer;
 var
-  BufferSize: Cardinal;
+  BufferSize, Required: Cardinal;
 begin
-  BufferSize := 0;
   Status.Location := 'GetUserObjectInformationW';
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TUserObjectInfoClass);
 
-  // Probe call
-  Status.Win32Result := GetUserObjectInformationW(hObj, InfoClass, nil, 0,
-    @BufferSize);
+  BufferSize := 0;
+  repeat
+    Result := AllocMem(BufferSize);
 
-  if not NtxTryCheckBuffer(Status.Status, BufferSize) then
-    Exit(nil);
+    Required := 0;
+    Status.Win32Result := GetUserObjectInformationW(hObj, InfoClass,
+      Result, BufferSize, @Required);
 
-  Result := AllocMem(BufferSize);
+    if not Status.IsSuccess then
+    begin
+      FreeMem(Result);
+      Result := nil;
+    end;
 
-  // TODO: fix race condition
-
-  Status.Win32Result := GetUserObjectInformationW(hObj, InfoClass,
-      Result, BufferSize, nil);
-
-  if not Status.IsSuccess then
-  begin
-    FreeMem(Result);
-    Result := nil;
-  end;
+  until not NtxExpandBuffer(Status, BufferSize, Required);
 end;
 
 function UsrxQueryObjectName(hObj: THandle; out Name: String): TNtxStatus;

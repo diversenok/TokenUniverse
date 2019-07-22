@@ -80,6 +80,9 @@ procedure NtxAssert(Status: NTSTATUS; Where: String);
 function WinTryCheckBuffer(BufferSize: Cardinal): Boolean;
 function NtxTryCheckBuffer(var Status: NTSTATUS; BufferSize: Cardinal): Boolean;
 
+function NtxExpandBuffer(var Status: TNtxStatus; var BufferSize: Cardinal;
+  Required: Cardinal; AddExtra: Boolean = False) : Boolean;
+
 implementation
 
 uses
@@ -253,6 +256,38 @@ begin
   end;
 end;
 
+function NtxExpandBuffer(var Status: TNtxStatus; var BufferSize: Cardinal;
+  Required: Cardinal; AddExtra: Boolean) : Boolean;
+begin
+  // True means continue; False means break from the loop
+  Result := False;
+
+  case Status.Status of
+    STATUS_INFO_LENGTH_MISMATCH, STATUS_BUFFER_TOO_SMALL,
+    STATUS_BUFFER_OVERFLOW:
+    begin
+      // The buffer should always grow with these error codes
+      if Required <= BufferSize then
+        Exit(False);
+
+      BufferSize := Required;
+
+      if AddExtra then
+        Inc(BufferSize, BufferSize shr 3); // +12% capacity
+
+      // Check for the limitation
+      if BufferSize > BUFFER_LIMIT then
+      begin
+        Status.Location := 'NtxExpandBuffer';
+        Status.Status := STATUS_IMPLEMENTATION_LIMIT;
+        Exit(False);
+      end;
+
+      Result := True;
+    end;
+  end;
+end;
+
 function RtlxGetLastNtStatus: NTSTATUS;
 begin
   // If the last Win32 error was set using RtlNtStatusToDosError call followed
@@ -264,16 +299,23 @@ begin
 
   if RtlNtStatusToDosErrorNoTeb(RtlGetLastNtStatus) = RtlGetLastWin32Error then
     Result := RtlGetLastNtStatus
-  else if RtlGetLastWin32Error = ERROR_INSUFFICIENT_BUFFER then
-    // Explicitly convert to use with buffer checks
-    Result := STATUS_BUFFER_TOO_SMALL
-  else if RtlGetLastWin32Error = ERROR_ACCESS_DENIED   then
-    Result := STATUS_ACCESS_DENIED
-  else if RtlGetLastWin32Error = ERROR_SUCCESS then
-    // After converting to NTSTATUS, ERROR_SUCCESS becomes unsuccessful, fix it
-    Result := STATUS_SUCCESS
+  else
+  case RtlGetLastWin32Error of
+
+    // Explicitly convert buffer-related errors
+    ERROR_INSUFFICIENT_BUFFER: Result := STATUS_BUFFER_TOO_SMALL;
+    ERROR_MORE_DATA:           Result := STATUS_BUFFER_OVERFLOW;
+    ERROR_BAD_LENGTH:          Result := STATUS_INFO_LENGTH_MISMATCH;
+
+    // After converting, ERROR_SUCCESS becomes unsuccessful, fix it
+    ERROR_SUCCESS:             Result := STATUS_SUCCESS;
+
+    // Common error which we might want to compare
+    ERROR_ACCESS_DENIED:       Result := STATUS_ACCESS_DENIED;
+    ERROR_PRIVILEGE_NOT_HELD:  Result := STATUS_PRIVILEGE_NOT_HELD;
   else
     Result := NTSTATUS_FROM_WIN32(RtlGetLastWin32Error);
+  end;
 end;
 
 end.

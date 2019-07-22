@@ -82,20 +82,10 @@ begin
     Result.Status := NtQuerySystemInformation(SystemExtendedHandleInformation,
       Buffer, BufferSize, @ReturnLength);
 
-    if Result.IsSuccess then
-      Break
-    else
+    if not Result.IsSuccess then
       FreeMem(Buffer);
 
-    if ReturnLength < BufferSize then
-      Break;
-
-    BufferSize := ReturnLength + ReturnLength shr 3; // + extra 12%
-
-    if BufferSize > BUFFER_LIMIT then
-      Result.Status := STATUS_IMPLEMENTATION_LIMIT;
-
-  until Result.Status <> STATUS_INFO_LENGTH_MISMATCH;
+  until not NtxExpandBuffer(Result, BufferSize, ReturnLength, True);
 
   if not Result.IsSuccess then
     Exit;
@@ -183,6 +173,8 @@ begin
   // rather than collecting the objects
   BufferSize := 2 * 1024 * 1024;
 
+  // TODO: use NtxExpandBuffer
+  
   repeat
     Buffer := AllocMem(BufferSize);
 
