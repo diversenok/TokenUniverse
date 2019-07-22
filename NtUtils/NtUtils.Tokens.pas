@@ -340,7 +340,7 @@ function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;
 var
   QoS: TSecurityQualityOfService;
   ObjAttr: TObjectAttributes;
-  TokenUser: TTokenUser;
+  TokenUser: TSidAndAttributes;
   TokenGroups: PTokenGroups;
   TokenPrivileges: PTokenPrivileges;
   TokenOwner: TTokenOwner;
@@ -354,8 +354,8 @@ begin
 
   // Prepare user
   Assert(Assigned(User.SecurityIdentifier));
-  TokenUser.User.Sid := User.SecurityIdentifier.Sid;
-  TokenUser.User.Attributes := User.Attributes;
+  TokenUser.Sid := User.SecurityIdentifier.Sid;
+  TokenUser.Attributes := User.Attributes;
 
   // Prepare groups and privileges
   TokenGroups := NtxpAllocGroups2(Groups);
@@ -400,7 +400,11 @@ class function NtxToken.Query<T>(hToken: THandle;
 var
   ReturnedBytes: Cardinal;
 begin
-  NtxFormatTokenQuery(Result, InfoClass);
+  Result.Location := 'NtQueryInformationToken';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
+
   Result.Status := NtQueryInformationToken(hToken, InfoClass, @Buffer,
     SizeOf(Buffer), ReturnedBytes);
 end;
@@ -408,7 +412,11 @@ end;
 class function NtxToken.SetInfo<T>(hToken: THandle;
   InfoClass: TTokenInformationClass; const Buffer: T): TNtxStatus;
 begin
-  NtxFormatTokenSet(Result, InfoClass);
+  Result.Location := 'NtSetInformationToken';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
+
   Result.Status := NtSetInformationToken(hToken, InfoClass, @Buffer,
     SizeOf(Buffer));
 end;
@@ -418,9 +426,10 @@ function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
 var
   BufferSize, Required: Cardinal;
 begin
-  Result := nil;
-  BufferSize := 0;
-  NtxFormatTokenQuery(Status, InfoClass);
+  Status.Location := 'NtQueryInformationToken';
+  Status.LastCall.CallType := lcQuerySetCall;
+  Status.LastCall.InfoClass := Cardinal(InfoClass);
+  Status.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
 
   BufferSize := 0;
   repeat
@@ -446,7 +455,11 @@ function NtxSetInformationToken(hToken: THandle;
   InfoClass: TTokenInformationClass; TokenInformation: Pointer;
   TokenInformationLength: Cardinal): TNtxStatus;
 begin
-  NtxFormatTokenSet(Result, InfoClass);
+  Result.Location := 'NtSetInformationToken';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(InfoClass);
+  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
+
   Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
     TokenInformationLength);
 end;

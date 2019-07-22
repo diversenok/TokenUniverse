@@ -3,15 +3,7 @@ unit NtUtils.Tokens.Misc;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntseapi, NtUtils.Exceptions, NtUtils.Security.Sid;
-
-{ Error formatting }
-
-// Format error locations for querying/setting token information
-procedure NtxFormatTokenQuery(var Result: TNtxStatus;
-  InfoClass: TTokenInformationClass);
-procedure NtxFormatTokenSet(var Result: TNtxStatus;
-  InfoClass: TTokenInformationClass);
+  Winapi.WinNt, NtUtils.Security.Sid;
 
 { Allocations }
 
@@ -25,26 +17,6 @@ function NtxpAllocGroups(Sids: TArray<ISid>; Attribute: Cardinal): PTokenGroups;
 function NtxpAllocGroups2(Groups: TArray<TGroup>): PTokenGroups;
 
 implementation
-
-{ Error formatting }
-
-procedure NtxFormatTokenQuery(var Result: TNtxStatus;
-  InfoClass: TTokenInformationClass);
-begin
-  Result.Location := 'NtQueryInformationToken';
-  Result.LastCall.CallType := lcQuerySetCall;
-  Result.LastCall.InfoClass := Cardinal(InfoClass);
-  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
-end;
-
-procedure NtxFormatTokenSet(var Result: TNtxStatus;
-  InfoClass: TTokenInformationClass);
-begin
-  Result.Location := 'NtSetInformationToken';
-  Result.LastCall.CallType := lcQuerySetCall;
-  Result.LastCall.InfoClass := Cardinal(InfoClass);
-  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
-end;
 
 { Allocations }
 

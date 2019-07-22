@@ -76,7 +76,7 @@ type
   // WinNt.10661
   TTokenInformationClass = (
     TokenInfoTPad = 0, // [Required to generate TypeInfo]
-    TokenUser = 1,                             // q: TTokenUser
+    TokenUser = 1,                             // q: TSidAndAttributes
     TokenGroups = 2,                           // q: TTokenGroups
     TokenPrivileges = 3,                       // q: TTokenPrivileges
     TokenOwner = 4,                            // q, s: TTokenOwner
@@ -92,17 +92,17 @@ type
     TokenSessionReference = 14,                // s: LongBool
     TokenSandBoxInert = 15,                    // q: LongBool
     TokenAuditPolicy = 16,                     // q, s: TTokenAuditPolicy
-    TokenOrigin = 17,                          // q, s: TTokenOrigin
+    TokenOrigin = 17,                          // q, s: TLuid
     TokenElevationType = 18,                   // q: TTokenElevationType
-    TokenLinkedToken = 19,                     // q, s: TTokenLinkedToken
-    TokenElevation = 20,                       // q: TTokenElevation
+    TokenLinkedToken = 19,                     // q, s: THandle
+    TokenElevation = 20,                       // q: LongBool
     TokenHasRestrictions = 21,                 // q: LongBool
     TokenAccessInformation = 22,               // q: TTokenAccessInformation
     TokenVirtualizationAllowed = 23,           // q, s: LongBool
     TokenVirtualizationEnabled = 24,           // q, s: LongBool
-    TokenIntegrityLevel = 25,                  // q, s: TTokenMandatoryLabel
+    TokenIntegrityLevel = 25,                  // q, s: TSidAndAttributes
     TokenUIAccess = 26,                        // q, s: LongBool
-    TokenMandatoryPolicy = 27,                 // q, s: TTokenMandatoryPolicy
+    TokenMandatoryPolicy = 27,                 // q, s: Cardinal
     TokenLogonSid = 28,                        // q: TTokenGroups
     TokenIsAppContainer = 29,                  // q: LongBool
     TokenCapabilities = 30,                    // q: TTokenGroups
@@ -127,10 +127,10 @@ type
 function NtCreateToken(out TokenHandle: THandle; DesiredAccess: TAccessMask;
   ObjectAttributes: PObjectAttributes; TokenType: TTokenType;
   var AuthenticationId: TLuid; var ExpirationTime: TLargeInteger;
-  const User: TTokenUser; Groups: PTokenGroups; Privileges: PTokenPrivileges;
-  Owner: PTokenOwner; var PrimaryGroup: TTokenPrimaryGroup;
-  DefaultDacl: PTokenDefaultDacl; const Source: TTokenSource): NTSTATUS;
-  stdcall; external ntdll;
+  const User: TSidAndAttributes; Groups: PTokenGroups;
+  Privileges: PTokenPrivileges; Owner: PTokenOwner;
+  var PrimaryGroup: TTokenPrimaryGroup; DefaultDacl: PTokenDefaultDacl;
+  const Source: TTokenSource): NTSTATUS; stdcall; external ntdll;
 
 // Win 8+
 function NtCreateLowBoxToken(out TokenHandle: THandle;

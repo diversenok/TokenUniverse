@@ -383,12 +383,6 @@ type
   TTokenElevationType = (TokenElevationTPad, TokenElevationTypeDefault,
     TokenElevationTypeFull, TokenElevationTypeLimited);
 
-  // 10744
-  TTokenUser = record
-    User: TSidAndAttributes;
-  end;
-  PTokenUser = ^TTokenUser;
-
   // 10768
   TTokenGroups = record
     GroupCount: Integer;
@@ -417,7 +411,7 @@ type
 
   // 10796
   TTokenDefaultDacl = record
-    DefaultDacl :PAcl;
+    DefaultDacl: PAcl;
   end;
   PTokenDefaultDacl = ^TTokenDefaultDacl;
 
@@ -436,30 +430,6 @@ type
   end;
   PTokenGroupsAndPrivileges = ^TTokenGroupsAndPrivileges;
 
-  // 10821
-  TTokenLinkedToken = record
-    LinkedToken: THandle;
-  end;
-  PTokenLinkedToken = ^TTokenLinkedToken;
-
-  // 10825
-  TTokenElevation = record
-    TokenIsElevated: LongBool;
-  end;
-  PTokenElevation = ^TTokenElevation;
-
-  // 10829
-  TTokenMandatoryLabel = record
-    MandatoryLabel: TSidAndAttributes;
-  end;
-  PTokenMandatoryLabel = ^TTokenMandatoryLabel;
-
-  // 10844
-  TTokenMandatoryPolicy = record
-    Policy: Cardinal;
-  end;
-  PTokenMandatoryPolicy = ^TTokenMandatoryPolicy;
-
   // 10850
   TTokenAccessInformation = record
     SidHash: PSIDAndAttributesHash;
@@ -468,7 +438,7 @@ type
     AuthenticationId: Int64;
     TokenType: TTokenType;
     ImpersonationLevel: TSecurityImpersonationLevel;
-    MandatoryPolicy: TTokenMandatoryPolicy;
+    MandatoryPolicy: Cardinal;
     Flags: Cardinal;
     AppContainerNumber: Cardinal;
     PackageSid: PSid;
@@ -511,12 +481,6 @@ type
     ModifiedId: TLuid;
   end;
   PTokenStatistics = ^TTokenStatistics;
-
-  // 10906
-  TTokenOrigin = record
-    OriginatingLogonSession: TLuid;
-  end;
-  PTokenOrigin = ^TTokenOrigin;
 
   // 10929
   TTokenAppContainer = record
