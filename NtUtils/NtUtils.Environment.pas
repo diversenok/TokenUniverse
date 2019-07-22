@@ -62,6 +62,9 @@ function RtlxEnumerateEnvironment(Environment: PWideChar;
 function UnvxCreateUserEnvironment(out Environment: IEnvironment;
   hToken: THandle; InheritCurrent: Boolean): TNtxStatus;
 
+// Expand a string using the current environment
+function RtlxExpandString(var Str: String): TNtxStatus;
+
 implementation
 
 uses
@@ -373,6 +376,18 @@ begin
 
   if Result.IsSuccess then
     Environment := TEnvironment.CreateOwned(EnvBlock);
+end;
+
+function RtlxExpandString(var Str: String): TNtxStatus;
+var
+  Environment: IEnvironment;
+  ExpandedStr: String;
+begin
+  Environment := TEnvironment.OpenCurrent;
+  Result := Environment.ExpandWithStatus(Str, ExpandedStr);
+
+  if Result.IsSuccess then
+    Str := ExpandedStr;
 end;
 
 end.
