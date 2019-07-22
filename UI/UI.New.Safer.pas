@@ -17,6 +17,8 @@ type
     CheckBoxSandboxInert: TCheckBox;
     LabelDesc: TLabel;
     LabelDescription: TLabel;
+    LabelName: TLabel;
+    LabelFriendlyName: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonCancelClick(Sender: TObject);
@@ -27,7 +29,6 @@ type
     function GetScopeId: TSaferScopeId;
     function GetLevelId: TSaferLevelId;
     procedure ChangedCaption(NewCaption: String);
-    function GetCurrentDescription: String;
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -35,7 +36,8 @@ type
 implementation
 
 uses
-  UI.Settings, UI.MainForm, TU.Suggestions, NtUtils.Exceptions, System.UITypes;
+  UI.Settings, UI.MainForm, TU.Suggestions, NtUtils.Exceptions, System.UITypes,
+  NtUtils.WinSafer;
 
 {$R *.dfm}
 
@@ -75,8 +77,23 @@ begin
 end;
 
 procedure TDialogSafer.ComboBoxLevelChange(Sender: TObject);
+var
+  hLevel: TSaferHandle;
+  Name, Description: string;
 begin
-  LabelDescription.Caption := GetCurrentDescription;
+  Name := '';
+  Description := '';
+
+  if SafexOpenLevel(hLevel, GetScopeId, GetLevelId).IsSuccess then
+  begin
+    SafexQueryNameLevel(hLevel, Name);
+    SafexQueryDescriptionLevel(hLevel, Description);
+
+    SafexCloseLevel(hLevel);
+  end;
+
+  LabelFriendlyName.Caption := Name;
+  LabelDescription.Caption := Description;
 end;
 
 constructor TDialogSafer.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
@@ -105,32 +122,6 @@ begin
     CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;
 
   ComboBoxLevelChange(Sender);
-end;
-
-function TDialogSafer.GetCurrentDescription: String;
-var
-  hLevel: TSaferLevelHandle;
-  BufferSize, Required: Cardinal;
-  Buffer: PWideChar;
-begin
-  Result := 'Unknown';
-  if not SaferCreateLevel(GetScopeId, GetLevelId, SAFER_LEVEL_OPEN, hLevel) then
-    Exit;
-
-  Required := 0;
-  SaferGetLevelInformation(hLevel, SaferObjectDescription, nil, 0, Required);
-  if not WinTryCheckBuffer(Required) then
-    Exit;
-
-  BufferSize := Required;
-  Buffer := AllocMem(BufferSize);
-
-  if SaferGetLevelInformation(hLevel, SaferObjectDescription, Buffer,
-    BufferSize, Required) then
-    SetString(Result, Buffer, Required div SizeOf(WideChar));
-
-  FreeMem(Buffer);
-  SaferCloseLevel(hLevel);
 end;
 
 function TDialogSafer.GetLevelId: TSaferLevelId;

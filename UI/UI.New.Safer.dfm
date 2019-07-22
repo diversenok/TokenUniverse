@@ -2,7 +2,7 @@ object DialogSafer: TDialogSafer
   Left = 0
   Top = 0
   Caption = 'Create Safer Token'
-  ClientHeight = 184
+  ClientHeight = 211
   ClientWidth = 274
   Color = clBtnFace
   Constraints.MinHeight = 220
@@ -35,20 +35,36 @@ object DialogSafer: TDialogSafer
   end
   object LabelDesc: TLabel
     Left = 8
-    Top = 72
+    Top = 92
     Width = 57
     Height = 13
     Caption = 'Description:'
   end
   object LabelDescription: TLabel
-    Left = 80
-    Top = 72
-    Width = 189
-    Height = 73
+    Left = 81
+    Top = 92
+    Width = 188
+    Height = 80
     Anchors = [akLeft, akTop, akRight, akBottom]
     AutoSize = False
     EllipsisPosition = epEndEllipsis
     WordWrap = True
+  end
+  object LabelName: TLabel
+    Left = 8
+    Top = 65
+    Width = 31
+    Height = 13
+    Caption = 'Name:'
+  end
+  object LabelFriendlyName: TLabel
+    Left = 81
+    Top = 65
+    Width = 188
+    Height = 16
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
+    EllipsisPosition = epEndEllipsis
   end
   object ComboBoxScope: TComboBox
     Left = 81
@@ -77,7 +93,7 @@ object DialogSafer: TDialogSafer
     Text = 'Normal User'
     OnChange = ComboBoxLevelChange
     Items.Strings = (
-      'Unrestricted (Fully Trusted)'
+      'Fully Trusted'
       'Normal User'
       'Constrained'
       'Untrusted'
@@ -85,7 +101,7 @@ object DialogSafer: TDialogSafer
   end
   object ButtonOK: TButton
     Left = 115
-    Top = 155
+    Top = 182
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -96,7 +112,7 @@ object DialogSafer: TDialogSafer
   end
   object ButtonCancel: TButton
     Left = 194
-    Top = 155
+    Top = 182
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -107,7 +123,7 @@ object DialogSafer: TDialogSafer
   end
   object CheckBoxSandboxInert: TCheckBox
     Left = 8
-    Top = 159
+    Top = 186
     Width = 97
     Height = 17
     Hint = 

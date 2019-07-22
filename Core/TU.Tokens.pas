@@ -402,7 +402,8 @@ uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Objects,
   NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, NtUtils.Tokens,
   NtUtils.Tokens.Impersonate, NtUtils.AccessMasks, DelphiUtils.Strings,
-  System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc;
+  System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc,
+  NtUtils.WinSafer;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -778,7 +779,7 @@ constructor TToken.CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
 var
   LevelName: String;
 begin
-  NtxRestrictSaferToken(hToken, SrcToken.hToken, ScopeId, LevelId,
+  SafexComputeSaferTokenById(hToken, SrcToken.hToken, ScopeId, LevelId,
     MakeInert).RaiseOnError;
 
   case LevelId of
@@ -798,7 +799,7 @@ begin
       LevelName := 'Disallowed'
   end;
 
-  FCaption := LevelName + ' Safer for ' + SrcToken.FCaption;
+  FCaption := LevelName + ' Safer for ' + SrcToken.FCaption
 end;
 
 constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;

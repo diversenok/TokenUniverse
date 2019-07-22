@@ -300,6 +300,7 @@
         <DCCReference Include="Headers\Ntapi.ntregapi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

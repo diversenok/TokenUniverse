@@ -3,7 +3,7 @@ unit NtUtils.Tokens;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Winapi.WinSafer, NtUtils.Exceptions,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, NtUtils.Exceptions,
   NtUtils.Security.Sid, NtUtils.Security.Acl;
 
 { ------------------------------ Creation ---------------------------------- }
@@ -45,11 +45,6 @@ function NtxOpenAnonymousToken(out hToken: THandle; DesiredAccess: TAccessMask;
 function NtxFilterToken(out hNewToken: THandle; hToken: THandle;
   Flags: Cardinal; SidsToDisable: TArray<ISid>;
   PrivilegesToDelete: TArray<TLuid>; SidsToRestrict: TArray<ISid>): TNtxStatus;
-
-// Restrict a token using Safer api
-function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
-  ScopeId: TSaferScopeId; LevelId: TSaferLevelId; MakeSanboxInert: Boolean):
-  TNtxStatus;
 
 // Create a new token from scratch. Requires SeCreateTokenPrivilege.
 function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;
@@ -304,31 +299,6 @@ begin
   FreeMem(DisableSids);
   FreeMem(RestrictSids);
   FreeMem(DeletePrivileges);
-end;
-
-function NtxRestrictSaferToken(out hToken: THandle; hTokenToRestict: THandle;
-  ScopeId: TSaferScopeId; LevelId: TSaferLevelId; MakeSanboxInert: Boolean):
-  TNtxStatus;
-var
-  hLevel: TSaferLevelHandle;
-  Flags: Cardinal;
-begin
-  Result.Location := 'SaferCreateLevel';
-  Result.Win32Result := SaferCreateLevel(ScopeId, LevelId, SAFER_LEVEL_OPEN,
-    hLevel);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  Flags := 0;
-  if MakeSanboxInert then
-    Flags := Flags or SAFER_TOKEN_MAKE_INERT;
-
-  Result.Location := 'SaferComputeTokenFromLevel';
-  Result.Win32Result := SaferComputeTokenFromLevel(hLevel, hTokenToRestict,
-    hToken, Flags, nil);
-
-  SaferCloseLevel(hLevel);
 end;
 
 function NtxCreateToken(out hToken: THandle; TokenType: TTokenType;

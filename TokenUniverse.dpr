@@ -108,7 +108,8 @@ uses
   NtUtils.Processes.Snapshots in 'NtUtils\NtUtils.Processes.Snapshots.pas',
   Ntapi.ntregapi in 'Headers\Ntapi.ntregapi.pas',
   NtUtils.Registry in 'NtUtils\NtUtils.Registry.pas',
-  NtUtils.Registry.HKCU in 'NtUtils\NtUtils.Registry.HKCU.pas';
+  NtUtils.Registry.HKCU in 'NtUtils\NtUtils.Registry.HKCU.pas',
+  NtUtils.WinSafer in 'NtUtils\NtUtils.WinSafer.pas';
 
 {$R *.res}
 
