@@ -3,13 +3,7 @@ unit NtUtils.AccessMasks;
 interface
 
 uses
-  Winapi.WinNt;
-
-type
-  TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
-    objNtKey, objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
-    objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
-    objSamAlias, objSamUser);
+  Winapi.WinNt, NtUtils.Exceptions;
 
 function FormatAccess(Access: TAccessMask; MaskType: TAccessMaskType): String;
 function FormatAccessPrefixed(Access: TAccessMask;

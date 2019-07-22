@@ -3,15 +3,18 @@ unit NtUtils.Exceptions;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, System.SysUtils, System.TypInfo,
-  NtUtils.AccessMasks;
+  Winapi.WinNt, Ntapi.ntdef, System.SysUtils, System.TypInfo;
 
 const
   BUFFER_LIMIT = 1024 * 1024 * 256; // 256 MB
 
 type
-  TAccessMaskType = NtUtils.AccessMasks.TAccessMaskType;
   TLastCallType = (lcOtherCall, lcOpenCall, lcQuerySetCall);
+
+  TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
+    objNtKey, objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
+    objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
+    objSamAlias, objSamUser);
 
   TLastCallInfo = record
   case CallType: TLastCallType of
