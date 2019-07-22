@@ -44,8 +44,10 @@ begin
     GroupsBuffer.GroupCount := Length(AdditionalGroups);
     for i := 0 to High(AdditionalGroups) do
     begin
-      GroupsBuffer.Groups[i].Sid := AdditionalGroups[i].SecurityIdentifier.Sid;
-      GroupsBuffer.Groups[i].Attributes := AdditionalGroups[i].Attributes;
+      GroupsBuffer.Groups{$R-}[i]{$R+}.Sid :=
+        AdditionalGroups[i].SecurityIdentifier.Sid;
+      GroupsBuffer.Groups{$R-}[i]{$R+}.Attributes :=
+        AdditionalGroups[i].Attributes;
     end;
 
     // Call LogonUserExExW that allows us to add arbitrary groups to a token.

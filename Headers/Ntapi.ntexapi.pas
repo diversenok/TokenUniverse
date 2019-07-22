@@ -136,7 +136,7 @@ type
   // SystemProcessInformation
   TSystemProcessInformation = record
     Process: TSystemProcessInformationFixed;
-    Threads: array [0..0] of TSystemThreadInformation;
+    Threads: array [ANYSIZE_ARRAY] of TSystemThreadInformation;
   end;
   PSystemProcessInformation = ^TSystemProcessInformation;
 
@@ -189,7 +189,7 @@ type
   TSystemHandleInformationEx = record
     NumberOfHandles: NativeInt;
     Reserved: NativeUInt;
-    Handles: array [0..0] of TSystemHandleTableEntryInfoEx;
+    Handles: array [ANYSIZE_ARRAY] of TSystemHandleTableEntryInfoEx;
   end;
   PSystemHandleInformationEx = ^TSystemHandleInformationEx;
 

@@ -501,8 +501,9 @@ begin
     SetLength(Groups, Buffer.GroupCount);
     for i := 0 to High(Groups) do
     begin
-      Groups[i].SecurityIdentifier := TSid.CreateCopy(Buffer.Groups[i].Sid);
-      Groups[i].Attributes := Buffer.Groups[i].Attributes;
+      Groups[i].SecurityIdentifier :=
+        TSid.CreateCopy(Buffer.Groups{$R-}[i]{$R+}.Sid);
+      Groups[i].Attributes := Buffer.Groups{$R-}[i]{$R+}.Attributes;
     end;
   finally
     FreeMem(Buffer);

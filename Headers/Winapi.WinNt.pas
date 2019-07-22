@@ -145,6 +145,10 @@ const
   UNPROTECTED_SACL_SECURITY_INFORMATION = $10000000;
 
 type
+  // If range checks are enabled make sure to wrap all accesses to any-size
+  // arrays inside a {$R-}/{$R+} block which temporarily disables them.
+  ANYSIZE_ARRAY = 0..0;
+
   // 823
   TLargeInteger = record
     QuadPart: Int64;
@@ -161,7 +165,7 @@ type
   TLuid = Int64;
   PLuid = ^TLuid;
 
-  TLuidArray = array [Word] of TLuid;
+  TLuidArray = array [ANYSIZE_ARRAY] of TLuid;
   PLuidArray = ^TLuidArray;
 
   // 1119
@@ -210,7 +214,7 @@ type
   end;
   PSid = ^TSid_Internal;
 
-  TSidArray = array [Word] of PSid;
+  TSidArray = array [ANYSIZE_ARRAY] of PSid;
   PSidArray = ^TSidArray;
 
   // 9055
@@ -364,7 +368,7 @@ type
   TPrivilegeSet = record
     PrivilegeCount: Cardinal;
     Control: Cardinal;
-    Privilege: array [Byte] of TLuidAndAttributes;
+    Privilege: array [ANYSIZE_ARRAY] of TLuidAndAttributes;
   end;
   PPrivilegeSet = ^TPrivilegeSet;
 
@@ -388,14 +392,14 @@ type
   // 10768
   TTokenGroups = record
     GroupCount: Integer;
-    Groups: array[Word] of TSIDAndAttributes;
+    Groups: array [ANYSIZE_ARRAY] of TSIDAndAttributes;
   end;
   PTokenGroups = ^TTokenGroups;
 
   // 10777
   TTokenPrivileges = record
     PrivilegeCount: Integer;
-    Privileges: array[Byte] of TLUIDAndAttributes;
+    Privileges: array [ANYSIZE_ARRAY] of TLUIDAndAttributes;
   end;
   PTokenPrivileges = ^TTokenPrivileges;
 
@@ -478,7 +482,7 @@ type
   TTokenAuditPolicy = record
     // The actual length depends on the count of SubCategories of auditing.
     // Each half of a byte is a set of Winapi.NtSecApi.PER_USER_AUDIT_* flags.
-    PerUserPolicy: array [Byte] of Byte;
+    PerUserPolicy: array [ANYSIZE_ARRAY] of Byte;
   end;
   PTokenAuditPolicy = ^TTokenAuditPolicy;
 

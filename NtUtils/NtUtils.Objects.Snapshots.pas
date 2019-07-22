@@ -92,10 +92,8 @@ begin
 
   SetLength(Handles, Buffer.NumberOfHandles);
 
-  {$R-}
   for i := 0 to High(Handles) do
-    Handles[i] := Buffer.Handles[i];
-  {$R+}
+    Handles[i] := Buffer.Handles{$R-}[i]{$R+};
 
   FreeMem(Buffer);
 end;

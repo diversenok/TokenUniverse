@@ -116,7 +116,7 @@ type
   end;
   PServiceStatus = ^TServiceStatus;
 
-  TServiceArgsW = array [Byte] of PWideChar;
+  TServiceArgsW = array [ANYSIZE_ARRAY] of PWideChar;
   PServiceArgsW = ^TServiceArgsW;
 
   // 868

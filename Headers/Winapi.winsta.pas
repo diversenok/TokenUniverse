@@ -48,7 +48,7 @@ type
     State: TWinStationStateClass;
   end;
 
-  TSessionIdArrayW = array [Word] of TSessionIdW;
+  TSessionIdArrayW = array [ANYSIZE_ARRAY] of TSessionIdW;
   PSessionIdArrayW = ^TSessionIdArrayW;
 
   // 110

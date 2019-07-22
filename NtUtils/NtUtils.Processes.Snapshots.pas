@@ -101,10 +101,8 @@ begin
     // Save each thread information
     SetLength(Processes[j].Threads, pProcess.Process.NumberOfThreads);
 
-    {$R-}
     for i := 0 to High(Processes[j].Threads) do
-      Processes[j].Threads[i] := pProcess.Threads[i];
-    {$R+}
+      Processes[j].Threads[i] := pProcess.Threads{$R-}[i]{$R+};
 
     // Proceed to the next process
     if pProcess.Process.NextEntryOffset = 0 then

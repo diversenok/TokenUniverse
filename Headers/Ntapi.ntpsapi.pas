@@ -221,7 +221,7 @@ type
   TJobBasicProcessIdList = record
     NumberOfAssignedProcesses: Cardinal;
     NumberOfProcessIdsInList: Cardinal;
-    ProcessIdList: array [Word] of NativeUInt;
+    ProcessIdList: array [ANYSIZE_ARRAY] of NativeUInt;
   end;
   PJobBasicProcessIdList = ^TJobBasicProcessIdList;
 

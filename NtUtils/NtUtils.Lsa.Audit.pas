@@ -166,10 +166,10 @@ var
   i: Integer;
 begin
   Self.AuditPolicySize := BufferSize;
-
   Self.Data := AllocMem(AuditPolicySize);
+
   for i := 0 to AuditPolicySize - 1 do
-    Self.Data.PerUserPolicy[i] := Buffer.PerUserPolicy[i];
+    Self.Data.PerUserPolicy{$R-}[i]{$R+} := Buffer.PerUserPolicy{$R-}[i]{$R+};
 end;
 
 destructor TTokenPerUserAudit.Destroy;
@@ -190,7 +190,7 @@ begin
     Exit(0);
 
   // Each bytes stores policies for two subcategories, extract the byte
-  Result := Data.PerUserPolicy[Index shr 1];
+  Result := Data.PerUserPolicy{$R-}[Index shr 1]{$R+};
 
   // Extract the required half of it
   if Index and 1 = 0 then
@@ -231,7 +231,7 @@ begin
   // Since each byte stores policies for two subcategories we should modify
   // only half of the byte preserving another half unchanged.
 
-  PolicyByte := Data.PerUserPolicy[Index shr 1];
+  PolicyByte := Data.PerUserPolicy{$R-}[Index shr 1]{$R+};
 
   if Index and 1 = 0 then
   begin
@@ -245,7 +245,7 @@ begin
     PolicyByte := PolicyByte or Value;
   end;
 
-  Data.PerUserPolicy[Index shr 1] := PolicyByte;
+  Data.PerUserPolicy{$R-}[Index shr 1]{$R+} := PolicyByte;
 end;
 
 { TPerUserAudit }
@@ -319,8 +319,8 @@ begin
   Result.Count := Length(SubCategories);
   SetLength(Result.Data, Result.Count);
 
-  for i := 0 to Result.Count - 1 do
-    Result.Data[i] := Buffer[i];
+  for i := 0 to High(Result.Count) do
+    Result.Data[i] := Buffer{$R-}[i]{$R+};
 
   AuditFree(Buffer);
 end;
@@ -340,11 +340,13 @@ begin
 
   for i := 0 to Count - 1 do
     if i and 1 = 0 then
-      Result.PerUserPolicy[i shr 1] := Result.PerUserPolicy[i shr 1] or
-        Byte(Data[i].AuditingInformation and $0F)
+      Result.PerUserPolicy{$R-}[i shr 1]{$R+} :=
+        Result.PerUserPolicy{$R-}[i shr 1]{$R+}
+        or Byte(Data[i].AuditingInformation and $0F)
     else
-      Result.PerUserPolicy[i shr 1] := Result.PerUserPolicy[i shr 1] or
-        (Byte(Data[i].AuditingInformation and $0F) shl 4);
+      Result.PerUserPolicy{$R-}[i shr 1]{$R+} :=
+        Result.PerUserPolicy{$R-}[i shr 1]{$R+}
+        or (Byte(Data[i].AuditingInformation and $0F) shl 4);
 end;
 
 function TPerUserAudit.RawBufferSize: Integer;
@@ -424,8 +426,9 @@ begin
   Result.SubCategories := SubCategories;
 
   SetLength(Result.AuditFlags, Length(SubCategories));
+
   for i := 0 to High(SubCategories) do
-    Result.AuditFlags[i] := Buffer[i].AuditingInformation;
+    Result.AuditFlags[i] := Buffer{$R-}[i]{$R+}.AuditingInformation;
 
   AuditFree(Buffer);
 end;
@@ -481,13 +484,13 @@ begin
   // Go through all categories
   for Ind := 0 to High(Mapping.Categories) do
   begin
-    Mapping.Categories[Ind] := Guids[Ind];
+    Mapping.Categories[Ind] := Guids{$R-}[Ind]{$R+};
 
     // Query subcategories of this category
 
     Result.Location := 'LsarEnumerateAuditSubCategories';
-    Result.Win32Result := AuditEnumerateSubCategories(Guids[Ind], False,
-      SubGuids, SubCount);
+    Result.Win32Result := AuditEnumerateSubCategories(Guids{$R-}[Ind]{$R+},
+      False, SubGuids, SubCount);
 
     if not Result.IsSuccess then
       Exit;
@@ -496,7 +499,7 @@ begin
 
     // Go through all subcategories
     for SubInd := 0 to High(Mapping.SubCategories[Ind]) do
-      Mapping.SubCategories[Ind, SubInd] := SubGuids[SubInd];
+      Mapping.SubCategories[Ind, SubInd] := SubGuids{$R-}[SubInd]{$R+};
 
     AuditFree(SubGuids);
   end;
@@ -522,8 +525,8 @@ begin
 
   SetLength(SubCategories, Count);
 
-  for i := 0 to Count - 1 do
-    SubCategories[i] := Buffer[i];
+  for i := 0 to High(SubCategories) do
+    SubCategories[i] := Buffer{$R-}[i]{$R+};
 
   AuditFree(Buffer);
 end;

@@ -115,7 +115,7 @@ type
   end;
   PSamRidEnumeration = ^TSamRidEnumeration;
 
-  TSamRidEnumerationArray = array [Word] of TSamRidEnumeration;
+  TSamRidEnumerationArray = array [ANYSIZE_ARRAY] of TSamRidEnumeration;
   PSamRidEnumerationArray = ^TSamRidEnumerationArray;
 
   // 82
@@ -125,10 +125,10 @@ type
   end;
   PSamSidEnumeration = ^TSamSidEnumeration;
 
-  TSamSidEnumerationArray = array [Word] of TSamSidEnumeration;
+  TSamSidEnumerationArray = array [ANYSIZE_ARRAY] of TSamSidEnumeration;
   PSamSidEnumerationArray = ^TSamSidEnumerationArray;
 
-  TCardinalArray = array [Word] of Cardinal;
+  TCardinalArray = array [ANYSIZE_ARRAY] of Cardinal;
   PCardinalArray = ^TCardinalArray;
 
   // 263
@@ -201,7 +201,7 @@ type
   end;
   PGroupMembership = ^TGroupMembership;
 
-  PGroupMembershipArray = array [Word] of PGroupMembership;
+  PGroupMembershipArray = array [ANYSIZE_ARRAY] of PGroupMembership;
 
   // 565
   TGroupInformationClass = (

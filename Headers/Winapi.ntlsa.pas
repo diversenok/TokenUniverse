@@ -70,7 +70,7 @@ type
   end;
   PPolicyPrivilegeDefinition = ^TPolicyPrivilegeDefinition;
 
-  TPolicyPrivilegeDefinitionArray = array [Byte] of TPolicyPrivilegeDefinition;
+  TPolicyPrivilegeDefinitionArray = array [ANYSIZE_ARRAY] of TPolicyPrivilegeDefinition;
   PPolicyPrivilegeDefinitionArray = ^TPolicyPrivilegeDefinitionArray;
 
   // Winapi.LsaLookup 70
@@ -80,7 +80,7 @@ type
   end;
   PLsaTrustInformation = ^TLsaTrustInformation;
 
-  TLsaTrustInformationArray = array [Word] of TLsaTrustInformation;
+  TLsaTrustInformationArray = array [ANYSIZE_ARRAY] of TLsaTrustInformation;
   PLsaTrustInformationArray = ^TLsaTrustInformationArray;
 
   // Winapi.LsaLookup 89
@@ -99,7 +99,7 @@ type
   end;
   PLsaTranslatedSid2 = ^TLsaTranslatedSid2;
 
-  TLsaTranslatedSid2Array = array [Word] of TLsaTranslatedSid2;
+  TLsaTranslatedSid2Array = array [ANYSIZE_ARRAY] of TLsaTranslatedSid2;
   PLsaTranslatedSid2Array = ^TLsaTranslatedSid2Array;
 
   // Winapi.LsaLookup 142
@@ -110,7 +110,7 @@ type
   end;
   PLsaTranslatedName = ^TLsaTranslatedName;
 
-  TLsaTranslatedNameArray = array [Word] of TLsaTranslatedName;
+  TLsaTranslatedNameArray = array [ANYSIZE_ARRAY] of TLsaTranslatedName;
   PLsaTranslatedNameArray = ^TLsaTranslatedNameArray;
 
 // 2983

@@ -48,8 +48,8 @@ begin
   begin
     SetLength(Sessions, Count);
 
-    for i := 0 to Count - 1 do
-      Sessions[i] := Buffer[i];
+    for i := 0 to High(Sessions) do
+      Sessions[i] := Buffer{$R-}[i]{$R+};
 
     WinStationFreeMemory(Buffer);
   end;

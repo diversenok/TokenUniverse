@@ -232,8 +232,8 @@ begin
   SetLength(Luids, Count);
 
   // Invert the order so that later logons appear later in the list
-  for i := 0 to Count - 1 do
-    Luids[i] := Buffer[Count - 1 - i];
+  for i := 0 to High(Luids) do
+    Luids[i] := Buffer{$R-}[Count - 1 - i]{$R+};
 
   LsaFreeReturnBuffer(Buffer);
 

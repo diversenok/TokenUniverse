@@ -57,10 +57,11 @@ begin
     Length(Privileges) * SizeOf(TLUIDAndAttributes));
 
   Result.PrivilegeCount := Length(Privileges);
+
   for i := 0 to High(Privileges) do
   begin
-    Result.Privileges[i].Luid := Privileges[i];
-    Result.Privileges[i].Attributes := Attribute;
+    Result.Privileges{$R-}[i]{$R+}.Luid := Privileges[i];
+    Result.Privileges{$R-}[i]{$R+}.Attributes := Attribute;
   end;
 end;
 
@@ -72,8 +73,9 @@ begin
     Length(Privileges) * SizeOf(TLUIDAndAttributes));
 
   Result.PrivilegeCount := Length(Privileges);
+
   for i := 0 to High(Privileges) do
-    Result.Privileges[i] := Privileges[i];
+    Result.Privileges{$R-}[i]{$R+} := Privileges[i];
 end;
 
 function NtxpAllocGroups(Sids: TArray<ISid>; Attribute: Cardinal): PTokenGroups;
@@ -83,10 +85,11 @@ begin
   Result := AllocMem(SizeOf(Integer) + Length(Sids) * SizeOf(TSIDAndAttributes));
 
   Result.GroupCount := Length(Sids);
+
   for i := 0 to High(Sids) do
   begin
-    Result.Groups[i].Sid := Sids[i].Sid;
-    Result.Groups[i].Attributes := Attribute;
+    Result.Groups{$R-}[i]{$R+}.Sid := Sids[i].Sid;
+    Result.Groups{$R-}[i]{$R+}.Attributes := Attribute;
   end;
 end;
 
@@ -98,10 +101,11 @@ begin
     Length(Groups) * SizeOf(TSIDAndAttributes));
 
   Result.GroupCount := Length(Groups);
+
   for i := 0 to High(Groups) do
   begin
-    Result.Groups[i].Sid := Groups[i].SecurityIdentifier.Sid;
-    Result.Groups[i].Attributes := Groups[i].Attributes;
+    Result.Groups{$R-}[i]{$R+}.Sid := Groups[i].SecurityIdentifier.Sid;
+    Result.Groups{$R-}[i]{$R+}.Attributes := Groups[i].Attributes;
   end;
 end;
 

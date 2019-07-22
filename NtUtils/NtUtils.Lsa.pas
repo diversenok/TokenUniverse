@@ -178,10 +178,10 @@ begin
   begin
     SetLength(Privileges, Count);
 
-    for i := 0 to Count - 1 do
+    for i := 0 to High(Privileges) do
     begin
-      Privileges[i].Name := Buffer[i].Name.ToString;
-      Privileges[i].LocalValue := Buffer[i].LocalValue;
+      Privileges[i].Name := Buffer{$R-}[i]{$R+}.Name.ToString;
+      Privileges[i].LocalValue := Buffer{$R-}[i]{$R+}.LocalValue;
     end;
 
     LsaFreeMemory(Buffer);
@@ -296,7 +296,7 @@ begin
     SetLength(Privileges, PrivilegeSet.PrivilegeCount);
 
     for i := 0 to High(Privileges) do
-      Privileges[i] := PrivilegeSet.Privilege[i];
+      Privileges[i] := PrivilegeSet.Privilege{$R-}[i]{$R+};
   end;
 
   LsaFreeMemory(PrivilegeSet);
@@ -329,7 +329,7 @@ begin
       PrivSet.Control := 0;
 
       for i := 0 to High(PrivilegesToAdd) do
-        PrivSet.Privilege[i] := PrivilegesToAdd[i];
+        PrivSet.Privilege{$R-}[i]{$R+} := PrivilegesToAdd[i];
 
       Result.Location := 'LsaAddPrivilegesToAccount';
       Result.Status := LsaAddPrivilegesToAccount(hAccount, PrivSet);
@@ -361,7 +361,7 @@ begin
       PrivSet.Control := 0;
 
       for i := 0 to High(PrivilegesToRemove) do
-        PrivSet.Privilege[i] := PrivilegesToRemove[i];
+        PrivSet.Privilege{$R-}[i]{$R+} := PrivilegesToRemove[i];
 
       Result.Location := 'LsaRemovePrivilegesFromAccount';
       Result.Status := LsaRemovePrivilegesFromAccount(hAccount, False,
@@ -514,21 +514,21 @@ begin
 
   for i := 0 to High(Sids) do
   begin
-    Names[i].SidType := BufferNames[i].Use;
+    Names[i].SidType := BufferNames{$R-}[i]{$R+}.Use;
 
     // Note: for some SID types LsaLookupSids might return SID's SDDL
     // representation in the Name field. In rare cases it might be empty.
 
-    Names[i].UserName := BufferNames[i].Name.ToString;
+    Names[i].UserName := BufferNames{$R-}[i]{$R+}.Name.ToString;
 
     if Names[i].SidType in [SidTypeInvalid, SidTypeUnknown] then
       RtlxpApplySddlOverrides(Sids[i], Names[i].UserName);
 
     // Negative DomainIndex means the SID does not reference a domain
-    if (BufferNames[i].DomainIndex >= 0) and
-      (BufferNames[i].DomainIndex < BufferDomains.Entries) then
+    if (BufferNames{$R-}[i]{$R+}.DomainIndex >= 0) and
+      (BufferNames{$R-}[i]{$R+}.DomainIndex < BufferDomains.Entries) then
       Names[i].DomainName := BufferDomains.Domains[
-        BufferNames[i].DomainIndex].Name.ToString
+        BufferNames{$R-}[i]{$R+}.DomainIndex].Name.ToString
     else
       Names[i].DomainName := '';
   end;

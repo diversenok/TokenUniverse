@@ -126,7 +126,7 @@ begin
   SetLength(ProcessIds, Buffer.NumberOfProcessIdsInList);
 
   for i := 0 to High(ProcessIds) do
-    ProcessIds[i] := Buffer.ProcessIdList[i];
+    ProcessIds[i] := Buffer.ProcessIdList{$R-}[i]{$R+};
 
   FreeMem(Buffer);
 end;

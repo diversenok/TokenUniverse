@@ -84,13 +84,13 @@ type
     LastWriteTime: TLargeInteger;
     TitleIndex: Cardinal;
     NameLength: Cardinal;
-    Name: array [0..0] of WideChar;
+    Name: array [ANYSIZE_ARRAY] of WideChar;
   end;
   PKeyBasicInformation = ^TKeyBasicInformation;
 
   TKeyNameInformation = record
     NameLength: Cardinal;
-    Name: array [0..0] of WideChar;
+    Name: array [ANYSIZE_ARRAY] of WideChar;
   end;
   PKeyNameInformation = ^TKeyNameInformation;
 
@@ -117,7 +117,7 @@ type
     TitleIndex: Cardinal;
     ValueType: TRegValueType;
     NameLength: Cardinal;
-    Name: array [0..0] of WideChar;
+    Name: array [ANYSIZE_ARRAY] of WideChar;
   end;
   PKeyValueBasicInformation = ^TKeyValueBasicInformation;
 
@@ -125,7 +125,7 @@ type
     TitleIndex: Cardinal;
     ValueType: TRegValueType;
     DataLength: Cardinal;
-    Data: array [0..0] of Byte;
+    Data: array [ANYSIZE_ARRAY] of Byte;
   end;
   PKeyValuePartialInfromation = ^TKeyValuePartialInfromation;
 

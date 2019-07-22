@@ -55,14 +55,16 @@ begin
 
   // Prepare passed parameters
   SetLength(Parameters, dwNumServicesArgs);
-  for i := 0 to dwNumServicesArgs - 1 do
-    Parameters[i] := String(lpServiceArgVectors[i]);
+
+  for i := 0 to High(Parameters) do
+    Parameters[i] := String(lpServiceArgVectors{$R-}[i]{$R+});
 
   {$IFDEF DEBUG}
   OutputDebugStringW(PWideChar(ParamStr(0)));
   OutputDebugStringW('Service parameters: ');
+
   for i := 0 to dwNumServicesArgs - 1 do
-    OutputDebugStringW(lpServiceArgVectors[i]);
+    OutputDebugStringW(lpServiceArgVectors{$R-}[i]{$R+});
   {$ENDIF}
 
   // Call the payload

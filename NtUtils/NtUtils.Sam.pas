@@ -262,7 +262,7 @@ begin
 
   // RelativeId is always zero for domains, but names are available
   for i := 0 to High(Names) do
-    Names[i] := Buffer[i].Name.ToString;
+    Names[i] := Buffer{$R-}[i]{$R+}.Name.ToString;
 
   SamFreeMemory(Buffer);
 end;
@@ -311,8 +311,8 @@ begin
 
   for i := 0 to High(Groups) do
   begin
-    Groups[i].RelativeId := Buffer[i].RelativeId;
-    Groups[i].Name := Buffer[i].Name.ToString;
+    Groups[i].RelativeId := Buffer{$R-}[i]{$R+}.RelativeId;
+    Groups[i].Name := Buffer{$R-}[i]{$R+}.Name.ToString;
   end;
 
   SamFreeMemory(Buffer);
@@ -360,8 +360,8 @@ begin
 
   for i := 0 to High(Members) do
   begin
-    Members[i].RelativeId := BufferIDs[i];
-    Members[i].Attributes := BufferAttributes[i];
+    Members[i].RelativeId := BufferIDs{$R-}[i]{$R+};
+    Members[i].Attributes := BufferAttributes{$R-}[i]{$R+};
   end;
 
   SamFreeMemory(BufferIDs);
@@ -412,8 +412,8 @@ begin
 
   for i := 0 to High(Aliases) do
   begin
-    Aliases[i].RelativeId := Buffer[i].RelativeId;
-    Aliases[i].Name := Buffer[i].Name.ToString;
+    Aliases[i].RelativeId := Buffer{$R-}[i]{$R+}.RelativeId;
+    Aliases[i].Name := Buffer{$R-}[i]{$R+}.Name.ToString;
   end;
 
   SamFreeMemory(Buffer);
@@ -459,7 +459,7 @@ begin
   SetLength(Members, Count);
 
   for i := 0 to High(Members) do
-    Members[i] := TSid.CreateCopy(Buffer[i]);
+    Members[i] := TSid.CreateCopy(Buffer{$R-}[i]{$R+});
 
   SamFreeMemory(Buffer);
 end;
@@ -475,7 +475,6 @@ begin
   Status.Status := SamQueryInformationAlias(hAlias, InfoClass, Result);
 end;
 
-// Set alias information
 function SamxSetAlias(hAlias: TSamHandle; InfoClass: TAliasInformationClass;
   Data: Pointer): TNtxStatus;
 begin
@@ -509,8 +508,8 @@ begin
 
   for i := 0 to High(Users) do
   begin
-    Users[i].RelativeId := Buffer[i].RelativeId;
-    Users[i].Name := Buffer[i].Name.ToString;
+    Users[i].RelativeId := Buffer{$R-}[i]{$R+}.RelativeId;
+    Users[i].Name := Buffer{$R-}[i]{$R+}.Name.ToString;
   end;
 
   SamFreeMemory(Buffer);
@@ -557,7 +556,7 @@ begin
   SetLength(Groups, Count);
 
   for i := 0 to High(Groups) do
-    Groups[i] := Buffer[i]^;
+    Groups[i] := Buffer{$R-}[i]{$R+}^;
 
   SamFreeMemory(Buffer);
 end;

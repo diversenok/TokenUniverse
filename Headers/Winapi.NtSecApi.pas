@@ -56,7 +56,7 @@ type
 
   TLsaOperationalMode = Cardinal;
 
-  TGuidArray = array [Byte] of TGUID;
+  TGuidArray = array [ANYSIZE_ARRAY] of TGUID;
   PGuidArray = ^TGuidArray;
 
   // 948
@@ -143,7 +143,7 @@ type
   end;
   PAuditPolicyInformation = ^TAuditPolicyInformation;
 
-  TAuditPolicyInformationArray = array [Byte] of TAuditPolicyInformation;
+  TAuditPolicyInformationArray = array [ANYSIZE_ARRAY] of TAuditPolicyInformation;
   PAuditPolicyInformationArray = ^TAuditPolicyInformationArray;
 
 // 1648
