@@ -54,7 +54,6 @@ type
 
   TPerUserAudit = class(TInterfacedObject, IAudit, IPerUserAudit)
   private
-    Count: Integer;
     Data: TArray<TAuditPolicyInformation>;
   public
     class function CreateEmpty(out Status: TNtxStatus): TPerUserAudit; static;
@@ -257,17 +256,17 @@ begin
   // Although on read PER_USER_POLICY_UNCHANGED means that the audit is
   // disabled, we need to explicitly convert it to PER_USER_AUDIT_NONE on write.
 
-  for i := 0 to Count - 1 do
+  for i := 0 to High(Data) do
     if Data[i].AuditingInformation = PER_USER_POLICY_UNCHANGED then
       Data[i].AuditingInformation := PER_USER_AUDIT_NONE;
 
   Result.Location := 'LsarSetAuditPolicy';
-  Result.Win32Result := AuditSetPerUserPolicy(Sid, Data, Count);
+  Result.Win32Result := AuditSetPerUserPolicy(Sid, Data, Length(Data));
 end;
 
 function TPerUserAudit.ContainsFlag(Index, Flag: Integer): Boolean;
 begin
-  if (Index < 0) or (Index >= Count) then
+  if (Index < 0) or (Index > High(Data)) then
     Exit(False);
 
   Result := Contains(Data[Index].AuditingInformation, Cardinal(Flag));
@@ -285,8 +284,7 @@ begin
 
   Result := TPerUserAudit.Create;
 
-  Result.Count := Length(SubCategories);
-  SetLength(Result.Data, Result.Count);
+  SetLength(Result.Data, Length(SubCategories));
 
   for i := 0 to High(SubCategories) do
   begin
@@ -316,10 +314,9 @@ begin
 
   Result := TPerUserAudit.Create;
 
-  Result.Count := Length(SubCategories);
-  SetLength(Result.Data, Result.Count);
+  SetLength(Result.Data, Length(SubCategories));
 
-  for i := 0 to High(Result.Count) do
+  for i := 0 to High(Result.Data) do
     Result.Data[i] := Buffer{$R-}[i]{$R+};
 
   AuditFree(Buffer);
@@ -338,7 +335,7 @@ begin
 
   // TokenAuditPolicy stores policies for two subcategories in each byte
 
-  for i := 0 to Count - 1 do
+  for i := 0 to High(Data) do
     if i and 1 = 0 then
       Result.PerUserPolicy{$R-}[i shr 1]{$R+} :=
         Result.PerUserPolicy{$R-}[i shr 1]{$R+}
@@ -352,14 +349,14 @@ end;
 function TPerUserAudit.RawBufferSize: Integer;
 begin
   // In accordance with Winapi's definition of TOKEN_AUDIT_POLICY
-  Result := (Count shr 1) + 1;
+  Result := (Length(Data) shr 1) + 1;
 end;
 
 procedure TPerUserAudit.SetFlag(Index, Flag: Integer; Enabled: Boolean);
 var
   PolicyByte: Byte;
 begin
-  if Index >= Count then
+  if Index > High(Data) then
     Exit;
 
   // Replace PER_USER_AUDIT_NONE with PER_USER_POLICY_UNCHANGED
