@@ -280,7 +280,7 @@ begin
     if not NT_ERROR(ENt.ErrorCode) then
       Dlg.pszMainIcon := TD_WARNING_ICON;
 
-    Dlg.pszMainInstruction := PWideChar(StatusToDescription(ENt.ErrorCode));
+    Dlg.pszMainInstruction := PWideChar(NtxStatusDescription(ENt.ErrorCode));
 
     if Dlg.pszMainInstruction = '' then
       Dlg.pszMainInstruction := PWideChar(TITLE_OS_ERROR);
@@ -296,8 +296,8 @@ begin
           ENt.LastCall.InfoClassType, Integer(ENt.LastCall.InfoClass));
     end;
 
-    Msg := Msg + #$D#$A + 'Result: ' + StatusToString(ENt.ErrorCode);
-    Msg := Msg + #$D#$A#$D#$A + SysNativeErrorMessage(ENt.ErrorCode);
+    Msg := Msg + #$D#$A + 'Result: ' + NtxStatusToString(ENt.ErrorCode);
+    Msg := Msg + #$D#$A#$D#$A + NtxFormatErrorMessage(ENt.ErrorCode);
     Msg := Msg + SuggestAll(ENt);
 
     Dlg.pszContent := PWideChar(Msg);

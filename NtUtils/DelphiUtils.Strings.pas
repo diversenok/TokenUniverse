@@ -43,6 +43,10 @@ function PrettifyCamelCase(Prefix, CamelCaseText: String): String;
 function PrettifyCamelCaseEnum(Prefix: String; TypeInfo: PTypeInfo;
   Value: Integer): String;
 
+function PrettifyCapsUnderscore(Prefix, CapsText: String): String;
+function PrettifyCapsUnderscoreEnum(Prefix: String; TypeInfo: PTypeInfo;
+  Value: Integer): String;
+
 // Hex represenation
 function IntToHexEx(Value: Int64; Digits: Integer = 0): String; overload;
 function IntToHexEx(Value: UInt64; Digits: Integer = 0): String; overload;
@@ -197,6 +201,40 @@ begin
   if (TypeInfo.Kind = tkEnumeration) and (Value >= TypeInfo.TypeData.MinValue)
     and (Value <= TypeInfo.TypeData.MaxValue) then
     Result := PrettifyCamelCase(Prefix, GetEnumName(TypeInfo, Integer(Value)))
+  else
+    Result := OutOfBound(Value);
+end;
+
+function PrettifyCapsUnderscore(Prefix, CapsText: String): String;
+var
+  i: Integer;
+begin
+  // Convert a string with from capitals with undescores to a spaced string
+  // removing a prefix, for example: 'ERROR_ACCESS_DENIED' => 'Acces denied'
+
+  Result := CapsText;
+
+  if Result.StartsWith(Prefix) then
+    Delete(Result, Low(Result), Length(Prefix));
+
+  for i := Succ(Low(Result)) to High(Result) do
+  begin
+    case Result[i] of
+      'A'..'Z':
+        Result[i] := Chr(Ord('a') + Ord(Result[i]) - Ord('A'));
+      '_':
+          Result[i] := ' ';
+    end;
+  end;
+end;
+
+function PrettifyCapsUnderscoreEnum(Prefix: String; TypeInfo: PTypeInfo;
+  Value: Integer): String;
+begin
+  if (TypeInfo.Kind = tkEnumeration) and (Value >= TypeInfo.TypeData.MinValue)
+    and (Value <= TypeInfo.TypeData.MaxValue) then
+    Result := PrettifyCapsUnderscore(Prefix,
+      GetEnumName(TypeInfo, Integer(Value)))
   else
     Result := OutOfBound(Value);
 end;

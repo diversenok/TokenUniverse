@@ -10,23 +10,23 @@ uses
 // $C00000BB =>     "STATUS_NOT_SUPPORTED"
 // Returns empty string if the name is not found.
 
-function Win32ErrorNameToString(Code: Cardinal): String;
-function StatusNameToString(Status: NTSTATUS): String;
+function NtxpWin32ErrorToString(Code: Cardinal): String;
+function NtxpStatusToString(Status: NTSTATUS): String;
 
 // The same as above, but on unknown errors returns their decimal/hexadecimal
 // representations.
-function Win32ErrorToString(Code: Cardinal): String;
-function StatusToString(Status: NTSTATUS): String;
+function NtxWin32ErrorToString(Code: Cardinal): String;
+function NtxStatusToString(Status: NTSTATUS): String;
 
 // Converts common error codes to their short descriptions, for example:
 //      1314 => "Privilege not held"
 // $C00000BB =>      "Not supported"
 // Returns empty string if the name is not found.
-function Win32ErrorToDescription(Code: Cardinal): String;
-function StatusToDescription(Status: NTSTATUS): String;
+function NtxWin32ErrorDescription(Code: Cardinal): String;
+function NtxStatusDescription(Status: NTSTATUS): String;
 
 // Retrieves a full description of a native error.
-function SysNativeErrorMessage(Status: NTSTATUS): String;
+function NtxFormatErrorMessage(Status: NTSTATUS): String;
 
 implementation
 
@@ -51,7 +51,7 @@ const
   RC_STATUS_SIFT_NT_ERROR = $C000;   // See ERROR_SEVERITY_ERRORW
   RC_STATUS_EACH_MAX = $1000;
 
-function Win32ErrorNameToString(Code: Cardinal): String;
+function NtxpWin32ErrorToString(Code: Cardinal): String;
 var
   Buf: PWideChar;
 begin
@@ -66,7 +66,7 @@ begin
   SetString(Result, Buf, LoadStringW(HInstance, Code, Buf));
 end;
 
-function StatusNameToString(Status: NTSTATUS): String;
+function NtxpStatusToString(Status: NTSTATUS): String;
 var
   ResIndex: Cardinal;
   Buf: PWideChar;
@@ -92,84 +92,62 @@ begin
   SetString(Result, Buf, LoadStringW(HInstance, ResIndex, Buf));
 end;
 
-function Win32ErrorToString(Code: Cardinal): String;
+function NtxWin32ErrorToString(Code: Cardinal): String;
 begin
-  Result := Win32ErrorNameToString(Code);
+  Result := NtxpWin32ErrorToString(Code);
   if Result = '' then
     Result := IntToStr(Code);
 end;
 
-function StatusToString(Status: NTSTATUS): String;
+function NtxStatusToString(Status: NTSTATUS): String;
 begin
   // Check if it's a fake status based on a Win32 error.
   // In this case use "ERROR_SOMETHING_WENT_WRONG" messages.
 
   if NT_NTWIN32(Status) then
-    Result := Win32ErrorNameToString(WIN32_FROM_NTSTATUS(Status))
+    Result := NtxpWin32ErrorToString(WIN32_FROM_NTSTATUS(Status))
   else
-    Result := StatusNameToString(Status);
+    Result := NtxpStatusToString(Status);
 
   if Result = '' then
     Result := IntToHexEx(Status, 8);
 end;
 
-function PrettifyError(PossiblePrefix: String; Msg: String): String;
-var
-  i: Integer;
-begin
-  Result := Msg;
-
-  // Remove the prefix
-  if Result.StartsWith(PossiblePrefix) then
-    Delete(Result, Low(Result), Length(PossiblePrefix));
-
-  // Lower the case and replace underscores with spaces
-  for i := Succ(Low(Result)) to High(Result) do
-  begin
-    case Result[i] of
-      'A'..'Z':
-        Result[i] := Chr(Ord('a') + Ord(Result[i]) - Ord('A'));
-      '_':
-          Result[i] := ' ';
-    end;
-  end;
-end;
-
-function Win32ErrorToDescription(Code: Cardinal): String;
+function NtxWin32ErrorDescription(Code: Cardinal): String;
 begin
   // We query the code name which looks like "ERROR_SOMETHING_WENT_WRONG"
   // and prettify it so it appears like "Something went wrong"
 
-  Result := Win32ErrorNameToString(Code);
+  Result := NtxpWin32ErrorToString(Code);
 
   if Result = '' then
     Exit;
 
-  Result := PrettifyError('ERROR_', Result);
+  Result := PrettifyCapsUnderscore('ERROR_', Result);
 end;
 
-function StatusToDescription(Status: NTSTATUS): String;
+function NtxStatusDescription(Status: NTSTATUS): String;
 begin
   if NT_NTWIN32(Status) then
   begin
     // This status was converted from a Win32 error.
-    Result := Win32ErrorToDescription(WIN32_FROM_NTSTATUS(Status));
+    Result := NtxWin32ErrorDescription(WIN32_FROM_NTSTATUS(Status));
   end
   else
   begin
     // We query the status name which looks like "STATUS_SOMETHING_WENT_WRONG"
     // and prettify it so it appears like "Something went wrong"
 
-    Result := StatusNameToString(Status);
+    Result := NtxpStatusToString(Status);
 
     if Result = '' then
       Exit;
 
-    Result := PrettifyError('STATUS_', Result);
+    Result := PrettifyCapsUnderscore('STATUS_', Result);
   end;
 end;
 
-function SysNativeErrorMessage(Status: NTSTATUS): String;
+function NtxFormatErrorMessage(Status: NTSTATUS): String;
 var
   StartFrom: Integer;
 begin

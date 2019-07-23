@@ -128,7 +128,7 @@ end;
 
 function TNtxStatus.MessageHint: String;
 begin
-  Result := SysNativeErrorMessage(Status);
+  Result := NtxFormatErrorMessage(Status);
 end;
 
 procedure TNtxStatus.RaiseOnError;
@@ -156,14 +156,14 @@ end;
 
 function TNtxStatus.ToString: String;
 begin
-  Result := Location + ': ' + StatusToString(Status);
+  Result := Location + ': ' + NtxStatusToString(Status);
 end;
 
 { ENtError }
 
 constructor ENtError.Create(Status: NTSTATUS; Location: String);
 begin
-  Message := Location + ' returned ' + StatusToString(Status);
+  Message := Location + ' returned ' + NtxStatusToString(Status);
   ErrorLocation := Location;
   ErrorCode := Status;
 end;
@@ -192,7 +192,7 @@ end;
 
 class procedure ENtError.Report(Status: Cardinal; Location: String);
 begin
-  OutputDebugStringW(PWideChar(Location + ': ' + StatusToString(Status)));
+  OutputDebugStringW(PWideChar(Location + ': ' + NtxStatusToString(Status)));
 end;
 
 function ENtError.ToWinErrorCode: Cardinal;
