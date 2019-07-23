@@ -15,7 +15,7 @@ implementation
 
 uses
   Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntpsapi, Ntapi.ntobapi, NtUtils.Exceptions,
-  Winapi.ProcessThreadsApi;
+  Winapi.ProcessThreadsApi, Ntapi.ntseapi;
 
 function RefStr(const Str: UNICODE_STRING; Present: Boolean): PUNICODE_STRING;
   inline;
@@ -34,14 +34,14 @@ var
   ProcessParams: PRtlUserProcessParameters;
   ProcessInfo: TRtlUserProcessInformation;
   NtImageName, CurrDir, CmdLine, Desktop: UNICODE_STRING;
-  Status: NTSTATUS;
+  Status: TNtxStatus;
 begin
   // Convert the filename to native format
-  Status := RtlDosPathNameToNtPathName_U_WithStatus(
+  Status.Location := 'RtlDosPathNameToNtPathName_U_WithStatus';
+  Status.Status := RtlDosPathNameToNtPathName_U_WithStatus(
     PWideChar(ParamSet.Application), NtImageName, nil, nil);
 
-  if not NT_SUCCESS(Status) then
-    raise ENtError.Create(Status, 'RtlDosPathNameToNtPathName_U_WithStatus');
+  Status.RaiseOnError;
 
   CmdLine.FromString(PrepareCommandLine(ParamSet));
 
@@ -52,7 +52,8 @@ begin
     Desktop.FromString(ParamSet.Desktop);
 
   // Construct parameters
-  Status := RtlCreateProcessParametersEx(
+  Status.Location := 'RtlCreateProcessParametersEx';
+  Status.Status := RtlCreateProcessParametersEx(
     ProcessParams,
     NtImageName,
     nil,
@@ -66,11 +67,10 @@ begin
     0
   );
 
-  if not NT_SUCCESS(Status) then
-  begin
+  if not Status.IsSuccess then
     RtlFreeUnicodeString(NtImageName);
-    raise ENtError.Create(Status, 'RtlCreateProcessParametersEx');
-  end;
+
+  Status.RaiseOnError;
 
   if ParamSet.Provides(ppShowWindowMode) then
   begin
@@ -79,7 +79,10 @@ begin
   end;
 
   // Create the process
-  Status := RtlCreateUserProcess(
+  Status.Location := 'RtlCreateUserProcess';
+  Status.LastCall.ExpectedPrivilege := SE_ASSIGN_PRIMARY_TOKEN_PRIVILEGE;
+
+  Status.Status := RtlCreateUserProcess(
     NtImageName,
     OBJ_CASE_INSENSITIVE,
     ProcessParams,
@@ -95,8 +98,7 @@ begin
   RtlDestroyProcessParameters(ProcessParams);
   RtlFreeUnicodeString(NtImageName);
 
-  if not NT_SUCCESS(Status) then
-    raise ENtError.Create(Status, 'RtlCreateUserProcess');
+  Status.RaiseOnError;
 
   // The process was created in a suspended state.
   // Resume it unless the caller explicitly states it should stay suspended.

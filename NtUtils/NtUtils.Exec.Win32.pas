@@ -56,7 +56,7 @@ type
 implementation
 
 uses
-  Winapi.WinError, Ntapi.ntobapi, Ntapi.ntstatus;
+  Winapi.WinError, Ntapi.ntobapi, Ntapi.ntstatus, Ntapi.ntseapi;
 
 { TStartupInfoHolder }
 
@@ -189,6 +189,7 @@ var
   CurrentDir: PWideChar;
   Startup: IStartupInfo;
   RunAsInvoker: IInterface;
+  Status: TNtxStatus;
 begin
   // Command line should be in writable memory
   CommandLine := PrepareCommandLine(ParamSet);
@@ -205,7 +206,10 @@ begin
 
   Startup := TStartupInfoHolder.Create(ParamSet, Self);
 
-  WinCheck(CreateProcessAsUserW(
+  Status.Location := 'CreateProcessAsUserW';
+  Status.LastCall.ExpectedPrivilege := SE_ASSIGN_PRIMARY_TOKEN_PRIVILEGE;
+
+  Status.Win32Result := CreateProcessAsUserW(
     ParamSet.Token, // Zero to fall back to CreateProcessW behavior
     PWideChar(ParamSet.Application),
     PWideChar(CommandLine),
@@ -217,8 +221,9 @@ begin
     CurrentDir,
     Startup.StartupInfoEx,
     Result
-    ), 'CreateProcessAsUserW'
   );
+
+  Status.RaiseOnError;
 
   // The caller must close handles passed via TProcessInfo
 end;
@@ -242,6 +247,7 @@ function TExecCreateProcessWithToken.Execute(ParamSet: IExecProvider):
 var
   CurrentDir: PWideChar;
   Startup: IStartupInfo;
+  Status: TNtxStatus;
 begin
   if ParamSet.Provides(ppCurrentDirectory) then
     CurrentDir := PWideChar(ParamSet.CurrentDircetory)
@@ -250,7 +256,10 @@ begin
 
   Startup := TStartupInfoHolder.Create(ParamSet, Self);
 
-  WinCheck(CreateProcessWithTokenW(
+  Status.Location := 'CreateProcessWithTokenW';
+  Status.LastCall.ExpectedPrivilege := SE_IMPERSONATE_PRIVILEGE;
+
+  Status.Win32Result := CreateProcessWithTokenW(
     ParamSet.Token,
     ParamSet.LogonFlags,
     PWideChar(ParamSet.Application),
@@ -260,8 +269,9 @@ begin
     CurrentDir,
     Startup.StartupInfoEx,
     Result
-    ), 'CreateProcessWithTokenW'
   );
+
+  Status.RaiseOnError;
 
   // The caller must close handles passed via TProcessInfo
 end;
