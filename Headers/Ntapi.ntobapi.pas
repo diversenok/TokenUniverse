@@ -13,11 +13,9 @@ type
     ObjectBasicInformation = 0,     // q: TObjectBasicInformaion
     ObjectNameInformation = 1,      // q: UNICODE_STRING
     ObjectTypeInformation = 2,      // q: TObjectTypeInformation
-    ObjectTypesInformation = 3,     // q:
+    ObjectTypesInformation = 3,     // q: TObjectTypesInformation + TObjectTypeInformation
     ObjectHandleFlagInformation = 4 // q+s: TObjectHandleFlagInformation
   );
-
-  // TODO: ObjectTypesInformation for token type
 
   // ObjectBasicInformation
   TObjectBasicInformaion = record
@@ -61,6 +59,12 @@ type
     DefaultNonPagedPoolCharge: Cardinal;
   end;
   PObjectTypeInformation = ^TObjectTypeInformation;
+
+  TObjectTypesInformation = record
+    NumberOfTypes: Cardinal;
+    // + aligned array of [0..NumberOfTypes - 1] of TObjectTypeInformation
+  end;
+  PObjectTypesInformation = ^TObjectTypesInformation;
 
   TObjectHandleFlagInformation = record
     Inherit: Boolean;

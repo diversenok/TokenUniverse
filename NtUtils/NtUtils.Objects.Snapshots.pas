@@ -3,7 +3,7 @@ unit NtUtils.Objects.Snapshots;
 interface
 
 uses
-  Ntapi.ntexapi, NtUtils.Exceptions;
+  Ntapi.ntexapi, NtUtils.Objects, NtUtils.Exceptions;
 
 type
   THandleEntry = Ntapi.ntexapi.TSystemHandleTableEntryInfoEx;
@@ -23,6 +23,8 @@ type
     Objects: array of TObjectEntry;
   end;
 
+{ Handles }
+
 // Snapshot all handles on the system
 function NtxEnumerateSystemHandles(out Handles: TArray<THandleEntry>):
   TNtxStatus;
@@ -38,20 +40,27 @@ function FilterByAddress(const HandleEntry: THandleEntry;
 function FilterByType(const HandleEntry: THandleEntry;
   TypeIndex: NativeUInt): Boolean;
 
+{ Objects }
+
 // Check if object snapshoting is supported
 function NtxObjectEnumerationSupported: Boolean;
 
-// Enumerate objects on the system
+// Snapshot objects on the system
 function NtxEnumerateObjects(out Types: TArray<TObjectTypeEntry>): TNtxStatus;
 
 // Find object entry by a object's address
 function NtxFindObjectByAddress(Types: TArray<TObjectTypeEntry>;
   Address: Pointer): PObjectEntry;
 
+{ Types }
+
+// Enumerate kernel object types on the system
+function NtxEnumerateTypes(out Types: TArray<TObjectTypeInfo>): TNtxStatus;
+
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntpsapi;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntpsapi, Ntapi.ntobapi;
 
 { Handles }
 
@@ -147,11 +156,6 @@ end;
 function NtxObjectEnumerationSupported: Boolean;
 begin
   Result := (RtlGetNtGlobalFlags and FLG_MAINTAIN_OBJECT_TYPELIST <> 0);
-end;
-
-function Offset(P: Pointer; Size: NativeUInt): Pointer;
-begin
-  Result := Pointer(NativeUInt(P) + Size);
 end;
 
 function NtxEnumerateObjects(out Types: TArray<TObjectTypeEntry>): TNtxStatus;
@@ -287,6 +291,55 @@ begin
         Exit(@Types[i].Objects[j]);
 
   Result := nil;
+end;
+
+{ Types }
+
+function NtxEnumerateTypes(out Types: TArray<TObjectTypeInfo>): TNtxStatus;
+var
+  Buffer: PObjectTypesInformation;
+  pType: PObjectTypeInformation;
+  BufferSize, Required: Cardinal;
+  i: Integer;
+begin
+  Result.Location := 'NtQueryObject';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ObjectTypesInformation);
+  Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+
+  BufferSize := SizeOf(TObjectTypesInformation);
+  repeat
+    Buffer := AllocMem(BufferSize);
+
+    Required := 0;
+    Result.Status := NtQueryObject(0, ObjectTypesInformation, Buffer,
+      BufferSize, @Required);
+
+    if not Result.IsSuccess then
+      FreeMem(Buffer);
+
+  until not NtxExpandBuffer(Result, BufferSize, Required, True);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  SetLength(Types, Buffer.NumberOfTypes);
+
+  i := 0;
+  pType := Offset(Buffer, SizeOf(NativeUInt));
+
+  repeat
+    Types[i].Other := pType^;
+    Types[i].TypeName := pType.TypeName.ToString;
+    Types[i].Other.TypeName.Buffer := PWideChar(Types[i].TypeName);
+
+    pType := Offset(pType, AlighUp(SizeOf(TObjectTypeInformation)) +
+      AlighUp(pType.TypeName.MaximumLength));
+
+    Inc(i);
+  until i > High(Types);
+
+  FreeMem(Buffer);
 end;
 
 end.

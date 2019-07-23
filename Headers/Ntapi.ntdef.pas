@@ -71,6 +71,10 @@ function NTSTATUS_FROM_WIN32(Win32Error: Cardinal): NTSTATUS; inline;
 function NT_NTWIN32(Status: NTSTATUS): Boolean;
 function WIN32_FROM_NTSTATUS(Status: NTSTATUS): Cardinal;
 
+function Offset(P: Pointer; Size: NativeUInt): Pointer;
+function AlighUp(Length: Cardinal; Size: Cardinal = SizeOf(NativeUInt))
+  : Cardinal;
+
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;
   ObjectName: PUNICODE_STRING = nil; Attributes: Cardinal = 0;
   RootDirectory: THandle = 0; QoS: PSecurityQualityOfService = nil); inline;
@@ -124,6 +128,17 @@ end;
 function WIN32_FROM_NTSTATUS(Status: NTSTATUS): Cardinal;
 begin
   Result := Status and $FFFF;
+end;
+
+function Offset(P: Pointer; Size: NativeUInt): Pointer;
+begin
+  Result := Pointer(NativeUInt(P) + Size);
+end;
+
+function AlighUp(Length: Cardinal; Size: Cardinal = SizeOf(NativeUInt))
+  : Cardinal;
+begin
+  Result := (Length + Size - 1) and not (Size - 1);
 end;
 
 procedure InitializeObjectAttributes(var ObjAttr: TObjectAttributes;

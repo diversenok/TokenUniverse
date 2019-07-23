@@ -29,12 +29,7 @@ function NtxFindProcessById(Processes: TArray<TProcessEntry>;
 implementation
 
 uses
-  Ntapi.ntstatus;
-
-function Offset(P: Pointer; Size: NativeUInt): Pointer;
-begin
-  Result := Pointer(NativeUInt(P) + Size);
-end;
+  Ntapi.ntstatus, Ntapi.ntdef;
 
 function NtxEnumerateProcesses(out Processes: TArray<TProcessEntry>):
   TNtxStatus;
