@@ -333,6 +333,15 @@ begin
     Types[i].TypeName := pType.TypeName.ToString;
     Types[i].Other.TypeName.Buffer := PWideChar(Types[i].TypeName);
 
+    // Until Win 8.1 ObQueryTypeInfo didn't write anything to TypeIndex field.
+    // Fix it by manually calculating this value.
+
+    // Note: NtQueryObject iterates through ObpObjectTypes which is zero-based;
+    // but TypeIndex is an index in ObTypeIndexTable which starts with 2.
+
+    if Types[i].Other.TypeIndex = 0 then
+      Types[i].Other.TypeIndex := OB_TYPE_INDEX_TABLE_TYPE_OFFSET + i;
+
     pType := Offset(pType, AlighUp(SizeOf(TObjectTypeInformation)) +
       AlighUp(pType.TypeName.MaximumLength));
 

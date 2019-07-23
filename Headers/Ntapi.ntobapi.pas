@@ -76,6 +76,9 @@ const
   DUPLICATE_SAME_ACCESS = $00000002;
   DUPLICATE_SAME_ATTRIBUTES = $00000004;
 
+  // rev
+  OB_TYPE_INDEX_TABLE_TYPE_OFFSET = 2;
+
 function NtQueryObject(ObjectHandle: THandle; ObjectInformationClass:
   TObjectInformationClass; ObjectInformation: Pointer; ObjectInformationLength:
   Cardinal; ReturnLength: PCardinal): NTSTATUS; stdcall; external ntdll;
