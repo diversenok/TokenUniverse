@@ -3,7 +3,7 @@ unit NtUtils.Exceptions;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, System.SysUtils, System.TypInfo;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, System.SysUtils, System.TypInfo;
 
 const
   BUFFER_LIMIT = 1024 * 1024 * 256; // 256 MB
@@ -17,6 +17,7 @@ type
     objSamAlias, objSamUser);
 
   TLastCallInfo = record
+    ExpectedPrivilege: TSeWellKnownPrivilege;
   case CallType: TLastCallType of
     lcOpenCall:
       (AccessMask: TAccessMask; AccessMaskType: TAccessMaskType);
@@ -146,7 +147,7 @@ end;
 procedure TNtxStatus.SetLocation(Value: String);
 begin
   FLocation := Value;
-  LastCall.CallType := lcOtherCall;
+  FillChar(LastCall, SizeOf(LastCall), 0);
 end;
 
 procedure TNtxStatus.SetWinError(Value: Cardinal);

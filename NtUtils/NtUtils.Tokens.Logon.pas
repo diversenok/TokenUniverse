@@ -19,7 +19,8 @@ function NtxLogonS4U(out hToken: THandle; Domain, Username: String;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, NtUtils.Processes, NtUtils.Tokens.Misc;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntseapi, NtUtils.Processes,
+  NtUtils.Tokens.Misc;
 
 function NtxLogonUser(out hToken: THandle; Domain, Username: String;
   Password: PWideChar; LogonType: TSecurityLogonType;
@@ -51,8 +52,8 @@ begin
     end;
 
     // Call LogonUserExExW that allows us to add arbitrary groups to a token.
-    // Note: this action requires SeTcbPrivilege.
     Result.Location := 'LogonUserExExW';
+    Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
     Result.Win32Result := LogonUserExExW(PWideChar(Username), PWideChar(Domain),
       Password, LogonType, LogonProvider, GroupsBuffer, hToken, nil, nil, nil,
       nil);
@@ -135,6 +136,7 @@ begin
   // Perform the logon
   SubStatus := STATUS_SUCCESS;
   Result.Location := 'LsaLogonUser';
+  Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
   Result.Status := LsaLogonUser(LsaHandle, OriginName, LogonType, AuthPkg,
     Buffer, BufferSize, GroupArray, TokenSource, ProfileBuffer, ProfileSize,
     LogonId, hToken, Quotas, SubStatus);

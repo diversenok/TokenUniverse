@@ -113,7 +113,7 @@ function LsaxLookupAuditSubCategoryName(const SubCategory: TGuid): String;
 implementation
 
 uses
-   Ntapi.ntstatus, DelphiUtils.Strings, System.SysUtils;
+   Ntapi.ntstatus, Ntapi.ntseapi, DelphiUtils.Strings, System.SysUtils;
 
 { TTokenPerUserAudit }
 
@@ -150,6 +150,7 @@ begin
   end;
 
   Result.Location := 'LsarSetAuditPolicy';
+  Result.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
   Result.Win32Result := AuditSetPerUserPolicy(Sid, Policies, Length(Policies));
 end;
 
@@ -261,6 +262,7 @@ begin
       Data[i].AuditingInformation := PER_USER_AUDIT_NONE;
 
   Result.Location := 'LsarSetAuditPolicy';
+  Result.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
   Result.Win32Result := AuditSetPerUserPolicy(Sid, Data, Length(Data));
 end;
 
@@ -306,6 +308,7 @@ begin
     Exit(nil);
 
   Status.Location := 'LsarQueryAuditPolicy';
+  Status.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
   Status.Win32Result := AuditQueryPerUserPolicy(Sid, SubCategories,
     Length(SubCategories), Buffer);
 
@@ -389,6 +392,7 @@ begin
   end;
 
   Result.Location := 'LsarSetAuditPolicy';
+  Result.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
   Result.Win32Result := AuditSetSystemPolicy(Audit, Length(Audit));
 end;
 
@@ -412,6 +416,7 @@ begin
     Exit(nil);
 
   Status.Location := 'LsarQueryAuditPolicy';
+  Status.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
   Status.Win32Result := AuditQuerySystemPolicy(SubCategories,
     Length(SubCategories), Buffer);
 

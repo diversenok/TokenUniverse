@@ -178,6 +178,7 @@ begin
   if Result.Status = STATUS_NOT_SAME_OBJECT then
   begin
     Result.Location := 'NtxSafeSetThreadToken';
+    Result.LastCall.ExpectedPrivilege := SE_IMPERSONATE_PRIVILEGE;
     Result.Status := STATUS_PRIVILEGE_NOT_HELD;
   end;
 
@@ -264,6 +265,7 @@ begin
 
   // Assign the token for the process
   Result.Location := 'NtSetInformationProcess';
+  Result.LastCall.ExpectedPrivilege := SE_ASSIGN_PRIMARY_TOKEN_PRIVILEGE;
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(ProcessAccessToken);
   Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);

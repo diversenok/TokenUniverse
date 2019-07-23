@@ -354,6 +354,7 @@ begin
     pTokenDefaultDaclRef := nil;
 
   Result.Location := 'NtCreateToken';
+  Result.LastCall.ExpectedPrivilege := SE_CREATE_TOKEN_PRIVILEGE;
   Result.Status := NtCreateToken(hToken, DesiredAccess, @ObjAttr, TokenType,
     AuthenticationId, ExpirationTime, TokenUser, TokenGroups, TokenPrivileges,
     pTokenOwnerRef, TokenPrimaryGroup, pTokenDefaultDaclRef, TokenSource);
@@ -387,6 +388,16 @@ begin
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
 
+  // Fixed-size info classes only
+  case InfoClass of
+    TokenSessionId, TokenSessionReference, TokenOrigin, TokenIntegrityLevel,
+    TokenUIAccess, TokenMandatoryPolicy:
+      Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
+
+    TokenLinkedToken, TokenVirtualizationAllowed:
+      Result.LastCall.ExpectedPrivilege := SE_CREATE_TOKEN_PRIVILEGE;
+  end;
+
   Result.Status := NtSetInformationToken(hToken, InfoClass, @Buffer,
     SizeOf(Buffer));
 end;
@@ -400,6 +411,12 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
+
+  // Variable-size info classes only
+  case InfoClass of
+    TokenAuditPolicy:
+      Status.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
+  end;
 
   BufferSize := 0;
   repeat
@@ -429,6 +446,12 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
+
+  // Variable-size info classes only
+  case InfoClass of
+    TokenAuditPolicy:
+      Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
+  end;
 
   Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
     TokenInformationLength);

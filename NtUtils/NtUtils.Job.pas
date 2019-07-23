@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntseapi;
 
 function NtxCreateJob(out hJob: THandle; ObjectName: String;
   RootDirectory: THandle; HandleAttributes: Cardinal): TNtxStatus;
@@ -149,6 +149,15 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TJobObjectInfoClass);
+
+  case InfoClass of
+    JobObjectBasicLimitInformation, JobObjectExtendedLimitInformation:
+      Result.LastCall.ExpectedPrivilege := SE_INCREASE_BASE_PRIORITY_PRIVILEGE;
+
+    JobObjectSecurityLimitInformation:
+      Result.LastCall.ExpectedPrivilege := SE_ASSIGN_PRIMARY_TOKEN_PRIVILEGE;
+  end;
+
   Result.Status := NtSetInformationJobObject(hJob, InfoClass, @Buffer,
     SizeOf(Buffer));
 end;

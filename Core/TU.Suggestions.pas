@@ -17,14 +17,14 @@ const
 
   NO_SANBOX_INERT = 'The resulting token doesn''t contain SandboxInert flag ' +
     'despite you tried to enable it. Looks like this action requires ' +
-    'SeTcbPrivilege on your system.';
+    'Tcb privilege on your system.';
 
 implementation
 
 uses
   Ntapi.ntseapi, Winapi.WinError, Winapi.CommCtrl, Ntapi.ntdef, Ntapi.ntstatus,
   NtUtils.Exceptions, NtUtils.ErrorMsg, Ntapi.ntpsapi, NtUtils.AccessMasks,
-  System.TypInfo;
+  System.TypInfo, DelphiUtils.Strings;
 
 resourcestring
   TITLE_OS_ERROR = 'System error';
@@ -40,11 +40,9 @@ resourcestring
   NEW_DUPLICATE_IMP = 'You can''t duplicate a token from a lower impersonation ' +
     'level to a higher one. Although, you can create a primary token from ' +
     'Impersonation and Delegation ones. If you are working with linked ' +
-    'tokens you can obtain a primary linked token if you have ' +
-    '`SeTcbPrivilege` privilege.';
+    'tokens you can obtain a primary linked token if you have Tcb privilege.';
   NEW_RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
     'resticted tokens.';
-  NEW_NT_CREATE = 'Creation of a token from the scratch requires `SeCreateTokenPrivilege`';
   NEW_SAFER_IMP = 'Since Safer API always returns primary tokens the rules ' +
    'are the same as while performing duplication. This means only ' +
    'Impersonation, Delegation, and Primary tokens are suitable.';
@@ -57,21 +55,12 @@ resourcestring
   SETTER_DEFAULT = '`Adjust default` access right is required to change this ' +
   'information class for the token';
   SETTER_SESSION = 'To change the session of a token you need to ' +
-    'have `SeTcbPrivilege` and also `Adjust SessionId` and `Adjust default` '+
+    'have `Adjust SessionId` and `Adjust default` '+
     'access rights for the token.';
   SETTER_OWNER = 'Only those groups from the token that are marked with ' +
     '`Owner` flag and the user itself can be set as an owner.';
   SETTER_PRIMARY = 'The SID must present in the group list of the token to be ' +
     'suitable as a primary group.';
-  SETTER_INTEGRITY_TCB = 'To raise the integrity level of a token you need to ' +
-    'have `SeTcbPrivilege`.';
-  SETTER_UIACCESS_TCB = 'You need `SeTcbPrivilege` to enable UIAccess flag.';
-  SETTER_POLICY_TCB = 'Changing of mandatory integrity policy requires ' +
-    '`SeTcbPrivilege`.';
-  SETTER_ORIGIN_TCB = 'Altering token origin requires `SeTcbPrivilege`. Also ' +
-    'note, that once set, the value can not be changed.';
-  SETTOR_VIRT_PRIV = 'You must possess `SeCreateTokenPrivilege` to allow / ' +
-    'disallow virtualization for tokens.';
   SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
     'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
@@ -79,19 +68,16 @@ resourcestring
   SETTER_GROUPS_ACCESS = 'This action requires `Adjust groups` access right.';
   SETTER_GROUPS_MODIFY = 'You can''t disable `Mandatory` groups ' +
     'just like you can''t enable `Use for deny only` groups.';
-  SETTER_AUDIT_PRIV = 'Changing auditing policy requires `SeTcbPrivilege`.';
   SETTER_AUDIT_ONCE = 'This is not an informative error, but the problem ' +
     'might be caused by an already set auditing policy for the token.';
 
   ACTION_ASSIGN_NOT_SUPPORTED = 'A token can be assigned only on an early ' +
     'stage of a process lifetime. Try this action on a newly created ' +
     'suspended process.';
-  ACTION_ASSIGN_PRIVILEGE = '`SeAssignPrimaryTokenPrivilege` is required to ' +
-    'assign tokens that are not derived from your current token. ';
   ACTION_ASSIGN_TYPE = 'Only a primary token can be assigned to a process';
 
   ACTION_SAFE_IMP = 'Not all security contexts can be impersonated if the ' +
-    'target process does not possess SeImpersonatePrivilege. In this case ' +
+    'target process does not possess Impersonate privilege. In this case ' +
     'NtSetInformationThread succeeds, but the target thread gets an ' +
     'Identification-level token that is not suitable for any access checks. ' +
     'The "Use safe impersonation technique" setting prevents such situations ' +
@@ -104,9 +90,6 @@ begin
 
   if E.Matches('NtFilterToken', STATUS_ACCESS_DENIED)  then
     Exit(NEW_RESTCICT_ACCESS);
-
-  if E.Matches('NtCreateToken', STATUS_PRIVILEGE_NOT_HELD) then
-    Exit(NEW_NT_CREATE);
 
   if E.Matches('SaferComputeTokenFromLevel', ERROR_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_SAFER_IMP);
@@ -170,30 +153,6 @@ begin
   if MatchesInfoClassAndCode(E, TokenAuditPolicy, ERROR_INVALID_PARAMETER) then
     Exit(SETTER_AUDIT_ONCE);
 
-  if E.ErrorCode = ERROR_PRIVILEGE_NOT_HELD then
-  begin
-    if MatchesInfoClass(E, TokenSessionId) then
-      Exit(SETTER_SESSION);
-
-    if MatchesInfoClass(E, TokenIntegrityLevel) then
-      Exit(SETTER_INTEGRITY_TCB);
-
-    if MatchesInfoClass(E, TokenUIAccess) then
-      Exit(SETTER_UIACCESS_TCB);
-
-    if MatchesInfoClass(E, TokenMandatoryPolicy) then
-      Exit(SETTER_POLICY_TCB);
-
-    if MatchesInfoClass(E, TokenVirtualizationAllowed) then
-      Exit(SETTOR_VIRT_PRIV);
-
-    if MatchesInfoClass(E, TokenOrigin) then
-      Exit(SETTER_ORIGIN_TCB);
-
-    if MatchesInfoClass(E, TokenAuditPolicy) then
-      Exit(SETTER_AUDIT_PRIV);
-  end;
-
   if E.ErrorLocation = 'NtAdjustPrivilegesToken' then
   begin
     if E.ErrorCode = STATUS_ACCESS_DENIED then
@@ -222,9 +181,6 @@ begin
    if E.ErrorCode = STATUS_NOT_SUPPORTED then
      Exit(ACTION_ASSIGN_NOT_SUPPORTED);
 
-   if E.ErrorCode = STATUS_PRIVILEGE_NOT_HELD then
-     Exit(ACTION_ASSIGN_PRIVILEGE);
-
    if E.ErrorCode = STATUS_BAD_IMPERSONATION_LEVEL then
      Exit(ACTION_ASSIGN_TYPE);
   end;
@@ -247,6 +203,15 @@ begin
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
 
+end;
+
+function GetPrivilegeName(Value: TSeWellKnownPrivilege): string;
+begin
+  if (Value <= SE_RESERVED_LUID_1) or (Value > High(TSeWellKnownPrivilege)) then
+    Exit('');
+
+  Result := ': "' + PrettifyCapsUnderscoreEnum('SE_',
+    TypeInfo(TSeWellKnownPrivilege), Integer(Value)) + '"';
 end;
 
 procedure ShowErrorSuggestions(ParentWnd: HWND; E: Exception);
@@ -298,6 +263,10 @@ begin
 
     Msg := Msg + #$D#$A + 'Result: ' + NtxStatusToString(ENt.ErrorCode);
     Msg := Msg + #$D#$A#$D#$A + NtxFormatErrorMessage(ENt.ErrorCode);
+
+    if ENt.ErrorCode = STATUS_PRIVILEGE_NOT_HELD then
+      Msg := Msg + GetPrivilegeName(ENt.LastCall.ExpectedPrivilege);
+
     Msg := Msg + SuggestAll(ENt);
 
     Dlg.pszContent := PWideChar(Msg);

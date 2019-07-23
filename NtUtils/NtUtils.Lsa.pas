@@ -248,7 +248,7 @@ begin
   // maintained in sync with Windows behavior when new privileges are
   // introduced.
 
-  case Luid of
+  case TSeWellKnownPrivilege(Luid) of
     // Ten of them require High
     SE_CREATE_TOKEN_PRIVILEGE,
     SE_TCB_PRIVILEGE,
@@ -265,7 +265,7 @@ begin
     // Three of them does not require anything
     SE_CHANGE_NOTIFY_PRIVILEGE,
     SE_UNDOCK_PRIVILEGE,
-    SE_INC_WORKING_SET_PRIVILEGE:
+    SE_INCREASE_WORKING_SET_PRIVILEGE:
       Result := SECURITY_MANDATORY_UNTRUSTED_RID;
 
   else
