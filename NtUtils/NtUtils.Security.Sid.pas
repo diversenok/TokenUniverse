@@ -168,9 +168,14 @@ begin
   Status := LsaxLookupUserName(AccountOrSID, LookupSid);
 
   if Status.IsSuccess then
-    CreateCopy(LookupSid.Sid)
-  else if (Length(AccountOrSID) = 2) or AccountOrSID.StartsWith('S-1-', True)
-    then
+  begin
+    CreateCopy(LookupSid.Sid);
+    Exit;
+  end;
+
+  // The string can start with "S-1-" and represent an arbitrary SID or can be
+  // one of ~40 double-letter abbreviations. See [MS-DTYP] for SDDL definition.
+  if (Length(AccountOrSID) = 2) or AccountOrSID.StartsWith('S-1-', True) then
     Status := RtlxConvertStringToSid(AccountOrSID, FSid);
 
   Status.RaiseOnError;

@@ -36,13 +36,13 @@ object LogonDialog: TLogonDialog
   end
   object LabelGroups: TLabel
     Left = 8
-    Top = 175
+    Top = 170
     Width = 296
     Height = 17
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
-    Caption = 'Additional groups (requires SeTcbPrivilege)'
+    Caption = 'Additional groups (requires Tcb privilege)'
   end
   object ComboLogonType: TComboBox
     Left = 8
@@ -180,16 +180,17 @@ object LogonDialog: TLogonDialog
   end
   inline FrameGroups: TFrameGroups
     Left = 8
-    Top = 169
+    Top = 193
     Width = 296
-    Height = 188
+    Height = 164
+    Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 5
     inherited ListView: TListViewEx
       AlignWithMargins = False
       Left = 0
       Top = 0
       Width = 296
-      Height = 188
+      Height = 164
       PopupMenu = PopupMenu
       OnDblClick = MenuEditClick
     end

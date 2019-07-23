@@ -58,6 +58,9 @@ begin
       Password, LogonType, LogonProvider, GroupsBuffer, hToken, nil, nil, nil,
       nil);
 
+    // Note: LogonUserExExW returns ERROR_ACCESS_DENIED where it
+    // should return ERROR_PRIVILEGE_NOT_HELD which is confusing.
+
     FreeMem(GroupsBuffer);
   end;
 end;
@@ -136,10 +139,15 @@ begin
   // Perform the logon
   SubStatus := STATUS_SUCCESS;
   Result.Location := 'LsaLogonUser';
-  Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
   Result.Status := LsaLogonUser(LsaHandle, OriginName, LogonType, AuthPkg,
     Buffer, BufferSize, GroupArray, TokenSource, ProfileBuffer, ProfileSize,
     LogonId, hToken, Quotas, SubStatus);
+
+  // Note: LsaLogonUser returns STATUS_ACCESS_DENIED where it
+  // should return STATUS_PRIVILEGE_NOT_HELD which is confusing.
+
+  if Length(AdditionalGroups) > 0 then
+    Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
 
   // Prefer a more detailed status
   if not NT_SUCCESS(SubStatus) then
