@@ -8,6 +8,17 @@ uses
 type
   TScmHandle = Winapi.Svc.TScmHandle;
 
+  TServiceConfig = record
+    ServiceType: Cardinal;
+    StartType: Cardinal;
+    ErrorControl: Cardinal;
+    TagId: Cardinal;
+    BinaryPathName: String;
+    LoadOrderGroup: String;
+    ServiceStartName: String;
+    DisplayName: String;
+  end;
+
 // Open a handle to SCM
 function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
   TNtxStatus;
@@ -30,6 +41,14 @@ function ScmxDeleteService(hSvc: TScmHandle): TNtxStatus;
 
 // Close SCM/service handle
 function ScmxClose(var hObject: TScmHandle): Boolean;
+
+// Query service config
+function ScmxQueryConfigService(hSvc: TScmHandle; out Config: TServiceConfig)
+  : TNtxStatus;
+
+// Query service status and process information
+function ScmxQueryProcessStatusService(hSvc: TScmHandle;
+  out Info: TServiceStatusProcess): TNtxStatus;
 
 implementation
 
@@ -123,6 +142,56 @@ function ScmxClose(var hObject: TScmHandle): Boolean;
 begin
   Result := CloseServiceHandle(hObject);
   hObject := 0;
+end;
+
+function ScmxQueryConfigService(hSvc: TScmHandle; out Config: TServiceConfig)
+  : TNtxStatus;
+var
+  Buffer: PQueryServiceConfigW;
+  BufferSize, Required: Cardinal;
+begin
+  Result.Location := 'QueryServiceConfigW';
+
+  BufferSize := 0;
+  repeat
+    Buffer := AllocMem(BufferSize);
+
+    Required := 0;
+    Result.Win32Result := QueryServiceConfigW(hSvc, Buffer, BufferSize,
+      Required);
+
+    if not Result.IsSuccess then
+      FreeMem(Buffer);
+
+  until not NtxExpandBuffer(Result, BufferSize, Required);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Config.ServiceType := Buffer.dwServiceType;
+  Config.StartType := Buffer.dwStartType;
+  Config.ErrorControl := Buffer.dwErrorControl;
+  Config.TagId := Buffer.dwTagId;
+  Config.BinaryPathName := String(Buffer.lpBinaryPathName);
+  Config.LoadOrderGroup := String(Buffer.lpLoadOrderGroup);
+  Config.ServiceStartName := String(Buffer.lpServiceStartName);
+  Config.DisplayName := String(Buffer.lpDisplayName);
+
+  FreeMem(Buffer);
+end;
+
+function ScmxQueryProcessStatusService(hSvc: TScmHandle;
+  out Info: TServiceStatusProcess): TNtxStatus;
+var
+  Required: Cardinal;
+begin
+  Result.Location := 'QueryServiceStatusEx';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(ScStatusProcessInfo);
+  Result.LastCall.InfoClassType := TypeInfo(TScStatusType);
+
+  Result.Win32Result := QueryServiceStatusEx(hSvc, ScStatusProcessInfo,
+    @Info, SizeOf(Info), Required);
 end;
 
 end.
