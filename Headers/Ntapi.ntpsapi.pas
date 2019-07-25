@@ -73,11 +73,11 @@ const
 type
   TProcessInfoClass = (
     ProcessBasicInformation = 0,       // q: TProcessBasinInformation
-    ProcessQuotaLimits = 1,
-    ProcessIoCounters = 2,
+    ProcessQuotaLimits = 1,            // q, s: TQuotaLimits
+    ProcessIoCounters = 2,             // q: TIoCounters
     ProcessVmCounters = 3,
     ProcessTimes = 4,
-    ProcessBasePriority = 5,
+    ProcessBasePriority = 5,           // s: KPRIORITY
     ProcessRaisePriority = 6,
     ProcessDebugPort = 7,
     ProcessExceptionPort = 8,
@@ -109,13 +109,30 @@ type
     ProcessExecuteFlags = 34,
     ProcessResourceManagement = 35,
     ProcessCookie = 36,
-    ProcessImageInformation = 37,
+    ProcessImageInformation = 37,       // q: TSectionImageInformation
     ProcessCycleTime = 38,
     ProcessPagePriority = 39,
     ProcessInstrumentationCallback = 40,
     ProcessThreadStackAllocation = 41,
     ProcessWorkingSetWatchEx = 42,
-    ProcessImageFileNameWin32 = 43     // q: UNICODE_STRING
+    ProcessImageFileNameWin32 = 43,     // q: UNICODE_STRING
+    ProcessImageFileMapping = 44,
+    ProcessAffinityUpdateMode = 45,
+    ProcessMemoryAllocationMode = 46,
+    ProcessGroupInformation = 47,
+    ProcessTokenVirtualizationEnabled = 48,
+    ProcessConsoleHostProcess = 49,
+    ProcessWindowInformation = 50,
+    ProcessHandleInformation = 51,
+    ProcessMitigationPolicy = 52,
+    ProcessDynamicFunctionTableInformation = 53,
+    ProcessHandleCheckingMode = 54,
+    ProcessKeepAliveCount = 55,
+    ProcessRevokeFileHandles = 56,
+    ProcessWorkingSetControl = 57,
+    ProcessHandleTable = 58,
+    ProcessCheckStackExtentsMode = 59,
+    ProcessCommandLineInformation = 60  // q: UNICODE_STRING
   );
 
   TThreadInfoClass = (
@@ -145,7 +162,7 @@ type
     ThreadCycleTime = 23,
     ThreadPagePriority = 24,
     ThreadActualBasePriority = 25,
-    ThreadTebInformation = 26
+    ThreadTebInformation = 26      // q: TThreadTebInformation
   );
 
   // ProcessBasicInformation
@@ -174,6 +191,13 @@ type
     BasePriority: Integer;
   end;
   PThreadBasicInformation = ^TThreadBasicInformation;
+
+  TThreadTebInformation = record
+    TebInformation: Pointer;
+    TebOffset: Cardinal;
+    BytesToRead: Cardinal;
+  end;
+  PThreadTebInformation = ^TThreadTebInformation;
 
   TPsApcRoutine = procedure (ApcArgument1, ApcArgument2, ApcArgument3: Pointer);
     stdcall;

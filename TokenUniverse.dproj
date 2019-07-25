@@ -301,6 +301,7 @@
         <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Threads.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

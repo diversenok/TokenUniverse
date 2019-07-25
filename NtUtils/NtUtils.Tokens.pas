@@ -124,7 +124,8 @@ implementation
 
 uses
   Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
-  NtUtils.Tokens.Misc, NtUtils.Processes, NtUtils.Tokens.Impersonate;
+  NtUtils.Tokens.Misc, NtUtils.Processes, NtUtils.Tokens.Impersonate,
+  NtUtils.Threads;
 
 { Creation }
 

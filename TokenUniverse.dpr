@@ -109,7 +109,8 @@ uses
   Ntapi.ntregapi in 'Headers\Ntapi.ntregapi.pas',
   NtUtils.Registry in 'NtUtils\NtUtils.Registry.pas',
   NtUtils.Registry.HKCU in 'NtUtils\NtUtils.Registry.HKCU.pas',
-  NtUtils.WinSafer in 'NtUtils\NtUtils.WinSafer.pas';
+  NtUtils.WinSafer in 'NtUtils\NtUtils.WinSafer.pas',
+  NtUtils.Threads in 'NtUtils\NtUtils.Threads.pas';
 
 {$R *.res}
 

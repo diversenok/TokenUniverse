@@ -62,6 +62,9 @@ const
   OBJ_DONT_REPARSE = $00001000;
   OBJ_KERNEL_EXCLUSIVE = $00010000;
 
+  MAX_UNICODE_STRING_SIZE = SizeOf(UNICODE_STRING) + High(Word) + 1 +
+    SizeOf(WideChar);
+
 function NT_SUCCESS(Status: NTSTATUS): Boolean; inline;
 function NT_INFORMATION(Status: NTSTATUS): Boolean; inline;
 function NT_WARNING(Status: NTSTATUS): Boolean; inline;

@@ -32,7 +32,7 @@ uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
   NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
-  NtUtils.Exec.Win32, NtUtils.Processes;
+  NtUtils.Exec.Win32, NtUtils.Processes, Ntapi.ntpsapi;
 
 { Restart Service client functions }
 
@@ -186,8 +186,8 @@ begin
       begin
         OutputDebugStringW('Abnormal process termination');
 
-        Status := NtxQueryBasicInformationProcess(ProcessInfo.hProcess,
-          BasicInfo);
+        Status := NtxProcess.Query<TProcessBasinInformation>(
+          ProcessInfo.hProcess, ProcessBasicInformation, BasicInfo);
 
         if Status.IsSuccess then
           OutputDebugStringW(PWideChar('Exit code: 0x' +

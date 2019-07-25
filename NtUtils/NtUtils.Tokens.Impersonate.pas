@@ -28,7 +28,8 @@ implementation
 
 uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, Ntapi.ntseapi,
-  NtUtils.Objects, NtUtils.Tokens, NtUtils.Ldr, NtUtils.Processes;
+  NtUtils.Objects, NtUtils.Tokens, NtUtils.Ldr, NtUtils.Processes,
+  NtUtils.Threads;
 
 { Impersonation }
 
