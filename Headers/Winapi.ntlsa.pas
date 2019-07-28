@@ -39,6 +39,19 @@ const
 
   POLICY_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $0FFF;
 
+  // 2330
+  POLICY_QOS_SCHANNEL_REQUIRED = $00000001;
+  POLICY_QOS_OUTBOUND_INTEGRITY = $00000002;
+  POLICY_QOS_OUTBOUND_CONFIDENTIALITY = $00000004;
+  POLICY_QOS_INBOUND_INTEGRITY = $00000008;
+  POLICY_QOS_INBOUND_CONFIDENTIALITY = $00000010;
+  POLICY_QOS_ALLOW_LOCAL_ROOT_CERT_STORE = $00000020;
+  POLICY_QOS_RAS_SERVER_ALLOWED = $00000040;
+  POLICY_QOS_DHCP_SERVER_ALLOWED = $00000080;
+
+  // 2383
+  POLICY_KERBEROS_VALIDATE_CLIENT = $00000080;
+
   // 2452
   ACCOUNT_VIEW = $00000001;
   ACCOUNT_ADJUST_PRIVILEGES = $00000002;
@@ -63,6 +76,12 @@ type
   TLsaHandle = Winapi.NtSecApi.TLsaHandle;
   TLsaEnumerationHandle = Cardinal;
 
+  // 1900
+  TPolicyLsaServerRole = (
+    PolicyServerRoleBackup = 2,
+    PolicyServerRolePrimary = 3
+  );
+
   // 1956
   TPolicyPrivilegeDefinition = record
     Name: TLsaUnicodeString;
@@ -70,8 +89,89 @@ type
   end;
   PPolicyPrivilegeDefinition = ^TPolicyPrivilegeDefinition;
 
-  TPolicyPrivilegeDefinitionArray = array [ANYSIZE_ARRAY] of TPolicyPrivilegeDefinition;
+  TPolicyPrivilegeDefinitionArray = array [ANYSIZE_ARRAY] of
+    TPolicyPrivilegeDefinition;
   PPolicyPrivilegeDefinitionArray = ^TPolicyPrivilegeDefinitionArray;
+
+  // 2024
+  TPolicyInformationClass = (
+    PolicyReserved = 0,
+    PolicyAuditLogInformation = 1,      // q:
+    PolicyAuditEventsInformation = 2,   // q, s:
+    PolicyPrimaryDomainInformation = 3, // q, s: TPolicyPrimaryDomainInfo
+    PolicyPdAccountInformation = 4,     // q: TLsaUnicodeString
+    PolicyAccountDomainInformation = 5, // q, s:
+    PolicyLsaServerRoleInformation = 6, // q, s: TPolicyLsaServerRole
+    PolicyReplicaSourceInformation = 7, // q, s: TPolicyReplicaSourceInfo
+    PolicyDefaultQuotaInformation = 8,  // q, s: TQuotaLimits
+    PolicyModificationInformation = 9,  // q: TPolicyModificationInfo
+    PolicyAuditFullSetInformation = 10,
+    PolicyAuditFullQueryInformation = 11,
+    PolicyDnsDomainInformation = 12,    // q, s:
+    PolicyDnsDomainInformationInt = 13,
+    PolicyLocalAccountDomainInformation = 14, // q, s:
+    PolicyMachineAccountInformation = 15 // q: TPolicyMachineAcctInfo
+  );
+
+  // 2188
+  TPolicyPrimaryDomainInfo = record
+    Name: TLsaUnicodeString;
+    Sid: PSid;
+  end;
+  PPolicyPrimaryDomainInfo = ^TPolicyPrimaryDomainInfo;
+
+  // 2244
+  TPolicyReplicaSourceInfo = record
+    ReplicaSource: TLsaUnicodeString;
+    ReplicaAccountName: TLsaUnicodeString;
+  end;
+  PPolicyReplicaSourceInfo = ^TPolicyReplicaSourceInfo;
+
+  // 2269
+  TPolicyModificationInfo = record
+    ModifiedId: TLargeInteger;
+    DatabaseCreationTime: TLargeInteger;
+  end;
+  PPolicyModificationInfo = ^TPolicyModificationInfo;
+
+  // 2315
+  TPolicyDomainInformationClass = (
+    PolicyDomainReserved = 0,
+    PolicyDomainQualityOfServiceInformation = 1, // Cardinal, POLICY_QOS_*
+    PolicyDomainEfsInformation = 2,
+    PolicyDomainKerberosTicketInformation = 3 // TPolicyDomainKerberosTicketInfo
+  );
+
+  // 2386
+  TPolicyDomainKerberosTicketInfo = record
+    AuthenticationOptions: Cardinal; // POLICY_KERBEROS_*
+    MaxServiceTicketAge: TLargeInteger;
+    MaxTicketAge: TLargeInteger;
+    MaxRenewAge: TLargeInteger;
+    MaxClockSkew: TLargeInteger;
+    Reserved: TLargeInteger;
+  end;
+  PPolicyDomainKerberosTicketInfo = ^TPolicyDomainKerberosTicketInfo;
+
+  // 2420
+  TPolicyMachineAcctInfo = record
+    Rid: Cardinal;
+    Sid: PSid;
+  end;
+  PPolicyMachineAcctInfo = ^TPolicyMachineAcctInfo;
+
+  // 2432
+  TPolicyNotificationInformationClass = (
+    PolicyNotifyReserved = 0,
+    PolicyNotifyAuditEventsInformation = 1,
+    PolicyNotifyAccountDomainInformation = 2,
+    PolicyNotifyServerRoleInformation = 3,
+    PolicyNotifyDnsDomainInformation = 4,
+    PolicyNotifyDomainEfsInformation = 5,
+    PolicyNotifyDomainKerberosTicketInformation = 6,
+    PolicyNotifyMachineAccountPasswordInformation = 7,
+    PolicyNotifyGlobalSaclInformation = 8
+  );
 
   // Winapi.LsaLookup 70
   TLsaTrustInformation = record
@@ -139,6 +239,36 @@ function LsaOpenPolicy(SystemName: PLsaUnicodeString;
   const ObjectAttributes: TObjectAttributes; DesiredAccess: TAccessMask;
   out PolicyHandle: TLsaHandle): NTSTATUS; stdcall; external advapi32;
 
+// 3237
+function LsaQueryInformationPolicy(PolicyHandle: TLsaHandle;
+  InformationClass: TPolicyInformationClass; out Buffer: Pointer): NTSTATUS;
+  stdcall; external advapi32;
+
+// 3281
+function LsaSetInformationPolicy(PolicyHandle: TLsaHandle;
+  InformationClass: TPolicyInformationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external advapi32;
+
+// 3289
+function LsaQueryDomainInformationPolicy(PolicyHandle: TLsaHandle;
+  InformationClass: TPolicyDomainInformationClass; out Buffer: Pointer):
+  NTSTATUS; stdcall; external advapi32;
+
+// 3297
+function LsaSetDomainInformationPolicy(PolicyHandle: TLsaHandle;
+  InformationClass: TPolicyDomainInformationClass; Buffer: Pointer): NTSTATUS;
+  stdcall; external advapi32;
+
+// 3306
+function LsaRegisterPolicyChangeNotification(InformationClass:
+  TPolicyNotificationInformationClass; NotificationEventHandle: THandle):
+  NTSTATUS; stdcall; external secur32;
+
+// 3313
+function LsaUnregisterPolicyChangeNotification(InformationClass:
+  TPolicyNotificationInformationClass; NotificationEventHandle: THandle):
+  NTSTATUS; stdcall; external secur32;
+
 // 3329
 function LsaCreateAccount(PolicyHandle: TLsaHandle;
   AccountSid: PSid; DesiredAccess: TAccessMask; out AccountHandle: TLsaHandle):
@@ -155,6 +285,24 @@ function LsaEnumeratePrivileges(PolicyHandle: TLsaHandle;
   var EnumerationContext: TLsaEnumerationHandle;
   out Buffer: PPolicyPrivilegeDefinitionArray; PreferedMaximumLength: Integer;
   out CountReturned: Integer): NTSTATUS; stdcall; external advapi32;
+
+// 3394
+function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
+  Count: Integer; const Name: TLsaUnicodeString;
+  out ReferencedDomain: PLsaReferencedDomainList;
+  out Sid: PLsaTranslatedSid2): NTSTATUS; stdcall;
+  external advapi32; overload;
+
+function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
+  Count: Integer; Names: TArray<TLsaUnicodeString>;
+  out ReferencedDomains: PLsaReferencedDomainList;
+  out Sids: PLsaTranslatedSid2Array): NTSTATUS; stdcall;
+  external advapi32; overload;
+
+// 3406
+function LsaLookupSids(PolicyHandle: TLsaHandle; Count: Cardinal;
+  Sids: TArray<PSid>; out ReferencedDomains: PLsaReferencedDomainList;
+  out Names: PLsaTranslatedNameArray): NTSTATUS; stdcall; external advapi32;
 
 // 3444
 function LsaOpenAccount(PolicyHandle: TLsaHandle;
@@ -208,25 +356,6 @@ function LsaLookupPrivilegeDisplayName(PolicyHandle: TLsaHandle;
 // 3605
 function LsaGetUserName(out UserName: PLsaUnicodeString;
   out DomainName: PLsaUnicodeString): NTSTATUS; stdcall; external advapi32;
-
-// 3394
-function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
-  Count: Integer; const Name: TLsaUnicodeString;
-  out ReferencedDomain: PLsaReferencedDomainList;
-  out Sid: PLsaTranslatedSid2): NTSTATUS; stdcall;
-  external advapi32; overload;
-
-// 3394
-function LsaLookupNames2(PolicyHandle: TLsaHandle; Flags: Cardinal;
-  Count: Integer; Names: TArray<TLsaUnicodeString>;
-  out ReferencedDomains: PLsaReferencedDomainList;
-  out Sids: PLsaTranslatedSid2Array): NTSTATUS; stdcall;
-  external advapi32; overload;
-
-// 3406
-function LsaLookupSids(PolicyHandle: TLsaHandle; Count: Cardinal;
-  Sids: TArray<PSid>; out ReferencedDomains: PLsaReferencedDomainList;
-  out Names: PLsaTranslatedNameArray): NTSTATUS; stdcall; external advapi32;
 
 implementation
 
