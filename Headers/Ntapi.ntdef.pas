@@ -11,6 +11,16 @@ type
   NTSTATUS = Cardinal;
   KPRIORITY = Integer;
 
+  TEventType = (
+    NotificationEvent,
+    SynchronizationEvent
+  );
+
+  TTimerType = (
+    NotificationTimer,
+    SynchronizationTimer
+  );
+
   ANSI_STRING = record
     Length: Word;
     MaximumLength: Word;
