@@ -243,38 +243,11 @@ function NtxAssignPrimaryToken(hProcess: THandle;
 var
   AccessToken: TProcessAccessToken;
 begin
-  // Check delayed import for ReactOS
-  Result := LdrxCheckNtDelayedImport('NtGetNextThread');
-
-  if not Result.IsSuccess then
-    Exit;
-
-  // Despite the process handle, we need a handle to the initial thread
-  Result.Location := 'NtGetNextThread';
-  Result.LastCall.CallType := lcOpenCall;
-  Result.LastCall.AccessMask := THREAD_QUERY_LIMITED_INFORMATION;
-  Result.LastCall.AccessMaskType := TAccessMaskType.objNtThread;
-
-  Result.Status := NtGetNextThread(hProcess, 0,
-    THREAD_QUERY_LIMITED_INFORMATION, 0, 0, AccessToken.Thread);
-
-  if not Result.IsSuccess then
-    Exit;
-
-  // Prepare the token's handle. The thread's handle is already in here.
+  AccessToken.Thread := 0; // Looks like the call ignores it
   AccessToken.Token := hToken;
 
-  // Assign the token for the process
-  Result.Location := 'NtSetInformationProcess';
-  Result.LastCall.ExpectedPrivilege := SE_ASSIGN_PRIMARY_TOKEN_PRIVILEGE;
-  Result.LastCall.CallType := lcQuerySetCall;
-  Result.LastCall.InfoClass := Cardinal(ProcessAccessToken);
-  Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
-
-  Result.Status := NtSetInformationProcess(hProcess, ProcessAccessToken,
-    @AccessToken, SizeOf(AccessToken));
-
-  NtxSafeClose(AccessToken.Thread);
+  Result := NtxProcess.SetInfo<TProcessAccessToken>(hProcess,
+    ProcessAccessToken, AccessToken);
 end;
 
 function NtxAssignPrimaryTokenById(PID: NativeUInt;
@@ -282,8 +255,7 @@ function NtxAssignPrimaryTokenById(PID: NativeUInt;
 var
   hProcess: THandle;
 begin
-  Result := NtxOpenProcess(hProcess, PID, PROCESS_QUERY_INFORMATION or
-    PROCESS_SET_INFORMATION);
+  Result := NtxOpenProcess(hProcess, PID, PROCESS_SET_INFORMATION);
 
   if not Result.IsSuccess then
     Exit;
