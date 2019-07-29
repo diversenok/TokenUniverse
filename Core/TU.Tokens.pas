@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 uses
   Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
-  TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events, TU.LsaApi,
+  TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
   NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
   System.Generics.Collections, NtUtils.Exceptions, NtUtils.Lsa.Logon;
 

@@ -10,6 +10,12 @@ type
   TPrivilegeColorMode = (pcDefault, pcGrayChecked, pcGrayUnchecked,
     pcColorChecked);
 
+  TPrivilegeEx = record
+    Value: TLuid;
+    Attributes: Cardinal;
+    Name, Description: string;
+  end;
+
   TFramePrivileges = class(TFrame)
     ListView: TListViewEx;
     procedure ListViewItemChecked(Sender: TObject; Item: TListItem);
@@ -18,7 +24,8 @@ type
     FColorMode: TPrivilegeColorMode;
     function GetPrivilege(Ind: Integer): TPrivilege;
     procedure SetPrivilege(Ind: Integer; const Value: TPrivilege);
-    function SetItemData(Item: TListItemEx; Privilege: TPrivilege): TListItemEx;
+    function SetItemData(Item: TListItemEx; Privilege: TPrivilegeEx):
+      TListItemEx;
     procedure SetItemColor(Index: Cardinal);
     procedure SetColorMode(const Value: TPrivilegeColorMode);
     function GetAttributes(Ind: Integer): Cardinal;
@@ -46,7 +53,8 @@ type
 implementation
 
 uses
-  NtUtils.Strings, DelphiUtils.Strings, TU.LsaApi, UI.Colors, NtUtils.Lsa;
+  NtUtils.Strings, DelphiUtils.Strings, UI.Colors, NtUtils.Lsa, Ntapi.ntseapi,
+  NtUtils.Exceptions;
 
 {$R *.dfm}
 
@@ -67,7 +75,7 @@ begin
     Result := GROUP_ID_MEDIUM;
 end;
 
-function FormatHint(Value: TLuid): String;
+function FormatHint(const Privilege: TPrivilegeEx): String;
 var
   Sections: array of THintSection;
 begin
@@ -75,66 +83,100 @@ begin
 
   Sections[0].Title := 'Name';
   Sections[0].Enabled := True;
-  Sections[0].Content := TPrivilegeCache.QueryName(Value);
+  Sections[0].Content := Privilege.Name;
 
   Sections[1].Title := 'Description';
   Sections[1].Enabled := True;
-  Sections[1].Content := TPrivilegeCache.QueryDisplayName(Value);
+  Sections[1].Content := Privilege.Description;
 
   Sections[2].Title := 'Value';
   Sections[2].Enabled := True;
-  Sections[2].Content := IntToStr(Value);
+  Sections[2].Content := IntToStr(Privilege.Value);
 
   Result := BuildHint(Sections);
 end;
 
 procedure TFramePrivileges.AddAllPrivileges;
 var
-  LuidArray: TArray<TLuid>;
-  Priv: TPrivilege;
+  PrivDefArray: TArray<TPrivilegeDefinition>;
+  PrivArray: TArray<TPrivilege>;
   i: Integer;
 begin
-  LuidArray := TPrivilegeCache.AllPrivileges;
+  if not LsaxEnumeratePrivilegesLocal(PrivDefArray).IsSuccess then
+  begin
+    // Privilege enumeration don't work, simply use all range
+    SetLength(PrivDefArray, SE_MAX_WELL_KNOWN_PRIVILEGE -
+      SE_MIN_WELL_KNOWN_PRIVILEGE + 1);
+
+    for i := 0 to High(PrivDefArray) do
+      PrivDefArray[i].LocalValue := SE_MIN_WELL_KNOWN_PRIVILEGE + i;
+  end;
+
+  SetLength(PrivArray, Length(PrivDefArray));
+  for i := 0 to High(PrivDefArray) do
+  begin
+    PrivArray[i].Luid := PrivDefArray[i].LocalValue;
+
+    // Enable only SeChangeNotifyPrivilege by default
+    if PrivArray[i].Luid = TLuid(SE_CHANGE_NOTIFY_PRIVILEGE) then
+      PrivArray[i].Attributes := SE_PRIVILEGE_ENABLED_BY_DEFAULT or
+        SE_PRIVILEGE_ENABLED
+    else
+      PrivArray[i].Attributes := 0;
+  end;
 
   ListView.Items.BeginUpdate;
-  for i := 0 to High(LuidArray) do
   begin
-    Priv.Luid := LuidArray[i];
+    AddPrivileges(PrivArray);
 
-    // Check and enable only SeChangeNotify by default
-    if TPrivilegeCache.QueryName(LuidArray[i]) = 'SeChangeNotifyPrivilege' then
-    begin
-      Priv.Attributes := SE_PRIVILEGE_ENABLED_BY_DEFAULT or
-        SE_PRIVILEGE_ENABLED;
-      AddPrivilege(Priv).Checked := True;
-    end
-    else
-    begin
-      Priv.Attributes := 0;
-      AddPrivilege(Priv);
-    end;
+    // Check SeChangeNotifyPrivilege
+    i := Find(TLuid(SE_CHANGE_NOTIFY_PRIVILEGE));
+      if i <> -1 then
+        ListView.Items[i].Checked := True;
   end;
   ListView.Items.EndUpdate;
 end;
 
 function TFramePrivileges.AddPrivilege(const NewPrivilege: TPrivilege):
   TListItemEx;
+var
+  NewPrivileges: TArray<TPrivilege>;
 begin
-  SetLength(FPrivileges, Length(FPrivileges) + 1);
-  FPrivileges[High(FPrivileges)] := NewPrivilege;
-  Result := SetItemData(ListView.Items.Add, NewPrivilege);
+  SetLength(NewPrivileges, 1);
+  NewPrivileges[0] := NewPrivilege;
+  AddPrivileges(NewPrivileges);
+  Result := ListView.Items[ListView.Items.Count - 1];
 end;
 
 procedure TFramePrivileges.AddPrivileges(NewPrivileges: TArray<TPrivilege>);
 var
   i: Integer;
+  NewPrivilegesEx: array of TPrivilegeEx;
+  Names, Descriptions: TArray<String>;
 begin
+  SetLength(NewPrivilegesEx, Length(NewPrivileges));
+
+  for i := 0 to High(NewPrivileges) do
+  begin
+    NewPrivilegesEx[i].Value := NewPrivileges[i].Luid;
+    NewPrivilegesEx[i].Attributes := NewPrivileges[i].Attributes;
+  end;
+
+  // Lookup names
+  if LsaxLookupMultiplePrivileges(PrivilegesToLuids(NewPrivileges), Names,
+    Descriptions).IsSuccess then
+    for i := 0 to High(NewPrivileges) do
+    begin
+      NewPrivilegesEx[i].Name := Names[i];
+      NewPrivilegesEx[i].Description := Descriptions[i];
+    end;
+
   FPrivileges := Concat(FPrivileges, NewPrivileges);
 
   ListView.Items.BeginUpdate;
 
   for i := 0 to High(NewPrivileges) do
-    SetItemData(ListView.Items.Add, NewPrivileges[i]);
+    SetItemData(ListView.Items.Add, NewPrivilegesEx[i]);
 
   ListView.Items.EndUpdate;
 end;
@@ -247,7 +289,11 @@ begin
     raise ERangeError.Create('TFramePrivileges.SetAttributes');
 
   FPrivileges[Ind].Attributes := Value;
-  SetItemData(ListView.Items[Ind], FPrivileges[Ind]);
+
+  ListView.Items.BeginUpdate;
+  ListView.Items[Ind].Cell[1] := StateOfPrivilegeToString(Value);
+  SetItemColor(Ind);
+  ListView.Items.EndUpdate;
 end;
 
 procedure TFramePrivileges.SetColorMode(const Value: TPrivilegeColorMode);
@@ -289,28 +335,50 @@ begin
 end;
 
 function TFramePrivileges.SetItemData(Item: TListItemEx;
-  Privilege: TPrivilege): TListItemEx;
+  Privilege: TPrivilegeEx): TListItemEx;
 begin
-  Item.Cell[0] := PrettifyCamelCase('Se', TPrivilegeCache.QueryName(
-    Privilege.Luid));
+  if Privilege.Name = '' then
+    Privilege.Name := 'Unknown privilege ' + IntToStr(Privilege.Value);
 
+  Item.Cell[0] := PrettifyCamelCase('Se', Privilege.Name);
   Item.Cell[1] := StateOfPrivilegeToString(Privilege.Attributes);
-  Item.Cell[2] := TPrivilegeCache.QueryDisplayName(Privilege.Luid);
-  Item.Cell[3] := IntToStr(Privilege.Luid);
-  Item.Hint := FormatHint(Privilege.Luid);
-  Item.GroupID := GetPrivilegeGroupId(Privilege.Luid);
+  Item.Cell[2] := Privilege.Description;
+  Item.Cell[3] := IntToStr(Privilege.Value);
+  Item.Hint := FormatHint(Privilege);
+  Item.GroupID := GetPrivilegeGroupId(Privilege.Value);
 
   SetItemColor(Item.Index);
   Result := Item;
 end;
 
 procedure TFramePrivileges.SetPrivilege(Ind: Integer; const Value: TPrivilege);
+var
+  Luids: TArray<TLuid>;
+  Names, Descriptions: TArray<String>;
+  PrivEx: TPrivilegeEx;
 begin
   if (Ind < 0) or (Ind > High(FPrivileges)) then
     raise ERangeError.Create('TFramePrivileges.SetPrivilege');
 
+  PrivEx.Value := Value.Luid;
+  PrivEx.Attributes := Value.Attributes;
+
+  SetLength(Luids, 1);
+  Luids[0] := Value.Luid;
+
+  if LsaxLookupMultiplePrivileges(Luids, Names, Descriptions).IsSuccess then
+  begin
+    PrivEx.Name := Names[0];
+    PrivEx.Description := Descriptions[0];
+  end
+  else
+  begin
+    PrivEx.Name := '';
+    PrivEx.Description := '';
+  end;
+
   FPrivileges[Ind] := Value;
-  SetItemData(ListView.Items[Ind], Value);
+  SetItemData(ListView.Items[Ind], PrivEx);
 end;
 
 end.

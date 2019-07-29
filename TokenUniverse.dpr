@@ -17,7 +17,6 @@ uses
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
-  TU.LsaApi in 'Core\TU.LsaApi.pas',
   UI.Prototypes.ChildForm in 'UI\UI.Prototypes.ChildForm.pas',
   UI.Modal.PickUser in 'UI\UI.Modal.PickUser.pas' {DialogPickUser},
   TU.ObjPicker in 'Core\TU.ObjPicker.pas',

@@ -5,20 +5,16 @@ interface
 uses
   Winapi.WinNt, NtUtils.Security.Sid;
 
-{ Allocations }
-
-// Prepare PTokenPrivileges
 function NtxpAllocPrivileges(Privileges: TArray<TLuid>;
   Attribute: Cardinal): PTokenPrivileges;
 function NtxpAllocPrivileges2(Privileges: TArray<TPrivilege>): PTokenPrivileges;
 
-// Prepare PTokenGroups
+function NtxpAllocPrivilegeSet(Privileges: TArray<TPrivilege>): PPrivilegeSet;
+
 function NtxpAllocGroups(Sids: TArray<ISid>; Attribute: Cardinal): PTokenGroups;
 function NtxpAllocGroups2(Groups: TArray<TGroup>): PTokenGroups;
 
 implementation
-
-{ Allocations }
 
 function NtxpAllocPrivileges(Privileges: TArray<TLuid>;
   Attribute: Cardinal): PTokenPrivileges;
@@ -48,6 +44,20 @@ begin
 
   for i := 0 to High(Privileges) do
     Result.Privileges{$R-}[i]{$R+} := Privileges[i];
+end;
+
+function NtxpAllocPrivilegeSet(Privileges: TArray<TPrivilege>): PPrivilegeSet;
+var
+  i: Integer;
+begin
+  Result := AllocMem(SizeOf(Cardinal) + SizeOf(Cardinal) +
+    SizeOf(TLuidAndAttributes) * Length(Privileges));
+
+  Result.PrivilegeCount := Length(Privileges);
+  Result.Control := 0;
+
+  for i := 0 to High(Privileges) do
+    Result.Privilege{$R-}[i]{$R+} := Privileges[i];
 end;
 
 function NtxpAllocGroups(Sids: TArray<ISid>; Attribute: Cardinal): PTokenGroups;

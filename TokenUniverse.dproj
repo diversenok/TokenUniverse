@@ -149,7 +149,6 @@
             <Form>LogonDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Core\TU.LsaApi.pas"/>
         <DCCReference Include="UI\UI.Prototypes.ChildForm.pas"/>
         <DCCReference Include="UI\UI.Modal.PickUser.pas">
             <Form>DialogPickUser</Form>

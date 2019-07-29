@@ -58,7 +58,7 @@ end;
 
 procedure TFrameLsaRights.ButtonApplyClick(Sender: TObject);
 begin
-  LsaxSetRightsAccount(Sid.Sid, CheckedRights).RaiseOnError;
+  LsaxSetRightsAccountBySid(Sid.Sid, CheckedRights).RaiseOnError;
   LoadForSid(Sid);
 end;
 
@@ -88,7 +88,7 @@ begin
   for i := 0 to High(AllRights) do
     with ListView.Items.Add do
     begin
-      if AllRights[i].AllowedType then
+      if AllRights[i].IsAllowedType then
         GroupID := GROUP_ID_ALLOW
       else
         GroupID := GROUP_ID_DENY;
@@ -118,22 +118,22 @@ end;
 
 procedure TFrameLsaRights.LoadForSid(Sid: ISid);
 var
-  StatusEx: TNtxStatus;
+  Status: TNtxStatus;
   i: Integer;
 begin
   Self.Sid := Sid;
 
-  StatusEx := LsaxQueryRightsAccount(Sid.Sid, CurrentRights);
+  Status := LsaxQueryRightsAccountBySid(Sid.Sid, CurrentRights);
 
-  if StatusEx.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
+  if Status.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
   begin
     LabelStatus.Caption := 'No policies are assigned to the account';
     LabelStatus.Hint := '';
   end
-  else if not StatusEx.IsSuccess then
+  else if not Status.IsSuccess then
   begin
-    LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.MessageHint;
+    LabelStatus.Caption := Status.ToString;
+    LabelStatus.Hint := Status.MessageHint;
   end
   else
   begin

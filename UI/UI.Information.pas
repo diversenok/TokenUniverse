@@ -122,7 +122,7 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors, TU.LsaApi, UI.ProcessList,
+  System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, DelphiUtils.Strings, NtUtils.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, NtUtils.AccessMasks, NtUtils.Exceptions;

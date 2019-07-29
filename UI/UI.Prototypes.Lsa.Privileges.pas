@@ -36,7 +36,8 @@ uses
 
 { TFrameLsaPolicy }
 
-function FindPrivInArray(PrivArray: TArray<TPrivilege>; Value: TLuid): PPrivilege;
+function FindPrivInArray(PrivArray: TArray<TPrivilege>; Value: TLuid):
+  PPrivilege;
 var
   i: Integer;
 begin
@@ -83,9 +84,8 @@ begin
       PrivToRemove).RaiseOnError;
   finally
     LoadForSid(Sid);
+    FramePrivileges.ListView.SetFocus;
   end;
-
-  FramePrivileges.ListView.SetFocus;
 end;
 
 procedure TFrameLsaPrivileges.DeleyedCreate;
@@ -96,21 +96,21 @@ end;
 
 procedure TFrameLsaPrivileges.LoadForSid(Sid: ISid);
 var
-  StatusEx: TNtxStatus;
+  Status: TNtxStatus;
   i, j: Integer;
 begin
   Self.Sid := Sid;
-  StatusEx := LsaxEnumerateAccountPrivileges(Sid.Sid, CurrentlyAssigned);
+  Status := LsaxEnumeratePrivilegesAccountBySid(Sid.Sid, CurrentlyAssigned);
 
-  if StatusEx.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
+  if Status.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
   begin
     LabelStatus.Caption := 'No policies are assigned to the account';
     LabelStatus.Hint := '';
   end
-  else if not StatusEx.IsSuccess then
+  else if not Status.IsSuccess then
   begin
-    LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.MessageHint;
+    LabelStatus.Caption := Status.ToString;
+    LabelStatus.Hint := Status.MessageHint;
   end
   else
   begin

@@ -83,7 +83,7 @@ type
 implementation
 
 uses
-  TU.LsaApi, UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, DelphiUtils.Strings,
+  UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, DelphiUtils.Strings,
   UI.Settings, UI.Modal.PickToken, System.UITypes,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb;
 

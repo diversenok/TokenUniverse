@@ -557,6 +557,8 @@ const
   SECURITY_MANDATORY_LABEL_AUTHORITY: TSIDIdentifierAuthority =
     (Value: (0, 0, 0, 0, 0, 16));
 
+function PrivilegesToLuids(Privileges: TArray<TPrivilege>): TArray<TLuid>;
+
 implementation
 
 uses
@@ -625,6 +627,18 @@ function TTokenSource.ToString: String;
 begin
   // sourcename field may or may not contain a zero-termination byte
   Result := String(PAnsiChar(AnsiString(sourcename)));
+end;
+
+{ Conversion functions }
+
+function PrivilegesToLuids(Privileges: TArray<TPrivilege>): TArray<TLuid>;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Privileges));
+
+  for i := 0 to High(Privileges) do
+    Result[i] := Privileges[i].Luid;
 end;
 
 { TLargeInteger }
