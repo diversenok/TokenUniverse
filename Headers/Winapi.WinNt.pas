@@ -626,12 +626,12 @@ var
 begin
   FillChar(sourcename, SizeOf(sourcename), 0);
 
-  Count := Length(SourceName);
+  Count := Length(Name);
   if Count > 8 then
     Count := 8;
 
   for i := 1 to Count do
-    sourcename[i] := AnsiChar(SourceName[Low(SourceName) + i - 1]);
+    sourcename[i] := AnsiChar(Name[Low(String) + i - 1]);
 end;
 
 function TTokenSource.ToString: String;

@@ -175,7 +175,7 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objNtToken;
-  Result.LastCall.Expects(THREAD_QUERY_LIMITED_INFORMATION, objNtProcess);
+  Result.LastCall.Expects(THREAD_QUERY_LIMITED_INFORMATION, objNtThread);
 
   // When opening other thread's token use our effective (thread) security
   // context. When reading a token from the current thread use the process'
