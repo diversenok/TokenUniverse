@@ -19,7 +19,7 @@ type
     tdTokenOwner, tdTokenPrimaryGroup, tdTokenDefaultDacl, tdTokenSource,
     tdTokenType, tdTokenStatistics, tdTokenRestrictedSids, tdTokenSessionId,
     tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
-    tdTokenHasRestrictions, tdTokenVirtualizationAllowed,
+    tdTokenHasRestrictions, tdTokenFlags, tdTokenVirtualizationAllowed,
     tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
     tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo, tdObjectInfo);
 
@@ -27,7 +27,7 @@ type
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
     tsUserState, tsSession, tsElevation, tsIntegrity, tsObjectAddress, tsHandle,
     tsNoWriteUpPolicy, tsNewProcessMinPolicy, tsUIAccess, tsOwner,
-    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsIsRestricted,
+    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsFlags, tsIsRestricted,
     tsVirtualization, tsTokenID, tsExprires, tsDynamicCharged,
     tsDynamicAvailable, tsGroupCount, tsPrivilegeCount, tsModifiedID, tsLogonID,
     tsSourceLUID, tsSourceName, tsOrigin);
@@ -57,6 +57,7 @@ type
     Origin: TLuid;
     Elevation: TTokenElevationType;
     HasRestrictions: LongBool;
+    Flags: Cardinal;
     VirtualizationAllowed: LongBool;
     VirtualizationEnabled: LongBool;
     Integrity: TGroup;
@@ -79,6 +80,7 @@ type
     FOnGroupsChange: TCachingEvent<TArray<TGroup>>;
     FOnStatisticsChange: TCachingEvent<TTokenStatistics>;
     FOnDefaultDaclChange: TEvent<IAcl>;
+    FOnFlagsChange: TCachingEvent<Cardinal>;
     OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
 
     ObjectAddress: NativeUInt;
@@ -101,6 +103,7 @@ type
     property OnGroupsChange: TCachingEvent<TArray<TGroup>> read FOnGroupsChange;
     property OnStatisticsChange: TCachingEvent<TTokenStatistics> read FOnStatisticsChange;
     property OnDefaultDaclChange: TEvent<IAcl> read FOnDefaultDaclChange;
+    property OnFlagsChange: TCachingEvent<Cardinal> read FOnFlagsChange;
 
     /// <summary>
     ///  Calls the event listener with the newly obtained string and subscribes
@@ -150,6 +153,7 @@ type
     function GetLogonSessionInfo: ILogonSession;
     function GetIsRestricted: LongBool;
     function GetDefaultDacl: IAcl;
+    function GetFlags: Cardinal;
     procedure InvokeStringEvent(StringClass: TTokenStringClass);
     procedure SetVirtualizationAllowed(const Value: LongBool);
     procedure SetVirtualizationEnabled(const Value: LongBool);
@@ -157,31 +161,31 @@ type
     function GetObjectInfo: TObjectBasicInformaion;
   public
     property User: TGroup read GetUser;                                         // class 1
-    property Groups: TArray<TGroup> read GetGroups;                                // class 2
-    property Privileges: TArray<TPrivilege> read GetPrivileges;                    // class 3
+    property Groups: TArray<TGroup> read GetGroups;                             // class 2
+    property Privileges: TArray<TPrivilege> read GetPrivileges;                 // class 3
     property Owner: ISid read GetOwner write SetOwner;                          // class 4 #settable
     property PrimaryGroup: ISid read GetPrimaryGroup write SetPrimaryGroup;     // class 5 #settable
     property DefaultDacl: IAcl read GetDefaultDacl write SetDefaultDacl;        // class 6 #settable
     property Source: TTokenSource read GetSource;                               // classes 7 & 8
     property TokenTypeInfo: TTokenTypeEx read GetTokenType;                     // class 9
     property Statistics: TTokenStatistics read GetStatistics;                   // class 10
-    property RestrictedSids: TArray<TGroup> read GetRestrictedSids;                // class 11
+    property RestrictedSids: TArray<TGroup> read GetRestrictedSids;             // class 11
     property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     // TODO: class 14 SessionReference #settable (and not gettable?)
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
-    property AuditPolicy: IPerUserAudit read GetAuditPolicy write SetAuditPolicy; // class 16 #settable
+    property AuditPolicy: IPerUserAudit read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
-    // TODO: class 22 AccessInformation (depends on OS version, duplicates most of the info)
+    property Flags: Cardinal read GetFlags;                                     // class 22 AccessInformation
     property VirtualizationAllowed: LongBool read GetVirtualizationAllowed write SetVirtualizationAllowed; // class 23 #settable
     property VirtualizationEnabled: LongBool read GetVirtualizationEnabled write SetVirtualizationEnabled; // class 24 #settable
-    property Integrity: TGroup read GetIntegrity;                      // class 25 #settable
+    property Integrity: TGroup read GetIntegrity;                               // class 25 #settable
     property IntegrityLevel: Cardinal write SetIntegrityLevel;
     property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
-    property MandatoryPolicy: Cardinal read GetMandatoryPolicy write SetMandatoryPolicy;    // class 27 #settable
+    property MandatoryPolicy: Cardinal read GetMandatoryPolicy write SetMandatoryPolicy; // class 27 #settable
     // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: ILogonSession read GetLogonSessionInfo;
@@ -417,10 +421,10 @@ const
     (tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
     tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
     tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
-    tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenIsRestricted,
-    tdTokenVirtualizationAllowed, tdTokenStatistics, tdTokenStatistics,
+    tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenFlags,
+    tdTokenIsRestricted, tdTokenVirtualizationAllowed, tdTokenStatistics,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdTokenSource,
+    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenSource,
     tdTokenSource, tdTokenOrigin);
 
 { TTokenCacheAndEvents }
@@ -446,6 +450,7 @@ begin
   FOnStatisticsChange.ComparisonFunction := CompareStatistics;
   FOnVirtualizationAllowedChange.ComparisonFunction := CompareLongBools;
   FOnVirtualizationEnabledChange.ComparisonFunction := CompareLongBools;
+  FOnFlagsChange.ComparisonFunction := CompareCardinals;
 end;
 
 destructor TTokenCacheAndEvents.Destroy;
@@ -461,6 +466,8 @@ begin
   CheckAbandoned(FOnPrivilegesChange.Count, 'OnPrivilegesChange');
   CheckAbandoned(FOnGroupsChange.Count, 'OnGroupsChange');
   CheckAbandoned(FOnStatisticsChange.Count, 'OnStatisticsChange');
+  CheckAbandoned(FOnDefaultDaclChange.Count, 'OnDefaultDaclChange');
+  CheckAbandoned(FOnFlagsChange.Count, 'OnFlagsChange');
 
   for i := Low(TTokenStringClass) to High(TTokenStringClass) do
     CheckAbandoned(OnStringDataChange[i].Count,
@@ -839,8 +846,8 @@ begin
     NtxSafeClose(hToken);
 
   CheckAbandoned(FOnCanClose.Count, 'OnCanClose');
-  CheckAbandoned(FOnClose.Count, 'FOnClose');
-  CheckAbandoned(FOnCaptionChange.Count, 'FOnCaptionChange');
+  CheckAbandoned(FOnClose.Count, 'OnClose');
+  CheckAbandoned(FOnCaptionChange.Count, 'OnCaptionChange');
 
   inherited;
 end;
@@ -899,6 +906,7 @@ begin
   // Update the cache and notify event listeners.
   InfoClass.ValidateCache(tdTokenPrivileges);
   InfoClass.ValidateCache(tdTokenStatistics);
+  InfoClass.ValidateCache(tdTokenFlags);
 
   // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
   // not considered as an error. Such behavior does not fit into our
@@ -954,6 +962,12 @@ function TTokenData.GetElevation: TTokenElevationType;
 begin
   Assert(Token.Cache.IsCached[tdTokenElevation]);
   Result := Token.Cache.Elevation;
+end;
+
+function TTokenData.GetFlags: Cardinal;
+begin
+  Assert(Token.Cache.IsCached[tdTokenFlags]);
+  Result := Token.Cache.Flags;
 end;
 
 function TTokenData.GetGroups: TArray<TGroup>;
@@ -1169,6 +1183,9 @@ begin
 
     tsHasRestrictions:
       Result := YesNoToString(Token.Cache.HasRestrictions);
+
+    tsFlags:
+      Result := MapFlags(Token.Cache.Flags, TokenFlagsNames);
 
     tsIsRestricted:
       Result := YesNoToString(Token.Cache.IsRestricted);
@@ -1395,6 +1412,15 @@ begin
       Result := NtxToken.Query<LongBool>(Token.hToken, TokenHasRestrictions,
         Token.Cache.HasRestrictions).IsSuccess;
 
+    tdTokenFlags:
+    begin
+      Result := NtxQueryFlagsToken(Token.hToken, Token.Cache.Flags).IsSuccess;
+
+      if Result then
+        if Token.Events.OnFlagsChange.Invoke(Token.Cache.Flags) then
+          InvokeStringEvent(tsFlags);
+    end;
+
     tdTokenVirtualizationAllowed:
     begin
       Result := NtxToken.Query<LongBool>(Token.hToken,
@@ -1498,6 +1524,7 @@ begin
   // Update the cache and notify event listeners.
   ValidateCache(tdTokenIntegrity);
   ValidateCache(tdTokenStatistics);
+  ValidateCache(tdTokenFlags);
 
   // Lowering integrity might disable sensitive privileges
   ValidateCache(tdTokenPrivileges);
@@ -1580,6 +1607,7 @@ begin
   // Update the cache and notify event listeners
   ValidateCache(tdTokenUIAccess);
   ValidateCache(tdTokenStatistics);
+  ValidateCache(tdTokenFlags);
 end;
 
 procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
@@ -1591,6 +1619,7 @@ begin
   ValidateCache(tdTokenVirtualizationAllowed);
   ValidateCache(tdTokenVirtualizationEnabled); // Just to be sure
   ValidateCache(tdTokenStatistics);
+  ValidateCache(tdTokenFlags);
 end;
 
 procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
@@ -1601,6 +1630,7 @@ begin
   // Update the cache and notify event listeners
   ValidateCache(tdTokenVirtualizationEnabled);
   ValidateCache(tdTokenStatistics);
+  ValidateCache(tdTokenFlags);
 end;
 
 procedure TTokenData.ValidateCache(DataClass: TTokenDataClass);

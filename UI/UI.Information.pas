@@ -110,6 +110,7 @@ type
     procedure ChangedPrimaryGroup(NewPrimary: ISid);
     procedure ChangedVAllowed(NewVAllowed: LongBool);
     procedure ChangedVEnabled(NewVEnabled: LongBool);
+    procedure ChangedFlags(NewFlags: Cardinal);
     procedure SetAuditPolicy(NewAudit: IAudit);
     procedure Refresh;
     procedure UpdateObjectTab;
@@ -292,6 +293,11 @@ begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
+procedure TInfoDialog.ChangedFlags(NewFlags: Cardinal);
+begin
+  ListViewAdvanced.Items[13].SubItems[0] := Token.InfoClass.QueryString(tsFlags);
+end;
+
 procedure TInfoDialog.ChangedGroups(NewGroups: TArray<TGroup>);
 var
   i: Integer;
@@ -451,6 +457,7 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  Token.Events.OnFlagsChange.Unsubscribe(ChangedFlags);
   Token.Events.OnVirtualizationEnabledChange.Unsubscribe(ChangedVEnabled);
   Token.Events.OnVirtualizationAllowedChange.Unsubscribe(ChangedVAllowed);
   Token.Events.OnPrimaryChange.Unsubscribe(ChangedPrimaryGroup);
@@ -494,6 +501,7 @@ begin
   Token.Events.OnPrimaryChange.Subscribe(ChangedPrimaryGroup);
   Token.Events.OnVirtualizationAllowedChange.Subscribe(ChangedVAllowed);
   Token.Events.OnVirtualizationEnabledChange.Subscribe(ChangedVEnabled);
+  Token.Events.OnFlagsChange.Subscribe(ChangedFlags);
 
   Token.OnCaptionChange.Subscribe(ChangedCaption);
   Token.OnCaptionChange.Invoke(Token.Caption);
@@ -577,6 +585,7 @@ begin
   Token.InfoClass.ReQuery(tdTokenPrimaryGroup);
   Token.InfoClass.ReQuery(tdTokenVirtualizationAllowed);
   Token.InfoClass.ReQuery(tdTokenVirtualizationEnabled);
+  Token.InfoClass.ReQuery(tdTokenFlags);
 
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass.User, EditUser do

@@ -20,6 +20,18 @@ const
     (Value: OBJ_EXCLUSIVE; Name: 'Exclusive')
   );
 
+  TokenFlagsNames: array [0..8] of TFlagName = (
+    (Value: TOKEN_WRITE_RESTRICTED; Name: 'Write-only restricted'),
+    (Value: TOKEN_IS_RESTRICTED; Name: 'Restricted'),
+    (Value: TOKEN_SESSION_NOT_REFERENCED; Name: 'Session not referenced'),
+    (Value: TOKEN_SANDBOX_INERT; Name: 'Sandbox inert'),
+    (Value: TOKEN_VIRTUALIZE_ALLOWED; Name: 'Virtualization allowed'),
+    (Value: TOKEN_VIRTUALIZE_ENABLED; Name: 'Virtualization enabled'),
+    (Value: TOKEN_IS_FILTERED; Name: 'Filtered'),
+    (Value: TOKEN_UIACCESS; Name: 'UIAccess'),
+    (Value: TOKEN_NOT_LOW; Name: 'Not low')
+  );
+
 function ElevationToString(Value: TTokenElevationType): String;
 function IntegrityToString(Rid: Cardinal): String;
 function StateOfGroupToString(Value: Cardinal): String;

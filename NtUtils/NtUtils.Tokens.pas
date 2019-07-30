@@ -100,6 +100,9 @@ function NtxQueryDefaultDaclToken(hToken: THandle; out DefaultDacl: IAcl):
 // Set default DACL
 function NtxSetDefaultDaclToken(hToken: THandle; DefaultDacl: IAcl): TNtxStatus;
 
+// Query token flags
+function NtxQueryFlagsToken(hToken: THandle; out Flags: Cardinal): TNtxStatus;
+
 // Query token statistic (requires either Query or Duplicate access)
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
@@ -554,6 +557,20 @@ var
 begin
   Dacl.DefaultDacl := DefaultDacl.Acl;
   Result := NtxToken.SetInfo<TTokenDefaultDacl>(hToken, TokenDefaultDacl, Dacl);
+end;
+
+function NtxQueryFlagsToken(hToken: THandle; out Flags: Cardinal): TNtxStatus;
+var
+  Buffer: PTokenAccessInformation;
+begin
+  Buffer := NtxQueryBufferToken(hToken, TokenAccessInformation, Result);
+
+  // TODO: Return more access information
+  if Result.IsSuccess then
+  begin
+    Flags := Buffer.Flags;
+    FreeMem(Buffer);
+  end;
 end;
 
 function NtxQueryStatisticsToken(hToken: THandle;
