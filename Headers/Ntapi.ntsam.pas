@@ -249,7 +249,7 @@ type
   TUserInformationClass = (
     UserEnumPadding = 0,
     UserGeneralInformation = 1,       // q: TUserGeneralInformation
-    UserPreferencesInformation = 2,   // q, s:
+    UserPreferencesInformation = 2,   // q, s: TUserPreferencesInformation
     UserLogonInformation = 3,         // q: TUserLogonInformation
     UserLogonHoursInformation = 4,    // q, s: TLogonHours
     UserAccountInformation = 5,       // q: TUserAccountInformation
@@ -276,7 +276,7 @@ type
     UserInternal5InformationNew = 26, // s:
     UserInternal6Information = 27,    // q, s:
     UserExtendedInformation = 28,     // q, s:
-    UserLogonUIInformation = 29       // q:
+    UserLogonUIInformation = 29       // q: TUserLogonUiInformation
   );
 
   // 1105
@@ -289,8 +289,17 @@ type
   end;
   PUserGeneralInformation = ^TUserGeneralInformation;
 
+  // 1113
+  TUserPreferencesInformation = record
+    UserComment: UNICODE_STRING;
+    Reserved1: UNICODE_STRING;
+    CountryCode: Word;
+    CodePage: Word;
+  end;
+  PUserPreferencesInformation = ^TUserPreferencesInformation;
+
   // 1125
-  TUserLogonInformation = record
+  TUserLogonInformation = packed record
     UserName: UNICODE_STRING;
     FullName: UNICODE_STRING;
     UserId: Cardinal;
@@ -313,7 +322,7 @@ type
   PUserLogonInformation = ^TUserLogonInformation;
 
   // 1148
-  TUserAccountInformation = record
+  TUserAccountInformation = packed record
     UserName: UNICODE_STRING;
     FullName: UNICODE_STRING;
     UserId: Cardinal;
@@ -348,6 +357,13 @@ type
     PasswordExpired: Boolean;
   end;
   PUserSetPasswordInformation = ^TUserSetPasswordInformation;
+
+  // 1249
+  TUserLogonUiInformation = record
+    PasswordIsBlank: Boolean;
+    AccountIsDisabled: Boolean;
+  end;
+  PUserLogonUiInformation = ^TUserLogonUiInformation;
 
 // 1777
 function SamFreeMemory(Buffer: Pointer): NTSTATUS; stdcall;
