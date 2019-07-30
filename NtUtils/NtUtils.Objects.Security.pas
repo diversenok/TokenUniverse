@@ -74,6 +74,7 @@ begin
   repeat
     SecDesc := AllocMem(BufferSize);
 
+    Required := 0;
     Result.Status := NtQuerySecurityObject(hObject, SecurityInformation,
       SecDesc, BufferSize, Required);
 
@@ -82,7 +83,6 @@ begin
       FreeMem(SecDesc);
       SecDesc := nil;
     end;
-
   until not NtxExpandBuffer(Result, BufferSize, Required);
 end;
 

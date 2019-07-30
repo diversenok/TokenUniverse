@@ -74,10 +74,11 @@ end;
 
 function NtxEnurateProcessesInJob(hJob: THandle;
   out ProcessIds: TArray<NativeUInt>): TNtxStatus;
+const
+  INITIAL_CAPACITY = 8;
 var
-  BufferSize: Cardinal;
+  BufferSize, Required: Cardinal;
   Buffer: PJobBasicProcessIdList;
-  MaxCount: Cardinal;
   i: Integer;
 begin
   Result.Location := 'NtQueryInformationJobObject';
@@ -86,44 +87,29 @@ begin
   Result.LastCall.InfoClassType := TypeInfo(TJobObjectInfoClass);
   Result.LastCall.Expects(JOB_OBJECT_QUERY, objNtJob);
 
-  MaxCount := 5; // Initial buffer capacity. Must be at least one.
+  // Initial buffer capacity should be enough for at least one item.
+  BufferSize := SizeOf(Cardinal) * 2 + SizeOf(NativeUInt) * INITIAL_CAPACITY;
 
   repeat
     // Allocate a buffer for MaxCount items
-    BufferSize := SizeOf(Cardinal) * 2 + SizeOf(NativeUInt) * MaxCount;
-
-    if BufferSize > BUFFER_LIMIT then
-    begin
-      Result.Status := STATUS_IMPLEMENTATION_LIMIT;
-      Exit;
-    end;
-
     Buffer := AllocMem(BufferSize);
 
-    // Query PID list
+    Required := 0;
     Result.Status := NtQueryInformationJobObject(hJob,
       JobObjectBasicProcessIdList, Buffer, BufferSize, nil);
 
-    // STATUS_BUFFER_OVERFLOW means there are more entries and is fine
-    if not Result.IsSuccess and (Result.Status <> STATUS_BUFFER_OVERFLOW) then
-    begin
-      FreeMem(Buffer);
-      Exit;
-    end;
+    // If not all processes fit into the list then calculate the required size
+    if Result.Status = STATUS_BUFFER_OVERFLOW then
+       Required := SizeOf(Cardinal) * 2 +
+         SizeOf(NativeUInt) * Buffer.NumberOfAssignedProcesses;
 
-    // Do we need another pass?
-    if Buffer.NumberOfAssignedProcesses > MaxCount then
-    begin
+    if not Result.IsSuccess then
       FreeMem(Buffer);
 
-      // Number of currently assigned processes + some extra capacity
-      MaxCount := Buffer.NumberOfAssignedProcesses +
-        Buffer.NumberOfAssignedProcesses shr 3 + 1; // Value + 12% + 1
-    end
-    else
-      Break;
+  until not NtxExpandBuffer(Result, BufferSize, Required, True);
 
-  until False;
+  if not Result.IsSuccess then
+    Exit;
 
   SetLength(ProcessIds, Buffer.NumberOfProcessIdsInList);
 

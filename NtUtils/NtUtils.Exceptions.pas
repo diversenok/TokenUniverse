@@ -57,7 +57,6 @@ type
     function MessageHint: String;
   end;
 
-type
   ENtError = class(EOSError)
   public
     ErrorLocation: string;
@@ -333,7 +332,7 @@ begin
     // After converting, ERROR_SUCCESS becomes unsuccessful, fix it
     ERROR_SUCCESS:             Result := STATUS_SUCCESS;
 
-    // Common error which we might want to compare
+    // Common errors which we might want to compare
     ERROR_ACCESS_DENIED:       Result := STATUS_ACCESS_DENIED;
     ERROR_PRIVILEGE_NOT_HELD:  Result := STATUS_PRIVILEGE_NOT_HELD;
   else

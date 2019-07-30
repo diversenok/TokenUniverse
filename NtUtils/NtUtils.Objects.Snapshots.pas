@@ -160,7 +160,7 @@ end;
 
 function NtxEnumerateObjects(out Types: TArray<TObjectTypeEntry>): TNtxStatus;
 var
-  ReturnLength, BufferSize: Cardinal;
+  BufferSize, Required: Cardinal;
   Buffer, pTypeEntry: PSystemObjectTypeInformation;
   pObjEntry: PSystemObjectInformation;
   Count, i, j: Integer;
@@ -175,34 +175,21 @@ begin
   // rather than collecting the objects
   BufferSize := 2 * 1024 * 1024;
 
-  // TODO: use NtxExpandBuffer
-  
   repeat
     Buffer := AllocMem(BufferSize);
 
-    ReturnLength := 0;
+    Required := 0;
     Result.Status := NtQuerySystemInformation(SystemObjectInformation, Buffer,
-      BufferSize, @ReturnLength);
+      BufferSize, @Required);
 
-    if Result.IsSuccess then
-      Break
-    else
+    if not Result.IsSuccess then
       FreeMem(Buffer);
 
-    if ReturnLength < BufferSize then
-      Break;
-
     // The call usually does not calculate the required
-    // size in one pass, we need to guess it.
-    BufferSize := BufferSize shl 1 + 1024; // x2 + 1 kB
+    // size in one pass, we need to speed it up.
+    Required := Required shl 1 + 64 * 1024 // x2 + 64 kB
 
-    if ReturnLength > BufferSize then
-      BufferSize := ReturnLength + ReturnLength shr 3; // +12%
-
-    if BufferSize > BUFFER_LIMIT then
-      Result.Status := STATUS_IMPLEMENTATION_LIMIT;
-
-  until Result.Status <> STATUS_INFO_LENGTH_MISMATCH;
+  until not NtxExpandBuffer(Result, BufferSize, Required);
 
   if not Result.IsSuccess then
     Exit;

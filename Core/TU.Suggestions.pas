@@ -149,7 +149,7 @@ begin
     for i := 0 to High(ExpectedAccess) do
       with ExpectedAccess[i] do
         Msg := Msg + #$D#$A + 'Expected ' + GetAccessTypeName(AccessMaskType) +
-          ' access : ' + FormatAccess(AccessMask, AccessMaskType);
+          ' access: ' + FormatAccess(AccessMask, AccessMaskType);
 end;
 
 function GetPrivilegeName(Value: TSeWellKnownPrivilege): string;

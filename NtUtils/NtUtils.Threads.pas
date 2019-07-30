@@ -102,6 +102,7 @@ begin
   repeat
     Result := AllocMem(BufferSize);
 
+    Required := 0;
     Status.Status := NtQueryInformationThread(hThread, InfoClass, Result,
       BufferSize, @Required);
 
