@@ -159,6 +159,7 @@ type
     procedure SetVirtualizationEnabled(const Value: LongBool);
     procedure SetDefaultDacl(Value: IAcl);
     function GetObjectInfo: TObjectBasicInformaion;
+    procedure SetSessionReference(const Value: LongBool);
   public
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TArray<TGroup> read GetGroups;                             // class 2
@@ -172,7 +173,7 @@ type
     property RestrictedSids: TArray<TGroup> read GetRestrictedSids;             // class 11
     property Session: Cardinal read GetSession write SetSession;                // class 12 #settable
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
-    // TODO: class 14 SessionReference #settable (and not gettable?)
+    property SessionReference: LongBool write SetSessionReference;              // class 14 #settable + not gettable
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
     property AuditPolicy: IPerUserAudit read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
@@ -1598,6 +1599,15 @@ begin
   // Although changing session does not usually change Modified ID it is good to
   // update it
   ValidateCache(tdTokenStatistics);
+end;
+
+procedure TTokenData.SetSessionReference(const Value: LongBool);
+begin
+  NtxToken.SetInfo<LongBool>(Token.hToken, TokenSessionReference,
+    Value).RaiseOnError;
+
+  ValidateCache(tdTokenStatistics);
+  ValidateCache(tdTokenFlags);
 end;
 
 procedure TTokenData.SetUIAccess(const Value: LongBool);

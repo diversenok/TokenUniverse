@@ -14,13 +14,18 @@ type
     ComboOrigin: TComboBox;
     StaticOrigin: TStaticText;
     BtnSetOrigin: TButton;
+    CheckBoxReference: TCheckBox;
+    BtnSetRef: TButton;
     procedure ComboOriginChange(Sender: TObject);
     procedure BtnSetOriginClick(Sender: TObject);
+    procedure BtnSetRefClick(Sender: TObject);
+    procedure CheckBoxReferenceClick(Sender: TObject);
   private
     Token: TToken;
     LogonSource: TLogonSessionSource;
     IndexOfLogon: Integer;
     procedure OnOriginChange(NewOrigin: TLuid);
+    procedure OnFlagsChange(NewFlags: Cardinal);
     function GetSubscribed: Boolean;
   public
     property Subscribed: Boolean read GetSubscribed;
@@ -74,6 +79,23 @@ begin
   end;
 end;
 
+procedure TFrameLogon.BtnSetRefClick(Sender: TObject);
+begin
+  Assert(Assigned(Token));
+  try
+    Token.InfoClass.SessionReference := CheckBoxReference.Checked;
+  finally
+    CheckBoxReference.Font.Style := [];
+    if Token.InfoClass.Query(tdTokenFlags) then
+      OnFlagsChange(Token.InfoClass.Flags);
+  end;
+end;
+
+procedure TFrameLogon.CheckBoxReferenceClick(Sender: TObject);
+begin
+  CheckBoxReference.Font.Style := [fsBold];
+end;
+
 procedure TFrameLogon.ComboOriginChange(Sender: TObject);
 begin
   ComboOrigin.Color := clStale;
@@ -100,6 +122,13 @@ end;
 function TFrameLogon.GetSubscribed: Boolean;
 begin
   Result := Assigned(Token);
+end;
+
+procedure TFrameLogon.OnFlagsChange(NewFlags: Cardinal);
+begin
+  CheckBoxReference.Checked := not Contains(NewFlags,
+    TOKEN_SESSION_NOT_REFERENCED);
+  CheckBoxReference.Font.Style := [];
 end;
 
 procedure TFrameLogon.OnOriginChange(NewOrigin: TLuid);
@@ -140,12 +169,14 @@ begin
     TLogonInfoSource.SetItems(ListView, IndexOfLogon, nil);
 
   Token.Events.OnOriginChange.Subscribe(OnOriginChange);
+  Token.Events.OnFlagsChange.Subscribe(OnFlagsChange);
 end;
 
 procedure TFrameLogon.UnsubscribeToken(Dummy: TToken);
 begin
   if Assigned(Token) then
   begin
+    Token.Events.OnFlagsChange.Unsubscribe(OnFlagsChange);
     Token.Events.OnOriginChange.Unsubscribe(OnOriginChange);
     Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
