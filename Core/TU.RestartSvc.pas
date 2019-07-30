@@ -47,7 +47,8 @@ begin
     CommandLine := CommandLine + ' ' + RESVC_SYSPLUS_PARAM;
 
   // Create Run-as-system service
-  Result := ScmxCreateService(hSvc, CommandLine, RESVC_NAME, RESVC_DIPLAY_NAME);
+  Result := ScmxCreateServiceLocal(hSvc, CommandLine, RESVC_NAME,
+    RESVC_DIPLAY_NAME);
 
   if not Result.IsSuccess then
     Exit;

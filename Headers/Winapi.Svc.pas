@@ -11,37 +11,6 @@ const
   // 88
   SERVICE_NO_CHANGE = Cardinal(-1);
 
-  // 101
-  SERVICE_CONTROL_STOP = $00000001;
-  SERVICE_CONTROL_PAUSE = $00000002;
-  SERVICE_CONTROL_CONTINUE = $00000003;
-  SERVICE_CONTROL_INTERROGATE = $00000004;
-  SERVICE_CONTROL_SHUTDOWN = $00000005;
-  SERVICE_CONTROL_PARAMCHANGE = $00000006;
-  SERVICE_CONTROL_NETBINDADD = $00000007;
-  SERVICE_CONTROL_NETBINDREMOVE = $00000008;
-  SERVICE_CONTROL_NETBINDENABLE = $00000009;
-  SERVICE_CONTROL_NETBINDDISABLE = $0000000A;
-  SERVICE_CONTROL_DEVICEEVENT = $0000000B;
-  SERVICE_CONTROL_HARDWAREPROFILECHANGE = $0000000C;
-  SERVICE_CONTROL_POWEREVENT = $0000000D;
-  SERVICE_CONTROL_SESSIONCHANGE = $0000000E;
-  SERVICE_CONTROL_PRESHUTDOWN = $0000000F;
-  SERVICE_CONTROL_TIMECHANGE = $00000010;
-  SERVICE_CONTROL_USER_LOGOFF = $00000011;
-  SERVICE_CONTROL_TRIGGEREVENT = $00000020;
-  SERVICE_CONTROL_LOWRESOURCES = $00000060;
-  SERVICE_CONTROL_SYSTEMLOWRESOURCES = $00000061;
-
-  // 127
-  SERVICE_STOPPED = $00000001;
-  SERVICE_START_PENDING = $00000002;
-  SERVICE_STOP_PENDING = $00000003;
-  SERVICE_RUNNING = $00000004;
-  SERVICE_CONTINUE_PENDING = $00000005;
-  SERVICE_PAUSE_PENDING = $00000006;
-  SERVICE_PAUSED = $00000007;
-
   // 138
   SERVICE_ACCEPT_STOP = $00000001;
   SERVICE_ACCEPT_PAUSE_CONTINUE = $00000002;
@@ -81,32 +50,64 @@ const
 
   SERVICE_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or $1FF;
 
-  // 311
-  SERVICE_SID_TYPE_NONE = $00000000;
-  SERVICE_SID_TYPE_UNRESTRICTED = $00000001;
-  SERVICE_SID_TYPE_RESTRICTED = $00000003;
-
   // WinNt.21364
   SERVICE_WIN32_OWN_PROCESS = $00000010;
   SERVICE_WIN32_SHARE_PROCESS = $00000020;
-
-  // WinNt.21392
-  SERVICE_BOOT_START = $00000000;
-  SERVICE_SYSTEM_START = $00000001;
-  SERVICE_AUTO_START = $00000002;
-  SERVICE_DEMAND_START = $00000003;
-  SERVICE_DISABLED = $00000004;
-
-  // WinNt.21401
-  SERVICE_ERROR_IGNORE = $00000000;
-  SERVICE_ERROR_NORMAL = $00000001;
-  SERVICE_ERROR_SEVERE = $00000002;
-  SERVICE_ERROR_CRITICAL = $00000003;
 
 type
   TScmHandle = NativeUInt;
   TServiceStatusHandle = NativeUInt;
   TScLock = NativeUInt;
+
+  // WinNt.21392
+  TServiceStartType = (
+    ServiceBootStart = 0,
+    ServiceSystemStart = 1,
+    ServiceAutoStart = 2,
+    ServiceDemandStart = 3,
+    ServiceDisabled = 4
+  );
+
+  // WinNt.21401
+  TServiceErrorControl = (
+    ServiceErrorIgnore = 0,
+    ServiceErrorNormal = 1,
+    ServiceErrorSevere = 2,
+    ServiceErrorCritical = 3
+  );
+
+  // 101
+  TServiceControl = (
+    ServiceControlReserved = 0,
+    ServiceControlStop = 1,
+    ServiceControlPause = 2,
+    ServiceControlContinue = 3,
+    ServiceControlInterrogate = 4,
+    ServiceControlShutdown = 5,
+    ServiceControlParamChange = 6,
+    ServiceControlNetbindAdd = 7,
+    ServiceControlNetbindRemove = 8,
+    ServiceControlNetbindEnable = 9,
+    ServiceControlNetbindDisable = 10,
+    ServiceControlDeviceEvent = 11,
+    ServiceControlHardwareProfileChange = 12,
+    ServiceControlPowerEvent = 13,
+    ServiceControlSessionChange = 14,
+    ServiceControlPreshutdown = 15,
+    ServiceControlTimeChange = 16,
+    ServiceControlUserLogoff = 17
+  );
+
+  // 127
+  TServiceState = (
+    ServiceStopped = 1,
+    ServiceStartPending = 2,
+    ServiceStopPending = 3,
+    ServiceRunning = 4,
+    ServiceContinuePending = 5,
+    ServicePausePending = 6,
+    ServicePaused = 7
+  );
 
   // 206
   TServiceConfigLevel = (
@@ -129,6 +130,13 @@ type
     ServiceContolStatusReasonInfo = 1 // TServiceControlStatusReasonParamsW
   );
 
+  // 311
+  TServiceSidType = (
+    ServiceSidTypeNone = 0,
+    ServiceSidTypeUnrestricted = 1,
+    ServiceSidTypeRestricted = 3
+  );
+
   // 707
   TScStatusType = (
     ScStatusProcessInfo = 0 // TServiceStatusProcess
@@ -136,41 +144,41 @@ type
 
   // 723
   TServiceStatus = record
-    dwServiceType: Cardinal;
-    dwCurrentState: Cardinal;
-    dwControlsAccepted: Cardinal;
-    dwWin32ExitCode: Cardinal;
-    dwServiceSpecificExitCode: Cardinal;
-    dwCheckPoint: Cardinal;
-    dwWaitHint: Cardinal;
+    ServiceType: Cardinal;
+    CurrentState: TServiceState;
+    ControlsAccepted: Cardinal;
+    Win32ExitCode: Cardinal;
+    ServiceSpecificExitCode: Cardinal;
+    CheckPoint: Cardinal;
+    WaitHint: Cardinal;
   end;
   PServiceStatus = ^TServiceStatus;
 
   // 733
   TServiceStatusProcess = record
-    dwServiceType: Cardinal;
-    dwCurrentState: Cardinal;
-    dwControlsAccepted: Cardinal;
-    dwWin32ExitCode: Cardinal;
-    dwServiceSpecificExitCode: Cardinal;
-    dwCheckPoint: Cardinal;
-    dwWaitHint: Cardinal;
-    dwProcessId: Cardinal;
-    dwServiceFlags: Cardinal;
+    ServiceType: Cardinal;
+    CurrentState: TServiceState;
+    ControlsAccepted: Cardinal;
+    Win32ExitCode: Cardinal;
+    ServiceSpecificExitCode: Cardinal;
+    CheckPoint: Cardinal;
+    WaitHint: Cardinal;
+    ProcessId: Cardinal;
+    ServiceFlags: Cardinal;
   end;
   PServiceStatusProcess = ^TServiceStatusProcess;
 
   // 827
   TQueryServiceConfigW = record
-    dwServiceType: Cardinal;
-    dwStartType: Cardinal;
-    dwErrorControl: Cardinal;
-    lpBinaryPathName: PWideChar;
-    lpLoadOrderGroup: PWideChar;
-    dwTagId: Cardinal;
-    lpDependencies: PWideChar;
-    lpServiceStartName: PWideChar;
-    lpDisplayName: PWideChar;
+    ServiceType: Cardinal;
+    StartType: TServiceStartType;
+    ErrorControl: TServiceErrorControl;
+    BinaryPathName: PWideChar;
+    LoadOrderGroup: PWideChar;
+    TagId: Cardinal;
+    Dependencies: PWideChar;
+    ServiceStartName: PWideChar;
+    DisplayName: PWideChar;
   end;
   PQueryServiceConfigW = ^TQueryServiceConfigW;
 
@@ -178,34 +186,34 @@ type
   PServiceArgsW = ^TServiceArgsW;
 
   // 868
-  TServiceMainFunction = procedure (dwNumServicesArgs: Integer;
-    lpServiceArgVectors: PServiceArgsW) stdcall;
+  TServiceMainFunction = procedure (NumServicesArgs: Integer;
+    ServiceArgVectors: PServiceArgsW) stdcall;
 
   // 893
   TServiceTableEntryW = record
-    lpServiceName: PWideChar;
-    lpServiceProc: TServiceMainFunction;
+    ServiceName: PWideChar;
+    ServiceProc: TServiceMainFunction;
   end;
   PServiceTableEntryW = ^TServiceTableEntryW;
 
   // 924
-  THandlerFunctionEx = function(dwControl: Cardinal; dwEventType: Cardinal;
-    lpEventData: Pointer; lpContext: Pointer): Cardinal; stdcall;
+  THandlerFunctionEx = function(Control: TServiceControl; EventType: Cardinal;
+    EventData: Pointer; Context: Pointer): Cardinal; stdcall;
 
   // 991
   TServiceControlStatusReasonParamsW = record
-    dwReason: Cardinal;
-    pszComment: PWideChar;
+    Reason: Cardinal;
+    Comment: PWideChar;
     ServiceStatus: TServiceStatusProcess;
   end;
   PServiceControlStatusReasonParamsW = ^TServiceControlStatusReasonParamsW;
 
 // 1041
 function ChangeServiceConfigW(hService: TScmHandle; dwServiceType: Cardinal;
-  dwStartType: Cardinal; dwErrorControl: Cardinal; pBinaryPathName: PWideChar;
-  pLoadOrderGroup: PWideChar; pdwTagId: PCardinal; pDependencies: PWideChar;
-  pServiceStartName: PWideChar; pPassword: PWideChar; pDisplayName: PWideChar):
-  LongBool; stdcall; external advapi32;
+  dwStartType: TServiceStartType; dwErrorControl: TServiceErrorControl;
+  pBinaryPathName: PWideChar; pLoadOrderGroup: PWideChar; pdwTagId: PCardinal;
+  pDependencies: PWideChar; pServiceStartName: PWideChar; pPassword: PWideChar;
+  pDisplayName: PWideChar): LongBool; stdcall; external advapi32;
 
 // 1071
 function ChangeServiceConfig2W(hService: TScmHandle;
@@ -217,15 +225,15 @@ function CloseServiceHandle(hSCObject: TScmHandle): LongBool; stdcall;
   external advapi32;
 
 // 1092
-function ControlService(hService: TScmHandle; dwControl: Cardinal;
+function ControlService(hService: TScmHandle; dwControl: TServiceControl;
   out lpServiceStatus: TServiceStatus): LongBool; stdcall; external advapi32;
 
 // 1121
 function CreateServiceW(hSCManager: TScmHandle; lpServiceName: PWideChar;
   lpDisplayName: PWideChar; dwDesiredAccess: TAccessMask;
-  dwServiceType: Cardinal; dwStartType: Cardinal; dwErrorControl: Cardinal;
-  lpBinaryPathName: PWideChar; lpLoadOrderGroup: PWideChar;
-  lpdwTagId: PCardinal; lpDependencies: PWideChar;
+  dwServiceType: Cardinal; dwStartType: TServiceStartType; dwErrorControl:
+  TServiceErrorControl; lpBinaryPathName: PWideChar; lpLoadOrderGroup:
+  PWideChar; lpdwTagId: PCardinal; lpDependencies: PWideChar;
   lpServiceStartName: PWideChar; lpPassword: PWideChar): TScmHandle; stdcall;
   external advapi32;
 
@@ -302,7 +310,7 @@ function UnlockServiceDatabase(ScLock: TScLock): LongBool; stdcall;
   external advapi32;
 
 // 1711
-function ControlServiceExW(hService: TScmHandle; dwControl: Cardinal;
+function ControlServiceExW(hService: TScmHandle; dwControl: TServiceControl;
   InfoLevel: TServiceContolLevel; pControlParams: Pointer): LongBool; stdcall;
   external advapi32;
 

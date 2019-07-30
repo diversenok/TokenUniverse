@@ -10,8 +10,8 @@ type
 
   TServiceConfig = record
     ServiceType: Cardinal;
-    StartType: Cardinal;
-    ErrorControl: Cardinal;
+    StartType: TServiceStartType;
+    ErrorControl: TServiceErrorControl;
     TagId: Cardinal;
     BinaryPathName: String;
     LoadOrderGroup: String;
@@ -20,27 +20,39 @@ type
   end;
 
 // Open a handle to SCM
-function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
-  TNtxStatus;
+function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask;
+  ServerName: String = ''): TNtxStatus;
+
+// Close SCM/service handle
+function ScmxClose(var hObject: TScmHandle): Boolean;
 
 // Open a service
-function ScmxOpenService(out hSvc: TScmHandle; ServiceName: String;
+function ScmxOpenService(out hSvc: TScmHandle; hScm: TScmHandle;
+  ServiceName: String; DesiredAccess: TAccessMask): TNtxStatus;
+
+function ScmxOpenServiceLocal(out hSvc: TScmHandle; ServiceName: String;
   DesiredAccess: TAccessMask): TNtxStatus;
 
 // Create a service
-function ScmxCreateService(out hSvc: TScmHandle; CommandLine, ServiceName,
-   DisplayName: String; StartType: Cardinal = SERVICE_DEMAND_START): TNtxStatus;
+function ScmxCreateService(out hSvc: TScmHandle; hScm: TScmHandle; CommandLine,
+  ServiceName, DisplayName: String; StartType: TServiceStartType =
+  ServiceDemandStart): TNtxStatus;
+
+function ScmxCreateServiceLocal(out hSvc: TScmHandle; CommandLine, ServiceName,
+  DisplayName: String; StartType: TServiceStartType = ServiceDemandStart)
+  : TNtxStatus;
 
 // Start a service
 function ScmxStartService(hSvc: TScmHandle): TNtxStatus; overload;
 function ScmxStartService(hSvc: TScmHandle; Parameters: TArray<String>):
   TNtxStatus; overload;
 
+// Send a control to a service
+function ScmxControlService(hSvc: TScmHandle; Control: TServiceControl;
+  out ServiceStatus: TServiceStatus): TNtxStatus;
+
 // Delete a service
 function ScmxDeleteService(hSvc: TScmHandle): TNtxStatus;
-
-// Close SCM/service handle
-function ScmxClose(var hObject: TScmHandle): Boolean;
 
 // Query service config
 function ScmxQueryConfigService(hSvc: TScmHandle; out Config: TServiceConfig)
@@ -52,61 +64,86 @@ function ScmxQueryProcessStatusService(hSvc: TScmHandle;
 
 implementation
 
-function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask):
-  TNtxStatus;
+uses
+  NtUtils.Access.Expected;
+
+function ScmxConnect(out hScm: TScmHandle; DesiredAccess: TAccessMask;
+  ServerName: String): TNtxStatus;
+var
+  pServerName: PWideChar;
 begin
-  hScm := OpenSCManagerW(nil, nil, DesiredAccess);
-  Result.Win32Result := (hScm <> 0);
+  if ServerName <> '' then
+    pServerName := PWideChar(ServerName)
+  else
+    pServerName := nil;
 
   Result.Location := 'OpenSCManagerW';
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objScmManager;
+
+  hScm := OpenSCManagerW(pServerName, nil, DesiredAccess);
+  Result.Win32Result := (hScm <> 0);
 end;
 
-function ScmxOpenService(out hSvc: TScmHandle; ServiceName: String;
-  DesiredAccess: TAccessMask): TNtxStatus;
-var
-  hScm: TScmHandle;
+function ScmxClose(var hObject: TScmHandle): Boolean;
 begin
-  // Connect to SCM
-  Result := ScmxConnect(hScm, SC_MANAGER_CONNECT);
+  Result := CloseServiceHandle(hObject);
+  hObject := 0;
+end;
 
-  if not Result.IsSuccess then
-    Exit;
-
-  // Create service
-  hSvc := OpenServiceW(hScm, PWideChar(ServiceName), DesiredAccess);
-  Result.Win32Result := (hSvc <> 0);
-
+function ScmxOpenService(out hSvc: TScmHandle; hScm: TScmHandle;
+  ServiceName: String; DesiredAccess: TAccessMask): TNtxStatus;
+begin
   Result.Location := 'OpenServiceW';
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objScmService;
+  Result.LastCall.Expects(SC_MANAGER_CONNECT, objScmManager);
 
-  ScmxClose(hScm);
+  hSvc := OpenServiceW(hScm, PWideChar(ServiceName), DesiredAccess);
+  Result.Win32Result := (hSvc <> 0);
 end;
 
-function ScmxCreateService(out hSvc: TScmHandle; CommandLine, ServiceName,
-   DisplayName: String; StartType: Cardinal): TNtxStatus;
+function ScmxOpenServiceLocal(out hSvc: TScmHandle; ServiceName: String;
+  DesiredAccess: TAccessMask): TNtxStatus;
 var
   hScm: TScmHandle;
 begin
-  // Connect to SCM
-  Result := ScmxConnect(hScm, SC_MANAGER_CREATE_SERVICE);
+  Result := ScmxConnect(hScm, SC_MANAGER_CONNECT);
 
-  if not Result.IsSuccess then
-    Exit;
+  if Result.IsSuccess then
+  begin
+    Result := ScmxOpenService(hSvc, hScm, ServiceName, DesiredAccess);
+    ScmxClose(hScm);
+  end;
+end;
 
-  // Create service
+function ScmxCreateService(out hSvc: TScmHandle; hScm: TScmHandle; CommandLine,
+  ServiceName, DisplayName: String; StartType: TServiceStartType): TNtxStatus;
+begin
+  Result.Location := 'CreateServiceW';
+  Result.LastCall.Expects(SC_MANAGER_CREATE_SERVICE, objScmManager);
+
   hSvc := CreateServiceW(hScm, PWideChar(ServiceName), PWideChar(DisplayName),
     SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, StartType,
-    SERVICE_ERROR_NORMAL, PWideChar(CommandLine), nil, nil, nil, nil, nil);
-
-  Result.Location := 'CreateServiceW';
+    ServiceErrorNormal, PWideChar(CommandLine), nil, nil, nil, nil, nil);
   Result.Win32Result := (hSvc <> 0);
+end;
 
-  ScmxClose(hScm);
+function ScmxCreateServiceLocal(out hSvc: TScmHandle; CommandLine, ServiceName,
+  DisplayName: String; StartType: TServiceStartType): TNtxStatus;
+var
+  hScm: TScmHandle;
+begin
+  Result := ScmxConnect(hScm, SC_MANAGER_CREATE_SERVICE);
+
+  if Result.IsSuccess then
+  begin
+    Result := ScmxCreateService(hSvc, hScm, CommandLine, ServiceName,
+      DisplayName, StartType);
+    ScmxClose(hScm);
+  end;
 end;
 
 function ScmxStartService(hSvc: TScmHandle): TNtxStatus; overload;
@@ -129,19 +166,28 @@ begin
     Params[i] := PWideChar(Parameters[i]);
 
   Result.Location := 'StartServiceW';
+  Result.LastCall.Expects(SERVICE_START, objScmService);
+
   Result.Win32Result := StartServiceW(hSvc, Length(Params), Params);
+end;
+
+function ScmxControlService(hSvc: TScmHandle; Control: TServiceControl;
+  out ServiceStatus: TServiceStatus): TNtxStatus;
+begin
+  Result.Location := 'ControlService';
+  Result.LastCall.CallType := lcQuerySetCall;
+  Result.LastCall.InfoClass := Cardinal(Control);
+  Result.LastCall.InfoClassType := TypeInfo(TServiceControl);
+  RtlxComputeServiceControlAccess(Result.LastCall, Control);
+
+  Result.Win32Result := ControlService(hSvc, Control, ServiceStatus);
 end;
 
 function ScmxDeleteService(hSvc: TScmHandle): TNtxStatus;
 begin
   Result.Location := 'DeleteService';
+  Result.LastCall.Expects(_DELETE, objScmService);
   Result.Win32Result := DeleteService(hSvc);
-end;
-
-function ScmxClose(var hObject: TScmHandle): Boolean;
-begin
-  Result := CloseServiceHandle(hObject);
-  hObject := 0;
 end;
 
 function ScmxQueryConfigService(hSvc: TScmHandle; out Config: TServiceConfig)
@@ -151,6 +197,7 @@ var
   BufferSize, Required: Cardinal;
 begin
   Result.Location := 'QueryServiceConfigW';
+  Result.LastCall.Expects(SERVICE_QUERY_CONFIG, objScmService);
 
   BufferSize := 0;
   repeat
@@ -168,14 +215,14 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Config.ServiceType := Buffer.dwServiceType;
-  Config.StartType := Buffer.dwStartType;
-  Config.ErrorControl := Buffer.dwErrorControl;
-  Config.TagId := Buffer.dwTagId;
-  Config.BinaryPathName := String(Buffer.lpBinaryPathName);
-  Config.LoadOrderGroup := String(Buffer.lpLoadOrderGroup);
-  Config.ServiceStartName := String(Buffer.lpServiceStartName);
-  Config.DisplayName := String(Buffer.lpDisplayName);
+  Config.ServiceType := Buffer.ServiceType;
+  Config.StartType := Buffer.StartType;
+  Config.ErrorControl := Buffer.ErrorControl;
+  Config.TagId := Buffer.TagId;
+  Config.BinaryPathName := String(Buffer.BinaryPathName);
+  Config.LoadOrderGroup := String(Buffer.LoadOrderGroup);
+  Config.ServiceStartName := String(Buffer.ServiceStartName);
+  Config.DisplayName := String(Buffer.DisplayName);
 
   FreeMem(Buffer);
 end;
@@ -189,6 +236,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(ScStatusProcessInfo);
   Result.LastCall.InfoClassType := TypeInfo(TScStatusType);
+  Result.LastCall.Expects(SERVICE_QUERY_STATUS, objScmService);
 
   Result.Win32Result := QueryServiceStatusEx(hSvc, ScStatusProcessInfo,
     @Info, SizeOf(Info), Required);

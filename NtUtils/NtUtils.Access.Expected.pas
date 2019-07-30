@@ -3,7 +3,8 @@ unit NtUtils.Access.Expected;
 interface
 
 uses
-  Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Ntapi.ntsam, NtUtils.Exceptions;
+  Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Ntapi.ntsam, Winapi.Svc,
+  NtUtils.Exceptions;
 
 { Process }
 
@@ -52,6 +53,11 @@ procedure RtlxComputeUserQueryAccess(var LastCall: TLastCallInfo;
 
 procedure RtlxComputeUserSetAccess(var LastCall: TLastCallInfo;
   InfoClass: TUserInformationClass);
+
+{ Service }
+
+procedure RtlxComputeServiceControlAccess(var LastCall: TLastCallInfo;
+  Control: TServiceControl);
 
 implementation
 
@@ -382,6 +388,28 @@ begin
 
     UserSetPasswordInformation:
       LastCall.Expects(USER_FORCE_PASSWORD_CHANGE, objSamUser);
+  end;
+end;
+
+procedure RtlxComputeServiceControlAccess(var LastCall: TLastCallInfo;
+  Control: TServiceControl);
+begin
+  // MSDN
+  case Control of
+    ServiceControlPause, ServiceControlContinue,
+    ServiceControlParamChange, ServiceControlNetbindAdd,
+    ServiceControlNetbindRemove, ServiceControlNetbindEnable,
+    ServiceControlNetbindDisable:
+      LastCall.Expects(SERVICE_PAUSE_CONTINUE, objScmService);
+
+    ServiceControlStop:
+      LastCall.Expects(SERVICE_STOP, objScmService);
+
+    ServiceControlInterrogate:
+      LastCall.Expects(SERVICE_INTERROGATE, objScmService);
+  else
+    if (Cardinal(Control) >= 128) and (Cardinal(Control) < 255) then
+      LastCall.Expects(SERVICE_USER_DEFINED_CONTROL, objScmService);
   end;
 end;
 

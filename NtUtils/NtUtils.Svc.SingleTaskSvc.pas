@@ -22,19 +22,19 @@ var
 
   SvcxStatusHandle: THandle;
   SvcxStatus: TServiceStatus = (
-      dwServiceType:             SERVICE_WIN32_OWN_PROCESS;
-      dwCurrentState:            SERVICE_RUNNING;
-      dwControlsAccepted:        0;
-      dwWin32ExitCode:           0;
-      dwServiceSpecificExitCode: 0;
-      dwCheckPoint:              0;
-      dwWaitHint:                5000
+      ServiceType:             SERVICE_WIN32_OWN_PROCESS;
+      CurrentState:            ServiceRunning;
+      ControlsAccepted:        0;
+      Win32ExitCode:           0;
+      ServiceSpecificExitCode: 0;
+      CheckPoint:              0;
+      WaitHint:                5000
     );
 
-function SvcxHandlerEx(dwControl: Cardinal; dwEventType: Cardinal;
-  lpEventData: Pointer; lpContext: Pointer): Cardinal; stdcall;
+function SvcxHandlerEx(Control: TServiceControl; EventType: Cardinal;
+  EventData: Pointer; Context: Pointer): Cardinal; stdcall;
 begin
-  if dwControl = SERVICE_CONTROL_INTERROGATE then
+  if Control = ServiceControlInterrogate then
     Result := ERROR_SUCCESS
   else
     Result := ERROR_CALL_NOT_IMPLEMENTED;
@@ -77,7 +77,7 @@ begin
   end;
 
   // Report that we have finished
-  SvcxStatus.dwCurrentState := SERVICE_STOPPED;
+  SvcxStatus.CurrentState := ServiceStopped;
   SetServiceStatus(SvcxStatusHandle, SvcxStatus);
 end;
 
@@ -88,10 +88,10 @@ begin
   SvcxName := ServiceName;
   SvcxPayload := Payload;
 
-  ServiceTable[0].lpServiceName := PWideChar(SvcxName);
-  ServiceTable[0].lpServiceProc := SvcxServiceMain;
-  ServiceTable[1].lpServiceName := nil;
-  ServiceTable[1].lpServiceProc := nil;
+  ServiceTable[0].ServiceName := PWideChar(SvcxName);
+  ServiceTable[0].ServiceProc := SvcxServiceMain;
+  ServiceTable[1].ServiceName := nil;
+  ServiceTable[1].ServiceProc := nil;
 
   Result := StartServiceCtrlDispatcherW(PServiceTableEntryW(@ServiceTable));
 end;
