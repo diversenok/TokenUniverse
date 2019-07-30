@@ -137,7 +137,7 @@ function SamxSetUser(hUser: TSamHandle; InfoClass: TUserInformationClass;
 implementation
 
 uses
-  Ntapi.ntstatus;
+  Ntapi.ntstatus, NtUtils.Access.Expected;
 
 { Server }
 
@@ -193,6 +193,7 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objSamDomain;
+  Result.LastCall.Expects(SAM_SERVER_LOOKUP_DOMAIN, objSamServer);
 
   Result.Status := SamOpenDomain(hServer, DesiredAccess, DomainId, hDomain);
 end;
@@ -231,8 +232,9 @@ var
   Buffer: PSid;
 begin
   NameStr.FromString(Name);
-
   Result.Location := 'SamLookupDomainInSamServer';
+  Result.LastCall.Expects(SAM_SERVER_LOOKUP_DOMAIN, objSamServer);
+
   Result.Status := SamLookupDomainInSamServer(hServer, NameStr, Buffer);
 
   if not Result.IsSuccess then
@@ -250,8 +252,9 @@ var
   Count, i: Integer;
 begin
   EnumContext := 0;
-
   Result.Location := 'SamEnumerateDomainsInSamServer';
+  Result.LastCall.Expects(SAM_SERVER_ENUMERATE_DOMAINS, objSamServer);
+
   Result.Status := SamEnumerateDomainsInSamServer(hServer, EnumContext, Buffer,
     MAX_PREFERRED_LENGTH, Count);
 
@@ -274,6 +277,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TDomainInformationClass);
+  RtlxComputeDomainQueryAccess(Status.LastCall, InfoClass);
 
   Status.Status := SamQueryInformationDomain(hDomain, InfoClass, Result);
 end;
@@ -285,6 +289,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TDomainInformationClass);
+  RtlxComputeDomainSetAccess(Result.LastCall, InfoClass);
 
   Result.Status := SamSetInformationDomain(hDomain, InfoClass, Data);
 end;
@@ -299,8 +304,9 @@ var
   Count, i: Integer;
 begin
   EnumContext := 0;
-
   Result.Location := 'SamEnumerateGroupsInDomain';
+  Result.LastCall.Expects(DOMAIN_LIST_ACCOUNTS, objSamDomain);
+
   Result.Status := SamEnumerateGroupsInDomain(hDomain, EnumContext, Buffer,
     MAX_PREFERRED_LENGTH, Count);
 
@@ -325,6 +331,7 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objSamGroup;
+  Result.LastCall.Expects(DOMAIN_LOOKUP, objSamDomain);
 
   Result.Status := SamOpenGroup(hDomain, DesiredAccess, GroupId, hGroup);
 end;
@@ -350,6 +357,8 @@ var
   Count, i: Integer;
 begin
   Result.Location := 'SamGetMembersInGroup';
+  Result.LastCall.Expects(GROUP_LIST_MEMBERS, objSamGroup);
+
   Result.Status := SamGetMembersInGroup(hGroup, BufferIDs, BufferAttributes,
     Count);
 
@@ -375,6 +384,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TGroupInformationClass);
+  Status.LastCall.Expects(GROUP_READ_INFORMATION, objSamGroup);
 
   Status.Status := SamQueryInformationGroup(hGroup, InfoClass, Result);
 end;
@@ -386,6 +396,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TGroupInformationClass);
+  Result.LastCall.Expects(GROUP_WRITE_ACCOUNT, objSamGroup);
 
   Result.Status := SamSetInformationGroup(hGroup, InfoClass, Data);
 end;
@@ -400,8 +411,9 @@ var
   Count, i: Integer;
 begin
   EnumContext := 0;
-
   Result.Location := 'SamEnumerateAliasesInDomain';
+  Result.LastCall.Expects(DOMAIN_LIST_ACCOUNTS, objSamDomain);
+
   Result.Status := SamEnumerateAliasesInDomain(hDomain, EnumContext,
     Buffer, MAX_PREFERRED_LENGTH, Count);
 
@@ -426,6 +438,7 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objSamAlias;
+  Result.LastCall.Expects(DOMAIN_LOOKUP, objSamDomain);
 
   Result.Status := SamOpenAlias(hDomain, DesiredAccess, AliasId, hAlias);
 end;
@@ -451,6 +464,8 @@ var
   Count, i: Integer;
 begin
   Result.Location := 'SamGetMembersInAlias';
+  Result.LastCall.Expects(ALIAS_LIST_MEMBERS, objSamAlias);
+
   Result.Status := SamGetMembersInAlias(hAlias, Buffer, Count);
 
   if not Result.IsSuccess then
@@ -471,6 +486,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TAliasInformationClass);
+  Status.LastCall.Expects(ALIAS_READ_INFORMATION, objSamAlias);
 
   Status.Status := SamQueryInformationAlias(hAlias, InfoClass, Result);
 end;
@@ -482,6 +498,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TAliasInformationClass);
+  Result.LastCall.Expects(ALIAS_WRITE_ACCOUNT, objSamAlias);
 
   Result.Status := SamSetInformationAlias(hAlias, InfoClass, Data);
 end;
@@ -496,8 +513,9 @@ var
   Count, i: Integer;
 begin
   EnumContext := 0;
-
   Result.Location := 'SamEnumerateUsersInDomain';
+  Result.LastCall.Expects(DOMAIN_LIST_ACCOUNTS, objSamDomain);
+
   Result.Status := SamEnumerateUsersInDomain(hDomain, EnumContext,
     UserType, Buffer, MAX_PREFERRED_LENGTH, Count);
 
@@ -522,6 +540,7 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objSamUser;
+  Result.LastCall.Expects(DOMAIN_LOOKUP, objSamDomain);
 
   Result.Status := SamOpenUser(hDomain, DesiredAccess, UserId, hUser);
 end;
@@ -548,6 +567,8 @@ var
   Count, i: Integer;
 begin
   Result.Location := 'SamGetGroupsForUser';
+  Result.LastCall.Expects(USER_LIST_GROUPS, objSamUser);
+
   Result.Status := SamGetGroupsForUser(hUser, Buffer, Count);
 
   if not Result.IsSuccess then
@@ -568,6 +589,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TUserInformationClass);
+  RtlxComputeUserQueryAccess(Status.LastCall, InfoClass);
 
   Status.Status := SamQueryInformationUser(hUser, InfoClass, Result);
 end;
@@ -580,6 +602,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TUserInformationClass);
+  RtlxComputeUserSetAccess(Result.LastCall, InfoClass);
 
   Result.Status := SamSetInformationUser(hUser, InfoClass, Data);
 end;

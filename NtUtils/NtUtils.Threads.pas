@@ -39,7 +39,8 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntseapi,
+  NtUtils.Access.Expected;
 
 function NtxOpenThread(out hThread: THandle; TID: NativeUInt;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
@@ -95,6 +96,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TThreadInfoClass);
+  RtlxComputeThreadQueryAccess(Status.LastCall, InfoClass);
 
   BufferSize := 0;
   repeat
@@ -118,6 +120,8 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TThreadInfoClass);
+  RtlxComputeThreadSetAccess(Result.LastCall, InfoClass);
+
   Result.Status := NtSetInformationThread(hThread, InfoClass, Data, DataSize);
 end;
 
@@ -128,6 +132,8 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TThreadInfoClass);
+  RtlxComputeThreadQueryAccess(Result.LastCall, InfoClass);
+
   Result.Status := NtQueryInformationThread(hThread, InfoClass, @Buffer,
     SizeOf(Buffer), nil);
 end;

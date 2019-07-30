@@ -49,7 +49,8 @@ function NtxAssertNotWoW64: TNtxStatus;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, NtUtils.Objects;
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntseapi, NtUtils.Objects,
+  NtUtils.Access.Expected;
 
 function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
@@ -105,6 +106,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+  RtlxComputeProcessQueryAccess(Status.LastCall, InfoClass);
 
   BufferSize := 0;
   repeat
@@ -128,6 +130,8 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+  RtlxComputeProcessSetAccess(Result.LastCall, InfoClass);
+
   Result.Status := NtSetInformationProcess(hProcess, InfoClass, Data, DataSize);
 end;
 
@@ -138,6 +142,8 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TProcessInfoClass);
+  RtlxComputeProcessQueryAccess(Result.LastCall, InfoClass);
+
   Result.Status := NtQueryInformationProcess(hProcess, InfoClass, @Buffer,
     SizeOf(Buffer), nil);
 end;

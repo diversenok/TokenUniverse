@@ -183,6 +183,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(ObjectNameInformation);
   Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+  // No special handle access required
 
   BufferSize := 0;
   repeat
@@ -211,6 +212,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(ObjectBasicInformation);
   Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+  // No special handle access required
 
   Result.Status := NtQueryObject(hObject, ObjectBasicInformation, @Info,
     SizeOf(Info), nil);
@@ -226,6 +228,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(ObjectTypeInformation);
   Result.LastCall.InfoClassType := TypeInfo(TObjectInformationClass);
+  // No special handle access required
 
   BufferSize := 0;
   repeat
@@ -267,12 +270,16 @@ begin
   TimeOutValue.QuadPart := Timeout;
 
   Result.Location := 'NtWaitForSingleObject';
+  Result.LastCall.Expects(SYNCHRONIZE, objNone);
+
   Result.Status := NtWaitForSingleObject(hObject, Alertable, TimeOutValue);
 end;
 
 function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;
 begin
   Result.Location := 'NtWaitForSingleObject';
+  Result.LastCall.Expects(SYNCHRONIZE, objNone);
+
   Result.Status := NtWaitForSingleObject(hObject, True, nil);
 end;
 

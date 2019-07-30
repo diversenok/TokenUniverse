@@ -34,6 +34,9 @@ function SafexComputeSaferTokenById(out hNewToken: THandle;
 
 implementation
 
+uses
+  Ntapi.ntseapi;
+
 function SafexOpenLevel(out hLevel: TSaferHandle; ScopeId: TSaferScopeId;
   LevelId: TSaferLevelId): TNtxStatus;
 begin
@@ -129,6 +132,8 @@ begin
     Flags := Flags or SAFER_TOKEN_MAKE_INERT;
 
   Result.Location := 'SaferComputeTokenFromLevel';
+  Result.LastCall.Expects(TOKEN_DUPLICATE or TOKEN_QUERY, objNtToken);
+
   Result.Win32Result := SaferComputeTokenFromLevel(hLevel, hExistingToken,
     hNewToken, Flags, nil);
 

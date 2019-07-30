@@ -132,7 +132,7 @@ type
     ProcessWorkingSetControl = 57,
     ProcessHandleTable = 58,
     ProcessCheckStackExtentsMode = 59,
-    ProcessCommandLineInformation = 60  // q: UNICODE_STRING
+    ProcessCommandLineInformation = 60 // q: UNICODE_STRING
   );
 
   TThreadInfoClass = (
@@ -162,7 +162,14 @@ type
     ThreadCycleTime = 23,
     ThreadPagePriority = 24,
     ThreadActualBasePriority = 25,
-    ThreadTebInformation = 26      // q: TThreadTebInformation
+    ThreadTebInformation = 26,      // q: TThreadTebInformation
+    ThreadCSwitchMon = 27,
+    ThreadCSwitchPmu = 28,
+    ThreadWow64Context = 29,
+    ThreadGroupInformation = 30,
+    ThreadUmsInformation = 31,
+    ThreadCounterProfiling = 32,
+    ThreadIdealProcessorEx = 33
   );
 
   // ProcessBasicInformation
@@ -179,7 +186,7 @@ type
   // ProcessAccessToken
   TProcessAccessToken = record
     Token: THandle; // needs TOKEN_ASSIGN_PRIMARY
-    Thread: THandle; // needs THREAD_QUERY_INFORMATION
+    Thread: THandle; // currently unused, was THREAD_QUERY_INFORMATION
   end;
 
   TThreadBasicInformation = record

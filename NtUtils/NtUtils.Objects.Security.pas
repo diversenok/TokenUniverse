@@ -68,6 +68,7 @@ var
   BufferSize, Required: Cardinal;
 begin
   Result.Location := 'NtQuerySecurityObject';
+  Result.LastCall.Expects(RtlxComputeReadAccess(SecurityInformation), objNone);
 
   BufferSize := 0;
   repeat
@@ -162,6 +163,8 @@ function NtxSetSecurityObject(hObject: THandle; SecInfo: TSecurityInformation;
   const SecDesc: TSecurityDescriptor): TNtxStatus;
 begin
   Result.Location := 'NtSetSecurityObject';
+  Result.LastCall.Expects(RtlxComputeWriteAccess(SecInfo), objNone);
+
   Result.Status := NtSetSecurityObject(hObject, SecInfo, SecDesc);
 end;
 

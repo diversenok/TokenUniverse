@@ -70,6 +70,7 @@ var
   BufferSize, Required: Cardinal;
 begin
   Result.Location := 'QueryServiceObjectSecurity';
+  Result.LastCall.Expects(RtlxComputeReadAccess(SecurityInformation), objNone);
 
   BufferSize := 0;
   repeat
@@ -168,6 +169,8 @@ function ScmxSetSecurityObject(ScmHandle: TScmHandle; SecInfo:
   TSecurityInformation; const SecDesc: TSecurityDescriptor): TNtxStatus;
 begin
   Result.Location := 'SetServiceObjectSecurity';
+  Result.LastCall.Expects(RtlxComputeWriteAccess(SecInfo), objNone);
+
   Result.Win32Result := SetServiceObjectSecurity(ScmHandle, SecInfo, SecDesc);
 end;
 

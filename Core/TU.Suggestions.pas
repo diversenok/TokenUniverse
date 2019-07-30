@@ -23,7 +23,7 @@ implementation
 
 uses
   Ntapi.ntseapi, Winapi.WinError, Winapi.CommCtrl, Ntapi.ntdef, Ntapi.ntstatus,
-  NtUtils.Exceptions, NtUtils.ErrorMsg, Ntapi.ntpsapi, NtUtils.AccessMasks,
+  NtUtils.Exceptions, NtUtils.ErrorMsg, Ntapi.ntpsapi, NtUtils.Access,
   System.TypInfo, DelphiUtils.Strings;
 
 resourcestring
@@ -41,33 +41,18 @@ resourcestring
     'level to a higher one. Although, you can create a primary token from ' +
     'Impersonation and Delegation ones. If you are working with linked ' +
     'tokens you can obtain a primary linked token if you have Tcb privilege.';
-  NEW_RESTCICT_ACCESS = 'The hande must grant `Duplicate` access to create ' +
-    'resticted tokens.';
   NEW_SAFER_IMP = 'Since Safer API always returns primary tokens the rules ' +
    'are the same as while performing duplication. This means only ' +
    'Impersonation, Delegation, and Primary tokens are suitable.';
 
-  GETTER_QUERY = 'You need `Query` access right to obtain this information ' +
-    'from the token';
-  GETTER_QUERY_SOURCE = 'You need `Query Source` access right to obtain ' +
-    'this information from the token';
-
-  SETTER_DEFAULT = '`Adjust default` access right is required to change this ' +
-  'information class for the token';
-  SETTER_SESSION = 'To change the session of a token you need to ' +
-    'have `Adjust SessionId` and `Adjust default` '+
-    'access rights for the token.';
   SETTER_OWNER = 'Only those groups from the token that are marked with ' +
     '`Owner` flag and the user itself can be set as an owner.';
   SETTER_PRIMARY = 'The SID must present in the group list of the token to be ' +
     'suitable as a primary group.';
-  SETTER_PRIVILEGES_ACCESS = 'You need to have `Adjust privileges` access ' +
-    'right for the token.';
   SETTER_PRIVILEGES_OTHER = 'You can''t enable some privileges if the ' +
    'integrity level of the token is too low.';
-  SETTER_GROUPS_ACCESS = 'This action requires `Adjust groups` access right.';
-  SETTER_GROUPS_MODIFY = 'You can''t disable `Mandatory` groups ' +
-    'just like you can''t enable `Use for deny only` groups.';
+  SETTER_GROUPS_MODIFY = 'You can''t disable Mandatory groups ' +
+    'just like you can''t enable Use-for-deny-only groups.';
   SETTER_AUDIT_ONCE = 'This is not an informative error, but the problem ' +
     'might be caused by an already set auditing policy for the token.';
 
@@ -88,9 +73,6 @@ begin
   if E.Matches('NtDuplicateToken', STATUS_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_DUPLICATE_IMP);
 
-  if E.Matches('NtFilterToken', STATUS_ACCESS_DENIED)  then
-    Exit(NEW_RESTCICT_ACCESS);
-
   if E.Matches('SaferComputeTokenFromLevel', ERROR_BAD_IMPERSONATION_LEVEL) then
     Exit(NEW_SAFER_IMP);
 end;
@@ -109,41 +91,8 @@ begin
   Result := (E.ErrorCode = ErrorCode) and MatchesInfoClass(E, InfoClass);
 end;
 
-function SuggestGetter(E: ENtError): String;
-begin
-  if E.ErrorLocation <> 'NtQueryInformationToken' then
-    Exit('');
-
-  if E.ErrorCode = ERROR_ACCESS_DENIED then
-  begin
-    if MatchesInfoClass(E, TokenSource) then
-      Exit(GETTER_QUERY_SOURCE)
-    else
-      Exit(GETTER_QUERY);
-  end;
-end;
-
 function SuggestSetter(E: ENtError): String;
 begin
-  if E.ErrorLocation <> 'NtSetInformationToken' then
-    Exit('');
-
-  if E.ErrorCode = ERROR_ACCESS_DENIED then
-  begin
-    if MatchesInfoClass(E, TokenSessionId) then
-      Exit(SETTER_SESSION);
-
-    if MatchesInfoClass(E, TokenIntegrityLevel)
-      or MatchesInfoClass(E, TokenUIAccess)
-      or MatchesInfoClass(E, TokenMandatoryPolicy)
-      or MatchesInfoClass(E, TokenOwner)
-      or MatchesInfoClass(E, TokenPrimaryGroup)
-      or MatchesInfoClass(E, TokenOrigin)
-      or MatchesInfoClass(E, TokenVirtualizationAllowed)
-      or MatchesInfoClass(E, TokenVirtualizationEnabled) then
-      Exit(SETTER_DEFAULT);
-  end;
-
   if MatchesInfoClassAndCode(E, TokenOwner, ERROR_INVALID_OWNER) then
     Exit(SETTER_OWNER);
 
@@ -153,20 +102,11 @@ begin
   if MatchesInfoClassAndCode(E, TokenAuditPolicy, ERROR_INVALID_PARAMETER) then
     Exit(SETTER_AUDIT_ONCE);
 
-  if E.ErrorLocation = 'NtAdjustPrivilegesToken' then
-  begin
-    if E.ErrorCode = STATUS_ACCESS_DENIED then
-      Exit(SETTER_PRIVILEGES_ACCESS);
-
-    if E.ErrorCode = STATUS_NOT_ALL_ASSIGNED then
-      Exit(SETTER_PRIVILEGES_OTHER);
-  end;
+  if E.Matches('NtAdjustPrivilegesToken', STATUS_NOT_ALL_ASSIGNED) then
+    Exit(SETTER_PRIVILEGES_OTHER);
 
   if E.ErrorLocation = 'NtAdjustGroupsToken' then
   begin
-    if E.ErrorCode = STATUS_ACCESS_DENIED then
-      Exit(SETTER_GROUPS_ACCESS);
-
     if E.ErrorCode = STATUS_CANT_ENABLE_DENY_ONLY then
       Exit(SETTER_GROUPS_MODIFY);
 
@@ -191,10 +131,6 @@ end;
 
 function SuggestAll(E: ENtError): String;
 begin
-  Result := SuggestGetter(ENtError(E));
-  if Result <> '' then
-    Exit(Format(SUGGEST_TEMPLATE, [Result]));
-
   Result := SuggestSetter(ENtError(E));
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
@@ -203,6 +139,17 @@ begin
   if Result <> '' then
     Exit(Format(SUGGEST_TEMPLATE, [Result]));
 
+end;
+
+procedure AddExpectedAccessList(ENt: ENtError; var Msg: String);
+var
+  i: Integer;
+begin
+  with ENt.LastCall do
+    for i := 0 to High(ExpectedAccess) do
+      with ExpectedAccess[i] do
+        Msg := Msg + #$D#$A + 'Expected ' + GetAccessTypeName(AccessMaskType) +
+          ' access : ' + FormatAccess(AccessMask, AccessMaskType);
 end;
 
 function GetPrivilegeName(Value: TSeWellKnownPrivilege): string;
@@ -254,8 +201,13 @@ begin
 
     case ENt.LastCall.CallType of
       lcOpenCall:
-        Msg := Msg + #$D#$A + 'Desired access: ' + FormatAccess(
-          ENt.LastCall.AccessMask, ENt.LastCall.AccessMaskType);
+      begin
+        Msg := Msg + #$D#$A + 'Desired ' +
+          GetAccessTypeName(ENt.LastCall.AccessMaskType) + ' access: ' +
+          FormatAccess(ENt.LastCall.AccessMask, ENt.LastCall.AccessMaskType);
+
+        AddExpectedAccessList(ENt, Msg);
+      end;
       lcQuerySetCall:
         Msg := Msg + #$D#$A + 'Information class: ' + GetEnumName(
           ENt.LastCall.InfoClassType, Integer(ENt.LastCall.InfoClass));
@@ -266,6 +218,14 @@ begin
 
     if ENt.ErrorCode = STATUS_PRIVILEGE_NOT_HELD then
       Msg := Msg + GetPrivilegeName(ENt.LastCall.ExpectedPrivilege);
+
+    if (ENt.ErrorCode = STATUS_ACCESS_DENIED) and
+      (ENt.LastCall.CallType <> lcOpenCall) and
+      (Length(ENt.LastCall.ExpectedAccess) > 0) then
+    begin
+      Msg := Msg + #$D#$A;
+      AddExpectedAccessList(ENt, Msg);
+    end;
 
     Msg := Msg + SuggestAll(ENt);
 

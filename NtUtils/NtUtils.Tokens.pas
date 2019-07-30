@@ -125,7 +125,7 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntpsapi, NtUtils.Objects,
   NtUtils.Tokens.Misc, NtUtils.Processes, NtUtils.Tokens.Impersonate,
-  NtUtils.Threads;
+  NtUtils.Threads, NtUtils.Access.Expected;
 
 { Creation }
 
@@ -136,6 +136,7 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objNtToken;
+  Result.LastCall.Expects(PROCESS_QUERY_LIMITED_INFORMATION, objNtProcess);
 
   Result.Status := NtOpenProcessTokenEx(hProcess, DesiredAccess,
     HandleAttributes, hToken);
@@ -164,9 +165,11 @@ begin
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
   Result.LastCall.AccessMaskType := TAccessMaskType.objNtToken;
+  Result.LastCall.Expects(THREAD_QUERY_LIMITED_INFORMATION, objNtProcess);
 
-  // When opening other threads use effective (thread) security context. When
-  // reading a token from the current thread use the process security context
+  // When opening other thread's token use our effective (thread) security
+  // context. When reading a token from the current thread use the process'
+  // security context.
 
   Result.Status := NtOpenThreadTokenEx(hThread, DesiredAccess,
     (hThread = NtCurrentThread), HandleAttributes, hToken);
@@ -204,11 +207,11 @@ begin
   // security context of the client thread. We use our thead as a server and the
   // target thread as a client, and then read the token from our thread.
 
-  // The server thread handle requires THREAD_IMPERSONATE access.
-  // The client thread handle requires THREAD_DIRECT_IMPERSONATION access.
-  // No access checks are performed on the token, we obtain a copy of it.
-
   Result.Location := 'NtImpersonateThread';
+  Result.LastCall.Expects(THREAD_IMPERSONATE, objNtThread);          // Server
+  Result.LastCall.Expects(THREAD_DIRECT_IMPERSONATION, objNtThread); // Client
+  // No access checks are performed on the client's token, we obtain a copy
+
   Result.Status := NtImpersonateThread(NtCurrentThread, hThread, QoS);
 
   if not Result.IsSuccess then
@@ -254,6 +257,8 @@ begin
   InitializeObjectAttributes(ObjAttr, nil, HandleAttributes, 0, @QoS);
 
   Result.Location := 'NtDuplicateToken';
+  Result.LastCall.Expects(TOKEN_DUPLICATE, objNtToken);
+
   Result.Status := NtDuplicateToken(hExistingToken, DesiredAccess, @ObjAttr,
     EffectiveOnly, TokenType, hToken);
 end;
@@ -268,6 +273,8 @@ begin
 
   // Set our thread to impersonate anonymous token
   Result.Location := 'NtImpersonateAnonymousToken';
+  Result.LastCall.Expects(THREAD_IMPERSONATE, objNtThread);
+
   Result.Status := NtImpersonateAnonymousToken(NtCurrentThread);
 
   // Read the token from the thread
@@ -294,6 +301,8 @@ begin
   DeletePrivileges := NtxpAllocPrivileges(PrivilegesToDelete, 0);
 
   Result.Location := 'NtFilterToken';
+  Result.LastCall.Expects(TOKEN_DUPLICATE, objNtToken);
+
   Result.Status := NtFilterToken(hToken, Flags, DisableSids, DeletePrivileges,
     RestrictSids, hNewToken);
 
@@ -356,6 +365,7 @@ begin
 
   Result.Location := 'NtCreateToken';
   Result.LastCall.ExpectedPrivilege := SE_CREATE_TOKEN_PRIVILEGE;
+
   Result.Status := NtCreateToken(hToken, DesiredAccess, @ObjAttr, TokenType,
     AuthenticationId, ExpirationTime, TokenUser, TokenGroups, TokenPrivileges,
     pTokenOwnerRef, TokenPrimaryGroup, pTokenDefaultDaclRef, TokenSource);
@@ -376,6 +386,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
+  RtlxComputeTokenQueryAccess(Result.LastCall, InfoClass);
 
   Result.Status := NtQueryInformationToken(hToken, InfoClass, @Buffer,
     SizeOf(Buffer), ReturnedBytes);
@@ -384,23 +395,7 @@ end;
 class function NtxToken.SetInfo<T>(hToken: THandle;
   InfoClass: TTokenInformationClass; const Buffer: T): TNtxStatus;
 begin
-  Result.Location := 'NtSetInformationToken';
-  Result.LastCall.CallType := lcQuerySetCall;
-  Result.LastCall.InfoClass := Cardinal(InfoClass);
-  Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
-
-  // Fixed-size info classes only
-  case InfoClass of
-    TokenSessionId, TokenSessionReference, TokenOrigin, TokenIntegrityLevel,
-    TokenUIAccess, TokenMandatoryPolicy:
-      Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
-
-    TokenLinkedToken, TokenVirtualizationAllowed:
-      Result.LastCall.ExpectedPrivilege := SE_CREATE_TOKEN_PRIVILEGE;
-  end;
-
-  Result.Status := NtSetInformationToken(hToken, InfoClass, @Buffer,
-    SizeOf(Buffer));
+  Result := NtxSetInformationToken(hToken, InfoClass, @Buffer, SizeOf(Buffer));
 end;
 
 function NtxQueryBufferToken(hToken: THandle; InfoClass: TTokenInformationClass;
@@ -412,12 +407,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
-
-  // Variable-size info classes only
-  case InfoClass of
-    TokenAuditPolicy:
-      Status.LastCall.ExpectedPrivilege := SE_SECURITY_PRIVILEGE;
-  end;
+  RtlxComputeTokenQueryAccess(Status.LastCall, InfoClass);
 
   BufferSize := 0;
   repeat
@@ -447,12 +437,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TTokenInformationClass);
-
-  // Variable-size info classes only
-  case InfoClass of
-    TokenAuditPolicy:
-      Result.LastCall.ExpectedPrivilege := SE_TCB_PRIVILEGE;
-  end;
+  RtlxComputeTokenSetAccess(Result.LastCall, InfoClass);
 
   Result.Status := NtSetInformationToken(hToken, InfoClass, TokenInformation,
     TokenInformationLength);
@@ -622,8 +607,9 @@ begin
   Buffer := NtxpAllocPrivileges(Privileges, NewAttribute);
 
   Result.Location := 'NtAdjustPrivilegesToken';
-  Result.Status := NtAdjustPrivilegesToken(hToken, False, Buffer, 0, nil, nil);
+  Result.LastCall.Expects(TOKEN_ADJUST_PRIVILEGES, objNtToken);
 
+  Result.Status := NtAdjustPrivilegesToken(hToken, False, Buffer, 0, nil, nil);
   FreeMem(Buffer);
 end;
 
@@ -645,9 +631,10 @@ begin
   Buffer := NtxpAllocGroups(Sids, NewAttribute);
 
   Result.Location := 'NtAdjustGroupsToken';
+  Result.LastCall.Expects(TOKEN_ADJUST_GROUPS, objNtToken);
+
   Result.Status := NtAdjustGroupsToken(hToken, ResetToDefault, Buffer, 0, nil,
     nil);
-
   FreeMem(Buffer);
 end;
 

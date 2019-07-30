@@ -148,6 +148,8 @@ end;
 function NtxDeleteKey(hKey: THandle): TNtxStatus;
 begin
   Result.Location := 'NtDeleteKey';
+  Result.LastCall.Expects(_DELETE, objNtKey);
+
   Result.Status := NtDeleteKey(hKey);
 end;
 
@@ -157,6 +159,12 @@ var
 begin
   NewNameStr.FromString(NewName);
   Result.Location := 'NtRenameKey';
+  Result.LastCall.Expects(READ_CONTROL or KEY_SET_VALUE or KEY_CREATE_SUB_KEY,
+    objNtKey);
+
+  // Or READ_CONTROL | KEY_NOTIFY | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE
+  // in case of enabled virtualization
+
   Result.Status := NtRenameKey(hKey, NewNameStr)
 end;
 
@@ -171,6 +179,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(KeyBasicInformation);
   Result.LastCall.InfoClassType := TypeInfo(TKeyInformationClass);
+  Result.LastCall.Expects(KEY_ENUMERATE_SUB_KEYS, objNtKey);
 
   SetLength(SubKeys, 0);
 
@@ -216,6 +225,9 @@ begin
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TKeyInformationClass);
 
+  if not (InfoClass in [KeyNameInformation, KeyHandleTagsInformation]) then
+    Status.LastCall.Expects(KEY_QUERY_VALUE, objNtKey);
+
   BufferSize := 0;
   repeat
     Result := AllocMem(BufferSize);
@@ -257,6 +269,9 @@ begin
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TKeyInformationClass);
 
+  if not (InfoClass in [KeyNameInformation, KeyHandleTagsInformation]) then
+    Result.LastCall.Expects(KEY_QUERY_VALUE, objNtKey);
+
   Result.Status := NtQueryKey(hKey, InfoClass, @Buffer, SizeOf(Buffer),
     Returned);
 end;
@@ -268,6 +283,12 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(InfoClass);
   Result.LastCall.InfoClassType := TypeInfo(TKeySetInformationClass);
+
+  if InfoClass <> KeySetHandleTagsInformation then
+    Result.LastCall.Expects(KEY_SET_VALUE, objNtKey);
+
+  // Or READ_CONTROL | KEY_NOTIFY | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE
+  // in case of enabled virtualization
 
   Result.Status := NtSetInformationKey(hKey, InfoClass, @Buffer,
     SizeOf(Buffer));
@@ -286,6 +307,7 @@ begin
   Result.LastCall.CallType := lcQuerySetCall;
   Result.LastCall.InfoClass := Cardinal(KeyValueBasicInformation);
   Result.LastCall.InfoClassType := TypeInfo(TKeyValueInformationClass);
+  Result.LastCall.Expects(KEY_QUERY_VALUE, objNtKey);
 
   SetLength(ValueNames, 0);
 
@@ -334,6 +356,7 @@ begin
   Status.LastCall.CallType := lcQuerySetCall;
   Status.LastCall.InfoClass := Cardinal(InfoClass);
   Status.LastCall.InfoClassType := TypeInfo(TKeyValueInformationClass);
+  Status.LastCall.Expects(KEY_QUERY_VALUE, objNtKey);
 
   BufferSize := 0;
 
@@ -481,6 +504,8 @@ var
 begin
   ValueNameStr.FromString(ValueName);
   Result.Location := 'NtSetValueKey';
+  Result.LastCall.Expects(KEY_SET_VALUE, objNtKey);
+
   Result.Status := NtSetValueKey(hKey, ValueNameStr, 0, ValueType, Data,
     DataSize);
 end;
@@ -530,6 +555,11 @@ var
 begin
   ValueNameStr.FromString(ValueName);
   Result.Location := 'NtDeleteValueKey';
+  Result.LastCall.Expects(KEY_SET_VALUE, objNtKey);
+
+  // Or READ_CONTROL | KEY_NOTIFY | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE
+  // in case of enabled virtualization
+
   Result.Status := NtDeleteValueKey(hKey, ValueNameStr);
 end;
 

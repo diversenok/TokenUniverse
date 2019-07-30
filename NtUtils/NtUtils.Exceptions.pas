@@ -16,8 +16,15 @@ type
     objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
     objSamAlias, objSamUser);
 
+  TExpectedAccess = record
+    AccessMask: TAccessMask;
+    AccessMaskType: TAccessMaskType;
+  end;
+
   TLastCallInfo = record
     ExpectedPrivilege: TSeWellKnownPrivilege;
+    ExpectedAccess: array of TExpectedAccess;
+    procedure Expects(AccessMask: TAccessMask; AccessMaskType: TAccessMaskType);
   case CallType: TLastCallType of
     lcOpenCall:
       (AccessMask: TAccessMask; AccessMaskType: TAccessMaskType);
@@ -93,6 +100,17 @@ uses
   Ntapi.ntrtl, Ntapi.ntstatus, Winapi.WinBase, Winapi.WinError,
   NtUtils.ErrorMsg;
 
+{ TLastCallInfo }
+
+procedure TLastCallInfo.Expects(AccessMask: TAccessMask;
+  AccessMaskType: TAccessMaskType);
+begin
+  // Add new access mask
+  SetLength(ExpectedAccess, Length(ExpectedAccess) + 1);
+  ExpectedAccess[High(ExpectedAccess)].AccessMask := AccessMask;
+  ExpectedAccess[High(ExpectedAccess)].AccessMaskType := AccessMaskType;
+end;
+
 { TNtxStatus }
 
 procedure TNtxStatus.FromLastWin32(RetValue: Boolean);
@@ -147,7 +165,8 @@ end;
 procedure TNtxStatus.SetLocation(Value: String);
 begin
   FLocation := Value;
-  FillChar(LastCall, SizeOf(LastCall), 0);
+  LastCall.ExpectedAccess := nil; // Free the dynamic array
+  FillChar(LastCall, SizeOf(LastCall), 0); // Zero all other fields
 end;
 
 procedure TNtxStatus.SetWinError(Value: Cardinal);

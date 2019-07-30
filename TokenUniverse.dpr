@@ -83,7 +83,7 @@ uses
   Ntapi.ntmmapi in 'Headers\Ntapi.ntmmapi.pas',
   NtUtils.Exec.Nt in 'NtUtils\NtUtils.Exec.Nt.pas',
   NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas',
-  NtUtils.AccessMasks in 'NtUtils\NtUtils.AccessMasks.pas',
+  NtUtils.Access in 'NtUtils\NtUtils.Access.pas',
   NtUtils.Processes in 'NtUtils\NtUtils.Processes.pas',
   NtUtils.Objects in 'NtUtils\NtUtils.Objects.pas',
   NtUtils.Tokens in 'NtUtils\NtUtils.Tokens.pas',
@@ -109,7 +109,8 @@ uses
   NtUtils.Registry in 'NtUtils\NtUtils.Registry.pas',
   NtUtils.Registry.HKCU in 'NtUtils\NtUtils.Registry.HKCU.pas',
   NtUtils.WinSafer in 'NtUtils\NtUtils.WinSafer.pas',
-  NtUtils.Threads in 'NtUtils\NtUtils.Threads.pas';
+  NtUtils.Threads in 'NtUtils\NtUtils.Threads.pas',
+  NtUtils.Access.Expected in 'NtUtils\NtUtils.Access.Expected.pas';
 
 {$R *.res}
 

@@ -1,4 +1,4 @@
-unit NtUtils.AccessMasks;
+unit NtUtils.Access;
 
 interface
 
@@ -8,6 +8,8 @@ uses
 function FormatAccess(Access: TAccessMask; MaskType: TAccessMaskType): String;
 function FormatAccessPrefixed(Access: TAccessMask;
   MaskType: TAccessMaskType): String;
+
+function GetAccessTypeName(MaskType: TAccessMaskType): String;
 
 implementation
 
@@ -376,6 +378,21 @@ function FormatAccessPrefixed(Access: TAccessMask;
   MaskType: TAccessMaskType): String;
 begin
   Result := IntToHexEx(Access, 6) + ' (' + FormatAccess(Access, MaskType) + ')';
+end;
+
+function GetAccessTypeName(MaskType: TAccessMaskType): String;
+const
+  TypeNames: array [TAccessMaskType] of String = (
+    'object', 'process', 'thread', 'job', 'token', 'registry', 'desktop',
+    'window station', 'policy', 'account', 'SCM', 'service',
+    'SAM', 'domain', 'group', 'alias', 'user'
+  );
+begin
+  if (MaskType >= Low(TAccessMaskType)) and
+    (MaskType <= High(TAccessMaskType)) then
+    Result := TypeNames[MaskType]
+  else
+    Result := '[invalid]';
 end;
 
 end.

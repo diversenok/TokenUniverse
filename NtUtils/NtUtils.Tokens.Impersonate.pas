@@ -75,13 +75,8 @@ end;
 
 function NtxSetThreadToken(hThread: THandle; hToken: THandle): TNtxStatus;
 begin
-  Result.Location := 'NtSetInformationThread';
-  Result.LastCall.CallType := lcQuerySetCall;
-  Result.LastCall.InfoClass := Cardinal(ThreadImpersonationToken);
-  Result.LastCall.InfoClassType := TypeInfo(TThreadInfoClass);
-
-  Result.Status := NtSetInformationThread(hThread, ThreadImpersonationToken,
-    @hToken, SizeOf(hToken));
+  Result := NtxThread.SetInfo<THandle>(hThread, ThreadImpersonationToken,
+    hToken);
 
   // TODO: what about inconsistency with NtCurrentTeb.IsImpersonating ?
 end;
@@ -222,7 +217,7 @@ begin
   // Try to impersonate (in case it is an impersonation-type token)
   Result := NtxSetThreadToken(NtCurrentThread, hToken);
 
-  if Result.Status = STATUS_BAD_TOKEN_TYPE then
+  if Result.Matches(STATUS_BAD_TOKEN_TYPE, 'NtSetInformationThread') then
   begin
     // Nope, it is a primary token, duplicate it
     Result := NtxDuplicateToken(hImpToken, hToken, TOKEN_IMPERSONATE,

@@ -401,7 +401,7 @@ implementation
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Objects,
   NtUtils.Processes, NtUtils.WinStation, NtUtils.Strings, NtUtils.Tokens,
-  NtUtils.Tokens.Impersonate, NtUtils.AccessMasks, DelphiUtils.Strings,
+  NtUtils.Tokens.Impersonate, NtUtils.Access, DelphiUtils.Strings,
   System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc,
   NtUtils.WinSafer;
 

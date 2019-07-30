@@ -125,7 +125,7 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, DelphiUtils.Strings, NtUtils.Strings,
-  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.AccessMasks, NtUtils.Exceptions;
+  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.Access, NtUtils.Exceptions;
 
 const
   TAB_INVALIDATED = 0;

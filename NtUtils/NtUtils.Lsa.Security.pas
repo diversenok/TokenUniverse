@@ -69,6 +69,8 @@ function LsaxQuerySecurityObject(LsaHandle: TLsaHandle; SecurityInformation:
   TSecurityInformation; out SecDesc: PSecurityDescriptor): TNtxStatus;
 begin
   Result.Location := 'LsaQuerySecurityObject';
+  Result.LastCall.Expects(RtlxComputeReadAccess(SecurityInformation), objNone);
+
   Result.Status := LsaQuerySecurityObject(LsaHandle, SecurityInformation,
     SecDesc);
 end;
@@ -152,6 +154,8 @@ function LsaxSetSecurityObject(LsaHandle: TLsaHandle; SecInfo:
   TSecurityInformation; const SecDesc: TSecurityDescriptor): TNtxStatus;
 begin
   Result.Location := 'LsaSetSecurityObject';
+  Result.LastCall.Expects(RtlxComputeWriteAccess(SecInfo), objNone);
+
   Result.Status := LsaSetSecurityObject(LsaHandle, SecInfo, SecDesc);
 end;
 

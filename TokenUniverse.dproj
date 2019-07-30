@@ -274,7 +274,7 @@
         <DCCReference Include="Headers\Ntapi.ntmmapi.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Nt.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.AccessMasks.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Access.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.pas"/>
@@ -301,6 +301,7 @@
         <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Threads.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Access.Expected.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

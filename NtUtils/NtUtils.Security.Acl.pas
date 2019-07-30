@@ -80,6 +80,12 @@ function RtlxPrepareDaclSD(var SecDesc: TSecurityDescriptor; Dacl: IAcl):
 function RtlxPrepareSaclSD(var SecDesc: TSecurityDescriptor; Sacl: IAcl):
   TNtxStatus;
 
+// Compute required access to read/write security
+function RtlxComputeReadAccess(SecurityInformation: TSecurityInformation)
+  : TAccessMask;
+function RtlxComputeWriteAccess(SecurityInformation: TSecurityInformation)
+  : TAccessMask;
+
 implementation
 
 uses
@@ -438,6 +444,51 @@ begin
       False)
   else
     Result.Status := RtlSetSaclSecurityDescriptor(SecDesc, True, nil, False);
+end;
+
+function RtlxComputeReadAccess(SecurityInformation: TSecurityInformation)
+  : TAccessMask;
+const
+  REQUIRE_READ_CONTROL = OWNER_SECURITY_INFORMATION or
+    GROUP_SECURITY_INFORMATION or DACL_SECURITY_INFORMATION or
+    LABEL_SECURITY_INFORMATION or ATTRIBUTE_SECURITY_INFORMATION or
+    SCOPE_SECURITY_INFORMATION or BACKUP_SECURITY_INFORMATION;
+  REQUIRE_SYSTEM_SECURITY = SACL_SECURITY_INFORMATION or
+    BACKUP_SECURITY_INFORMATION;
+begin
+  Result := 0;
+
+  if SecurityInformation and REQUIRE_READ_CONTROL <> 0 then
+    Result := Result or READ_CONTROL;
+
+  if SecurityInformation and REQUIRE_SYSTEM_SECURITY <> 0 then
+    Result := Result or ACCESS_SYSTEM_SECURITY;
+end;
+
+function RtlxComputeWriteAccess(SecurityInformation: TSecurityInformation)
+  : TAccessMask;
+const
+  REQUIRE_WRITE_DAC = DACL_SECURITY_INFORMATION or
+    ATTRIBUTE_SECURITY_INFORMATION or BACKUP_SECURITY_INFORMATION or
+    PROTECTED_DACL_SECURITY_INFORMATION or
+    UNPROTECTED_DACL_SECURITY_INFORMATION;
+  REQUIRE_WRITE_OWNER = OWNER_SECURITY_INFORMATION or GROUP_SECURITY_INFORMATION
+    or LABEL_SECURITY_INFORMATION or BACKUP_SECURITY_INFORMATION;
+  REQUIRE_SYSTEM_SECURITY = SACL_SECURITY_INFORMATION or
+    SCOPE_SECURITY_INFORMATION or
+    BACKUP_SECURITY_INFORMATION or PROTECTED_SACL_SECURITY_INFORMATION or
+    UNPROTECTED_SACL_SECURITY_INFORMATION;
+begin
+  Result := 0;
+
+  if SecurityInformation and REQUIRE_WRITE_DAC <> 0 then
+    Result := Result or WRITE_DAC;
+
+  if SecurityInformation and REQUIRE_WRITE_OWNER <> 0 then
+    Result := Result or WRITE_OWNER;
+
+  if SecurityInformation and REQUIRE_SYSTEM_SECURITY <> 0 then
+    Result := Result or ACCESS_SYSTEM_SECURITY;
 end;
 
 end.
