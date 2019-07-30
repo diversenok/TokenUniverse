@@ -93,6 +93,13 @@ function NtxQueryGroupsToken(hToken: THandle; InfoClass: TTokenInformationClass;
 function NtxQueryPrivilegesToken(hToken: THandle;
   out Privileges: TArray<TPrivilege>): TNtxStatus;
 
+// Query default DACL
+function NtxQueryDefaultDaclToken(hToken: THandle; out DefaultDacl: IAcl):
+  TNtxStatus;
+
+// Set default DACL
+function NtxSetDefaultDaclToken(hToken: THandle; DefaultDacl: IAcl): TNtxStatus;
+
 // Query token statistic (requires either Query or Duplicate access)
 function NtxQueryStatisticsToken(hToken: THandle;
   out Statistics: TTokenStatistics): TNtxStatus;
@@ -519,6 +526,34 @@ begin
     Privileges[i] := Buffer.Privileges{$R-}[i]{$R+};
 
   FreeMem(Buffer);
+end;
+
+function NtxQueryDefaultDaclToken(hToken: THandle; out DefaultDacl: IAcl):
+  TNtxStatus;
+var
+  Buffer: PTokenDefaultDacl;
+begin
+  Buffer := NtxQueryBufferToken(hToken, TokenDefaultDacl, Result);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  try
+    if Assigned(Buffer.DefaultDacl) then
+      DefaultDacl := TAcl.CreateCopy(Buffer.DefaultDacl)
+    else
+      DefaultDacl := nil;
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
+function NtxSetDefaultDaclToken(hToken: THandle; DefaultDacl: IAcl): TNtxStatus;
+var
+  Dacl: TTokenDefaultDacl;
+begin
+  Dacl.DefaultDacl := DefaultDacl.Acl;
+  Result := NtxToken.SetInfo<TTokenDefaultDacl>(hToken, TokenDefaultDacl, Dacl);
 end;
 
 function NtxQueryStatisticsToken(hToken: THandle;

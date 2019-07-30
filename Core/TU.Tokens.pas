@@ -8,7 +8,8 @@ uses
   Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
   TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
   NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
-  System.Generics.Collections, NtUtils.Exceptions, NtUtils.Lsa.Logon;
+  System.Generics.Collections, NtUtils.Exceptions, NtUtils.Lsa.Logon,
+  NtUtils.Security.Acl;
 
 type
   /// <summary>
@@ -45,6 +46,7 @@ type
     Privileges: TArray<TPrivilege>;
     Owner: ISid;
     PrimaryGroup: ISid;
+    DefaultDacl: IAcl;
     Source: TTokenSource;
     TokenType: TTokenTypeEx;
     Statistics: TTokenStatistics;
@@ -76,6 +78,7 @@ type
     FOnPrivilegesChange: TCachingEvent<TArray<TPrivilege>>;
     FOnGroupsChange: TCachingEvent<TArray<TGroup>>;
     FOnStatisticsChange: TCachingEvent<TTokenStatistics>;
+    FOnDefaultDaclChange: TEvent<IAcl>;
     OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
 
     ObjectAddress: NativeUInt;
@@ -97,6 +100,7 @@ type
     property OnPrivilegesChange: TCachingEvent<TArray<TPrivilege>> read FOnPrivilegesChange;
     property OnGroupsChange: TCachingEvent<TArray<TGroup>> read FOnGroupsChange;
     property OnStatisticsChange: TCachingEvent<TTokenStatistics> read FOnStatisticsChange;
+    property OnDefaultDaclChange: TEvent<IAcl> read FOnDefaultDaclChange;
 
     /// <summary>
     ///  Calls the event listener with the newly obtained string and subscribes
@@ -145,9 +149,11 @@ type
     function GetUser: TGroup;
     function GetLogonSessionInfo: ILogonSession;
     function GetIsRestricted: LongBool;
+    function GetDefaultDacl: IAcl;
     procedure InvokeStringEvent(StringClass: TTokenStringClass);
     procedure SetVirtualizationAllowed(const Value: LongBool);
     procedure SetVirtualizationEnabled(const Value: LongBool);
+    procedure SetDefaultDacl(Value: IAcl);
     function GetObjectInfo: TObjectBasicInformaion;
   public
     property User: TGroup read GetUser;                                         // class 1
@@ -155,7 +161,7 @@ type
     property Privileges: TArray<TPrivilege> read GetPrivileges;                    // class 3
     property Owner: ISid read GetOwner write SetOwner;                          // class 4 #settable
     property PrimaryGroup: ISid read GetPrimaryGroup write SetPrimaryGroup;     // class 5 #settable
-    // TODO: class 6: DefaultDacl #settable
+    property DefaultDacl: IAcl read GetDefaultDacl write SetDefaultDacl;        // class 6 #settable
     property Source: TTokenSource read GetSource;                               // classes 7 & 8
     property TokenTypeInfo: TTokenTypeEx read GetTokenType;                     // class 9
     property Statistics: TTokenStatistics read GetStatistics;                   // class 10
@@ -938,6 +944,12 @@ begin
   Result := Token.Cache.AuditPolicy;
 end;
 
+function TTokenData.GetDefaultDacl: IAcl;
+begin
+  Assert(Token.Cache.IsCached[tdTokenDefaultDacl]);
+  Result := Token.Cache.DefaultDacl;
+end;
+
 function TTokenData.GetElevation: TTokenElevationType;
 begin
   Assert(Token.Cache.IsCached[tdTokenElevation]);
@@ -1284,7 +1296,14 @@ begin
          InvokeStringEvent(tsPrimaryGroup);
     end;
 
-    tdTokenDefaultDacl: ; // Not implemented
+    tdTokenDefaultDacl:
+    begin
+      Result := NtxQueryDefaultDaclToken(Token.hToken,
+        Token.Cache.DefaultDacl).IsSuccess;
+
+      if Result then
+        Token.Events.OnDefaultDaclChange.Invoke(Token.Cache.DefaultDacl);
+    end;
 
     tdTokenSource:
       Result := NtxToken.Query<TTokenSource>(Token.hToken, TokenSource,
@@ -1464,6 +1483,12 @@ begin
   // Update the cache and notify event listeners
   ValidateCache(tdTokenAuditPolicy);
   ValidateCache(tdTokenStatistics);
+end;
+
+procedure TTokenData.SetDefaultDacl(Value: IAcl);
+begin
+  NtxSetDefaultDaclToken(Token.hToken, Value).RaiseOnError;
+  ValidateCache(tdTokenDefaultDacl);
 end;
 
 procedure TTokenData.SetIntegrityLevel(const Value: Cardinal);
