@@ -110,7 +110,8 @@ uses
   NtUtils.Registry.HKCU in 'NtUtils\NtUtils.Registry.HKCU.pas',
   NtUtils.WinSafer in 'NtUtils\NtUtils.WinSafer.pas',
   NtUtils.Threads in 'NtUtils\NtUtils.Threads.pas',
-  NtUtils.Access.Expected in 'NtUtils\NtUtils.Access.Expected.pas';
+  NtUtils.Access.Expected in 'NtUtils\NtUtils.Access.Expected.pas',
+  NtUtils.Objects.Compare in 'NtUtils\NtUtils.Objects.Compare.pas';
 
 {$R *.res}
 

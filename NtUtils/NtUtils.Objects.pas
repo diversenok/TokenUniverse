@@ -37,15 +37,10 @@ function NtxWaitForSingleObject(hObject: THandle; Alertable: Boolean;
   Timeout: Int64): TNtxStatus; overload;
 function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;
 
-// Check whether two handles point to the same kernel object
-function NtxCompareObjects(hObject1, hObject2: THandle;
-  ObjectTypeName: String = ''): NTSTATUS;
-
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntpsapi, System.SysUtils, NtUtils.Ldr,
-  NtUtils.Objects.Snapshots, NtUtils.Tokens;
+  Ntapi.ntstatus, Ntapi.ntpsapi, System.SysUtils;
 
 function NtxSafeClose(var hObject: THandle): NTSTATUS;
 begin
@@ -281,78 +276,6 @@ begin
   Result.LastCall.Expects(SYNCHRONIZE, objNone);
 
   Result.Status := NtWaitForSingleObject(hObject, True, nil);
-end;
-
-function NtxCompareObjects(hObject1, hObject2: THandle;
-  ObjectTypeName: String = ''): NTSTATUS;
-var
-  Type1, Type2: TObjectTypeInfo;
-  Name1, Name2: String;
-  Handles: TArray<THandleEntry>;
-  i, j: Integer;
-begin
-  if hObject1 = hObject2 then
-    Exit(STATUS_SUCCESS);
-
-  // Win 10 TH+ makes things way easier
-  if LdrxCheckNtDelayedImport('NtCompareObjects').IsSuccess then
-    Exit(NtCompareObjects(hObject1, hObject2));
-
-  // Get object's type if the caller didn't specify it
-  if ObjectTypeName = '' then
-    if NtxQueryTypeObject(hObject1, Type1).IsSuccess and
-      NtxQueryTypeObject(hObject2, Type2).IsSuccess then
-    begin
-      if Type1.Other.TypeIndex <> Type2.Other.TypeIndex then
-        Exit(STATUS_NOT_SAME_OBJECT);
-
-      ObjectTypeName := Type1.TypeName;
-    end;
-
-  // Perform type-specific comparison
-  if ObjectTypeName <> '' then
-  begin
-    Result := STATUS_OBJECT_TYPE_MISMATCH;
-
-    if ObjectTypeName = 'Token' then
-      Result := NtxpCompareTokenIds(hObject1, hObject2);
-
-    // TODO: add more types
-
-    case Result of
-      STATUS_SUCCESS, STATUS_NOT_SAME_OBJECT:
-        Exit;
-    end;
-  end;
-
-  // Compare named objects
-  if NtxQueryNameObject(hObject1, Name1).IsSuccess and
-    NtxQueryNameObject(hObject2, Name2).IsSuccess then
-    if (Name1 <> Name2) then
-      Exit(STATUS_NOT_SAME_OBJECT)
-    else if Name1 <> '' then
-      Exit(STATUS_SUCCESS);
-
-  // The last resort is to proceed via a handle snapshot
-  Result := NtxEnumerateSystemHandles(Handles).Status;
-
-  if not NT_SUCCESS(Result) then
-    Exit;
-
-  NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);
-
-  for i := 0 to High(Handles) do
-    if Handles[i].HandleValue = hObject1 then
-      for j := i + 1 to High(Handles) do
-        if Handles[j].HandleValue = hObject2 then
-        begin
-          if Handles[i].PObject = Handles[j].PObject then
-            Exit(STATUS_SUCCESS)
-          else
-            Exit(STATUS_NOT_SAME_OBJECT)
-        end;
-
-  Result := STATUS_NOT_FOUND;
 end;
 
 end.

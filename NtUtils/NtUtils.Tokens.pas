@@ -103,10 +103,6 @@ function NtxSetDefaultDaclToken(hToken: THandle; DefaultDacl: IAcl): TNtxStatus;
 // Query token flags
 function NtxQueryFlagsToken(hToken: THandle; out Flags: Cardinal): TNtxStatus;
 
-// Query token statistic (requires either Query or Duplicate access)
-function NtxQueryStatisticsToken(hToken: THandle;
-  out Statistics: TTokenStatistics): TNtxStatus;
-
 // Query integrity level of a token
 function NtxQueryIntegrityToken(hToken: THandle; out  IntegrityLevel: Cardinal):
   TNtxStatus;
@@ -116,9 +112,6 @@ function NtxSetIntegrityToken(hToken: THandle; IntegrityLevel: Cardinal):
   TNtxStatus;
 
 { --------------------------- Other operations ---------------------------- }
-
-// Compare token objects using Token IDs
-function NtxpCompareTokenIds(hToken1, hToken2: THandle): NTSTATUS;
 
 // Adjust privileges
 function NtxAdjustPrivileges(hToken: THandle; Privileges: TArray<TLuid>;
@@ -573,26 +566,6 @@ begin
   end;
 end;
 
-function NtxQueryStatisticsToken(hToken: THandle;
-  out Statistics: TTokenStatistics): TNtxStatus;
-var
-  hTokenRef: THandle;
-begin
-  Result := NtxToken.Query<TTokenStatistics>(hToken, TokenStatistics,
-    Statistics);
-
-  // Try to process the case of a handle with no TOKEN_QUERY access
-  if (Result.Status = STATUS_ACCESS_DENIED) and
-    NT_SUCCESS(NtDuplicateObject(NtCurrentProcess, hToken,
-    NtCurrentProcess, hTokenRef, TOKEN_QUERY, 0, 0)) then
-  begin
-    Result := NtxToken.Query<TTokenStatistics>(hToken, TokenStatistics,
-      Statistics);
-
-    NtxSafeClose(hTokenRef);
-  end;
-end;
-
 function NtxQueryIntegrityToken(hToken: THandle; out IntegrityLevel: Cardinal):
   TNtxStatus;
 var
@@ -630,26 +603,6 @@ begin
 end;
 
 { Other opeations }
-
-function NtxpCompareTokenIds(hToken1, hToken2: THandle): NTSTATUS;
-var
-  Statistics1, Statistics2: TTokenStatistics;
-begin
-  Result := NtxQueryStatisticsToken(hToken1, Statistics1).Status;
-
-  if NT_SUCCESS(Result) then
-  begin
-    Result := NtxQueryStatisticsToken(hToken2, Statistics2).Status;
-
-    if NT_SUCCESS(Result)  then
-    begin
-      if Statistics1.TokenId = Statistics2.TokenId then
-        Exit(STATUS_SUCCESS)
-      else
-        Exit(STATUS_NOT_SAME_OBJECT);
-    end;
-  end;
-end;
 
 function NtxAdjustPrivileges(hToken: THandle; Privileges: TArray<TLuid>;
   NewAttribute: Cardinal): TNtxStatus;
