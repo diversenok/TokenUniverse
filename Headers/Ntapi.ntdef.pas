@@ -30,8 +30,8 @@ type
   PANSI_STRING = ^ANSI_STRING;
 
   UNICODE_STRING = record
-    Length: Word;
-    MaximumLength: Word;
+    Length: Word; // bytes
+    MaximumLength: Word; // bytes
     Buffer: PWideChar;
     function ToString: String;
     procedure FromString(Value: string);

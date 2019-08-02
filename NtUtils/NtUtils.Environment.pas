@@ -176,29 +176,27 @@ var
   Required: Cardinal;
 begin
   SrcStr.FromString(Source);
-
-  Required := 0;
-  DestStr.Length := 0;
-  DestStr.MaximumLength := 0;
-  DestStr.Buffer := nil;
-
   Result.Location := 'RtlExpandEnvironmentStrings_U';
-  Result.Status := RtlExpandEnvironmentStrings_U(FBlock, SrcStr, DestStr,
-    @Required);
 
-  if Result.Status = STATUS_BUFFER_TOO_SMALL then
-  begin
-    DestStr.MaximumLength := Required;
+  DestStr.MaximumLength := 0;
+  repeat
+    Required := 0;
+    DestStr.Length := 0;
     DestStr.Buffer := AllocMem(DestStr.MaximumLength);
 
     Result.Status := RtlExpandEnvironmentStrings_U(FBlock, SrcStr, DestStr,
-      nil);
+      @Required);
 
-    if Result.IsSuccess then
-      Expanded := DestStr.ToString;
+    if not Result.IsSuccess then
+      FreeMem(DestStr.Buffer);
 
-    FreeMem(DestStr.Buffer);
-  end;
+  until not NtxExpandStringBuffer(Result, DestStr, Required);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Expanded := DestStr.ToString;
+  FreeMem(DestStr.Buffer);
 end;
 
 function TEnvironment.IsCurrent: Boolean;
@@ -249,28 +247,25 @@ var
   NameStr, ValueStr: UNICODE_STRING;
 begin
   NameStr.FromString(Name);
-
-  ValueStr.Length := 0;
-  ValueStr.MaximumLength := 0;
-  ValueStr.Buffer := nil;
-
-  // Query the required length
   Result.Location := 'RtlQueryEnvironmentVariable_U';
-  Result.Status := RtlQueryEnvironmentVariable_U(FBlock, NameStr, ValueStr);
 
-  if Result.Status = STATUS_BUFFER_TOO_SMALL then
-  begin
-    // Include zero-termination character and allocate the buffer
-    ValueStr.MaximumLength := ValueStr.Length + SizeOf(WideChar);
+  ValueStr.MaximumLength := 0;
+  repeat
+    ValueStr.Length := 0;
     ValueStr.Buffer := AllocMem(ValueStr.MaximumLength);
 
     Result.Status := RtlQueryEnvironmentVariable_U(FBlock, NameStr, ValueStr);
 
-    if Result.IsSuccess then
-      Value := ValueStr.ToString;
+    if not Result.IsSuccess then
+      FreeMem(ValueStr.Buffer);
 
-    FreeMem(ValueStr.Buffer);
-  end;
+  until not NtxExpandStringBuffer(Result, ValueStr);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  Value := ValueStr.ToString;
+  FreeMem(ValueStr.Buffer);
 end;
 
 function TEnvironment.SetAsCurrent: TNtxStatus;

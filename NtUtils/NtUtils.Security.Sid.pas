@@ -360,7 +360,7 @@ end;
 function RtlxConvertSidToString(SID: PSid): String;
 var
   SDDL: UNICODE_STRING;
-  Buffer: array [0 .. SECURITY_MAX_SID_STRING_CHARACTERS] of WideChar;
+  Buffer: array [0 .. SECURITY_MAX_SID_STRING_CHARACTERS - 1] of WideChar;
 begin
   Result := '';
 
@@ -368,8 +368,8 @@ begin
     Exit;
 
   SDDL.Length := 0;
-  SDDL.MaximumLength := SECURITY_MAX_SID_STRING_CHARACTERS;
-  SDDL.Buffer := PWideChar(@Buffer);
+  SDDL.MaximumLength := SizeOf(Buffer);
+  SDDL.Buffer := @Buffer;
 
   if NT_SUCCESS(RtlConvertSidToUnicodeString(SDDL, SID, False)) then
     Result := SDDL.ToString
