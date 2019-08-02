@@ -15,7 +15,7 @@ implementation
 
 uses
   DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc,
-  Ntapi.ntsam, Winapi.WinUser, Ntapi.ntregapi;
+  Ntapi.ntsam, Winapi.WinUser, Ntapi.ntregapi, Ntapi.ntobapi;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -93,6 +93,17 @@ const
     (Value: KEY_ENUMERATE_SUB_KEYS; Name: 'Enumerate sub-keys'),
     (Value: KEY_NOTIFY;             Name: 'Notify'),
     (Value: KEY_CREATE_LINK;        Name: 'Create link')
+  );
+
+  SpecificAccessNtDirectory: array [0..3] of TFlagName = (
+    (Value: DIRECTORY_QUERY;               Name: 'Query'),
+    (Value: DIRECTORY_TRAVERSE;            Name: 'Traverse'),
+    (Value: DIRECTORY_CREATE_OBJECT;       Name: 'Create object'),
+    (Value: DIRECTORY_CREATE_SUBDIRECTORY; Name: 'Create sub-directories')
+  );
+
+  SpecificAccessNtSymlink: array [0..0] of TFlagName = (
+    (Value: SYMBOLIC_LINK_QUERY; Name: 'Query')
   );
 
   SpecificAccessUsrDesktop: array [0..8] of TFlagName = (
@@ -218,7 +229,8 @@ const
 
   FullAccessForType: array [TAccessMaskType] of Cardinal = (SPECIFIC_RIGHTS_ALL,
     PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, JOB_OBJECT_ALL_ACCESS,
-    TOKEN_ALL_ACCESS, KEY_ALL_ACCESS, DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS,
+    TOKEN_ALL_ACCESS, KEY_ALL_ACCESS, DIRECTORY_ALL_ACCESS,
+    SYMBOLIC_LINK_ALL_ACCESS, DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS,
     POLICY_ALL_ACCESS, ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS,
     SERVICE_ALL_ACCESS, SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS,
     GROUP_ALL_ACCESS, ALIAS_ALL_ACCESS, USER_ALL_ACCESS
@@ -289,6 +301,18 @@ begin
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessNtKey));
       ExcludeFlags(Access, SpecificAccessNtKey);
+    end;
+
+    objNtDirectory:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtDirectory));
+      ExcludeFlags(Access, SpecificAccessNtDirectory);
+    end;
+
+    objNtSymlink:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtSymlink));
+      ExcludeFlags(Access, SpecificAccessNtSymlink);
     end;
 
     objUsrDesttop:
@@ -383,9 +407,9 @@ end;
 function GetAccessTypeName(MaskType: TAccessMaskType): String;
 const
   TypeNames: array [TAccessMaskType] of String = (
-    'object', 'process', 'thread', 'job', 'token', 'registry', 'desktop',
-    'window station', 'policy', 'account', 'SCM', 'service',
-    'SAM', 'domain', 'group', 'alias', 'user'
+    'object', 'process', 'thread', 'job', 'token', 'registry', 'directory',
+    'symlink', 'desktop', 'window station', 'policy', 'account', 'SCM',
+    'service', 'SAM', 'domain', 'group', 'alias', 'user'
   );
 begin
   if (MaskType >= Low(TAccessMaskType)) and

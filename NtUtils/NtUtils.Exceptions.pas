@@ -12,9 +12,9 @@ type
   TLastCallType = (lcOtherCall, lcOpenCall, lcQuerySetCall);
 
   TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
-    objNtKey, objUsrDesttop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
-    objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
-    objSamAlias, objSamUser);
+    objNtKey, objNtDirectory, objNtSymlink, objUsrDesttop, objUsrWindowStation,
+    objLsaPolicy, objLsaAccount, objScmManager, objScmService, objSamServer,
+    objSamDomain, objSamGroup, objSamAlias, objSamUser);
 
   TExpectedAccess = record
     AccessMask: TAccessMask;
@@ -24,7 +24,7 @@ type
   TLastCallInfo = record
     ExpectedPrivilege: TSeWellKnownPrivilege;
     ExpectedAccess: array of TExpectedAccess;
-    procedure Expects(AccessMask: TAccessMask; AccessMaskType: TAccessMaskType);
+    procedure Expects(Mask: TAccessMask; MaskType: TAccessMaskType);
   case CallType: TLastCallType of
     lcOpenCall:
       (AccessMask: TAccessMask; AccessMaskType: TAccessMaskType);
@@ -104,13 +104,12 @@ uses
 
 { TLastCallInfo }
 
-procedure TLastCallInfo.Expects(AccessMask: TAccessMask;
-  AccessMaskType: TAccessMaskType);
+procedure TLastCallInfo.Expects(Mask: TAccessMask; MaskType: TAccessMaskType);
 begin
   // Add new access mask
   SetLength(ExpectedAccess, Length(ExpectedAccess) + 1);
-  ExpectedAccess[High(ExpectedAccess)].AccessMask := AccessMask;
-  ExpectedAccess[High(ExpectedAccess)].AccessMaskType := AccessMaskType;
+  ExpectedAccess[High(ExpectedAccess)].AccessMask := Mask;
+  ExpectedAccess[High(ExpectedAccess)].AccessMaskType := MaskType;
 end;
 
 { TNtxStatus }
