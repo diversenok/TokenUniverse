@@ -3,7 +3,7 @@ unit NtUtils.Threads;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntpsapi, NtUtils.Exceptions;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpsapi, Ntapi.ntrtl, NtUtils.Exceptions;
 
 const
   // Ntapi.ntpsapi
@@ -36,10 +36,19 @@ type
       InfoClass: TThreadInfoClass; const Buffer: T): TNtxStatus; static;
   end;
 
+// Query exit status of a thread
+function NtxQueryExitStatusThread(hThread: THandle; out ExitStatus: NTSTATUS)
+  : TNtxStatus;
+
+// Create a thread in a process
+function RtlxCreateThread(out hThread: THandle; hProcess: THandle;
+  StartRoutine: TUserThreadStartRoutine; Parameter: Pointer;
+  CreateSuspended: Boolean = False): TNtxStatus;
+
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntseapi,
+  Ntapi.ntstatus, Ntapi.ntobapi, Ntapi.ntseapi,
   NtUtils.Access.Expected;
 
 function NtxOpenThread(out hThread: THandle; TID: NativeUInt;
@@ -145,5 +154,27 @@ begin
   Result := NtxSetThread(hThread, InfoClass, @Buffer, SizeOf(Buffer));
 end;
 
+function NtxQueryExitStatusThread(hThread: THandle; out ExitStatus: NTSTATUS)
+  : TNtxStatus;
+var
+  Info: TThreadBasicInformation;
+begin
+  Result := NtxThread.Query<TThreadBasicInformation>(hThread,
+    ThreadBasicInformation, Info);
+
+  if Result.IsSuccess then
+    ExitStatus := Info.ExitStatus;
+end;
+
+function RtlxCreateThread(out hThread: THandle; hProcess: THandle;
+  StartRoutine: TUserThreadStartRoutine; Parameter: Pointer;
+  CreateSuspended: Boolean): TNtxStatus;
+begin
+  Result.Location := 'RtlCreateUserThread';
+  Result.LastCall.Expects(PROCESS_CREATE_THREAD, objNtProcess);
+
+  Result.Status := RtlCreateUserThread(hProcess, nil, CreateSuspended, 0, 0, 0,
+    StartRoutine, Parameter, hThread, nil);
+end;
 
 end.
