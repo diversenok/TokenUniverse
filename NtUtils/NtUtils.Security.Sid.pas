@@ -369,7 +369,7 @@ begin
 
   SDDL.Length := 0;
   SDDL.MaximumLength := SizeOf(Buffer);
-  SDDL.Buffer := @Buffer;
+  SDDL.Buffer := Buffer;
 
   if NT_SUCCESS(RtlConvertSidToUnicodeString(SDDL, SID, False)) then
     Result := SDDL.ToString

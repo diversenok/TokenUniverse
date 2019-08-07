@@ -267,7 +267,10 @@ begin
   Result.Location := 'NtWaitForSingleObject';
   Result.LastCall.Expects(SYNCHRONIZE, objNone);
 
-  Result.Status := NtWaitForSingleObject(hObject, Alertable, TimeOutValue);
+  if Timeout = INFINITE then
+    Result.Status := NtWaitForSingleObject(hObject, Alertable, nil)
+  else
+    Result.Status := NtWaitForSingleObject(hObject, Alertable, TimeOutValue);
 end;
 
 function NtxWaitForSingleObject(hObject: THandle): TNtxStatus; overload;

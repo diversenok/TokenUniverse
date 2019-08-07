@@ -21,6 +21,7 @@ type
     function GetAce(Index: Integer): TAce;
     function Delete(Index: Integer): TNtxStatus;
     function AddAt(const Ace: TAce; Index: Integer): TNtxStatus;
+    procedure MapGenericMask(const GenericMapping: TGenericMapping);
   end;
 
   TAcl = class(TInterfacedObject, IAcl)
@@ -35,6 +36,7 @@ type
     function GetAce(Index: Integer): TAce;
     function Delete(Index: Integer): TNtxStatus;
     function AddAt(const Ace: TAce; Index: Integer): TNtxStatus;
+    procedure MapGenericMask(const GenericMapping: TGenericMapping);
   end;
 
 // Query ACL size information
@@ -267,6 +269,18 @@ begin
     // Unsupported ace type
     Result.Mask := 0;
     Result.Sid := nil;
+  end;
+end;
+
+procedure TAcl.MapGenericMask(const GenericMapping: TGenericMapping);
+var
+  i: Integer;
+  Ace: PAce;
+begin
+  for i := 0 to SizeInfo.AceCount - 1 do
+  begin
+    NtxCheck(RtlGetAce(FAcl, i, Ace), 'RtlGetAce');
+    RtlMapGenericMask(Ace.Mask, GenericMapping);
   end;
 end;
 

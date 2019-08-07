@@ -12,6 +12,8 @@ const
   advapi32  = 'advapi32.dll';
   secur32 = 'secur32.dll';
 
+  INFINITE = $FFFFFFFF;
+
   // 8894
   _DELETE = $00010000;      // SDDL: DE
   READ_CONTROL = $00020000; // SDDL: RC
