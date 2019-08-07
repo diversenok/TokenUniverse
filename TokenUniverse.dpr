@@ -112,7 +112,8 @@ uses
   NtUtils.Threads in 'NtUtils\NtUtils.Threads.pas',
   NtUtils.Access.Expected in 'NtUtils\NtUtils.Access.Expected.pas',
   NtUtils.Objects.Compare in 'NtUtils\NtUtils.Objects.Compare.pas',
-  NtUtils.Objects.Namespace in 'NtUtils\NtUtils.Objects.Namespace.pas';
+  NtUtils.Objects.Namespace in 'NtUtils\NtUtils.Objects.Namespace.pas',
+  NtUtils.Processes.Memory in 'NtUtils\NtUtils.Processes.Memory.pas';
 
 {$R *.res}
 

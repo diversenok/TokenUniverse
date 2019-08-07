@@ -128,6 +128,8 @@ function NtUnlockVirtualMemory(ProcessHandle: THandle; var BaseAddress: Pointer;
 function NtFlushInstructionCache(ProcessHandle: THandle; BaseAddress: Pointer;
   Length: NativeUInt): NTSTATUS; stdcall; external ntdll;
 
+function NtFlushWriteBuffer: NTSTATUS; stdcall; external ntdll;
+
 implementation
 
 end.

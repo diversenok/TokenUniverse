@@ -304,6 +304,7 @@
         <DCCReference Include="NtUtils\NtUtils.Access.Expected.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.Compare.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.Namespace.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Processes.Memory.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
