@@ -16,9 +16,18 @@ type
   TProcessFilter = function (const ProcessEntry: TProcessEntry;
     Parameter: NativeUInt): Boolean;
 
+  TFilterAction = (ftInclude, ftExclude);
+
 // Snapshot active processes on the system
 function NtxEnumerateProcesses(out Processes: TArray<TProcessEntry>):
   TNtxStatus;
+
+// Filter specific processes from the snapshot
+procedure NtxFilterProcessess(var Processes: TArray<TProcessEntry>;
+  Filter: TProcessFilter; Parameter: NativeUInt; Action: TFilterAction);
+
+procedure NtxFilterProcessessByImage(var Processes: TArray<TProcessEntry>;
+  ImageName: String; Action: TFilterAction);
 
 // Find a process in the snapshot by PID
 function NtxFindProcessById(Processes: TArray<TProcessEntry>;
@@ -109,6 +118,45 @@ begin
   until False;
 
   FreeMem(Buffer);
+end;
+
+procedure NtxFilterProcessess(var Processes: TArray<TProcessEntry>;
+  Filter: TProcessFilter; Parameter: NativeUInt; Action: TFilterAction);
+var
+  FilteredProcesses: TArray<TProcessEntry>;
+  Count, i, j: Integer;
+begin
+  Assert(Assigned(Filter));
+
+  Count := 0;
+  for i := 0 to High(Processes) do
+    if Filter(Processes[i], Parameter) xor (Action = ftExclude) then
+      Inc(Count);
+
+  SetLength(FilteredProcesses, Count);
+
+  j := 0;
+  for i := 0 to High(Processes) do
+    if Filter(Processes[i], Parameter) xor (Action = ftExclude) then
+    begin
+      FilteredProcesses[j] := Processes[i];
+      Inc(j);
+    end;
+
+  Processes := FilteredProcesses;
+end;
+
+function FilterByImage(const ProcessEntry: TProcessEntry;
+  Parameter: NativeUInt): Boolean;
+begin
+  Result := (ProcessEntry.ImageName = String(PWideChar(Parameter)));
+end;
+
+procedure NtxFilterProcessessByImage(var Processes: TArray<TProcessEntry>;
+  ImageName: String; Action: TFilterAction);
+begin
+  NtxFilterProcessess(Processes, FilterByImage,
+    NativeUInt(PWideChar(ImageName)), Action);
 end;
 
 function NtxFindProcessById(Processes: TArray<TProcessEntry>;
