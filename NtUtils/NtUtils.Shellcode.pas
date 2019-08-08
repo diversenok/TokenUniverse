@@ -3,7 +3,11 @@ unit NtUtils.Shellcode;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntrtl, NtUtils.Exceptions;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntrtl, Ntapi.ntpsapi, NtUtils.Exceptions;
+
+const
+  PROCESS_INJECT_ACCESS = PROCESS_CREATE_THREAD or PROCESS_VM_OPERATION or
+    PROCESS_VM_WRITE;
 
 // Write a portion of data to a process' memory
 function NtxWriteDataProcess(hProcess: THandle; Buffer: Pointer;
@@ -162,7 +166,7 @@ function RtlxInjectDllProcess(out hThread: THandle; hProcess: THandle;
   DllName: String; Timeout: Int64): TNtxStatus;
 var
   hKernel32: HMODULE;
-  pLoadLibrary: Pointer;
+  pLoadLibrary: TUserThreadStartRoutine;
 begin
   // TODO: WoW64 support
   Result := LdrxGetDllHandle(kernel32, hKernel32);
@@ -170,7 +174,7 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result := LdrxGetProcedureAddress(hKernel32, 'LoadLibraryW', pLoadLibrary);
+  pLoadLibrary := LdrxGetProcedureAddress(hKernel32, 'LoadLibraryW', Result);
 
   if not Result.IsSuccess then
     Exit;

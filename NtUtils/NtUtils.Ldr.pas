@@ -21,7 +21,7 @@ function LdrxGetDllHandle(DllName: String; out DllHandle: HMODULE): TNtxStatus;
 
 // Get a function address
 function LdrxGetProcedureAddress(DllHandle: HMODULE; ProcedureName: AnsiString;
-  out Address: Pointer): TNtxStatus;
+  out Status: TNtxStatus): Pointer;
 
 implementation
 
@@ -110,14 +110,14 @@ begin
 end;
 
 function LdrxGetProcedureAddress(DllHandle: HMODULE; ProcedureName: AnsiString;
-  out Address: Pointer): TNtxStatus;
+  out Status: TNtxStatus): Pointer;
 var
   ProcNameStr: ANSI_STRING;
 begin
   ProcNameStr.FromString(ProcedureName);
 
-  Result.Location := 'LdrGetProcedureAddress("' + String(ProcedureName) + '")';
-  Result.Status := LdrGetProcedureAddress(DllHandle, ProcNameStr, 0, Address);
+  Status.Location := 'LdrGetProcedureAddress("' + String(ProcedureName) + '")';
+  Status.Status := LdrGetProcedureAddress(DllHandle, ProcNameStr, 0, Result);
 end;
 
 initialization
