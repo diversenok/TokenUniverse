@@ -315,7 +315,7 @@ begin
       ExcludeFlags(Access, SpecificAccessNtSymlink);
     end;
 
-    objUsrDesttop:
+    objUsrDesktop:
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessUsrDesktop));
       ExcludeFlags(Access, SpecificAccessUsrDesktop);

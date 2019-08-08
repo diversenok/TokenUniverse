@@ -12,7 +12,7 @@ type
   TLastCallType = (lcOtherCall, lcOpenCall, lcQuerySetCall);
 
   TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
-    objNtKey, objNtDirectory, objNtSymlink, objUsrDesttop, objUsrWindowStation,
+    objNtKey, objNtDirectory, objNtSymlink, objUsrDesktop, objUsrWindowStation,
     objLsaPolicy, objLsaAccount, objScmManager, objScmService, objSamServer,
     objSamDomain, objSamGroup, objSamAlias, objSamUser);
 

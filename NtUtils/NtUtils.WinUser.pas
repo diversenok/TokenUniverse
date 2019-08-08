@@ -45,10 +45,19 @@ function UsrxEnumDesktops(WinSta: HWINSTA; out Desktops: TArray<String>):
 // Enumerate all accessable desktops from different window stations
 function UsrxEnumAllDesktops: TArray<String>;
 
+{ Actions }
+
+// Switch to a desktop
+function UsrxSwithToDesktop(hDesktop: THandle; FadeTime: Cardinal = 0)
+  : TNtxStatus;
+
+function UsrxSwithToDesktopByName(DesktopName: String; FadeTime: Cardinal = 0)
+  : TNtxStatus;
+
 implementation
 
 uses
-  Winapi.ProcessThreadsApi, Ntapi.ntpsapi;
+  Winapi.ProcessThreadsApi, Ntapi.ntpsapi, NtUtils.Objects;
 
 function UsrxOpenDesktop(out hDesktop: THandle; Name: String;
   DesiredAccess: TAccessMask; InheritHandle: Boolean): TNtxStatus;
@@ -56,7 +65,7 @@ begin
   Result.Location := 'OpenDesktopW';
   Result.LastCall.CallType := lcOpenCall;
   Result.LastCall.AccessMask := DesiredAccess;
-  Result.LastCall.AccessMaskType := TAccessMaskType.objUsrDesttop;
+  Result.LastCall.AccessMaskType := objUsrDesktop;
 
   hDesktop := OpenDesktopW(PWideChar(Name), 0, InheritHandle, DesiredAccess);
   Result.Win32Result := (hDesktop <> 0);
@@ -208,6 +217,36 @@ begin
     end;
 
    CloseWindowStation(hWinStation);
+  end;
+end;
+
+function UsrxSwithToDesktop(hDesktop: THandle; FadeTime: Cardinal): TNtxStatus;
+begin
+  if FadeTime = 0 then
+  begin
+    Result.Location := 'SwitchDesktop';
+    Result.LastCall.Expects(DESKTOP_SWITCHDESKTOP, objUsrDesktop);
+    Result.Win32Result := SwitchDesktop(hDesktop);
+  end
+  else
+  begin
+    Result.Location := 'SwitchDesktopWithFade';
+    Result.LastCall.Expects(DESKTOP_SWITCHDESKTOP, objUsrDesktop);
+    Result.Win32Result := SwitchDesktopWithFade(hDesktop, FadeTime);
+  end;
+end;
+
+function UsrxSwithToDesktopByName(DesktopName: String; FadeTime: Cardinal)
+  : TNtxStatus;
+var
+  hDesktop: THandle;
+begin
+  Result := UsrxOpenDesktop(hDesktop, DesktopName, DESKTOP_SWITCHDESKTOP);
+
+  if Result.IsSuccess then
+  begin
+    Result := UsrxSwithToDesktop(hDesktop, FadeTime);
+    NtxSafeClose(hDesktop);
   end;
 end;
 
