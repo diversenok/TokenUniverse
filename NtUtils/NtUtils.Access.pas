@@ -15,7 +15,8 @@ implementation
 
 uses
   DelphiUtils.Strings, Ntapi.ntpsapi, Ntapi.ntseapi, Winapi.ntlsa, Winapi.Svc,
-  Ntapi.ntsam, Winapi.WinUser, Ntapi.ntregapi, Ntapi.ntobapi;
+  Ntapi.ntsam, Winapi.WinUser, Ntapi.ntregapi, Ntapi.ntobapi, Ntapi.ntmmapi,
+  Ntapi.ntioapi;
 
 const
   NonSpecificAccess: array [0..10] of TFlagName = (
@@ -104,6 +105,25 @@ const
 
   SpecificAccessNtSymlink: array [0..0] of TFlagName = (
     (Value: SYMBOLIC_LINK_QUERY; Name: 'Query')
+  );
+
+  SpecificAccessNtSection: array [0..4] of TFlagName = (
+    (Value: SECTION_QUERY;       Name: 'Query'),
+    (Value: SECTION_MAP_WRITE;   Name: 'Map write'),
+    (Value: SECTION_MAP_READ;    Name: 'Map read'),
+    (Value: SECTION_MAP_EXECUTE; Name: 'Map execute'),
+    (Value: SECTION_EXTEND_SIZE; Name: 'Extend size')
+  );
+
+  SpecificAccessIoFile: array [0..7] of TFlagName = (
+    (Value: FILE_READ_DATA;        Name: 'Read data'),
+    (Value: FILE_WRITE_DATA;       Name: 'Write data'),
+    (Value: FILE_APPEND_DATA;      Name: 'Append data'),
+    (Value: FILE_READ_EA;          Name: 'Read extended attributes'),
+    (Value: FILE_WRITE_EA;         Name: 'Write extended attributes'),
+    (Value: FILE_EXECUTE;          Name: 'Execute'),
+    (Value: FILE_READ_ATTRIBUTES;  Name: 'Read attributes'),
+    (Value: FILE_WRITE_ATTRIBUTES; Name: 'Write attributes')
   );
 
   SpecificAccessUsrDesktop: array [0..8] of TFlagName = (
@@ -230,10 +250,11 @@ const
   FullAccessForType: array [TAccessMaskType] of Cardinal = (SPECIFIC_RIGHTS_ALL,
     PROCESS_ALL_ACCESS, THREAD_ALL_ACCESS, JOB_OBJECT_ALL_ACCESS,
     TOKEN_ALL_ACCESS, KEY_ALL_ACCESS, DIRECTORY_ALL_ACCESS,
-    SYMBOLIC_LINK_ALL_ACCESS, DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS,
-    POLICY_ALL_ACCESS, ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS,
-    SERVICE_ALL_ACCESS, SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS,
-    GROUP_ALL_ACCESS, ALIAS_ALL_ACCESS, USER_ALL_ACCESS
+    SYMBOLIC_LINK_ALL_ACCESS, SECTION_ALL_ACCESS, FILE_ALL_ACCESS,
+    DESKTOP_ALL_ACCESS, WINSTA_ALL_ACCESS, POLICY_ALL_ACCESS,
+    ACCOUNT_ALL_ACCESS, SC_MANAGER_ALL_ACCESS, SERVICE_ALL_ACCESS,
+    SAM_SERVER_ALL_ACCESS, DOMAIN_ALL_ACCESS, GROUP_ALL_ACCESS,
+    ALIAS_ALL_ACCESS, USER_ALL_ACCESS
   );
 
 procedure ExcludeFlags(var Value: Cardinal; Mapping: array of TFlagName);
@@ -313,6 +334,18 @@ begin
     begin
       ConcatFlags(Result, MapFlags(Access, SpecificAccessNtSymlink));
       ExcludeFlags(Access, SpecificAccessNtSymlink);
+    end;
+
+    objNtSection:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessNtSection));
+      ExcludeFlags(Access, SpecificAccessNtSection);
+    end;
+
+    objIoFile:
+    begin
+      ConcatFlags(Result, MapFlags(Access, SpecificAccessIoFile));
+      ExcludeFlags(Access, SpecificAccessIoFile);
     end;
 
     objUsrDesktop:
@@ -408,8 +441,8 @@ function GetAccessTypeName(MaskType: TAccessMaskType): String;
 const
   TypeNames: array [TAccessMaskType] of String = (
     'object', 'process', 'thread', 'job', 'token', 'registry', 'directory',
-    'symlink', 'desktop', 'window station', 'policy', 'account', 'SCM',
-    'service', 'SAM', 'domain', 'group', 'alias', 'user'
+    'symlink', 'section', 'file', 'desktop', 'window station', 'policy',
+    'account', 'SCM', 'service', 'SAM', 'domain', 'group', 'alias', 'user'
   );
 begin
   if (MaskType >= Low(TAccessMaskType)) and

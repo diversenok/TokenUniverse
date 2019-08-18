@@ -12,9 +12,10 @@ type
   TLastCallType = (lcOtherCall, lcOpenCall, lcQuerySetCall);
 
   TAccessMaskType = (objNone, objNtProcess, objNtThread, objNtJob, objNtToken,
-    objNtKey, objNtDirectory, objNtSymlink, objUsrDesktop, objUsrWindowStation,
-    objLsaPolicy, objLsaAccount, objScmManager, objScmService, objSamServer,
-    objSamDomain, objSamGroup, objSamAlias, objSamUser);
+    objNtKey, objNtDirectory, objNtSymlink, objNtSection, objIoFile,
+    objUsrDesktop, objUsrWindowStation, objLsaPolicy, objLsaAccount,
+    objScmManager, objScmService, objSamServer, objSamDomain, objSamGroup,
+    objSamAlias, objSamUser);
 
   TExpectedAccess = record
     AccessMask: TAccessMask;

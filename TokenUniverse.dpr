@@ -114,7 +114,9 @@ uses
   NtUtils.Objects.Compare in 'NtUtils\NtUtils.Objects.Compare.pas',
   NtUtils.Objects.Namespace in 'NtUtils\NtUtils.Objects.Namespace.pas',
   NtUtils.Processes.Memory in 'NtUtils\NtUtils.Processes.Memory.pas',
-  NtUtils.Shellcode in 'NtUtils\NtUtils.Shellcode.pas';
+  NtUtils.Shellcode in 'NtUtils\NtUtils.Shellcode.pas',
+  NtUtils.Sections in 'NtUtils\NtUtils.Sections.pas',
+  Ntapi.ntioapi in 'Headers\Ntapi.ntioapi.pas';
 
 {$R *.res}
 

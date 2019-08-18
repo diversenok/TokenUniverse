@@ -59,7 +59,18 @@ procedure RtlxComputeUserSetAccess(var LastCall: TLastCallInfo;
 procedure RtlxComputeServiceControlAccess(var LastCall: TLastCallInfo;
   Control: TServiceControl);
 
+{ Section }
+
+procedure RtlxComputeSectionFileAccess(var LastCall: TLastCallInfo;
+  Win32Protect: Cardinal);
+
+procedure RtlxComputeSectionMapAccess(var LastCall: TLastCallInfo;
+  Win32Protect: Cardinal);
+
 implementation
+
+uses
+  Ntapi.ntmmapi, Ntapi.ntioapi;
 
 { Process }
 
@@ -410,6 +421,49 @@ begin
   else
     if (Cardinal(Control) >= 128) and (Cardinal(Control) < 255) then
       LastCall.Expects(SERVICE_USER_DEFINED_CONTROL, objScmService);
+  end;
+end;
+
+procedure RtlxComputeSectionFileAccess(var LastCall: TLastCallInfo;
+  Win32Protect: Cardinal);
+begin
+  case Win32Protect and $FF of
+    PAGE_NOACCESS, PAGE_READONLY, PAGE_WRITECOPY:
+      LastCall.Expects(FILE_READ_DATA, objIoFile);
+
+    PAGE_READWRITE:
+      LastCall.Expects(FILE_WRITE_DATA or FILE_READ_DATA, objIoFile);
+
+    PAGE_EXECUTE:
+      LastCall.Expects(FILE_EXECUTE, objIoFile);
+
+    PAGE_EXECUTE_READ, PAGE_EXECUTE_WRITECOPY:
+      LastCall.Expects(FILE_EXECUTE or FILE_READ_DATA, objIoFile);
+
+    PAGE_EXECUTE_READWRITE:
+      LastCall.Expects(FILE_EXECUTE or FILE_WRITE_DATA or FILE_READ_DATA,
+        objIoFile);
+  end;
+end;
+
+procedure RtlxComputeSectionMapAccess(var LastCall: TLastCallInfo;
+  Win32Protect: Cardinal);
+begin
+  case Win32Protect and $FF of
+    PAGE_NOACCESS, PAGE_READONLY, PAGE_WRITECOPY:
+      LastCall.Expects(SECTION_MAP_READ, objNtSection);
+
+    PAGE_READWRITE:
+      LastCall.Expects(SECTION_MAP_WRITE, objNtSection);
+
+    PAGE_EXECUTE:
+      LastCall.Expects(SECTION_MAP_EXECUTE, objNtSection);
+
+    PAGE_EXECUTE_READ, PAGE_EXECUTE_WRITECOPY:
+      LastCall.Expects(SECTION_MAP_EXECUTE or SECTION_MAP_READ, objNtSection);
+
+    PAGE_EXECUTE_READWRITE:
+      LastCall.Expects(SECTION_MAP_EXECUTE or SECTION_MAP_WRITE, objNtSection);
   end;
 end;
 
