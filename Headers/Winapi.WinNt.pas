@@ -556,6 +556,169 @@ type
   end;
   PIoCounters = ^TIoCounters;
 
+  // 16684
+  TImageFileHeader = record
+    Machine: Word;
+    NumberOfSections: Word;
+    TimeDateStamp: Cardinal;
+    PointerToSymbolTable: Cardinal;
+    NumberOfSymbols: Cardinal;
+    SizeOfOptionalHeader: Word;
+    Characteristics: Word;
+  end;
+  PImageFileHeader = ^TImageFileHeader;
+
+  // 16750
+  TImageDataDirectory = record
+    VirtualAddress: Cardinal;
+    Size: Cardinal;
+  end;
+  PImageDataDirectory = ^TImageDataDirectory;
+
+  // 16938 (out of order)
+  {$MINENUMSIZE 2}
+  TImageDirectoryEntry = (
+    ImageDirectoryEntryExport = 0,
+    ImageDirectoryEntryImport = 1,
+    ImageDirectoryEntryResource = 2,
+    ImageDirectoryEntryException = 3,
+    ImageDirectoryEntrySecurity = 4,
+    ImageDirectoryEntryBaseReloc = 5,
+    ImageDirectoryEntryDebug = 6,
+    ImageDirectoryEntryArchitecture = 7,
+    ImageDirectoryEntryGlobalPtr = 8,
+    ImageDirectoryEntryTls = 9,
+    ImageDirectoryEntryLoadConfig = 10,
+    ImageDirectoryEntryBoundImport = 11,
+    ImageDirectoryEntryIat = 12,
+    ImageDirectoryEntryDelayImport = 13,
+    ImageDirectoryEntryComDescriptor = 14,
+    ImageDirectoryEntryReserved = 15
+  );
+  {$MINENUMSIZE 4}
+
+  // 16761
+  TImageOptionalHeaders32 = record
+    Magic: Word;
+    MajorLinkerVersion: Byte;
+    MinorLinkerVersion: Byte;
+    SizeOfCode: Cardinal;
+    SizeOfInitializedData: Cardinal;
+    SizeOfUninitializedData: Cardinal;
+    AddressOfEntryPoint: Cardinal;
+    BaseOfCode: Cardinal;
+    BaseOfData: Cardinal;
+    ImageBase: Cardinal;
+    SectionAlignment: Cardinal;
+    FileAlignment: Cardinal;
+    MajorOperatingSystemVersion: Word;
+    MinorOperatingSystemVersion: Word;
+    MajorImageVersion: Word;
+    MinorImageVersion: Word;
+    MajorSubsystemVersion: Word;
+    MinorSubsystemVersion: Word;
+    Win32VersionValue: Cardinal;
+    SizeOfImage: Cardinal;
+    SizeOfHeaders: Cardinal;
+    CheckSum: Cardinal;
+    Subsystem: Word;
+    DllCharacteristics: Word;
+    SizeOfStackReserve: Cardinal;
+    SizeOfStackCommit: Cardinal;
+    SizeOfHeapReserve: Cardinal;
+    SizeOfHeapCommit: Cardinal;
+    LoaderFlags: Cardinal;
+    NumberOfRvaAndSizes: Cardinal;
+    DataDirectory: array [TImageDirectoryEntry] of TImageDataDirectory;
+  end;
+  PImageOptionalHeaders32 = ^TImageOptionalHeaders32;
+
+  // 16820
+  TImageOptionalHeader64 = record
+    Magic: Word;
+    MajorLinkerVersion: Byte;
+    MinorLinkerVersion: Byte;
+    SizeOfCode: Cardinal;
+    SizeOfInitializedData: Cardinal;
+    SizeOfUninitializedData: Cardinal;
+    AddressOfEntryPoint: Cardinal;
+    BaseOfCode: Cardinal;
+    ImageBase: UInt64;
+    SectionAlignment: Cardinal;
+    FileAlignment: Cardinal;
+    MajorOperatingSystemVersion: Word;
+    MinorOperatingSystemVersion: Word;
+    MajorImageVersion: Word;
+    MinorImageVersion: Word;
+    MajorSubsystemVersion: Word;
+    MinorSubsystemVersion: Word;
+    Win32VersionValue: Cardinal;
+    SizeOfImage: Cardinal;
+    SizeOfHeaders: Cardinal;
+    CheckSum: Cardinal;
+    Subsystem: Word;
+    DllCharacteristics: Word;
+    SizeOfStackReserve: UInt64;
+    SizeOfStackCommit: UInt64;
+    SizeOfHeapReserve: UInt64;
+    SizeOfHeapCommit: UInt64;
+    LoaderFlags: Cardinal;
+    NumberOfRvaAndSizes: Cardinal;
+    DataDirectory: array [TImageDirectoryEntry] of TImageDataDirectory;
+  end;
+  PImageOptionalHeader64 = ^TImageOptionalHeader64;
+
+  // 16867
+  TImageNtHeaders64 = record
+    Signature: Cardinal;
+    FileHeader: TImageFileHeader;
+    OptionalHeader: TImageOptionalHeader64;
+  end;
+  PImageNtHeaders64 = ^TImageNtHeaders64;
+
+  // 16873
+  TImageNtHeaders32 = record
+    Signature: Cardinal;
+    FileHeader: TImageFileHeader;
+    OptionalHeader: TImageOptionalHeaders32;
+  end;
+  PImageNtHeaders32 = ^TImageNtHeaders32;
+
+  // 17007
+  TImageSectionHeader = record
+  const
+    IMAGE_SIZEOF_SHORT_NAME = 8;
+  var
+    Name: array [0 .. IMAGE_SIZEOF_SHORT_NAME - 1] of Byte;
+    Misc: Cardinal;
+    VirtualAddress: Cardinal;
+    SizeOfRawData: Cardinal;
+    PointerToRawData: Cardinal;
+    PointerToRelocations: Cardinal;
+    PointerToLinenumbers: Cardinal;
+    NumberOfRelocations: Word;
+    NumberOfLinenumbers: Word;
+    Characteristics: Cardinal;
+  end;
+  PImageSectionHeader = ^TImageSectionHeader;
+  PPImageSectionHeader = ^PImageSectionHeader;
+
+  // 17867
+  TImageExportDirectory = record
+    Characteristics: Cardinal;
+    TimeDateStamp: Cardinal;
+    MajorVersion: Word;
+    MinorVersion: Word;
+    Name: Cardinal;
+    Base: Cardinal;
+    NumberOfFunctions: Cardinal;
+    NumberOfNames: Cardinal;
+    AddressOfFunctions: Cardinal;     // RVA from base of image
+    AddressOfNames: Cardinal;         // RVA from base of image
+    AddressOfNameOrdinals: Cardinal;  // RVA from base of image
+  end;
+  PImageExportDirectory = ^TImageExportDirectory;
+
 const
   // 9175
   SECURITY_NT_AUTHORITY_ID = 5;

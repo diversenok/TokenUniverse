@@ -14,6 +14,8 @@ const
   RTL_CLONE_PROCESS_FLAGS_INHERIT_HANDLES = $00000002;
   RTL_CLONE_PROCESS_FLAGS_NO_SYNCHRONIZE = $00000004;
 
+  RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK = $00000001;
+
 type
   // Processes
 
@@ -189,6 +191,52 @@ function RtlCreateUserThread(Process: THandle; ThreadSecurityDescriptor:
   MaximumStackSize: NativeUInt; CommittedStackSize: NativeUInt;
   StartAddress: TUserThreadStartRoutine; Parameter: Pointer; out Thread:
   THandle; ClientId: PClientId): NTSTATUS; stdcall; external ntdll;
+
+// Images
+
+function RtlImageNtHeaderEx(Flags: Cardinal; BaseOfImage: Pointer; Size: UInt64;
+  out OutHeaders: PImageNtHeaders64): NTSTATUS; stdcall;
+  external ntdll; overload;
+
+function RtlImageNtHeaderEx(Flags: Cardinal; BaseOfImage: Pointer; Size: UInt64;
+  out OutHeaders: PImageNtHeaders32): NTSTATUS; stdcall;
+  external ntdll; overload;
+
+function RtlAddressInSectionTable(NtHeaders: PImageNtHeaders32;
+  BaseOfImage: Pointer; VirtualAddress: Cardinal): Pointer; stdcall;
+  external ntdll; overload;
+
+function RtlAddressInSectionTable(NtHeaders: PImageNtHeaders64;
+  BaseOfImage: Pointer; VirtualAddress: Cardinal): Pointer; stdcall;
+  external ntdll; overload;
+
+function RtlSectionTableFromVirtualAddress(NtHeaders: PImageNtHeaders32;
+  BaseOfImage: Pointer; VirtualAddress: Cardinal): PImageSectionHeader;
+  stdcall; external ntdll; overload;
+
+function RtlSectionTableFromVirtualAddress(NtHeaders: PImageNtHeaders64;
+  BaseOfImage: Pointer; VirtualAddress: Cardinal): PImageSectionHeader;
+  stdcall; external ntdll; overload;
+
+function RtlImageDirectoryEntryToData(BaseOfImage: Pointer; MappedAsImage:
+  Boolean; DirectoryEntry: TImageDirectoryEntry; out Size: Cardinal): Pointer;
+  stdcall; external ntdll;
+
+function RtlImageRvaToSection(NtHeaders: PImageNtHeaders32;
+  BaseOfImage: Pointer; Rva: Cardinal): PImageSectionHeader; stdcall;
+  external ntdll; overload;
+
+function RtlImageRvaToSection(NtHeaders: PImageNtHeaders64;
+  BaseOfImage: Pointer; Rva: Cardinal): PImageSectionHeader; stdcall;
+  external ntdll; overload;
+
+function RtlImageRvaToVa(NtHeaders: PImageNtHeaders32; BaseOfImage: Pointer;
+  Rva: Cardinal; LastRvaSection: PPImageSectionHeader): Pointer; stdcall;
+  external ntdll; overload;
+
+function RtlImageRvaToVa(NtHeaders: PImageNtHeaders64; BaseOfImage: Pointer;
+  Rva: Cardinal; LastRvaSection: PPImageSectionHeader): Pointer; stdcall;
+  external ntdll; overload;
 
 // Memory
 
