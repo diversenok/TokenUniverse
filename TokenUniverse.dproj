@@ -308,6 +308,7 @@
         <DCCReference Include="NtUtils\NtUtils.Shellcode.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Sections.pas"/>
         <DCCReference Include="Headers\Ntapi.ntioapi.pas"/>
+        <DCCReference Include="Headers\Winapi.ConsoleApi.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

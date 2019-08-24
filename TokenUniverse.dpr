@@ -116,7 +116,8 @@ uses
   NtUtils.Processes.Memory in 'NtUtils\NtUtils.Processes.Memory.pas',
   NtUtils.Shellcode in 'NtUtils\NtUtils.Shellcode.pas',
   NtUtils.Sections in 'NtUtils\NtUtils.Sections.pas',
-  Ntapi.ntioapi in 'Headers\Ntapi.ntioapi.pas';
+  Ntapi.ntioapi in 'Headers\Ntapi.ntioapi.pas',
+  Winapi.ConsoleApi in 'Headers\Winapi.ConsoleApi.pas';
 
 {$R *.res}
 
