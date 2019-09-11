@@ -42,6 +42,9 @@ function FilterByType(const HandleEntry: THandleEntry;
 function FilterByAccess(const HandleEntry: THandleEntry;
   AccessMask: NativeUInt): Boolean;
 
+function NtxFindHandleEntry(Handles: TArray<THandleEntry>;
+  PID: NativeUInt; Handle: THandle; out Entry: THandleEntry): Boolean;
+
 { Objects }
 
 // Check if object snapshoting is supported
@@ -158,6 +161,22 @@ function FilterByAccess(const HandleEntry: THandleEntry;
   AccessMask: NativeUInt): Boolean;
 begin
   Result := (HandleEntry.GrantedAccess = TAccessMask(AccessMask));
+end;
+
+function NtxFindHandleEntry(Handles: TArray<THandleEntry>;
+  PID: NativeUInt; Handle: THandle; out Entry: THandleEntry): Boolean;
+var
+  i: Integer;
+begin
+  for i := 0 to High(Handles) do
+    if (Handles[i].UniqueProcessId = PID) and (Handles[i].HandleValue = Handle)
+      then
+    begin
+      Entry := Handles[i];
+      Exit(True);
+    end;
+
+  Result := False;
 end;
 
 { Objects }

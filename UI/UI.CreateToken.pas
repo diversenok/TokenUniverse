@@ -125,7 +125,8 @@ var
 begin
   Source := TDialogPickToken.Execute(Self);
 
-  if Source.HandleInformation.GrantedAccess and TOKEN_QUERY = 0 then
+  if not Source.InfoClass.Query(tdObjectInfo) or not
+    Contains(Source.InfoClass.ObjectInformation.GrantedAccess, TOKEN_QUERY) then
   begin
     MessageDlg('This token does not have Query access.', mtError, mbOKCancel,
       -1);

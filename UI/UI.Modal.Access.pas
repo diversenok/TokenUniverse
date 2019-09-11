@@ -36,8 +36,11 @@ class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
 begin
   with TDialogAccess.Create(AOwner) do
   begin
-    TAccessMaskSource.InitAccessEntries(ListViewAccess,
-      Source.HandleInformation.GrantedAccess);
+    if Source.InfoClass.Query(tdObjectInfo) then
+      TAccessMaskSource.InitAccessEntries(ListViewAccess,
+        Source.InfoClass.ObjectInformation.GrantedAccess)
+    else
+      TAccessMaskSource.InitAccessEntries(ListViewAccess, 0);
 
     ShowModal;
 

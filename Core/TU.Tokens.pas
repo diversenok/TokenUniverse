@@ -21,7 +21,8 @@ type
     tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
     tdTokenHasRestrictions, tdTokenFlags, tdTokenVirtualizationAllowed,
     tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
-    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo, tdObjectInfo);
+    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo, tdObjectInfo,
+    tdHandleInfo);
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
@@ -66,6 +67,7 @@ type
     IsRestricted: LongBool;
     LogonSessionInfo: ILogonSession;
     ObjectInformation: TObjectBasicInformaion;
+    HandleInformation: THandleEntry;
 
     FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
     FOnSessionChange: TCachingEvent<Cardinal>;
@@ -82,9 +84,6 @@ type
     FOnDefaultDaclChange: TEvent<IAcl>;
     FOnFlagsChange: TCachingEvent<Cardinal>;
     OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
-
-    ObjectAddress: NativeUInt;
-    ReferenceCount: Integer;
   public
     constructor Create;
     destructor Destroy; override;
@@ -160,6 +159,7 @@ type
     procedure SetDefaultDacl(Value: IAcl);
     function GetObjectInfo: TObjectBasicInformaion;
     procedure SetSessionReference(const Value: LongBool);
+    function GetHandleInfo: THandleEntry;
   public
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TArray<TGroup> read GetGroups;                             // class 2
@@ -191,6 +191,7 @@ type
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: ILogonSession read GetLogonSessionInfo;
     property ObjectInformation: TObjectBasicInformaion read GetObjectInfo;
+    property HandleInformation: THandleEntry read GetHandleInfo;
 
     /// <summary>
     ///  Ensure that the requested value is in the cache and retrieve it if
@@ -213,38 +214,6 @@ type
       Detailed: Boolean = False): String;
   end;
 
-  /// <summary>
-  ///  A class to track all the tokens and to manage their cache and events.
-  /// </summary>
-  TTokenFactory = class
-    /// <summaty>
-    ///  We need to track all the handles to find out when new ones are sent to
-    ///  our process by other instances of Token Universe.
-    /// </summary>
-    class var HandleMapping: TDictionary<THandle,TToken>;
-
-    /// <summary>
-    ///  Different handles pointing to the same kernel objects must be linked to
-    ///  the same cache/event system. This value maps each opened kernel object
-    ///  address to a cache/event system (that maitains reference counting).
-    /// </summary>
-    class var CacheMapping: TDictionary<NativeUInt, TTokenCacheAndEvents>;
-
-    class constructor CreateTokenFactory;
-    class destructor DestroyTokenFactory;
-
-    /// <remarks>
-    ///  All tokens must register themselves at creation. The handle must be
-    ///  already valid at that point.
-    /// </remarks>
-    class procedure RegisterToken(Token: TToken); static;
-
-    /// <remarks>
-    ///  All tokens must call it on destruction.
-    /// </remarks>
-    class procedure UnRegisterToken(Token: TToken); static;
-  end;
-
   {-------------------  TToken object definition  ---------------------------}
 
   /// <summary>
@@ -255,7 +224,6 @@ type
     procedure SetCaption(const Value: String);
   protected
     hToken: THandle;
-    FHandleInformation: THandleEntry;
     FInfoClassData: TTokenData;
     Cache: TTokenCacheAndEvents;
 
@@ -268,7 +236,6 @@ type
     {--------------------  TToken public section ---------------------------}
 
     property Handle: THandle read hToken;
-    property HandleInformation: THandleEntry read FHandleInformation;
 
     property InfoClass: TTokenData read FInfoClassData;
     property Events: TTokenCacheAndEvents read Cache;
@@ -419,8 +386,8 @@ uses
 const
   /// <summary> Stores which data class a string class depends on. </summary>
   StringClassToDataClass: array [TTokenStringClass] of TTokenDataClass =
-    (tdTokenType, tdNone, tdTokenUser, tdTokenUser, tdTokenSessionId,
-    tdTokenElevation, tdTokenIntegrity, tdNone, tdNone, tdTokenMandatoryPolicy,
+    (tdTokenType, tdObjectInfo, tdTokenUser, tdTokenUser, tdTokenSessionId,
+    tdTokenElevation, tdTokenIntegrity, tdHandleInfo, tdNone, tdTokenMandatoryPolicy,
     tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
     tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenFlags,
     tdTokenIsRestricted, tdTokenVirtualizationAllowed, tdTokenStatistics,
@@ -499,106 +466,14 @@ begin
   OnStringDataChange[StringClass].Unsubscribe(Listener);
 end;
 
-{ TTokenFactory }
-
-class constructor TTokenFactory.CreateTokenFactory;
-begin
-  HandleMapping := TDictionary<THandle, TToken>.Create;
-  CacheMapping := TDictionary<NativeUInt, TTokenCacheAndEvents>.Create;
-end;
-
-class destructor TTokenFactory.DestroyTokenFactory;
-begin
-  CheckAbandoned(CacheMapping.Count, 'CacheMapping');
-  CheckAbandoned(HandleMapping.Count, 'HandleMapping');
-
-  CacheMapping.Destroy;
-  HandleMapping.Destroy;
-end;
-
-class procedure TTokenFactory.RegisterToken(Token: TToken);
-begin
-  // Save TToken object for the handle
-  HandleMapping.Add(Token.hToken, Token);
-
-  // Each token needs an event handler (which is also a cahce) to be assigned
-  // to it. If several TToken objects point to the same kernel object
-  // then the same instance of event handler will be assigned to all of them.
-
-  // Try to assign an existing TTokenCacheAndEvents to the token and
-  // maintain reference counter for it.
-  if CacheMapping.TryGetValue(NativeUInt(Token.HandleInformation.PObject),
-      {out} Token.Cache) then
-    Inc(Token.Cache.ReferenceCount)
-  else
-  begin
-    // Or create a new instance
-    Token.Cache := TTokenCacheAndEvents.Create;
-    Token.Cache.ObjectAddress := NativeUInt(Token.HandleInformation.PObject);
-    Token.Cache.ReferenceCount := 1;
-    CacheMapping.Add(NativeUInt(Token.HandleInformation.PObject), Token.Cache);
-  end;
-end;
-
-class procedure TTokenFactory.UnRegisterToken(Token: TToken);
-begin
-  // If the token initialization was not finished because of an exception in a
-  // constuctor then the token was not registered and the cleanup is not needed
-  if not Assigned(Token.Cache) then
-    Exit;  
-
-  // Dereference an event handler
-  Dec(Token.Cache.ReferenceCount);
-
-  // Delete it if no references are left
-  if Token.Cache.ReferenceCount = 0 then
-  begin
-    CacheMapping.Remove(Token.Cache.ObjectAddress);
-    Token.Cache.Free;
-    Token.Cache := nil;
-  end;
-
-  // The handle is going to be closed
-  HandleMapping.Remove(Token.hToken);
-end;
-
 { TToken }
 
 procedure TToken.AfterConstruction;
-var
-  Handles: TArray<THandleEntry>;
-  i: integer;
 begin
   inherited;
-
-  // Init ower of InfoClass field
   FInfoClassData.Token := Self;
-
-  // Firstly we need to obtain a kernel object address to be able to link token
-  // cache. The only way I know to do so is to make a snapshot of all
-  // system/process handles and iterate through them.
-
-  // This information might be already known (from a constructor)
-  if HandleInformation.PObject = nil then
-  begin
-    NtxEnumerateSystemHandles(Handles).RaiseOnError;
-
-    for i := 0 to High(Handles) do
-      if (Handles[i].UniqueProcessId = NtCurrentProcessId) and
-        (Handles[i].HandleValue = hToken) then
-      begin
-        FHandleInformation := Handles[i];
-        Break;
-      end;
-  end;
-
-  // This should not happen and I do not know what to do here
-  if FHandleInformation.PObject = nil then
-    raise EAssertionFailed.Create('Can not obtain kernel object address of a ' +
-      'token.');
-
-  // Register in the factory and initialize token Cache
-  TTokenFactory.RegisterToken(Self);
+  Cache := TTokenCacheAndEvents.Create;
+  InfoClass.Query(tdObjectInfo);
 end;
 
 procedure TToken.AssignToProcess(PID: NativeUInt);
@@ -649,7 +524,8 @@ begin
     raise ENotImplemented.Create('TODO');
 
   hToken := HandleInfo.HandleValue;
-  FHandleInformation := HandleInfo;
+  Cache.IsCached[tdHandleInfo] := True;
+  Cache.HandleInformation := HandleInfo;
   FCaption := Format('Inherited %d [0x%x]', [hToken, hToken]);
 end;
 
@@ -841,7 +717,7 @@ begin
   end;
 
   // Unregister from the factory before we close the handle
-  TTokenFactory.UnRegisterToken(Self);
+  Cache.Free;
 
   if hToken <> 0 then
     NtxSafeClose(hToken);
@@ -975,6 +851,12 @@ function TTokenData.GetGroups: TArray<TGroup>;
 begin
   Assert(Token.Cache.IsCached[tdTokenGroups]);
   Result := Token.Cache.Groups;
+end;
+
+function TTokenData.GetHandleInfo: THandleEntry;
+begin
+  Assert(Token.Cache.IsCached[tdHandleInfo]);
+  Result := Token.Cache.HandleInformation;
 end;
 
 function TTokenData.GetHasRestrictions: LongBool;
@@ -1131,10 +1013,10 @@ begin
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsAccess:
       if Detailed then
-        Result := FormatAccessPrefixed(Token.HandleInformation.GrantedAccess,
-          objNtToken)
+        Result := FormatAccessPrefixed(
+          Token.Cache.ObjectInformation.GrantedAccess, objNtToken)
       else
-        Result := FormatAccess(Token.HandleInformation.GrantedAccess,
+        Result := FormatAccess(Token.Cache.ObjectInformation.GrantedAccess,
           objNtToken);
 
     tsUserName:
@@ -1153,7 +1035,7 @@ begin
       Result := IntegrityToString(Token.Cache.Integrity.SecurityIdentifier.Rid);
 
     tsObjectAddress:
-      Result := IntToHexEx(UInt64(Token.HandleInformation.PObject));
+      Result := IntToHexEx(UInt64(Token.Cache.HandleInformation.PObject));
 
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsHandle:
@@ -1244,19 +1126,11 @@ var
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
   bufferSize: Cardinal;
+  Handles: TArray<THandleEntry>;
   Status: TNtxStatus;
+  i: Integer;
 begin
   Result := False;
-
-  // TokenSource can't be queried without TOKEN_QUERY_SOURCE access
-  if (Token.HandleInformation.GrantedAccess and TOKEN_QUERY_SOURCE = 0) and
-    (DataClass = tdTokenSource) then
-    Exit;
-
-  // And almost nothing can be queried without TOKEN_QUERY access
-  if (Token.HandleInformation.GrantedAccess and TOKEN_QUERY = 0) and
-    not (DataClass in [tdNone, tdTokenSource, tdObjectInfo]) then
-      Exit;
 
   case DataClass of
     tdNone:
@@ -1489,6 +1363,17 @@ begin
     tdObjectInfo:
       Result := NtxQueryBasicInfoObject(Token.hToken,
         Token.Cache.ObjectInformation).IsSuccess;
+
+    tdHandleInfo:
+    begin
+      Result := NtxEnumerateSystemHandles(Handles).IsSuccess;
+      if Result then
+      begin
+        NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);
+        Result := NtxFindHandleEntry(Handles, NtCurrentProcessId, Token.hToken,
+          Token.Cache.HandleInformation);
+      end;
+    end;
   end;
 
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;

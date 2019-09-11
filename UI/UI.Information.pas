@@ -526,8 +526,10 @@ end;
 procedure TInfoDialog.ListViewGeneralDblClick(Sender: TObject);
 begin
   if Assigned(ListViewGeneral.Selected) and
-    (ListViewGeneral.Selected.Index = 2) then
-    TDialogGrantedAccess.Execute(Self, Token.HandleInformation.GrantedAccess);
+    (ListViewGeneral.Selected.Index = 2) and Token.InfoClass.Query(tdObjectInfo)
+    then
+    TDialogGrantedAccess.Execute(Self,
+      Token.InfoClass.ObjectInformation.GrantedAccess);
 end;
 
 procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;
@@ -689,11 +691,14 @@ begin
   ListViewProcesses.Items.Clear;
   ListViewProcesses.SmallImages := TProcessIcons.ImageList;
 
+  if not Token.InfoClass.Query(tdHandleInfo) then
+    Exit;
+
   // Snapshot handles and find the ones pointing to that object
   if NtxEnumerateSystemHandles(Handles).IsSuccess then
   begin
-    NtxFilterHandles(Handles, FilterByAddress,
-      NativeUInt(Token.HandleInformation.PObject));
+    NtxFilterHandles(Handles, FilterByAddress, NativeUInt(
+      Token.InfoClass.HandleInformation.PObject));
 
     OpenedSomewhereElse := False;
 
@@ -746,7 +751,7 @@ begin
       if NtxEnumerateObjects(ObjTypes).IsSuccess then
       begin
         ObjEntry := NtxFindObjectByAddress(ObjTypes,
-          Token.HandleInformation.PObject);
+          Token.InfoClass.HandleInformation.PObject);
 
         if Assigned(ObjEntry) then
         begin
