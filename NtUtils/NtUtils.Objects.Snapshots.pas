@@ -39,6 +39,8 @@ function FilterByAddress(const HandleEntry: THandleEntry;
   ObjectAddress: NativeUInt): Boolean;
 function FilterByType(const HandleEntry: THandleEntry;
   TypeIndex: NativeUInt): Boolean;
+function FilterByAccess(const HandleEntry: THandleEntry;
+  AccessMask: NativeUInt): Boolean;
 
 { Objects }
 
@@ -60,7 +62,8 @@ function NtxEnumerateTypes(out Types: TArray<TObjectTypeInfo>): TNtxStatus;
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntpsapi, Ntapi.ntobapi;
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntrtl, Ntapi.ntpsapi,
+  Ntapi.ntobapi;
 
 { Handles }
 
@@ -149,6 +152,12 @@ function FilterByType(const HandleEntry: THandleEntry;
   TypeIndex: NativeUInt): Boolean;
 begin
   Result := (HandleEntry.ObjectTypeIndex = Word(TypeIndex));
+end;
+
+function FilterByAccess(const HandleEntry: THandleEntry;
+  AccessMask: NativeUInt): Boolean;
+begin
+  Result := (HandleEntry.GrantedAccess = TAccessMask(AccessMask));
 end;
 
 { Objects }

@@ -21,6 +21,9 @@ function NtxDuplicateObject(SourceProcessHandle: THandle;
   out TargetHandle: THandle; DesiredAccess: TAccessMask;
   HandleAttributes: Cardinal; Options: Cardinal): TNtxStatus;
 
+function NtxDuplicateObjectLocal(SourceHandle: THandle; out hNewHandle: THandle;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
+
 // Query name of an object
 function NtxQueryNameObject(hObject: THandle; out Name: String): TNtxStatus;
 
@@ -167,6 +170,13 @@ begin
       TargetProcessHandle, TargetHandle, DesiredAccess, HandleAttributes,
       Options);
   end;
+end;
+
+function NtxDuplicateObjectLocal(SourceHandle: THandle; out hNewHandle: THandle;
+  DesiredAccess: TAccessMask; HandleAttributes: Cardinal): TNtxStatus;
+begin
+  Result := NtxDuplicateObject(NtCurrentProcess, SourceHandle, NtCurrentProcess,
+    hNewHandle, DesiredAccess, HandleAttributes, 0);
 end;
 
 function NtxQueryNameObject(hObject: THandle; out Name: String): TNtxStatus;
