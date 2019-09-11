@@ -14,6 +14,37 @@ const
 
   INFINITE = $FFFFFFFF;
 
+  // 7477
+  CONTEXT_i386 = $00010000;
+
+  CONTEXT_CONTROL = CONTEXT_i386 or $00000001;  // SS:SP, CS:IP, FLAGS, BP
+  CONTEXT_INTEGER = CONTEXT_i386 or $00000002;  // AX, BX, CX, DX, SI, DI
+  CONTEXT_SEGMENTS = CONTEXT_i386 or $00000004; // DS, ES, FS, GS
+  CONTEXT_FLOATING_POINT = CONTEXT_i386 or $00000008;     // 387 state
+  CONTEXT_DEBUG_REGISTERS = CONTEXT_i386 or $00000010;    // DB 0-3,6,7
+  CONTEXT_EXTENDED_REGISTERS = CONTEXT_i386 or $00000020; // cpu specific extensions
+
+  CONTEXT_FULL = CONTEXT_CONTROL or CONTEXT_INTEGER or CONTEXT_SEGMENTS;
+  CONTEXT_ALL = CONTEXT_FULL or CONTEXT_FLOATING_POINT or
+    CONTEXT_DEBUG_REGISTERS or CONTEXT_EXTENDED_REGISTERS;
+
+  CONTEXT_XSTATE = CONTEXT_i386 or $00000040;
+
+  CONTEXT_EXCEPTION_ACTIVE = $08000000;
+  CONTEXT_SERVICE_ACTIVE = $10000000;
+  CONTEXT_EXCEPTION_REQUEST = $40000000;
+  CONTEXT_EXCEPTION_REPORTING = $80000000;
+
+  // EFLAGS register bits
+  EFLAGS_CF = $0001; // Carry
+  EFLAGS_PF = $0004; // Parity
+  EFLAGS_AF = $0010; // Auxiliary Carry
+  EFLAGS_ZF = $0040; // Zero
+  EFLAGS_SF = $0080; // Sign
+  EFLAGS_TF = $0100; // Trap
+  EFLAGS_DF = $0400; // Direction
+  EFLAGS_OF = $0800; // Overflow
+
   // 8894
   _DELETE = $00010000;      // SDDL: DE
   READ_CONTROL = $00020000; // SDDL: RC
@@ -186,6 +217,133 @@ type
   TListEntry = record
     Flink: PListEntry;
     Blink: PListEntry;
+  end;
+
+  // 2529
+  {$ALIGN 16}
+  M128A = record
+    Low: UInt64;
+    High: Int64;
+  end;
+  {$ALIGN 8}
+
+  // 3837
+  {$ALIGN 16}
+  TContext64 = record
+    PnHome: array [1..6] of UInt64;
+    ContextFlags: Cardinal; // CONTEXT_*
+    MxCsr: Cardinal;
+    SegCs: WORD;
+    SegDs: WORD;
+    SegEs: WORD;
+    SegFs: WORD;
+    SegGs: WORD;
+    SegSs: WORD;
+    EFlags: Cardinal;
+    Dr0: UInt64;
+    Dr1: UInt64;
+    Dr2: UInt64;
+    Dr3: UInt64;
+    Dr6: UInt64;
+    Dr7: UInt64;
+    Rax: UInt64;
+    Rcx: UInt64;
+    Rdx: UInt64;
+    Rbx: UInt64;
+    Rsp: UInt64;
+    Rbp: UInt64;
+    Rsi: UInt64;
+    Rdi: UInt64;
+    R8: UInt64;
+    R9: UInt64;
+    R10: UInt64;
+    R11: UInt64;
+    R12: UInt64;
+    R13: UInt64;
+    R14: UInt64;
+    R15: UInt64;
+    Rip: UInt64;
+    FloatingPointState: array [0..31] of M128A;
+    VectorRegister: array [0..25] of M128A;
+    VectorControl: UInt64;
+    DebugControl: UInt64;
+    LastBranchToRip: UInt64;
+    LastBranchFromRip: UInt64;
+    LastExceptionToRip: UInt64;
+    LastExceptionFromRip: UInt64
+  end;
+  PContext64 = ^TContext64;
+  {$ALIGN 8}
+
+  // 7507
+  TFloatingSaveArea = record
+  const
+    SIZE_OF_80387_REGISTERS = 80;
+  var
+    ControlWord: Cardinal;
+    StatusWord: Cardinal;
+    TagWord: Cardinal;
+    ErrorOffset: Cardinal;
+    ErrorSelector: Cardinal;
+    DataOffset: Cardinal;
+    DataSelector: Cardinal;
+    RegisterArea: array [0 .. SIZE_OF_80387_REGISTERS - 1] of Byte;
+    Cr0NpxState: Cardinal;
+  end;
+
+  // 7548
+  TContext32 = record
+  const
+    MAXIMUM_SUPPORTED_EXTENSION = 512;
+  var
+    ContextFlags: Cardinal; // CONTEXT_*
+    Dr0: Cardinal;
+    Dr1: Cardinal;
+    Dr2: Cardinal;
+    Dr3: Cardinal;
+    Dr6: Cardinal;
+    Dr7: Cardinal;
+    FloatSave: TFloatingSaveArea;
+    SegGs: Cardinal;
+    SegFs: Cardinal;
+    SegEs: Cardinal;
+    SegDs: Cardinal;
+    Edi: Cardinal;
+    Esi: Cardinal;
+    Ebx: Cardinal;
+    Edx: Cardinal;
+    Ecx: Cardinal;
+    Eax: Cardinal;
+    Ebp: Cardinal;
+    Eip: Cardinal;
+    SegCs: Cardinal;
+    EFlags: Cardinal;
+    Esp: Cardinal;
+    SegSs: Cardinal;
+    ExtendedRegisters: array [0 .. MAXIMUM_SUPPORTED_EXTENSION - 1] of Byte;
+  end;
+  PContext32 = ^TContext32;
+
+  {$IFDEF WIN64}
+  TContext = TContext64;
+  {$ELSE}
+  TContext = TContext32;
+  {$ENDIF}
+  PContext = ^TContext;
+
+  // 8775
+  PExceptionRecord = ^TExceptionRecord;
+  TExceptionRecord = record
+  const
+    EXCEPTION_MAXIMUM_PARAMETERS = 15;
+  var
+    ExceptionCode: Cardinal;
+    ExceptionFlags: Cardinal;
+    ExceptionRecord: PExceptionRecord;
+    ExceptionAddress: Pointer;
+    NumberParameters: Cardinal;
+    ExceptionInformation: array [0 .. EXCEPTION_MAXIMUM_PARAMETERS - 1] of
+      NativeUInt;
   end;
 
   // 8877

@@ -309,6 +309,7 @@
         <DCCReference Include="NtUtils\NtUtils.Sections.pas"/>
         <DCCReference Include="Headers\Ntapi.ntioapi.pas"/>
         <DCCReference Include="Headers\Winapi.ConsoleApi.pas"/>
+        <DCCReference Include="Headers\Ntapi.ntdbg.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

@@ -228,7 +228,7 @@ type
     HardErrorMode: Cardinal;
 
 	{$IFDEF WIN64}
-	Instrumentation: array [1..11] of Pointer;
+    Instrumentation: array [1..11] of Pointer;
 	{$ELSE}
     Instrumentation: array [1..9] of Pointer;
 	{$ENDIF}

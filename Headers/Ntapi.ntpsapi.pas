@@ -9,6 +9,9 @@ uses
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntpebteb;
 
 const
+  // ProcessDebugFlags info class
+  PROCESS_DEBUG_INHERIT = $00000001;
+
   PROCESS_TERMINATE = $0001;
   PROCESS_CREATE_THREAD = $0002;
   PROCESS_SET_SESSIONID = $0004;
@@ -103,7 +106,7 @@ type
     ProcessLUIDDeviceMapsEnabled = 28,
     ProcessBreakOnTermination = 29,
     ProcessDebugObjectHandle = 30,
-    ProcessDebugFlags = 31,
+    ProcessDebugFlags = 31,            // q, s: Cardinal (PROCESS_DEBUG_INHERIT)
     ProcessHandleTracing = 32,
     ProcessIoPriority = 33,
     ProcessExecuteFlags = 34,
@@ -310,12 +313,18 @@ function NtTerminateThread(ThreadHandle: THandle; ExitStatus: NTSTATUS):
   NTSTATUS; stdcall; external ntdll;
 
 function NtSuspendThread(ThreadHandle: THandle; PreviousSuspendCount:
-  PCardinal): NTSTATUS; stdcall; external ntdll;
+  PCardinal = nil): NTSTATUS; stdcall; external ntdll;
 
 function NtResumeThread(ThreadHandle: THandle; PreviousSuspendCount:
-  PCardinal): NTSTATUS; stdcall; external ntdll;
+  PCardinal = nil): NTSTATUS; stdcall; external ntdll;
 
 function NtGetCurrentProcessorNumber: Cardinal; stdcall; external ntdll;
+
+function NtGetContextThread(ThreadHandle: THandle; var ThreadContext: TContext):
+  NTSTATUS; stdcall; external ntdll;
+
+function NtSetContextThread(ThreadHandle: THandle;
+  const ThreadContext: TContext): NTSTATUS; stdcall; external ntdll;
 
 function NtQueryInformationThread(ThreadHandle: THandle;
   ThreadInformationClass: TThreadInfoClass; ThreadInformation: Pointer;

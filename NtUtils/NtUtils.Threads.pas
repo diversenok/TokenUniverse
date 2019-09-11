@@ -40,6 +40,14 @@ type
 function NtxQueryExitStatusThread(hThread: THandle; out ExitStatus: NTSTATUS)
   : TNtxStatus;
 
+// Get thread context
+function NtxGetContextThread(hThread: THandle; FlagsToQuery: Cardinal;
+  out Context: TContext): TNtxStatus;
+
+// Set thread context
+function NtxSetContextThread(hThread: THandle; const Context: TContext):
+  TNtxStatus;
+
 // Create a thread in a process
 function RtlxCreateThread(out hThread: THandle; hProcess: THandle;
   StartRoutine: TUserThreadStartRoutine; Parameter: Pointer;
@@ -164,6 +172,25 @@ begin
 
   if Result.IsSuccess then
     ExitStatus := Info.ExitStatus;
+end;
+
+function NtxGetContextThread(hThread: THandle; FlagsToQuery: Cardinal;
+  out Context: TContext): TNtxStatus;
+begin
+  FillChar(Context, SizeOf(Context), 0);
+  Context.ContextFlags := FlagsToQuery;
+
+  Result.Location := 'NtGetContextThread';
+  Result.LastCall.Expects(THREAD_GET_CONTEXT, objNtThread);
+  Result.Status := NtGetContextThread(hThread, Context);
+end;
+
+function NtxSetContextThread(hThread: THandle; const Context: TContext):
+  TNtxStatus;
+begin
+  Result.Location := 'NtSetContextThread';
+  Result.LastCall.Expects(THREAD_SET_CONTEXT, objNtThread);
+  Result.Status := NtSetContextThread(hThread, Context);
 end;
 
 function RtlxCreateThread(out hThread: THandle; hProcess: THandle;

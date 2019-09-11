@@ -117,7 +117,8 @@ uses
   NtUtils.Shellcode in 'NtUtils\NtUtils.Shellcode.pas',
   NtUtils.Sections in 'NtUtils\NtUtils.Sections.pas',
   Ntapi.ntioapi in 'Headers\Ntapi.ntioapi.pas',
-  Winapi.ConsoleApi in 'Headers\Winapi.ConsoleApi.pas';
+  Winapi.ConsoleApi in 'Headers\Winapi.ConsoleApi.pas',
+  Ntapi.ntdbg in 'Headers\Ntapi.ntdbg.pas';
 
 {$R *.res}
 

@@ -192,6 +192,18 @@ function RtlCreateUserThread(Process: THandle; ThreadSecurityDescriptor:
   StartAddress: TUserThreadStartRoutine; Parameter: Pointer; out Thread:
   THandle; ClientId: PClientId): NTSTATUS; stdcall; external ntdll;
 
+// Extended thread context
+
+{$IFDEF WIN64}
+function RtlWow64GetThreadContext(ThreadHandle: THandle;
+  var ThreadContext: TContext32): NTSTATUS; stdcall; external ntdll;
+{$ENDIF}
+
+{$IFDEF WIN64}
+function RtlWow64SetThreadContext(ThreadHandle: THandle;
+  var ThreadContext: TContext32): NTSTATUS; stdcall; external ntdll;
+{$ENDIF}
+
 // Images
 
 function RtlImageNtHeaderEx(Flags: Cardinal; BaseOfImage: Pointer; Size: UInt64;
