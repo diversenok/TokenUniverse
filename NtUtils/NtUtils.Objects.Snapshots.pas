@@ -26,7 +26,7 @@ type
 { Handles }
 
 // Snapshot all handles on the system
-function NtxEnumerateSystemHandles(out Handles: TArray<THandleEntry>):
+function NtxEnumerateHandles(out Handles: TArray<THandleEntry>):
   TNtxStatus;
 
 // Filter specific handles from the snapshot
@@ -70,7 +70,7 @@ uses
 
 { Handles }
 
-function NtxEnumerateSystemHandles(out Handles: TArray<THandleEntry>):
+function NtxEnumerateHandles(out Handles: TArray<THandleEntry>):
   TNtxStatus;
 var
   BufferSize, ReturnLength: Cardinal;

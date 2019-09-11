@@ -348,7 +348,7 @@ begin
   CurrentUserChanged(Self);
 
   // Search for inherited handles
-  if NtxEnumerateSystemHandles(Handles).IsSuccess then
+  if NtxEnumerateHandles(Handles).IsSuccess then
   begin
     NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);
 

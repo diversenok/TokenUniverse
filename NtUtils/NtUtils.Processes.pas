@@ -9,6 +9,9 @@ const
   // Ntapi.ntpsapi
   NtCurrentProcess: THandle = THandle(-1);
 
+type
+  TProcessHandleEntry = Ntapi.ntpsapi.TProcessHandleTableEntryInfo;
+
 // Open a process (always succeeds for the current PID)
 function NtxOpenProcess(out hProcess: THandle; PID: NativeUInt;
   DesiredAccess: TAccessMask; HandleAttributes: Cardinal = 0): TNtxStatus;
@@ -35,6 +38,10 @@ type
     class function SetInfo<T>(hProcess: THandle;
       InfoClass: TProcessInfoClass; const Buffer: T): TNtxStatus; static;
   end;
+
+// Enumerate handles of a process
+function NtxEnumerateHandlesProcess(hProcess: THandle; out Handles:
+  TArray<TProcessHandleEntry>): TNtxStatus;
 
 // Query a string
 function NtxQueryStringProcess(hProcess: THandle; InfoClass: TProcessInfoClass;
@@ -153,6 +160,25 @@ class function NtxProcess.SetInfo<T>(hProcess: THandle;
   InfoClass: TProcessInfoClass; const Buffer: T): TNtxStatus;
 begin
   Result := NtxSetProcess(hProcess, InfoClass, @Buffer, SizeOf(Buffer));
+end;
+
+function NtxEnumerateHandlesProcess(hProcess: THandle; out Handles:
+  TArray<TProcessHandleEntry>): TNtxStatus;
+var
+  Buffer: PProcessHandleSnapshotInformation;
+  i: Integer;
+begin
+  Buffer := NtxQueryProcess(hProcess, ProcessHandleInformation, Result);
+
+  if Result.IsSuccess then
+  begin
+    SetLength(Handles, Buffer.NumberOfHandles);
+
+    for i := 0 to High(Handles) do
+      Handles[i] := Buffer.Handles{$R-}[i]{$R+};
+
+    FreeMem(Buffer);
+  end;
 end;
 
 function NtxQueryStringProcess(hProcess: THandle; InfoClass: TProcessInfoClass;

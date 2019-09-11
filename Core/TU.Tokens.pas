@@ -1128,7 +1128,6 @@ var
   bufferSize: Cardinal;
   Handles: TArray<THandleEntry>;
   Status: TNtxStatus;
-  i: Integer;
 begin
   Result := False;
 
@@ -1366,7 +1365,7 @@ begin
 
     tdHandleInfo:
     begin
-      Result := NtxEnumerateSystemHandles(Handles).IsSuccess;
+      Result := NtxEnumerateHandles(Handles).IsSuccess;
       if Result then
       begin
         NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);

@@ -176,7 +176,7 @@ begin
       Exit(STATUS_SUCCESS);
 
   // The last resort is to proceed via a handle snapshot
-  Result := NtxEnumerateSystemHandles(Handles).Status;
+  Result := NtxEnumerateHandles(Handles).Status;
 
   if not NT_SUCCESS(Result) then
     Exit;

@@ -695,7 +695,7 @@ begin
     Exit;
 
   // Snapshot handles and find the ones pointing to that object
-  if NtxEnumerateSystemHandles(Handles).IsSuccess then
+  if NtxEnumerateHandles(Handles).IsSuccess then
   begin
     NtxFilterHandles(Handles, FilterByAddress, NativeUInt(
       Token.InfoClass.HandleInformation.PObject));

@@ -92,7 +92,7 @@ begin
     ProcessDebugPort, ProcessWorkingSetWatch, ProcessWx86Information,
     ProcessDeviceMap, ProcessBreakOnTermination, ProcessDebugObjectHandle,
     ProcessDebugFlags, ProcessHandleTracing, ProcessExecuteFlags,
-    ProcessWorkingSetWatchEx, ProcessImageFileMapping:
+    ProcessWorkingSetWatchEx, ProcessImageFileMapping, ProcessHandleInformation:
       LastCall.Expects(PROCESS_QUERY_INFORMATION, objNtProcess);
 
     ProcessCookie:

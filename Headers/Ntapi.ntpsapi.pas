@@ -126,7 +126,7 @@ type
     ProcessTokenVirtualizationEnabled = 48,
     ProcessConsoleHostProcess = 49,
     ProcessWindowInformation = 50,
-    ProcessHandleInformation = 51,
+    ProcessHandleInformation = 51,   // q: TProcessHandleSnapshotInformation
     ProcessMitigationPolicy = 52,
     ProcessDynamicFunctionTableInformation = 53,
     ProcessHandleCheckingMode = 54,
@@ -191,6 +191,25 @@ type
     Token: THandle; // needs TOKEN_ASSIGN_PRIMARY
     Thread: THandle; // currently unused, was THREAD_QUERY_INFORMATION
   end;
+
+  TProcessHandleTableEntryInfo = record
+    HandleValue: THandle;
+    HandleCount: NativeUInt;
+    PointerCount: NativeUInt;
+    GrantedAccess: Cardinal;
+    ObjectTypeIndex: Cardinal;
+    HandleAttributes: Cardinal;
+    Reserved: Cardinal;
+  end;
+  PProcessHandleTableEntryInfo = ^TProcessHandleTableEntryInfo;
+
+  // ProcessHandleInformation
+  TProcessHandleSnapshotInformation = record
+    NumberOfHandles: NativeUInt;
+    Reserved: NativeUInt;
+    Handles: array [ANYSIZE_ARRAY] of TProcessHandleTableEntryInfo;
+  end;
+  PProcessHandleSnapshotInformation = ^TProcessHandleSnapshotInformation;
 
   TThreadBasicInformation = record
     ExitStatus: NTSTATUS;
