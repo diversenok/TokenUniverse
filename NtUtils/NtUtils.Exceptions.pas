@@ -49,7 +49,7 @@ type
     function IsSuccess: Boolean; inline;
     property WinError: Cardinal read GetWinError write SetWinError;
     property Win32Result: Boolean write FromLastWin32;
-    procedure RaiseOnError;
+    procedure RaiseOnError; inline;
     procedure ReportOnError;
   public
     property Location: String read FLocation write SetLocation;

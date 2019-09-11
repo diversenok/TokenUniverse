@@ -18,6 +18,9 @@ type
 
 implementation
 
+uses
+  NtUtils.Exceptions;
+
 {$R *.dfm}
 
 { TDialogSystemAudit }

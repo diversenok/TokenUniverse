@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  DelphiUtils.Strings, Winapi.WinNt;
+  DelphiUtils.Strings, Winapi.WinNt, NtUtils.Exceptions;
 
 {$R *.dfm}
 

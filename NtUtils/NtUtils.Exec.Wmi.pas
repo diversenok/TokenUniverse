@@ -16,7 +16,7 @@ implementation
 uses
   Winapi.ActiveX, System.Win.ComObj, System.SysUtils, Ntapi.ntpsapi,
   Winapi.ProcessThreadsApi, NtUtils.Exec.Win32, NtUtils.Tokens.Impersonate,
-  NtUtils.Objects;
+  NtUtils.Objects, NtUtils.Exceptions;
 
 function GetWMIObject(const objectName: String): IDispatch;
 var

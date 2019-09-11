@@ -45,7 +45,7 @@ type
 implementation
 
 uses
-  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
+  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser, NtUtils.Exceptions,
   DelphiUtils.Strings, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
   NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes;
 

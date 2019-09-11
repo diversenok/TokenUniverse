@@ -100,7 +100,7 @@ uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
   Ntapi.ntpsapi, NtUtils.Objects, Winapi.WinUser, NtUtils.WinUser,
-  NtUtils.Processes;
+  NtUtils.Processes, NtUtils.Exceptions;
 
 {$R *.dfm}
 
