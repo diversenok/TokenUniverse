@@ -173,25 +173,11 @@
             <Form>ComboDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Headers\Ntapi.ntdef.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntstatus.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntexapi.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntobapi.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntpsapi.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntseapi.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntrtl.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntpebteb.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntkeapi.pas"/>
         <DCCReference Include="Core\TU.Winapi.pas"/>
         <DCCReference Include="UI\UI.Modal.ThreadList.pas">
             <Form>ThreadListDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
-        <DCCReference Include="Headers\Winapi.WinError.pas"/>
-        <DCCReference Include="Headers\Winapi.WinNt.pas"/>
-        <DCCReference Include="Headers\Winapi.WinBase.pas"/>
-        <DCCReference Include="Headers\Winapi.Sddl.pas"/>
         <DCCReference Include="UI\UI.Information.Access.pas">
             <Form>DialogGrantedAccess</Form>
             <FormType>dfm</FormType>
@@ -200,34 +186,20 @@
             <Form>DialogPickToken</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Headers\Winapi.WinSafer.pas"/>
         <DCCReference Include="UI\UI.New.Safer.pas">
             <Form>DialogSafer</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Headers\Winapi.NtSecApi.pas"/>
         <DCCReference Include="UI\UI.Prototypes.AuditFrame.pas">
             <Form>FrameAudit</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="Headers\Winapi.ntlsa.pas"/>
         <DCCReference Include="UI\UI.Prototypes.Logon.pas">
             <Form>FrameLogon</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
-        <DCCReference Include="Headers\Winapi.winsta.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
-        <DCCReference Include="NtUtils\DelphiUtils.Events.pas"/>
-        <DCCReference Include="NtUtils\DelphiUtils.Strings.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Ldr.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntldr.pas"/>
-        <DCCReference Include="Headers\Winapi.securitybaseapi.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Strings.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Security.Sid.pas"/>
         <DCCReference Include="UI\UI.Prototypes.Privileges.pas">
             <Form>FramePrivileges</Form>
             <FormType>dfm</FormType>
@@ -238,7 +210,6 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="Headers\Ntapi.ntsam.pas"/>
         <DCCReference Include="UI\UI.Sid.View.pas">
             <Form>DialogSidView</Form>
         </DCCReference>
@@ -252,67 +223,79 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.Audit.pas"/>
         <DCCReference Include="UI\UI.Audit.System.pas">
             <Form>DialogSystemAudit</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Headers\Winapi.WinUser.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.pas"/>
         <DCCReference Include="UI\UI.Process.Run.pas">
             <Form>DialogRun</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="Headers\Winapi.Shlwapi.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Win32.pas"/>
-        <DCCReference Include="Headers\Winapi.ProcessThreadsApi.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Shell.pas"/>
-        <DCCReference Include="Headers\Winapi.Shell.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Wdc.pas"/>
-        <DCCReference Include="Headers\Winapi.Wdc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Wmi.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntmmapi.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Nt.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntdef.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntexapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntioapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntkeapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntldr.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntmmapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntobapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntpebteb.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntpsapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntregapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntrtl.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntsam.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntseapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntstatus.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.ntlsa.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.NtSecApi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.ProcessThreadsApi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.Sddl.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.securitybaseapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.Shell.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.Shlwapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.Svc.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.UserEnv.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.Wdc.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.WinBase.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.WinError.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.WinNt.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.WinSafer.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.winsta.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.WinUser.pas"/>
+        <DCCReference Include="NtUtils\DelphiUtils.Events.pas"/>
+        <DCCReference Include="NtUtils\DelphiUtils.Strings.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Access.Expected.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Access.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Nt.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Shell.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Wdc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Win32.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exec.Wmi.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Ldr.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Lsa.Audit.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Lsa.Logon.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.Compare.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Impersonate.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.Snapshots.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Processes.Snapshots.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Security.Acl.pas"/>
-        <DCCReference Include="Headers\Winapi.Svc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Logon.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Security.Sid.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Strings.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Svc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Svc.SingleTaskSvc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Svc.Security.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.Security.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Security.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Sam.Security.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Sam.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Job.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.Logon.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
-        <DCCReference Include="Headers\Winapi.UserEnv.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Snapshots.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.Snapshots.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntregapi.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Threads.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Access.Expected.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Compare.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Namespace.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.Memory.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Shellcode.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Sections.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntioapi.pas"/>
-        <DCCReference Include="Headers\Winapi.ConsoleApi.pas"/>
-        <DCCReference Include="Headers\Ntapi.ntdbg.pas"/>
-        <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
-            <Form>NtUtils.ErrorMsg.res</Form>
-        </RcCompile>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Impersonate.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Logon.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

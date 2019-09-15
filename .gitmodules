@@ -1,0 +1,3 @@
+[submodule "NtUtils"]
+	path = NtUtils
+	url = https://github.com/diversenok/NtUtilsLibrary
