@@ -1,3 +1,6 @@
 [submodule "NtUtils"]
 	path = NtUtils
 	url = https://github.com/diversenok/NtUtilsLibrary
+[submodule "VclEx"]
+	path = VclEx
+	url = https://github.com/diversenok/VclEx

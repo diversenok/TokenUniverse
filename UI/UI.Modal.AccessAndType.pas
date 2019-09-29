@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics,
   Vcl.ComCtrls, TU.Tokens, UI.Prototypes, UI.Prototypes.ChildForm,
-  UI.ListViewEx, TU.Tokens.Types;
+  VclEx.ListView, TU.Tokens.Types;
 
 type
   TDialogAccessAndType = class(TChildForm)

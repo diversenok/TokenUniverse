@@ -141,7 +141,6 @@
             <Form>DialogRestrictToken</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UI\UI.ListViewEx.pas"/>
         <DCCReference Include="UI\UI.Colors.pas"/>
         <DCCReference Include="UI\UI.Prototypes.pas"/>
         <DCCReference Include="Core\TU.Credentials.pas"/>
@@ -296,6 +295,7 @@
         <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
+        <DCCReference Include="VclEx\VclEx.ListView.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

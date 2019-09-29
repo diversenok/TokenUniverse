@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
-  Vcl.ComCtrls, UI.ListViewEx, NtUtils.Lsa.Audit;
+  Vcl.ComCtrls, VclEx.ListView, NtUtils.Lsa.Audit;
 
 type
   TApplyProc = procedure (AuditPolicy: IAudit) of object;

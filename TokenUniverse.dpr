@@ -12,7 +12,6 @@ uses
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
-  UI.ListViewEx in 'UI\UI.ListViewEx.pas',
   UI.Colors in 'UI\UI.Colors.pas',
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
@@ -104,7 +103,8 @@ uses
   NtUtils.Tokens in 'NtUtils\NtUtils.Tokens.pas',
   NtUtils.WinSafer in 'NtUtils\NtUtils.WinSafer.pas',
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
-  NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas';
+  NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas',
+  VclEx.ListView in 'VclEx\VclEx.ListView.pas';
 
 {$R *.res}
 

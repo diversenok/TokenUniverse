@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.ComCtrls, Vcl.StdCtrls,
-  UI.Prototypes, UI.Prototypes.ChildForm, UI.ListViewEx, Winapi.WinNt;
+  UI.Prototypes, UI.Prototypes.ChildForm, VclEx.ListView, Winapi.WinNt;
 
 type
   TDialogGrantedAccess = class(TChildForm)

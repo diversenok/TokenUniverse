@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,  Vcl.Menus,
-  Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.ListViewEx,
+  Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView,
   UI.Prototypes.ChildForm, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
 
 type
