@@ -11,9 +11,7 @@ uses
 type
   TLogonDialog = class(TChildForm)
     ComboLogonType: TComboBox;
-    ComboLogonProvider: TComboBox;
     LabelType: TLabel;
-    LabelProvider: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
     ButtonAddSID: TButton;
@@ -33,8 +31,8 @@ type
     procedure MenuRemoveClick(Sender: TObject);
     procedure MenuEditClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure ComboLogonProviderChange(Sender: TObject);
     procedure ButtonAllocLuidClick(Sender: TObject);
+    procedure ComboLogonTypeChange(Sender: TObject);
   private
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: TSecurityLogonType;
@@ -51,7 +49,7 @@ uses
 {$R *.dfm}
 
 const
-  S4U_INDEX = 5; // Make sure to be consisten with the combobox
+  S4U_INDEX = 0; // Make sure to be consisten with the combobox
 
 function IsLogonSid(Sid: ISid): Boolean;
 begin
@@ -84,16 +82,16 @@ begin
   Enabled := False;
   try
     PromptCredentialsUI(Handle, TokenCreationCallback,
-      ComboLogonProvider.ItemIndex = S4U_INDEX);
+      ComboLogonType.ItemIndex = S4U_INDEX);
   finally
     Enabled := True;
   end;
   ModalResult := mrOk;
 end;
 
-procedure TLogonDialog.ComboLogonProviderChange(Sender: TObject);
+procedure TLogonDialog.ComboLogonTypeChange(Sender: TObject);
 begin
-  EditSourceName.Enabled := (ComboLogonProvider.ItemIndex = S4U_INDEX);
+  EditSourceName.Enabled := (ComboLogonType.ItemIndex = S4U_INDEX);
   EditSourceLuid.Enabled := EditSourceName.Enabled;
   ButtonAllocLuid.Enabled := EditSourceName.Enabled;
 end;
@@ -105,7 +103,7 @@ end;
 
 function TLogonDialog.GetLogonType: TSecurityLogonType;
 const
-  LogonTypeMapping: array [0 .. 6] of TSecurityLogonType = (
+  LogonTypeMapping: array [1 .. 7] of TSecurityLogonType = (
     LogonTypeInteractive, LogonTypeNetwork, LogonTypeNetworkCleartext,
     LogonTypeNewCredentials, LogonTypeUnlock, LogonTypeBatch, LogonTypeService
   );
@@ -164,7 +162,7 @@ procedure TLogonDialog.TokenCreationCallback(Domain, User: String;
 var
   Source: TTokenSource;
 begin
-  if ComboLogonProvider.ItemIndex = S4U_INDEX then
+  if ComboLogonType.ItemIndex = S4U_INDEX then
   begin
     // Use Services 4 Users logon
     Source.FromString(EditSourceName.Text);

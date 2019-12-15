@@ -3,7 +3,7 @@ object LogonDialog: TLogonDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Logon user'
-  ClientHeight = 396
+  ClientHeight = 344
   ClientWidth = 312
   Color = clBtnFace
   Constraints.MinHeight = 320
@@ -27,16 +27,9 @@ object LogonDialog: TLogonDialog
     Height = 13
     Caption = 'Logon type:'
   end
-  object LabelProvider: TLabel
-    Left = 8
-    Top = 57
-    Width = 76
-    Height = 13
-    Caption = 'Logon provider:'
-  end
   object LabelGroups: TLabel
     Left = 8
-    Top = 170
+    Top = 116
     Width = 296
     Height = 17
     Alignment = taCenter
@@ -51,10 +44,12 @@ object LogonDialog: TLogonDialog
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
-    ItemIndex = 0
+    ItemIndex = 1
     TabOrder = 0
     Text = 'Interactive'
+    OnChange = ComboLogonTypeChange
     Items.Strings = (
+      'S4U (without a password)'
       'Interactive'
       'Network'
       'Network clear text'
@@ -63,50 +58,31 @@ object LogonDialog: TLogonDialog
       'Batch'
       'Service')
   end
-  object ComboLogonProvider: TComboBox
-    Left = 8
-    Top = 76
-    Width = 296
-    Height = 21
-    Style = csDropDownList
-    Anchors = [akLeft, akTop, akRight]
-    ItemIndex = 0
-    TabOrder = 1
-    Text = 'Default'
-    OnChange = ComboLogonProviderChange
-    Items.Strings = (
-      'Default'
-      'Windows NT 3.5'
-      'NTLM'
-      'Negotiate'
-      'Virtual'
-      'Negotiate via S4U')
-  end
   object ButtonCancel: TButton
     Left = 8
-    Top = 363
+    Top = 311
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 6
+    TabOrder = 5
   end
   object ButtonContinue: TButton
     Left = 229
-    Top = 363
+    Top = 311
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Continue'
     Default = True
-    TabOrder = 4
+    TabOrder = 3
     OnClick = ButtonContinueClick
   end
   object ButtonAddSID: TButton
     Left = 118
-    Top = 363
+    Top = 311
     Width = 78
     Height = 25
     Anchors = [akBottom]
@@ -115,17 +91,17 @@ object LogonDialog: TLogonDialog
     ImageMargins.Left = 3
     ImageMargins.Top = 1
     Images = FormMain.SmallIcons
-    TabOrder = 3
+    TabOrder = 2
     OnClick = ButtonAddSIDClick
   end
   object GroupBoxSource: TGroupBox
     Left = 8
-    Top = 110
+    Top = 54
     Width = 296
     Height = 54
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Token Source '
-    TabOrder = 2
+    TabOrder = 1
     object EditSourceName: TEdit
       Left = 45
       Top = 21
@@ -180,17 +156,17 @@ object LogonDialog: TLogonDialog
   end
   inline FrameGroups: TFrameGroups
     Left = 8
-    Top = 193
+    Top = 137
     Width = 296
-    Height = 164
+    Height = 168
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 5
+    TabOrder = 4
     inherited ListView: TListViewEx
       AlignWithMargins = False
       Left = 0
       Top = 0
       Width = 296
-      Height = 164
+      Height = 168
       PopupMenu = PopupMenu
       OnDblClick = MenuEditClick
     end
