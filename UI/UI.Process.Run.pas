@@ -5,7 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.ChildForm,
-  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens, NtUtils.Environment;
+  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens, NtUtils.Environment,
+  NtUtils.Objects;
 
 type
   TDialogRun = class(TChildTaskbarForm, IExecProvider)
@@ -71,8 +72,8 @@ type
     function Parameters: String;
     function CurrentDircetory: String;
     function Desktop: String;
-    function Token: THandle;
-    function ParentProcess: THandle;
+    function Token: IHandle;
+    function ParentProcess: IHandle;
     function LogonFlags: Cardinal;
     function InheritHandles: Boolean;
     function CreateSuspended: Boolean;
@@ -83,9 +84,9 @@ type
     function RunAsInvoker: Boolean;
     function Environment: IEnvironment;
   private
-    ExecMethod: IExecMethod;
+    ExecMethod: TExecMethodClass;
     FToken: TToken;
-    hParentProcess: THandle;
+    hxParentProcess: IHandle;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(NewCaption: String);
     procedure SetToken(const Value: TToken);
@@ -99,7 +100,7 @@ implementation
 uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
-  Ntapi.ntpsapi, NtUtils.Objects, Winapi.WinUser, NtUtils.WinUser,
+  Ntapi.ntpsapi, Winapi.WinUser, NtUtils.WinUser,
   NtUtils.Processes, NtUtils.Exceptions;
 
 {$R *.dfm}
@@ -124,10 +125,8 @@ procedure TDialogRun.ButtonChooseParentClick(Sender: TObject);
 var
   ClientIdEx: TClientIdEx;
 begin
-  MenuClearParentClick(Sender);
-
   ClientIdEx := TProcessListDialog.Execute(Self, False);
-  NtxOpenProcess(hParentProcess, ClientIdEx.ProcessID,
+  NtxOpenProcess(hxParentProcess, ClientIdEx.ProcessID,
     PROCESS_CREATE_PROCESS).RaiseOnError;
 
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
@@ -145,10 +144,8 @@ var
 begin
   if Assigned(ExecMethod) then
   begin
-    ProcInfo := ExecMethod.Execute(Self);
-
+    ExecMethod.Execute(Self, ProcInfo).RaiseOnError;
     // TODO: check that the process didn't crash immediately
-    FreeProcessInfo(ProcInfo);
   end
   else
     raise Exception.Create('No exec method available');
@@ -157,17 +154,17 @@ end;
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
 begin
   if Sender = RadioButtonAsUser then
-    ExecMethod := TExecCreateProcessAsUser.Create
+    ExecMethod := TExecCreateProcessAsUser
   else if Sender = RadioButtonWithToken then
-    ExecMethod := TExecCreateProcessWithToken.Create
+    ExecMethod := TExecCreateProcessWithToken
   else if Sender = RadioButtonRtl then
-    ExecMethod := TExecRtlCreateUserProcess.Create
+    ExecMethod := TExecRtlCreateUserProcess
   else if Sender = RadioButtonShell then
-    ExecMethod := TExecShellExecute.Create
+    ExecMethod := TExecShellExecute
   else if Sender = RadioButtonWdc then
-    ExecMethod := TExecCallWdc.Create
+    ExecMethod := TExecCallWdc
   else if Sender = RadioButtonWMI then
-    ExecMethod := TExecCallWmi.Create
+    ExecMethod := TExecCallWmi
   else
     ExecMethod := nil;
   UpdateEnabledState;
@@ -240,12 +237,8 @@ end;
 
 procedure TDialogRun.MenuClearParentClick(Sender: TObject);
 begin
-  if hParentProcess <> 0 then
-  begin
-    NtxSafeClose(hParentProcess);
-    hParentProcess := 0;
-    EditParent.Text := '<not specified>';
-  end;
+  hxParentProcess := nil;
+  EditParent.Text := '<not specified>';
 end;
 
 procedure TDialogRun.MenuCmdClick(Sender: TObject);
@@ -273,9 +266,9 @@ begin
   Result := EditParams.Text;
 end;
 
-function TDialogRun.ParentProcess: THandle;
+function TDialogRun.ParentProcess: IHandle;
 begin
-  Result := hParentProcess;
+  Result := hxParentProcess;
 end;
 
 function TDialogRun.Provides(Parameter: TExecParam): Boolean;
@@ -295,7 +288,7 @@ begin
       Result := Assigned(FToken);
 
     ppParentProcess:
-      Result := hParentProcess <> 0;
+      Result := Assigned(hxParentProcess);
 
     ppShowWindowMode:
       Result := ComboBoxShowMode.ItemIndex <> SW_SHOWNORMAL;
@@ -343,12 +336,10 @@ begin
   Result := ComboBoxShowMode.ItemIndex;
 end;
 
-function TDialogRun.Token: THandle;
+function TDialogRun.Token: IHandle;
 begin
   if Assigned(FToken) then
     Result := FToken.Handle
-  else
-    Result := 0;
 end;
 
 procedure TDialogRun.UpdateDesktopList;

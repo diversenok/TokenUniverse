@@ -38,7 +38,6 @@ type
   private
     procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: TSecurityLogonType;
-    function GetLogonProvider: TLogonProvider;
     procedure SuggestCurrentLogonGroup;
   end;
 
@@ -102,11 +101,6 @@ end;
 procedure TLogonDialog.FormCreate(Sender: TObject);
 begin
   ButtonAllocLuidClick(Sender);
-end;
-
-function TLogonDialog.GetLogonProvider: TLogonProvider;
-begin
-  Result := TLogonProvider(ComboLogonProvider.ItemIndex);
 end;
 
 function TLogonDialog.GetLogonType: TSecurityLogonType;
@@ -177,12 +171,12 @@ begin
     Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
       'Source LUID');
 
-    FormMain.TokenView.Add(TToken.CreateS4ULogon(GetLogonType, Domain, User,
-      Source, FrameGroups.Groups));
+    FormMain.TokenView.Add(TToken.CreateS4ULogon(Domain, User, Source,
+      FrameGroups.Groups));
   end
   else
-    FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType,
-      GetLogonProvider, Domain, User, Password, FrameGroups.Groups));
+    FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType, Domain, User,
+      Password, FrameGroups.Groups));
 end;
 
 end.

@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{FAB640F0-B30E-4DFF-B1C6-0AE668D2F087}</ProjectGuid>
-        <ProjectVersion>18.4</ProjectVersion>
+        <ProjectVersion>18.7</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <MainSource>TokenUniverse.dpr</MainSource>
         <Base>True</Base>
@@ -230,11 +230,14 @@
             <Form>DialogRun</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="VclEx\VclEx.ListView.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntdbg.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntdef.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntexapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntioapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntkeapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntldr.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntlpcapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntmmapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntobapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntpebteb.pas"/>
@@ -244,6 +247,9 @@
         <DCCReference Include="NtUtils\Headers\Ntapi.ntsam.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntseapi.pas"/>
         <DCCReference Include="NtUtils\Headers\Ntapi.ntstatus.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.nttmapi.pas"/>
+        <DCCReference Include="NtUtils\Headers\Ntapi.ntwow64.pas"/>
+        <DCCReference Include="NtUtils\Headers\Winapi.ConsoleApi.pas"/>
         <DCCReference Include="NtUtils\Headers\Winapi.ntlsa.pas"/>
         <DCCReference Include="NtUtils\Headers\Winapi.NtSecApi.pas"/>
         <DCCReference Include="NtUtils\Headers\Winapi.ProcessThreadsApi.pas"/>
@@ -260,10 +266,14 @@
         <DCCReference Include="NtUtils\Headers\Winapi.WinSafer.pas"/>
         <DCCReference Include="NtUtils\Headers\Winapi.winsta.pas"/>
         <DCCReference Include="NtUtils\Headers\Winapi.WinUser.pas"/>
+        <DCCReference Include="NtUtils\DelphiUtils.Arrays.pas"/>
         <DCCReference Include="NtUtils\DelphiUtils.Events.pas"/>
         <DCCReference Include="NtUtils\DelphiUtils.Strings.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Access.Expected.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Access.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.AutoHandle.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Debug.HardwareBP.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Debug.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
         <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
@@ -273,29 +283,54 @@
         <DCCReference Include="NtUtils\NtUtils.Exec.Wdc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Win32.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Wmi.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Files.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Job.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Ldr.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Lsa.Audit.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Lsa.Logon.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Lsa.Security.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Lsa.Sid.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.Compare.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.Namespace.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Objects.Security.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Objects.Snapshots.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Processes.Memory.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Processes.Snapshots.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Profiles.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Sam.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Sam.Security.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Sections.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Security.Acl.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Security.AppContainer.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Security.Sid.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Shellcode.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Strings.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Svc.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Svc.Security.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Svc.SingleTaskSvc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Threads.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Threads.Stack.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.Impersonate.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.Logon.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Tokens.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Tokens.Query.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Transactions.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Transactions.Remote.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
-        <DCCReference Include="VclEx\VclEx.ListView.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.WinUser.WinstaLock.pas"/>
+        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.HysteresisList.pas"/>
+        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Icons.pas"/>
+        <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
+            <Form>NtUtils.ErrorMsg.res</Form>
+        </RcCompile>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
@@ -335,7 +370,6 @@
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="Win32">
-                        <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
                 </DeployClass>

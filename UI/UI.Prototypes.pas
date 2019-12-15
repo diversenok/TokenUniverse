@@ -96,7 +96,7 @@ implementation
 
 uses
   DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa,
-  NtUtils.Exceptions, NtUtils.Lsa.Logon;
+  NtUtils.Exceptions, NtUtils.Lsa.Logon, NtUtils.Lsa.Sid;
 
 { TSessionSource }
 
@@ -367,6 +367,7 @@ var
   i: integer;
   S: String;
   LogonData: ILogonSession;
+  Name: TTranslatedName;
 begin
   if not LsaxEnumerateLogonSessions(FLogonSessions).IsSuccess then
     SetLength(FLogonSessions, 0);
@@ -379,13 +380,15 @@ begin
 
     LsaxQueryLogonSession(FLogonSessions[i], LogonData);
 
-    if Assigned(LogonData.User) and (LogonData.User.UserName <> '') then
+    if Assigned(LogonData.User) and LsaxLookupSid(LogonData.User.Sid,
+      Name).IsSuccess and not (Name.SidType in [SidTypeUndefined,
+      SidTypeInvalid, SidTypeUnknown]) and (Name.UserName <> '') then
     begin
       if Assigned(LogonData.RawData) then
-        S := Format('%s (%s @ %d)', [S, LogonData.User.UserName,
+        S := Format('%s (%s @ %d)', [S, Name.UserName,
           LogonData.RawData.Session])
       else
-        S := Format('%s (%s)', [S, LogonData.User.UserName])
+        S := Format('%s (%s)', [S, Name.UserName])
     end;
 
     ComboBox.Items.Add(S);

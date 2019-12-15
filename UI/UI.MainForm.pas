@@ -129,7 +129,8 @@ uses
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
-  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus;
+  UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
+  DelphiUtils.Arrays;
 
 {$R *.dfm}
 
@@ -341,7 +342,7 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
-  Handles: TArray<THandleEntry>;
+  Handles: TArray<TSystemHandleEntry>;
   i: integer;
 begin
   TokenView := TTokenViewSource.Create(ListViewTokens);
@@ -350,10 +351,11 @@ begin
   // Search for inherited handles
   if NtxEnumerateHandles(Handles).IsSuccess then
   begin
-    NtxFilterHandles(Handles, FilterByProcess, NtCurrentProcessId);
+    TArrayHelper.Filter<TSystemHandleEntry>(Handles, FilterByProcess,
+      NtCurrentProcessId);
 
     // TODO: obtain token's type index in runtime
-    NtxFilterHandles(Handles, FilterByType, 5);
+    TArrayHelper.Filter<TSystemHandleEntry>(Handles, FilterByType, 5);
 
     for i := 0 to High(Handles) do
       TokenView.Add(TToken.CreateByHandle(Handles[i]));

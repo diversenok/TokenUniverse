@@ -126,7 +126,8 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, DelphiUtils.Strings, NtUtils.Strings,
-  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.Access, NtUtils.Exceptions;
+  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.Access, NtUtils.Exceptions,
+  NtUtils.Lsa.Sid, DelphiUtils.Arrays, Ntapi.ntseapi;
 
 const
   TAB_INVALIDATED = 0;
@@ -189,10 +190,12 @@ begin
 end;
 
 procedure TInfoDialog.BtnSetOwnerClick(Sender: TObject);
+var
+  Sid: ISid;
 begin
   try
-    Token.InfoClass.Owner := TSid.CreateFromString(
-      ComboOwner.Text);
+    LsaxLookupNameOrSddl(ComboOwner.Text, Sid).RaiseOnError;
+    Token.InfoClass.Owner := Sid;
     ComboOwner.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenOwner) then
@@ -226,9 +229,12 @@ begin
 end;
 
 procedure TInfoDialog.BtnSetPrimaryClick(Sender: TObject);
+var
+  Sid: ISid;
 begin
   try
-    Token.InfoClass.PrimaryGroup := TSid.CreateFromString(ComboPrimary.Text);
+    LsaxLookupNameOrSddl(ComboPrimary.Text, Sid).RaiseOnError;
+    Token.InfoClass.PrimaryGroup := Sid;
     ComboPrimary.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenPrimaryGroup) then
@@ -325,17 +331,21 @@ begin
   // Add User since it is always assignable
   if Token.InfoClass.Query(tdTokenUser) then
   begin
-    ComboOwner.Items.Add(Token.InfoClass.User.SecurityIdentifier.AsString);
-    ComboPrimary.Items.Add(Token.InfoClass.User.SecurityIdentifier.AsString);
+    ComboOwner.Items.Add(LsaxSidToString(
+      Token.InfoClass.User.SecurityIdentifier.Sid));
+    ComboPrimary.Items.Add(LsaxSidToString(
+      Token.InfoClass.User.SecurityIdentifier.Sid));
   end;
 
   // Add all groups for Primary Group and only those with specific attribtes
   // for Owner.
   for i := 0 to High(NewGroups) do
   begin
-    ComboPrimary.Items.Add(NewGroups[i].SecurityIdentifier.AsString);
+    ComboPrimary.Items.Add(LsaxSidToString(
+      NewGroups[i].SecurityIdentifier.Sid));
     if Contains(NewGroups[i].Attributes, SE_GROUP_OWNER) then
-      ComboOwner.Items.Add(NewGroups[i].SecurityIdentifier.AsString);
+      ComboOwner.Items.Add(LsaxSidToString(
+        NewGroups[i].SecurityIdentifier.Sid));
   end;
 
   ComboPrimary.Items.EndUpdate;
@@ -353,7 +363,7 @@ end;
 procedure TInfoDialog.ChangedOwner(NewOwner: ISid);
 begin
   ComboOwner.Color := clWindow;
-  ComboOwner.Text := NewOwner.AsString;
+  ComboOwner.Text := LsaxSidToString(NewOwner.Sid);
 end;
 
 procedure TInfoDialog.ChangedPolicy(NewPolicy: Cardinal);
@@ -371,7 +381,7 @@ end;
 procedure TInfoDialog.ChangedPrimaryGroup(NewPrimary: ISid);
 begin
   ComboPrimary.Color := clWindow;
-  ComboPrimary.Text := NewPrimary.AsString;
+  ComboPrimary.Text := LsaxSidToString(NewPrimary.Sid);
 end;
 
 procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
@@ -592,7 +602,7 @@ begin
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass.User, EditUser do
     begin
-      Text := SecurityIdentifier.AsString;
+      Text := LsaxSidToString(SecurityIdentifier.Sid);
       Hint := BuildSidHint(SecurityIdentifier, Attributes);
 
       if Contains(Attributes, SE_GROUP_USE_FOR_DENY_ONLY) then
@@ -661,7 +671,7 @@ end;
 
 procedure TInfoDialog.UpdateObjectTab;
 var
-  Handles: TArray<THandleEntry>;
+  Handles: TArray<TSystemHandleEntry>;
   OpenedSomewhereElse: Boolean;
   Processes: TArray<TProcessEntry>;
   Process: PProcessEntry;
@@ -697,8 +707,8 @@ begin
   // Snapshot handles and find the ones pointing to that object
   if NtxEnumerateHandles(Handles).IsSuccess then
   begin
-    NtxFilterHandles(Handles, FilterByAddress, NativeUInt(
-      Token.InfoClass.HandleInformation.PObject));
+    TArrayHelper.Filter<TSystemHandleEntry>(Handles, FilterByAddress,
+      NativeUInt(Token.InfoClass.HandleInformation.PObject));
 
     OpenedSomewhereElse := False;
 
@@ -710,7 +720,7 @@ begin
           Caption := 'Current process';
           SubItems.Add(IntToStr(NtCurrentProcessId));
           SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
+          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, @TokenAccessType));
           ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
         end
       else
@@ -737,7 +747,7 @@ begin
 
           SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
           SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, objNtToken));
+          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, @TokenAccessType));
           ImageIndex := TProcessIcons.GetIcon(
             NtxTryQueryImageProcessById(Handles[i].UniqueProcessId));
         end;

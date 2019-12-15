@@ -42,7 +42,8 @@ function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
 implementation
 
 uses
-  System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Exceptions;
+  System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Exceptions,
+  NtUtils.Lsa.Sid;
 
 { TTokenTypeExHelper }
 

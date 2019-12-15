@@ -340,7 +340,7 @@ begin
   if Privilege.Name = '' then
     Privilege.Name := 'Unknown privilege ' + IntToStr(Privilege.Value);
 
-  Item.Cell[0] := PrettifyCamelCase('Se', Privilege.Name);
+  Item.Cell[0] := PrettifyCamelCase(Privilege.Name, 'Se');
   Item.Cell[1] := StateOfPrivilegeToString(Privilege.Attributes);
   Item.Cell[2] := Privilege.Description;
   Item.Cell[3] := IntToStr(Privilege.Value);

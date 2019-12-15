@@ -18,7 +18,7 @@ implementation
 
 uses
   System.SysUtils, Winapi.Ole2, TU.Tokens.Types, Ntutils.Exceptions,
-  NtUtils.Security.Sid;
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid;
 
 type
   TCredUIInfoW = record
@@ -60,6 +60,7 @@ var
   UserBuffer, DomainBuffer, PasswordBuffer: PWideChar;
   UserLength, DomainLength, PasswordLength: Cardinal;
   Sid: ISid;
+  AccountName: TTranslatedName;
 begin
   LastAuthError := 0;
   while True do
@@ -108,10 +109,11 @@ begin
         RaiseLastOSError;
 
       try
-        Sid := TSid.CreateFromString(UserBuffer);
+        LsaxLookupNameOrSddl(UserBuffer, Sid).RaiseOnError;
+        LsaxLookupSid(Sid.Sid, AccountName).RaiseOnError;
 
         if Assigned(Callback) then
-          Callback(Sid.DomainName, Sid.UserName, PasswordBuffer);
+          Callback(AccountName.DomainName, AccountName.UserName, PasswordBuffer);
 
         Exit;
       except

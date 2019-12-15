@@ -84,8 +84,9 @@ implementation
 
 uses
   UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, DelphiUtils.Strings,
-  UI.Settings, UI.Modal.PickToken, System.UITypes,
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb;
+  UI.Settings, UI.Modal.PickToken, System.UITypes, NtUtils.Lsa.Sid,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb,
+  NtUtils.Exceptions;
 
 {$R *.dfm}
 
@@ -94,9 +95,9 @@ begin
   FrameGroups.AddGroup(NewGroup);
 
   if Contains(NewGroup.Attributes, SE_GROUP_OWNER) then
-    ComboOwner.Items.Add(NewGroup.SecurityIdentifier.AsString);
+    ComboOwner.Items.Add(LsaxSidToString(NewGroup.SecurityIdentifier.Sid));
 
-  ComboPrimary.Items.Add(NewGroup.SecurityIdentifier.AsString);
+  ComboPrimary.Items.Add(LsaxSidToString(NewGroup.SecurityIdentifier.Sid));
 end;
 
 procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
@@ -136,7 +137,8 @@ begin
   // User
   if Source.InfoClass.Query(tdTokenUser) then
   begin
-    ComboUser.Text := Source.InfoClass.User.SecurityIdentifier.AsString;
+    ComboUser.Text := LsaxSidToString(
+      Source.InfoClass.User.SecurityIdentifier.Sid);
     ComboUserChange(Sender);
     CheckBoxUserState.Checked := Contains(Source.InfoClass.User.Attributes,
       SE_GROUP_USE_FOR_DENY_ONLY);
@@ -180,11 +182,12 @@ begin
 
   // Owner
   if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := Source.InfoClass.Owner.AsString;
+    ComboOwner.Text := LsaxSidToString(Source.InfoClass.Owner.Sid);
 
   // Primary group
   if Source.InfoClass.Query(tdTokenPrimaryGroup) then
-    ComboPrimary.Text := Source.InfoClass.PrimaryGroup.AsString;
+    ComboPrimary.Text := LsaxSidToString(
+      Source.InfoClass.PrimaryGroup.Sid);
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
@@ -231,6 +234,7 @@ var
   OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: Cardinal;
   Source: TTokenSource;
+  User, Owner, PrimaryGroup: ISid;
 begin
   if CheckBoxInfinite.Checked then
     Expires.QuadPart := Int64.MaxValue
@@ -254,14 +258,18 @@ begin
   Source.FromString(EditSourceName.Text);
   Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
 
+  LsaxLookupNameOrSddl(ComboUser.Text, User).RaiseOnError;
+  LsaxLookupNameOrSddl(OwnerGroupName, Owner).RaiseOnError;
+  LsaxLookupNameOrSddl(PrimaryGroupName, PrimaryGroup).RaiseOnError;
+
   Token := TToken.CreateNtCreateToken(
-    TSid.CreateFromString(ComboUser.Text),
+    User,
     CheckBoxUserState.Checked,
     FrameGroups.Groups,
     FramePrivileges.CheckedPrivileges,
     LogonIDSource.SelectedLogonSession,
-    TSid.CreateFromString(OwnerGroupName),
-    TSid.CreateFromString(PrimaryGroupName),
+    Owner,
+    PrimaryGroup,
     Source,
     Expires
   );
@@ -389,8 +397,8 @@ procedure TDialogCreateToken.ObjPickerUserCallback(UserName: String);
 var
   Sid: ISid;
 begin
-  Sid := TSid.CreateFromString(UserName);
-  ComboUser.Text := Sid.AsString;
+  LsaxLookupNameOrSddl(UserName, Sid).RaiseOnError;
+  ComboUser.Text := LsaxSidToString(Sid.Sid);
   ComboUserChange(ButtonPickUser);
 end;
 

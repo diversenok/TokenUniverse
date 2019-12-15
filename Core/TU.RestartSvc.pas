@@ -32,14 +32,14 @@ uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
   NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
-  NtUtils.Exec.Win32, NtUtils.Processes, Ntapi.ntpsapi;
+  NtUtils.Exec.Win32, NtUtils.Processes, Ntapi.ntpsapi, NtUtils.Tokens.Query;
 
 { Restart Service client functions }
 
 function ReSvcCreateService(IsSystemPlus: Boolean): TNtxStatus;
 var
   CommandLine: String;
-  hSvc: TScmHandle;
+  hxSvc: IScmHandle;
   Parameters: TArray<String>;
 begin
   CommandLine := '"' + ParamStr(0) + '" ' + RESVC_PARAM;
@@ -47,7 +47,7 @@ begin
     CommandLine := CommandLine + ' ' + RESVC_SYSPLUS_PARAM;
 
   // Create Run-as-system service
-  Result := ScmxCreateServiceLocal(hSvc, CommandLine, RESVC_NAME,
+  Result := ScmxCreateService(hxSvc, CommandLine, RESVC_NAME,
     RESVC_DIPLAY_NAME);
 
   if not Result.IsSuccess then
@@ -60,16 +60,14 @@ begin
   Parameters[1] := UsrxCurrentDesktopName;
 
   // Start the service
-  Result := ScmxStartService(hSvc, Parameters);
+  Result := ScmxStartService(hxSvc.Value, Parameters);
 
-  ScmxDeleteService(hSvc).ReportOnError;
-  ScmxClose(hSvc);
+  ScmxDeleteService(hxSvc.Value).ReportOnError;
 end;
 
 procedure ReSvcDelegate(RestartMethod: TRestartMethod);
 var
   Provider: TDefaultExecProvider;
-  Method: IExecMethod;
   ProcessInfo: TProcessInfo;
 begin
   Provider := TDefaultExecProvider.Create;
@@ -90,16 +88,13 @@ begin
       Provider.strParameters := DELEGATE_PARAM_SYSPLUS;
   end;
 
-  Method := TExecShellExecute.Create;
-  ProcessInfo := Method.Execute(Provider);
-
-  FreeProcessInfo(ProcessInfo);
+  TExecShellExecute.Execute(Provider, ProcessInfo).RaiseOnError;
   // No need to free Provider since the interface will free it automatically
 end;
 
 { Restart Service server functions }
 
-function GetCsrssToken: THandle;
+function GetCsrssToken: IHandle;
 const
   SrcProcess = 'csrss.exe';
 var
@@ -119,37 +114,32 @@ begin
   raise Exception.Create(SrcProcess + ' is not found on the system.');
 end;
 
-function PrepareToken(SessionID: Integer): THandle;
+function PrepareToken(SessionID: Integer): IHandle;
 var
-  hToken: THandle;
+  hxToken: IHandle;
 begin
   // We are already running as SYSTEM, but if we want to obtain a rare
   // `SeCreateTokenPrivilege` (aka SYSTEM+ token) we need to steal it from
   // csrss.exe
   if ParamStr(2) = RESVC_SYSPLUS_PARAM then
-    hToken := GetCsrssToken
+    hxToken := GetCsrssToken
   else
-    NtxOpenProcessToken(hToken, NtCurrentProcess,
+    NtxOpenProcessToken(hxToken, NtCurrentProcess,
       TOKEN_DUPLICATE).RaiseOnError;
 
-  try
-    // Duplicate
-    NtxDuplicateToken(Result, hToken, TOKEN_ADJUST_DEFAULT or
-      TOKEN_ADJUST_SESSIONID or TOKEN_QUERY or TOKEN_DUPLICATE or
-      TOKEN_ASSIGN_PRIMARY, TokenPrimary).RaiseOnError;
+  // Duplicate
+  NtxDuplicateToken(Result, hxToken.Value, TOKEN_ADJUST_DEFAULT or
+    TOKEN_ADJUST_SESSIONID or TOKEN_QUERY or TOKEN_DUPLICATE or
+    TOKEN_ASSIGN_PRIMARY, TokenPrimary).RaiseOnError;
 
-    // Change session
-    NtxSetInformationToken(Result, TokenSessionId, @SessionId,
-      SizeOf(SessionId)).RaiseOnError;
-  finally
-    NtxSafeClose(hToken);
-  end;
+  // Change session
+  NtxSetToken(Result.Value, TokenSessionId, @SessionId,
+    SizeOf(SessionId)).RaiseOnError;
 end;
 
 procedure ReSvcRunInSession(ScvParams: TArray<String>);
 var
   Provider: TDefaultExecProvider;
-  Method: IExecMethod;
   ProcessInfo: TProcessInfo;
   Session: Integer;
   {$IFDEF DEBUG}
@@ -163,9 +153,9 @@ begin
   Provider.strApplication := ParamStr(0);
 
   if (Length(ScvParams) >= 2) and TryStrToInt(ScvParams[1], Session) then
-    Provider.hToken := PrepareToken(Session)
+    Provider.hxToken := PrepareToken(Session)
   else
-    Provider.hToken := PrepareToken(0);
+    Provider.hxToken := PrepareToken(0);
 
   // TODO: determine interactive session and active desktop
 
@@ -174,12 +164,11 @@ begin
   else
     Provider.strDesktop := 'WinSta0\Default';
 
-  Method := TExecCreateProcessAsUser.Create;
-  ProcessInfo := Method.Execute(Provider);
+  TExecCreateProcessAsUser.Execute(Provider, ProcessInfo).RaiseOnError;
 
   {$IFDEF DEBUG}
   // Check that the process didn't crash immediately
-  Status := NtxWaitForSingleObject(ProcessInfo.hProcess, False, 200);
+  Status := NtxWaitForSingleObject(ProcessInfo.hxProcess.Value, 200 * MILLISEC);
 
   case Status.Status of
     STATUS_TIMEOUT: ; // Nothing
@@ -188,7 +177,7 @@ begin
         OutputDebugStringW('Abnormal process termination');
 
         Status := NtxProcess.Query<TProcessBasinInformation>(
-          ProcessInfo.hProcess, ProcessBasicInformation, BasicInfo);
+          ProcessInfo.hxProcess.Value, ProcessBasicInformation, BasicInfo);
 
         if Status.IsSuccess then
           OutputDebugStringW(PWideChar('Exit code: 0x' +
@@ -200,8 +189,6 @@ begin
       Status.ReportOnError;
   end;
   {$ENDIF}
-
-  FreeProcessInfo(ProcessInfo);
 end;
 
 end.

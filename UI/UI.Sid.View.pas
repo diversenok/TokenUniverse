@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  DelphiUtils.Strings, Winapi.WinNt, NtUtils.Exceptions;
+  DelphiUtils.Strings, Winapi.WinNt, NtUtils.Exceptions, NtUtils.Lsa.Sid;
 
 {$R *.dfm}
 
@@ -62,6 +62,8 @@ begin
 end;
 
 class procedure TDialogSidView.CreateView(SrcSid: ISid);
+var
+  Lookup: TTranslatedName;
 begin
   if not Assigned(SrcSid) then
     Exit;
@@ -70,34 +72,41 @@ begin
   begin
     Sid := SrcSid;
 
-    Caption := Caption + ' for "' + Sid.AsString +'"';
+    if not LsaxLookupSid(Sid.Sid, Lookup).IsSuccess then
+    begin
+      Lookup.SidType := SidTypeUndefined;
+      Lookup.DomainName := '';
+      Lookup.UserName := '';
+    end;
 
-    if not (Sid.SidType in [SidTypeUndefined, SidTypeInvalid, SidTypeUnknown])
-      then
-      EditFullName.Text := Sid.AsString;
+    Caption := Caption + ' for "' + LsaxSidToString(Sid.Sid) +'"';
+
+    if not (Lookup.SidType in [SidTypeUndefined, SidTypeInvalid,
+      SidTypeUnknown]) then
+      EditFullName.Text := Lookup.FullName;
 
     EditSID.Text := Sid.SDDL;
-    EditType.Text := PrettifyCamelCaseEnum('SidType', TypeInfo(TSidNameUse),
-        Integer(Sid.SidType));
+    EditType.Text := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
+        Integer(Lookup.SidType), 'SidType');
     EditSubAuthorities.Text := IntToStr(Sid.SubAuthorities);
 
     if Sid.SubAuthorities = 0 then
       LinkLabelMinusOne.Visible := False; // Hide parant SID link
 
-    if Sid.DomainName <> '' then
+    if Lookup.DomainName <> '' then
     begin
-      LinkLabelDomain.Caption := Sid.DomainName;
+      LinkLabelDomain.Caption := Lookup.DomainName;
 
       // When viewing anything but domains make it a link
-      if Sid.SidType <> SidTypeDomain then
+      if Lookup.SidType <> SidTypeDomain then
         LinkLabelDomain.Caption := '<a>' + LinkLabelDomain.Caption + '</a>';
     end;
 
     // Manage tab visibility
-    TabDomain.TabVisible := (Sid.SidType = SidTypeDomain);
-    TabGroup.TabVisible := (Sid.SidType = SidTypeGroup);
-    TabAlias.TabVisible := (Sid.SidType = SidTypeAlias);
-    TabUser.TabVisible := (Sid.SidType = SidTypeUser);
+    TabDomain.TabVisible := (Lookup.SidType = SidTypeDomain);
+    TabGroup.TabVisible := (Lookup.SidType = SidTypeGroup);
+    TabAlias.TabVisible := (Lookup.SidType = SidTypeAlias);
+    TabUser.TabVisible := (Lookup.SidType = SidTypeUser);
     Pages.ActivePage := TabSid;
 
     FrameLsaRights.DeleyedCreate;
@@ -117,10 +126,11 @@ procedure TDialogSidView.LinkLabelDomainLinkClick(Sender: TObject;
   const Link: string; LinkType: TSysLinkType);
 var
   DomainSid: ISid;
+  Lookup: TTranslatedName;
 begin
-  if Sid.DomainName <> '' then
+  if LsaxLookupSid(Sid.Sid, Lookup).IsSuccess and (Lookup.DomainName <> '') then
   begin
-    DomainSid := TSid.CreateFromString(Sid.DomainName);
+    LsaxLookupName(Lookup.DomainName, DomainSid).RaiseOnError;
     TDialogSidView.CreateView(DomainSid);
   end;
 end;
@@ -129,7 +139,7 @@ procedure TDialogSidView.LinkLabelMinusOneLinkClick(Sender: TObject;
   const Link: string; LinkType: TSysLinkType);
 begin
   if Sid.SubAuthorities > 0 then
-    TDialogSidView.CreateView(Sid.ParentSid);
+    TDialogSidView.CreateView(Sid.Parent);
 end;
 
 procedure TDialogSidView.SetUserAudit(NewAudit: IAudit);

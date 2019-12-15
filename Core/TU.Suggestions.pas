@@ -148,7 +148,7 @@ begin
   with ENt.LastCall do
     for i := 0 to High(ExpectedAccess) do
       with ExpectedAccess[i] do
-        Msg := Msg + #$D#$A + 'Expected ' + GetAccessTypeName(AccessMaskType) +
+        Msg := Msg + #$D#$A + 'Expected ' + String(AccessMaskType.TypeName) +
           ' access: ' + FormatAccess(AccessMask, AccessMaskType);
 end;
 
@@ -157,8 +157,8 @@ begin
   if (Value <= SE_RESERVED_LUID_1) or (Value > High(TSeWellKnownPrivilege)) then
     Exit('');
 
-  Result := ': "' + PrettifyCapsUnderscoreEnum('SE_',
-    TypeInfo(TSeWellKnownPrivilege), Integer(Value)) + '"';
+  Result := ': "' + PrettifySnakeCaseEnum(TypeInfo(TSeWellKnownPrivilege),
+    Integer(Value), 'SE_') + '"';
 end;
 
 procedure ShowErrorSuggestions(ParentWnd: HWND; E: Exception);
@@ -203,7 +203,7 @@ begin
       lcOpenCall:
       begin
         Msg := Msg + #$D#$A + 'Desired ' +
-          GetAccessTypeName(ENt.LastCall.AccessMaskType) + ' access: ' +
+          String(ENt.LastCall.AccessMaskType.TypeName) + ' access: ' +
           FormatAccess(ENt.LastCall.AccessMask, ENt.LastCall.AccessMaskType);
 
         AddExpectedAccessList(ENt, Msg);

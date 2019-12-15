@@ -54,7 +54,7 @@ const
   LogonDataNames: array [TLogonDataClass] of String = ('Logon ID',
   'Security identifier', 'User name', 'Logon domain', 'Authentication package',
   'Logon type', 'Session', 'Logon time', 'Logon server', 'DNS domain', 'UPN',
-  'Logon flags', 'Last succcessful attempt', 'Last failed attempt',
+  'Logon flags', 'Last successful attempt', 'Last failed attempt',
   'Failed attempts since last successful logon',
   'Logon script', 'Profile path', 'Home directory', 'Home drive', 'Logoff time',
   'Kickoff time', 'Password last set', 'Password can change from',

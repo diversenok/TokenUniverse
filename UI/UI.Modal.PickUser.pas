@@ -70,7 +70,8 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg, DelphiUtils.Strings, Winapi.WinNt;
+  TU.ObjPicker, UI.Modal.ComboDlg, DelphiUtils.Strings, Winapi.WinNt,
+  NtUtils.Lsa.Sid, NtUtils.Exceptions;
 
 {$R *.dfm}
 
@@ -103,8 +104,8 @@ end;
 
 procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
 begin
-  SetSelectedGroup(TSid.CreateFromString(Format('S-1-16-%d',
-    [Cardinal(TComboDialog.PickIntegrity(Self))])));
+  SetSelectedGroup(TSid.CreateNew(SECURITY_MANDATORY_LABEL_AUTHORITY, 1,
+    TComboDialog.PickIntegrity(Self)));
 
   SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
 end;
@@ -112,7 +113,8 @@ end;
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
 begin
   if ComboBoxSID.Enabled and not IsValidGroup then
-    SelectedGroup := TSid.CreateFromString(ComboBoxSID.Text);
+    LsaxLookupNameOrSddl(ComboBoxSID.Text, SelectedGroup).RaiseOnError;
+
   ModalResult := mrOk;
 end;
 
@@ -196,8 +198,11 @@ begin
 end;
 
 procedure TDialogPickUser.ObjPickerCallback(UserName: String);
+var
+  Sid: ISid;
 begin
-  SetSelectedGroup(TSid.CreateFromString(UserName));
+  LsaxLookupNameOrSddl(UserName, Sid).RaiseOnError;
+  SetSelectedGroup(Sid);
 end;
 
 class procedure TDialogPickUser.PickEditMultiple(AOwner: TComponent;
@@ -297,14 +302,10 @@ begin
 end;
 
 procedure TDialogPickUser.SetSelectedGroup(Value: ISid);
-var
-  SidName: string;
 begin
   IsValidGroup := True;
   SelectedGroup := Value;
-  SidName := SelectedGroup.AsString;
-  RtlxpApplySddlOverrides(SelectedGroup.Sid, SidName);
-  ComboBoxSID.Text := SidName;
+  ComboBoxSID.Text := LsaxSidToString(SelectedGroup.Sid);
 end;
 
 end.

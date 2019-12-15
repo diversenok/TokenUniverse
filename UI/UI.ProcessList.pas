@@ -254,8 +254,8 @@ begin
       if (ChildInd <> ParentInd) and
         (ProcessListEx[ChildInd].Process.Process.InheritedFromProcessId =
         ProcessListEx[ParentInd].Process.Process.ProcessId) and
-        (ProcessListEx[ChildInd].Process.Process.CreateTime >=
-        ProcessListEx[ParentInd].Process.Process.CreateTime) then
+        (ProcessListEx[ChildInd].Process.Process.CreateTime.QuadPart >=
+        ProcessListEx[ParentInd].Process.Process.CreateTime.QuadPart) then
       begin
         ProcessListEx[ChildInd].Parent := ProcessListEx[ParentInd];
         Break;

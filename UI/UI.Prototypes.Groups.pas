@@ -39,8 +39,8 @@ function BuildSidHint(Sid: ISid; Attributes: Cardinal;
 implementation
 
 uses
-  UI.Colors, NtUtils.Strings, DelphiUtils.Strings,
-  UI.Modal.PickUser, UI.Sid.View, Winapi.WinNt;
+  UI.Colors, NtUtils.Strings, DelphiUtils.Strings, NtUtils.Exceptions,
+  UI.Modal.PickUser, UI.Sid.View, Winapi.WinNt, NtUtils.Lsa.Sid;
 
 {$R *.dfm}
 
@@ -52,21 +52,25 @@ const
                        SE_GROUP_RESOURCE or SE_GROUP_LOGON_ID;
 var
   Sections: array of THintSection;
+  Lookup: TTranslatedName;
+  Success: Boolean;
 begin
   SetLength(Sections, 5);
 
+  Success := LsaxLookupSid(Sid.Sid, Lookup).IsSuccess;
+
   Sections[0].Title := 'Friendly name';
-  Sections[0].Enabled := Sid.AsString <> Sid.SDDL;
-  Sections[0].Content := Sid.AsString;
+  Sections[0].Enabled := Success;
+  Sections[0].Content := Lookup.FullName;
 
   Sections[1].Title := 'SID';
   Sections[1].Enabled := True;
   Sections[1].Content := Sid.SDDL;
 
   Sections[2].Title := 'Type';
-  Sections[2].Enabled := Sid.SidType <> SidTypeUndefined;
-  Sections[2].Content := PrettifyCamelCaseEnum('SidType', TypeInfo(TSidNameUse),
-    Integer(Sid.SidType));
+  Sections[2].Enabled := Success and (Lookup.SidType <> SidTypeUndefined);
+  Sections[2].Content := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
+    Integer(Lookup.SidType), 'SidType');
 
   Sections[3].Title := 'State';
   Sections[3].Enabled := AttributesPresent;
@@ -210,8 +214,7 @@ end;
 
 function TFrameGroups.SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
 begin
-  Group.SecurityIdentifier.RefreshLookup;
-  Item.Cell[0] := Group.SecurityIdentifier.AsString;
+  Item.Cell[0] := LsaxSidToString(Group.SecurityIdentifier.Sid);
   Item.Cell[1] := StateOfGroupToString(Group.Attributes);
   Item.Cell[2] := MapFlags(Group.Attributes, GroupAttributeFlags);
   Item.Hint := BuildSidHint(Group.SecurityIdentifier, Group.Attributes);
