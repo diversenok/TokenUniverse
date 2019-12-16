@@ -86,6 +86,7 @@ uses
   NtUtils.Environment in 'NtUtils\NtUtils.Environment.pas',
   NtUtils.ErrorMsg in 'NtUtils\NtUtils.ErrorMsg.pas',
   NtUtils.Exceptions in 'NtUtils\NtUtils.Exceptions.pas',
+  NtUtils.Exceptions.Report in 'NtUtils\NtUtils.Exceptions.Report.pas',
   NtUtils.Exec.Nt in 'NtUtils\NtUtils.Exec.Nt.pas',
   NtUtils.Exec in 'NtUtils\NtUtils.Exec.pas',
   NtUtils.Exec.Shell in 'NtUtils\NtUtils.Exec.Shell.pas',
@@ -135,6 +136,7 @@ uses
   NtUtils.WinStation in 'NtUtils\NtUtils.WinStation.pas',
   NtUtils.WinUser in 'NtUtils\NtUtils.WinUser.pas',
   NtUtils.WinUser.WinstaLock in 'NtUtils\NtUtils.WinUser.WinstaLock.pas',
+  NtUiLib.Exceptions in 'NtUtils\NtUiLib\NtUiLib.Exceptions.pas',
   NtUiLib.HysteresisList in 'NtUtils\NtUiLib\NtUiLib.HysteresisList.pas',
   NtUiLib.Icons in 'NtUtils\NtUiLib\NtUiLib.Icons.pas';
 

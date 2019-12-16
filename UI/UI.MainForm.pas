@@ -130,7 +130,7 @@ uses
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
-  DelphiUtils.Arrays;
+  DelphiUtils.Arrays, NtUiLib.Exceptions;
 
 {$R *.dfm}
 
@@ -325,7 +325,7 @@ end;
 
 procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
 begin
-  ShowErrorSuggestions(Application.Handle, E);
+  ShowNtxException(Application.Handle, E);
 end;
 
 procedure TFormMain.CurrentUserChanged(Sender: TObject);

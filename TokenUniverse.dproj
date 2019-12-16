@@ -277,6 +277,7 @@
         <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
         <DCCReference Include="NtUtils\NtUtils.ErrorMsg.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exceptions.pas"/>
+        <DCCReference Include="NtUtils\NtUtils.Exceptions.Report.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Nt.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.pas"/>
         <DCCReference Include="NtUtils\NtUtils.Exec.Shell.pas"/>
@@ -326,6 +327,7 @@
         <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
         <DCCReference Include="NtUtils\NtUtils.WinUser.WinstaLock.pas"/>
+        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Exceptions.pas"/>
         <DCCReference Include="NtUtils\NtUiLib\NtUiLib.HysteresisList.pas"/>
         <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Icons.pas"/>
         <RcCompile Include="NtUtils\NtUtils.ErrorMsg.rc">
