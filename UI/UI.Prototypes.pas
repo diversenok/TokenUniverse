@@ -58,7 +58,7 @@ type
   private
     Row: TRowSource;
     ColumnIndex: Integer;
-    procedure SetTextCallback(Value: String);
+    procedure SetTextCallback(const Value: String);
   public
     constructor Create(Row: TRowSource; ColumnIndex: Integer);
     destructor Destroy; override;
@@ -67,7 +67,7 @@ type
   TRowSource = class
   private
     Cells: array of TCellSource;
-    procedure TokenCaptionCallback(Value: String);
+    procedure TokenCaptionCallback(const Value: String);
   public
     Token: TToken;
     Item: TListItemEx;
@@ -415,7 +415,7 @@ begin
   inherited;
 end;
 
-procedure TCellSource.SetTextCallback(Value: String);
+procedure TCellSource.SetTextCallback(const Value: String);
 begin
   Assert(Row.Item.SubItems.Count > ColumnIndex);
   Row.Item.SubItems[ColumnIndex] := Value;
@@ -461,7 +461,7 @@ begin
   inherited;
 end;
 
-procedure TRowSource.TokenCaptionCallback(Value: String);
+procedure TRowSource.TokenCaptionCallback(const Value: String);
 begin
   Item.Caption := Value;
 end;

@@ -88,7 +88,7 @@ type
     FToken: TToken;
     hxParentProcess: IHandle;
     procedure UpdateEnabledState;
-    procedure OnCaptionChange(NewCaption: String);
+    procedure OnCaptionChange(const NewCaption: String);
     procedure SetToken(const Value: TToken);
     procedure UpdateDesktopList;
   public
@@ -256,7 +256,7 @@ begin
   Result := CheckBoxNewConsole.Checked;
 end;
 
-procedure TDialogRun.OnCaptionChange(NewCaption: String);
+procedure TDialogRun.OnCaptionChange(const NewCaption: String);
 begin
   LinkLabelToken.Caption := 'Using token: <a>' + NewCaption + '</a>';
 end;

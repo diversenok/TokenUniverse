@@ -98,19 +98,19 @@ type
     Token: TToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
-    procedure ChangedCaption(NewCaption: String);
-    procedure ChangedIntegrity(NewIntegrity: TGroup);
-    procedure ChangedSession(NewSession: Cardinal);
-    procedure ChangedUIAccess(NewUIAccess: LongBool);
-    procedure ChangedPolicy(NewPolicy: Cardinal);
-    procedure ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
-    procedure ChangedGroups(NewGroups: TArray<TGroup>);
-    procedure ChangedStatistics(NewStatistics: TTokenStatistics);
-    procedure ChangedOwner(NewOwner: ISid);
-    procedure ChangedPrimaryGroup(NewPrimary: ISid);
-    procedure ChangedVAllowed(NewVAllowed: LongBool);
-    procedure ChangedVEnabled(NewVEnabled: LongBool);
-    procedure ChangedFlags(NewFlags: Cardinal);
+    procedure ChangedCaption(const NewCaption: String);
+    procedure ChangedIntegrity(const NewIntegrity: TGroup);
+    procedure ChangedSession(const NewSession: Cardinal);
+    procedure ChangedUIAccess(const NewUIAccess: LongBool);
+    procedure ChangedPolicy(const NewPolicy: Cardinal);
+    procedure ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
+    procedure ChangedGroups(const NewGroups: TArray<TGroup>);
+    procedure ChangedStatistics(const NewStatistics: TTokenStatistics);
+    procedure ChangedOwner(const NewOwner: ISid);
+    procedure ChangedPrimaryGroup(const NewPrimary: ISid);
+    procedure ChangedVAllowed(const NewVAllowed: LongBool);
+    procedure ChangedVEnabled(const NewVEnabled: LongBool);
+    procedure ChangedFlags(const NewFlags: Cardinal);
     procedure SetAuditPolicy(NewAudit: IAudit);
     procedure Refresh;
     procedure UpdateObjectTab;
@@ -294,17 +294,17 @@ begin
   end;
 end;
 
-procedure TInfoDialog.ChangedCaption(NewCaption: String);
+procedure TInfoDialog.ChangedCaption(const NewCaption: String);
 begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
-procedure TInfoDialog.ChangedFlags(NewFlags: Cardinal);
+procedure TInfoDialog.ChangedFlags(const NewFlags: Cardinal);
 begin
   ListViewAdvanced.Items[13].SubItems[0] := Token.InfoClass.QueryString(tsFlags);
 end;
 
-procedure TInfoDialog.ChangedGroups(NewGroups: TArray<TGroup>);
+procedure TInfoDialog.ChangedGroups(const NewGroups: TArray<TGroup>);
 var
   i: Integer;
 begin
@@ -352,7 +352,7 @@ begin
   ComboOwner.Items.EndUpdate;
 end;
 
-procedure TInfoDialog.ChangedIntegrity(NewIntegrity: TGroup);
+procedure TInfoDialog.ChangedIntegrity(const NewIntegrity: TGroup);
 begin
   ComboIntegrity.Color := clWindow;
   IntegritySource.SelectedIntegrity := NewIntegrity.SecurityIdentifier.Rid;
@@ -360,13 +360,13 @@ begin
     NewIntegrity.Attributes);
 end;
 
-procedure TInfoDialog.ChangedOwner(NewOwner: ISid);
+procedure TInfoDialog.ChangedOwner(const NewOwner: ISid);
 begin
   ComboOwner.Color := clWindow;
   ComboOwner.Text := LsaxSidToString(NewOwner.Sid);
 end;
 
-procedure TInfoDialog.ChangedPolicy(NewPolicy: Cardinal);
+procedure TInfoDialog.ChangedPolicy(const NewPolicy: Cardinal);
 begin
   CheckBoxNoWriteUp.Checked := Contains(NewPolicy,
     TOKEN_MANDATORY_POLICY_NO_WRITE_UP);
@@ -378,13 +378,13 @@ begin
   CheckBoxNewProcessMin.Font.Style := [];
 end;
 
-procedure TInfoDialog.ChangedPrimaryGroup(NewPrimary: ISid);
+procedure TInfoDialog.ChangedPrimaryGroup(const NewPrimary: ISid);
 begin
   ComboPrimary.Color := clWindow;
   ComboPrimary.Text := LsaxSidToString(NewPrimary.Sid);
 end;
 
-procedure TInfoDialog.ChangedPrivileges(NewPrivileges: TArray<TPrivilege>);
+procedure TInfoDialog.ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
 begin
   TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
 
@@ -396,13 +396,13 @@ begin
   FramePrivileges.ListView.Items.EndUpdate(True);
 end;
 
-procedure TInfoDialog.ChangedSession(NewSession: Cardinal);
+procedure TInfoDialog.ChangedSession(const NewSession: Cardinal);
 begin
   ComboSession.Color := clWindow;
   SessionSource.SelectedSession := NewSession;
 end;
 
-procedure TInfoDialog.ChangedStatistics(NewStatistics: TTokenStatistics);
+procedure TInfoDialog.ChangedStatistics(const NewStatistics: TTokenStatistics);
 begin
   with ListViewAdvanced do
   begin
@@ -418,13 +418,13 @@ begin
   end;
 end;
 
-procedure TInfoDialog.ChangedUIAccess(NewUIAccess: LongBool);
+procedure TInfoDialog.ChangedUIAccess(const NewUIAccess: LongBool);
 begin
   ComboUIAccess.Color := clWhite;
   ComboUIAccess.ItemIndex := Integer(NewUIAccess = True);
 end;
 
-procedure TInfoDialog.ChangedVAllowed(NewVAllowed: LongBool);
+procedure TInfoDialog.ChangedVAllowed(const NewVAllowed: LongBool);
 begin
   CheckBoxVAllowed.OnClick := nil;
   CheckBoxVAllowed.Font.Style := [];
@@ -432,7 +432,7 @@ begin
   CheckBoxVAllowed.OnClick := CheckBoxClick;
 end;
 
-procedure TInfoDialog.ChangedVEnabled(NewVEnabled: LongBool);
+procedure TInfoDialog.ChangedVEnabled(const NewVEnabled: LongBool);
 begin
   CheckBoxVEnabled.OnClick := nil;
   CheckBoxVEnabled.Font.Style := [];

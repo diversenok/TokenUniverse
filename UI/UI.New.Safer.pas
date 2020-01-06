@@ -28,7 +28,7 @@ type
     Token: TToken;
     function GetScopeId: TSaferScopeId;
     function GetLevelId: TSaferLevelId;
-    procedure ChangedCaption(NewCaption: String);
+    procedure ChangedCaption(const NewCaption: String);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
   end;
@@ -71,7 +71,7 @@ begin
     Close;
 end;
 
-procedure TDialogSafer.ChangedCaption(NewCaption: String);
+procedure TDialogSafer.ChangedCaption(const NewCaption: String);
 begin
   Caption := Format('Create Safer Token for "%s"', [NewCaption]);
 end;

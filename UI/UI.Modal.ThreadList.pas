@@ -27,25 +27,9 @@ var
 implementation
 
 uses
-  Ntapi.ntkeapi, UI.Colors;
+  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser;
 
 {$R *.dfm}
-
-type
-  TGuiThreadInfo = record
-    cbSize: Cardinal;
-    flags: Cardinal;
-    hwndActive: HWND;
-    hwndFocus: HWND;
-    hwndCapture: HWND;
-    hwndMenuOwner: HWND;
-    hwndMoveSize: HWND;
-    hwndCaret: HWND;
-    rcCaret: TRect;
-  end;
-
-function GetGUIThreadInfo(idThread: Cardinal; var gui: TGuiThreadInfo):
-  LongBool; stdcall; external 'user32.dll';
 
 { TThreadListDialog }
 
@@ -72,10 +56,8 @@ begin
     else
     begin
       // Check wether the thread owns any GUI objects
-      FillChar(GuiInfo, SizeOf(GuiInfo), 0);
-      GuiInfo.cbSize := SizeOf(GuiInfo);
-
-      if GetGUIThreadInfo(Process.Threads[i].ClientId.UniqueThread, GuiInfo) then
+      if UsrxGetGuiInfoThread(Process.Threads[i].ClientId.UniqueThread,
+        GuiInfo).IsSuccess then
         Color := clGuiThread;
     end;
   end;

@@ -30,14 +30,14 @@ type
 function FormatCurrentState: String;
 
 { Comparison function used by cached event handling system }
-function CompareSIDs(Value1, Value2: ISid): Boolean;
-function CompareCardinals(Value1, Value2: Cardinal): Boolean;
-function CompareLUIDs(Value1, Value2: TLuid): Boolean;
-function CompareLongBools(Value1, Value2: LongBool): Boolean;
-function ComparePrivileges(Value1, Value2: TArray<TPrivilege>): Boolean;
-function CompareGroups(Value1, Value2: TGroup): Boolean;
-function CompareGroupArrays(Value1, Value2: TArray<TGroup>): Boolean;
-function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
+function CompareSIDs(const Value1, Value2: ISid): Boolean;
+function CompareCardinals(const Value1, Value2: Cardinal): Boolean;
+function CompareLUIDs(const Value1, Value2: TLuid): Boolean;
+function CompareLongBools(const Value1, Value2: LongBool): Boolean;
+function ComparePrivileges(const Value1, Value2: TArray<TPrivilege>): Boolean;
+function CompareGroups(const Value1, Value2: TGroup): Boolean;
+function CompareGroupArrays(const Value1, Value2: TArray<TGroup>): Boolean;
+function CompareStatistics(const Value1, Value2: TTokenStatistics): Boolean;
 
 implementation
 
@@ -85,22 +85,22 @@ end;
 
 { Comparison functions }
 
-function CompareSIDs(Value1, Value2: ISid): Boolean;
+function CompareSIDs(const Value1, Value2: ISid): Boolean;
 begin
   Result := Value1.EqualsTo(Value2.Sid);
 end;
 
-function CompareCardinals(Value1, Value2: Cardinal): Boolean;
+function CompareCardinals(const Value1, Value2: Cardinal): Boolean;
 begin
   Result := Value1 = Value2;
 end;
 
-function CompareLUIDs(Value1, Value2: TLuid): Boolean;
+function CompareLUIDs(const Value1, Value2: TLuid): Boolean;
 begin
   Result := Value1 = Value2;
 end;
 
-function CompareGroupArrays(Value1, Value2: TArray<TGroup>): Boolean;
+function CompareGroupArrays(const Value1, Value2: TArray<TGroup>): Boolean;
 var
   i: integer;
 begin
@@ -113,19 +113,19 @@ begin
           Exit(False);
 end;
 
-function CompareGroups(Value1, Value2: TGroup): Boolean;
+function CompareGroups(const Value1, Value2: TGroup): Boolean;
 begin
   Result := (Value1.SecurityIdentifier.EqualsTo(
     Value2.SecurityIdentifier.Sid)) and
     (Value1.Attributes = Value2.Attributes);
 end;
 
-function CompareLongBools(Value1, Value2: LongBool): Boolean;
+function CompareLongBools(const Value1, Value2: LongBool): Boolean;
 begin
   Result := Value1 = Value2;
 end;
 
-function ComparePrivileges(Value1, Value2: TArray<TPrivilege>): Boolean;
+function ComparePrivileges(const Value1, Value2: TArray<TPrivilege>): Boolean;
 var
   i: integer;
 begin
@@ -137,7 +137,7 @@ begin
         Exit(False);
 end;
 
-function CompareStatistics(Value1, Value2: TTokenStatistics): Boolean;
+function CompareStatistics(const Value1, Value2: TTokenStatistics): Boolean;
 begin
   Result := (Value1.ModifiedId = Value2.ModifiedId);
 end;

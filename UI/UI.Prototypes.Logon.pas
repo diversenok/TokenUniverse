@@ -24,13 +24,13 @@ type
     Token: TToken;
     LogonSource: TLogonSessionSource;
     IndexOfLogon: Integer;
-    procedure OnOriginChange(NewOrigin: TLuid);
-    procedure OnFlagsChange(NewFlags: Cardinal);
+    procedure OnOriginChange(const NewOrigin: TLuid);
+    procedure OnFlagsChange(const NewFlags: Cardinal);
     function GetSubscribed: Boolean;
   public
     property Subscribed: Boolean read GetSubscribed;
-    procedure SubscribeToken(Token: TToken);
-    procedure UnsubscribeToken(Dummy: TToken = nil);
+    procedure SubscribeToken(const Token: TToken);
+    procedure UnsubscribeToken(const Dummy: TToken = nil);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -124,14 +124,14 @@ begin
   Result := Assigned(Token);
 end;
 
-procedure TFrameLogon.OnFlagsChange(NewFlags: Cardinal);
+procedure TFrameLogon.OnFlagsChange(const NewFlags: Cardinal);
 begin
   CheckBoxReference.Checked := not Contains(NewFlags,
     TOKEN_SESSION_NOT_REFERENCED);
   CheckBoxReference.Font.Style := [];
 end;
 
-procedure TFrameLogon.OnOriginChange(NewOrigin: TLuid);
+procedure TFrameLogon.OnOriginChange(const NewOrigin: TLuid);
 begin
   ComboOrigin.Color := clWindow;
   LogonSource.SelectedLogonSession := NewOrigin;
@@ -145,7 +145,7 @@ begin
     ListView.Items[ITEM_IND_ORIGIN].Cell[1] := IntToHexEx(NewOrigin);
 end;
 
-procedure TFrameLogon.SubscribeToken(Token: TToken);
+procedure TFrameLogon.SubscribeToken(const Token: TToken);
 begin
   UnsubscribeToken;
 
@@ -172,7 +172,7 @@ begin
   Token.Events.OnFlagsChange.Subscribe(OnFlagsChange);
 end;
 
-procedure TFrameLogon.UnsubscribeToken(Dummy: TToken);
+procedure TFrameLogon.UnsubscribeToken(const Dummy: TToken);
 begin
   if Assigned(Token) then
   begin

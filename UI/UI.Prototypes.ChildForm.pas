@@ -10,8 +10,8 @@ type
   TChildForm = class(TForm)
   private
     FConfirmComment: String;
-    procedure ConfirmTokenClose(Sender: TToken);
-    procedure OnMainFormClose(Sender: TObject);
+    procedure ConfirmTokenClose(const Sender: TToken);
+    procedure OnMainFormClose(const Sender: TObject);
   protected
     procedure DoClose(var Action: TCloseAction); override;
     procedure DoCreate; override;
@@ -37,7 +37,7 @@ uses
 
 { TChildForm }
 
-procedure TChildForm.ConfirmTokenClose(Sender: TToken);
+procedure TChildForm.ConfirmTokenClose(const Sender: TToken);
 const
   CONFIRM_CLOSE = 'This token has an opened "%s" window for it. ' +
     'Do you want close it?';
@@ -64,7 +64,7 @@ begin
   FormMain.OnMainFormClose.Subscribe(OnMainFormClose);
 end;
 
-procedure TChildForm.OnMainFormClose(Sender: TObject);
+procedure TChildForm.OnMainFormClose(const Sender: TObject);
 begin
   Close;
 end;
