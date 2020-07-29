@@ -23,7 +23,6 @@ type
   private
     Token: TToken;
     LogonSource: TLogonSessionSource;
-    IndexOfLogon: Integer;
     procedure OnOriginChange(const NewOrigin: TLuid);
     procedure OnFlagsChange(const NewFlags: Cardinal);
     function GetSubscribed: Boolean;
@@ -35,34 +34,20 @@ type
     destructor Destroy; override;
   end;
 
-  TLogonInfoSource = class
-    class function InitItems(ListView: TListViewEx; GroupInd: Integer):
-      Integer; static;
-    class procedure SetItems(ListView: TListViewEx; StartInd: Integer;
-      LogonInfo: ILogonSession); static;
-  end;
-
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors, DelphiUtils.Strings, NtUtils.Security.Sid,
-  UI.Prototypes.Groups;
+  Vcl.Graphics, UI.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
+  UI.Prototypes.Groups, Ntapi.ntseapi, Winapi.NtSecApi,
+  DelphiUiLib.Reflection.Records, DelphiUtils.AutoObject,
+  DelphiUiLib.Reflection;
 
 {$R *.dfm}
 
 const
-  LogonDataNames: array [TLogonDataClass] of String = ('Logon ID',
-  'Security identifier', 'User name', 'Logon domain', 'Authentication package',
-  'Logon type', 'Session', 'Logon time', 'Logon server', 'DNS domain', 'UPN',
-  'Logon flags', 'Last successful attempt', 'Last failed attempt',
-  'Failed attempts since last successful logon',
-  'Logon script', 'Profile path', 'Home directory', 'Home drive', 'Logoff time',
-  'Kickoff time', 'Password last set', 'Password can change from',
-  'Password must change before');
-
   // Be consistent with ListView
-  ITEM_IND_ORIGIN = 0;
   GROUP_IND_LOGON = 0;
+  GROUP_IND_ORIGIN = 1;
 
 { TFrameLogon }
 
@@ -107,9 +92,6 @@ begin
   // TODO: TLogonSessionSource triggers enumeration, postpone it until
   // the user actually switches to the tab
   LogonSource := TLogonSessionSource.Create(ComboOrigin);
-
-  // Add items for Logon ID
-  IndexOfLogon := TLogonInfoSource.InitItems(ListView, GROUP_IND_LOGON);
 end;
 
 destructor TFrameLogon.Destroy;
@@ -126,8 +108,7 @@ end;
 
 procedure TFrameLogon.OnFlagsChange(const NewFlags: Cardinal);
 begin
-  CheckBoxReference.Checked := not Contains(NewFlags,
-    TOKEN_SESSION_NOT_REFERENCED);
+  CheckBoxReference.Checked := NewFlags and TOKEN_SESSION_NOT_REFERENCED = 0;
   CheckBoxReference.Font.Style := [];
 end;
 
@@ -136,13 +117,14 @@ begin
   ComboOrigin.Color := clWindow;
   LogonSource.SelectedLogonSession := NewOrigin;
 
-  if NewOrigin = 0 then
-    ListView.Items[ITEM_IND_ORIGIN].Cell[1] := '0 (value not set)'
-  else if Token.InfoClass.Query(tdTokenStatistics) and
-    (Token.InfoClass.Statistics.AuthenticationId = NewOrigin) then
-    ListView.Items[ITEM_IND_ORIGIN].Cell[1] := 'Same as current'
-  else
-    ListView.Items[ITEM_IND_ORIGIN].Cell[1] := IntToHexEx(NewOrigin);
+  with ListView.Items[ListView.Items.Count - 1] do
+    if NewOrigin = 0 then
+      Cell[1] := '0 (value not set)'
+    else if Token.InfoClass.Query(tdTokenStatistics) and
+      (Token.InfoClass.Statistics.AuthenticationId = NewOrigin) then
+      Cell[1] := 'Same as current'
+    else
+      Cell[1] := IntToHexEx(NewOrigin);
 end;
 
 procedure TFrameLogon.SubscribeToken(const Token: TToken);
@@ -152,24 +134,64 @@ begin
   Self.Token := Token;
   Token.OnClose.Subscribe(UnsubscribeToken);
 
-  LogonSource.UpdateLogonSessions;
+  ListView.Items.BeginUpdate;
+  ListView.Items.Clear;
 
-  // Update Logon ID value
-  if Token.InfoClass.Query(tdTokenStatistics) then
-    ListView.Items[IndexOfLogon].Cell[1] := IntToHexEx(
-      Token.InfoClass.Statistics.AuthenticationId)
-  else
-    ListView.Items[IndexOfLogon].Cell[1] := 'Unknown';
+  with ListView.Items.Add do
+    begin
+      Cell[0] := 'Logon ID';
+      Cell[1] := 'Unknown';
+      GroupId := GROUP_IND_LOGON;
+    end;
 
-  // Update detailed information
   if Token.InfoClass.Query(tdLogonInfo) then
-    TLogonInfoSource.SetItems(ListView, IndexOfLogon,
-      Token.InfoClass.LogonSessionInfo)
-  else
-    TLogonInfoSource.SetItems(ListView, IndexOfLogon, nil);
+    with Token.InfoClass.LogonSessionInfo do
+    begin
+      ListView.Items[0].Cell[1] := IntToHexEx(LogonId);
+
+      TRecord.Traverse(Ptr.RefOrNil<PSecurityLogonSessionData>(Detailed),
+        procedure (const Field: TFieldReflection)
+        var
+          SidReflection: TRepresentation;
+        begin
+          // Skip the logon ID, we already processed it
+          if Field.Offset = UIntPtr(@PSecurityLogonSessionData(nil).LogonID) then
+            Exit;
+
+          with ListView.Items.Add do
+          begin
+            Cell[0] := PrettifyCamelCase(Field.FieldName);
+            GroupId := GROUP_IND_LOGON;
+
+            if (Field.Offset = UIntPtr(@PSecurityLogonSessionData(nil).SID)) and
+              not Assigned(Detailed) and Assigned(WellKnownSid) then
+            begin
+              // Fallback to well-known SIDs if necessary
+              SidReflection := TType.Represent(WellKnownSid);
+              Cell[1] := SidReflection.Text;
+              Hint := SidReflection.Hint;
+            end
+            else
+            begin
+              Cell[1] := Field.Reflection.Text;
+              Hint := Field.Reflection.Hint;
+            end;
+          end;
+        end
+      );
+    end;
+
+  // Add an item for the originating logon ID
+  with ListView.Items.Add do
+  begin
+    Cell[0] := 'Logon ID';
+    GroupId := GROUP_IND_ORIGIN;
+  end;
 
   Token.Events.OnOriginChange.Subscribe(OnOriginChange);
   Token.Events.OnFlagsChange.Subscribe(OnFlagsChange);
+
+  ListView.Items.EndUpdate;
 end;
 
 procedure TFrameLogon.UnsubscribeToken(const Dummy: TToken);
@@ -181,53 +203,6 @@ begin
     Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
   end;
-end;
-
-{ TLogonInfoSource }
-
-class function TLogonInfoSource.InitItems(ListView: TListViewEx;
-  GroupInd: Integer): Integer;
-var
-  i: TLogonDataClass;
-begin
-  ListView.Items.BeginUpdate;
-
-  Result := ListView.Items.Count;
-  for i := Low(TLogonDataClass) to High(TLogonDataClass) do
-  begin
-    with ListView.Items.Add do
-    begin
-      Caption := LogonDataNames[i];
-      GroupID := GroupInd;
-    end;
-  end;
-
-  ListView.Items.EndUpdate;
-end;
-
-class procedure TLogonInfoSource.SetItems(ListView: TListViewEx;
-  StartInd: Integer; LogonInfo: ILogonSession);
-var
-  i: TLogonDataClass;
-begin
-  if Assigned(LogonInfo) then
-  begin
-    for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do
-      ListView.Items[StartInd + Integer(i)].Cell[1] := LogonInfo.QueryString(i);
-
-    // Build hint for UserFlags
-    if Assigned(LogonInfo.RawData) then
-      ListView.Items[StartInd + Integer(lsUserFlags)].Hint :=
-        MapFlagsList(LogonInfo.RawData.UserFlags, LogonFlags);
-
-    // Build hint for the user
-    if Assigned(LogonInfo.User) then
-      ListView.Items[StartInd + Integer(lsSecurityIdentifier)].Hint :=
-        BuildSidHint(LogonInfo.User, 0, False);
-  end
-  else
-    for i := Succ(Low(TLogonDataClass)) to High(TLogonDataClass) do
-      ListView.Items[StartInd + Integer(i)].Cell[1] := 'Unknown';
 end;
 
 end.

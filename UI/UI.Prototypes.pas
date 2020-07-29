@@ -40,7 +40,7 @@ type
 
   TLogonSessionSource = class
   private
-    FLogonSessions: TArray<TLuid>;
+    FLogonSessions: TArray<TLogonId>;
     ComboBox: TComboBox;
     function GetSelected: TLuid;
     procedure SetSelected(const Value: TLuid);
@@ -95,8 +95,9 @@ type
 implementation
 
 uses
-  DelphiUtils.Strings, UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa,
-  NtUtils.Exceptions, NtUtils.Lsa.Logon, NtUtils.Lsa.Sid;
+  UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils,
+  NtUtils.Lsa.Logon, NtUtils.Lsa.Sid, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection;
 
 { TSessionSource }
 
@@ -365,34 +366,16 @@ end;
 procedure TLogonSessionSource.UpdateLogonSessions;
 var
   i: integer;
-  S: String;
-  LogonData: ILogonSession;
-  Name: TTranslatedName;
 begin
   if not LsaxEnumerateLogonSessions(FLogonSessions).IsSuccess then
     SetLength(FLogonSessions, 0);
 
   ComboBox.Items.BeginUpdate;
   ComboBox.Items.Clear;
+
   for i := 0 to High(FLogonSessions) do
-  begin
-    S := IntToHexEx(FLogonSessions[i]);
+    ComboBox.Items.Add(TType.Represent(FLogonSessions[i]).Text);
 
-    LsaxQueryLogonSession(FLogonSessions[i], LogonData);
-
-    if Assigned(LogonData.User) and LsaxLookupSid(LogonData.User.Sid,
-      Name).IsSuccess and not (Name.SidType in [SidTypeUndefined,
-      SidTypeInvalid, SidTypeUnknown]) and (Name.UserName <> '') then
-    begin
-      if Assigned(LogonData.RawData) then
-        S := Format('%s (%s @ %d)', [S, Name.UserName,
-          LogonData.RawData.Session])
-      else
-        S := Format('%s (%s)', [S, Name.UserName])
-    end;
-
-    ComboBox.Items.Add(S);
-  end;
   ComboBox.Items.EndUpdate;
 end;
 

@@ -124,13 +124,14 @@ var
 implementation
 
 uses
-  System.UITypes, TU.Tokens.Types, Winapi.WinNt, NtUtils.Exceptions,
+  System.UITypes, TU.Tokens.Types, Winapi.WinNt,
   NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
-  DelphiUtils.Arrays, NtUiLib.Exceptions;
+  DelphiUtils.Arrays, NtUiLib.Exceptions, Ntapi.ntseapi, NtUtils,
+  NtUiLib.Exceptions.Dialog;
 
 {$R *.dfm}
 
@@ -241,8 +242,11 @@ begin
 end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
+var
+  Linked: TToken;
 begin
-  TokenView.Add(TokenView.Selected.OpenLinkedToken.GetValueOrRaise);
+  TokenView.Selected.OpenLinkedToken(Linked).RaiseOnError;
+  TokenView.Add(Linked);
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
@@ -342,32 +346,29 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
-  Handles: TArray<TSystemHandleEntry>;
+  Handles: TArray<TProcessHandleEntry>;
+  Linked: TToken;
   i: integer;
 begin
   TokenView := TTokenViewSource.Create(ListViewTokens);
   CurrentUserChanged(Self);
 
   // Search for inherited handles
-  if NtxEnumerateHandles(Handles).IsSuccess then
+  if NtxEnumerateHandlesProcess(NtCurrentProcess, Handles).IsSuccess then
   begin
-    TArrayHelper.Filter<TSystemHandleEntry>(Handles, FilterByProcess,
-      NtCurrentProcessId);
-
     // TODO: obtain token's type index in runtime
-    TArrayHelper.Filter<TSystemHandleEntry>(Handles, FilterByType, 5);
+    TArray.FilterInline<TProcessHandleEntry>(Handles, ByType(5));
 
     for i := 0 to High(Handles) do
-      TokenView.Add(TToken.CreateByHandle(Handles[i]));
+      TokenView.Add(TToken.CreateByHandle(Handles[i].HandleValue));
   end;
 
   // Open current process and, maybe, its linked token
   with TokenView.Add(TToken.CreateOpenCurrent) do
     if InfoClass.Query(tdTokenElevation) and
-      (InfoClass.Elevation <> TokenElevationTypeDefault) then
-      with OpenLinkedToken do
-        if Status.IsSuccess then
-          TokenView.Add(Value);
+      (InfoClass.Elevation <> TokenElevationTypeDefault) and
+      OpenLinkedToken(Linked).IsSuccess then
+        TokenView.Add(Linked);
 
   SetForegroundWindow(Handle);
 end;

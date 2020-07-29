@@ -48,8 +48,8 @@ type
 implementation
 
 uses
-  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUtils.Strings,
-  NtUtils.Exceptions;
+  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Strings,
+  NtUiLib.Exceptions, Ntapi.ntdef, NtUtils;
 
 {$R *.dfm}
 

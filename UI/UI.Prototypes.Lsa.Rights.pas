@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, VclEx.ListView, Vcl.StdCtrls,
-  NtUtils.Security.Sid, NtUtils.Lsa;
+  NtUtils.Security.Sid, NtUtils.Lsa, NtUtils;
 
 type
   TFrameLsaRights = class(TFrame)
@@ -28,7 +28,8 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, DelphiUtils.Strings, UI.Colors, NtUtils.Exceptions;
+  Ntapi.ntstatus, UI.Colors, NtUiLib.Exceptions, DelphiUiLib.Strings,
+  Ntapi.ntdef;
 
 {$R *.dfm}
 
@@ -44,11 +45,9 @@ begin
   SetLength(Sections, 2);
 
   Sections[0].Title := 'Name';
-  Sections[0].Enabled := True;
   Sections[0].Content := Right.Name;
 
   Sections[1].Title := 'Value';
-  Sections[1].Enabled := True;
   Sections[1].Content := IntToHexEx(Right.Value);
 
   Result := BuildHint(Sections);
@@ -58,7 +57,7 @@ end;
 
 procedure TFrameLsaRights.ButtonApplyClick(Sender: TObject);
 begin
-  LsaxSetRightsAccountBySid(Sid.Sid, CheckedRights).RaiseOnError;
+  LsaxSetRightsAccountBySid(Sid.Data, CheckedRights).RaiseOnError;
   LoadForSid(Sid);
 end;
 
@@ -108,8 +107,7 @@ begin
 
   if Assigned(Item) and (Item is TListItemEx) then
   begin
-    if Item.Checked xor Contains(CurrentRights,
-      AllRights[Item.Index].Value) then
+    if Item.Checked xor (CurrentRights and AllRights[Item.Index].Value <> 0) then
       TListItemEx(Item).Color := clStale
     else
       TListItemEx(Item).ColorEnabled := False;
@@ -123,7 +121,7 @@ var
 begin
   Self.Sid := Sid;
 
-  Status := LsaxQueryRightsAccountBySid(Sid.Sid, CurrentRights);
+  Status := LsaxQueryRightsAccountBySid(Sid.Data, CurrentRights);
 
   if Status.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
   begin
@@ -148,7 +146,7 @@ begin
 
     for i := 0 to High(AllRights) do
     begin
-      ListView.Items[i].Checked := Contains(CurrentRights, AllRights[i].Value);
+      ListView.Items[i].Checked := CurrentRights and AllRights[i].Value <> 0;
       ListView.Items[i].ColorEnabled := False;
     end;
 

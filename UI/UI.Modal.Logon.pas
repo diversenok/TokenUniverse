@@ -42,9 +42,10 @@ type
 implementation
 
 uses
-  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser, NtUtils.Exceptions,
-  DelphiUtils.Strings, Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
-  NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes;
+  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser, NtUtils,
+  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
+  NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes,
+  NtUiLib.Exceptions, DelphiUiLib.Strings;
 
 {$R *.dfm}
 
@@ -53,9 +54,9 @@ const
 
 function IsLogonSid(Sid: ISid): Boolean;
 begin
-  Result := (Sid.IdentifyerAuthority.ToInt64 = SECURITY_NT_AUTHORITY_ID)
-    and (Sid.SubAuthorities = SECURITY_LOGON_IDS_RID_COUNT) and
-    (Sid.SubAuthority(0) = SECURITY_LOGON_IDS_RID);
+  Result := (RtlIdentifierAuthoritySid(Sid.Data).ToInt64 = SECURITY_NT_AUTHORITY_ID)
+    and (RtlSubAuthorityCountSid(Sid.Data)^ = SECURITY_LOGON_IDS_RID_COUNT) and
+    (RtlSubAuthoritySid(Sid.Data, 0)^ = SECURITY_LOGON_IDS_RID);
 end;
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
@@ -134,7 +135,7 @@ var
 begin
   // Check for existing logon groups
   for i := 0 to FrameGroups.Count - 1 do
-    if IsLogonSid(FrameGroups.Group[i].SecurityIdentifier) then
+    if IsLogonSid(FrameGroups.Group[i].Sid) then
       Exit;
 
   case TaskMessageDlg(TITLE, MSG, mtConfirmation, [mbYes, mbIgnore, mbCancel],
@@ -142,8 +143,7 @@ begin
     IDYES:
     begin
       // Query window station SID
-      UsrxQueryObjectSid(GetProcessWindowStation,
-        LogonGroup.SecurityIdentifier).RaiseOnError;
+      UsrxQuerySid(GetProcessWindowStation, LogonGroup.Sid).RaiseOnError;
 
       LogonGroup.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or
         SE_GROUP_ENABLED or SE_GROUP_LOGON_ID;

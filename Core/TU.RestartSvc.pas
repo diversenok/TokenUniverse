@@ -3,7 +3,7 @@ unit TU.RestartSvc;
 interface
 
 uses
-  NtUtils.Exceptions, NtUtils.Svc;
+  NtUtils, NtUiLib.Exceptions, NtUtils.Svc;
 
 const
   RESVC_PARAM = '/service';
@@ -32,7 +32,8 @@ uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
   NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
-  NtUtils.Exec.Win32, NtUtils.Processes, Ntapi.ntpsapi, NtUtils.Tokens.Query;
+  NtUtils.Exec.Win32, NtUtils.Processes.Query, Ntapi.ntpsapi,
+  NtUtils.Tokens.Query;
 
 { Restart Service client functions }
 
@@ -60,9 +61,9 @@ begin
   Parameters[1] := UsrxCurrentDesktopName;
 
   // Start the service
-  Result := ScmxStartService(hxSvc.Value, Parameters);
+  Result := ScmxStartService(hxSvc.Handle, Parameters);
 
-  ScmxDeleteService(hxSvc.Value).ReportOnError;
+  ScmxDeleteService(hxSvc.Handle).ReportOnError;
 end;
 
 procedure ReSvcDelegate(RestartMethod: TRestartMethod);
@@ -106,7 +107,7 @@ begin
   for i := 0 to High(Processes) do
     if Processes[i].ImageName = SrcProcess then
     begin
-      NtxOpenProcessTokenById(Result, Processes[i].Process.ProcessId,
+      NtxOpenProcessTokenById(Result, Processes[i].Basic.ProcessId,
         TOKEN_DUPLICATE).RaiseOnError;
       Exit;
     end;
@@ -128,12 +129,12 @@ begin
       TOKEN_DUPLICATE).RaiseOnError;
 
   // Duplicate
-  NtxDuplicateToken(Result, hxToken.Value, TOKEN_ADJUST_DEFAULT or
+  NtxDuplicateToken(Result, hxToken.Handle, TOKEN_ADJUST_DEFAULT or
     TOKEN_ADJUST_SESSIONID or TOKEN_QUERY or TOKEN_DUPLICATE or
     TOKEN_ASSIGN_PRIMARY, TokenPrimary).RaiseOnError;
 
   // Change session
-  NtxSetToken(Result.Value, TokenSessionId, @SessionId,
+  NtxSetToken(Result.Handle, TokenSessionId, @SessionId,
     SizeOf(SessionId)).RaiseOnError;
 end;
 
@@ -143,7 +144,7 @@ var
   ProcessInfo: TProcessInfo;
   Session: Integer;
   {$IFDEF DEBUG}
-  BasicInfo: TProcessBasinInformation;
+  BasicInfo: TProcessBasicInformation;
   Status: TNtxStatus;
   {$ENDIF}
 begin
@@ -168,7 +169,7 @@ begin
 
   {$IFDEF DEBUG}
   // Check that the process didn't crash immediately
-  Status := NtxWaitForSingleObject(ProcessInfo.hxProcess.Value, 200 * MILLISEC);
+  Status := NtxWaitForSingleObject(ProcessInfo.hxProcess.Handle, 200 * MILLISEC);
 
   case Status.Status of
     STATUS_TIMEOUT: ; // Nothing
@@ -176,8 +177,8 @@ begin
       begin
         OutputDebugStringW('Abnormal process termination');
 
-        Status := NtxProcess.Query<TProcessBasinInformation>(
-          ProcessInfo.hxProcess.Value, ProcessBasicInformation, BasicInfo);
+        Status := NtxProcess.Query<TProcessBasicInformation>(
+          ProcessInfo.hxProcess.Handle, ProcessBasicInformation, BasicInfo);
 
         if Status.IsSuccess then
           OutputDebugStringW(PWideChar('Exit code: 0x' +

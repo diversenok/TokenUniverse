@@ -8,7 +8,8 @@ uses
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
   VclEx.ListView, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Security.Sid,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
-  UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit;
+  UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
+  Ntapi.ntseapi, NtUtils;
 
 type
   TInfoDialog = class(TChildTaskbarForm)
@@ -125,9 +126,10 @@ implementation
 uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
-  NtUtils.Objects.Snapshots, DelphiUtils.Strings, NtUtils.Strings,
-  Ntapi.ntpsapi, NtUtils.Processes, NtUtils.Access, NtUtils.Exceptions,
-  NtUtils.Lsa.Sid, DelphiUtils.Arrays, Ntapi.ntseapi;
+  NtUtils.Objects.Snapshots, NtUiLib.Exceptions, DelphiUiLib.Strings,
+  Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
+  NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
+  NtUiLib.AccessMasks, NtUiLib.Icons;
 
 const
   TAB_INVALIDATED = 0;
@@ -332,9 +334,9 @@ begin
   if Token.InfoClass.Query(tdTokenUser) then
   begin
     ComboOwner.Items.Add(LsaxSidToString(
-      Token.InfoClass.User.SecurityIdentifier.Sid));
+      Token.InfoClass.User.Sid.Data));
     ComboPrimary.Items.Add(LsaxSidToString(
-      Token.InfoClass.User.SecurityIdentifier.Sid));
+      Token.InfoClass.User.Sid.Data));
   end;
 
   // Add all groups for Primary Group and only those with specific attribtes
@@ -342,10 +344,10 @@ begin
   for i := 0 to High(NewGroups) do
   begin
     ComboPrimary.Items.Add(LsaxSidToString(
-      NewGroups[i].SecurityIdentifier.Sid));
-    if Contains(NewGroups[i].Attributes, SE_GROUP_OWNER) then
+      NewGroups[i].Sid.Data));
+    if NewGroups[i].Attributes and SE_GROUP_OWNER <> 0 then
       ComboOwner.Items.Add(LsaxSidToString(
-        NewGroups[i].SecurityIdentifier.Sid));
+        NewGroups[i].Sid.Data));
   end;
 
   ComboPrimary.Items.EndUpdate;
@@ -355,24 +357,23 @@ end;
 procedure TInfoDialog.ChangedIntegrity(const NewIntegrity: TGroup);
 begin
   ComboIntegrity.Color := clWindow;
-  IntegritySource.SelectedIntegrity := NewIntegrity.SecurityIdentifier.Rid;
-  ComboIntegrity.Hint := BuildSidHint(NewIntegrity.SecurityIdentifier,
-    NewIntegrity.Attributes);
+  IntegritySource.SelectedIntegrity := RtlxRidSid(NewIntegrity.Sid.Data);
+  ComboIntegrity.Hint := TType.Represent(NewIntegrity).Hint;
 end;
 
 procedure TInfoDialog.ChangedOwner(const NewOwner: ISid);
 begin
   ComboOwner.Color := clWindow;
-  ComboOwner.Text := LsaxSidToString(NewOwner.Sid);
+  ComboOwner.Text := LsaxSidToString(NewOwner.Data);
 end;
 
 procedure TInfoDialog.ChangedPolicy(const NewPolicy: Cardinal);
 begin
-  CheckBoxNoWriteUp.Checked := Contains(NewPolicy,
-    TOKEN_MANDATORY_POLICY_NO_WRITE_UP);
+  CheckBoxNoWriteUp.Checked := NewPolicy and
+    TOKEN_MANDATORY_POLICY_NO_WRITE_UP <> 0;
 
-  CheckBoxNewProcessMin.Checked := Contains(NewPolicy,
-    TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN);
+  CheckBoxNewProcessMin.Checked := NewPolicy and
+    TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN <> 0;
 
   CheckBoxNoWriteUp.Font.Style := [];
   CheckBoxNewProcessMin.Font.Style := [];
@@ -381,7 +382,7 @@ end;
 procedure TInfoDialog.ChangedPrimaryGroup(const NewPrimary: ISid);
 begin
   ComboPrimary.Color := clWindow;
-  ComboPrimary.Text := LsaxSidToString(NewPrimary.Sid);
+  ComboPrimary.Text := LsaxSidToString(NewPrimary.Data);
 end;
 
 procedure TInfoDialog.ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
@@ -462,7 +463,7 @@ end;
 procedure TInfoDialog.EditUserDblClick(Sender: TObject);
 begin
   if Token.InfoClass.Query(tdTokenUser) then
-    TDialogSidView.CreateView(Token.InfoClass.User.SecurityIdentifier);
+    TDialogSidView.CreateView(Token.InfoClass.User.Sid);
 end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -560,6 +561,8 @@ begin
 end;
 
 procedure TInfoDialog.Refresh;
+var
+  Repr: TRepresentation;
 begin
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
@@ -600,12 +603,14 @@ begin
   Token.InfoClass.ReQuery(tdTokenFlags);
 
   if Token.InfoClass.Query(tdTokenUser) then
-    with Token.InfoClass.User, EditUser do
+    with Token.InfoClass, EditUser do
     begin
-      Text := LsaxSidToString(SecurityIdentifier.Sid);
-      Hint := BuildSidHint(SecurityIdentifier, Attributes);
+      Repr := TType.Represent(Token.InfoClass.User);
 
-      if Contains(Attributes, SE_GROUP_USE_FOR_DENY_ONLY) then
+      Text := Repr.Text;
+      Hint := Repr.Hint;
+
+      if User.Attributes and SE_GROUP_USE_FOR_DENY_ONLY <> 0 then
         Color := clDisabled
       else
         Color := clEnabled;
@@ -690,7 +695,7 @@ begin
   if Token.InfoClass.ReQuery(tdObjectInfo) then
     with ListViewObject, Token.InfoClass.ObjectInformation do
     begin
-      Items[1].SubItems[0] := MapFlags(Attributes, ObjAttributesFlags, 'None');
+      Items[1].SubItems[0] := TNumeric.Represent(Attributes).Text;
       Items[2].SubItems[0] := BytesToString(PagedPoolCharge);
       Items[3].SubItems[0] := BytesToString(NonPagedPoolCharge);
       Items[4].SubItems[0] := IntToStr(PointerCount);
@@ -707,8 +712,8 @@ begin
   // Snapshot handles and find the ones pointing to that object
   if NtxEnumerateHandles(Handles).IsSuccess then
   begin
-    TArrayHelper.Filter<TSystemHandleEntry>(Handles, FilterByAddress,
-      NativeUInt(Token.InfoClass.HandleInformation.PObject));
+    TArray.FilterInline<TSystemHandleEntry>(Handles, ByAddress(
+      Token.InfoClass.HandleInformation.PObject));
 
     OpenedSomewhereElse := False;
 
@@ -720,7 +725,7 @@ begin
           Caption := 'Current process';
           SubItems.Add(IntToStr(NtCurrentProcessId));
           SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, @TokenAccessType));
+          SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
           ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
         end
       else
@@ -741,15 +746,14 @@ begin
           Process := NtxFindProcessById(Processes, Handles[i].UniqueProcessId);
 
           if Assigned(Process) then
-            Caption := Process.Process.GetImageName
+            Caption := Process.ImageName
           else
             Caption := 'Unknown process';
 
           SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
           SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-          SubItems.Add(FormatAccess(Handles[i].GrantedAccess, @TokenAccessType));
-          ImageIndex := TProcessIcons.GetIcon(
-            NtxTryQueryImageProcessById(Handles[i].UniqueProcessId));
+          SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
+          ImageIndex := TProcessIcons.GetIconByPid(Handles[i].UniqueProcessId);
         end;
     end;
   end;
@@ -782,7 +786,7 @@ begin
             begin
               Hint := 'Since process IDs might be reused, ' +
                       'image name might be incorrect';
-              CreatorImageName := Process.Process.GetImageName;
+              CreatorImageName := Process.ImageName;
             end
             else // Use default unknown name
               CreatorImageName := 'Unknown process';

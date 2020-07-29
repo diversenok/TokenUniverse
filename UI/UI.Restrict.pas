@@ -6,7 +6,8 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls, TU.Tokens,
   VclEx.ListView, UI.Prototypes.ChildForm, UI.Prototypes.Privileges,
-  UI.Prototypes.Groups, NtUtils.Security.Sid, Winapi.WinNt;
+  UI.Prototypes.Groups, NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi,
+  NtUtils;
 
 type
   TDialogRestrictToken = class(TChildTaskbarForm)
@@ -52,8 +53,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
-  Ntapi.ntseapi, Winapi.securitybaseapi, DelphiUtils.Strings,
-  NtUtils.Exceptions;
+  Winapi.securitybaseapi;
 
 {$R *.dfm}
 
@@ -132,7 +132,7 @@ begin
 
     // Add enabled groups
     for i := 0 to High(NewGroups) do
-      if Contains(NewGroups[i].Attributes, SE_GROUP_ENABLED) then
+      if NewGroups[i].Attributes and SE_GROUP_ENABLED <> 0 then
         AddGroup(NewGroups[i]);
 
     // Starting from here manually items only
@@ -217,17 +217,17 @@ begin
     end;
 
     // RESTRICTED is useful to provide access to WinSta0 and Default desktop
-    if SddlxGetWellKnownSid(WinRestrictedCodeSid, Sid).IsSuccess then
+    if SddlxGetWellKnownSid(Sid, WinRestrictedCodeSid).IsSuccess then
     begin
-      Group.SecurityIdentifier := Sid;
+      Group.Sid := Sid;
       Group.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or SE_GROUP_ENABLED;
       FrameGroupsRestrict.AddGroup(Group);
     end;
 
     // And WRITE RESTRICTED
-    if SddlxGetWellKnownSid(WinWriteRestrictedCodeSid, Sid).IsSuccess then
+    if SddlxGetWellKnownSid(Sid, WinWriteRestrictedCodeSid).IsSuccess then
     begin
-      Group.SecurityIdentifier := Sid;
+      Group.Sid := Sid;
       Group.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or SE_GROUP_ENABLED;
       FrameGroupsRestrict.AddGroup(Group);
     end;
@@ -238,8 +238,7 @@ begin
       with Token.InfoClass do
         for RestrInd := 0 to High(RestrictedSids) do
         begin
-          ItemInd := FrameGroupsRestrict.Find(
-            RestrictedSids[RestrInd].SecurityIdentifier);
+          ItemInd := FrameGroupsRestrict.Find(RestrictedSids[RestrInd].Sid);
 
           // Check the item if it's in the list. If not, add it.
           if ItemInd <> -1 then

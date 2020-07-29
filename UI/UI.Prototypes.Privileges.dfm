@@ -3,6 +3,7 @@ object FramePrivileges: TFramePrivileges
   Top = 0
   Width = 388
   Height = 369
+  Align = alClient
   TabOrder = 0
   object ListView: TListViewEx
     AlignWithMargins = True

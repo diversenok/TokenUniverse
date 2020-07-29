@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.ChildForm,
   UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Types,
-  NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups;
+  NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
+  NtUtils;
 
 type
   TGroupUpdateType = (guEditOne, guEditMultiple, guRemove);
@@ -83,10 +84,10 @@ type
 implementation
 
 uses
-  UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, DelphiUtils.Strings,
+  UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
   UI.Settings, UI.Modal.PickToken, System.UITypes, NtUtils.Lsa.Sid,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb,
-  NtUtils.Exceptions;
+  NtUiLib.Exceptions, DelphiUiLib.Strings;
 
 {$R *.dfm}
 
@@ -94,10 +95,10 @@ procedure TDialogCreateToken.AddGroup(NewGroup: TGroup);
 begin
   FrameGroups.AddGroup(NewGroup);
 
-  if Contains(NewGroup.Attributes, SE_GROUP_OWNER) then
-    ComboOwner.Items.Add(LsaxSidToString(NewGroup.SecurityIdentifier.Sid));
+  if NewGroup.Attributes and SE_GROUP_OWNER <> 0 then
+    ComboOwner.Items.Add(LsaxSidToString(NewGroup.Sid.Data));
 
-  ComboPrimary.Items.Add(LsaxSidToString(NewGroup.SecurityIdentifier.Sid));
+  ComboPrimary.Items.Add(LsaxSidToString(NewGroup.Sid.Data));
 end;
 
 procedure TDialogCreateToken.ButtonAddSIDClick(Sender: TObject);
@@ -127,7 +128,7 @@ begin
   Source := TDialogPickToken.Execute(Self);
 
   if not Source.InfoClass.Query(tdObjectInfo) or not
-    Contains(Source.InfoClass.ObjectInformation.GrantedAccess, TOKEN_QUERY) then
+    (Source.InfoClass.ObjectInformation.GrantedAccess and TOKEN_QUERY <> 0) then
   begin
     MessageDlg('This token does not have Query access.', mtError, mbOKCancel,
       -1);
@@ -138,10 +139,10 @@ begin
   if Source.InfoClass.Query(tdTokenUser) then
   begin
     ComboUser.Text := LsaxSidToString(
-      Source.InfoClass.User.SecurityIdentifier.Sid);
+      Source.InfoClass.User.Sid.Data);
     ComboUserChange(Sender);
-    CheckBoxUserState.Checked := Contains(Source.InfoClass.User.Attributes,
-      SE_GROUP_USE_FOR_DENY_ONLY);
+    CheckBoxUserState.Checked := Source.InfoClass.User.Attributes and
+      SE_GROUP_USE_FOR_DENY_ONLY <> 0;
   end;
 
   // Logon ID & Expiration
@@ -151,11 +152,12 @@ begin
       Source.InfoClass.Statistics.AuthenticationId;
 
     CheckBoxInfinite.Checked := (
-      Source.InfoClass.Statistics.ExpirationTime.QuadPart = Int64.MaxValue);
+      Source.InfoClass.Statistics.ExpirationTime = Int64.MaxValue);
 
     if not CheckBoxInfinite.Checked then
     begin
-      Expiration := Source.InfoClass.Statistics.ExpirationTime.ToDateTime;
+      Expiration := LargeIntegerToDateTime(Source.InfoClass.Statistics.
+        ExpirationTime);
 
       // Date only
       DateExpires.DateTime := Trunc(Expiration);
@@ -182,12 +184,12 @@ begin
 
   // Owner
   if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := LsaxSidToString(Source.InfoClass.Owner.Sid);
+    ComboOwner.Text := LsaxSidToString(Source.InfoClass.Owner.Data);
 
   // Primary group
   if Source.InfoClass.Query(tdTokenPrimaryGroup) then
     ComboPrimary.Text := LsaxSidToString(
-      Source.InfoClass.PrimaryGroup.Sid);
+      Source.InfoClass.PrimaryGroup.Data);
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
@@ -237,11 +239,11 @@ var
   User, Owner, PrimaryGroup: ISid;
 begin
   if CheckBoxInfinite.Checked then
-    Expires.QuadPart := Int64.MaxValue
+    Expires := Int64.MaxValue
   else if TimeExpires.Checked then
-    Expires.FromDateTime(DateExpires.Date + TimeExpires.Time)
+    Expires := DateTimeToLargeInteger(DateExpires.Date + TimeExpires.Time)
   else
-    Expires.FromDateTime(DateExpires.Date);
+    Expires := DateTimeToLargeInteger(DateExpires.Date);
 
   // ComboOwner may contain '< Same as user >' value
   if ComboOwner.ItemIndex = 0 then
@@ -398,7 +400,7 @@ var
   Sid: ISid;
 begin
   LsaxLookupNameOrSddl(UserName, Sid).RaiseOnError;
-  ComboUser.Text := LsaxSidToString(Sid.Sid);
+  ComboUser.Text := LsaxSidToString(Sid.Data);
   ComboUserChange(ButtonPickUser);
 end;
 
@@ -442,7 +444,7 @@ begin
 
     // Only groups with Owner flag can be assigned as owners
     for i := 0 to FrameGroups.ListView.Items.Count - 1 do
-      if Contains(FrameGroups.Group[i].Attributes, SE_GROUP_OWNER) then
+      if FrameGroups.Group[i].Attributes and SE_GROUP_OWNER <> 0 then
         ComboOwner.Items.Add(FrameGroups.ListView.Items[i].Caption);
 
     // Restore choise

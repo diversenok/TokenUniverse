@@ -11,7 +11,7 @@ interface
   on the same simple type. }
 
 uses
-  Winapi.WinNt, NtUtils.Security.Sid;
+  Winapi.WinNt, Ntapi.ntseapi, Ntapi.ntrtl, NtUtils.Security.Sid, NtUtils;
 
 type
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);
@@ -34,7 +34,7 @@ function CompareSIDs(const Value1, Value2: ISid): Boolean;
 function CompareCardinals(const Value1, Value2: Cardinal): Boolean;
 function CompareLUIDs(const Value1, Value2: TLuid): Boolean;
 function CompareLongBools(const Value1, Value2: LongBool): Boolean;
-function ComparePrivileges(const Value1, Value2: TArray<TPrivilege>): Boolean;
+function ComparePrivileges(const Value1, Value2: TArray<TLuidAndAttributes>): Boolean;
 function CompareGroups(const Value1, Value2: TGroup): Boolean;
 function CompareGroupArrays(const Value1, Value2: TArray<TGroup>): Boolean;
 function CompareStatistics(const Value1, Value2: TTokenStatistics): Boolean;
@@ -42,8 +42,7 @@ function CompareStatistics(const Value1, Value2: TTokenStatistics): Boolean;
 implementation
 
 uses
-  System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Exceptions,
-  NtUtils.Lsa.Sid;
+  System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Sid;
 
 { TTokenTypeExHelper }
 
@@ -87,7 +86,7 @@ end;
 
 function CompareSIDs(const Value1, Value2: ISid): Boolean;
 begin
-  Result := Value1.EqualsTo(Value2.Sid);
+  Result := RtlEqualSid(Value1.Data, Value2.Data);
 end;
 
 function CompareCardinals(const Value1, Value2: Cardinal): Boolean;
@@ -107,16 +106,14 @@ begin
   Result := Length(Value1) = Length(Value2);
   if Result then
     for i := 0 to High(Value1) do
-      if not Value1[i].SecurityIdentifier.EqualsTo(
-        Value2[i].SecurityIdentifier.Sid)
+      if not RtlEqualSid(Value1[i].Sid.Data, Value2[i].Sid.Data)
         or (Value1[i].Attributes <> Value2[i].Attributes) then
           Exit(False);
 end;
 
 function CompareGroups(const Value1, Value2: TGroup): Boolean;
 begin
-  Result := (Value1.SecurityIdentifier.EqualsTo(
-    Value2.SecurityIdentifier.Sid)) and
+  Result := RtlEqualSid(Value1.Sid.Data, Value2.Sid.Data) and
     (Value1.Attributes = Value2.Attributes);
 end;
 
@@ -125,7 +122,7 @@ begin
   Result := Value1 = Value2;
 end;
 
-function ComparePrivileges(const Value1, Value2: TArray<TPrivilege>): Boolean;
+function ComparePrivileges(const Value1, Value2: TArray<TLuidAndAttributes>): Boolean;
 var
   i: integer;
 begin

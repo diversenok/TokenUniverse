@@ -36,8 +36,8 @@ type
 implementation
 
 uses
-  UI.Settings, UI.MainForm, TU.Suggestions, NtUtils.Exceptions, System.UITypes,
-  NtUtils.WinSafer;
+  UI.Settings, UI.MainForm, TU.Suggestions, System.UITypes,
+  NtUtils.WinSafer, NtUtils;
 
 {$R *.dfm}
 
@@ -78,18 +78,16 @@ end;
 
 procedure TDialogSafer.ComboBoxLevelChange(Sender: TObject);
 var
-  hLevel: TSaferHandle;
+  hxLevel: IHandle;
   Name, Description: string;
 begin
   Name := '';
   Description := '';
 
-  if SafexOpenLevel(hLevel, GetScopeId, GetLevelId).IsSuccess then
+  if SafexOpenLevel(hxLevel, GetScopeId, GetLevelId).IsSuccess then
   begin
-    SafexQueryNameLevel(hLevel, Name);
-    SafexQueryDescriptionLevel(hLevel, Description);
-
-    SafexCloseLevel(hLevel);
+    SafexQueryNameLevel(hxLevel.Handle, Name);
+    SafexQueryDescriptionLevel(hxLevel.Handle, Description);
   end;
 
   LabelFriendlyName.Caption := Name;

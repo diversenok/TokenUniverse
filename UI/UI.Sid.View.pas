@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   UI.Prototypes.ChildForm, NtUtils.Security.Sid, UI.Prototypes.Lsa.Rights,
-  UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
+  UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit,
+  NtUtils;
 
 type
   TDialogSidView = class(TChildTaskbarForm)
@@ -50,7 +51,8 @@ type
 implementation
 
 uses
-  DelphiUtils.Strings, Winapi.WinNt, NtUtils.Exceptions, NtUtils.Lsa.Sid;
+  DelphiUiLib.Strings, Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid,
+  Ntapi.ntrtl;
 
 {$R *.dfm}
 
@@ -72,25 +74,26 @@ begin
   begin
     Sid := SrcSid;
 
-    if not LsaxLookupSid(Sid.Sid, Lookup).IsSuccess then
+    if not LsaxLookupSid(Sid.Data, Lookup).IsSuccess then
     begin
       Lookup.SidType := SidTypeUndefined;
       Lookup.DomainName := '';
       Lookup.UserName := '';
     end;
 
-    Caption := Caption + ' for "' + LsaxSidToString(Sid.Sid) +'"';
+    Caption := Caption + ' for "' + LsaxSidToString(Sid.Data) +'"';
 
     if not (Lookup.SidType in [SidTypeUndefined, SidTypeInvalid,
       SidTypeUnknown]) then
       EditFullName.Text := Lookup.FullName;
 
-    EditSID.Text := Sid.SDDL;
+    EditSID.Text := RtlxSidToString(Sid.Data);
     EditType.Text := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
         Integer(Lookup.SidType), 'SidType');
-    EditSubAuthorities.Text := IntToStr(Sid.SubAuthorities);
+    EditSubAuthorities.Text := IntToStr(RtlSubAuthorityCountSid(
+      Sid.Data)^);
 
-    if Sid.SubAuthorities = 0 then
+    if RtlSubAuthorityCountSid(Sid.Data)^ = 0 then
       LinkLabelMinusOne.Visible := False; // Hide parant SID link
 
     if Lookup.DomainName <> '' then
@@ -116,7 +119,7 @@ begin
     FrameLsaPrivileges.LoadForSid(Sid);
 
     FrameLsaAudit.OnApplyClick := SetUserAudit;
-    FrameLsaAudit.LoadForSid(Sid.Sid);
+    FrameLsaAudit.LoadForSid(Sid.Data);
 
     Show;
   end;
@@ -128,7 +131,7 @@ var
   DomainSid: ISid;
   Lookup: TTranslatedName;
 begin
-  if LsaxLookupSid(Sid.Sid, Lookup).IsSuccess and (Lookup.DomainName <> '') then
+  if LsaxLookupSid(Sid.Data, Lookup).IsSuccess and (Lookup.DomainName <> '') then
   begin
     LsaxLookupName(Lookup.DomainName, DomainSid).RaiseOnError;
     TDialogSidView.CreateView(DomainSid);
@@ -137,9 +140,11 @@ end;
 
 procedure TDialogSidView.LinkLabelMinusOneLinkClick(Sender: TObject;
   const Link: string; LinkType: TSysLinkType);
+var
+  Parent: ISid;
 begin
-  if Sid.SubAuthorities > 0 then
-    TDialogSidView.CreateView(Sid.Parent);
+  if RtlxParentSid(Parent, Sid).IsSuccess then
+    TDialogSidView.CreateView(Parent);
 end;
 
 procedure TDialogSidView.SetUserAudit(NewAudit: IAudit);
@@ -148,9 +153,9 @@ begin
   FrameLsaAudit.LabelStatus.Hint := '';
 
   try
-    (NewAudit as IPerUserAudit).AssignToUser(Sid.Sid).RaiseOnError;
+    (NewAudit as IPerUserAudit).AssignToUser(Sid.Data).RaiseOnError;
   finally
-    FrameLsaAudit.LoadForSid(Sid.Sid);
+    FrameLsaAudit.LoadForSid(Sid.Data);
   end;
 end;
 

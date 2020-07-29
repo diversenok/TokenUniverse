@@ -9,17 +9,6 @@ uses
   VclEx.ListView, UI.Prototypes.ChildForm, NtUtils.Processes.Snapshots;
 
 type
-  TProcessIcons = class
-  strict private
-    class var Images: TImageList;
-    class var Mapping: TDictionary<string,Integer>;
-  public
-    class constructor Create;
-    class destructor Destroy;
-    class property ImageList: TImageList read Images;
-    class function GetIcon(FileName: string): Integer; static;
-  end;
-
   TProcessItemEx = class
     Process: TProcessEntry;
     SearchKeyword: string;
@@ -66,63 +55,9 @@ implementation
 
 uses
   Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes,
-  NtUtils.Exceptions;
+  NtUiLib.Icons, NtUtils;
 
 {$R *.dfm}
-
-{ TProcessIcons }
-
-class constructor TProcessIcons.Create;
-begin
-  Mapping := TDictionary<string,Integer>.Create;
-
-  Images := TImageList.Create(nil);
-  Images.ColorDepth := cd32Bit;
-  Images.AllocBy := 32;
-
-  GetIcon(GetEnvironmentVariable('SystemRoot') + '\system32\user32.dll');
-end;
-
-class destructor TProcessIcons.Destroy;
-begin
-  Images.Free;
-  Mapping.Free;
-end;
-
-class function TProcessIcons.GetIcon(FileName: string): Integer;
-var
-  ObjIcon: TIcon;
-  LargeHIcon, SmallHIcon: HICON;
-begin
-  Result := 0; // Default icon. See the constructor.
-
-  // Unknown filename means defalut icon
-  if FileName = '' then
-    Exit;
-
-  // Check if the icon for this file is already here
-  if Mapping.TryGetValue(FileName, Result) then
-    Exit;
-
-  LargeHIcon := 0;
-  SmallHIcon := 0;
-
-  // Try to query the icon. Save it to our ImageList on success.
-  if (ExtractIconExW(PWideChar(FileName), 0, LargeHIcon, SmallHIcon, 1) <> 0)
-    and (SmallHIcon <> 0) then
-  begin
-    ObjIcon := TIcon.Create;
-    ObjIcon.Handle := SmallHIcon;
-    Result := Images.AddIcon(ObjIcon);
-    ObjIcon.Free;
-  end;
-
-  DestroyIcon(SmallHIcon);
-  DestroyIcon(LargeHIcon);
-
-  // Save the icon index for future use
-  Mapping.Add(FileName, Result);
-end;
 
 { TProcessListDialog }
 
@@ -182,9 +117,9 @@ begin
       Abort;
 
     Process := @PProcessItemEx(ListView.Selected.Data).Process;
-    Result.ProcessID := Process.Process.ProcessId;
+    Result.ProcessID := Process.Basic.ProcessId;
     Result.ThreadID := ThreadID;
-    Result.ImageName := Process.Process.GetImageName;
+    Result.ImageName := Process.ImageName;
   end;
 end;
 
@@ -218,8 +153,8 @@ begin
   TProcessIcons.ImageList.BeginUpdate;
 
   for i := 0 to High(ProcessListEx) do
-    ProcessListEx[i].ImageIndex := TProcessIcons.GetIcon(
-      NtxTryQueryImageProcessById(ProcessListEx[i].Process.Process.ProcessId));
+    ProcessListEx[i].ImageIndex := TProcessIcons.GetIconByPid(
+      ProcessListEx[i].Process.Basic.ProcessId);
 
   TProcessIcons.ImageList.EndUpdate;
 end;
@@ -242,8 +177,8 @@ begin
   begin
     ProcessListEx[i] := TProcessItemEx.Create(Processes[i]);
     ProcessListEx[i].SearchKeyword :=
-      LowerCase(ProcessListEx[i].Process.Process.GetImageName) + ' ' +
-      IntToStr(ProcessListEx[i].Process.Process.ProcessId);
+      LowerCase(ProcessListEx[i].Process.ImageName) + ' ' +
+      IntToStr(ProcessListEx[i].Process.Basic.ProcessId);
   end;
 
   // Check if parent still exists for each process.
@@ -251,11 +186,8 @@ begin
   // check that the parent was created before the child.
   for ChildInd := 0 to High(ProcessListEx) do
     for ParentInd := 0 to High(ProcessListEx) do
-      if (ChildInd <> ParentInd) and
-        (ProcessListEx[ChildInd].Process.Process.InheritedFromProcessId =
-        ProcessListEx[ParentInd].Process.Process.ProcessId) and
-        (ProcessListEx[ChildInd].Process.Process.CreateTime.QuadPart >=
-        ProcessListEx[ParentInd].Process.Process.CreateTime.QuadPart) then
+      if (ChildInd <> ParentInd) and ParentProcessChecker(
+        ProcessListEx[ParentInd].Process, ProcessListEx[ChildInd].Process) then
       begin
         ProcessListEx[ChildInd].Parent := ProcessListEx[ParentInd];
         Break;
@@ -290,8 +222,8 @@ begin
       if Enabled and ((Parent = nil) or (not Parent.Enabled))  then
       begin
         ListItemRef := ListView.Items.Add;
-        ListItemRef.Caption := ' ' + Process.Process.GetImageName;
-        ListItemRef.SubItems.Add(IntToStr(Process.Process.ProcessId));
+        ListItemRef.Caption := ' ' + Process.ImageName;
+        ListItemRef.SubItems.Add(IntToStr(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
         Added := True;
@@ -305,8 +237,8 @@ begin
         if Enabled and (not Added) and (Parent <> nil) and Parent.Added then
       begin
         ListItemRef := AddChild(Parent.ListItemRef.Index);
-        ListItemRef.Caption := ' ' + Process.Process.GetImageName;
-        ListItemRef.SubItems.Add(IntToStr(Process.Process.ProcessId));
+        ListItemRef.Caption := ' ' + Process.ImageName;
+        ListItemRef.SubItems.Add(IntToStr(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
         Added := True;

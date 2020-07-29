@@ -27,7 +27,7 @@ var
 implementation
 
 uses
-  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser;
+  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt;
 
 {$R *.dfm}
 
@@ -37,27 +37,26 @@ constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
   const Process: TProcessEntry);
 var
   i: Integer;
-  GuiInfo: TGuiThreadInfo;
 begin
   inherited Create(AOwner);
 
-  Caption := Format('Threads of %s [%d]', [Process.Process.GetImageName,
-    Process.Process.ProcessId]);
+  Caption := Format('Threads of %s [%d]', [Process.ImageName,
+    Process.Basic.ProcessId]);
 
   ListViewThreads.Items.BeginUpdate;
 
-  for i := 0 to Process.Process.NumberOfThreads - 1 do
+  for i := 0 to Process.Basic.NumberOfThreads - 1 do
   with ListViewThreads.Items.Add do
   begin
-    Caption := IntToStr(Process.Threads[i].ClientId.UniqueThread);
-    SubItems.Add(DateTimeToStr(Process.Threads[i].CreateTime.ToDateTime));
-    if Process.Threads[i].WaitReason = Suspended then
+    Caption := IntToStr(Process.Threads[i].Basic.ClientID.UniqueThread);
+    SubItems.Add(DateTimeToStr(LargeIntegerToDateTime(
+      Process.Threads[i].Basic.CreateTime)));
+    if Process.Threads[i].Basic.WaitReason = Suspended then
       Color := clSuspended
     else
     begin
       // Check wether the thread owns any GUI objects
-      if UsrxGetGuiInfoThread(Process.Threads[i].ClientId.UniqueThread,
-        GuiInfo).IsSuccess then
+      if UsrxIsGuiThread(Process.Threads[i].Basic.ClientId.UniqueThread) then
         Color := clGuiThread;
     end;
   end;
@@ -78,7 +77,8 @@ begin
     if not Assigned(ListViewThreads.Selected) then
       Abort;
 
-    Result := Process.Threads[ListViewThreads.Selected.Index].ClientId.UniqueThread;
+    Result := Process.Threads[ListViewThreads.Selected.Index].Basic.ClientId.
+      UniqueThread;
 
     Free;
   end;

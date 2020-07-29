@@ -17,8 +17,8 @@ procedure PromptCredentialsUI(ParentWindow: HWND;
 implementation
 
 uses
-  System.SysUtils, Winapi.Ole2, TU.Tokens.Types, Ntutils.Exceptions,
-  NtUtils.Security.Sid, NtUtils.Lsa.Sid;
+  System.SysUtils, Winapi.Ole2, TU.Tokens.Types, NtUtils,
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUiLib.Exceptions;
 
 type
   TCredUIInfoW = record
@@ -110,7 +110,7 @@ begin
 
       try
         LsaxLookupNameOrSddl(UserBuffer, Sid).RaiseOnError;
-        LsaxLookupSid(Sid.Sid, AccountName).RaiseOnError;
+        LsaxLookupSid(Sid.Data, AccountName).RaiseOnError;
 
         if Assigned(Callback) then
           Callback(AccountName.DomainName, AccountName.UserName, PasswordBuffer);

@@ -5,8 +5,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Vcl.ExtCtrls, TU.Tokens, TU.Tokens.Types,
-  UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Security.Sid;
+  Vcl.ComCtrls, Vcl.ExtCtrls, TU.Tokens, TU.Tokens.Types, NtUtils,
+  UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Security.Sid,
+  Ntapi.ntseapi;
 
 type
   TCheckBoxMapping = record
@@ -64,14 +65,14 @@ type
     class function PickEditOne(AOwner: TComponent; const Group: TGroup;
       DisableAttributes: Boolean = False): TGroup;
     class procedure PickEditMultiple(AOwner: TComponent; Groups: TArray<TGroup>;
-      out AttributesToAdd, AttributesToDelete: Cardinal);
+      out AttributesToAdd, AttributesToDelete: TGroupAttributes);
   end;
 
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg, DelphiUtils.Strings, Winapi.WinNt,
-  NtUtils.Lsa.Sid, NtUtils.Exceptions;
+  TU.ObjPicker, UI.Modal.ComboDlg, Winapi.WinNt,
+  NtUtils.Lsa.Sid, NtUiLib.Exceptions;
 
 {$R *.dfm}
 
@@ -103,10 +104,13 @@ end;
 { TDialogPickUser }
 
 procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
+var
+  Sid: ISid;
 begin
-  SetSelectedGroup(TSid.CreateNew(SECURITY_MANDATORY_LABEL_AUTHORITY, 1,
-    TComboDialog.PickIntegrity(Self)));
+  RtlxNewSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
+    [TComboDialog.PickIntegrity(Self)]).RaiseOnError;
 
+  SetSelectedGroup(Sid);
   SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
 end;
 
@@ -206,7 +210,8 @@ begin
 end;
 
 class procedure TDialogPickUser.PickEditMultiple(AOwner: TComponent;
-  Groups: TArray<TGroup>; out AttributesToAdd, AttributesToDelete: Cardinal);
+  Groups: TArray<TGroup>; out AttributesToAdd, AttributesToDelete:
+  TGroupAttributes);
 var
   BitwiseAnd, BitwiseOr: Cardinal;
   i: Integer;
@@ -232,9 +237,9 @@ begin
 
     // Set appropriate checkbox states
     for i := 0 to High(Mapping) do
-      if Contains(BitwiseAnd, Mapping[i].Attribute) then
+      if BitwiseAnd and Mapping[i].Attribute <> 0 then
         Mapping[i].CheckBox.SetStateEx(cbChecked) // All groups contain it
-      else if Contains(BitwiseOr, Mapping[i].Attribute) then
+      else if BitwiseOr and Mapping[i].Attribute <> 0 then
       begin
         Mapping[i].CheckBox.AllowGrayed := True;
         Mapping[i].CheckBox.SetStateEx(cbGrayed); // Only some of them
@@ -264,14 +269,14 @@ class function TDialogPickUser.PickEditOne(AOwner: TComponent;
 begin
   with TDialogPickUser.Create(AOwner) do
   begin
-    SetSelectedGroup(Group.SecurityIdentifier);
+    SetSelectedGroup(Group.Sid);
     SetAttributes(Group.Attributes);
 
     if DisableAttributes then
       DoDisableAttributes;
 
     ShowModal;
-    Result.SecurityIdentifier := SelectedGroup;
+    Result.Sid := SelectedGroup;
     Result.Attributes := GetAttributes;
   end;
 end;
@@ -288,7 +293,7 @@ begin
     end;
 
     ShowModal;
-    Result.SecurityIdentifier := SelectedGroup;
+    Result.Sid := SelectedGroup;
     Result.Attributes := GetAttributes;
   end;
 end;
@@ -298,14 +303,14 @@ var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
-    Mapping[i].CheckBox.SetCheckedEx(Contains(Value, Mapping[i].Attribute));
+    Mapping[i].CheckBox.SetCheckedEx(Value and Mapping[i].Attribute <> 0);
 end;
 
 procedure TDialogPickUser.SetSelectedGroup(Value: ISid);
 begin
   IsValidGroup := True;
   SelectedGroup := Value;
-  ComboBoxSID.Text := LsaxSidToString(SelectedGroup.Sid);
+  ComboBoxSID.Text := LsaxSidToString(SelectedGroup.Data);
 end;
 
 end.

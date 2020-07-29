@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ComCtrls, VclEx.ListView, NtUtils.Security.Sid;
+  Vcl.Dialogs, Vcl.ComCtrls, VclEx.ListView, NtUtils.Security.Sid,
+  NtUtils;
 
 type
   TFrameGroups = class(TFrame)
@@ -33,60 +34,14 @@ type
       DisableAttributes: Boolean = False);
   end;
 
-function BuildSidHint(Sid: ISid; Attributes: Cardinal;
-  AttributesPresent: Boolean = True): String;
-
 implementation
 
 uses
-  UI.Colors, NtUtils.Strings, DelphiUtils.Strings, NtUtils.Exceptions,
-  UI.Modal.PickUser, UI.Sid.View, Winapi.WinNt, NtUtils.Lsa.Sid;
+  UI.Colors, Ntapi.ntrtl, DelphiApi.Reflection,
+  UI.Modal.PickUser, UI.Sid.View, Winapi.WinNt, NtUtils.Lsa.Sid, Ntapi.ntseapi,
+  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Numeric;
 
 {$R *.dfm}
-
-function BuildSidHint(Sid: ISid; Attributes: Cardinal;
-  AttributesPresent: Boolean): String;
-const
-  SE_GROUP_ALL_FLAGS = SE_GROUP_MANDATORY or SE_GROUP_OWNER or
-                       SE_GROUP_USE_FOR_DENY_ONLY or SE_GROUP_INTEGRITY or
-                       SE_GROUP_RESOURCE or SE_GROUP_LOGON_ID;
-var
-  Sections: array of THintSection;
-  Lookup: TTranslatedName;
-  Success: Boolean;
-begin
-  SetLength(Sections, 5);
-
-  Success := LsaxLookupSid(Sid.Sid, Lookup).IsSuccess;
-
-  Sections[0].Title := 'Friendly name';
-  Sections[0].Enabled := Success;
-  Sections[0].Content := Lookup.FullName;
-
-  Sections[1].Title := 'SID';
-  Sections[1].Enabled := True;
-  Sections[1].Content := Sid.SDDL;
-
-  Sections[2].Title := 'Type';
-  Sections[2].Enabled := Success and (Lookup.SidType <> SidTypeUndefined);
-  Sections[2].Content := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
-    Integer(Lookup.SidType), 'SidType');
-
-  Sections[3].Title := 'State';
-  Sections[3].Enabled := AttributesPresent;
-  Sections[3].Content := StateOfGroupToString(Attributes);
-
-  if AttributesPresent and ContainsAny(Attributes, SE_GROUP_ALL_FLAGS) then
-  begin
-    Sections[4].Title := 'Flags';
-    Sections[4].Enabled := True;
-    Sections[4].Content := MapFlags(Attributes, GroupAttributeFlags);
-  end
-  else
-    Sections[4].Enabled := False;
-
-  Result := BuildHint(Sections);
-end;
 
 { TFrameGroups }
 
@@ -151,7 +106,7 @@ var
   i: Integer;
 begin
   for i := 0 to High(FGroups) do
-    if FGroups[i].SecurityIdentifier.EqualsTo(Sid.Sid) then
+    if RtlEqualSid(FGroups[i].Sid.Data, Sid.Data) then
       Exit(i);
 
   Result := -1;
@@ -174,7 +129,7 @@ end;
 procedure TFrameGroups.ListViewDblClick(Sender: TObject);
 begin
   if Assigned(ListView.Selected) then
-    TDialogSidView.CreateView(Group[ListView.Selected.Index].SecurityIdentifier);
+    TDialogSidView.CreateView(Group[ListView.Selected.Index].Sid);
 end;
 
 procedure TFrameGroups.RemoveGroup(Index: Integer);
@@ -213,11 +168,28 @@ begin
 end;
 
 function TFrameGroups.SetItemData(Item: TListItemEx; Group: TGroup): TListItemEx;
+var
+  SA: TSidAndAttributes;
+  Representation: TRepresentation;
+  NoState: IgnoreSubEnumsAttribute;
 begin
-  Item.Cell[0] := LsaxSidToString(Group.SecurityIdentifier.Sid);
-  Item.Cell[1] := StateOfGroupToString(Group.Attributes);
-  Item.Cell[2] := MapFlags(Group.Attributes, GroupAttributeFlags);
-  Item.Hint := BuildSidHint(Group.SecurityIdentifier, Group.Attributes);
+  SA.Sid := Group.Sid.Data;
+  SA.Attributes := Group.Attributes;
+  Representation := RepresentType(TypeInfo(TSidAndAttributes), SA);
+
+  Item.Cell[0] := Representation.Text;
+  Item.Cell[1] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
+    SE_GROUP_STATE_MASK).Text;
+
+  NoState := IgnoreSubEnumsAttribute.Create;
+  try
+    Item.Cell[2] := TNumeric.Represent<TGroupAttributes>(Group.Attributes and
+      not SE_GROUP_STATE_MASK, [NoState]).Text;
+  finally
+    NoState.Free;
+  end;
+
+  Item.Hint := Representation.Hint;
   Item.Color := GroupAttributesToColor(Group.Attributes);
   Result := Item;
 end;
@@ -225,7 +197,7 @@ end;
 procedure TFrameGroups.UiEditSelected(AOwner: TComponent;
   DisableAttributes: Boolean);
 var
-  AttributesToAdd, AttributesToDelete: Cardinal;
+  AttributesToAdd, AttributesToDelete: TGroupAttributes;
   i: integer;
   NewGroup: TGroup;
 begin

@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ComCtrls, VclEx.ListView, NtUtils.Security.Sid, Winapi.WinNt;
+  Vcl.ComCtrls, VclEx.ListView, NtUtils.Security.Sid, Winapi.WinNt,
+  Ntapi.ntseapi;
 
 type
   TPrivilegeColorMode = (pcDefault, pcGrayChecked, pcGrayUnchecked,
@@ -12,7 +13,7 @@ type
 
   TPrivilegeEx = record
     Value: TLuid;
-    Attributes: Cardinal;
+    Attributes: TPrivilegeAttributes;
     Name, Description: string;
   end;
 
@@ -28,11 +29,11 @@ type
       TListItemEx;
     procedure SetItemColor(Index: Cardinal);
     procedure SetColorMode(const Value: TPrivilegeColorMode);
-    function GetAttributes(Ind: Integer): Cardinal;
-    procedure SetAttributes(Ind: Integer; const Value: Cardinal);
+    function GetAttributes(Ind: Integer): TPrivilegeAttributes;
+    procedure SetAttributes(Ind: Integer; const Value: TPrivilegeAttributes);
   public
     property Privilege[Ind: Integer]: TPrivilege read GetPrivilege write SetPrivilege;
-    property PrivAttributes[Ind: Integer]: Cardinal read GetAttributes write SetAttributes;
+    property PrivAttributes[Ind: Integer]: TPrivilegeAttributes read GetAttributes write SetAttributes;
     function Privileges: TArray<TPrivilege>;
     function PrivilegeCount: Integer;
 
@@ -53,8 +54,8 @@ type
 implementation
 
 uses
-  NtUtils.Strings, DelphiUtils.Strings, UI.Colors, NtUtils.Lsa, Ntapi.ntseapi,
-  NtUtils.Exceptions;
+  DelphiUiLib.Strings, UI.Colors, NtUtils.Lsa, NtUtils, Winapi.ntlsa,
+  DelphiUiLib.Reflection.Numeric;
 
 {$R *.dfm}
 
@@ -82,18 +83,25 @@ begin
   SetLength(Sections, 3);
 
   Sections[0].Title := 'Name';
-  Sections[0].Enabled := True;
   Sections[0].Content := Privilege.Name;
 
   Sections[1].Title := 'Description';
-  Sections[1].Enabled := True;
   Sections[1].Content := Privilege.Description;
 
   Sections[2].Title := 'Value';
-  Sections[2].Enabled := True;
   Sections[2].Content := IntToStr(Privilege.Value);
 
   Result := BuildHint(Sections);
+end;
+
+function PrivilegesToLuids(Privileges: TArray<TPrivilege>): TArray<TLuid>;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Privileges));
+
+  for i := 0 to High(Privileges) do
+    Result[i] := Privileges[i].Luid;
 end;
 
 procedure TFramePrivileges.AddAllPrivileges;
@@ -102,7 +110,7 @@ var
   PrivArray: TArray<TPrivilege>;
   i: Integer;
 begin
-  if not LsaxEnumeratePrivilegesLocal(PrivDefArray).IsSuccess then
+  if not LsaxEnumeratePrivileges(PrivDefArray).IsSuccess then
   begin
     // Privilege enumeration don't work, simply use all range
     SetLength(PrivDefArray, SE_MAX_WELL_KNOWN_PRIVILEGE -
@@ -152,7 +160,8 @@ procedure TFramePrivileges.AddPrivileges(NewPrivileges: TArray<TPrivilege>);
 var
   i: Integer;
   NewPrivilegesEx: array of TPrivilegeEx;
-  Names, Descriptions: TArray<String>;
+  Name, Description: String;
+  hxPolicy: IHandle;
 begin
   SetLength(NewPrivilegesEx, Length(NewPrivileges));
 
@@ -163,13 +172,14 @@ begin
   end;
 
   // Lookup names
-  if LsaxLookupMultiplePrivileges(PrivilegesToLuids(NewPrivileges), Names,
-    Descriptions).IsSuccess then
+  if LsaxOpenPolicy(hxPolicy, POLICY_LOOKUP_NAMES).IsSuccess then
     for i := 0 to High(NewPrivileges) do
-    begin
-      NewPrivilegesEx[i].Name := Names[i];
-      NewPrivilegesEx[i].Description := Descriptions[i];
-    end;
+      if LsaxQueryPrivilege(NewPrivileges[i].Luid, Name, Description).IsSuccess
+        then
+        begin
+          NewPrivilegesEx[i].Name := PrettifyCamelCase(Name, 'Se');
+          NewPrivilegesEx[i].Description := Description;
+        end;
 
   FPrivileges := Concat(FPrivileges, NewPrivileges);
 
@@ -222,7 +232,7 @@ begin
   Result := -1;
 end;
 
-function TFramePrivileges.GetAttributes(Ind: Integer): Cardinal;
+function TFramePrivileges.GetAttributes(Ind: Integer): TPrivilegeAttributes;
 begin
   if (0 <= Ind) and (Ind <= High(FPrivileges)) then
     Result := FPrivileges[Ind].Attributes
@@ -283,7 +293,8 @@ begin
     end;
 end;
 
-procedure TFramePrivileges.SetAttributes(Ind: Integer; const Value: Cardinal);
+procedure TFramePrivileges.SetAttributes(Ind: Integer; const Value:
+  TPrivilegeAttributes);
 begin
   if (Ind < 0) or (Ind > High(FPrivileges)) then
     raise ERangeError.Create('TFramePrivileges.SetAttributes');
@@ -291,7 +302,7 @@ begin
   FPrivileges[Ind].Attributes := Value;
 
   ListView.Items.BeginUpdate;
-  ListView.Items[Ind].Cell[1] := StateOfPrivilegeToString(Value);
+  ListView.Items[Ind].Cell[1] := TNumeric.Represent(Value).Text;
   SetItemColor(Ind);
   ListView.Items.EndUpdate;
 end;
@@ -340,8 +351,8 @@ begin
   if Privilege.Name = '' then
     Privilege.Name := 'Unknown privilege ' + IntToStr(Privilege.Value);
 
-  Item.Cell[0] := PrettifyCamelCase(Privilege.Name, 'Se');
-  Item.Cell[1] := StateOfPrivilegeToString(Privilege.Attributes);
+  Item.Cell[0] := Privilege.Name;
+  Item.Cell[1] := TNumeric.Represent(Privilege.Attributes).Text;
   Item.Cell[2] := Privilege.Description;
   Item.Cell[3] := IntToStr(Privilege.Value);
   Item.Hint := FormatHint(Privilege);
@@ -353,8 +364,7 @@ end;
 
 procedure TFramePrivileges.SetPrivilege(Ind: Integer; const Value: TPrivilege);
 var
-  Luids: TArray<TLuid>;
-  Names, Descriptions: TArray<String>;
+  Name, Description: String;
   PrivEx: TPrivilegeEx;
 begin
   if (Ind < 0) or (Ind > High(FPrivileges)) then
@@ -363,13 +373,10 @@ begin
   PrivEx.Value := Value.Luid;
   PrivEx.Attributes := Value.Attributes;
 
-  SetLength(Luids, 1);
-  Luids[0] := Value.Luid;
-
-  if LsaxLookupMultiplePrivileges(Luids, Names, Descriptions).IsSuccess then
+  if LsaxQueryPrivilege(Value.Luid, Name, Description).IsSuccess then
   begin
-    PrivEx.Name := Names[0];
-    PrivEx.Description := Descriptions[0];
+    PrivEx.Name := PrettifyCamelCase(Name, 'Se');
+    PrivEx.Description := Description;
   end
   else
   begin

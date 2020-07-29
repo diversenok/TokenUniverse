@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.ChildForm,
   Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens, NtUtils.Environment,
-  NtUtils.Objects;
+  NtUtils.Objects, Winapi.WinUser, NtUtils, Winapi.ProcessThreadsApi;
 
 type
   TDialogRun = class(TChildTaskbarForm, IExecProvider)
@@ -74,13 +74,13 @@ type
     function Desktop: String;
     function Token: IHandle;
     function ParentProcess: IHandle;
-    function LogonFlags: Cardinal;
+    function LogonFlags: TProcessLogonFlags;
     function InheritHandles: Boolean;
     function CreateSuspended: Boolean;
     function Breakaway: Boolean;
     function NewConsole: Boolean;
     function RequireElevation: Boolean;
-    function ShowWindowMode: Word;
+    function ShowWindowMode: TShowMode;
     function RunAsInvoker: Boolean;
     function Environment: IEnvironment;
   private
@@ -100,8 +100,7 @@ implementation
 uses
   Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
   NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
-  Ntapi.ntpsapi, Winapi.WinUser, NtUtils.WinUser,
-  NtUtils.Processes, NtUtils.Exceptions;
+  Ntapi.ntpsapi, NtUtils.WinUser, NtUtils.Processes, NtUiLib.Exceptions;
 
 {$R *.dfm}
 
@@ -229,7 +228,7 @@ begin
     TInfoDialog.CreateFromToken(Self, FToken);
 end;
 
-function TDialogRun.LogonFlags: Cardinal;
+function TDialogRun.LogonFlags: TProcessLogonFlags;
 begin
   // 0, LOGON_WITH_PROFILE, LOGON_NETCREDENTIALS_ONLY
   Result := ComboBoxLogonFlags.ItemIndex;
@@ -291,7 +290,7 @@ begin
       Result := Assigned(hxParentProcess);
 
     ppShowWindowMode:
-      Result := ComboBoxShowMode.ItemIndex <> SW_SHOWNORMAL;
+      Result := ComboBoxShowMode.ItemIndex <> Integer(SW_SHOW_NORMAL);
 
     ppRunAsInvoker:
       Result := CheckBoxRunAsInvoker.State <> cbGrayed;
@@ -330,10 +329,10 @@ begin
   end;
 end;
 
-function TDialogRun.ShowWindowMode: Word;
+function TDialogRun.ShowWindowMode: TShowMode;
 begin
   // SW_HIDE..SW_SHOWMAXIMIZED
-  Result := ComboBoxShowMode.ItemIndex;
+  Result := TShowMode(ComboBoxShowMode.ItemIndex);
 end;
 
 function TDialogRun.Token: IHandle;

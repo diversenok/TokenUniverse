@@ -18,7 +18,7 @@ implementation
 
 uses
   Ntapi.ntstatus, Winapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
-  System.TypInfo, NtUtils.Exceptions, NtUiLib.Exceptions;
+  System.TypInfo, NtUtils, NtUiLib.Exceptions, NtUiLib.Exceptions.Dialog;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +

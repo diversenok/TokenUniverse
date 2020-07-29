@@ -5,7 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, VclEx.ListView, Vcl.StdCtrls, NtUtils.Security.Sid,
-  Winapi.WinNt, NtUtils.Lsa, UI.Prototypes.Privileges, Vcl.Menus;
+  Winapi.WinNt, NtUtils.Lsa, UI.Prototypes.Privileges, Vcl.Menus, Ntapi.ntseapi,
+  NtUtils;
 
 type
   TFrameLsaPrivileges = class(TFrame)
@@ -30,7 +31,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, NtUtils.Exceptions;
+  Ntapi.ntstatus, Ntapi.ntdef, NtUiLib.Exceptions;
 
 {$R *.dfm}
 
@@ -80,7 +81,7 @@ begin
     end;
 
   try
-    LsaxManagePrivilegesAccount(Sid.Sid, False, PrivToAdd,
+    LsaxManagePrivilegesAccount(Sid.Data, False, PrivToAdd,
       PrivToRemove).RaiseOnError;
   finally
     LoadForSid(Sid);
@@ -100,7 +101,7 @@ var
   i, j: Integer;
 begin
   Self.Sid := Sid;
-  Status := LsaxEnumeratePrivilegesAccountBySid(Sid.Sid, CurrentlyAssigned);
+  Status := LsaxEnumeratePrivilegesAccountBySid(Sid.Data, CurrentlyAssigned);
 
   if Status.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
   begin
