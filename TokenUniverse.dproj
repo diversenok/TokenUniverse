@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{FAB640F0-B30E-4DFF-B1C6-0AE668D2F087}</ProjectGuid>
-        <ProjectVersion>18.7</ProjectVersion>
+        <ProjectVersion>18.8</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <MainSource>TokenUniverse.dpr</MainSource>
         <Base>True</Base>
@@ -230,114 +230,114 @@
             <Form>DialogRun</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="VclEx\VclEx.ListView.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntdbg.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntdef.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntexapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntioapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntkeapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntldr.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntlpcapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntmmapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntobapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntpebteb.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntpsapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntregapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntrtl.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntsam.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntseapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntstatus.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.nttmapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Ntapi.ntwow64.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.ConsoleApi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.ntlsa.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.NtSecApi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.ProcessThreadsApi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.Sddl.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.securitybaseapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.Shell.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.Shlwapi.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.Svc.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.UserEnv.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.Wdc.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.WinBase.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.WinError.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.WinNt.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.WinSafer.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.winsta.pas"/>
-        <DCCReference Include="NtUtils\Headers\Winapi.WinUser.pas"/>
-        <DCCReference Include="NtUtils\DelphiUtils.Arrays.pas"/>
-        <DCCReference Include="NtUtils\DelphiUtils.Events.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Access.Expected.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Debug.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Environment.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Nt.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Shell.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Wdc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Win32.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Exec.Wmi.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Files.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Job.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Ldr.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.Audit.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.Logon.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Lsa.Sid.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Compare.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Namespace.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Objects.Snapshots.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.Memory.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.Snapshots.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Profiles.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Registry.HKCU.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Registry.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Sam.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Sections.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Security.Acl.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Security.AppContainer.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Security.Sid.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Shellcode.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Svc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Svc.SingleTaskSvc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Threads.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Threads.Stack.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Impersonate.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Logon.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Misc.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Tokens.Query.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Transactions.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Transactions.Remote.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinSafer.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinStation.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinUser.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.WinUser.WinstaLock.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Exceptions.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Icons.pas"/>
-        <DCCReference Include="NtUtils\DelphiUtils.AutoObject.pas"/>
-        <DCCReference Include="NtUtils\Headers\DelphiApi.Reflection.pas"/>
-        <DCCReference Include="NtUtils\DelphiUtils.ExternalImport.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\DelphiUiLib.HysteresisList.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Reflection.Types.pas"/>
-        <DCCReference Include="NtUtils\Headers\NtUtils.Version.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.ImageHlp.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.SysUtils.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.Query.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.System.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.AccessMasks.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\DelphiUiLib.Reflection.Numeric.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\DelphiUiLib.Reflection.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\DelphiUiLib.Strings.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Exceptions.Dialog.pas"/>
-        <DCCReference Include="NtUtils\NtUtils.Processes.Create.Win32.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas"/>
-        <DCCReference Include="NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas"/>
-        <RcCompile Include="NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
+        <DCCReference Include="NtUtilsUI\VclEx\VclEx.ListView.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntdbg.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntdef.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntexapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntioapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntkeapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntldr.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntlpcapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntmmapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntobapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntpebteb.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntpsapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntregapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntrtl.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntsam.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntseapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntstatus.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.nttmapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Ntapi.ntwow64.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.ConsoleApi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.ntlsa.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.NtSecApi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.ProcessThreadsApi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.Sddl.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.securitybaseapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.Shell.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.Shlwapi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.Svc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.UserEnv.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.Wdc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.WinBase.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.WinError.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.WinNt.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.WinSafer.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.winsta.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.WinUser.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.Arrays.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.Events.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Access.Expected.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Debug.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Environment.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Nt.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Shell.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Wdc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Win32.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Wmi.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Files.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Job.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Ldr.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Lsa.Audit.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Lsa.Logon.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Lsa.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Lsa.Sid.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Objects.Compare.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Objects.Namespace.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Objects.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Objects.Snapshots.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Memory.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Snapshots.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Profiles.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Registry.HKCU.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Registry.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Sam.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Sections.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Security.Acl.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Security.AppContainer.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Security.Sid.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Shellcode.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Svc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Svc.SingleTaskSvc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Threads.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Threads.Stack.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Tokens.Impersonate.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Tokens.Logon.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Tokens.Misc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Tokens.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Tokens.Query.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Transactions.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Transactions.Remote.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.WinSafer.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.WinStation.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.WinUser.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.WinUser.WinstaLock.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Icons.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.AutoObject.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\DelphiApi.Reflection.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.ExternalImport.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.HysteresisList.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Reflection.Types.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\NtUtils.Version.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.ImageHlp.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.SysUtils.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Query.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.System.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.AccessMasks.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Numeric.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Strings.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Dialog.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas"/>
+        <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
         <None Include="TokenUniverse.todo"/>
@@ -387,6 +387,20 @@
                         <RemoteDir>classes</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>classes</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidFileProvider">
+                    <Platform Name="Android">
+                        <RemoteDir>res\xml</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\xml</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="AndroidGDBServer">
                     <Platform Name="Android">
@@ -399,9 +413,23 @@
                         <RemoteDir>library\lib\armeabi</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeArmeabiv7aFile">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="AndroidLibnativeMipsFile">
                     <Platform Name="Android">
+                        <RemoteDir>library\lib\mips</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>library\lib\mips</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -411,9 +439,23 @@
                         <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidServiceOutput_Android32">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="AndroidSplashImageDef">
                     <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>res\drawable</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -423,9 +465,37 @@
                         <RemoteDir>res\values</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV21">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v21</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_Colors">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="Android_DefaultAppIcon">
                     <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>res\drawable</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -435,9 +505,17 @@
                         <RemoteDir>res\drawable-xxhdpi</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="Android_LauncherIcon36">
                     <Platform Name="Android">
+                        <RemoteDir>res\drawable-ldpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>res\drawable-ldpi</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -447,9 +525,17 @@
                         <RemoteDir>res\drawable-mdpi</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="Android_LauncherIcon72">
                     <Platform Name="Android">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>res\drawable-hdpi</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -459,9 +545,67 @@
                         <RemoteDir>res\drawable-xhdpi</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon24">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon36">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon48">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon72">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_NotificationIcon96">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xxxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="Android_SplashImage426">
                     <Platform Name="Android">
+                        <RemoteDir>res\drawable-small</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>res\drawable-small</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -471,9 +615,17 @@
                         <RemoteDir>res\drawable-normal</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-normal</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="Android_SplashImage640">
                     <Platform Name="Android">
+                        <RemoteDir>res\drawable-large</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <RemoteDir>res\drawable-large</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -481,6 +633,20 @@
                 <DeployClass Name="Android_SplashImage960">
                     <Platform Name="Android">
                         <RemoteDir>res\drawable-xlarge</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\drawable-xlarge</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_Strings">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -498,6 +664,11 @@
                 </DeployClass>
                 <DeployClass Name="DependencyFramework">
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.framework</Extensions>
+                    </Platform>
+                    <Platform Name="OSX64">
                         <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.framework</Extensions>
@@ -520,6 +691,11 @@
                         <Extensions>.dylib</Extensions>
                     </Platform>
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="OSX64">
                         <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
@@ -547,6 +723,11 @@
                         <Operation>1</Operation>
                         <Extensions>.dylib</Extensions>
                     </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
                         <Extensions>.bpl</Extensions>
@@ -554,6 +735,9 @@
                 </DeployClass>
                 <DeployClass Name="File">
                     <Platform Name="Android">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <Operation>0</Operation>
                     </Platform>
                     <Platform Name="iOSDevice32">
@@ -569,11 +753,26 @@
                         <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
                         <Operation>0</Operation>
                     </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\Resources\StartUp\</RemoteDir>
+                        <Operation>0</Operation>
+                    </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch1024">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch1024x768">
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
@@ -595,6 +794,39 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
+                <DeployClass Name="iPad_Launch1536x2048">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch1668">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch1668x2388">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="iPad_Launch2048">
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
@@ -606,7 +838,172 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
+                <DeployClass Name="iPad_Launch2048x1536">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch2048x2732">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch2224">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch2388x1668">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch2732x2048">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="iPad_Launch768">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch768x1024">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch1125">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch1136x640">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch1242">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch1242x2688">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch1334">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch1792">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch2208">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch2436">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch2688x1242">
                     <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
@@ -650,8 +1047,33 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
+                <DeployClass Name="iPhone_Launch750">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch828">
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectAndroidManifest">
                     <Platform Name="Android">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -705,8 +1127,18 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
+                <DeployClass Name="ProjectOSXDebug">
+                    <Platform Name="OSX64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
                 <DeployClass Name="ProjectOSXEntitlements">
                     <Platform Name="OSX32">
+                        <RemoteDir>..\</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
                         <RemoteDir>..\</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -716,9 +1148,17 @@
                         <RemoteDir>Contents</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectOSXResource">
                     <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="OSX64">
                         <RemoteDir>Contents\Resources</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
@@ -726,6 +1166,10 @@
                 <DeployClass Required="true" Name="ProjectOutput">
                     <Platform Name="Android">
                         <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\arm64-v8a</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice32">
@@ -744,8 +1188,18 @@
                         <RemoteDir>Contents\MacOS</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
+                    <Platform Name="OSX64">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOutput_Android32">
+                    <Platform Name="Android64">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="ProjectUWPManifest">
@@ -783,7 +1237,9 @@
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
             </Deployment>
             <Platforms>
                 <Platform value="Win32">True</Platform>
