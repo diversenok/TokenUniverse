@@ -96,7 +96,7 @@ type
     procedure ListViewGeneralDblClick(Sender: TObject);
     procedure EditUserDblClick(Sender: TObject);
   private
-    Token: TToken;
+    Token: IToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
     procedure ChangedCaption(const NewCaption: String);
@@ -118,7 +118,7 @@ type
     procedure UpdateAuditTab;
     procedure UpdateLogonTab;
   public
-    constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
+    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
   end;
 
 implementation
@@ -447,7 +447,7 @@ begin
   (Sender as TCheckBox).Font.Style := [fsBold];
 end;
 
-constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
+constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
 begin
   Assert(Assigned(SrcToken));
   Token := SrcToken;

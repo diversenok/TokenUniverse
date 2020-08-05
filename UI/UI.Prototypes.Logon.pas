@@ -21,15 +21,15 @@ type
     procedure BtnSetRefClick(Sender: TObject);
     procedure CheckBoxReferenceClick(Sender: TObject);
   private
-    Token: TToken;
+    Token: IToken;
     LogonSource: TLogonSessionSource;
     procedure OnOriginChange(const NewOrigin: TLuid);
     procedure OnFlagsChange(const NewFlags: Cardinal);
     function GetSubscribed: Boolean;
   public
     property Subscribed: Boolean read GetSubscribed;
-    procedure SubscribeToken(const Token: TToken);
-    procedure UnsubscribeToken(const Dummy: TToken = nil);
+    procedure SubscribeToken(const Token: IToken);
+    procedure UnsubscribeToken(const Dummy: IToken = nil);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -127,7 +127,7 @@ begin
       Cell[1] := IntToHexEx(NewOrigin);
 end;
 
-procedure TFrameLogon.SubscribeToken(const Token: TToken);
+procedure TFrameLogon.SubscribeToken(const Token: IToken);
 begin
   UnsubscribeToken;
 
@@ -194,7 +194,7 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-procedure TFrameLogon.UnsubscribeToken(const Dummy: TToken);
+procedure TFrameLogon.UnsubscribeToken(const Dummy: IToken);
 begin
   if Assigned(Token) then
   begin

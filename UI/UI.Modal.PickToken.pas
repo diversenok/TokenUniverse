@@ -15,7 +15,7 @@ type
     procedure ListViewTokensSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
   public
-    class function Execute(AOwner: TComponent): TToken;
+    class function Execute(AOwner: TComponent): IToken;
   end;
 
 implementation
@@ -27,7 +27,7 @@ uses
 
 { TDialogSelectToken }
 
-class function TDialogPickToken.Execute(AOwner: TComponent): TToken;
+class function TDialogPickToken.Execute(AOwner: TComponent): IToken;
 var
   i: Integer;
 begin

@@ -25,12 +25,12 @@ type
     procedure ButtonOKClick(Sender: TObject);
     procedure ComboBoxLevelChange(Sender: TObject);
   private
-    Token: TToken;
+    Token: IToken;
     function GetScopeId: TSaferScopeId;
     function GetLevelId: TSaferLevelId;
     procedure ChangedCaption(const NewCaption: String);
   public
-    constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
+    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
   end;
 
 implementation
@@ -50,7 +50,7 @@ end;
 
 procedure TDialogSafer.ButtonOKClick(Sender: TObject);
 var
-  NewToken: TToken;
+  NewToken: IToken;
 begin
   NewToken := TToken.CreateSaferToken(Token, GetScopeId, GetLevelId,
     CheckBoxSandboxInert.Checked);
@@ -94,7 +94,7 @@ begin
   LabelDescription.Caption := Description;
 end;
 
-constructor TDialogSafer.CreateFromToken(AOwner: TComponent; SrcToken: TToken);
+constructor TDialogSafer.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
 begin
   Token := SrcToken;
   inherited Create(AOwner);

@@ -139,7 +139,7 @@ uses
 
 procedure TFormMain.ActionAssignToProcess(Sender: TObject);
 var
-  Token: TToken;
+  Token: IToken;
 begin
   Token := TokenView.Selected;
 
@@ -169,7 +169,7 @@ end;
 
 procedure TFormMain.ActionAssignToThread(Sender: TObject);
 var
-  Token: TToken;
+  Token: IToken;
 begin
   Token := TokenView.Selected;
 
@@ -243,7 +243,7 @@ end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
 var
-  Linked: TToken;
+  Linked: IToken;
 begin
   TokenView.Selected.OpenLinkedToken(Linked).RaiseOnError;
   TokenView.Add(Linked);
@@ -347,7 +347,7 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 var
   Handles: TArray<TProcessHandleEntry>;
-  Linked: TToken;
+  Linked: IToken;
   i: integer;
 begin
   TokenView := TTokenViewSource.Create(ListViewTokens);

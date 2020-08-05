@@ -33,6 +33,7 @@ type
     tsDynamicAvailable, tsGroupCount, tsPrivilegeCount, tsModifiedID, tsLogonID,
     tsSourceLUID, tsSourceName, tsOrigin);
 
+  IToken = interface;
   TToken = class;
 
   TLogonSessionCache = record
@@ -115,7 +116,7 @@ type
     ///  for future events.
     /// </summary>
     procedure SubscribeString(StringClass: TTokenStringClass;
-      Listener: TEventListener<String>; TokenToQuery: TToken);
+      Listener: TEventListener<String>; TokenToQuery: IToken);
     procedure UnSubscribeString(StringClass: TTokenStringClass;
       Listener: TEventListener<String>);
   end;
@@ -225,7 +226,7 @@ type
 
   TStringCachingEvent = TCachingEvent<String>;
   PStringCachingEvent = ^TStringCachingEvent;
-  TTokenEvent = TEvent<TToken>;
+  TTokenEvent = TEvent<IToken>;
   PTokenEvent = ^TTokenEvent;
 
   IToken = interface
@@ -252,7 +253,7 @@ type
     procedure AssignToProcess(PID: NativeUInt);
     procedure AssignToThread(TID: NativeUInt);
     procedure AssignToThreadSafe(TID: NativeUInt);
-    function OpenLinkedToken(out Token: TToken): TNtxStatus;
+    function OpenLinkedToken(out Token: IToken): TNtxStatus;
   end;
 
   /// <summary>
@@ -366,13 +367,13 @@ type
       Attributes: Cardinal = 0; EffectiveOnly: Boolean = False);
 
     /// <summary> Duplicates a token. </summary>
-    constructor CreateDuplicateToken(SrcToken: TToken; Access: TAccessMask;
+    constructor CreateDuplicateToken(SrcToken: IToken; Access: TAccessMask;
       TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
 
     /// <summary>
     ///  Duplicates a handle. The result references for the same kernel object.
     /// </summary>
-    constructor CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
+    constructor CreateDuplicateHandle(SrcToken: IToken; Access: TAccessMask;
       SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 
     /// <summary>
@@ -381,7 +382,7 @@ type
     constructor CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
 
     /// <summary> Creates a restricted version of the token. </summary>
-    constructor CreateRestricted(SrcToken: TToken; Flags: Cardinal;
+    constructor CreateRestricted(SrcToken: IToken; Flags: Cardinal;
       SIDsToDisabe, SIDsToRestrict: TArray<TGroup>;
       PrivilegesToDelete: TArray<TPrivilege>);
 
@@ -407,14 +408,14 @@ type
       HandleAttributes: Cardinal = 0);
 
     /// <summary> Create a restricted token using Safer API. </summary>
-    constructor CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
+    constructor CreateSaferToken(SrcToken: IToken; ScopeId: TSaferScopeId;
       LevelId: TSaferLevelId; MakeInert: Boolean = False);
 
     /// <summary>
     ///  Opens a linked token for the current token.
     ///  Requires SeTcbPrivilege to open a primary token.
     /// </summary>
-    function OpenLinkedToken(out Token: TToken): TNtxStatus;
+    function OpenLinkedToken(out Token: IToken): TNtxStatus;
   end;
 
 {----------------------  End of interface section  ----------------------------}
@@ -493,7 +494,7 @@ begin
 end;
 
 procedure TTokenCacheAndEvents.SubscribeString(StringClass: TTokenStringClass;
-  Listener: TEventListener<String>; TokenToQuery: TToken);
+  Listener: TEventListener<String>; TokenToQuery: IToken);
 begin
   // Query the string and call the new event listener with it
   Listener(TokenToQuery.InfoClass.QueryString(StringClass));
@@ -573,17 +574,17 @@ begin
   FCaption := Format('Inherited %d [0x%x]', [hxToken.Handle, hxToken.Handle]);
 end;
 
-constructor TToken.CreateDuplicateHandle(SrcToken: TToken; Access: TAccessMask;
+constructor TToken.CreateDuplicateHandle(SrcToken: IToken; Access: TAccessMask;
   SameAccess: Boolean; HandleAttributes: Cardinal = 0);
 begin
-  NtxDuplicateHandleLocal(SrcToken.hxToken.Handle, hxToken, Access,
+  NtxDuplicateHandleLocal(SrcToken.Handle.Handle, hxToken, Access,
     HandleAttributes).RaiseOnError;
 
   FCaption := SrcToken.Caption + ' (ref)'
   // TODO: No need to snapshot handles, object address is already known
 end;
 
-constructor TToken.CreateDuplicateToken(SrcToken: TToken; Access: TAccessMask;
+constructor TToken.CreateDuplicateToken(SrcToken: IToken; Access: TAccessMask;
   TokenTypeEx: TTokenTypeEx; EffectiveOnly: Boolean);
 var
   TokenType: TTokenType;
@@ -600,7 +601,7 @@ begin
     ImpersonationLvl := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  NtxDuplicateToken(hxToken, SrcToken.hxToken.Handle, Access, TokenType,
+  NtxDuplicateToken(hxToken, SrcToken.Handle.Handle, Access, TokenType,
     ImpersonationLvl, 0, EffectiveOnly).RaiseOnError;
 
   if EffectiveOnly then
@@ -668,7 +669,7 @@ begin
   FCaption := Format('Session %d token', [SessionID]);
 end;
 
-constructor TToken.CreateRestricted(SrcToken: TToken; Flags: Cardinal;
+constructor TToken.CreateRestricted(SrcToken: IToken; Flags: Cardinal;
   SIDsToDisabe, SIDsToRestrict: TArray<TGroup>;
   PrivilegesToDelete: TArray<TPrivilege>);
 var
@@ -688,7 +689,7 @@ begin
   for i := 0 to High(PrivilegesToDelete) do
     Remove[i] := PrivilegesToDelete[i].Luid;
 
-  NtxFilterToken(hxToken, SrcToken.hxToken.Handle, Flags, Disable, Remove,
+  NtxFilterToken(hxToken, SrcToken.Handle.Handle, Flags, Disable, Remove,
     Restrict).RaiseOnError;
 
   FCaption := 'Restricted ' + SrcToken.Caption;
@@ -702,12 +703,12 @@ begin
   FCaption := 'S4U logon of ' + User;
 end;
 
-constructor TToken.CreateSaferToken(SrcToken: TToken; ScopeId: TSaferScopeId;
+constructor TToken.CreateSaferToken(SrcToken: IToken; ScopeId: TSaferScopeId;
   LevelId: TSaferLevelId; MakeInert: Boolean = False);
 var
   LevelName: String;
 begin
-  SafexComputeSaferTokenById(hxToken, SrcToken.hxToken.Handle, ScopeId, LevelId,
+  SafexComputeSaferTokenById(hxToken, SrcToken.Handle.Handle, ScopeId, LevelId,
     MakeInert).RaiseOnError;
 
   case LevelId of
@@ -727,7 +728,7 @@ begin
       LevelName := 'Disallowed'
   end;
 
-  FCaption := LevelName + ' Safer for ' + SrcToken.FCaption
+  FCaption := LevelName + ' Safer for ' + SrcToken.Caption
 end;
 
 constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;
@@ -822,7 +823,7 @@ begin
   InfoClass.ValidateCache(tdTokenIntegrity);
 end;
 
-function TToken.OpenLinkedToken(out Token: TToken): TNtxStatus;
+function TToken.OpenLinkedToken(out Token: IToken): TNtxStatus;
 var
   Handle: THandle;
 begin

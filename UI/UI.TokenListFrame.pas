@@ -19,11 +19,11 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     procedure ClearAll;
-    function AddToken(Token: TToken; Group: Integer = 0): TToken;
+    function AddToken(Token: IToken; Group: Integer = 0): IToken;
     procedure DeleteToken(Item: TListItemEx; SelectNext: Boolean = False);
     procedure RenameToken(NewName: String; Item: TListItemEx);
-    function GetSelectedToken: TToken;
-    function GetToken(Item: TListItemEx): TToken;
+    function GetSelectedToken: IToken;
+    function GetToken(Item: TListItemEx): IToken;
   end;
 
 implementation
@@ -33,7 +33,7 @@ uses
 
 {$R *.dfm}
 
-function TFrameTokenList.AddToken(Token: TToken; Group: Integer): TToken;
+function TFrameTokenList.AddToken(Token: IToken; Group: Integer): IToken;
 var
   Item: TListItemEx;
 begin
@@ -44,7 +44,7 @@ begin
   Item := ListViewTokens.Items.Add;
 
   Item.Caption := Token.Caption;
-  Item.OwnedData := Token;
+  Item.OwnedIData := Token;
   Item.GroupID := Group;
 
   Item.SubItems.Add(Token.InfoClass.QueryString(tsTokenType));
@@ -82,19 +82,19 @@ begin
     ListViewTokens.Items[OriginalIndex].Selected := True;}
 end;
 
-function TFrameTokenList.GetSelectedToken: TToken;
+function TFrameTokenList.GetSelectedToken: IToken;
 begin
-  Result := ListViewTokens.Selected.OwnedData as TToken;
+  Result := IToken(ListViewTokens.Selected.OwnedIData);
 end;
 
-function TFrameTokenList.GetToken(Item: TListItemEx): TToken;
+function TFrameTokenList.GetToken(Item: TListItemEx): IToken;
 begin
-  Result := TToken(Item.OwnedData);
+  Result := IToken(Item.OwnedIData);
 end;
 
 procedure TFrameTokenList.RenameToken(NewName: String; Item: TListItemEx);
 begin
-  TToken(Item.OwnedData).Caption := NewName;
+  IToken(Item.OwnedIData).Caption := NewName;
   Item.Caption := NewName; // TODO: move to OnCaptionChange
 end;
 

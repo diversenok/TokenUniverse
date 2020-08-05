@@ -39,14 +39,14 @@ type
     procedure MenuRemoveClick(Sender: TObject);
     procedure MenuEditClick(Sender: TObject);
   private
-    Token: TToken;
+    Token: IToken;
     FirstEditableItem: Integer; // in list of restricting SIDs
     function GetFlags: Cardinal;
     procedure ChangedCaption(const NewCaption: String);
     procedure ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
     procedure ChangedGroups(const NewGroups: TArray<TGroup>);
   public
-    constructor CreateFromToken(AOwner: TComponent; SrcToken: TToken);
+    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
   end;
 
 implementation
@@ -67,7 +67,7 @@ end;
 
 procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
 var
-  NewToken: TToken;
+  NewToken: IToken;
 begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
     FrameGroupsDisable.CheckedGroups,
@@ -158,7 +158,7 @@ begin
 end;
 
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
-  SrcToken: TToken);
+  SrcToken: IToken);
 begin
   Token := SrcToken;
   inherited Create(AOwner);

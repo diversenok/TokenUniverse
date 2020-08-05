@@ -23,8 +23,8 @@ type
   protected
     function GetAccess: ACCESS_MASK;
   public
-    class function ExecuteDuplication(AOwner: TComponent; Source: TToken):
-      TToken;
+    class function ExecuteDuplication(AOwner: TComponent; Source: IToken):
+      IToken;
   end;
 
 implementation
@@ -32,7 +32,7 @@ implementation
 {$R *.dfm}
 
 class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
-  Source: TToken): TToken;
+  Source: IToken): IToken;
 begin
   with TDialogAccess.Create(AOwner) do
   begin

@@ -32,8 +32,8 @@ type
     property SelectedAccess: ACCESS_MASK read GetAccess;
     property SelectedTokenType: TTokenTypeEx read FSelectedType write
       SetSelectedType;
-    class function ExecuteDuplication(AOwner: TComponent; Source: TToken):
-      TToken;
+    class function ExecuteDuplication(AOwner: TComponent; Source: IToken):
+      IToken;
   end;
 
 implementation
@@ -48,7 +48,7 @@ begin
 end;
 
 class function TDialogAccessAndType.ExecuteDuplication(AOwner: TComponent;
-  Source: TToken): TToken;
+  Source: IToken): IToken;
 begin
   with TDialogAccessAndType.Create(AOwner) do
   begin

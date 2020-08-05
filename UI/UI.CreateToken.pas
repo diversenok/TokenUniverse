@@ -121,7 +121,7 @@ end;
 
 procedure TDialogCreateToken.ButtonLoadClick(Sender: TObject);
 var
-  Source: TToken;
+  Source: IToken;
   Expiration: TDateTime;
   i, j: Integer;
 begin
@@ -231,7 +231,7 @@ end;
 
 procedure TDialogCreateToken.ButtonOKClick(Sender: TObject);
 var
-  Token: TToken;
+  Token: IToken;
   Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: Cardinal;

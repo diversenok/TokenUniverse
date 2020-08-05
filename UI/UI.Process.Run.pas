@@ -85,14 +85,14 @@ type
     function Environment: IEnvironment;
   private
     ExecMethod: TExecMethodClass;
-    FToken: TToken;
+    FToken: IToken;
     hxParentProcess: IHandle;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(const NewCaption: String);
-    procedure SetToken(const Value: TToken);
+    procedure SetToken(const Value: IToken);
     procedure UpdateDesktopList;
   public
-    property UseToken: TToken read FToken write SetToken;
+    property UseToken: IToken read FToken write SetToken;
   end;
 
 implementation
@@ -309,7 +309,7 @@ begin
   Result := CheckBoxRunAsInvoker.Checked;
 end;
 
-procedure TDialogRun.SetToken(const Value: TToken);
+procedure TDialogRun.SetToken(const Value: IToken);
 begin
   if Assigned(FToken) then
   begin
