@@ -235,7 +235,7 @@ begin
     // If the token has restricting SIDs then check them. It can also contain
     // manually added items that are not part of the group list. Add them here.
     if Token.InfoClass.Query(tdTokenRestrictedSids) then
-      with Token.InfoClass do
+      with Token.InfoClass^ do
         for RestrInd := 0 to High(RestrictedSids) do
         begin
           ItemInd := FrameGroupsRestrict.Find(RestrictedSids[RestrInd].Sid);

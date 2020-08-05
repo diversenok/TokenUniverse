@@ -219,42 +219,82 @@ type
     function QueryString(StringClass: TTokenStringClass;
       Detailed: Boolean = False): String;
   end;
+  PTokenData = ^TTokenData;
 
   {-------------------  TToken object definition  ---------------------------}
+
+  TStringCachingEvent = TCachingEvent<String>;
+  PStringCachingEvent = ^TStringCachingEvent;
+  TTokenEvent = TEvent<TToken>;
+  PTokenEvent = ^TTokenEvent;
+
+  IToken = interface
+    procedure SetCaption(const Value: String);
+    function GetCaption: String;
+    function GetHandle: IHandle;
+    function GetInfoClassData: PTokenData;
+    function GetCache: TTokenCacheAndEvents;
+    function GetCaptionChange: PStringCachingEvent;
+    function GetOnClose: PTokenEvent;
+    function GetOnCanClose: PTokenEvent;
+    property Handle: IHandle read GetHandle;
+    property InfoClass: PTokenData read GetInfoClassData;
+    property Events: TTokenCacheAndEvents read GetCache;
+    property Caption: String read GetCaption write SetCaption;
+    property OnCaptionChange: PStringCachingEvent read GetCaptionChange;
+    property OnCanClose: PTokenEvent read GetOnCanClose;
+    function CanBeFreed: Boolean;
+    property OnClose: PTokenEvent read GetOnClose;
+    procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
+      Action: TPrivilegeAdjustAction);
+    procedure GroupAdjust(Groups: TArray<TGroup>; Action: TGroupAdjustAction);
+    function SendHandleToProcess(PID: NativeUInt): NativeUInt;
+    procedure AssignToProcess(PID: NativeUInt);
+    procedure AssignToThread(TID: NativeUInt);
+    procedure AssignToThreadSafe(TID: NativeUInt);
+    function OpenLinkedToken(out Token: TToken): TNtxStatus;
+  end;
 
   /// <summary>
   ///  Token Universe representation of an opend token handle.
   /// </summary>
-  TToken = class
+  TToken = class(TInterfacedObject, IToken)
   private
     procedure SetCaption(const Value: String);
+    function GetCaption: String;
+    function GetHandle: IHandle;
+    function GetInfoClassData: PTokenData;
+    function GetCache: TTokenCacheAndEvents;
+    function GetCaptionChange: PStringCachingEvent;
+    function GetOnClose: PTokenEvent;
+    function GetOnCanClose: PTokenEvent;
   protected
     hxToken: IHandle;
     FInfoClassData: TTokenData;
     Cache: TTokenCacheAndEvents;
 
     FCaption: String;
-    FOnCaptionChange: TCachingEvent<String>;
-    FOnCanClose: TEvent<TToken>;
-    FOnClose: TEvent<TToken>;
+    FOnCaptionChange: TStringCachingEvent;
+    FOnCanClose: TTokenEvent;
+    FOnClose: TTokenEvent;
   public
 
     {--------------------  TToken public section ---------------------------}
 
     property Handle: IHandle read hxToken;
 
-    property InfoClass: TTokenData read FInfoClassData;
-    property Events: TTokenCacheAndEvents read Cache;
+    property InfoClass: PTokenData read GetInfoClassData;
+    property Events: TTokenCacheAndEvents read GetCache;
 
-    property Caption: String read FCaption write SetCaption;
-    property OnCaptionChange: TCachingEvent<String> read FOnCaptionChange;
+    property Caption: String read GetCaption write SetCaption;
+    property OnCaptionChange: PStringCachingEvent read GetCaptionChange;
 
     /// <summary>
     ///  The event is called to test whether the token can be destroyed.
     ///  The listener can deny object destruction by calling
     ///  <see cref="System.SysUtils.EAbort"/>.
     /// </summary>
-    property OnCanClose: TEvent<TToken> read FOnCanClose;
+    property OnCanClose: PTokenEvent read GetOnCanClose;
 
     /// <summary>
     ///  Asks all subscribed event listeners if the token can be freed.
@@ -266,7 +306,7 @@ type
 
     /// <summary> The event is called on token destruction. </summary>
     /// <remarks> Be aware of exceptions at this point. </remarks>
-    property OnClose: TEvent<TToken> read FOnClose;
+    property OnClose: PTokenEvent read GetOnClose;
     destructor Destroy; override;
 
     procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
@@ -721,6 +761,41 @@ begin
   CheckAbandoned(FOnCaptionChange.Count, 'OnCaptionChange');
 
   inherited;
+end;
+
+function TToken.GetCache: TTokenCacheAndEvents;
+begin
+  Result := Cache;
+end;
+
+function TToken.GetCaption: String;
+begin
+  Result := FCaption;
+end;
+
+function TToken.GetCaptionChange: PStringCachingEvent;
+begin
+  Result := @FOnCaptionChange;
+end;
+
+function TToken.GetHandle: IHandle;
+begin
+  Result := hxToken;
+end;
+
+function TToken.GetInfoClassData: PTokenData;
+begin
+  Result := @FInfoClassData;
+end;
+
+function TToken.GetOnCanClose: PTokenEvent;
+begin
+  Result := @FOnCanClose;
+end;
+
+function TToken.GetOnClose: PTokenEvent;
+begin
+  Result := @FOnClose;
 end;
 
 procedure TToken.GroupAdjust(Groups: TArray<TGroup>; Action:

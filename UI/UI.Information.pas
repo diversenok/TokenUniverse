@@ -603,7 +603,7 @@ begin
   Token.InfoClass.ReQuery(tdTokenFlags);
 
   if Token.InfoClass.Query(tdTokenUser) then
-    with Token.InfoClass, EditUser do
+    with Token.InfoClass^, EditUser do
     begin
       Repr := TType.Represent(Token.InfoClass.User);
 
