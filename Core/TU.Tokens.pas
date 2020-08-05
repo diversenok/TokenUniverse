@@ -236,16 +236,12 @@ type
     function GetInfoClassData: PTokenData;
     function GetCache: TTokenCacheAndEvents;
     function GetCaptionChange: PStringCachingEvent;
-    function GetOnClose: PTokenEvent;
-    function GetOnCanClose: PTokenEvent;
     property Handle: IHandle read GetHandle;
     property InfoClass: PTokenData read GetInfoClassData;
     property Events: TTokenCacheAndEvents read GetCache;
     property Caption: String read GetCaption write SetCaption;
     property OnCaptionChange: PStringCachingEvent read GetCaptionChange;
-    property OnCanClose: PTokenEvent read GetOnCanClose;
     function CanBeFreed: Boolean;
-    property OnClose: PTokenEvent read GetOnClose;
     procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
       Action: TPrivilegeAdjustAction);
     procedure GroupAdjust(Groups: TArray<TGroup>; Action: TGroupAdjustAction);

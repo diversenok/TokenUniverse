@@ -4,12 +4,12 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.ChildForm,
+  Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
   Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens, NtUtils.Environment,
   NtUtils.Objects, Winapi.WinUser, NtUtils, Winapi.ProcessThreadsApi;
 
 type
-  TDialogRun = class(TChildTaskbarForm, IExecProvider)
+  TDialogRun = class(TChildForm, IExecProvider)
     PageControl: TPageControl;
     TabMethod: TTabSheet;
     TabEnv: TTabSheet;
@@ -93,6 +93,7 @@ type
     procedure UpdateDesktopList;
   public
     property UseToken: IToken read FToken write SetToken;
+    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
@@ -167,6 +168,11 @@ begin
   else
     ExecMethod := nil;
   UpdateEnabledState;
+end;
+
+constructor TDialogRun.Create(AOwner: TComponent);
+begin
+  inherited CreateChild(AOwner, True);
 end;
 
 function TDialogRun.CreateSuspended: Boolean;
@@ -312,10 +318,7 @@ end;
 procedure TDialogRun.SetToken(const Value: IToken);
 begin
   if Assigned(FToken) then
-  begin
     FToken.OnCaptionChange.Unsubscribe(OnCaptionChange);
-    UnsubscribeTokenCanClose(FToken);
-  end;
 
   FToken := Value;
 
@@ -323,7 +326,6 @@ begin
     LinkLabelToken.Caption := 'Using token: <not specified>'
   else
   begin
-    SubscribeTokenCanClose(Value, 'Run dialod');
     Value.OnCaptionChange.Subscribe(OnCaptionChange);
     OnCaptionChange(Value.Caption);
   end;

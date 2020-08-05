@@ -5,12 +5,12 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls, TU.Tokens,
-  VclEx.ListView, UI.Prototypes.ChildForm, UI.Prototypes.Privileges,
+  VclEx.ListView, UI.Prototypes.Forms, UI.Prototypes.Privileges,
   UI.Prototypes.Groups, NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi,
   NtUtils;
 
 type
-  TDialogRestrictToken = class(TChildTaskbarForm)
+  TDialogRestrictToken = class(TChildForm)
     CheckBoxDisableMaxPriv: TCheckBox;
     CheckBoxSandboxInert: TCheckBox;
     CheckBoxLUA: TCheckBox;
@@ -161,7 +161,7 @@ constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
   SrcToken: IToken);
 begin
   Token := SrcToken;
-  inherited Create(AOwner);
+  inherited CreateChild(AOwner, True);
   Show;
 end;
 
@@ -176,7 +176,6 @@ begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   Token.Events.OnPrivilegesChange.Unsubscribe(ChangedPrivileges);
   Token.Events.OnGroupsChange.Unsubscribe(ChangedGroups);
-  UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
@@ -186,8 +185,6 @@ var
   RestrInd, ItemInd: Integer;
 begin
   Assert(Assigned(Token));
-
-  SubscribeTokenCanClose(Token, Caption);
 
   Token.OnCaptionChange.Subscribe(ChangedCaption);
   ChangedCaption(Token.Caption);

@@ -4,10 +4,10 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, UI.Prototypes.ChildForm, TU.Tokens, Winapi.WinSafer;
+  Vcl.StdCtrls, UI.Prototypes.Forms, TU.Tokens, Winapi.WinSafer;
 
 type
-  TDialogSafer = class(TChildTaskbarForm)
+  TDialogSafer = class(TChildForm)
     ComboBoxScope: TComboBox;
     ComboBoxLevel: TComboBox;
     LabelScope: TLabel;
@@ -97,21 +97,18 @@ end;
 constructor TDialogSafer.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
 begin
   Token := SrcToken;
-  inherited Create(AOwner);
+  inherited CreateChild(AOwner, True);
   Show;
 end;
 
 procedure TDialogSafer.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
-  UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TDialogSafer.FormCreate(Sender: TObject);
 begin
   Assert(Assigned(Token));
-
-  SubscribeTokenCanClose(Token, Caption);
 
   Token.OnCaptionChange.Subscribe(ChangedCaption);
   ChangedCaption(Token.Caption);

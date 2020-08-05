@@ -148,7 +148,6 @@
             <Form>LogonDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UI\UI.Prototypes.ChildForm.pas"/>
         <DCCReference Include="UI\UI.Modal.PickUser.pas">
             <Form>DialogPickUser</Form>
             <FormType>dfm</FormType>
@@ -337,6 +336,8 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas"/>
+        <DCCReference Include="NtUtilsUI\Common\UI.Prototypes.Forms.pas"/>
+        <DCCReference Include="NtUtilsUI\VclEx\VclEx.Form.pas"/>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
@@ -369,7 +370,19 @@
             <Deployment Version="3">
                 <DeployFile LocalName="Win32\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="TokenUniverse.todo" Configuration="Debug" Class="ProjectFile"/>
+                <DeployFile LocalName="TokenUniverse.todo" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win64\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>TokenUniverse.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

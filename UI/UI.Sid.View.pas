@@ -5,12 +5,12 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UI.Prototypes.ChildForm, NtUtils.Security.Sid, UI.Prototypes.Lsa.Rights,
+  UI.Prototypes.Forms, NtUtils.Security.Sid, UI.Prototypes.Lsa.Rights,
   UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit,
   NtUtils;
 
 type
-  TDialogSidView = class(TChildTaskbarForm)
+  TDialogSidView = class(TChildForm)
     Pages: TPageControl;
     TabSid: TTabSheet;
     TabDomain: TTabSheet;
@@ -70,7 +70,7 @@ begin
   if not Assigned(SrcSid) then
     Exit;
 
-  with TDialogSidView.Create(nil) do
+  with TDialogSidView.CreateChild(nil, True) do
   begin
     Sid := SrcSid;
 

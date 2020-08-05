@@ -6,10 +6,10 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList, Vcl.AppEvnts,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
-  VclEx.ListView, UI.Prototypes, DelphiUtils.Events;
+  VclEx.ListView, UI.Prototypes, VclEx.Form;
 
 type
-  TFormMain = class(TForm)
+  TFormMain = class(TFormEx)
     Panel1: TPanel;
     Button1: TButton;
     MainMenu: TMainMenu;
@@ -115,7 +115,6 @@ type
     procedure CurrentUserChanged(Sender: TObject);
   public
     TokenView: TTokenViewSource;
-    OnMainFormClose: TNotifyEventHandler;
   end;
 
 var
@@ -131,7 +130,7 @@ uses
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Exceptions, Ntapi.ntseapi, NtUtils,
-  NtUiLib.Exceptions.Dialog;
+  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms;
 
 {$R *.dfm}
 
@@ -340,7 +339,7 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  OnMainFormClose.Invoke(Self);
+  TFormEvents.OnMainFormClose.Invoke(Self);
   TokenView.Free;
 end;
 

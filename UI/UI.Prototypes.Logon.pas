@@ -132,7 +132,6 @@ begin
   UnsubscribeToken;
 
   Self.Token := Token;
-  Token.OnClose.Subscribe(UnsubscribeToken);
 
   ListView.Items.BeginUpdate;
   ListView.Items.Clear;
@@ -200,7 +199,6 @@ begin
   begin
     Token.Events.OnFlagsChange.Unsubscribe(OnFlagsChange);
     Token.Events.OnOriginChange.Unsubscribe(OnOriginChange);
-    Token.OnClose.Unsubscribe(UnsubscribeToken);
     Token := nil;
   end;
 end;

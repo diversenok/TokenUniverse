@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.ChildForm,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms,
   UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
   NtUtils;
@@ -12,7 +12,7 @@ uses
 type
   TGroupUpdateType = (guEditOne, guEditMultiple, guRemove);
 
-  TDialogCreateToken = class(TChildTaskbarForm)
+  TDialogCreateToken = class(TChildForm)
     ButtonOK: TButton;
     ButtonCancel: TButton;
     PageControl: TPageControl;
@@ -79,6 +79,8 @@ type
     procedure AddGroup(NewGroup: TGroup);
     procedure UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
     procedure SetPrivilegesAttributes(NewValue: Cardinal);
+  public
+    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
@@ -329,6 +331,11 @@ begin
   // Forcibly update the Text field
   ComboOwner.ItemIndex := SavedOwnerIndex;
   ComboPrimary.ItemIndex := SavedPrimaryIndex;
+end;
+
+constructor TDialogCreateToken.Create(AOwner: TComponent);
+begin
+  inherited CreateChild(AOwner, True);
 end;
 
 procedure TDialogCreateToken.FormClose(Sender: TObject;

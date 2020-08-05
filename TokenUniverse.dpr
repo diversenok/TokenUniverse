@@ -16,7 +16,6 @@ uses
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
-  UI.Prototypes.ChildForm in 'UI\UI.Prototypes.ChildForm.pas',
   UI.Modal.PickUser in 'UI\UI.Modal.PickUser.pas' {DialogPickUser},
   TU.ObjPicker in 'Core\TU.ObjPicker.pas',
   UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken},
@@ -145,7 +144,9 @@ uses
   NtUiLib.Exceptions.Dialog in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Dialog.pas',
   NtUtils.Processes.Create.Win32 in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas',
   NtUiLib.Exceptions.Report in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas',
-  DelphiUiLib.Reflection.Records in 'NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas';
+  DelphiUiLib.Reflection.Records in 'NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas',
+  UI.Prototypes.Forms in 'NtUtilsUI\Common\UI.Prototypes.Forms.pas',
+  VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas';
 
 {$R *.res}
 

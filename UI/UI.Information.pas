@@ -6,13 +6,13 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
-  VclEx.ListView, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Security.Sid,
+  VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
   Ntapi.ntseapi, NtUtils;
 
 type
-  TInfoDialog = class(TChildTaskbarForm)
+  TInfoDialog = class(TChildForm)
     PageControl: TPageControl;
     TabGeneral: TTabSheet;
     TabGroups: TTabSheet;
@@ -451,7 +451,7 @@ constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
 begin
   Assert(Assigned(SrcToken));
   Token := SrcToken;
-  inherited Create(AOwner);
+  inherited CreateChild(AOwner, True);
   Show;
 end;
 
@@ -483,12 +483,10 @@ begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   IntegritySource.Free;
   SessionSource.Free;
-  UnsubscribeTokenCanClose(Token);
 end;
 
 procedure TInfoDialog.FormCreate(Sender: TObject);
 begin
-  SubscribeTokenCanClose(Token, Caption);
   SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
   FrameAudit.OnApplyClick := SetAuditPolicy;

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, VclEx.ListView, UI.Prototypes.ChildForm;
+  Vcl.ComCtrls, VclEx.ListView, UI.Prototypes.Forms;
 
 type
   TDialogColumns = class(TChildForm)

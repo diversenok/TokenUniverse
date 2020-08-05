@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.ExtCtrls, TU.Tokens, TU.Tokens.Types, NtUtils,
-  UI.MainForm, UI.Prototypes, UI.Prototypes.ChildForm, NtUtils.Security.Sid,
+  UI.MainForm, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
   Ntapi.ntseapi;
 
 type
