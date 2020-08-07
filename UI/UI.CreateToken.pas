@@ -55,8 +55,8 @@ type
     CheckBoxNoWriteUp: TCheckBox;
     CheckBoxNewProcMin: TCheckBox;
     CheckBoxSession: TCheckBox;
-    FramePrivileges: TFramePrivileges;
     FrameGroups: TFrameGroups;
+    PrivilegesFrame: TPrivilegesFrame;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -195,32 +195,7 @@ begin
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
-  begin
-    FramePrivileges.ListView.Items.BeginUpdate;
-
-    // Uncheck everything
-    for i := 0 to FramePrivileges.ListView.Items.Count - 1 do
-      FramePrivileges.ListView.Items[i].Checked := False;
-
-    for i := 0 to High(Source.InfoClass.Privileges) do
-    begin
-      // Locate a privilege from the token in the list
-      j := FramePrivileges.Find(Source.InfoClass.Privileges[i].Luid);
-
-      // Set appropriate state and check it
-      if j = -1 then
-        // Add if necessary
-        FramePrivileges.AddPrivilege(Source.InfoClass.Privileges[i]).Checked :=
-          True
-      else
-      begin
-        FramePrivileges.Privilege[j] := Source.InfoClass.Privileges[i];
-        FramePrivileges.ListView.Items[j].Checked := True;
-      end;
-    end;
-
-    FramePrivileges.ListView.Items.EndUpdate;
-  end;
+    PrivilegesFrame.Checked := Source.InfoClass.Privileges;
 
   // Source
   if Source.InfoClass.Query(tdTokenSource) then
@@ -270,7 +245,7 @@ begin
     User,
     CheckBoxUserState.Checked,
     FrameGroups.Groups,
-    FramePrivileges.CheckedPrivileges,
+    PrivilegesFrame.Checked,
     LogonIDSource.SelectedLogonSession,
     Owner,
     PrimaryGroup,
@@ -350,8 +325,9 @@ begin
   CheckBoxSession.Enabled := RtlGetCurrentPeb.SessionId <> 0;
   ButtonAllocLuidClick(Self);
 
-  FramePrivileges.AddAllPrivileges;
-  FramePrivileges.ColorMode := pcGrayUnchecked;
+  PrivilegesFrame.ColoringChecked := pcStateBased;
+  PrivilegesFrame.ColoringUnChecked := pcRemoved;
+  PrivilegesFrame.LoadEvery;
 end;
 
 procedure TDialogCreateToken.MenuDisabledClick(Sender: TObject);
@@ -413,20 +389,18 @@ end;
 
 procedure TDialogCreateToken.SetPrivilegesAttributes(NewValue: Cardinal);
 var
-  Priv: TPrivilege;
   i: Integer;
 begin
-  FramePrivileges.ListView.Items.BeginUpdate;
+  with PrivilegesFrame.ListViewEx do
+  begin
+    Items.BeginUpdate;
 
-  for i := 0 to FramePrivileges.ListView.Items.Count - 1 do
-    if FramePrivileges.ListView.Items[i].Selected then
-    begin
-      Priv := FramePrivileges.Privilege[i];
-      Priv.Attributes := NewValue;
-      FramePrivileges.Privilege[i] := Priv;
-    end;
+    for i := 0 to Pred(Items.Count) do
+      if Items[i].Selected then
+        PrivilegesFrame.UpdateState(i, NewValue);
 
-  FramePrivileges.ListView.Items.EndUpdate;
+    Items.EndUpdate;
+  end;
 end;
 
 procedure TDialogCreateToken.UpdatePrimaryAndOwner(Mode: TGroupUpdateType);

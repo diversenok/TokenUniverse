@@ -14,6 +14,9 @@ object DialogSidView: TDialogSidView
   OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
+  DesignSize = (
+    387
+    371)
   PixelsPerInch = 96
   TextHeight = 13
   object Pages: TPageControl
@@ -29,6 +32,9 @@ object DialogSidView: TDialogSidView
     TabOrder = 0
     object TabSid: TTabSheet
       Caption = 'General'
+      DesignSize = (
+        373
+        289)
       object LinkLabelDomain: TLinkLabel
         Left = 97
         Top = 103
@@ -163,20 +169,28 @@ object DialogSidView: TDialogSidView
         Height = 289
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 373
+        ExplicitHeight = 289
         inherited LabelStatus: TLabel
           Top = 266
           Width = 283
+          ExplicitTop = 266
+          ExplicitWidth = 283
         end
         inherited ButtonApply: TButton
           Top = 261
+          ExplicitTop = 261
         end
-        inherited FramePrivileges: TFramePrivileges
-          Width = 373
-          Height = 260
-          inherited ListView: TListViewEx
+        inherited PrivilegesFrame: TPrivilegesFrame
+          Width = 367
+          Height = 254
+          ExplicitWidth = 367
+          ExplicitHeight = 254
+          inherited ListViewEx: TListViewEx
             Width = 367
             Height = 254
-            PopupMenu = FrameLsaPrivileges.PopupMenu
+            ExplicitWidth = 367
+            ExplicitHeight = 254
           end
         end
       end
@@ -191,16 +205,23 @@ object DialogSidView: TDialogSidView
         Height = 289
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 373
+        ExplicitHeight = 289
         inherited LabelStatus: TLabel
           Top = 266
           Width = 283
+          ExplicitTop = 266
+          ExplicitWidth = 283
         end
         inherited ButtonApply: TButton
           Top = 261
+          ExplicitTop = 261
         end
         inherited ListView: TListViewEx
           Width = 367
           Height = 255
+          ExplicitWidth = 367
+          ExplicitHeight = 255
         end
       end
     end
@@ -214,9 +235,13 @@ object DialogSidView: TDialogSidView
         Height = 289
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 373
+        ExplicitHeight = 289
         inherited LabelStatus: TLabel
           Top = 267
           Width = 264
+          ExplicitTop = 267
+          ExplicitWidth = 264
         end
         inherited ListView: TListViewEx
           Width = 367
@@ -245,10 +270,14 @@ object DialogSidView: TDialogSidView
               Caption = 'Fail Exc'
               Width = 55
             end>
+          ExplicitWidth = 367
+          ExplicitHeight = 257
         end
         inherited ButtonApply: TButton
           Left = 273
           Top = 262
+          ExplicitLeft = 273
+          ExplicitTop = 262
         end
       end
     end

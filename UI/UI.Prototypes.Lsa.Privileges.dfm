@@ -23,57 +23,24 @@ object FrameLsaPrivileges: TFrameLsaPrivileges
     TabOrder = 0
     OnClick = ButtonApplyClick
   end
-  inline FramePrivileges: TFramePrivileges
+  inline PrivilegesFrame: TPrivilegesFrame
     AlignWithMargins = True
-    Left = 0
-    Top = 0
-    Width = 320
-    Height = 211
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 29
+    Left = 3
+    Top = 3
+    Width = 314
+    Height = 205
+    Margins.Bottom = 32
     Align = alClient
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 1
-    inherited ListView: TListViewEx
+    inherited ListViewEx: TListViewEx
       Width = 314
       Height = 205
       Checkboxes = True
-      Columns = <
-        item
-          Caption = 'Name'
-          Width = 200
-        end
-        item
-          Caption = 'State'
-          Width = 90
-        end>
       GridLines = False
-      Groups = <
-        item
-          Header = 'Sensitive (high integrity)'
-          GroupID = 0
-          State = [lgsNormal, lgsCollapsible]
-          HeaderAlign = taLeftJustify
-          FooterAlign = taLeftJustify
-          TitleImage = -1
-        end
-        item
-          Header = 'Usual (medium integrity)'
-          GroupID = 1
-          State = [lgsNormal, lgsCollapsible]
-          HeaderAlign = taLeftJustify
-          FooterAlign = taLeftJustify
-          TitleImage = -1
-        end
-        item
-          Header = 'Non-sensitive (no integrity)'
-          GroupID = 2
-          State = [lgsNormal, lgsCollapsible]
-          HeaderAlign = taLeftJustify
-          FooterAlign = taLeftJustify
-          TitleImage = -1
-        end>
       GroupView = True
       PopupMenu = PopupMenu
     end

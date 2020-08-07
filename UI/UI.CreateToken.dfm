@@ -235,35 +235,22 @@ object DialogCreateToken: TDialogCreateToken
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      inline FramePrivileges: TFramePrivileges
-        Left = 0
-        Top = 0
-        Width = 314
-        Height = 303
+      inline PrivilegesFrame: TPrivilegesFrame
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 308
+        Height = 297
         Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
-        inherited ListView: TListViewEx
+        inherited ListViewEx: TListViewEx
           Width = 308
           Height = 297
           Checkboxes = True
-          Columns = <
-            item
-              Caption = 'Name'
-              Width = 180
-            end
-            item
-              Caption = 'State'
-              Width = 90
-            end
-            item
-              Caption = 'Description'
-              Width = 220
-            end
-            item
-              Alignment = taCenter
-              Caption = 'LUID'
-              Width = 40
-            end>
           PopupMenu = PopupMenuPrivileges
         end
       end
@@ -307,7 +294,6 @@ object DialogCreateToken: TDialogCreateToken
           Width = 103
           Height = 21
           Anchors = [akTop, akRight]
-          Date = 0.500000000000000000
           Time = 0.500000000000000000
           ShowCheckbox = True
           Enabled = False

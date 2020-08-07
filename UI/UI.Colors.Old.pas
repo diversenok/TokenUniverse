@@ -1,4 +1,4 @@
-unit UI.Colors;
+unit UI.Colors.Old;
 
 interface
 
@@ -17,8 +17,6 @@ const
   clGuiThread: TColor = $77FFFF;
 
 function GroupAttributesToColor(Attributes: Cardinal): TColor;
-
-function PrivilegeToColor(Privilege: TPrivilege): TColor;
 
 implementation
 
@@ -42,27 +40,6 @@ begin
   else
   begin
     if Contains(Attributes, SE_GROUP_ENABLED_BY_DEFAULT) then
-      Result := clDisabledModified
-    else
-      Result := clDisabled;
-  end;
-end;
-
-function PrivilegeToColor(Privilege: TPrivilege): TColor;
-begin
-  if Contains(Privilege.Attributes, SE_PRIVILEGE_REMOVED) then
-    Exit(clRemoved);
-
-  if Contains(Privilege.Attributes, SE_PRIVILEGE_ENABLED) then
-  begin
-    if Contains(Privilege.Attributes, SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
-      Result := clEnabled
-    else
-      Result := clEnabledModified;
-  end
-  else
-  begin
-    if Contains(Privilege.Attributes, SE_PRIVILEGE_ENABLED_BY_DEFAULT) then
       Result := clDisabledModified
     else
       Result := clDisabled;

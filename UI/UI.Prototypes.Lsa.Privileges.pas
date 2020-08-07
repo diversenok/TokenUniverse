@@ -12,10 +12,10 @@ type
   TFrameLsaPrivileges = class(TFrame)
     ButtonApply: TButton;
     LabelStatus: TLabel;
-    FramePrivileges: TFramePrivileges;
     PopupMenu: TPopupMenu;
     MenuEnable: TMenuItem;
     MenuDisable: TMenuItem;
+    PrivilegesFrame: TPrivilegesFrame;
     procedure MenuEnableClick(Sender: TObject);
     procedure MenuDisableClick(Sender: TObject);
     procedure ButtonApplyClick(Sender: TObject);
@@ -54,29 +54,32 @@ var
   PrivToAdd, PrivToRemove: TArray<TPrivilege>;
   i: Integer;
   Current: PPrivilege;
+  New: TPrivilege;
 begin
   SetLength(PrivToAdd, 0);
   SetLength(PrivToRemove, 0);
 
-  for i := 0 to FramePrivileges.PrivilegeCount - 1 do
-  with FramePrivileges.ListView.Items[i] do
+  for i := 0 to Pred(PrivilegesFrame.ListViewEx.Items.Count) do
+  with PrivilegesFrame.ListViewEx.Items[i] do
     begin
       Current := FindPrivInArray(CurrentlyAssigned,
-        FramePrivileges.Privilege[i].Luid);
+        PrivilegesFrame.Privilege[i].Luid);
 
-      if Checked and (not Assigned(Current) or (Current.Attributes <>
-        FramePrivileges.Privilege[i].Attributes)) then
+      New := PrivilegesFrame.Privilege[i];
+
+      if Checked and (not Assigned(Current) or
+        (Current.Attributes <> New.Attributes)) then
       begin
         // It was enabled or modified, add
         SetLength(PrivToAdd, Length(PrivToAdd) + 1);
-        PrivToAdd[High(PrivToAdd)] := FramePrivileges.Privilege[i];
+        PrivToAdd[High(PrivToAdd)] := New;
       end;
 
       if not Checked and Assigned(Current) then
       begin
         // It was disabled, remove
         SetLength(PrivToRemove, Length(PrivToRemove) + 1);
-        PrivToRemove[High(PrivToRemove)] := FramePrivileges.Privilege[i];
+        PrivToRemove[High(PrivToRemove)] := New;
       end;
     end;
 
@@ -85,14 +88,15 @@ begin
       PrivToRemove).RaiseOnError;
   finally
     LoadForSid(Sid);
-    FramePrivileges.ListView.SetFocus;
+    PrivilegesFrame.ListViewEx.SetFocus;
   end;
 end;
 
 procedure TFrameLsaPrivileges.DeleyedCreate;
 begin
-  FramePrivileges.ColorMode := pcColorChecked;
-  FramePrivileges.AddAllPrivileges;
+  PrivilegesFrame.ColoringUnChecked := pcNone;
+  PrivilegesFrame.ColoringChecked := pcStateBased;
+  PrivilegesFrame.LoadEvery;
 end;
 
 procedure TFrameLsaPrivileges.LoadForSid(Sid: ISid);
@@ -120,23 +124,7 @@ begin
   end;
 
   // Check assigned privileges
-  begin
-    FramePrivileges.ListView.Items.BeginUpdate;
-
-    for i := 0 to FramePrivileges.PrivilegeCount - 1 do
-      FramePrivileges.ListView.Items[i].Checked := False;
-
-    for j := 0 to High(CurrentlyAssigned) do
-      for i := 0 to FramePrivileges.PrivilegeCount - 1 do
-        if FramePrivileges.Privilege[i].Luid = CurrentlyAssigned[j].Luid then
-        begin
-          FramePrivileges.PrivAttributes[i] := CurrentlyAssigned[j].Attributes;
-          FramePrivileges.ListView.Items[i].Checked := True;
-          Break;
-        end;
-
-    FramePrivileges.ListView.Items.EndUpdate;
-  end;
+  PrivilegesFrame.Checked := CurrentlyAssigned;
 end;
 
 procedure TFrameLsaPrivileges.MenuDisableClick(Sender: TObject);
@@ -153,10 +141,10 @@ procedure TFrameLsaPrivileges.SetSelectedPrivState(Attributes: Cardinal);
 var
   i: Integer;
 begin
-  if FramePrivileges.ListView.SelCount > 0 then
-    for i := 0 to FramePrivileges.ListView.Items.Count - 1 do
-      if FramePrivileges.ListView.Items[i].Selected then
-        FramePrivileges.PrivAttributes[i] := Attributes
+  if PrivilegesFrame.ListViewEx.SelCount > 0 then
+    for i := 0 to Pred(PrivilegesFrame.ListViewEx.Items.Count) do
+      if PrivilegesFrame.ListViewEx.Items[i].Selected then
+        PrivilegesFrame.UpdateState(i, Attributes);
 end;
 
 

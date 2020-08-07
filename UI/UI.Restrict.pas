@@ -26,9 +26,9 @@ type
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
     CheckBoxUsual: TCheckBox;
-    FramePrivileges: TFramePrivileges;
     FrameGroupsDisable: TFrameGroups;
     FrameGroupsRestrict: TFrameGroups;
+    PrivilegesFrame: TPrivilegesFrame;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
@@ -43,7 +43,6 @@ type
     FirstEditableItem: Integer; // in list of restricting SIDs
     function GetFlags: Cardinal;
     procedure ChangedCaption(const NewCaption: String);
-    procedure ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
     procedure ChangedGroups(const NewGroups: TArray<TGroup>);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
@@ -72,7 +71,7 @@ begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
     FrameGroupsDisable.CheckedGroups,
     FrameGroupsRestrict.CheckedGroups,
-    FramePrivileges.CheckedPrivileges);
+    PrivilegesFrame.Checked);
 
   FormMain.TokenView.Add(NewToken);
 
@@ -146,17 +145,6 @@ begin
   end;
 end;
 
-procedure TDialogRestrictToken.ChangedPrivileges(
-  const NewPrivileges: TArray<TPrivilege>);
-begin
-  FramePrivileges.ListView.Items.BeginUpdate(True);
-
-  FramePrivileges.Clear;
-  FramePrivileges.AddPrivileges(NewPrivileges);
-
-  FramePrivileges.ListView.Items.EndUpdate(True);
-end;
-
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
   SrcToken: IToken);
 begin
@@ -174,7 +162,7 @@ procedure TDialogRestrictToken.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
-  Token.Events.OnPrivilegesChange.Unsubscribe(ChangedPrivileges);
+  Token.Events.OnPrivilegesChange.Unsubscribe(PrivilegesFrame.Load);
   Token.Events.OnGroupsChange.Unsubscribe(ChangedGroups);
 end;
 
@@ -193,9 +181,10 @@ begin
     CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;
 
   // Privileges
-  FramePrivileges.ColorMode := pcGrayChecked;
+  PrivilegesFrame.ColoringUnChecked := pcStateBased;
+  PrivilegesFrame.ColoringChecked := pcRemoved;
   Token.InfoClass.Query(tdTokenPrivileges);
-  Token.Events.OnPrivilegesChange.Subscribe(ChangedPrivileges, True);
+  Token.Events.OnPrivilegesChange.Subscribe(PrivilegesFrame.Load, True);
 
   // Disabled SIDs and Restricting SIDs
   begin

@@ -66,9 +66,9 @@ type
     FrameAudit: TFrameAudit;
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
-    FramePrivileges: TFramePrivileges;
     FrameGroupSIDs: TFrameGroups;
     FrameRestrictSIDs: TFrameGroups;
+    PrivilegesFrame: TPrivilegesFrame;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -124,7 +124,7 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
+  System.UITypes, UI.MainForm, UI.Colors.Old, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, NtUiLib.Exceptions, DelphiUiLib.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
@@ -157,26 +157,26 @@ end;
 
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
-  if FramePrivileges.ListView.SelCount <> 0 then
-    Token.PrivilegeAdjust(FramePrivileges.SelectedPrivileges, paDisable);
+  if PrivilegesFrame.ListViewEx.SelCount <> 0 then
+    Token.PrivilegeAdjust(PrivilegesFrame.Selected, paDisable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
-  if FramePrivileges.ListView.SelCount <> 0 then
-    Token.PrivilegeAdjust(FramePrivileges.SelectedPrivileges, paEnable);
+  if PrivilegesFrame.ListViewEx.SelCount <> 0 then
+    Token.PrivilegeAdjust(PrivilegesFrame.Selected, paEnable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
-  if FramePrivileges.ListView.SelCount = 0 then
+  if PrivilegesFrame.ListViewEx.SelCount = 0 then
     Exit;
 
   if TaskMessageDlg('Remove these privileges from the token?',
     'This action can''t be undone.', mtWarning, mbYesNo, -1) <> idYes then
     Exit;
 
-  Token.PrivilegeAdjust(FramePrivileges.SelectedPrivileges, paRemove);
+  Token.PrivilegeAdjust(PrivilegesFrame.Selected, paRemove);
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
@@ -388,13 +388,7 @@ end;
 procedure TInfoDialog.ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
 begin
   TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
-
-  FramePrivileges.ListView.Items.BeginUpdate(True);
-
-  FramePrivileges.Clear;
-  FramePrivileges.AddPrivileges(NewPrivileges);
-
-  FramePrivileges.ListView.Items.EndUpdate(True);
+  PrivilegesFrame.Load(NewPrivileges);
 end;
 
 procedure TInfoDialog.ChangedSession(const NewSession: Cardinal);

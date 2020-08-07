@@ -168,21 +168,22 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentFont = False
         TabOrder = 0
       end
-      inline FramePrivileges: TFramePrivileges
+      inline PrivilegesFrame: TPrivilegesFrame
         AlignWithMargins = True
-        Left = 0
+        Left = 3
         Top = 26
-        Width = 344
-        Height = 302
-        Margins.Left = 0
+        Width = 338
+        Height = 299
         Margins.Top = 26
-        Margins.Right = 0
-        Margins.Bottom = 0
         Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 1
-        inherited ListView: TListViewEx
+        inherited ListViewEx: TListViewEx
           Width = 338
-          Height = 296
+          Height = 299
           Checkboxes = True
         end
       end

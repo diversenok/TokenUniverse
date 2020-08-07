@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, UI.Colors, NtUiLib.Exceptions, DelphiUiLib.Strings,
+  Ntapi.ntstatus, UI.Colors.Old, NtUiLib.Exceptions, DelphiUiLib.Strings,
   Ntapi.ntdef;
 
 {$R *.dfm}

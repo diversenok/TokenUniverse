@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  UI.Colors, Ntapi.ntrtl, DelphiApi.Reflection,
+  UI.Colors.Old, Ntapi.ntrtl, DelphiApi.Reflection,
   UI.Modal.PickUser, UI.Sid.View, Winapi.WinNt, NtUtils.Lsa.Sid, Ntapi.ntseapi,
   DelphiUiLib.Reflection, DelphiUiLib.Reflection.Numeric;
 

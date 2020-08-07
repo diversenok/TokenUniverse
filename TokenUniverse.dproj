@@ -141,7 +141,7 @@
             <Form>DialogRestrictToken</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UI\UI.Colors.pas"/>
+        <DCCReference Include="UI\UI.Colors.Old.pas"/>
         <DCCReference Include="UI\UI.Prototypes.pas"/>
         <DCCReference Include="Core\TU.Credentials.pas"/>
         <DCCReference Include="UI\UI.Modal.Logon.pas">
@@ -195,11 +195,6 @@
         </DCCReference>
         <DCCReference Include="UI\UI.Prototypes.Logon.pas">
             <Form>FrameLogon</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
-        <DCCReference Include="UI\UI.Prototypes.Privileges.pas">
-            <Form>FramePrivileges</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
@@ -338,6 +333,12 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Prototypes.Forms.pas"/>
         <DCCReference Include="NtUtilsUI\VclEx\VclEx.Form.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
+            <Form>PrivilegesFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Common\UI.Colors.pas"/>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

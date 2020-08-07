@@ -27,7 +27,7 @@ var
 implementation
 
 uses
-  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt;
+  Ntapi.ntkeapi, UI.Colors.Old, NtUtils.WinUser, Winapi.WinNt;
 
 {$R *.dfm}
 

@@ -12,7 +12,7 @@ uses
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
-  UI.Colors in 'UI\UI.Colors.pas',
+  UI.Colors.Old in 'UI\UI.Colors.Old.pas',
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
@@ -31,7 +31,6 @@ uses
   UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer},
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
-  UI.Prototypes.Privileges in 'UI\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
   UI.Prototypes.Groups in 'UI\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView},
   UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame},
@@ -146,7 +145,9 @@ uses
   NtUiLib.Exceptions.Report in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas',
   DelphiUiLib.Reflection.Records in 'NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas',
   UI.Prototypes.Forms in 'NtUtilsUI\Common\UI.Prototypes.Forms.pas',
-  VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas';
+  VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas',
+  UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {PrivilegesFrame: TFrame},
+  UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas';
 
 {$R *.res}
 

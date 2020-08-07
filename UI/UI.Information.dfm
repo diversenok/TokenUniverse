@@ -586,13 +586,21 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      inline FramePrivileges: TFramePrivileges
-        Left = 0
-        Top = 0
-        Width = 388
-        Height = 369
+      inline PrivilegesFrame: TPrivilegesFrame
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 382
+        Height = 363
+        Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
-        inherited ListView: TListViewEx
+        inherited ListViewEx: TListViewEx
+          Width = 382
+          Height = 363
           PopupMenu = PrivilegePopup
         end
       end
