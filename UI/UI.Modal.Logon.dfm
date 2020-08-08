@@ -67,7 +67,7 @@ object LogonDialog: TLogonDialog
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 5
+    TabOrder = 4
   end
   object ButtonContinue: TButton
     Left = 229
@@ -154,21 +154,32 @@ object LogonDialog: TLogonDialog
       OnClick = ButtonAllocLuidClick
     end
   end
-  inline FrameGroups: TFrameGroups
+  object GroupsPanel: TPanel
     Left = 8
     Top = 137
     Width = 296
     Height = 168
     Anchors = [akLeft, akTop, akRight, akBottom]
-    TabOrder = 4
-    inherited ListView: TListViewEx
-      AlignWithMargins = False
-      Left = 0
-      Top = 0
-      Width = 296
-      Height = 168
-      PopupMenu = PopupMenu
-      OnDblClick = MenuEditClick
+    BevelOuter = bvNone
+    TabOrder = 5
+    inline GroupsFrame: TGroupsFrame
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 290
+      Height = 162
+      Align = alClient
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 0
+      inherited ListViewEx: TListViewEx
+        Width = 290
+        Height = 162
+        PopupMenu = PopupMenu
+        OnDblClick = MenuEditClick
+      end
     end
   end
   object PopupMenu: TPopupMenu

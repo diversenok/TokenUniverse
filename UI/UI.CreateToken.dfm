@@ -211,24 +211,24 @@ object DialogCreateToken: TDialogCreateToken
         TabOrder = 0
         OnClick = ButtonAddSIDClick
       end
-      inline FrameGroups: TFrameGroups
+      inline GroupsFrame: TGroupsFrame
         AlignWithMargins = True
-        Left = 0
-        Top = 0
-        Width = 314
-        Height = 273
-        Margins.Left = 0
-        Margins.Top = 0
-        Margins.Right = 0
+        Left = 3
+        Top = 3
+        Width = 308
+        Height = 270
         Margins.Bottom = 30
         Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 1
-        inherited ListView: TListViewEx
+        inherited ListViewEx: TListViewEx
           Width = 308
-          Height = 267
+          Height = 270
           PopupMenu = PopupMenuGroups
           OnDblClick = MenuEditClick
-          PopupOnItemsOnly = True
         end
       end
     end

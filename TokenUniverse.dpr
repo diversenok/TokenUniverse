@@ -31,7 +31,6 @@ uses
   UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer},
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
-  UI.Prototypes.Groups in 'UI\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView},
   UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame},
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
@@ -147,7 +146,8 @@ uses
   UI.Prototypes.Forms in 'NtUtilsUI\Common\UI.Prototypes.Forms.pas',
   VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {PrivilegesFrame: TFrame},
-  UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas';
+  UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
+  UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame};
 
 {$R *.res}
 

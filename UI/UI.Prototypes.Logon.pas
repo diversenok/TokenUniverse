@@ -38,7 +38,7 @@ implementation
 
 uses
   Vcl.Graphics, UI.Colors.Old, DelphiUiLib.Strings, NtUtils.Security.Sid,
-  UI.Prototypes.Groups, Ntapi.ntseapi, Winapi.NtSecApi,
+  Ntapi.ntseapi, Winapi.NtSecApi,
   DelphiUiLib.Reflection.Records, DelphiUtils.AutoObject,
   DelphiUiLib.Reflection;
 

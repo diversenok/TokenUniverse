@@ -51,17 +51,23 @@ object DialogRestrictToken: TDialogRestrictToken
     TabOrder = 2
     object TabSheetSidDisable: TTabSheet
       Caption = 'SIDs to disable'
-      inline FrameGroupsDisable: TFrameGroups
-        Left = 0
-        Top = 0
-        Width = 344
-        Height = 328
+      inline GroupsDisableFrame: TGroupsFrame
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 338
+        Height = 322
         Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
-        inherited ListView: TListViewEx
+        inherited ListViewEx: TListViewEx
           Width = 338
           Height = 322
           Checkboxes = True
+          OnDblClick = GroupsDisableFrameListViewExDblClick
         end
       end
     end
@@ -90,7 +96,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Font.Style = [fsBold]
         ParentFont = False
         State = cbChecked
-        TabOrder = 1
+        TabOrder = 0
       end
       object ButtonAddSID: TButton
         Left = 263
@@ -104,7 +110,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ImageMargins.Left = 3
         ImageMargins.Top = 1
         Images = FormMain.SmallIcons
-        TabOrder = 2
+        TabOrder = 1
         OnClick = ButtonAddSIDClick
       end
       object CheckBoxUsual: TCheckBox
@@ -123,27 +129,26 @@ object DialogRestrictToken: TDialogRestrictToken
         Font.Style = [fsBold]
         ParentFont = False
         State = cbChecked
-        TabOrder = 3
+        TabOrder = 2
       end
-      inline FrameGroupsRestrict: TFrameGroups
+      inline GroupsRestrictFrame: TGroupsFrame
         AlignWithMargins = True
-        Left = 0
-        Top = 0
-        Width = 344
-        Height = 287
-        Margins.Left = 0
-        Margins.Top = 0
-        Margins.Right = 0
+        Left = 3
+        Top = 3
+        Width = 338
+        Height = 284
         Margins.Bottom = 41
         Align = alClient
-        TabOrder = 0
-        inherited ListView: TListViewEx
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 3
+        inherited ListViewEx: TListViewEx
           Width = 338
-          Height = 281
+          Height = 284
           Checkboxes = True
-          PopupMenu = PopupMenu
-          OnContextPopup = ListViewRestrictSIDContextPopup
-          OnDblClick = MenuEditClick
+          OnDblClick = GroupsRestrictFrameListViewExDblClick
         end
       end
     end
@@ -213,19 +218,5 @@ object DialogRestrictToken: TDialogRestrictToken
     Anchors = [akLeft, akBottom]
     Caption = 'Sandbox inert'
     TabOrder = 4
-  end
-  object PopupMenu: TPopupMenu
-    Left = 232
-    Top = 128
-    object MenuEdit: TMenuItem
-      Caption = 'Edit'
-      ShortCut = 113
-      OnClick = MenuEditClick
-    end
-    object MenuRemove: TMenuItem
-      Caption = 'Remove'
-      ShortCut = 46
-      OnClick = MenuRemoveClick
-    end
   end
 end

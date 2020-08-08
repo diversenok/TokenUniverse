@@ -570,16 +570,23 @@ object InfoDialog: TInfoDialog
     object TabGroups: TTabSheet
       Caption = 'Groups'
       ImageIndex = 1
-      inline FrameGroupSIDs: TFrameGroups
-        Left = 0
-        Top = 0
-        Width = 388
-        Height = 369
+      inline GroupsMemberFrame: TGroupsFrame
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 382
+        Height = 363
         Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
-        inherited ListView: TListViewEx
+        inherited ListViewEx: TListViewEx
+          Width = 382
+          Height = 363
           PopupMenu = GroupPopup
-          OnContextPopup = ListViewGroupsContextPopup
+          OnDblClick = GroupsFrameListViewExDblClick
         end
       end
     end
@@ -608,13 +615,23 @@ object InfoDialog: TInfoDialog
     object TabRestricted: TTabSheet
       Caption = 'Restricting SIDs'
       ImageIndex = 3
-      inline FrameRestrictSIDs: TFrameGroups
-        Left = 0
-        Top = 0
-        Width = 388
-        Height = 369
+      inline GroupsRestrictedFrame: TGroupsFrame
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 382
+        Height = 363
         Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
+        inherited ListViewEx: TListViewEx
+          Width = 382
+          Height = 363
+          OnDblClick = RestrictedGroupsFrameListViewExDblClick
+        end
       end
     end
     object TabSecurity: TTabSheet

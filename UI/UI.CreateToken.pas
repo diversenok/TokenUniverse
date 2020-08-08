@@ -55,8 +55,8 @@ type
     CheckBoxNoWriteUp: TCheckBox;
     CheckBoxNewProcMin: TCheckBox;
     CheckBoxSession: TCheckBox;
-    FrameGroups: TFrameGroups;
     PrivilegesFrame: TPrivilegesFrame;
+    GroupsFrame: TGroupsFrame;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -95,7 +95,7 @@ uses
 
 procedure TDialogCreateToken.AddGroup(NewGroup: TGroup);
 begin
-  FrameGroups.AddGroup(NewGroup);
+  GroupsFrame.Add([NewGroup]);
 
   if NewGroup.Attributes and SE_GROUP_OWNER <> 0 then
     ComboOwner.Items.Add(LsaxSidToString(NewGroup.Sid.Data));
@@ -125,7 +125,6 @@ procedure TDialogCreateToken.ButtonLoadClick(Sender: TObject);
 var
   Source: IToken;
   Expiration: TDateTime;
-  i, j: Integer;
 begin
   Source := TDialogPickToken.Execute(Self);
 
@@ -171,16 +170,7 @@ begin
 
   // Groups
   if Source.InfoClass.Query(tdTokenGroups) then
-  with FrameGroups do
-    begin
-      ListView.Items.BeginUpdate;
-
-      Clear;
-      for i := 0 to High(Source.InfoClass.Groups) do
-        AddGroup(Source.InfoClass.Groups[i]);
-
-      ListView.Items.EndUpdate;
-    end;
+    GroupsFrame.Load(Source.InfoClass.Groups);
 
   // TODO: Owner and Primary group ItemIndexes are not updated properly
 
@@ -244,7 +234,7 @@ begin
   Token := TToken.CreateNtCreateToken(
     User,
     CheckBoxUserState.Checked,
-    FrameGroups.Groups,
+    GroupsFrame.All,
     PrivilegesFrame.Checked,
     LogonIDSource.SelectedLogonSession,
     Owner,
@@ -342,13 +332,29 @@ end;
 
 procedure TDialogCreateToken.MenuEditClick(Sender: TObject);
 var
-  SelCount: Integer;
+  ItemsToModify: Integer;
+  AddAttributes, RemoveAttriutes: TGroupAttributes;
 begin
-  SelCount := FrameGroups.ListView.SelCount;
+  ItemsToModify := GroupsFrame.ListViewEx.SelCount;
 
-  FrameGroups.UiEditSelected(Self);
+  with GroupsFrame.ListViewEx do
+  begin
+    // Edit one group: SID and attributes
+    if (SelCount = 1) and Assigned(Selected) then
+      GroupsFrame[Selected.Index] := TDialogPickUser.PickEditOne(Self,
+        GroupsFrame[Selected.Index]);
 
-  case SelCount of
+    // Edit multiple groups: only attributes
+    if SelCount > 1 then
+    begin
+      TDialogPickUser.PickEditMultiple(Self, GroupsFrame.Selected, AddAttributes,
+        RemoveAttriutes);
+
+      GroupsFrame.UpdateSelected(AddAttributes, RemoveAttriutes);
+    end;
+  end;
+
+  case ItemsToModify of
     0:
       ; // Nothing to update
     1:
@@ -371,11 +377,8 @@ end;
 
 procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
 begin
-  if Assigned(FrameGroups.ListView.Selected) then
-  begin
-    FrameGroups.RemoveGroup(FrameGroups.ListView.Selected.Index);
-    UpdatePrimaryAndOwner(guRemove);
-  end;
+  GroupsFrame.RemoveSelected;
+  UpdatePrimaryAndOwner(guRemove);
 end;
 
 procedure TDialogCreateToken.ObjPickerUserCallback(UserName: String);
@@ -424,9 +427,9 @@ begin
       ComboOwner.Items.Delete(i);
 
     // Only groups with Owner flag can be assigned as owners
-    for i := 0 to FrameGroups.ListView.Items.Count - 1 do
-      if FrameGroups.Group[i].Attributes and SE_GROUP_OWNER <> 0 then
-        ComboOwner.Items.Add(FrameGroups.ListView.Items[i].Caption);
+    for i := 0 to Pred(GroupsFrame.ListViewEx.Items.Count) do
+      if GroupsFrame.Group[i].Attributes and SE_GROUP_OWNER <> 0 then
+        ComboOwner.Items.Add(GroupsFrame.ListViewEx.Items[i].Caption);
 
     // Restore choise
     if (Mode = guEditOne) and (SavedOwnerCount = ComboOwner.Items.Count) then
@@ -456,8 +459,8 @@ begin
       ComboPrimary.Items.Delete(i);
 
     // Any group present in the token can be assigned as a primary
-    for i := 0 to FrameGroups.ListView.Items.Count - 1 do
-      ComboPrimary.Items.Add(FrameGroups.ListView.Items[i].Caption);
+    for i := 0 to Pred(GroupsFrame.ListViewEx.Items.Count) do
+      ComboPrimary.Items.Add(GroupsFrame.ListViewEx.Items[i].Caption);
 
     // Restore choise
     case Mode of

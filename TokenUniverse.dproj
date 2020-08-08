@@ -198,11 +198,6 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="UI\UI.Prototypes.Groups.pas">
-            <Form>FrameGroups</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="UI\UI.Sid.View.pas">
             <Form>DialogSidView</Form>
         </DCCReference>
@@ -339,6 +334,11 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\UI.Colors.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas">
+            <Form>GroupsFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

@@ -102,7 +102,6 @@ end;
 procedure TFrameLsaPrivileges.LoadForSid(Sid: ISid);
 var
   Status: TNtxStatus;
-  i, j: Integer;
 begin
   Self.Sid := Sid;
   Status := LsaxEnumeratePrivilegesAccountBySid(Sid.Data, CurrentlyAssigned);

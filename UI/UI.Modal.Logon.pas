@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups,
-  Winapi.WinBase, Winapi.NtSecApi;
+  Winapi.WinBase, Winapi.NtSecApi, Vcl.ExtCtrls;
 
 type
   TLogonDialog = class(TChildForm)
@@ -25,7 +25,8 @@ type
     StaticSourceLuid: TStaticText;
     EditSourceLuid: TEdit;
     ButtonAllocLuid: TButton;
-    FrameGroups: TFrameGroups;
+    GroupsFrame: TGroupsFrame;
+    GroupsPanel: TPanel;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
@@ -61,7 +62,7 @@ end;
 
 procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
 begin
-  FrameGroups.AddGroup(TDialogPickUser.PickNew(Self));
+  GroupsFrame.Add([TDialogPickUser.PickNew(Self)]);
   ButtonContinue.SetFocus;
 end;
 
@@ -77,7 +78,7 @@ procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
 begin
   // When logging users with additional groups at least one of them shoud be a
   // logon group
-  if FrameGroups.Count > 0 then
+  if GroupsFrame.ListViewEx.Items.Count > 0 then
     SuggestCurrentLogonGroup;
 
   Enabled := False;
@@ -113,14 +114,33 @@ begin
 end;
 
 procedure TLogonDialog.MenuEditClick(Sender: TObject);
+var
+  ItemsToModify: Integer;
+  AddAttributes, RemoveAttriutes: TGroupAttributes;
 begin
-  FrameGroups.UiEditSelected(Self);
+  ItemsToModify := GroupsFrame.ListViewEx.SelCount;
+
+  with GroupsFrame.ListViewEx do
+  begin
+    // Edit one group: SID and attributes
+    if (SelCount = 1) and Assigned(Selected) then
+      GroupsFrame[Selected.Index] := TDialogPickUser.PickEditOne(Self,
+        GroupsFrame[Selected.Index]);
+
+    // Edit multiple groups: only attributes
+    if SelCount > 1 then
+    begin
+      TDialogPickUser.PickEditMultiple(Self, GroupsFrame.Selected, AddAttributes,
+        RemoveAttriutes);
+
+      GroupsFrame.UpdateSelected(AddAttributes, RemoveAttriutes);
+    end;
+  end;
 end;
 
 procedure TLogonDialog.MenuRemoveClick(Sender: TObject);
 begin
-  if Assigned(FrameGroups.ListView.Selected) then
-    FrameGroups.RemoveGroup(FrameGroups.ListView.Selected.Index);
+  GroupsFrame.RemoveSelected;
 end;
 
 procedure TLogonDialog.SuggestCurrentLogonGroup;
@@ -130,12 +150,11 @@ const
         'the current window station? Note, that when providing additional ' +
         'groups, at least one of them must be a logon group.';
 var
-  i: Integer;
-  LogonGroup: TGroup;
+  Group: TGroup;
 begin
   // Check for existing logon groups
-  for i := 0 to FrameGroups.Count - 1 do
-    if IsLogonSid(FrameGroups.Group[i].Sid) then
+  for Group in GroupsFrame.All do
+    if IsLogonSid(Group.Sid) then
       Exit;
 
   case TaskMessageDlg(TITLE, MSG, mtConfirmation, [mbYes, mbIgnore, mbCancel],
@@ -143,13 +162,13 @@ begin
     IDYES:
     begin
       // Query window station SID
-      UsrxQuerySid(GetProcessWindowStation, LogonGroup.Sid).RaiseOnError;
+      UsrxQuerySid(GetProcessWindowStation, Group.Sid).RaiseOnError;
 
-      LogonGroup.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or
+      Group.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or
         SE_GROUP_ENABLED or SE_GROUP_LOGON_ID;
 
       // Add it
-      FrameGroups.AddGroup(LogonGroup);
+      GroupsFrame.Add([Group]);
     end;
 
     IDCANCEL:
@@ -170,11 +189,11 @@ begin
       'Source LUID');
 
     FormMain.TokenView.Add(TToken.CreateS4ULogon(Domain, User, Source,
-      FrameGroups.Groups));
+      GroupsFrame.All));
   end
   else
     FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType, Domain, User,
-      Password, FrameGroups.Groups));
+      Password, GroupsFrame.All));
 end;
 
 end.
