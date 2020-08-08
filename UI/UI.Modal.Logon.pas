@@ -115,11 +115,8 @@ end;
 
 procedure TLogonDialog.MenuEditClick(Sender: TObject);
 var
-  ItemsToModify: Integer;
   AddAttributes, RemoveAttriutes: TGroupAttributes;
 begin
-  ItemsToModify := GroupsFrame.ListViewEx.SelCount;
-
   with GroupsFrame.ListViewEx do
   begin
     // Edit one group: SID and attributes

@@ -27,7 +27,7 @@ var
 implementation
 
 uses
-  Ntapi.ntkeapi, UI.Colors.Old, NtUtils.WinUser, Winapi.WinNt;
+  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt;
 
 {$R *.dfm}
 
@@ -52,12 +52,12 @@ begin
     SubItems.Add(DateTimeToStr(LargeIntegerToDateTime(
       Process.Threads[i].Basic.CreateTime)));
     if Process.Threads[i].Basic.WaitReason = Suspended then
-      Color := clSuspended
+      Color := ColorSettings.clSuspended
     else
     begin
       // Check wether the thread owns any GUI objects
       if UsrxIsGuiThread(Process.Threads[i].Basic.ClientId.UniqueThread) then
-        Color := clGuiThread;
+        Color := ColorSettings.clGuiThread;
     end;
   end;
 

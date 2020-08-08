@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, UI.Colors.Old, NtUiLib.Exceptions, DelphiUiLib.Strings,
+  Ntapi.ntstatus, UI.Colors, NtUiLib.Exceptions, DelphiUiLib.Strings,
   Ntapi.ntdef;
 
 {$R *.dfm}
@@ -108,7 +108,7 @@ begin
   if Assigned(Item) and (Item is TListItemEx) then
   begin
     if Item.Checked xor (CurrentRights and AllRights[Item.Index].Value <> 0) then
-      TListItemEx(Item).Color := clStale
+      TListItemEx(Item).Color := ColorSettings.clStale
     else
       TListItemEx(Item).ColorEnabled := False;
   end;

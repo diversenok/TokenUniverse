@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors.Old, DelphiUiLib.Strings, NtUtils.Security.Sid,
+  Vcl.Graphics, UI.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
   Ntapi.ntseapi, Winapi.NtSecApi,
   DelphiUiLib.Reflection.Records, DelphiUtils.AutoObject,
   DelphiUiLib.Reflection;
@@ -83,7 +83,7 @@ end;
 
 procedure TFrameLogon.ComboOriginChange(Sender: TObject);
 begin
-  ComboOrigin.Color := clStale;
+  ComboOrigin.Color := ColorSettings.clStale;
 end;
 
 constructor TFrameLogon.Create(AOwner: TComponent);

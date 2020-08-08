@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors.Old, DelphiUiLib.Strings,
+  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Strings,
   NtUiLib.Exceptions, Ntapi.ntdef, NtUtils;
 
 {$R *.dfm}
@@ -240,7 +240,7 @@ begin
     begin
       Policy.SetFlag(i, Flag, NewState);
       FillRow(i);
-      ListView.Items[i].Color := clStale;
+      ListView.Items[i].Color := ColorSettings.clStale;
     end;
   ListView.Items.EndUpdate;
 end;

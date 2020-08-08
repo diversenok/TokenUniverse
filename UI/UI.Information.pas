@@ -126,7 +126,7 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors.Old, UI.ProcessList,
+  System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, NtUiLib.Exceptions, DelphiUiLib.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
@@ -604,9 +604,9 @@ begin
       Hint := Repr.Hint;
 
       if User.Attributes and SE_GROUP_USE_FOR_DENY_ONLY <> 0 then
-        Color := clDisabled
+        Color := ColorSettings.clDisabled
       else
-        Color := clEnabled;
+        Color := ColorSettings.clEnabled;
     end;
 
   if Token.InfoClass.Query(tdTokenRestrictedSids) then
@@ -637,7 +637,7 @@ end;
 procedure TInfoDialog.SetStaleColor(Sender: TObject);
 begin
   Assert(Sender is TComboBox);
-  (Sender as TComboBox).Color := clStale;
+  (Sender as TComboBox).Color := ColorSettings.clStale;
 end;
 
 procedure TInfoDialog.UpdateAuditTab;

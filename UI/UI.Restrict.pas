@@ -175,7 +175,6 @@ end;
 procedure TDialogRestrictToken.FormCreate(Sender: TObject);
 var
   Group: TGroup;
-  RestrInd, ItemInd: Integer;
 begin
   Assert(Assigned(Token));
 
