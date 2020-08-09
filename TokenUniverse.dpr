@@ -12,7 +12,6 @@ uses
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
-  UI.Colors.Old in 'UI\UI.Colors.Old.pas',
   UI.Prototypes in 'UI\UI.Prototypes.pas',
   TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
@@ -122,7 +121,6 @@ uses
   NtUtils.WinUser in 'NtUtilsUI\NtUtils\NtUtils.WinUser.pas',
   NtUtils.WinUser.WinstaLock in 'NtUtilsUI\NtUtils\NtUtils.WinUser.WinstaLock.pas',
   NtUiLib.Exceptions in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.pas',
-  NtUiLib.Icons in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Icons.pas',
   DelphiUtils.AutoObject in 'NtUtilsUI\NtUtils\DelphiUtils.AutoObject.pas',
   DelphiApi.Reflection in 'NtUtilsUI\NtUtils\Headers\DelphiApi.Reflection.pas',
   DelphiUtils.ExternalImport in 'NtUtilsUI\NtUtils\DelphiUtils.ExternalImport.pas',
@@ -147,7 +145,8 @@ uses
   VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {PrivilegesFrame: TFrame},
   UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
-  UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame};
+  UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame},
+  UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas';
 
 {$R *.res}
 

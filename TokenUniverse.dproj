@@ -141,7 +141,6 @@
             <Form>DialogRestrictToken</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="UI\UI.Colors.Old.pas"/>
         <DCCReference Include="UI\UI.Prototypes.pas"/>
         <DCCReference Include="Core\TU.Credentials.pas"/>
         <DCCReference Include="UI\UI.Modal.Logon.pas">
@@ -305,7 +304,6 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.WinUser.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.WinUser.WinstaLock.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Icons.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.AutoObject.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\Headers\DelphiApi.Reflection.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.ExternalImport.pas"/>
@@ -339,6 +337,7 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="NtUtilsUI\Common\UI.ProcessIcons.pas"/>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

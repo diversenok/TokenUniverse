@@ -45,7 +45,7 @@ type
     Sid: ISid;
     procedure SetUserAudit(NewAudit: IAudit);
   public
-    class procedure CreateView(SrcSid: ISid); static;
+    class procedure CreateView(AOwner: TComponent; SrcSid: ISid); static;
   end;
 
 implementation
@@ -63,14 +63,14 @@ begin
   Close;
 end;
 
-class procedure TDialogSidView.CreateView(SrcSid: ISid);
+class procedure TDialogSidView.CreateView(AOwner: TComponent; SrcSid: ISid);
 var
   Lookup: TTranslatedName;
 begin
   if not Assigned(SrcSid) then
     Exit;
 
-  with TDialogSidView.CreateChild(nil, True) do
+  with TDialogSidView.CreateChild(AOwner, True) do
   begin
     Sid := SrcSid;
 
@@ -134,7 +134,7 @@ begin
   if LsaxLookupSid(Sid.Data, Lookup).IsSuccess and (Lookup.DomainName <> '') then
   begin
     LsaxLookupName(Lookup.DomainName, DomainSid).RaiseOnError;
-    TDialogSidView.CreateView(DomainSid);
+    TDialogSidView.CreateView(Owner, DomainSid);
   end;
 end;
 
@@ -144,7 +144,7 @@ var
   Parent: ISid;
 begin
   if RtlxParentSid(Parent, Sid).IsSuccess then
-    TDialogSidView.CreateView(Parent);
+    TDialogSidView.CreateView(Owner, Parent);
 end;
 
 procedure TDialogSidView.SetUserAudit(NewAudit: IAudit);

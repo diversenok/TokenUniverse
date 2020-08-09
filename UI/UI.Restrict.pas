@@ -225,7 +225,7 @@ procedure TDialogRestrictToken.GroupsDisableFrameListViewExDblClick(
 begin
   with GroupsDisableFrame.ListViewEx do
     if Assigned(Selected) then
-      TDialogSidView.CreateView(GroupsDisableFrame[Selected.Index].Sid);
+      TDialogSidView.CreateView(Self, GroupsDisableFrame[Selected.Index].Sid);
 end;
 
 procedure TDialogRestrictToken.GroupsRestrictFrameListViewExDblClick(
@@ -233,7 +233,7 @@ procedure TDialogRestrictToken.GroupsRestrictFrameListViewExDblClick(
 begin
   with GroupsRestrictFrame.ListViewEx do
     if Assigned(Selected) then
-      TDialogSidView.CreateView(GroupsRestrictFrame[Selected.Index].Sid);
+      TDialogSidView.CreateView(Self, GroupsRestrictFrame[Selected.Index].Sid);
 end;
 
 end.

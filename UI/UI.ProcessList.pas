@@ -55,7 +55,7 @@ implementation
 
 uses
   Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes,
-  NtUiLib.Icons, NtUtils;
+  UI.ProcessIcons, NtUtils;
 
 {$R *.dfm}
 

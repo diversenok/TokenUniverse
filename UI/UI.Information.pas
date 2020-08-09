@@ -131,7 +131,7 @@ uses
   NtUtils.Objects.Snapshots, NtUiLib.Exceptions, DelphiUiLib.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  NtUiLib.AccessMasks, NtUiLib.Icons;
+  NtUiLib.AccessMasks, UI.ProcessIcons;
 
 const
   TAB_INVALIDATED = 0;
@@ -451,7 +451,7 @@ end;
 procedure TInfoDialog.EditUserDblClick(Sender: TObject);
 begin
   if Token.InfoClass.Query(tdTokenUser) then
-    TDialogSidView.CreateView(Token.InfoClass.User.Sid);
+    TDialogSidView.CreateView(Self, Token.InfoClass.User.Sid);
 end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -518,7 +518,7 @@ procedure TInfoDialog.GroupsFrameListViewExDblClick(Sender: TObject);
 begin
   with GroupsMemberFrame.ListViewEx do
     if Assigned(Selected) then
-      TDialogSidView.CreateView(GroupsMemberFrame[Selected.Index].Sid);
+      TDialogSidView.CreateView(Self, GroupsMemberFrame[Selected.Index].Sid);
 end;
 
 procedure TInfoDialog.ListViewAdvancedResize(Sender: TObject);
@@ -621,7 +621,7 @@ procedure TInfoDialog.RestrictedGroupsFrameListViewExDblClick(Sender: TObject);
 begin
   with GroupsRestrictedFrame.ListViewEx do
     if Assigned(Selected) then
-      TDialogSidView.CreateView(GroupsRestrictedFrame[Selected.Index].Sid);
+      TDialogSidView.CreateView(Self, GroupsRestrictedFrame[Selected.Index].Sid);
 end;
 
 procedure TInfoDialog.SetAuditPolicy(NewAudit: IAudit);
