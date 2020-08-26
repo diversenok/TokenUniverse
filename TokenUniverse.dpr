@@ -146,7 +146,8 @@ uses
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {PrivilegesFrame: TFrame},
   UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame},
-  UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas';
+  UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
+  UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame};
 
 {$R *.res}
 

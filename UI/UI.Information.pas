@@ -532,7 +532,7 @@ begin
   if Assigned(ListViewGeneral.Selected) and
     (ListViewGeneral.Selected.Index = 2) and Token.InfoClass.Query(tdObjectInfo)
     then
-    TDialogGrantedAccess.Execute(Self,
+    TDialogGrantedAccess.Execute(Owner,
       Token.InfoClass.ObjectInformation.GrantedAccess);
 end;
 

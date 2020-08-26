@@ -3,8 +3,8 @@ object DialogGrantedAccess: TDialogGrantedAccess
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Granted Access Rights'
-  ClientHeight = 383
-  ClientWidth = 206
+  ClientHeight = 320
+  ClientWidth = 240
   Color = clBtnFace
   Constraints.MinHeight = 200
   Constraints.MinWidth = 222
@@ -14,42 +14,40 @@ object DialogGrantedAccess: TDialogGrantedAccess
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  KeyPreview = True
   OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
+  OnKeyPress = FormKeyPress
   PixelsPerInch = 96
   TextHeight = 13
-  object ListViewAccess: TListViewEx
+  inline AccessMaskFrame: TAccessMaskFrame
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 200
-    Height = 349
-    Margins.Bottom = 31
+    Width = 234
+    Height = 314
     Align = alClient
-    Checkboxes = True
-    Columns = <
-      item
-        Width = 178
-      end>
-    MultiSelect = True
-    GroupView = True
-    ReadOnly = True
-    RowSelect = True
-    ShowColumnHeaders = False
+    Constraints.MinHeight = 200
+    Constraints.MinWidth = 180
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
-    ViewStyle = vsReport
-  end
-  object ButtonClose: TButton
-    Left = 128
-    Top = 355
-    Width = 75
-    Height = 25
-    Anchors = [akRight, akBottom]
-    Cancel = True
-    Caption = 'Close'
-    Default = True
-    ModalResult = 8
-    TabOrder = 1
+    inherited ListViewEx: TListViewEx
+      Width = 234
+      Height = 285
+    end
+    inherited Panel: TPanel
+      Top = 285
+      Width = 234
+      inherited ButtonFull: TButton
+        Left = 164
+      end
+      inherited EditMask: TEdit
+        Width = 86
+      end
+    end
   end
 end

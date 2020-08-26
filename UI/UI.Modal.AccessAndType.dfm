@@ -3,8 +3,8 @@ object DialogAccessAndType: TDialogAccessAndType
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Select access rights and token type'
-  ClientHeight = 212
-  ClientWidth = 354
+  ClientHeight = 316
+  ClientWidth = 395
   Color = clBtnFace
   Constraints.MinHeight = 250
   Constraints.MinWidth = 370
@@ -17,16 +17,13 @@ object DialogAccessAndType: TDialogAccessAndType
   OldCreateOrder = False
   Position = poMainFormCenter
   ShowHint = True
-  DesignSize = (
-    354
-    212)
   PixelsPerInch = 96
   TextHeight = 13
   object GroupBoxType: TGroupBox
-    Left = 208
+    Left = 249
     Top = 3
     Width = 140
-    Height = 149
+    Height = 251
     Anchors = [akTop, akRight, akBottom]
     Caption = 'Token Type '
     TabOrder = 0
@@ -85,8 +82,8 @@ object DialogAccessAndType: TDialogAccessAndType
     end
   end
   object ButtonOK: TButton
-    Left = 208
-    Top = 181
+    Left = 249
+    Top = 283
     Width = 66
     Height = 24
     Anchors = [akRight, akBottom]
@@ -95,20 +92,9 @@ object DialogAccessAndType: TDialogAccessAndType
     ModalResult = 1
     TabOrder = 2
   end
-  object StaticTextAccess: TStaticText
-    Left = 5
-    Top = 3
-    Width = 197
-    Height = 17
-    Alignment = taCenter
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = 'Access rights'
-    TabOrder = 5
-  end
   object ButtonCancel: TButton
-    Left = 282
-    Top = 181
+    Left = 323
+    Top = 283
     Width = 66
     Height = 24
     Anchors = [akRight, akBottom]
@@ -117,33 +103,53 @@ object DialogAccessAndType: TDialogAccessAndType
     ModalResult = 2
     TabOrder = 3
   end
-  object ListViewAccess: TListViewEx
-    Left = 5
-    Top = 24
-    Width = 197
-    Height = 180
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Checkboxes = True
-    Columns = <
-      item
-        Width = 160
-      end>
-    MultiSelect = True
-    GroupView = True
-    ReadOnly = True
-    RowSelect = True
-    ShowColumnHeaders = False
-    TabOrder = 4
-    ViewStyle = vsReport
-  end
   object CheckBoxEffective: TCheckBox
-    Left = 216
-    Top = 158
+    Left = 257
+    Top = 260
     Width = 132
     Height = 17
     Hint = 'Duplicate only currently enabled parts of the token.'
     Anchors = [akRight, akBottom]
     Caption = 'Copy &effective only'
     TabOrder = 1
+  end
+  object GroupBoxAccess: TGroupBox
+    Left = 4
+    Top = 3
+    Width = 239
+    Height = 309
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Caption = 'Access Mask '
+    TabOrder = 4
+    inline AccessMaskFrame: TAccessMaskFrame
+      AlignWithMargins = True
+      Left = 5
+      Top = 18
+      Width = 229
+      Height = 286
+      Align = alClient
+      Constraints.MinHeight = 200
+      Constraints.MinWidth = 180
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 0
+      inherited ListViewEx: TListViewEx
+        Width = 229
+        Height = 257
+      end
+      inherited Panel: TPanel
+        Top = 257
+        Width = 229
+        inherited ButtonFull: TButton
+          Left = 159
+        end
+        inherited EditMask: TEdit
+          Width = 81
+          Constraints.MinWidth = 32
+        end
+      end
+    end
   end
 end

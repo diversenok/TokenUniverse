@@ -4,30 +4,27 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics,
-  Vcl.ComCtrls, TU.Tokens, UI.Prototypes, UI.Prototypes.Forms,
-  VclEx.ListView, TU.Tokens.Types;
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens,
+  UI.Prototypes.Forms, VclEx.ListView, UI.Prototypes.AccessMask;
 
 type
   TDialogAccess = class(TChildForm)
     RadioButtonSame: TRadioButton;
-    RadioButtonMaximum: TRadioButton;
     RadioButtonSpecial: TRadioButton;
-    GroupBox1: TGroupBox;
-    StaticTextAccess: TStaticText;
-    ListViewAccess: TListViewEx;
+    GroupBoxMode: TGroupBox;
     ButtonOK: TButton;
     ButtonCancel: TButton;
-    procedure ListViewAccessChange(Sender: TObject; Item: TListItem;
-      Change: TItemChange);
-  protected
-    function GetAccess: ACCESS_MASK;
+    GroupBoxAccess: TGroupBox;
+    AccessMaskFrame: TAccessMaskFrame;
   public
     class function ExecuteDuplication(AOwner: TComponent; Source: IToken):
       IToken;
   end;
 
 implementation
+
+uses
+   TU.Tokens.Types, Ntapi.ntseapi;
 
 {$R *.dfm}
 
@@ -36,31 +33,17 @@ class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
 begin
   with TDialogAccess.Create(AOwner) do
   begin
+    AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
+
     if Source.InfoClass.Query(tdObjectInfo) then
-      TAccessMaskSource.InitAccessEntries(ListViewAccess,
-        Source.InfoClass.ObjectInformation.GrantedAccess)
-    else
-      TAccessMaskSource.InitAccessEntries(ListViewAccess, 0);
+      AccessMaskFrame.AccessMask :=
+        Source.InfoClass.ObjectInformation.GrantedAccess;
 
     ShowModal;
 
-    Result := TToken.CreateDuplicateHandle(Source, GetAccess,
+    Result := TToken.CreateDuplicateHandle(Source, AccessMaskFrame.AccessMask,
       RadioButtonSame.Checked);
   end;
-end;
-
-function TDialogAccess.GetAccess: ACCESS_MASK;
-begin
-  if RadioButtonMaximum.Checked then
-    Result := MAXIMUM_ALLOWED
-  else
-    Result := TAccessMaskSource.GetAccessMask(ListViewAccess);
-end;
-
-procedure TDialogAccess.ListViewAccessChange(Sender: TObject; Item: TListItem;
-  Change: TItemChange);
-begin
-  RadioButtonSpecial.Checked := True;
 end;
 
 end.

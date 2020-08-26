@@ -39,10 +39,13 @@ function CompareGroups(const Value1, Value2: TGroup): Boolean;
 function CompareGroupArrays(const Value1, Value2: TArray<TGroup>): Boolean;
 function CompareStatistics(const Value1, Value2: TTokenStatistics): Boolean;
 
+function TokenGenericMapping: TGenericMapping;
+
 implementation
 
 uses
-  System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Sid;
+  System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Sid,
+  NtUtils.Objects.Snapshots, DelphiUtils.Arrays, NtUtils.Objects;
 
 { TTokenTypeExHelper }
 
@@ -137,6 +140,33 @@ end;
 function CompareStatistics(const Value1, Value2: TTokenStatistics): Boolean;
 begin
   Result := (Value1.ModifiedId = Value2.ModifiedId);
+end;
+
+function TokenGenericMapping: TGenericMapping;
+var
+  Types: TArray<TObjectTypeInfo>;
+begin
+  NtxEnumerateTypes(Types).IsSuccess;
+
+  Result.GenericRead := TOKEN_DUPLICATE or TOKEN_QUERY or TOKEN_QUERY_SOURCE;
+  Result.GenericWrite := TOKEN_ADJUST_PRIVILEGES or TOKEN_ADJUST_GROUPS or
+    TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID;
+  Result.GenericExecute := TOKEN_ASSIGN_PRIMARY or TOKEN_IMPERSONATE;
+  Result.GenericAll := TOKEN_ALL_ACCESS;
+
+  // Try to use the type snapshot, but fall back to local definition if needed
+  Result := TArray.ConvertFirstOrDefault<TObjectTypeInfo, TGenericMapping>(
+    Types,
+    function (const Entry: TObjectTypeInfo; out Mapping: TGenericMapping):
+      Boolean
+    begin
+      Result := Entry.TypeName = 'Token';
+
+      if Result then
+        Mapping := Entry.Other.GenericMapping;
+    end,
+    Result
+    );
 end;
 
 end.

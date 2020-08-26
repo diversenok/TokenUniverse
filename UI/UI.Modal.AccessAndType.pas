@@ -4,9 +4,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics,
-  Vcl.ComCtrls, TU.Tokens, UI.Prototypes, UI.Prototypes.Forms,
-  VclEx.ListView, TU.Tokens.Types;
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls, TU.Tokens,
+  UI.Prototypes.Forms, VclEx.ListView, TU.Tokens.Types,
+  UI.Prototypes.AccessMask;
 
 type
   TDialogAccessAndType = class(TChildForm)
@@ -17,19 +17,17 @@ type
     RadioButtonImpersonation: TRadioButton;
     RadioButtonDelegation: TRadioButton;
     ButtonOK: TButton;
-    StaticTextAccess: TStaticText;
     ButtonCancel: TButton;
-    ListViewAccess: TListViewEx;
     CheckBoxEffective: TCheckBox;
+    GroupBoxAccess: TGroupBox;
+    AccessMaskFrame: TAccessMaskFrame;
     procedure RadioButtonClick(Sender: TObject);
   private
     FSelectedType: TTokenTypeEx;
-    function GetAccess: ACCESS_MASK;
     procedure SetSelectedType(const Value: TTokenTypeEx);
   protected
     procedure DoCreate; override;
   public
-    property SelectedAccess: ACCESS_MASK read GetAccess;
     property SelectedTokenType: TTokenTypeEx read FSelectedType write
       SetSelectedType;
     class function ExecuteDuplication(AOwner: TComponent; Source: IToken):
@@ -38,12 +36,18 @@ type
 
 implementation
 
+uses
+  Ntapi.ntseapi;
+
 {$R *.dfm}
 
 procedure TDialogAccessAndType.DoCreate;
 begin
   inherited;
-  TAccessMaskSource.InitAccessEntries(ListViewAccess, TOKEN_ALL_ACCESS);
+
+  AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
+  AccessMaskFrame.AccessMask := TOKEN_ALL_ACCESS;
+
   FSelectedType := ttPrimary;
 end;
 
@@ -57,7 +61,7 @@ begin
 
     ShowModal;
 
-    Result := TToken.CreateDuplicateToken(Source, SelectedAccess,
+    Result := TToken.CreateDuplicateToken(Source, AccessMaskFrame.AccessMask,
       SelectedTokenType, CheckBoxEffective.Checked);
   end;
 end;
@@ -69,11 +73,6 @@ begin
   RadioButtonImpersonation.Checked := (Value = ttImpersonation);
   RadioButtonDelegation.Checked := (Value = ttDelegation);
   RadioButtonPrimary.Checked := (Value = ttPrimary);
-end;
-
-function TDialogAccessAndType.GetAccess: ACCESS_MASK;
-begin
-  Result := TAccessMaskSource.GetAccessMask(ListViewAccess);
 end;
 
 procedure TDialogAccessAndType.RadioButtonClick(Sender: TObject);
