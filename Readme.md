@@ -33,17 +33,19 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [x] Filter tokens
  - [ ] Create LowBox tokens
  - [x] Created restricted tokens using Safer API
- - [ ] Search for opened handles
+ - [x] Search for opened handles
  - [x] Create anonymous token
+ - [ ] Impersonate logon session token via pipes
+ - [ ] Open clipboard token
 
 #### Highly privileged operations
- - [x] Add custom group membership while logging in users (requires SeTcbPrivilege)
- - [x] Create custom token from scratch (requires SeCreateTokenPrivilege)
+ - [x] Add custom group membership while logging in users (requires *Tcb Privilege*)
+ - [x] Create custom token from scratch (requires *Create Token Privilege*)
 
 ### Viewing
  - [x] User
  - [x] Statistics, source, flags
- - [ ] Extended flags (from access information)
+ - [x] Extended flags (TOKEN_\*)
  - [x] Restricting SIDs
  - [ ] App container SID and number
  - [ ] Capabilities
@@ -84,6 +86,12 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Compare tokens
  - [ ] Linking logon sessions to create UAC-friendly tokens
  - [ ] Logon session relation map
+
+### AppContainer profiles
+ - [ ] Viewing AppContainer information
+ - [ ] Listing AppContainer profiles per user
+ - [ ] Listing child AppContainers
+ - [ ] Creating/deleting AppContainers
 
 ## Local Security Authority
  - [x] Global audit settings
@@ -133,6 +141,8 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Child process policy
  - [ ] Job assignment
  - [x] Run as invoker compatibility
+ - [ ] AppContainer SID
+ - [ ] Capabilities
 
 ### Interface features
  - [ ] Immediate crash notification
@@ -142,6 +152,7 @@ My goal is to create a useful tool that implements almost everything I know abou
 ## Process list
  - [x] Hierarchy
  - [x] Icons
+ - [ ] Listing processes from Low integrity & AppContainer
  - [ ] Basic actions (resume/suspend, ...)
  - [ ] Customizable columns
  - [ ] Highlighting
@@ -150,11 +161,11 @@ My goal is to create a useful tool that implements almost everything I know abou
 
 ## Interface features
  - [x] Restart as SYSTEM
- - [x] Restart as SYSTEM+ (with SeCreateTokenPrivilege)
+ - [x] Restart as SYSTEM+ (with *Create Token Privilege*)
  - [ ] Customizable columns
  - [ ] Graphical hash icons
  - [x] Auto-detect inherited handles
- - [ ] Our own security editor that allows arbitrary SIDs and shows mandatory labels
+ - [ ] Our own security editor with arbitrary SIDs and mandatory label modification
  - [ ] Customizable list of suggested SIDs
  - [x] Detailed error status information
  - [ ] Detailed suggestions on errors
