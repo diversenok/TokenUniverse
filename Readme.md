@@ -88,9 +88,9 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Logon session relation map
 
 ### AppContainer profiles
- - [ ] Viewing AppContainer information
+ - [x] Viewing AppContainer information
  - [ ] Listing AppContainer profiles per user
- - [ ] Listing child AppContainers
+ - [x] Listing child AppContainers
  - [ ] Creating/deleting AppContainers
 
 ## Local Security Authority

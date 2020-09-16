@@ -343,6 +343,10 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="UI\UI.AppContainer.View.pas">
+            <Form>DialogAppContainer</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

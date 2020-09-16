@@ -147,7 +147,8 @@ uses
   UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame},
   UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
-  UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame};
+  UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame},
+  UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer};
 
 {$R *.res}
 
