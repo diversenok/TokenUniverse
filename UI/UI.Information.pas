@@ -9,7 +9,7 @@ uses
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
   TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
-  Ntapi.ntseapi, NtUtils;
+  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls;
 
 type
   TInfoDialog = class(TChildForm)
@@ -69,6 +69,8 @@ type
     PrivilegesFrame: TPrivilegesFrame;
     GroupsMemberFrame: TGroupsFrame;
     GroupsRestrictedFrame: TGroupsFrame;
+    StaticAppContainer: TStaticText;
+    EditAppContainer: TEdit;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -97,6 +99,7 @@ type
     procedure EditUserDblClick(Sender: TObject);
     procedure GroupsFrameListViewExDblClick(Sender: TObject);
     procedure RestrictedGroupsFrameListViewExDblClick(Sender: TObject);
+    procedure EditAppContainerDblClick(Sender: TObject);
   private
     Token: IToken;
     SessionSource: TSessionSource;
@@ -131,7 +134,8 @@ uses
   NtUtils.Objects.Snapshots, NtUiLib.Exceptions, DelphiUiLib.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  NtUiLib.AccessMasks, UI.ProcessIcons;
+  NtUiLib.AccessMasks, UI.ProcessIcons, NtUtils.Version,
+  UI.AppContainer.View;
 
 const
   TAB_INVALIDATED = 0;
@@ -448,10 +452,18 @@ begin
   Close;
 end;
 
+procedure TInfoDialog.EditAppContainerDblClick(Sender: TObject);
+begin
+  if Token.InfoClass.Query(tdTokenUser) and Token.InfoClass.Query(
+    tdTokenAppContainer) and Assigned(Token.InfoClass.AppContainer) then
+    TDialogAppContainer.Execute(FormMain, Token.InfoClass.User.Sid,
+      Token.InfoClass.AppContainer);
+end;
+
 procedure TInfoDialog.EditUserDblClick(Sender: TObject);
 begin
   if Token.InfoClass.Query(tdTokenUser) then
-    TDialogSidView.CreateView(Self, Token.InfoClass.User.Sid);
+    TDialogSidView.CreateView(FormMain, Token.InfoClass.User.Sid);
 end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -598,15 +610,29 @@ begin
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass^, EditUser do
     begin
-      Repr := TType.Represent(Token.InfoClass.User);
+      Repr := TType.Represent(User);
 
-      Text := Repr.Text;
-      Hint := Repr.Hint;
+      EditUser.Text := Repr.Text;
+      EditUser.Hint := Repr.Hint;
 
       if User.Attributes and SE_GROUP_USE_FOR_DENY_ONLY <> 0 then
-        Color := ColorSettings.clDisabled
+        EditUser.Color := ColorSettings.clDisabled
       else
-        Color := ColorSettings.clEnabled;
+        EditUser.Color := ColorSettings.clEnabled;
+
+      // AppContainer is user-specific
+      if not RtlOsVersionAtLeast(OsWin8) then
+        EditAppContainer.Text := 'Not supported'
+      else if Query(tdTokenAppContainer) then
+      begin
+        if not Assigned(AppContainer) then
+          EditAppContainer.Text := 'No'
+        else
+        begin
+          EditAppContainer.Text := RtlxSidToString(AppContainer.Data);
+          EditAppContainer.Enabled := True;
+        end;
+      end;
     end;
 
   if Token.InfoClass.Query(tdTokenRestrictedSids) then

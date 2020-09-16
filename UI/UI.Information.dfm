@@ -5,7 +5,7 @@ object InfoDialog: TInfoDialog
   ClientHeight = 448
   ClientWidth = 402
   Color = clBtnFace
-  Constraints.MinHeight = 437
+  Constraints.MinHeight = 484
   Constraints.MinWidth = 400
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -55,12 +55,12 @@ object InfoDialog: TInfoDialog
         AutoSize = False
         ReadOnly = True
         TabOrder = 1
-        Text = 'Unknown user'
+        Text = 'Unknown User'
         OnDblClick = EditUserDblClick
       end
       object StaticSession: TStaticText
         Left = 7
-        Top = 155
+        Top = 182
         Width = 44
         Height = 17
         Caption = 'Session:'
@@ -68,7 +68,7 @@ object InfoDialog: TInfoDialog
       end
       object StaticIntegrity: TStaticText
         Left = 7
-        Top = 182
+        Top = 209
         Width = 75
         Height = 17
         Caption = 'Integrity level:'
@@ -76,29 +76,29 @@ object InfoDialog: TInfoDialog
       end
       object ComboSession: TComboBox
         Left = 112
-        Top = 151
-        Width = 244
-        Height = 21
-        AutoComplete = False
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 2
-        Text = 'Unknown session'
-        OnChange = SetStaleColor
-      end
-      object ComboIntegrity: TComboBox
-        Left = 112
         Top = 178
         Width = 244
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
+        TabOrder = 2
+        Text = 'Unknown Session'
+        OnChange = SetStaleColor
+      end
+      object ComboIntegrity: TComboBox
+        Left = 112
+        Top = 205
+        Width = 244
+        Height = 21
+        AutoComplete = False
+        Anchors = [akLeft, akTop, akRight]
         TabOrder = 4
-        Text = 'Unknown integrity level'
+        Text = 'Unknown Integrity Level'
         OnChange = SetStaleColor
       end
       object StaticOwner: TStaticText
         Left = 9
-        Top = 290
+        Top = 317
         Width = 40
         Height = 17
         Caption = 'Owner:'
@@ -106,7 +106,7 @@ object InfoDialog: TInfoDialog
       end
       object ComboOwner: TComboBox
         Left = 112
-        Top = 286
+        Top = 313
         Width = 244
         Height = 21
         AutoComplete = False
@@ -117,7 +117,7 @@ object InfoDialog: TInfoDialog
       end
       object ComboPrimary: TComboBox
         Left = 112
-        Top = 313
+        Top = 340
         Width = 244
         Height = 21
         AutoComplete = False
@@ -128,7 +128,7 @@ object InfoDialog: TInfoDialog
       end
       object StaticPrimary: TStaticText
         Left = 9
-        Top = 317
+        Top = 344
         Width = 75
         Height = 17
         Caption = 'Primary group:'
@@ -136,7 +136,7 @@ object InfoDialog: TInfoDialog
       end
       object StaticUIAccess: TStaticText
         Left = 7
-        Top = 209
+        Top = 236
         Width = 52
         Height = 17
         Caption = 'UIAccess:'
@@ -144,7 +144,7 @@ object InfoDialog: TInfoDialog
       end
       object ComboUIAccess: TComboBox
         Left = 112
-        Top = 205
+        Top = 232
         Width = 244
         Height = 21
         Hint = 
@@ -163,7 +163,7 @@ object InfoDialog: TInfoDialog
       end
       object StaticText1: TStaticText
         Left = 7
-        Top = 236
+        Top = 263
         Width = 90
         Height = 17
         Caption = 'Mandatory policy:'
@@ -217,7 +217,7 @@ object InfoDialog: TInfoDialog
       end
       object CheckBoxNoWriteUp: TCheckBox
         Left = 112
-        Top = 234
+        Top = 261
         Width = 97
         Height = 17
         Hint = 
@@ -230,7 +230,7 @@ object InfoDialog: TInfoDialog
       end
       object CheckBoxNewProcessMin: TCheckBox
         Left = 240
-        Top = 234
+        Top = 261
         Width = 116
         Height = 17
         Hint = 
@@ -245,7 +245,7 @@ object InfoDialog: TInfoDialog
       end
       object StaticVirtualization: TStaticText
         Left = 7
-        Top = 263
+        Top = 290
         Width = 69
         Height = 17
         Caption = 'Virtualization:'
@@ -253,7 +253,7 @@ object InfoDialog: TInfoDialog
       end
       object CheckBoxVAllowed: TCheckBox
         Left = 112
-        Top = 261
+        Top = 288
         Width = 73
         Height = 17
         Caption = 'Allowed'
@@ -263,7 +263,7 @@ object InfoDialog: TInfoDialog
       end
       object CheckBoxVEnabled: TCheckBox
         Left = 240
-        Top = 261
+        Top = 288
         Width = 116
         Height = 17
         Anchors = [akTop, akRight]
@@ -274,7 +274,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetSession: TButton
         Left = 360
-        Top = 150
+        Top = 177
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -286,7 +286,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetIntegrity: TButton
         Left = 360
-        Top = 177
+        Top = 204
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -298,7 +298,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetUIAccess: TButton
         Left = 360
-        Top = 204
+        Top = 231
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -310,7 +310,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetOwner: TButton
         Left = 360
-        Top = 285
+        Top = 312
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -322,7 +322,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetPolicy: TButton
         Left = 360
-        Top = 232
+        Top = 259
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -334,7 +334,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetPrimary: TButton
         Left = 360
-        Top = 312
+        Top = 339
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -346,7 +346,7 @@ object InfoDialog: TInfoDialog
       end
       object BtnSetVEnabled: TButton
         Left = 360
-        Top = 258
+        Top = 285
         Width = 24
         Height = 23
         Anchors = [akTop, akRight]
@@ -366,6 +366,29 @@ object InfoDialog: TInfoDialog
         Images = FormMain.SmallIcons
         TabOrder = 12
         OnClick = BtnSetVAllowedClick
+      end
+      object StaticAppContainer: TStaticText
+        Left = 7
+        Top = 155
+        Width = 74
+        Height = 17
+        Caption = 'AppContainer:'
+        TabOrder = 27
+      end
+      object EditAppContainer: TEdit
+        Left = 112
+        Top = 150
+        Width = 270
+        Height = 21
+        Margins.Right = 6
+        Anchors = [akLeft, akTop, akRight]
+        AutoSelect = False
+        AutoSize = False
+        Enabled = False
+        ReadOnly = True
+        TabOrder = 28
+        Text = 'Unknown AppContainer'
+        OnDblClick = EditAppContainerDblClick
       end
     end
     object TabAdvanced: TTabSheet

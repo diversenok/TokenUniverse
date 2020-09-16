@@ -21,8 +21,8 @@ type
     tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
     tdTokenHasRestrictions, tdTokenFlags, tdTokenVirtualizationAllowed,
     tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
-    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdLogonInfo, tdObjectInfo,
-    tdHandleInfo);
+    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdTokenAppContainer,
+    tdLogonInfo, tdObjectInfo, tdHandleInfo);
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
@@ -72,6 +72,7 @@ type
     UIAccess: LongBool;
     MandatoryPolicy: Cardinal;
     IsRestricted: LongBool;
+    AppContainer: ISid;
     LogonSessionInfo: TLogonSessionCache;
     ObjectInformation: TObjectBasicInformaion;
     HandleInformation: TSystemHandleEntry;
@@ -167,6 +168,7 @@ type
     function GetObjectInfo: TObjectBasicInformaion;
     procedure SetSessionReference(const Value: LongBool);
     function GetHandleInfo: TSystemHandleEntry;
+    function GetAppContainer: ISid;
   public
     property User: TGroup read GetUser;                                         // class 1
     property Groups: TArray<TGroup> read GetGroups;                             // class 2
@@ -195,6 +197,7 @@ type
     property UIAccess: LongBool read GetUIAccess write SetUIAccess;             // class 26 #settable
     property MandatoryPolicy: Cardinal read GetMandatoryPolicy write SetMandatoryPolicy; // class 27 #settable
     // class 28 TokenLogonSid returns 0 or 1 logon sids (even if there are more)
+    property AppContainer: ISid read GetAppContainer;                           // class 31
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: TLogonSessionCache read GetLogonSessionInfo;
     property ObjectInformation: TObjectBasicInformaion read GetObjectInfo;
@@ -911,6 +914,12 @@ end;
 
 { TTokenData }
 
+function TTokenData.GetAppContainer: ISid;
+begin
+  Assert(Token.Cache.IsCached[tdTokenAppContainer]);
+  Result := Token.Cache.AppContainer;
+end;
+
 function TTokenData.GetAuditPolicy: IPerUserAudit;
 begin
   Assert(Token.Cache.IsCached[tdTokenAuditPolicy]);
@@ -1429,6 +1438,10 @@ begin
     tdTokenIsRestricted:
       Result := NtxToken.Query(Token.hxToken.Handle, TokenIsRestricted,
         Token.Cache.IsRestricted).IsSuccess;
+
+    tdTokenAppContainer:
+      Result := NtxQuerySidToken(Token.hxToken.Handle, TokenAppContainerSid,
+        Token.Cache.AppContainer).IsSuccess;
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then
