@@ -237,11 +237,11 @@ type
     function GetCache: TTokenCacheAndEvents;
     function GetCaptionChange: PStringCachingEvent;
     property Handle: IHandle read GetHandle;
+    function ConvertToReal: IToken;
     property InfoClass: PTokenData read GetInfoClassData;
     property Events: TTokenCacheAndEvents read GetCache;
     property Caption: String read GetCaption write SetCaption;
     property OnCaptionChange: PStringCachingEvent read GetCaptionChange;
-    function CanBeFreed: Boolean;
     procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
       Action: TPrivilegeAdjustAction);
     procedure GroupAdjust(Groups: TArray<TGroup>; Action: TGroupAdjustAction);
@@ -278,7 +278,8 @@ type
 
     {--------------------  TToken public section ---------------------------}
 
-    property Handle: IHandle read hxToken;
+    property Handle: IHandle read GetHandle;
+    function ConvertToReal: IToken;
 
     property InfoClass: PTokenData read GetInfoClassData;
     property Events: TTokenCacheAndEvents read GetCache;
@@ -292,14 +293,6 @@ type
     ///  <see cref="System.SysUtils.EAbort"/>.
     /// </summary>
     property OnCanClose: PTokenEvent read GetOnCanClose;
-
-    /// <summary>
-    ///  Asks all subscribed event listeners if the token can be freed.
-    /// </summary>
-    /// <exception cref="System.SysUtils.EAbort">
-    ///  Can raise <see cref="System.SysUtils.EAbort"/>.
-    /// </exception>
-    function CanBeFreed: Boolean;
 
     /// <summary> The event is called on token destruction. </summary>
     /// <remarks> Be aware of exceptions at this point. </remarks>
@@ -329,8 +322,6 @@ type
 
     {--------------------  TToken constructors  ----------------------------}
 
-    /// All the constructors can raise <see cref="TU.Common.ELocatedOSError"/>.
-
     /// <summary>
     ///  Registers in the factory and initializes cache.
     /// </summary>
@@ -344,6 +335,13 @@ type
     ///  Create a TToken object using inherited handle.
     /// </summary>
     constructor CreateByHandle(Handle: THandle);
+
+    /// <summary>
+    ///  Create a pseudo TToken object that represent a entry from a system
+    ///  handle snapshot.
+    /// </summary>
+    constructor CreatePseudo(HandleInfo: TSystemHandleEntry; ImageName: String;
+      LocalCopy: IHandle = nil);
 
     /// <summary> Opens a token of current process. </summary>
     constructor CreateOpenCurrent(Access: TAccessMask = MAXIMUM_ALLOWED);
@@ -517,8 +515,10 @@ procedure TToken.AfterConstruction;
 begin
   inherited;
   FInfoClassData.Token := Self;
-  Cache := TTokenCacheAndEvents.Create;
-  InfoClass.Query(tdObjectInfo);
+
+  if not Assigned(Cache) then
+    Cache := TTokenCacheAndEvents.Create;
+
   CompileTimeIncludeAllNtTypes;
 end;
 
@@ -544,11 +544,20 @@ begin
   NtxSafeSetThreadTokenById(TID, hxToken.Handle).RaiseOnError;
 end;
 
-function TToken.CanBeFreed: Boolean;
+function TToken.ConvertToReal: IToken;
+var
+  hxProcess: IHandle;
 begin
-  // Check whether someone wants to raise EAbort to deny token destruction
-  OnCanClose.Invoke(Self);
-  Result := True;
+  if not Assigned(hxToken) then
+  begin
+    NtxOpenProcess(hxProcess, Cache.HandleInformation.UniqueProcessId,
+      PROCESS_DUP_HANDLE).RaiseOnError;
+
+    NtxDuplicateHandleFrom(hxProcess.Handle,
+      Cache.HandleInformation.HandleValue, hxToken).RaiseOnError;
+  end;
+
+  Result := Self;
 end;
 
 constructor TToken.Create(Handle: THandle; Caption: String);
@@ -657,6 +666,22 @@ constructor TToken.CreateOpenThread(TID: NativeUInt; ImageName: String;
 begin
   NtxOpenThreadTokenById(hxToken, TID, Access, Attributes).RaiseOnError;
   FCaption := Format('Thread %d of %s', [TID, ImageName]);
+end;
+
+constructor TToken.CreatePseudo(HandleInfo: TSystemHandleEntry;
+  ImageName: String; LocalCopy: IHandle);
+begin
+  hxToken := LocalCopy;
+
+  // Add object info to the cache
+  FInfoClassData.Token := Self;
+  Cache := TTokenCacheAndEvents.Create;
+  Cache.HandleInformation := HandleInfo;
+  Cache.ObjectInformation.GrantedAccess := HandleInfo.GrantedAccess;
+  Cache.IsCached[tdHandleInfo] := True;
+  Cache.IsCached[tdObjectInfo] := True;
+
+  FCaption := Format('Handle %d @ %s', [HandleInfo.HandleValue, ImageName]);
 end;
 
 constructor TToken.CreateQueryWts(SessionID: Cardinal; Dummy: Boolean = True);
@@ -1056,17 +1081,15 @@ end;
 
 function TTokenData.Query(DataClass: TTokenDataClass): Boolean;
 begin
-  if Token.Cache.IsCached[DataClass] or ReQuery(DataClass) then
-    Result := True
-  else
-    Result := False;
+  Result := Token.Cache.IsCached[DataClass] or
+    (Assigned(Token.hxToken) and ReQuery(DataClass));
 end;
 
 function TTokenData.QueryString(StringClass: TTokenStringClass;
   Detailed: Boolean): String;
 begin
   if not Query(StringClassToDataClass[StringClass]) then
-    Exit('Unknown');
+    Exit('');
 
   {$REGION 'Converting cached data to string'}
   case StringClass of
@@ -1426,7 +1449,7 @@ begin
       Result := NtxEnumerateHandles(Handles).IsSuccess;
       if Result then
       begin
-        TArray.Filter<TSystemHandleEntry>(Handles,
+        TArray.FilterInline<TSystemHandleEntry>(Handles,
           ByProcess(NtCurrentProcessId));
 
         Result := NtxFindHandleEntry(Handles, NtCurrentProcessId,

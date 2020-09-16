@@ -503,12 +503,9 @@ end;
 
 procedure TTokenViewSource.Delete(Index: Integer);
 begin
-  if GetToken(Index).CanBeFreed then
-  begin
-    // This will delete the item, the assiciated row object, unsubscribe
-    // all column events and close the token
-    ListView.Items.Delete(Index);
-  end;
+  // This will delete the item, the assiciated row object, unsubscribe
+  // all column events and close the token
+  ListView.Items.Delete(Index);
 end;
 
 destructor TTokenViewSource.Destroy;

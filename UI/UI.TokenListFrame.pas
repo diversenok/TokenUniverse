@@ -46,6 +46,7 @@ begin
   Item.Caption := Token.Caption;
   Item.OwnedIData := Token;
   Item.GroupID := Group;
+  Item.Data := Pointer(Group);
 
   Item.SubItems.Add(Token.InfoClass.QueryString(tsTokenType));
   Item.SubItems.Add(Token.InfoClass.QueryString(tsAccess));
@@ -61,6 +62,7 @@ procedure TFrameTokenList.ClearAll;
 begin
   ListViewTokens.Items.Clear;
   ListViewTokens.Groups.Clear;
+  SearchBox.Text := '';
 end;
 
 constructor TFrameTokenList.Create(AOwner: TComponent);
@@ -75,8 +77,7 @@ end;
 procedure TFrameTokenList.DeleteToken(Item: TListItemEx;
   SelectNext: Boolean = False);
 begin
-  if GetToken(Item).CanBeFreed then
-    Item.Delete;
+  Item.Delete;
 
   {if SelectNext and (OriginalIndex < ListViewTokens.Items.Count) then
     ListViewTokens.Items[OriginalIndex].Selected := True;}
@@ -84,7 +85,10 @@ end;
 
 function TFrameTokenList.GetSelectedToken: IToken;
 begin
-  Result := IToken(ListViewTokens.Selected.OwnedIData);
+  if Assigned(ListViewTokens.Selected) then
+    Result := IToken(ListViewTokens.Selected.OwnedIData)
+  else
+    Result := nil;
 end;
 
 function TFrameTokenList.GetToken(Item: TListItemEx): IToken;
@@ -105,16 +109,16 @@ var
 begin
   SearchPattern := String(SearchBox.Text).ToLower;
 
-  ListViewTokens.GroupView := SearchPattern <> '';
   SearchBox.RightButton.Visible := SearchPattern <> '';
 
-  if ListViewTokens.GroupView then
-    for i := 0 to ListViewTokens.Items.Count - 1 do
-      with ListViewTokens.Items[i] do
-        if Matches(SearchPattern, ComboBoxColumn.ItemIndex - 1) then
-          GroupID := 0
-        else
-          GroupID := -1;
+  for i := 0 to ListViewTokens.Items.Count - 1 do
+    with ListViewTokens.Items[i] do
+      if SearchPattern = '' then
+        GroupID := Integer(ListViewTokens.Items[i].Data)
+      else if Matches(SearchPattern, ComboBoxColumn.ItemIndex - 1) then
+        GroupID := 0
+      else
+        GroupID := -1;
 end;
 
 procedure TFrameTokenList.SearchBoxRightButtonClick(Sender: TObject);
