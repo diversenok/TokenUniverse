@@ -103,7 +103,7 @@ begin
   lnkUser.Caption := 'User: <a>' + LsaxSidToString(User.Data) + '</a>';
   tbxSid.Text := RtlxSidToString(AppContainer.Data);
 
-  if UnvxQueryAppContainer(Info, User.Data, AppContainer.Data).IsSuccess then
+  if UnvxQueryAppContainer(Info, AppContainer.Data, User.Data).IsSuccess then
   begin
     tbxName.Text := Info.FullName;
     tbxDispName.Text := Info.DisplayName;
@@ -127,16 +127,16 @@ begin
       Exit;
 
     // Delayed loading of child AppContainers
-    if UnvxEnumerateChildrenAppContainer(Children, User.Data,
-      AppContainer.Data).IsSuccess then
+    if UnvxEnumerateChildrenAppContainer(Children, AppContainer.Data,
+      User.Data).IsSuccess then
     begin
       lvChildren.Items.BeginUpdate;
 
       for i := 0 to High(Children) do
         with lvChildren.Items.Add do
         begin
-          if UnvxQueryAppContainer(ChildInfo, User.Data,
-            Children[i].Data).IsSuccess then
+          if UnvxQueryAppContainer(ChildInfo, Children[i].Data,
+            User.Data).IsSuccess then
             Caption := ChildInfo.Name
           else
             Caption := RtlxSidToString(Children[i].Data);

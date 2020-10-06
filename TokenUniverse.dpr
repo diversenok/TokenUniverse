@@ -151,7 +151,8 @@ uses
   NtUtils.Processes.Create.Wdc in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wdc.pas',
   NtUtils.Processes.Create.Win32 in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas',
   NtUtils.Processes.Create.Wmi in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wmi.pas',
-  TU.Exec in 'Core\TU.Exec.pas';
+  TU.Exec in 'Core\TU.Exec.pas',
+  UI.AppContainer.List in 'UI\UI.AppContainer.List.pas' {DialogACProfiles};
 
 {$R *.res}
 

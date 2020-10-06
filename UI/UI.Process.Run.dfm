@@ -19,6 +19,9 @@ object DialogRun: TDialogRun
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
+  DesignSize = (
+    331
+    390)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -34,23 +37,33 @@ object DialogRun: TDialogRun
     TabOrder = 2
     object TabMethod: TTabSheet
       Caption = 'Method'
+      DesignSize = (
+        317
+        279)
       object LabelOther: TLabel
         Left = 8
-        Top = 185
+        Top = 213
         Width = 76
         Height = 13
         Caption = 'Other methods:'
       end
       object LabelCred: TLabel
         Left = 8
-        Top = 130
+        Top = 158
         Width = 121
         Height = 13
         Caption = 'Using explicit credentials:'
       end
+      object LabelAppContainer: TLabel
+        Left = 8
+        Top = 32
+        Width = 70
+        Height = 13
+        Caption = 'AppContainer:'
+      end
       object RadioButtonRtl: TRadioButton
         Left = 24
-        Top = 97
+        Top = 125
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -60,7 +73,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonShell: TRadioButton
         Left = 24
-        Top = 204
+        Top = 232
         Width = 113
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -70,7 +83,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWdc: TRadioButton
         Left = 24
-        Top = 227
+        Top = 255
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -80,7 +93,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWmi: TRadioButton
         Left = 24
-        Top = 74
+        Top = 102
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -90,7 +103,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonAsUser: TRadioButton
         Left = 24
-        Top = 28
+        Top = 56
         Width = 154
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -102,7 +115,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWithToken: TRadioButton
         Left = 24
-        Top = 51
+        Top = 79
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -112,7 +125,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWithLogon: TRadioButton
         Left = 24
-        Top = 149
+        Top = 177
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -123,7 +136,7 @@ object DialogRun: TDialogRun
       end
       object CheckBoxRunas: TCheckBox
         Left = 184
-        Top = 204
+        Top = 232
         Width = 116
         Height = 15
         Anchors = [akTop]
@@ -144,7 +157,7 @@ object DialogRun: TDialogRun
       end
       object CheckBoxRunAsInvoker: TCheckBox
         Left = 184
-        Top = 28
+        Top = 56
         Width = 116
         Height = 17
         Hint = 
@@ -156,10 +169,35 @@ object DialogRun: TDialogRun
         State = cbGrayed
         TabOrder = 9
       end
+      object EditAppContainer: TEdit
+        Left = 84
+        Top = 29
+        Width = 133
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        ReadOnly = True
+        TabOrder = 10
+        Text = 'No'
+      end
+      object ButtonAC: TButton
+        Left = 223
+        Top = 27
+        Width = 83
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Choose'
+        DropDownMenu = PopupClearAC
+        Style = bsSplitButton
+        TabOrder = 11
+        OnClick = ButtonACClick
+      end
     end
     object TabParams: TTabSheet
       Caption = 'Parameters'
       ImageIndex = 4
+      DesignSize = (
+        317
+        279)
       object LabelDesktop: TLabel
         Left = 4
         Top = 100
@@ -292,6 +330,9 @@ object DialogRun: TDialogRun
     object TabParent: TTabSheet
       Caption = 'Parent process'
       ImageIndex = 2
+      DesignSize = (
+        317
+        279)
       object ButtonChooseParent: TButton
         Left = 223
         Top = 14
@@ -388,6 +429,14 @@ object DialogRun: TDialogRun
     object MenuClearParent: TMenuItem
       Caption = 'Clear'
       OnClick = MenuClearParentClick
+    end
+  end
+  object PopupClearAC: TPopupMenu
+    Left = 263
+    Top = 251
+    object MenuClearAC: TMenuItem
+      Caption = 'Clear'
+      OnClick = MenuClearACClick
     end
   end
 end

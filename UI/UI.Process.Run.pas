@@ -53,6 +53,11 @@ type
     MenuClearParent: TMenuItem;
     CheckBoxNewConsole: TCheckBox;
     CheckBoxRunAsInvoker: TCheckBox;
+    EditAppContainer: TEdit;
+    LabelAppContainer: TLabel;
+    ButtonAC: TButton;
+    PopupClearAC: TPopupMenu;
+    MenuClearAC: TMenuItem;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -66,10 +71,13 @@ type
     procedure ButtonChooseParentClick(Sender: TObject);
     procedure MenuClearParentClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure ButtonACClick(Sender: TObject);
+    procedure MenuClearACClick(Sender: TObject);
   private
     ExecMethod: TCreateProcessMethod;
     FToken: IToken;
     hxParentProcess: IHandle;
+    AppContainerSid: ISid;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(const NewCaption: String);
     procedure SetToken(const Value: IToken);
@@ -82,13 +90,31 @@ type
 implementation
 
 uses
-  Winapi.Shlwapi, UI.Information, UI.ProcessList, TU.Exec,
-  Ntapi.ntpsapi, NtUtils.WinUser, NtUtils.Processes, NtUiLib.Exceptions,
+  Winapi.Shlwapi, Ntapi.ntpsapi, NtUtils.WinUser, Ntapi.ntseapi,
+  NtUtils.Processes, NtUiLib.Exceptions, NtUtils.Tokens.Query,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Wmi,
-  NtUtils.Processes.Create.Wdc;
+  NtUtils.Processes.Create.Wdc, NtUtils.Profiles, TU.Exec,
+  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm;
 
 {$R *.dfm}
+
+procedure TDialogRun.ButtonACClick(Sender: TObject);
+var
+  hToken: THandle;
+  User: ISid;
+begin
+  if Assigned(FToken) then
+    hToken := FToken.Handle.Handle
+  else
+    hToken := NtCurrentEffectiveToken;
+
+  NtxQuerySidToken(hToken, TokenUser, User).RaiseOnError;
+
+  AppContainerSid := TDialogACProfiles.ExecuteSelect(FormMain, User);
+  EditAppContainer.Text := UnvxAppContainerToString(AppContainerSid.Data,
+    User.Data);
+end;
 
 procedure TDialogRun.ButtonBrowseClick(Sender: TObject);
 begin
@@ -124,6 +150,7 @@ begin
   Options.CurrentDirectory := EditDir.Text;
   Options.Desktop := ComboBoxDesktop.Text;
   Options.Attributes.hxParentProcess := hxParentProcess;
+  Options.Attributes.AppContainer := AppContainerSid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
   Options.WindowMode := TShowMode(ComboBoxShowMode.ItemIndex);
 
@@ -223,6 +250,12 @@ procedure TDialogRun.LinkLabelTokenLinkClick(Sender: TObject;
 begin
   if Assigned(FToken) then
     TInfoDialog.CreateFromToken(Self, FToken);
+end;
+
+procedure TDialogRun.MenuClearACClick(Sender: TObject);
+begin
+  AppContainerSid := nil;
+  EditAppContainer.Text := 'No';
 end;
 
 procedure TDialogRun.MenuClearParentClick(Sender: TObject);

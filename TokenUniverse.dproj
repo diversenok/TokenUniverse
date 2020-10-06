@@ -350,6 +350,10 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wmi.pas"/>
         <DCCReference Include="Core\TU.Exec.pas"/>
+        <DCCReference Include="UI\UI.AppContainer.List.pas">
+            <Form>DialogACProfiles</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>
@@ -380,21 +384,33 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="Win32\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
-                <DeployFile LocalName="TokenUniverse.todo" Configuration="Debug" Class="ProjectFile"/>
                 <DeployFile LocalName="TokenUniverse.todo" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win64">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win64\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win64\Release\TokenUniverse.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>TokenUniverse.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>TokenUniverse.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="Win32\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="TokenUniverse.todo" Configuration="Debug" Class="ProjectFile"/>
+                <DeployFile LocalName="TokenUniverse.todo" Configuration="Release" Class="ProjectFile">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win64\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
