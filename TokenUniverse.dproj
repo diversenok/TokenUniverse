@@ -259,12 +259,6 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Access.Expected.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Debug.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Environment.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Nt.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Shell.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Wdc.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Win32.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Exec.Wmi.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Files.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Job.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Ldr.pas"/>
@@ -321,7 +315,6 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Strings.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Dialog.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Prototypes.Forms.pas"/>
@@ -347,6 +340,16 @@
             <Form>DialogAppContainer</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.ObjBase.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.ObjIdl.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Com.Dispatch.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Native.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Shell.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wdc.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wmi.pas"/>
+        <DCCReference Include="Core\TU.Exec.pas"/>
         <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
             <Form>NtUtils.ErrorMsg.res</Form>
         </RcCompile>

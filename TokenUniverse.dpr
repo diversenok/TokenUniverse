@@ -76,12 +76,6 @@ uses
   NtUtils.Access.Expected in 'NtUtilsUI\NtUtils\NtUtils.Access.Expected.pas',
   NtUtils.Debug in 'NtUtilsUI\NtUtils\NtUtils.Debug.pas',
   NtUtils.Environment in 'NtUtilsUI\NtUtils\NtUtils.Environment.pas',
-  NtUtils.Exec.Nt in 'NtUtilsUI\NtUtils\NtUtils.Exec.Nt.pas',
-  NtUtils.Exec in 'NtUtilsUI\NtUtils\NtUtils.Exec.pas',
-  NtUtils.Exec.Shell in 'NtUtilsUI\NtUtils\NtUtils.Exec.Shell.pas',
-  NtUtils.Exec.Wdc in 'NtUtilsUI\NtUtils\NtUtils.Exec.Wdc.pas',
-  NtUtils.Exec.Win32 in 'NtUtilsUI\NtUtils\NtUtils.Exec.Win32.pas',
-  NtUtils.Exec.Wmi in 'NtUtilsUI\NtUtils\NtUtils.Exec.Wmi.pas',
   NtUtils.Files in 'NtUtilsUI\NtUtils\NtUtils.Files.pas',
   NtUtils.Job in 'NtUtilsUI\NtUtils\NtUtils.Job.pas',
   NtUtils.Ldr in 'NtUtilsUI\NtUtils\NtUtils.Ldr.pas',
@@ -138,7 +132,6 @@ uses
   DelphiUiLib.Strings in 'NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Strings.pas',
   NtUiLib.Exceptions.Messages in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.pas',
   NtUiLib.Exceptions.Dialog in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Dialog.pas',
-  NtUtils.Processes.Create.Win32 in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas',
   NtUiLib.Exceptions.Report in 'NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas',
   DelphiUiLib.Reflection.Records in 'NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas',
   UI.Prototypes.Forms in 'NtUtilsUI\Common\UI.Prototypes.Forms.pas',
@@ -148,7 +141,17 @@ uses
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame},
   UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
   UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame},
-  UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer};
+  UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer},
+  Winapi.ObjBase in 'NtUtilsUI\NtUtils\Headers\Winapi.ObjBase.pas',
+  Winapi.ObjIdl in 'NtUtilsUI\NtUtils\Headers\Winapi.ObjIdl.pas',
+  NtUtils.Com.Dispatch in 'NtUtilsUI\NtUtils\NtUtils.Com.Dispatch.pas',
+  NtUtils.Processes.Create.Native in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Native.pas',
+  NtUtils.Processes.Create in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.pas',
+  NtUtils.Processes.Create.Shell in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Shell.pas',
+  NtUtils.Processes.Create.Wdc in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wdc.pas',
+  NtUtils.Processes.Create.Win32 in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Win32.pas',
+  NtUtils.Processes.Create.Wmi in 'NtUtilsUI\NtUtils\NtUtils.Processes.Create.Wmi.pas',
+  TU.Exec in 'Core\TU.Exec.pas';
 
 {$R *.res}
 

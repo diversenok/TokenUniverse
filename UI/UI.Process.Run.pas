@@ -5,11 +5,12 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
-  Vcl.ExtCtrls, Vcl.Menus, NtUtils.Exec, TU.Tokens, NtUtils.Environment,
-  NtUtils.Objects, Winapi.WinUser, NtUtils, Winapi.ProcessThreadsApi;
+  Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment,
+  NtUtils.Objects, Winapi.WinUser, NtUtils, Winapi.ProcessThreadsApi,
+  NtUtils.Processes.Create;
 
 type
-  TDialogRun = class(TChildForm, IExecProvider)
+  TDialogRun = class(TChildForm)
     PageControl: TPageControl;
     TabMethod: TTabSheet;
     TabEnv: TTabSheet;
@@ -66,25 +67,7 @@ type
     procedure MenuClearParentClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    // IExecProvider implementation
-    function Provides(Parameter: TExecParam): Boolean;
-    function Application: String;
-    function Parameters: String;
-    function CurrentDircetory: String;
-    function Desktop: String;
-    function Token: IHandle;
-    function ParentProcess: IHandle;
-    function LogonFlags: TProcessLogonFlags;
-    function InheritHandles: Boolean;
-    function CreateSuspended: Boolean;
-    function Breakaway: Boolean;
-    function NewConsole: Boolean;
-    function RequireElevation: Boolean;
-    function ShowWindowMode: TShowMode;
-    function RunAsInvoker: Boolean;
-    function Environment: IEnvironment;
-  private
-    ExecMethod: TExecMethodClass;
+    ExecMethod: TCreateProcessMethod;
     FToken: IToken;
     hxParentProcess: IHandle;
     procedure UpdateEnabledState;
@@ -99,21 +82,13 @@ type
 implementation
 
 uses
-  Winapi.Shlwapi, NtUtils.Exec.Win32, NtUtils.Exec.Shell, NtUtils.Exec.Wdc,
-  NtUtils.Exec.Wmi, NtUtils.Exec.Nt, UI.Information, UI.ProcessList,
-  Ntapi.ntpsapi, NtUtils.WinUser, NtUtils.Processes, NtUiLib.Exceptions;
+  Winapi.Shlwapi, UI.Information, UI.ProcessList, TU.Exec,
+  Ntapi.ntpsapi, NtUtils.WinUser, NtUtils.Processes, NtUiLib.Exceptions,
+  NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
+  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Wmi,
+  NtUtils.Processes.Create.Wdc;
 
 {$R *.dfm}
-
-function TDialogRun.Application: String;
-begin
-  Result := EditExe.Text;
-end;
-
-function TDialogRun.Breakaway: Boolean;
-begin
-  Result := CheckBoxBreakaway.Checked;
-end;
 
 procedure TDialogRun.ButtonBrowseClick(Sender: TObject);
 begin
@@ -140,13 +115,51 @@ end;
 
 procedure TDialogRun.ButtonRunClick(Sender: TObject);
 var
+  Options: TCreateProcessOptions;
   ProcInfo: TProcessInfo;
 begin
-  if Assigned(ExecMethod) then
+  Options := Default(TCreateProcessOptions);
+  Options.Application := EditExe.Text;
+  Options.Parameters := EditParams.Text;
+  Options.CurrentDirectory := EditDir.Text;
+  Options.Desktop := ComboBoxDesktop.Text;
+  Options.Attributes.hxParentProcess := hxParentProcess;
+  Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
+  Options.WindowMode := TShowMode(ComboBoxShowMode.ItemIndex);
+
+  if Assigned(FToken) then
+    Options.hxToken := FToken.Handle;
+
+  if CheckBoxBreakaway.Checked then
+    Options.Flags := Options.Flags or PROCESS_OPTION_BREAKAWAY_FROM_JOB;
+
+  if CheckBoxSuspended.Checked then
+    Options.Flags := Options.Flags or PROCESS_OPTION_SUSPENDED;
+
+  if CheckBoxInherit.Checked then
+    Options.Flags := Options.Flags or PROCESS_OPTION_INHERIT_HANDLES;
+
+  if CheckBoxNewConsole.Checked then
+    Options.Flags := Options.Flags or PROCESS_OPTION_NEW_CONSOLE;
+
+  if ComboBoxShowMode.ItemIndex <> Integer(SW_SHOW_NORMAL) then
+    Options.Flags := Options.Flags or PROCESS_OPTION_USE_WINDOW_MODE;
+
+  if CheckBoxRunAsInvoker.State <> cbGrayed then
   begin
-    ExecMethod.Execute(Self, ProcInfo).RaiseOnError;
-    // TODO: check that the process didn't crash immediately
-  end
+    if CheckBoxRunAsInvoker.Checked then
+      Options.Flags := Options.Flags or PROCESS_OPTION_RUN_AS_INVOKER_ON
+    else
+      Options.Flags := Options.Flags or PROCESS_OPTION_RUN_AS_INVOKER_OFF;
+  end;
+
+  if CheckBoxRunas.Checked then
+    Options.Flags := Options.Flags or PROCESS_OPTION_REQUIRE_ELEVATION;
+
+  // TODO: check that the process didn't crash immediately
+
+  if Assigned(ExecMethod) then
+    ExecMethod(Options, ProcInfo).RaiseOnError
   else
     raise Exception.Create('No exec method available');
 end;
@@ -154,45 +167,28 @@ end;
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
 begin
   if Sender = RadioButtonAsUser then
-    ExecMethod := TExecCreateProcessAsUser
+    ExecMethod := AdvxCreateProcess
   else if Sender = RadioButtonWithToken then
-    ExecMethod := TExecCreateProcessWithToken
+    ExecMethod := AdvxCreateProcessWithToken
+  else if Sender = RadioButtonWithLogon then
+    ExecMethod := AdvxCreateProcessWithLogon
   else if Sender = RadioButtonRtl then
-    ExecMethod := TExecRtlCreateUserProcess
+    ExecMethod := RtlxCreateUserProcess
   else if Sender = RadioButtonShell then
-    ExecMethod := TExecShellExecute
+    ExecMethod := ShlxExecute
   else if Sender = RadioButtonWdc then
-    ExecMethod := TExecCallWdc
+    ExecMethod := WdcxCreateProcess
   else if Sender = RadioButtonWMI then
-    ExecMethod := TExecCallWmi
+    ExecMethod := WmixCreateProcess
   else
     ExecMethod := nil;
+
   UpdateEnabledState;
 end;
 
 constructor TDialogRun.Create(AOwner: TComponent);
 begin
   inherited CreateChild(AOwner, True);
-end;
-
-function TDialogRun.CreateSuspended: Boolean;
-begin
-  Result := CheckBoxSuspended.Checked;
-end;
-
-function TDialogRun.CurrentDircetory: String;
-begin
-  Result := EditDir.Text;
-end;
-
-function TDialogRun.Desktop: String;
-begin
-  Result := ComboBoxDesktop.Text;
-end;
-
-function TDialogRun.Environment: IEnvironment;
-begin
-  Result := nil; // TODO: Environment editor
 end;
 
 procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -222,22 +218,11 @@ begin
     ButtonBrowse.Click;
 end;
 
-function TDialogRun.InheritHandles: Boolean;
-begin
-  Result := CheckBoxInherit.Checked;
-end;
-
 procedure TDialogRun.LinkLabelTokenLinkClick(Sender: TObject;
   const Link: string; LinkType: TSysLinkType);
 begin
   if Assigned(FToken) then
     TInfoDialog.CreateFromToken(Self, FToken);
-end;
-
-function TDialogRun.LogonFlags: TProcessLogonFlags;
-begin
-  // 0, LOGON_WITH_PROFILE, LOGON_NETCREDENTIALS_ONLY
-  Result := ComboBoxLogonFlags.ItemIndex;
 end;
 
 procedure TDialogRun.MenuClearParentClick(Sender: TObject);
@@ -256,63 +241,9 @@ begin
   EditExe.Text := ParamStr(0);
 end;
 
-function TDialogRun.NewConsole: Boolean;
-begin
-  Result := CheckBoxNewConsole.Checked;
-end;
-
 procedure TDialogRun.OnCaptionChange(const NewCaption: String);
 begin
   LinkLabelToken.Caption := 'Using token: <a>' + NewCaption + '</a>';
-end;
-
-function TDialogRun.Parameters: String;
-begin
-  Result := EditParams.Text;
-end;
-
-function TDialogRun.ParentProcess: IHandle;
-begin
-  Result := hxParentProcess;
-end;
-
-function TDialogRun.Provides(Parameter: TExecParam): Boolean;
-begin
-  case Parameter of
-    ppDesktop, ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppNewConsole, ppRequireElevation:
-      Result := True;
-
-    ppParameters:
-      Result := EditParams.Text <> '';
-
-    ppCurrentDirectory:
-      Result := EditDir.Text <> '';
-
-    ppToken:
-      Result := Assigned(FToken);
-
-    ppParentProcess:
-      Result := Assigned(hxParentProcess);
-
-    ppShowWindowMode:
-      Result := ComboBoxShowMode.ItemIndex <> Integer(SW_SHOW_NORMAL);
-
-    ppRunAsInvoker:
-      Result := CheckBoxRunAsInvoker.State <> cbGrayed;
-  else
-    Result := False;
-  end;
-end;
-
-function TDialogRun.RequireElevation: Boolean;
-begin
-  Result := CheckBoxRunas.Checked;
-end;
-
-function TDialogRun.RunAsInvoker: Boolean;
-begin
-  Result := CheckBoxRunAsInvoker.Checked;
 end;
 
 procedure TDialogRun.SetToken(const Value: IToken);
@@ -329,18 +260,6 @@ begin
     Value.OnCaptionChange.Subscribe(OnCaptionChange);
     OnCaptionChange(Value.Caption);
   end;
-end;
-
-function TDialogRun.ShowWindowMode: TShowMode;
-begin
-  // SW_HIDE..SW_SHOWMAXIMIZED
-  Result := TShowMode(ComboBoxShowMode.ItemIndex);
-end;
-
-function TDialogRun.Token: IHandle;
-begin
-  if Assigned(FToken) then
-    Result := FToken.Handle
 end;
 
 procedure TDialogRun.UpdateDesktopList;
@@ -382,43 +301,23 @@ begin
 end;
 
 procedure TDialogRun.UpdateEnabledState;
+var
+  SupportedOptions: TExecParamSet;
 begin
-  EditParams.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppParameters);
+  SupportedOptions := ExecSupports(ExecMethod);
 
-  EditDir.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppCurrentDirectory);
-
-  ComboBoxDesktop.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppDesktop);
-
-  ComboBoxLogonFlags.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppLogonFlags);
-
-  CheckBoxInherit.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppInheritHandles);
-
-  CheckBoxSuspended.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppCreateSuspended);
-
-  CheckBoxBreakaway.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppBreakaway);
-
-  CheckBoxNewConsole.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppNewConsole);
-
-  CheckBoxRunas.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppRequireElevation);
-
-  ComboBoxShowMode.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppShowWindowMode);
-
-  CheckBoxRunAsInvoker.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppRunAsInvoker);
-
-  EditParent.Enabled := Assigned(ExecMethod) and
-    ExecMethod.Supports(ppParentProcess);
-  ButtonChooseParent.Enabled := EditParent.Enabled;
+  EditDir.Enabled := ppCurrentDirectory in SupportedOptions;
+  ComboBoxDesktop.Enabled := ppDesktop in SupportedOptions;
+  ComboBoxLogonFlags.Enabled := ppLogonFlags in SupportedOptions;
+  CheckBoxInherit.Enabled := ppInheritHandles in SupportedOptions;
+  CheckBoxSuspended.Enabled := ppCreateSuspended in SupportedOptions;
+  CheckBoxBreakaway.Enabled := ppBreakaway in SupportedOptions;
+  CheckBoxNewConsole.Enabled := ppNewConsole in SupportedOptions;
+  CheckBoxRunas.Enabled := ppRequireElevation in SupportedOptions;
+  ComboBoxShowMode.Enabled := ppShowWindowMode in SupportedOptions;
+  CheckBoxRunAsInvoker.Enabled := ppRunAsInvoker in SupportedOptions;
+  EditParent.Enabled := ppParentProcess in SupportedOptions;
+  ButtonChooseParent.Enabled := ppParentProcess in SupportedOptions;
 end;
 
 end.

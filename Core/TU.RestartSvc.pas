@@ -29,11 +29,11 @@ procedure ReSvcRunInSession(ScvParams: TArray<String>);
 implementation
 
 uses
-  Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi,
+  Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
-  NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Exec, NtUtils.Exec.Shell,
-  NtUtils.Exec.Win32, NtUtils.Processes.Query, Ntapi.ntpsapi,
-  NtUtils.Tokens.Query;
+  NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Processes.Query,
+  NtUtils.Tokens.Query, NtUtils.Processes.Create,
+  NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Win32;
 
 { Restart Service client functions }
 
@@ -68,29 +68,23 @@ end;
 
 procedure ReSvcDelegate(RestartMethod: TRestartMethod);
 var
-  Provider: TDefaultExecProvider;
+  Options: TCreateProcessOptions;
   ProcessInfo: TProcessInfo;
 begin
-  Provider := TDefaultExecProvider.Create;
-
-  Provider.UseParams := [ppParameters, ppRequireElevation];
-  Provider.strApplication := ParamStr(0);
-  Provider.bRequireElevation := True;
+  Options := Default(TCreateProcessOptions);
+  Options.Application := ParamStr(0);
+  Options.Flags := PROCESS_OPTION_REQUIRE_ELEVATION;
 
   // The parameter states that the execution of the service was delegated
   case RestartMethod of
-    rmElevate:
-      Provider.strParameters := '';
-
     rmDelegateSystem:
-      Provider.strParameters := DELEGATE_PARAM;
+      Options.Parameters := DELEGATE_PARAM;
 
     rmDelegateSystemPlus:
-      Provider.strParameters := DELEGATE_PARAM_SYSPLUS;
+      Options.Parameters := DELEGATE_PARAM_SYSPLUS;
   end;
 
-  TExecShellExecute.Execute(Provider, ProcessInfo).RaiseOnError;
-  // No need to free Provider since the interface will free it automatically
+  ShlxExecute(Options, ProcessInfo).RaiseOnError;
 end;
 
 { Restart Service server functions }
@@ -129,9 +123,7 @@ begin
       TOKEN_DUPLICATE).RaiseOnError;
 
   // Duplicate
-  NtxDuplicateToken(Result, hxToken.Handle, TOKEN_ADJUST_DEFAULT or
-    TOKEN_ADJUST_SESSIONID or TOKEN_QUERY or TOKEN_DUPLICATE or
-    TOKEN_ASSIGN_PRIMARY, TokenPrimary).RaiseOnError;
+  NtxDuplicateToken(Result, hxToken.Handle, TokenPrimary).RaiseOnError;
 
   // Change session
   NtxSetToken(Result.Handle, TokenSessionId, @SessionId,
@@ -140,7 +132,7 @@ end;
 
 procedure ReSvcRunInSession(ScvParams: TArray<String>);
 var
-  Provider: TDefaultExecProvider;
+  Options: TCreateProcessOptions;
   ProcessInfo: TProcessInfo;
   Session: Integer;
   {$IFDEF DEBUG}
@@ -148,24 +140,22 @@ var
   Status: TNtxStatus;
   {$ENDIF}
 begin
-  Provider := TDefaultExecProvider.Create;
-
-  Provider.UseParams := [ppDesktop, ppToken];
-  Provider.strApplication := ParamStr(0);
+  Options := Default(TCreateProcessOptions);
+  Options.Application := ParamStr(0);
 
   if (Length(ScvParams) >= 2) and TryStrToInt(ScvParams[1], Session) then
-    Provider.hxToken := PrepareToken(Session)
+    Options.hxToken := PrepareToken(Session)
   else
-    Provider.hxToken := PrepareToken(0);
+    Options.hxToken := PrepareToken(0);
 
   // TODO: determine interactive session and active desktop
 
   if Length(ScvParams) >= 3 then
-    Provider.strDesktop := ScvParams[2]
+    Options.Desktop := ScvParams[2]
   else
-    Provider.strDesktop := 'WinSta0\Default';
+    Options.Desktop := 'WinSta0\Default';
 
-  TExecCreateProcessAsUser.Execute(Provider, ProcessInfo).RaiseOnError;
+  AdvxCreateProcess(Options, ProcessInfo).RaiseOnError;
 
   {$IFDEF DEBUG}
   // Check that the process didn't crash immediately

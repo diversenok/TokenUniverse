@@ -85,7 +85,7 @@ procedure TDialogAppContainer.lnkParentLinkClick(Sender: TObject;
 var
   ParentAC: ISid;
 begin
-  RtlxGetAppContainerParent(AppContainer.Data, ParentAC).RaiseOnError;
+  RtlxAppContainerParent(AppContainer.Data, ParentAC).RaiseOnError;
   TDialogAppContainer.Execute(FormMain, User, ParentAC);
 end;
 
@@ -103,8 +103,7 @@ begin
   lnkUser.Caption := 'User: <a>' + LsaxSidToString(User.Data) + '</a>';
   tbxSid.Text := RtlxSidToString(AppContainer.Data);
 
-  if UnvxQueryAppContainer(RtlxSidToString(User.Data), AppContainer.Data,
-    Info).IsSuccess then
+  if UnvxQueryAppContainer(Info, User.Data, AppContainer.Data).IsSuccess then
   begin
     tbxName.Text := Info.FullName;
     tbxDispName.Text := Info.DisplayName;
@@ -128,16 +127,16 @@ begin
       Exit;
 
     // Delayed loading of child AppContainers
-    if UnvxEnumerateChildrenAppContainer(RtlxSidToString(User.Data),
-      RtlxSidToString(AppContainer.Data), Children).IsSuccess then
+    if UnvxEnumerateChildrenAppContainer(Children, User.Data,
+      AppContainer.Data).IsSuccess then
     begin
       lvChildren.Items.BeginUpdate;
 
       for i := 0 to High(Children) do
         with lvChildren.Items.Add do
         begin
-          if UnvxQueryAppContainer(RtlxSidToString(User.Data), Children[i].Data,
-            ChildInfo).IsSuccess then
+          if UnvxQueryAppContainer(ChildInfo, User.Data,
+            Children[i].Data).IsSuccess then
             Caption := ChildInfo.Name
           else
             Caption := RtlxSidToString(Children[i].Data);

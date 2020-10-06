@@ -609,8 +609,8 @@ begin
     ImpersonationLvl := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  NtxDuplicateToken(hxToken, SrcToken.Handle.Handle, Access, TokenType,
-    ImpersonationLvl, 0, EffectiveOnly).RaiseOnError;
+  NtxDuplicateToken(hxToken, SrcToken.Handle.Handle, TokenType,
+    ImpersonationLvl, EffectiveOnly, 0, Access).RaiseOnError;
 
   if EffectiveOnly then
     FCaption := SrcToken.Caption + ' (eff. copy)'
