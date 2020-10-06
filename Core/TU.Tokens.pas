@@ -332,7 +332,7 @@ type
 
     /// <summary> General purpuse constructor. </summary>
     /// <exception> This constructor doesn't raise any exceptions. </exception>
-    constructor Create(Handle: THandle; Caption: String);
+    constructor Create(Handle: IHandle; Caption: String);
 
     /// <summary>
     ///  Create a TToken object using inherited handle.
@@ -427,7 +427,7 @@ uses
   NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions,
   NtUiLib.AccessMasks, DelphiUiLib.Reflection.Numeric, NtUtils.SysUtils,
   DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiLib.Reflection.Types,
-  Ntapi.ntrtl;
+  Ntapi.ntrtl, NtUtils.Processes.Query;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -563,9 +563,9 @@ begin
   Result := Self;
 end;
 
-constructor TToken.Create(Handle: THandle; Caption: String);
+constructor TToken.Create(Handle: IHandle; Caption: String);
 begin
-  hxToken := TAutoHandle.Capture(Handle);
+  hxToken := Handle;
   FCaption := Caption;;
 end;
 
@@ -855,7 +855,8 @@ begin
     Handle);
 
   if Result.IsSuccess then
-    Token := TToken.Create(Handle, 'Linked token for ' + Caption);
+    Token := TToken.Create(TAutoHandle.Capture(Handle),
+      'Linked token for ' + Caption);
 end;
 
 procedure TToken.PrivilegeAdjust(Privileges: TArray<TPrivilege>;

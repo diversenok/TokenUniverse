@@ -90,11 +90,11 @@ type
 implementation
 
 uses
-  Winapi.Shlwapi, Ntapi.ntpsapi, NtUtils.WinUser, Ntapi.ntseapi,
+  Winapi.WinNt, Winapi.Shlwapi, Ntapi.ntpsapi, NtUtils.WinUser, Ntapi.ntseapi,
   NtUtils.Processes, NtUiLib.Exceptions, NtUtils.Tokens.Query,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Wmi,
-  NtUtils.Processes.Create.Wdc, NtUtils.Profiles, TU.Exec,
+  NtUtils.Processes.Create.Wdc, NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
   UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm;
 
 {$R *.dfm}
@@ -143,6 +143,7 @@ procedure TDialogRun.ButtonRunClick(Sender: TObject);
 var
   Options: TCreateProcessOptions;
   ProcInfo: TProcessInfo;
+  hxToken: IHandle;
 begin
   Options := Default(TCreateProcessOptions);
   Options.Application := EditExe.Text;
@@ -189,6 +190,13 @@ begin
     ExecMethod(Options, ProcInfo).RaiseOnError
   else
     raise Exception.Create('No exec method available');
+
+  // Suggest opening the token since we have a handle anyway
+  if Assigned(ProcInfo.hxProcess) and NtxOpenProcessToken(hxToken,
+    ProcInfo.hxProcess.Handle, MAXIMUM_ALLOWED).IsSuccess then
+    FormMain.TokenView.Add(TToken.Create(hxToken,
+      Format('%s [%d]', [ExtractFileName(EditExe.Text),
+        ProcInfo.ClientId.UniqueProcess])));
 end;
 
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
