@@ -610,7 +610,7 @@ begin
   end;
 
   NtxDuplicateToken(hxToken, SrcToken.Handle.Handle, TokenType,
-    ImpersonationLvl, EffectiveOnly, 0, Access).RaiseOnError;
+    ImpersonationLvl, EffectiveOnly, Access, 0).RaiseOnError;
 
   if EffectiveOnly then
     FCaption := SrcToken.Caption + ' (eff. copy)'
