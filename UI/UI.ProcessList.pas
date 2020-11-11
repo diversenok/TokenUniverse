@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls,
   Vcl.ExtCtrls, Vcl.ImgList, System.Generics.Collections,
-  VclEx.ListView, UI.Prototypes.Forms, NtUtils.Processes.Snapshots;
+  VclEx.ListView, UI.Prototypes.Forms, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
   TProcessItemEx = class
@@ -15,8 +15,9 @@ type
     Enabled: Boolean; // by search
     Added: Boolean;
     Parent: TProcessItemEx;
-    ListItemRef: TListItem;
+    ListItemRef: TListItemEx;
     ImageIndex: Integer;
+    function IsSuspended: Boolean;
     constructor Create(const Src: TProcessEntry);
   end;
   PProcessItemEx = ^TProcessItemEx;
@@ -32,6 +33,10 @@ type
     ButtonRefresh: TButton;
     SearchBox: TButtonedEdit;
     ListView: TListViewEx;
+    PopupMenu: TPopupMenu;
+    cmTerminate: TMenuItem;
+    cmSuspend: TMenuItem;
+    cmResume: TMenuItem;
     procedure ReloadProcessList(Sender: TObject);
     procedure ReloadProcessIcons;
     procedure SearchBoxChange(Sender: TObject);
@@ -41,11 +46,12 @@ type
     destructor Destroy; override;
     procedure SearchBoxRightButtonClick(Sender: TObject);
     procedure ButtonOkClick(Sender: TObject);
+    procedure cmActionClick(Sender: TObject);
   private
     ProcessListEx: array of TProcessItemEx;
     PickThread: Boolean;
     ThreadID: NativeUInt;
-    function AddChild(ParentIndex: Integer): TListItem;
+    function AddChild(ParentIndex: Integer): TListItemEx;
   public
     class function Execute(AOwner: TComponent; AllowSelectThread: Boolean):
       TClientIdEx;
@@ -55,13 +61,15 @@ implementation
 
 uses
   Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes,
-  UI.ProcessIcons, NtUtils;
+  UI.ProcessIcons, NtUtils, Ntapi.ntkeapi, UI.Colors, Vcl.Dialogs,
+  NtUILib.Exceptions, Ntapi.ntstatus, Winapi.WinNt, Ntapi.ntpsapi,
+  System.UITypes;
 
 {$R *.dfm}
 
 { TProcessListDialog }
 
-function TProcessListDialog.AddChild(ParentIndex: Integer): TListItem;
+function TProcessListDialog.AddChild(ParentIndex: Integer): TListItemEx;
 var
   NextSibling, ParentIndent: Integer;
 begin
@@ -87,6 +95,49 @@ begin
       PProcessItemEx(ListView.Selected.Data).Process);
 
   ModalResult := mrOk;
+end;
+
+procedure TProcessListDialog.cmActionClick(Sender: TObject);
+var
+  Process: PProcessItemEx;
+  hxProcess: IHandle;
+  Verb: String;
+  Access: TAccessMask;
+begin
+  if not Assigned(ListView.Selected) then
+    Exit;
+
+  Process := PProcessItemEx(ListView.Selected.Data);
+
+  Access := PROCESS_SUSPEND_RESUME;
+
+  if Sender = cmTerminate then
+  begin
+    Verb := 'terminate';
+    Access := PROCESS_TERMINATE;
+  end
+  else if Sender = cmSuspend then
+    Verb := 'suspend'
+  else if Sender = cmResume then
+    Verb := 'resume'
+  else
+    Exit;
+
+  if TaskMessageDlg('Are you sure you want to ' + Verb + ' ' +
+    Process.Process.ImageName + '?', 'This action might interfere with the ' +
+    'usual workflow of some programs.', mtWarning, mbYesNoCancel, -1, mbYes) =
+    IDYES then
+  begin
+    NtxOpenProcess(hxProcess, Process.Process.Basic.ProcessID,
+      Access).RaiseOnError;
+
+    if Sender = cmTerminate then
+      NtxTerminateProcess(hxProcess.Handle, STATUS_CANCELLED).RaiseOnError
+    else if Sender = cmSuspend then
+      NtxSuspendProcess(hxProcess.Handle).RaiseOnError
+    else
+      NtxResumeProcess(hxProcess.Handle).RaiseOnError;
+  end;
 end;
 
 destructor TProcessListDialog.Destroy;
@@ -241,6 +292,10 @@ begin
         ListItemRef.SubItems.Add(IntToStr(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
+
+        if IsSuspended then
+          ListItemRef.Color := ColorSettings.clSuspended;
+
         Added := True;
         Inc(LoopAdded);
       end;
@@ -262,6 +317,17 @@ end;
 constructor TProcessItemEx.Create(const Src: TProcessEntry);
 begin
   Process := Src;
+end;
+
+function TProcessItemEx.IsSuspended: Boolean;
+var
+  i: Integer;
+begin
+  for i := 0 to High(Process.Threads) do
+    if Process.Threads[i].Basic.WaitReason <> KWaitReason.Suspended then
+      Exit(False);
+
+  Result := True;
 end;
 
 end.

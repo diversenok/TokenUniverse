@@ -51,8 +51,8 @@ type
 implementation
 
 uses
-  DelphiUiLib.Strings, Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid,
-  Ntapi.ntrtl;
+  Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid, Ntapi.ntrtl,
+  DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
 

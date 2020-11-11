@@ -256,7 +256,6 @@
         <DCCReference Include="NtUtilsUI\NtUtils\Headers\Winapi.WinUser.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.Arrays.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.Events.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Access.Expected.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Debug.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Environment.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Files.pas"/>
@@ -301,22 +300,13 @@
         <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.AutoObject.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\Headers\DelphiApi.Reflection.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\DelphiUtils.ExternalImport.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.HysteresisList.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Reflection.Types.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\Headers\NtUtils.Version.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.ImageHlp.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.SysUtils.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.Processes.Query.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUtils.System.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.AccessMasks.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Numeric.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Strings.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Dialog.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Report.pas"/>
-        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\DelphiUiLib.Reflection.Records.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Prototypes.Forms.pas"/>
         <DCCReference Include="NtUtilsUI\VclEx\VclEx.Form.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
@@ -354,9 +344,15 @@
             <Form>DialogACProfiles</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <RcCompile Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Exceptions.Messages.rc">
-            <Form>NtUtils.ErrorMsg.res</Form>
-        </RcCompile>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\NtUiLib.Errors.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\DelphiUiLib.Reflection.Numeric.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\DelphiUiLib.Reflection.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\DelphiUiLib.Reflection.Records.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\DelphiUiLib.Reflection.Strings.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.Exceptions.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.Types.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\GUI\NtUiLib.Exceptions.Dialog.pas"/>
+        <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.AccessMasks.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -5,33 +5,80 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  UI.Prototypes.Forms, VclEx.ListView, NtUtils.Processes.Snapshots;
+  UI.Prototypes.Forms, VclEx.ListView, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
   TThreadListDialog = class(TChildForm)
     ListViewThreads: TListViewEx;
     ButtonOk: TButton;
     ButtonCancel: TButton;
+    PopupMenu: TPopupMenu;
+    cmTerminate: TMenuItem;
+    cmSuspend: TMenuItem;
+    cmResume: TMenuItem;
     procedure ListViewThreadsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure ListViewThreadsDblClick(Sender: TObject);
+    procedure cmActionClick(Sender: TObject);
+  private
+    FProcess: TProcessEntry;
   public
     constructor CreateFrom(AOwner: TComponent; const Process: TProcessEntry);
     class function Execute(AOwner: TComponent;
       const Process: TProcessEntry): NativeUInt;
   end;
 
-var
-  ThreadListDialog: TThreadListDialog;
-
 implementation
 
 uses
-  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt;
+  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt, Ntapi.ntpsapi,
+  Ntapi.ntdef, NtUtils, NtUtils.Threads, NtUiLib.Exceptions, Ntapi.ntstatus,
+  System.UITypes;
 
 {$R *.dfm}
 
 { TThreadListDialog }
+
+procedure TThreadListDialog.cmActionClick(Sender: TObject);
+var
+  Thread: TClientId;
+  hxThread: IHandle;
+  Verb: String;
+  Access: TAccessMask;
+begin
+  if not Assigned(ListViewThreads.Selected) then
+    Exit;
+
+  Access := THREAD_SUSPEND_RESUME;
+
+  if Sender = cmTerminate then
+  begin
+    Verb := 'terminate';
+    Access := THREAD_TERMINATE;
+  end
+  else if Sender = cmSuspend then
+    Verb := 'suspend'
+  else if Sender = cmResume then
+    Verb := 'resume'
+  else
+    Exit;
+
+  Thread := FProcess.Threads[ListViewThreads.Selected.Index].Basic.ClientId;
+
+  if TaskMessageDlg('Are you sure you want to ' + Verb + ' this thread?',
+    'This action might interfere with the usual workflow of some programs.',
+    mtWarning, mbYesNoCancel, -1, mbYes) = IDYES then
+  begin
+    NtxOpenThread(hxThread, Thread.UniqueThread, Access).RaiseOnError;
+
+    if Sender = cmTerminate then
+      NtxTerminateThread(hxThread.Handle, STATUS_CANCELLED).RaiseOnError
+    else if Sender = cmSuspend then
+      NtxSuspendThread(hxThread.Handle).RaiseOnError
+    else
+      NtxResumeThread(hxThread.Handle).RaiseOnError;
+  end;
+end;
 
 constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
   const Process: TProcessEntry);
@@ -48,10 +95,11 @@ begin
   for i := 0 to Process.Basic.NumberOfThreads - 1 do
   with ListViewThreads.Items.Add do
   begin
+    FProcess := Process;
     Caption := IntToStr(Process.Threads[i].Basic.ClientID.UniqueThread);
     SubItems.Add(DateTimeToStr(LargeIntegerToDateTime(
       Process.Threads[i].Basic.CreateTime)));
-    if Process.Threads[i].Basic.WaitReason = Suspended then
+    if Process.Threads[i].Basic.WaitReason = KWaitReason.Suspended then
       Color := ColorSettings.clSuspended
     else
     begin

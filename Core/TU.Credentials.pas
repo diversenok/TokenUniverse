@@ -118,7 +118,7 @@ begin
         Exit;
       except
         on E: ENtError do
-          LastAuthError := ENtError(E).ToWinErrorCode;
+          LastAuthError := ENtError(E).NtxStatus.WinError;
         on E: EOSError do
           LastAuthError := E.ErrorCode
       end;

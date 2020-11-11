@@ -97,7 +97,7 @@ implementation
 uses
   UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils,
   NtUtils.Lsa.Logon, NtUtils.Lsa.Sid, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection;
+  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection;
 
 { TSessionSource }
 

@@ -46,7 +46,7 @@ uses
   TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser, NtUtils,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes,
-  NtUiLib.Exceptions, DelphiUiLib.Strings;
+  NtUiLib.Exceptions, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
 

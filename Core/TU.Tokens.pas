@@ -94,7 +94,6 @@ type
     OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
   public
     constructor Create;
-    destructor Destroy; override;
 
     property OnOwnerChange: TCachingEvent<ISid> read FOnOwnerChange;
     property OnPrimaryChange: TCachingEvent<ISid> read FOnPrimaryChange;
@@ -422,10 +421,10 @@ implementation
 uses
   Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Tokens.Query,
   NtUtils.Processes, NtUtils.WinStation, NtUtils.Tokens,
-  NtUtils.Tokens.Impersonate,
+  NtUtils.Tokens.Impersonate, DelphiUiLib.Reflection.Strings,
   System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc,
   NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions,
-  NtUiLib.AccessMasks, DelphiUiLib.Reflection.Numeric, NtUtils.SysUtils,
+  NtUiLib.Reflection.AccessMasks, DelphiUiLib.Reflection.Numeric, NtUtils.SysUtils,
   DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiLib.Reflection.Types,
   Ntapi.ntrtl, NtUtils.Processes.Query;
 
@@ -443,12 +442,6 @@ const
 
 { TTokenCacheAndEvents }
 
-procedure CheckAbandoned(Value: Integer; Name: String);
-begin
-  if Value > 0 then
-    ENtError.Report(STATUS_ABANDONED, Name + ' cleanup');
-end;
-
 constructor TTokenCacheAndEvents.Create;
 begin
   inherited;
@@ -465,29 +458,6 @@ begin
   FOnVirtualizationAllowedChange.ComparisonFunction := CompareLongBools;
   FOnVirtualizationEnabledChange.ComparisonFunction := CompareLongBools;
   FOnFlagsChange.ComparisonFunction := CompareCardinals;
-end;
-
-destructor TTokenCacheAndEvents.Destroy;
-var
-  i: TTokenStringClass;
-begin
-  CheckAbandoned(FOnOwnerChange.Count, 'OnOwnerChange');
-  CheckAbandoned(FOnPrimaryChange.Count, 'OnPrimaryChange');
-  CheckAbandoned(FOnSessionChange.Count, 'OnSessionChange');
-  CheckAbandoned(FOnIntegrityChange.Count, 'OnIntegrityChange');
-  CheckAbandoned(FOnUIAccessChange.Count, 'OnUIAccessChange');
-  CheckAbandoned(FOnPolicyChange.Count, 'OnPolicyChange');
-  CheckAbandoned(FOnPrivilegesChange.Count, 'OnPrivilegesChange');
-  CheckAbandoned(FOnGroupsChange.Count, 'OnGroupsChange');
-  CheckAbandoned(FOnStatisticsChange.Count, 'OnStatisticsChange');
-  CheckAbandoned(FOnDefaultDaclChange.Count, 'OnDefaultDaclChange');
-  CheckAbandoned(FOnFlagsChange.Count, 'OnFlagsChange');
-
-  for i := Low(TTokenStringClass) to High(TTokenStringClass) do
-    CheckAbandoned(OnStringDataChange[i].Count,
-      GetEnumName(TypeInfo(TTokenStringClass), Integer(i)));
-
-  inherited;
 end;
 
 procedure TTokenCacheAndEvents.SubscribeString(StringClass: TTokenStringClass;
@@ -767,23 +737,10 @@ end;
 destructor TToken.Destroy;
 begin
   // Inform event listeners that we are closing the handle
-  try
-    OnClose.Invoke(Self);
-  except
-    on E: Exception do
-    begin
-      // This is really bad. At least inform the debugger...
-      ENtError.Report(STATUS_ASSERTION_FAILURE, 'Token.OnClose: ' + E.Message);
-      raise;
-    end;
-  end;
+  OnClose.Invoke(Self);
 
   // Unregister from the factory before we close the handle
   Cache.Free;
-
-  CheckAbandoned(FOnCanClose.Count, 'OnCanClose');
-  CheckAbandoned(FOnClose.Count, 'OnClose');
-  CheckAbandoned(FOnCaptionChange.Count, 'OnCaptionChange');
 
   inherited;
 end;
@@ -886,7 +843,7 @@ begin
   // not considered as an error. Such behavior does not fit into our
   // model so we should overwrite it.
   if Status.Status = STATUS_NOT_ALL_ASSIGNED then
-    raise ENtError.Create(Status.Status, Status.Location)
+    raise ENtError.CreateNtx(Status)
   else
     Status.RaiseOnError;
 end;
@@ -1135,7 +1092,7 @@ begin
       if Detailed then
         Result := Format('0x%x (%d)', [Token.Handle, Token.Handle])
       else
-        Result := RtlxInt64ToStr(Token.Handle.Handle, 16);
+        Result := IntToHexEx(Token.Handle.Handle);
 
     tsNoWriteUpPolicy:
       Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy and

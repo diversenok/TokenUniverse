@@ -29,7 +29,7 @@ implementation
 
 uses
   Ntapi.ntstatus, UI.Colors, NtUiLib.Exceptions, DelphiUiLib.Strings,
-  Ntapi.ntdef;
+  DelphiUiLib.Reflection.Strings, Ntapi.ntdef;
 
 {$R *.dfm}
 
@@ -131,7 +131,7 @@ begin
   else if not Status.IsSuccess then
   begin
     LabelStatus.Caption := Status.ToString;
-    LabelStatus.Hint := Status.MessageHint;
+    LabelStatus.Hint := Status.Description;
   end
   else
   begin

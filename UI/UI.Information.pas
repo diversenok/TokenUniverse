@@ -132,10 +132,10 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, NtUiLib.Exceptions, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  NtUiLib.AccessMasks, UI.ProcessIcons, NtUtils.Version,
-  UI.AppContainer.View;
+  UI.ProcessIcons, NtUtils.Version, UI.AppContainer.View;
 
 const
   TAB_INVALIDATED = 0;

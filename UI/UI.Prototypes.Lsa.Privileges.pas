@@ -114,7 +114,7 @@ begin
   else if not Status.IsSuccess then
   begin
     LabelStatus.Caption := Status.ToString;
-    LabelStatus.Hint := Status.MessageHint;
+    LabelStatus.Hint := Status.Description;
   end
   else
   begin

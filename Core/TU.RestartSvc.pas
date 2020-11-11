@@ -63,7 +63,7 @@ begin
   // Start the service
   Result := ScmxStartService(hxSvc.Handle, Parameters);
 
-  ScmxDeleteService(hxSvc.Handle).ReportOnError;
+  ScmxDeleteService(hxSvc.Handle);
 end;
 
 procedure ReSvcDelegate(RestartMethod: TRestartMethod);
@@ -172,13 +172,12 @@ begin
 
         if Status.IsSuccess then
           OutputDebugStringW(PWideChar('Exit code: 0x' +
-            IntToHex(BasicInfo.ExitStatus, 8)))
-        else
-          Status.ReportOnError;
+            IntToHex(BasicInfo.ExitStatus, 8)));
       end;
-    else
-      Status.ReportOnError;
   end;
+
+  if not Status.IsSuccess then
+    OutputDebugStringW(PWideChar(Status.ToString));
   {$ENDIF}
 end;
 

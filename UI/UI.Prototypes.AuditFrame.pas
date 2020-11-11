@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Strings,
+  Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Reflection.Strings,
   NtUiLib.Exceptions, Ntapi.ntdef, NtUtils;
 
 {$R *.dfm}
@@ -176,7 +176,7 @@ begin
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.MessageHint;
+    LabelStatus.Hint := StatusEx.Description;
   end;
 
   Load(Policy);
@@ -191,7 +191,7 @@ begin
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.MessageHint;
+    LabelStatus.Hint := StatusEx.Description;
   end;
 
   Load(Policy);
@@ -265,7 +265,7 @@ begin
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.MessageHint;
+    LabelStatus.Hint := StatusEx.Description;
     Exit;
   end;
 
@@ -273,7 +273,7 @@ begin
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.MessageHint;
+    LabelStatus.Hint := StatusEx.Description;
     Exit;
   end;
 

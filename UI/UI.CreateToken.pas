@@ -89,7 +89,7 @@ uses
   UI.Modal.PickUser, TU.ObjPicker, TU.Winapi,
   UI.Settings, UI.Modal.PickToken, System.UITypes, NtUtils.Lsa.Sid,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb,
-  NtUiLib.Exceptions, DelphiUiLib.Strings;
+  NtUiLib.Exceptions, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
 
