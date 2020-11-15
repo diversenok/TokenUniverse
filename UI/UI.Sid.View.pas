@@ -4,10 +4,9 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UI.Prototypes.Forms, NtUtils.Security.Sid, UI.Prototypes.Lsa.Rights,
-  UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit,
-  NtUtils;
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, UI.Prototypes.Forms,
+  NtUtils.Security.Sid, UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame,
+  NtUtils.Lsa.Audit, NtUtils, UI.Prototypes.BitMask;
 
 type
   TDialogSidView = class(TChildForm)
@@ -32,18 +31,22 @@ type
     StaticTextDomain: TStaticText;
     TabLsaRights: TTabSheet;
     TabLsaAudit: TTabSheet;
-    FrameLsaRights: TFrameLsaRights;
     TabLsaQuotas: TTabSheet;
     FrameLsaPrivileges: TFrameLsaPrivileges;
     FrameLsaAudit: TFrameAudit;
+    LabelStatus: TLabel;
+    ButtonApply: TButton;
+    LogonMaskFrame: TBitMaskFrame;
     procedure LinkLabelDomainLinkClick(Sender: TObject; const Link: string;
       LinkType: TSysLinkType);
     procedure ButtonCloseClick(Sender: TObject);
     procedure LinkLabelMinusOneLinkClick(Sender: TObject; const Link: string;
       LinkType: TSysLinkType);
+    procedure ButtonApplyClick(Sender: TObject);
   private
     Sid: ISid;
     procedure SetUserAudit(NewAudit: IAudit);
+    procedure LoadLogonRights;
   public
     class procedure CreateView(AOwner: TComponent; SrcSid: ISid); static;
   end;
@@ -51,12 +54,19 @@ type
 implementation
 
 uses
-  Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid, Ntapi.ntrtl,
-  DelphiUiLib.Reflection.Strings;
+  Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid, Ntapi.ntrtl, Winapi.ntlsa,
+  Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa,
+  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric;
 
 {$R *.dfm}
 
 { TDialogSidView }
+
+procedure TDialogSidView.ButtonApplyClick(Sender: TObject);
+begin
+  LsaxSetRightsAccountBySid(Sid.Data, LogonMaskFrame.Value).RaiseOnError;
+  LogonMaskFrame.Value := LogonMaskFrame.Value;
+end;
 
 procedure TDialogSidView.ButtonCloseClick(Sender: TObject);
 begin
@@ -66,6 +76,7 @@ end;
 class procedure TDialogSidView.CreateView(AOwner: TComponent; SrcSid: ISid);
 var
   Lookup: TTranslatedName;
+  LogonGroups: TArray<TFlagName>;
 begin
   if not Assigned(SrcSid) then
     Exit;
@@ -112,8 +123,15 @@ begin
     TabUser.TabVisible := (Lookup.SidType = SidTypeUser);
     Pages.ActivePage := TabSid;
 
-    FrameLsaRights.DeleyedCreate;
-    FrameLsaRights.LoadForSid(Sid);
+    // Initialize logon bitmask frame
+    SetLength(LogonGroups, 2);
+    LogonGroups[0].Value := SECURITY_ACCESS_ALLOWED_MASK;
+    LogonGroups[0].Name := 'Allowing';
+    LogonGroups[1].Value := SECURITY_ACCESS_DENIED_MASK;
+    LogonGroups[1].Name := 'Denying';
+    LogonMaskFrame.Initialize(EnumerateFlagAttributes(TypeInfo(TSystemAccess)),
+      LogonGroups);
+    LoadLogonRights;
 
     FrameLsaPrivileges.DeleyedCreate;
     FrameLsaPrivileges.LoadForSid(Sid);
@@ -145,6 +163,30 @@ var
 begin
   if RtlxParentSid(Parent, Sid).IsSuccess then
     TDialogSidView.CreateView(Owner, Parent);
+end;
+
+procedure TDialogSidView.LoadLogonRights;
+var
+  xStatus: TNtxStatus;
+  Rights: TSystemAccess;
+begin
+  xStatus := LsaxQueryRightsAccountBySid(Sid.Data, Rights);
+
+  if xStatus.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
+  begin
+    LabelStatus.Caption := 'No policies are assigned to the account';
+    LabelStatus.Hint := '';
+  end
+  else if not xStatus.IsSuccess then
+  begin
+    LabelStatus.Caption := xStatus.ToString;
+    LabelStatus.Hint := xStatus.Description;
+    Exit;
+  end;
+
+  LabelStatus.Caption := '';
+  LabelStatus.Hint := '';
+  LogonMaskFrame.Value := Rights;
 end;
 
 procedure TDialogSidView.SetUserAudit(NewAudit: IAudit);

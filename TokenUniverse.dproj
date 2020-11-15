@@ -200,11 +200,6 @@
         <DCCReference Include="UI\UI.Sid.View.pas">
             <Form>DialogSidView</Form>
         </DCCReference>
-        <DCCReference Include="UI\UI.Prototypes.Lsa.Rights.pas">
-            <Form>FrameLsaRights</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="UI\UI.Prototypes.Lsa.Privileges.pas">
             <Form>FrameLsaPrivileges</Form>
             <FormType>dfm</FormType>
@@ -353,6 +348,11 @@
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.Types.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\GUI\NtUiLib.Exceptions.Dialog.pas"/>
         <DCCReference Include="NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.AccessMasks.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas">
+            <Form>BitMaskFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

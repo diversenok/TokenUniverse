@@ -31,7 +31,6 @@ uses
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
   UI.Prototypes.Logon in 'UI\UI.Prototypes.Logon.pas' {FrameLogon: TFrame},
   UI.Sid.View in 'UI\UI.Sid.View.pas' {DialogSidView},
-  UI.Prototypes.Lsa.Rights in 'UI\UI.Prototypes.Lsa.Rights.pas' {FrameLsaRights: TFrame},
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
   UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit},
   UI.Process.Run in 'UI\UI.Process.Run.pas' {DialogRun},
@@ -151,7 +150,8 @@ uses
   NtUiLib.Reflection.Exceptions in 'NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.Exceptions.pas',
   NtUiLib.Reflection.Types in 'NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.Types.pas',
   NtUiLib.Exceptions.Dialog in 'NtUtilsUI\NtUtils\NtUiLib\GUI\NtUiLib.Exceptions.Dialog.pas',
-  NtUiLib.Reflection.AccessMasks in 'NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.AccessMasks.pas';
+  NtUiLib.Reflection.AccessMasks in 'NtUtilsUI\NtUtils\NtUiLib\RTTI\NtUiLib.Reflection.AccessMasks.pas',
+  UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame};
 
 {$R *.res}
 

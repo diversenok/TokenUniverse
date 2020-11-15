@@ -14,9 +14,6 @@ object DialogSidView: TDialogSidView
   OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
-  DesignSize = (
-    387
-    371)
   PixelsPerInch = 96
   TextHeight = 13
   object Pages: TPageControl
@@ -32,9 +29,6 @@ object DialogSidView: TDialogSidView
     TabOrder = 0
     object TabSid: TTabSheet
       Caption = 'General'
-      DesignSize = (
-        373
-        289)
       object LinkLabelDomain: TLinkLabel
         Left = 97
         Top = 103
@@ -169,28 +163,20 @@ object DialogSidView: TDialogSidView
         Height = 289
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 373
-        ExplicitHeight = 289
         inherited LabelStatus: TLabel
           Top = 266
           Width = 283
-          ExplicitTop = 266
-          ExplicitWidth = 283
         end
         inherited ButtonApply: TButton
           Top = 261
-          ExplicitTop = 261
         end
         inherited PrivilegesFrame: TPrivilegesFrame
           Width = 367
           Height = 254
-          ExplicitWidth = 367
-          ExplicitHeight = 254
           inherited ListViewEx: TListViewEx
             Width = 367
             Height = 254
-            ExplicitWidth = 367
-            ExplicitHeight = 254
+            PopupMenu = FrameLsaPrivileges.PopupMenu
           end
         end
       end
@@ -198,30 +184,41 @@ object DialogSidView: TDialogSidView
     object TabLsaRights: TTabSheet
       Caption = 'Logon rights'
       ImageIndex = 6
-      inline FrameLsaRights: TFrameLsaRights
-        Left = 0
-        Top = 0
-        Width = 373
-        Height = 289
-        Align = alClient
+      object LabelStatus: TLabel
+        Left = 87
+        Top = 266
+        Width = 283
+        Height = 13
+        Anchors = [akLeft, akRight, akBottom]
+        AutoSize = False
+        EllipsisPosition = epEndEllipsis
+      end
+      object ButtonApply: TButton
+        Left = 3
+        Top = 261
+        Width = 75
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = 'Apply'
         TabOrder = 0
-        ExplicitWidth = 373
-        ExplicitHeight = 289
-        inherited LabelStatus: TLabel
-          Top = 266
-          Width = 283
-          ExplicitTop = 266
-          ExplicitWidth = 283
-        end
-        inherited ButtonApply: TButton
-          Top = 261
-          ExplicitTop = 261
-        end
-        inherited ListView: TListViewEx
+        OnClick = ButtonApplyClick
+      end
+      inline LogonMaskFrame: TBitMaskFrame
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 367
+        Height = 253
+        Margins.Bottom = 33
+        Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 1
+        inherited ListViewEx: TListViewEx
           Width = 367
-          Height = 255
-          ExplicitWidth = 367
-          ExplicitHeight = 255
+          Height = 253
         end
       end
     end
@@ -235,13 +232,9 @@ object DialogSidView: TDialogSidView
         Height = 289
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 373
-        ExplicitHeight = 289
         inherited LabelStatus: TLabel
           Top = 267
           Width = 264
-          ExplicitTop = 267
-          ExplicitWidth = 264
         end
         inherited ListView: TListViewEx
           Width = 367
@@ -270,14 +263,10 @@ object DialogSidView: TDialogSidView
               Caption = 'Fail Exc'
               Width = 55
             end>
-          ExplicitWidth = 367
-          ExplicitHeight = 257
         end
         inherited ButtonApply: TButton
           Left = 273
           Top = 262
-          ExplicitLeft = 273
-          ExplicitTop = 262
         end
       end
     end
