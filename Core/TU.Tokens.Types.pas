@@ -79,7 +79,7 @@ end;
 
 function FormatCurrentState: String;
 begin
-  if not LsaxGetUserName(Result).IsSuccess then
+  if not LsaxGetFullUserName(Result).IsSuccess then
     Result := 'Unknown user';
 
   Result := Result + ' @ ' + IntToStr(RtlGetCurrentPeb.SessionId);

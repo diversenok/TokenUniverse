@@ -181,7 +181,7 @@ begin
   if ComboLogonType.ItemIndex = S4U_INDEX then
   begin
     // Use Services 4 Users logon
-    Source.FromString(EditSourceName.Text);
+    Source.Name := EditSourceName.Text;
     Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
       'Source LUID');
 

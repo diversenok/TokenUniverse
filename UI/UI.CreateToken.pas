@@ -190,7 +190,7 @@ begin
   // Source
   if Source.InfoClass.Query(tdTokenSource) then
   begin
-    EditSourceName.Text := Source.InfoClass.Source.ToString;
+    EditSourceName.Text := Source.InfoClass.Source.Name;
     EditSourceLuid.Text := IntToHexEx(
       Source.InfoClass.Source.SourceIdentifier);
   end;
@@ -224,7 +224,7 @@ begin
   else
     PrimaryGroupName := ComboPrimary.Text;
 
-  Source.FromString(EditSourceName.Text);
+  Source.Name := EditSourceName.Text;
   Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
 
   LsaxLookupNameOrSddl(ComboUser.Text, User).RaiseOnError;

@@ -148,7 +148,7 @@ begin
     begin
       ListView.Items[0].Cell[1] := IntToHexEx(LogonId);
 
-      TRecord.Traverse(Ptr.RefOrNil<PSecurityLogonSessionData>(Detailed),
+      TRecord.Traverse(IMem.RefOrNil<PSecurityLogonSessionData>(Detailed),
         procedure (const Field: TFieldReflection)
         var
           SidReflection: TRepresentation;

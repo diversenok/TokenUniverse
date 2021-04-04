@@ -580,7 +580,8 @@ begin
   end;
 
   NtxDuplicateToken(hxToken, SrcToken.Handle.Handle, TokenType,
-    ImpersonationLvl, EffectiveOnly, Access, 0).RaiseOnError;
+    ImpersonationLvl, AttributeBuilder.UseEffectiveOnly(EffectiveOnly).
+    UseDesiredAccess(Access)).RaiseOnError;
 
   if EffectiveOnly then
     FCaption := SrcToken.Caption + ' (eff. copy)'
@@ -1085,7 +1086,7 @@ begin
         Token.Cache.Integrity.Sid.Data))).Text;
 
     tsObjectAddress:
-      Result := IntToHexEx(Token.Cache.HandleInformation.PObject);
+      Result := PtrToHexEx(Token.Cache.HandleInformation.PObject);
 
     // Note: this is a per-handle value. Beware of per-kernel-object events.
     tsHandle:
@@ -1162,7 +1163,7 @@ begin
       Result := IntToHexEx(Token.Cache.Source.SourceIdentifier);
 
     tsSourceName:
-      Result := Token.Cache.Source.ToString;
+      Result := Token.Cache.Source.Name;
 
     tsOrigin:
       Result := IntToHexEx(Token.Cache.Origin);
@@ -1424,7 +1425,7 @@ begin
           ByProcess(NtCurrentProcessId));
 
         Result := NtxFindHandleEntry(Handles, NtCurrentProcessId,
-          Token.hxToken.Handle, Token.Cache.HandleInformation);
+          Token.hxToken.Handle, Token.Cache.HandleInformation).IsSuccess;
       end;
     end;
   end;
@@ -1485,7 +1486,7 @@ end;
 
 procedure TTokenData.SetMandatoryPolicy(const Value: Cardinal);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenMandatoryPolicy,
+  NtxToken.&Set(Token.hxToken.Handle, TokenMandatoryPolicy,
     Value).RaiseOnError;
 
   // Update the cache and notify event listeners
@@ -1495,7 +1496,7 @@ end;
 
 procedure TTokenData.SetOrigin(const Value: TLuid);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenOrigin, Value).RaiseOnError;
+  NtxToken.&Set(Token.hxToken.Handle, TokenOrigin, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOrigin);
@@ -1507,7 +1508,7 @@ var
   NewOwner: TTokenSidInformation;
 begin
   NewOwner.Sid := Value.Data;
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenOwner,NewOwner).RaiseOnError;
+  NtxToken.&Set(Token.hxToken.Handle, TokenOwner,NewOwner).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOwner);
@@ -1519,7 +1520,7 @@ var
   NewPrimaryGroup: TTokenSidInformation;
 begin
   NewPrimaryGroup.Sid := Value.Data;
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenPrimaryGroup,
+  NtxToken.&Set(Token.hxToken.Handle, TokenPrimaryGroup,
     NewPrimaryGroup).RaiseOnError;
 
   // Update the cache and notify event listeners
@@ -1529,7 +1530,7 @@ end;
 
 procedure TTokenData.SetSession(const Value: Cardinal);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenSessionId, Value).RaiseOnError;
+  NtxToken.&Set(Token.hxToken.Handle, TokenSessionId, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenSessionId);
@@ -1541,7 +1542,7 @@ end;
 
 procedure TTokenData.SetSessionReference(const Value: LongBool);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenSessionReference,
+  NtxToken.&Set(Token.hxToken.Handle, TokenSessionReference,
     Value).RaiseOnError;
 
   ValidateCache(tdTokenStatistics);
@@ -1550,7 +1551,7 @@ end;
 
 procedure TTokenData.SetUIAccess(const Value: LongBool);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenUIAccess, Value).RaiseOnError;
+  NtxToken.&Set(Token.hxToken.Handle, TokenUIAccess, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenUIAccess);
@@ -1560,7 +1561,7 @@ end;
 
 procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenVirtualizationAllowed,
+  NtxToken.&Set(Token.hxToken.Handle, TokenVirtualizationAllowed,
     Value).RaiseOnError;
 
   // Update the cache and notify event listeners
@@ -1572,7 +1573,7 @@ end;
 
 procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
 begin
-  NtxToken.SetInfo(Token.hxToken.Handle, TokenVirtualizationEnabled,
+  NtxToken.&Set(Token.hxToken.Handle, TokenVirtualizationEnabled,
     Value).RaiseOnError;
 
   // Update the cache and notify event listeners

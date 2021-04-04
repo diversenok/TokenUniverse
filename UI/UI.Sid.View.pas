@@ -55,7 +55,7 @@ implementation
 
 uses
   Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid, Ntapi.ntrtl, Winapi.ntlsa,
-  Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa,
+  Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa, Ntapi.ntdef,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric;
 
 {$R *.dfm}

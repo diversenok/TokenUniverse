@@ -93,9 +93,9 @@ uses
   Winapi.WinNt, Winapi.Shlwapi, Ntapi.ntpsapi, NtUtils.WinUser, Ntapi.ntseapi,
   NtUtils.Processes, NtUiLib.Exceptions, NtUtils.Tokens.Query,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
-  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Wmi,
-  NtUtils.Processes.Create.Wdc, NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
-  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm;
+  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
+  NtUtils.Profiles, NtUtils.Tokens, TU.Exec, UI.Information, UI.ProcessList,
+  UI.AppContainer.List, UI.MainForm;
 
 {$R *.dfm}
 

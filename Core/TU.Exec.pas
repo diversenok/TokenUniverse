@@ -22,8 +22,7 @@ implementation
 
 uses
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
-  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Wmi,
-  NtUtils.Processes.Create.Wdc;
+  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com;
 
 function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
 begin
