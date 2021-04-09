@@ -48,7 +48,9 @@ uses
   UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer},
   TU.Exec in 'Core\TU.Exec.pas',
   UI.AppContainer.List in 'UI\UI.AppContainer.List.pas' {DialogACProfiles},
-  UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame};
+  UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame},
+  UI.Prototypes.Groups2 in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups2.pas' {FrameGroups: TFrame},
+  UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas';
 
 {$R *.res}
 

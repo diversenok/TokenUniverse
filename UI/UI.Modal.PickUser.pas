@@ -16,12 +16,6 @@ type
     procedure Create(CheckBox: TCheckBox; Attribute: Cardinal);
   end;
 
-  // HACK: Change of state should not issue OnClick event
-  TCheckBoxHack = class helper for TCheckBox
-    procedure SetStateEx(Value: TCheckBoxState);
-    procedure SetCheckedEx(Value: Boolean);
-  end;
-
   TDialogPickUser = class(TChildForm)
     ComboBoxSID: TComboBox;
     ButtonFilter: TButton;
@@ -71,34 +65,17 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg, Winapi.WinNt,
+  TU.ObjPicker, UI.Modal.ComboDlg, Winapi.WinNt, UI.Helper,
   NtUtils.Lsa.Sid, NtUiLib.Exceptions;
 
 {$R *.dfm}
 
 { TCheckBoxMapping }
 
-procedure TCheckBoxMapping.Create(CheckBox: TCheckBox;
-  Attribute: Cardinal);
+procedure TCheckBoxMapping.Create;
 begin
   Self.CheckBox := CheckBox;
   Self.Attribute := Attribute;
-end;
-
-{ TCheckBoxHack }
-
-procedure TCheckBoxHack.SetCheckedEx(Value: Boolean);
-begin
-  ClicksDisabled := True;
-  Checked := Value;
-  ClicksDisabled := False;
-end;
-
-procedure TCheckBoxHack.SetStateEx(Value: TCheckBoxState);
-begin
-  ClicksDisabled := True;
-  State := Value;
-  ClicksDisabled := False;
 end;
 
 { TDialogPickUser }

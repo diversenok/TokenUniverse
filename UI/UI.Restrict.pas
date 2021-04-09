@@ -6,7 +6,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls, TU.Tokens,
   VclEx.ListView, UI.Prototypes.Forms, UI.Prototypes.Privileges,
-  UI.Prototypes.Groups, NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi,
+  UI.Prototypes.Groups2, NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi,
   NtUtils;
 
 type
@@ -24,8 +24,8 @@ type
     ButtonAddSID: TButton;
     CheckBoxUsual: TCheckBox;
     PrivilegesFrame: TPrivilegesFrame;
-    GroupsDisableFrame: TGroupsFrame;
-    GroupsRestrictFrame: TGroupsFrame;
+    GroupsRestrictFrame: TFrameGroups;
+    GroupsDisableFrame: TFrameGroups;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
@@ -61,10 +61,7 @@ begin
 
   ManuallyAdded := ManuallyAdded + [Group];
   GroupsRestrictFrame.Add([Group]);
-
-  // Check the newly added item
-  with GroupsRestrictFrame.ListViewEx do
-    Items[Pred(Items.Count)].Checked := True;
+  GroupsRestrictFrame.IsChecked[Group] := True;
 end;
 
 procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
@@ -141,14 +138,7 @@ begin
 
   // Populate resricted view
   GroupsRestrictFrame.Load(Groups);
-
-  // Check already restricted items
-  for i := 0 to High(AlreadyRestricted) do
-  begin
-    j := GroupsRestrictFrame.Find(AlreadyRestricted[i].Sid);
-    if j >= 0 then
-      GroupsRestrictFrame.ListViewEx.Items[j].Checked := True;
-  end;
+  GroupsRestrictFrame.Checked := AlreadyRestricted;
 end;
 
 constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
@@ -156,6 +146,8 @@ constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
 begin
   Token := SrcToken;
   inherited CreateChild(AOwner, True);
+  GroupsDisableFrame.Checkboxes := True;
+  GroupsRestrictFrame.Checkboxes := True;
   Show;
 end;
 
@@ -225,17 +217,17 @@ end;
 procedure TDialogRestrictToken.GroupsDisableFrameListViewExDblClick(
   Sender: TObject);
 begin
-  with GroupsDisableFrame.ListViewEx do
+  {with GroupsDisableFrame.ListViewEx do
     if Assigned(Selected) then
-      TDialogSidView.CreateView(Self, GroupsDisableFrame[Selected.Index].Sid);
+      TDialogSidView.CreateView(Self, GroupsDisableFrame[Selected.Index].Sid);}
 end;
 
 procedure TDialogRestrictToken.GroupsRestrictFrameListViewExDblClick(
   Sender: TObject);
 begin
-  with GroupsRestrictFrame.ListViewEx do
+  {with GroupsRestrictFrame.ListViewEx do
     if Assigned(Selected) then
-      TDialogSidView.CreateView(Self, GroupsRestrictFrame[Selected.Index].Sid);
+      TDialogSidView.CreateView(Self, GroupsRestrictFrame[Selected.Index].Sid);}
 end;
 
 end.

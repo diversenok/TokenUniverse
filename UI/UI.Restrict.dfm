@@ -2,8 +2,8 @@ object DialogRestrictToken: TDialogRestrictToken
   Left = 0
   Top = 0
   Caption = 'Create Restricted Token'
-  ClientHeight = 415
-  ClientWidth = 360
+  ClientHeight = 462
+  ClientWidth = 398
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 340
@@ -20,8 +20,8 @@ object DialogRestrictToken: TDialogRestrictToken
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
-    Left = 200
-    Top = 382
+    Left = 238
+    Top = 429
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -31,8 +31,8 @@ object DialogRestrictToken: TDialogRestrictToken
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
-    Left = 281
-    Top = 382
+    Left = 319
+    Top = 429
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -44,30 +44,28 @@ object DialogRestrictToken: TDialogRestrictToken
   object PageControl1: TPageControl
     Left = 4
     Top = 6
-    Width = 352
-    Height = 356
+    Width = 390
+    Height = 403
     ActivePage = TabSheetSidDisable
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 2
     object TabSheetSidDisable: TTabSheet
       Caption = 'SIDs to disable'
-      inline GroupsDisableFrame: TGroupsFrame
+      inline GroupsDisableFrame: TFrameGroups
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 338
-        Height = 322
+        Width = 376
+        Height = 369
         Align = alClient
         DoubleBuffered = True
         ParentDoubleBuffered = False
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited ListViewEx: TListViewEx
-          Width = 338
-          Height = 322
-          Checkboxes = True
-          OnDblClick = GroupsDisableFrameListViewExDblClick
+        inherited VST: TVirtualStringTree
+          Width = 376
+          Height = 369
         end
       end
     end
@@ -76,7 +74,7 @@ object DialogRestrictToken: TDialogRestrictToken
       ImageIndex = 1
       object CheckBoxWriteOnly: TCheckBox
         Left = 3
-        Top = 308
+        Top = 355
         Width = 217
         Height = 17
         Hint = 
@@ -99,8 +97,8 @@ object DialogRestrictToken: TDialogRestrictToken
         TabOrder = 0
       end
       object ButtonAddSID: TButton
-        Left = 263
-        Top = 296
+        Left = 301
+        Top = 343
         Width = 78
         Height = 25
         Hint = 'Add a new restricted SID that is not present in the list.'
@@ -115,7 +113,7 @@ object DialogRestrictToken: TDialogRestrictToken
       end
       object CheckBoxUsual: TCheckBox
         Left = 3
-        Top = 291
+        Top = 338
         Width = 217
         Height = 17
         Anchors = [akLeft, akBottom]
@@ -131,12 +129,12 @@ object DialogRestrictToken: TDialogRestrictToken
         State = cbChecked
         TabOrder = 2
       end
-      inline GroupsRestrictFrame: TGroupsFrame
+      inline GroupsRestrictFrame: TFrameGroups
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 338
-        Height = 284
+        Width = 376
+        Height = 331
         Margins.Bottom = 41
         Align = alClient
         DoubleBuffered = True
@@ -144,11 +142,9 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
-        inherited ListViewEx: TListViewEx
-          Width = 338
-          Height = 284
-          Checkboxes = True
-          OnDblClick = GroupsRestrictFrameListViewExDblClick
+        inherited VST: TVirtualStringTree
+          Width = 376
+          Height = 331
         end
       end
     end
@@ -158,7 +154,7 @@ object DialogRestrictToken: TDialogRestrictToken
       object CheckBoxDisableMaxPriv: TCheckBox
         Left = 6
         Top = 4
-        Width = 335
+        Width = 373
         Height = 17
         Hint = 
           'Ignore the list below and delete all the privileges except `SeCh' +
@@ -177,8 +173,8 @@ object DialogRestrictToken: TDialogRestrictToken
         AlignWithMargins = True
         Left = 3
         Top = 26
-        Width = 338
-        Height = 299
+        Width = 376
+        Height = 346
         Margins.Top = 26
         Align = alClient
         DoubleBuffered = True
@@ -196,7 +192,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxLUA: TCheckBox
     Left = 14
-    Top = 368
+    Top = 415
     Width = 120
     Height = 15
     Hint = 
@@ -208,7 +204,7 @@ object DialogRestrictToken: TDialogRestrictToken
   end
   object CheckBoxSandboxInert: TCheckBox
     Left = 14
-    Top = 389
+    Top = 436
     Width = 120
     Height = 17
     Hint = 
