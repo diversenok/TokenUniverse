@@ -542,7 +542,7 @@ end;
 constructor TToken.CreateAnonymous(Access: TAccessMask;
   HandleAttributes: Cardinal);
 begin
-  NtxOpenAnonymousToken(hxToken, Access, HandleAttributes);
+  NtxOpenAnonymousToken(hxToken, Access, HandleAttributes).RaiseOnError;
   FCaption := 'Anonymous token';
 end;
 
