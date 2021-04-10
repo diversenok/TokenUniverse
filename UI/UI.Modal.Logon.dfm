@@ -3,8 +3,8 @@ object LogonDialog: TLogonDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Logon user'
-  ClientHeight = 344
-  ClientWidth = 312
+  ClientHeight = 388
+  ClientWidth = 350
   Color = clBtnFace
   Constraints.MinHeight = 320
   Constraints.MinWidth = 266
@@ -30,7 +30,7 @@ object LogonDialog: TLogonDialog
   object LabelGroups: TLabel
     Left = 8
     Top = 116
-    Width = 296
+    Width = 334
     Height = 17
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight]
@@ -40,7 +40,7 @@ object LogonDialog: TLogonDialog
   object ComboLogonType: TComboBox
     Left = 8
     Top = 27
-    Width = 296
+    Width = 334
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
@@ -60,7 +60,7 @@ object LogonDialog: TLogonDialog
   end
   object ButtonCancel: TButton
     Left = 8
-    Top = 311
+    Top = 355
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -70,8 +70,8 @@ object LogonDialog: TLogonDialog
     TabOrder = 4
   end
   object ButtonContinue: TButton
-    Left = 229
-    Top = 311
+    Left = 267
+    Top = 355
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -81,8 +81,8 @@ object LogonDialog: TLogonDialog
     OnClick = ButtonContinueClick
   end
   object ButtonAddSID: TButton
-    Left = 118
-    Top = 311
+    Left = 137
+    Top = 355
     Width = 78
     Height = 25
     Anchors = [akBottom]
@@ -97,7 +97,7 @@ object LogonDialog: TLogonDialog
   object GroupBoxSource: TGroupBox
     Left = 8
     Top = 54
-    Width = 296
+    Width = 334
     Height = 54
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Token Source '
@@ -131,7 +131,7 @@ object LogonDialog: TLogonDialog
     object EditSourceLuid: TEdit
       Left = 167
       Top = 21
-      Width = 89
+      Width = 127
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       Enabled = False
@@ -139,7 +139,7 @@ object LogonDialog: TLogonDialog
       Text = '0'
     end
     object ButtonAllocLuid: TButton
-      Left = 262
+      Left = 300
       Top = 20
       Width = 25
       Height = 23
@@ -157,28 +157,56 @@ object LogonDialog: TLogonDialog
   object GroupsPanel: TPanel
     Left = 8
     Top = 137
-    Width = 296
-    Height = 168
+    Width = 334
+    Height = 212
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 5
-    inline GroupsFrame: TGroupsFrame
-      AlignWithMargins = True
-      Left = 3
-      Top = 3
-      Width = 290
-      Height = 162
+    inline GroupsFrame: TFrameGroups
+      Left = 0
+      Top = 0
+      Width = 334
+      Height = 212
       Align = alClient
       DoubleBuffered = True
       ParentDoubleBuffered = False
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited ListViewEx: TListViewEx
-        Width = 290
-        Height = 162
-        PopupMenu = PopupMenu
-        OnDblClick = MenuEditClick
+      inherited VST: TVirtualStringTree
+        Width = 334
+        Height = 212
+        Columns = <
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 0
+            Text = 'Friendly Name'
+            Width = 150
+          end
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 1
+            Text = 'SID'
+            Width = 280
+          end
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 2
+            Text = 'SID Type'
+            Width = 110
+          end
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 3
+            Text = 'State'
+            Width = 90
+          end
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 4
+            Text = 'Flags'
+            Width = 90
+          end>
       end
     end
   end

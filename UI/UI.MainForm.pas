@@ -223,7 +223,7 @@ end;
 
 procedure TFormMain.ActionLogon(Sender: TObject);
 begin
-  TLogonDialog.Create(Self).ShowModal;
+  TLogonDialog.Create(Self).Show;
 end;
 
 procedure TFormMain.ActionOpen(Sender: TObject);

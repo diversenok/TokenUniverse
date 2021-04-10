@@ -5,8 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms, Vcl.ComCtrls,
-  VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups,
-  Winapi.WinBase, Winapi.NtSecApi, Vcl.ExtCtrls;
+  VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups2,
+  Winapi.WinBase, Winapi.NtSecApi, Vcl.ExtCtrls, NtUtils;
 
 type
   TLogonDialog = class(TChildForm)
@@ -25,8 +25,8 @@ type
     StaticSourceLuid: TStaticText;
     EditSourceLuid: TEdit;
     ButtonAllocLuid: TButton;
-    GroupsFrame: TGroupsFrame;
     GroupsPanel: TPanel;
+    GroupsFrame: TFrameGroups;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
@@ -36,13 +36,14 @@ type
     procedure ComboLogonTypeChange(Sender: TObject);
   private
     function GetLogonType: TSecurityLogonType;
+    procedure EditSingleGroup(const Value: TGroup);
     procedure SuggestCurrentLogonGroup;
   end;
 
 implementation
 
 uses
-  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser, NtUtils,
+  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes,
   NtUiLib.Exceptions, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
@@ -59,13 +60,13 @@ begin
     (RtlSubAuthoritySid(Sid.Data, 0)^ = SECURITY_LOGON_IDS_RID);
 end;
 
-procedure TLogonDialog.ButtonAddSIDClick(Sender: TObject);
+procedure TLogonDialog.ButtonAddSIDClick;
 begin
   GroupsFrame.Add([TDialogPickUser.PickNew(Self)]);
   ButtonContinue.SetFocus;
 end;
 
-procedure TLogonDialog.ButtonAllocLuidClick(Sender: TObject);
+procedure TLogonDialog.ButtonAllocLuidClick;
 var
   NewLuid: TLuid;
 begin
@@ -73,11 +74,11 @@ begin
     EditSourceLuid.Text := IntToHexEx(NewLuid);
 end;
 
-procedure TLogonDialog.ButtonContinueClick(Sender: TObject);
+procedure TLogonDialog.ButtonContinueClick;
 begin
   // When logging users with additional groups at least one of them shoud be a
   // logon group
-  if GroupsFrame.ListViewEx.Items.Count > 0 then
+  if GroupsFrame.VST.RootNodeCount > 0 then
     SuggestCurrentLogonGroup;
 
   Enabled := False;
@@ -110,19 +111,31 @@ begin
   ModalResult := mrOk;
 end;
 
-procedure TLogonDialog.ComboLogonTypeChange(Sender: TObject);
+procedure TLogonDialog.ComboLogonTypeChange;
 begin
   EditSourceName.Enabled := (ComboLogonType.ItemIndex = S4U_INDEX);
   EditSourceLuid.Enabled := EditSourceName.Enabled;
   ButtonAllocLuid.Enabled := EditSourceName.Enabled;
 end;
 
-procedure TLogonDialog.FormCreate(Sender: TObject);
+procedure TLogonDialog.EditSingleGroup;
 begin
-  ButtonAllocLuidClick(Sender);
+  GroupsFrame.EditSelectedGroup(
+    procedure (var Group: TGroup)
+    begin
+      Group := TDialogPickUser.PickEditOne(Self, Group);
+    end
+  );
 end;
 
-function TLogonDialog.GetLogonType: TSecurityLogonType;
+procedure TLogonDialog.FormCreate;
+begin
+  ButtonAllocLuidClick(Sender);
+  GroupsFrame.NodePopupMenu := PopupMenu;
+  GroupsFrame.OnDefaultAction := EditSingleGroup;
+end;
+
+function TLogonDialog.GetLogonType;
 const
   LogonTypeMapping: array [1 .. 7] of TSecurityLogonType = (
     LogonTypeInteractive, LogonTypeNetwork, LogonTypeNetworkCleartext,
@@ -132,29 +145,28 @@ begin
   Result := LogonTypeMapping[ComboLogonType.ItemIndex];
 end;
 
-procedure TLogonDialog.MenuEditClick(Sender: TObject);
-var
-  AddAttributes, RemoveAttriutes: TGroupAttributes;
+procedure TLogonDialog.MenuEditClick;
 begin
-  with GroupsFrame.ListViewEx do
-  begin
-    // Edit one group: SID and attributes
-    if (SelCount = 1) and Assigned(Selected) then
-      GroupsFrame[Selected.Index] := TDialogPickUser.PickEditOne(Self,
-        GroupsFrame[Selected.Index]);
+  // Single edit
+  if GroupsFrame.VST.SelectedCount = 1 then
+    EditSingleGroup(Default(TGroup))
 
-    // Edit multiple groups: only attributes
-    if SelCount > 1 then
-    begin
-      TDialogPickUser.PickEditMultiple(Self, GroupsFrame.Selected, AddAttributes,
-        RemoveAttriutes);
-
-      GroupsFrame.UpdateSelected(AddAttributes, RemoveAttriutes);
-    end;
-  end;
+  // Multiple edit
+  else if GroupsFrame.VST.SelectedCount > 1 then
+    GroupsFrame.EditSelectedGroups(
+      procedure (
+        const Groups: TArray<TGroup>;
+        var AttributesToClear: TGroupAttributes;
+        var AttributesToSet: TGroupAttributes
+      )
+      begin
+        TDialogPickUser.PickEditMultiple(Self, Groups, AttributesToSet,
+          AttributesToClear);
+      end
+    );
 end;
 
-procedure TLogonDialog.MenuRemoveClick(Sender: TObject);
+procedure TLogonDialog.MenuRemoveClick;
 begin
   GroupsFrame.RemoveSelected;
 end;
