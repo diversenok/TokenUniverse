@@ -75,7 +75,7 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'WdcRunTaskAsInteractiveUser'
-        TabOrder = 6
+        TabOrder = 8
         OnClick = ChangedExecMethod
       end
       object RadioButtonWmi: TRadioButton
@@ -128,7 +128,7 @@ object DialogRun: TDialogRun
         Anchors = [akTop]
         Caption = 'Request elevation'
         Enabled = False
-        TabOrder = 7
+        TabOrder = 10
       end
       object LinkLabelToken: TLinkLabel
         Left = 8
@@ -138,7 +138,7 @@ object DialogRun: TDialogRun
         Anchors = [akLeft, akTop, akRight]
         AutoSize = False
         Caption = 'Using token: <not specified>'
-        TabOrder = 8
+        TabOrder = 11
         OnLinkClick = LinkLabelTokenLinkClick
       end
       object CheckBoxRunAsInvoker: TCheckBox
@@ -165,7 +165,7 @@ object DialogRun: TDialogRun
           'code injection'
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcess via code injection'
-        TabOrder = 10
+        TabOrder = 7
         OnClick = ChangedExecMethod
       end
       object RadioButtonIShellDispatch: TRadioButton
@@ -175,7 +175,7 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'ShellExecute via IShellDispatch2'
-        TabOrder = 11
+        TabOrder = 6
         OnClick = ChangedExecMethod
       end
     end

@@ -320,6 +320,7 @@ end;
 procedure TDialogRun.MenuSelfClick(Sender: TObject);
 begin
   EditExe.Text := ParamStr(0);
+  ButtonRun.SetFocus;
 end;
 
 procedure TDialogRun.OnCaptionChange(const NewCaption: String);
