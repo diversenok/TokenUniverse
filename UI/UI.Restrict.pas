@@ -31,14 +31,13 @@ type
     procedure DoCloseForm(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
-    procedure GroupsDisableFrameListViewExDblClick(Sender: TObject);
-    procedure GroupsRestrictFrameListViewExDblClick(Sender: TObject);
   private
     Token: IToken;
     ManuallyAdded: TArray<TGroup>;
     function GetFlags: Cardinal;
     procedure ChangedCaption(const NewCaption: String);
     procedure ChangedGroups(const NewGroups: TArray<TGroup>);
+    procedure InspectGroup(const Group: TGroup);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
   end;
@@ -53,7 +52,7 @@ uses
 
 { TDialogRestrictToken }
 
-procedure TDialogRestrictToken.ButtonAddSIDClick(Sender: TObject);
+procedure TDialogRestrictToken.ButtonAddSIDClick;
 var
   Group: TGroup;
 begin
@@ -64,7 +63,7 @@ begin
   GroupsRestrictFrame.IsChecked[Group] := True;
 end;
 
-procedure TDialogRestrictToken.ButtonOKClick(Sender: TObject);
+procedure TDialogRestrictToken.ButtonOKClick;
 var
   NewToken: IToken;
 begin
@@ -89,15 +88,14 @@ begin
     Close;
 end;
 
-procedure TDialogRestrictToken.ChangedCaption(const NewCaption: String);
+procedure TDialogRestrictToken.ChangedCaption;
 begin
   Caption := Format('Create Restricted Token for "%s"', [NewCaption]);
 end;
 
-procedure TDialogRestrictToken.ChangedGroups(const NewGroups: TArray<TGroup>);
+procedure TDialogRestrictToken.ChangedGroups;
 var
   Groups, AlreadyRestricted: TArray<TGroup>;
-  i, j: Integer;
 begin
   Groups := Copy(NewGroups, 0, Length(NewGroups));
 
@@ -112,7 +110,7 @@ begin
   TArray.FilterInline<TGroup>(Groups,
     function (const Entry: TGroup): Boolean
     begin
-      Result := Entry.Attributes and SE_GROUP_ENABLED <> 0;
+      Result := BitTest(Entry.Attributes and SE_GROUP_ENABLED);
     end
   );
 
@@ -141,30 +139,30 @@ begin
   GroupsRestrictFrame.Checked := AlreadyRestricted;
 end;
 
-constructor TDialogRestrictToken.CreateFromToken(AOwner: TComponent;
-  SrcToken: IToken);
+constructor TDialogRestrictToken.CreateFromToken;
 begin
   Token := SrcToken;
   inherited CreateChild(AOwner, True);
   GroupsDisableFrame.Checkboxes := True;
   GroupsRestrictFrame.Checkboxes := True;
+  GroupsDisableFrame.OnDefaultAction := InspectGroup;
+  GroupsRestrictFrame.OnDefaultAction := InspectGroup;
   Show;
 end;
 
-procedure TDialogRestrictToken.DoCloseForm(Sender: TObject);
+procedure TDialogRestrictToken.DoCloseForm;
 begin
   Close;
 end;
 
-procedure TDialogRestrictToken.FormClose(Sender: TObject;
-  var Action: TCloseAction);
+procedure TDialogRestrictToken.FormClose;
 begin
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   Token.Events.OnPrivilegesChange.Unsubscribe(PrivilegesFrame.Load);
   Token.Events.OnGroupsChange.Unsubscribe(ChangedGroups);
 end;
 
-procedure TDialogRestrictToken.FormCreate(Sender: TObject);
+procedure TDialogRestrictToken.FormCreate;
 var
   Group: TGroup;
 begin
@@ -201,33 +199,26 @@ begin
   Token.Events.OnGroupsChange.Subscribe(ChangedGroups, True);
 end;
 
-function TDialogRestrictToken.GetFlags: Cardinal;
+function TDialogRestrictToken.GetFlags;
 begin
   Result := 0;
+
   if CheckBoxDisableMaxPriv.Checked then
     Result := Result or DISABLE_MAX_PRIVILEGE;
+
   if CheckBoxSandboxInert.Checked then
     Result := Result or SANDBOX_INERT;
+
   if CheckBoxLUA.Checked then
     Result := Result or LUA_TOKEN;
+
   if not CheckBoxWriteOnly.Checked then
     Result := Result or WRITE_RESTRICTED;
 end;
 
-procedure TDialogRestrictToken.GroupsDisableFrameListViewExDblClick(
-  Sender: TObject);
+procedure TDialogRestrictToken.InspectGroup;
 begin
-  {with GroupsDisableFrame.ListViewEx do
-    if Assigned(Selected) then
-      TDialogSidView.CreateView(Self, GroupsDisableFrame[Selected.Index].Sid);}
-end;
-
-procedure TDialogRestrictToken.GroupsRestrictFrameListViewExDblClick(
-  Sender: TObject);
-begin
-  {with GroupsRestrictFrame.ListViewEx do
-    if Assigned(Selected) then
-      TDialogSidView.CreateView(Self, GroupsRestrictFrame[Selected.Index].Sid);}
+  TDialogSidView.CreateView(Self, Group.Sid);
 end;
 
 end.
