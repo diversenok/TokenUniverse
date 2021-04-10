@@ -2,10 +2,10 @@ object DialogRun: TDialogRun
   Left = 0
   Top = 0
   Caption = 'Run program...'
-  ClientHeight = 390
+  ClientHeight = 416
   ClientWidth = 331
   Color = clBtnFace
-  Constraints.MinHeight = 428
+  Constraints.MinHeight = 455
   Constraints.MinWidth = 347
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -19,9 +19,6 @@ object DialogRun: TDialogRun
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  DesignSize = (
-    331
-    390)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
@@ -29,7 +26,7 @@ object DialogRun: TDialogRun
     Left = 3
     Top = 52
     Width = 325
-    Height = 307
+    Height = 333
     Margins.Top = 52
     Margins.Bottom = 31
     ActivePage = TabMethod
@@ -37,33 +34,23 @@ object DialogRun: TDialogRun
     TabOrder = 2
     object TabMethod: TTabSheet
       Caption = 'Method'
-      DesignSize = (
-        317
-        279)
       object LabelOther: TLabel
         Left = 8
-        Top = 213
+        Top = 181
         Width = 76
         Height = 13
         Caption = 'Other methods:'
       end
       object LabelCred: TLabel
         Left = 8
-        Top = 158
+        Top = 133
         Width = 121
         Height = 13
         Caption = 'Using explicit credentials:'
       end
-      object LabelAppContainer: TLabel
-        Left = 8
-        Top = 32
-        Width = 70
-        Height = 13
-        Caption = 'AppContainer:'
-      end
       object RadioButtonRtl: TRadioButton
         Left = 24
-        Top = 125
+        Top = 102
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -73,8 +60,8 @@ object DialogRun: TDialogRun
       end
       object RadioButtonShell: TRadioButton
         Left = 24
-        Top = 232
-        Width = 113
+        Top = 200
+        Width = 135
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'ShellExecuteEx'
@@ -83,7 +70,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWdc: TRadioButton
         Left = 24
-        Top = 255
+        Top = 269
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -93,7 +80,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWmi: TRadioButton
         Left = 24
-        Top = 102
+        Top = 79
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -103,7 +90,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonAsUser: TRadioButton
         Left = 24
-        Top = 56
+        Top = 33
         Width = 154
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -115,7 +102,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWithToken: TRadioButton
         Left = 24
-        Top = 79
+        Top = 56
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -125,7 +112,7 @@ object DialogRun: TDialogRun
       end
       object RadioButtonWithLogon: TRadioButton
         Left = 24
-        Top = 177
+        Top = 152
         Width = 276
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -136,7 +123,7 @@ object DialogRun: TDialogRun
       end
       object CheckBoxRunas: TCheckBox
         Left = 184
-        Top = 232
+        Top = 200
         Width = 116
         Height = 15
         Anchors = [akTop]
@@ -157,7 +144,7 @@ object DialogRun: TDialogRun
       end
       object CheckBoxRunAsInvoker: TCheckBox
         Left = 184
-        Top = 56
+        Top = 33
         Width = 116
         Height = 17
         Hint = 
@@ -169,35 +156,33 @@ object DialogRun: TDialogRun
         State = cbGrayed
         TabOrder = 9
       end
-      object EditAppContainer: TEdit
-        Left = 84
-        Top = 29
-        Width = 133
-        Height = 21
+      object RadioButtonRemote: TRadioButton
+        Left = 24
+        Top = 246
+        Width = 276
+        Height = 17
+        Hint = 
+          'Call CreateProcess in a context of a different process via shell' +
+          'code injection'
         Anchors = [akLeft, akTop, akRight]
-        ReadOnly = True
+        Caption = 'CreateProcess via code injection'
         TabOrder = 10
-        Text = 'No'
+        OnClick = ChangedExecMethod
       end
-      object ButtonAC: TButton
-        Left = 223
-        Top = 27
-        Width = 83
-        Height = 25
-        Anchors = [akTop, akRight]
-        Caption = 'Choose'
-        DropDownMenu = PopupClearAC
-        Style = bsSplitButton
+      object RadioButtonIShellDispatch: TRadioButton
+        Left = 24
+        Top = 223
+        Width = 276
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'ShellExecute via IShellDispatch2'
         TabOrder = 11
-        OnClick = ButtonACClick
+        OnClick = ChangedExecMethod
       end
     end
     object TabParams: TTabSheet
       Caption = 'Parameters'
       ImageIndex = 4
-      DesignSize = (
-        317
-        279)
       object LabelDesktop: TLabel
         Left = 4
         Top = 100
@@ -219,6 +204,13 @@ object DialogRun: TDialogRun
         Height = 13
         Caption = 'Window mode:'
       end
+      object LabelAppContainer: TLabel
+        Left = 3
+        Top = 200
+        Width = 70
+        Height = 13
+        Caption = 'AppContainer:'
+      end
       object EditParams: TLabeledEdit
         Left = 4
         Top = 20
@@ -232,7 +224,7 @@ object DialogRun: TDialogRun
       end
       object GroupBoxFlags: TGroupBox
         Left = 3
-        Top = 197
+        Top = 223
         Width = 307
         Height = 79
         Anchors = [akLeft, akRight, akBottom]
@@ -322,6 +314,28 @@ object DialogRun: TDialogRun
           'Show minimized'
           'Show maximized')
       end
+      object ButtonAC: TButton
+        Left = 226
+        Top = 195
+        Width = 83
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Choose'
+        DropDownMenu = PopupClearAC
+        Style = bsSplitButton
+        TabOrder = 6
+        OnClick = ButtonACClick
+      end
+      object EditAppContainer: TEdit
+        Left = 79
+        Top = 197
+        Width = 141
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        ReadOnly = True
+        TabOrder = 7
+        Text = 'No'
+      end
     end
     object TabEnv: TTabSheet
       Caption = 'Environment'
@@ -330,9 +344,6 @@ object DialogRun: TDialogRun
     object TabParent: TTabSheet
       Caption = 'Parent process'
       ImageIndex = 2
-      DesignSize = (
-        317
-        279)
       object ButtonChooseParent: TButton
         Left = 223
         Top = 14
@@ -359,7 +370,7 @@ object DialogRun: TDialogRun
   end
   object ButtonClose: TButton
     Left = 253
-    Top = 361
+    Top = 387
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -371,7 +382,7 @@ object DialogRun: TDialogRun
   end
   object ButtonRun: TButton
     Left = 172
-    Top = 361
+    Top = 387
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -402,6 +413,15 @@ object DialogRun: TDialogRun
     Style = bsSplitButton
     TabOrder = 1
     OnClick = ButtonBrowseClick
+  end
+  object cbxOpenToken: TCheckBox
+    Left = 8
+    Top = 391
+    Width = 158
+    Height = 17
+    Anchors = [akLeft, akBottom]
+    Caption = 'Open token afterwards'
+    TabOrder = 5
   end
   object PopupMenuExe: TPopupMenu
     Left = 271

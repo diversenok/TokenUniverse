@@ -491,8 +491,6 @@ begin
 
   if not Assigned(Cache) then
     Cache := TTokenCacheAndEvents.Create;
-
-  CompileTimeIncludeAllNtTypes;
 end;
 
 procedure TToken.AssignToProcess(PID: NativeUInt);

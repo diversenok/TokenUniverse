@@ -7,7 +7,7 @@ uses
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment,
   NtUtils.Objects, Winapi.WinUser, NtUtils, Winapi.ProcessThreadsApi,
-  NtUtils.Processes.Create;
+  NtUtils.Processes.Create, Ntapi.ntpsapi;
 
 type
   TDialogRun = class(TChildForm)
@@ -58,6 +58,9 @@ type
     ButtonAC: TButton;
     PopupClearAC: TPopupMenu;
     MenuClearAC: TMenuItem;
+    RadioButtonRemote: TRadioButton;
+    cbxOpenToken: TCheckBox;
+    RadioButtonIShellDispatch: TRadioButton;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -76,6 +79,7 @@ type
   private
     ExecMethod: TCreateProcessMethod;
     FToken: IToken;
+    ParentAccessMask: TProcessAccessMask;
     hxParentProcess: IHandle;
     AppContainerSid: ISid;
     procedure UpdateEnabledState;
@@ -90,12 +94,12 @@ type
 implementation
 
 uses
-  Winapi.WinNt, Winapi.Shlwapi, Ntapi.ntpsapi, NtUtils.WinUser, Ntapi.ntseapi,
+  Winapi.WinNt, Winapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi,
   NtUtils.Processes, NtUiLib.Exceptions, NtUtils.Tokens.Query,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
-  NtUtils.Profiles, NtUtils.Tokens, TU.Exec, UI.Information, UI.ProcessList,
-  UI.AppContainer.List, UI.MainForm;
+  NtUtils.Processes.Create.Remote, NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
+  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm;
 
 {$R *.dfm}
 
@@ -128,7 +132,7 @@ var
 begin
   ClientIdEx := TProcessListDialog.Execute(Self, False);
   NtxOpenProcess(hxParentProcess, ClientIdEx.ProcessID,
-    PROCESS_CREATE_PROCESS).RaiseOnError;
+    ParentAccessMask).RaiseOnError;
 
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
     ClientIdEx.ProcessID]);
@@ -159,30 +163,30 @@ begin
     Options.hxToken := FToken.Handle;
 
   if CheckBoxBreakaway.Checked then
-    Options.Flags := Options.Flags or PROCESS_OPTION_BREAKAWAY_FROM_JOB;
+    Include(Options.Flags, poBreakawayFromJob);
 
   if CheckBoxSuspended.Checked then
-    Options.Flags := Options.Flags or PROCESS_OPTION_SUSPENDED;
+    Include(Options.Flags, poSuspended);
 
   if CheckBoxInherit.Checked then
-    Options.Flags := Options.Flags or PROCESS_OPTION_INHERIT_HANDLES;
+    Include(Options.Flags, poInheritHandles);
 
   if CheckBoxNewConsole.Checked then
-    Options.Flags := Options.Flags or PROCESS_OPTION_NEW_CONSOLE;
+    Include(Options.Flags, poNewConsole);
 
   if ComboBoxShowMode.ItemIndex <> Integer(SW_SHOW_NORMAL) then
-    Options.Flags := Options.Flags or PROCESS_OPTION_USE_WINDOW_MODE;
+    Include(Options.Flags, poUseWindowMode);
 
   if CheckBoxRunAsInvoker.State <> cbGrayed then
   begin
     if CheckBoxRunAsInvoker.Checked then
-      Options.Flags := Options.Flags or PROCESS_OPTION_RUN_AS_INVOKER_ON
+      Include(Options.Flags, poRunAsInvokerOn)
     else
-      Options.Flags := Options.Flags or PROCESS_OPTION_RUN_AS_INVOKER_OFF;
+      Include(Options.Flags, poRunAsInvokerOff);
   end;
 
   if CheckBoxRunas.Checked then
-    Options.Flags := Options.Flags or PROCESS_OPTION_REQUIRE_ELEVATION;
+    Include(Options.Flags, poRequireElevation);
 
   // TODO: check that the process didn't crash immediately
 
@@ -192,17 +196,22 @@ begin
     raise Exception.Create('No exec method available');
 
   // Suggest opening the token since we have a handle anyway
-  if Assigned(ProcInfo.hxProcess) and NtxOpenProcessToken(hxToken,
-    ProcInfo.hxProcess.Handle, MAXIMUM_ALLOWED).IsSuccess then
+  if Assigned(ProcInfo.hxProcess) and cbxOpenToken.Checked and
+    NtxOpenProcessToken(hxToken, ProcInfo.hxProcess.Handle,
+    MAXIMUM_ALLOWED).IsSuccess then
     FormMain.TokenView.Add(TToken.Create(hxToken,
       Format('%s [%d]', [ExtractFileName(EditExe.Text),
         ProcInfo.ClientId.UniqueProcess])));
 end;
 
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
+var
+  OldParentAccessMask: TProcessAccessMask;
 begin
   if Sender = RadioButtonAsUser then
     ExecMethod := AdvxCreateProcess
+  else if Sender = RadioButtonRemote then
+    ExecMethod := AdvxCreateProcessRemote
   else if Sender = RadioButtonWithToken then
     ExecMethod := AdvxCreateProcessWithToken
   else if Sender = RadioButtonWithLogon then
@@ -215,8 +224,26 @@ begin
     ExecMethod := WdcxCreateProcess
   else if Sender = RadioButtonWMI then
     ExecMethod := WmixCreateProcess
+  else if Sender = RadioButtonIShellDispatch then
+    ExecMethod := ComxShellExecute
   else
     ExecMethod := nil;
+
+  if ppParentProcess in ExecSupports(ExecMethod) then
+  begin
+    OldParentAccessMask := ParentAccessMask;
+
+    // Determine required access to the parent process
+    if @ExecMethod = @AdvxCreateProcessRemote then
+      ParentAccessMask := PROCESS_CREATE_PROCESS_REMOTE
+    else
+      ParentAccessMask := PROCESS_CREATE_PROCESS;
+
+    // Try to reopen the parent if necessary; clear silently on failure
+    if (ParentAccessMask <> OldParentAccessMask) and Assigned(hxParentProcess)
+      and not NtxReopenHandle(hxParentProcess, ParentAccessMask).IsSuccess then
+        MenuClearParentClick(Sender);
+  end;
 
   UpdateEnabledState;
 end;
@@ -224,6 +251,7 @@ end;
 constructor TDialogRun.Create(AOwner: TComponent);
 begin
   inherited CreateChild(AOwner, True);
+  ParentAccessMask := PROCESS_CREATE_PROCESS;
 end;
 
 procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -359,6 +387,8 @@ begin
   CheckBoxRunAsInvoker.Enabled := ppRunAsInvoker in SupportedOptions;
   EditParent.Enabled := ppParentProcess in SupportedOptions;
   ButtonChooseParent.Enabled := ppParentProcess in SupportedOptions;
+  EditAppContainer.Enabled := ppAppContainer in SupportedOptions;
+  ButtonAC.Enabled := ppAppContainer in SupportedOptions;
 end;
 
 end.

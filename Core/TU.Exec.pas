@@ -6,14 +6,12 @@ uses
   NtUtils.Processes.Create;
 
 type
-  TExecParam = (
+  TExecParamSet = set of (
     ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
     ppNewConsole, ppRequireElevation, ppShowWindowMode, ppRunAsInvoker,
     ppEnvironment, ppAppContainer
   );
-
-  TExecParamSet = set of TExecParam;
 
 // Determine if a process creation method supports an option
 function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
@@ -22,7 +20,8 @@ implementation
 
 uses
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
-  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com;
+  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
+  NtUtils.Processes.Create.Remote;
 
 function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
 begin
@@ -39,6 +38,10 @@ begin
     Result := [ppCurrentDirectory, ppDesktop, ppLogonFlags,
       ppCreateSuspended, ppShowWindowMode, ppEnvironment]
 
+  else if Pointer(@Method) = Pointer(@AdvxCreateProcessRemote) then
+    Result := [ppCurrentDirectory, ppDesktop, ppParentProcess, ppInheritHandles,
+      ppCreateSuspended, ppBreakaway, ppNewConsole]
+
   else if Pointer(@Method) = Pointer(@ShlxExecute) then
     Result := [ppCurrentDirectory, ppNewConsole, ppRequireElevation,
       ppShowWindowMode, ppRunAsInvoker]
@@ -53,6 +56,9 @@ begin
 
   else if Pointer(@Method) = Pointer(@WdcxCreateProcess) then
     Result := [ppCurrentDirectory]
+
+  else if Pointer(@Method) = Pointer(@ComxShellExecute) then
+    Result := [ppCurrentDirectory, ppRequireElevation, ppShowWindowMode]
 
   else
     Result := [];

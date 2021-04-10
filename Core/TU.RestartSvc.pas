@@ -73,7 +73,7 @@ var
 begin
   Options := Default(TCreateProcessOptions);
   Options.Application := ParamStr(0);
-  Options.Flags := PROCESS_OPTION_REQUIRE_ELEVATION;
+  Options.Flags := [poRequireElevation];
 
   // The parameter states that the execution of the service was delegated
   case RestartMethod of

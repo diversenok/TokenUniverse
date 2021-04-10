@@ -126,8 +126,12 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [x] CreateProcessWithToken
  - [x] WMI
  - [x] RtlCreateUserProcess
- - [ ] CreateProcessWithLogon (no token, only credentials)
- - [x] ShellExecuteEx (no token, can elevate)
+ - [ ] NtCreateUserProcess
+ - [ ] NtCreateProcessEx
+ - [ ] CreateProcessWithLogon
+ - [x] ShellExecuteEx
+ - [x] ShellExecute via IShellDispatch2
+ - [x] CtrateProcess via code injection
  - [x] WdcRunTaskAsInteractiveUser (no token)
 
 ### Parameters
