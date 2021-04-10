@@ -128,7 +128,7 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [x] RtlCreateUserProcess
  - [ ] NtCreateUserProcess
  - [ ] NtCreateProcessEx
- - [ ] CreateProcessWithLogon
+ - [x] CreateProcessWithLogon
  - [x] ShellExecuteEx
  - [x] ShellExecute via IShellDispatch2
  - [x] CtrateProcess via code injection

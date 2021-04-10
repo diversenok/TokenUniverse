@@ -384,7 +384,7 @@ type
 
     /// <summary> Logons a user with the specified credentials. </summary>
     constructor CreateWithLogon(LogonType: TSecurityLogonType;
-      Domain, User: String; Password: PWideChar; AddGroups: TArray<TGroup>);
+      Domain, User, Password: String; AddGroups: TArray<TGroup>);
 
     /// <summary> Logon a user using Services 4 Users. </summary>
     constructor CreateS4ULogon(Domain, User: String; const Source: TTokenSource;
@@ -725,9 +725,9 @@ begin
 end;
 
 constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;
-  Domain, User: String; Password: PWideChar; AddGroups: TArray<TGroup>);
+  Domain, User, Password: String; AddGroups: TArray<TGroup>);
 begin
-  LsaxLogonUser(hxToken, Domain, User, Password, LogonType,
+  LsaxLogonUser(hxToken, Domain, User, PWideChar(Password), LogonType,
     AddGroups).RaiseOnError;
 
   FCaption := 'Logon of ' + User;

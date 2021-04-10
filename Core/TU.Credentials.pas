@@ -8,8 +8,7 @@ uses
   Winapi.Windows, TU.Tokens;
 
 type
-  TCredentialsCallback = procedure(Domain, User: String; Password: PWideChar)
-    of object;
+  TCredentialsCallback = reference to procedure(Domain, User, Password: String);
 
 procedure PromptCredentialsUI(ParentWindow: HWND;
   Callback: TCredentialsCallback; AllowNoPassword: Boolean = False);

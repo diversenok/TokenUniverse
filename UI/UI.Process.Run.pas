@@ -99,7 +99,8 @@ uses
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
   NtUtils.Processes.Create.Remote, NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
-  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm;
+  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm,
+  TU.Credentials;
 
 {$R *.dfm}
 
@@ -187,6 +188,17 @@ begin
 
   if CheckBoxRunas.Checked then
     Include(Options.Flags, poRequireElevation);
+
+  // Prompt for credentials if necessary
+  if @ExecMethod = @AdvxCreateProcessWithLogon then
+    PromptCredentialsUI(Handle,
+      procedure (Domain, User, Password: String)
+      begin
+        Options.Domain := Domain;
+        Options.Username := User;
+        Options.Password := Password;
+      end
+    );
 
   // TODO: check that the process didn't crash immediately
 

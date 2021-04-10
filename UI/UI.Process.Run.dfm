@@ -117,7 +117,6 @@ object DialogRun: TDialogRun
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'CreateProcessWithLogon'
-        Enabled = False
         TabOrder = 4
         OnClick = ChangedExecMethod
       end

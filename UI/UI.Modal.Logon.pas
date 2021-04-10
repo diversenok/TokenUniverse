@@ -35,7 +35,6 @@ type
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ComboLogonTypeChange(Sender: TObject);
   private
-    procedure TokenCreationCallback(Domain, User: String; Password: PWideChar);
     function GetLogonType: TSecurityLogonType;
     procedure SuggestCurrentLogonGroup;
   end;
@@ -82,9 +81,29 @@ begin
     SuggestCurrentLogonGroup;
 
   Enabled := False;
+
   try
-    PromptCredentialsUI(Handle, TokenCreationCallback,
-      ComboLogonType.ItemIndex = S4U_INDEX);
+    PromptCredentialsUI(Handle,
+      procedure (Domain, User, Password: String)
+      var
+        Source: TTokenSource;
+      begin
+        if ComboLogonType.ItemIndex = S4U_INDEX then
+        begin
+          // Use Services 4 Users logon
+          Source.Name := EditSourceName.Text;
+          Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
+            'Source LUID');
+
+          FormMain.TokenView.Add(TToken.CreateS4ULogon(Domain, User, Source,
+            GroupsFrame.All));
+        end
+        else
+          FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType, Domain, User,
+            Password, GroupsFrame.All));
+      end,
+      ComboLogonType.ItemIndex = S4U_INDEX
+    );
   finally
     Enabled := True;
   end;
@@ -171,26 +190,6 @@ begin
     IDCANCEL:
       Abort;
   end;
-end;
-
-procedure TLogonDialog.TokenCreationCallback(Domain, User: String;
-  Password: PWideChar);
-var
-  Source: TTokenSource;
-begin
-  if ComboLogonType.ItemIndex = S4U_INDEX then
-  begin
-    // Use Services 4 Users logon
-    Source.Name := EditSourceName.Text;
-    Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
-      'Source LUID');
-
-    FormMain.TokenView.Add(TToken.CreateS4ULogon(Domain, User, Source,
-      GroupsFrame.All));
-  end
-  else
-    FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType, Domain, User,
-      Password, GroupsFrame.All));
 end;
 
 end.
