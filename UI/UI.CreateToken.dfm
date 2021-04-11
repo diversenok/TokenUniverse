@@ -2,8 +2,8 @@ object DialogCreateToken: TDialogCreateToken
   Left = 0
   Top = 0
   Caption = 'Create new token'
-  ClientHeight = 367
-  ClientWidth = 328
+  ClientHeight = 406
+  ClientWidth = 400
   Color = clBtnFace
   Constraints.MinHeight = 370
   Constraints.MinWidth = 344
@@ -20,8 +20,8 @@ object DialogCreateToken: TDialogCreateToken
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
-    Left = 169
-    Top = 337
+    Left = 241
+    Top = 376
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -32,8 +32,8 @@ object DialogCreateToken: TDialogCreateToken
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
-    Left = 250
-    Top = 337
+    Left = 322
+    Top = 376
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -47,8 +47,8 @@ object DialogCreateToken: TDialogCreateToken
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 322
-    Height = 331
+    Width = 394
+    Height = 370
     Margins.Bottom = 33
     ActivePage = TabGeneral
     Align = alClient
@@ -82,7 +82,7 @@ object DialogCreateToken: TDialogCreateToken
       object ComboLogonSession: TComboBox
         Left = 114
         Top = 84
-        Width = 195
+        Width = 267
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 3
@@ -91,7 +91,7 @@ object DialogCreateToken: TDialogCreateToken
       object ComboOwner: TComboBox
         Left = 114
         Top = 111
-        Width = 195
+        Width = 267
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
@@ -103,7 +103,7 @@ object DialogCreateToken: TDialogCreateToken
       object ComboPrimary: TComboBox
         Left = 114
         Top = 138
-        Width = 195
+        Width = 267
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
@@ -115,13 +115,13 @@ object DialogCreateToken: TDialogCreateToken
       object GroupBoxUser: TGroupBox
         Left = 3
         Top = 3
-        Width = 306
+        Width = 378
         Height = 70
         Anchors = [akLeft, akTop, akRight]
         Caption = 'User '
         TabOrder = 6
         object ButtonPickUser: TButton
-          Left = 274
+          Left = 346
           Top = 15
           Width = 25
           Height = 25
@@ -137,7 +137,7 @@ object DialogCreateToken: TDialogCreateToken
         object ComboUser: TComboBox
           Left = 9
           Top = 17
-          Width = 259
+          Width = 331
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           TabOrder = 1
@@ -146,7 +146,7 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxUserState: TCheckBox
           Left = 9
           Top = 44
-          Width = 259
+          Width = 331
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Use for deny only'
@@ -155,8 +155,8 @@ object DialogCreateToken: TDialogCreateToken
       end
       object GroupBoxPostCreation: TGroupBox
         Left = 5
-        Top = 200
-        Width = 306
+        Top = 239
+        Width = 378
         Height = 100
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'After creation: '
@@ -164,7 +164,7 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxNoWriteUp: TCheckBox
           Left = 7
           Top = 24
-          Width = 259
+          Width = 331
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Enable No Write Up policy'
@@ -175,7 +175,7 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxNewProcMin: TCheckBox
           Left = 7
           Top = 47
-          Width = 259
+          Width = 331
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Enable New Process Min policy'
@@ -186,7 +186,7 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxSession: TCheckBox
           Left = 7
           Top = 70
-          Width = 259
+          Width = 331
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Change session to current'
@@ -198,8 +198,8 @@ object DialogCreateToken: TDialogCreateToken
       Caption = 'Groups'
       ImageIndex = 1
       object ButtonAddSID: TButton
-        Left = 117
-        Top = 276
+        Left = 152
+        Top = 315
         Width = 78
         Height = 25
         Anchors = [akBottom]
@@ -211,24 +211,22 @@ object DialogCreateToken: TDialogCreateToken
         TabOrder = 0
         OnClick = ButtonAddSIDClick
       end
-      inline GroupsFrame: TGroupsFrame
+      inline GroupsFrame: TFrameGroups
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 308
-        Height = 270
-        Margins.Bottom = 30
+        Width = 380
+        Height = 307
+        Margins.Bottom = 32
         Align = alClient
         DoubleBuffered = True
         ParentDoubleBuffered = False
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited ListViewEx: TListViewEx
-          Width = 308
-          Height = 270
-          PopupMenu = PopupMenuGroups
-          OnDblClick = MenuEditClick
+        inherited VST: TVirtualStringTree
+          Width = 380
+          Height = 307
         end
       end
     end
@@ -239,8 +237,8 @@ object DialogCreateToken: TDialogCreateToken
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 308
-        Height = 297
+        Width = 380
+        Height = 336
         Align = alClient
         DoubleBuffered = True
         ParentDoubleBuffered = False
@@ -248,8 +246,8 @@ object DialogCreateToken: TDialogCreateToken
         ShowHint = True
         TabOrder = 0
         inherited ListViewEx: TListViewEx
-          Width = 308
-          Height = 297
+          Width = 380
+          Height = 336
           Checkboxes = True
           PopupMenu = PopupMenuPrivileges
         end
@@ -261,7 +259,7 @@ object DialogCreateToken: TDialogCreateToken
       object GroupBoxExpires: TGroupBox
         Left = 3
         Top = 97
-        Width = 306
+        Width = 378
         Height = 82
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Expiration Time '
@@ -280,7 +278,7 @@ object DialogCreateToken: TDialogCreateToken
         object DateExpires: TDateTimePicker
           Left = 9
           Top = 47
-          Width = 181
+          Width = 253
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           Date = 401769.000000000000000000
@@ -289,7 +287,7 @@ object DialogCreateToken: TDialogCreateToken
           TabOrder = 1
         end
         object TimeExpires: TDateTimePicker
-          Left = 196
+          Left = 268
           Top = 47
           Width = 103
           Height = 21
@@ -366,7 +364,7 @@ object DialogCreateToken: TDialogCreateToken
   end
   object ButtonLoad: TButton
     Left = 3
-    Top = 337
+    Top = 376
     Width = 84
     Height = 25
     Anchors = [akLeft, akBottom]
