@@ -42,14 +42,13 @@ uses
   VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {PrivilegesFrame: TFrame},
   UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
-  UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {GroupsFrame: TFrame},
   UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
   UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame},
   UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer},
   TU.Exec in 'Core\TU.Exec.pas',
   UI.AppContainer.List in 'UI\UI.AppContainer.List.pas' {DialogACProfiles},
   UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame},
-  UI.Prototypes.Groups2 in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups2.pas' {FrameGroups: TFrame},
+  UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas';
 
 {$R *.res}

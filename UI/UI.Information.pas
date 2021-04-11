@@ -67,10 +67,10 @@ type
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
     PrivilegesFrame: TPrivilegesFrame;
-    GroupsMemberFrame: TGroupsFrame;
-    GroupsRestrictedFrame: TGroupsFrame;
     StaticAppContainer: TStaticText;
     EditAppContainer: TEdit;
+    GroupsRestrictedFrame: TFrameGroups;
+    GroupsMemberFrame: TFrameGroups;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -84,8 +84,6 @@ type
     procedure ActionGroupEnable(Sender: TObject);
     procedure ActionGroupDisable(Sender: TObject);
     procedure ActionGroupReset(Sender: TObject);
-    procedure ListViewGroupsContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: Boolean);
     procedure BtnSetUIAccessClick(Sender: TObject);
     procedure BtnSetPolicyClick(Sender: TObject);
     procedure ListViewAdvancedResize(Sender: TObject);
@@ -97,8 +95,6 @@ type
     procedure PageControlChange(Sender: TObject);
     procedure ListViewGeneralDblClick(Sender: TObject);
     procedure EditUserDblClick(Sender: TObject);
-    procedure GroupsFrameListViewExDblClick(Sender: TObject);
-    procedure RestrictedGroupsFrameListViewExDblClick(Sender: TObject);
     procedure EditAppContainerDblClick(Sender: TObject);
   private
     Token: IToken;
@@ -118,6 +114,7 @@ type
     procedure ChangedVEnabled(const NewVEnabled: LongBool);
     procedure ChangedFlags(const NewFlags: Cardinal);
     procedure SetAuditPolicy(NewAudit: IAudit);
+    procedure InspectGroup(const Group: TGroup);
     procedure Refresh;
     procedure UpdateObjectTab;
     procedure UpdateAuditTab;
@@ -145,19 +142,19 @@ const
 
 procedure TInfoDialog.ActionGroupDisable(Sender: TObject);
 begin
-  if GroupsMemberFrame.ListViewEx.SelCount <> 0 then
+  if GroupsMemberFrame.VST.SelectedCount > 0 then
     Token.GroupAdjust(GroupsMemberFrame.Selected, gaDisable);
 end;
 
 procedure TInfoDialog.ActionGroupEnable(Sender: TObject);
 begin
-  if GroupsMemberFrame.ListViewEx.SelCount <> 0 then
+  if GroupsMemberFrame.VST.SelectedCount > 0 then
     Token.GroupAdjust(GroupsMemberFrame.Selected, gaEnable);
 end;
 
 procedure TInfoDialog.ActionGroupReset(Sender: TObject);
 begin
-  if GroupsMemberFrame.ListViewEx.SelCount <> 0 then
+  if GroupsMemberFrame.VST.SelectedCount > 0 then
     Token.GroupAdjust(GroupsMemberFrame.Selected, gaResetDefault);
 end;
 
@@ -444,6 +441,10 @@ begin
   Assert(Assigned(SrcToken));
   Token := SrcToken;
   inherited CreateChild(AOwner, True);
+
+  GroupsRestrictedFrame.OnDefaultAction := InspectGroup;
+  GroupsMemberFrame.NodePopupMenu := GroupPopup;
+  GroupsMemberFrame.OnDefaultAction := InspectGroup;
   Show;
 end;
 
@@ -516,7 +517,7 @@ begin
   Token.OnCaptionChange.Invoke(Token.Caption);
 
   TabRestricted.Caption := Format('Restricting SIDs (%d)',
-    [GroupsRestrictedFrame.ListViewEx.Items.Count]);
+    [GroupsRestrictedFrame.VST.RootNodeCount]);
 end;
 
 procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
@@ -526,11 +527,9 @@ begin
     Refresh;
 end;
 
-procedure TInfoDialog.GroupsFrameListViewExDblClick(Sender: TObject);
+procedure TInfoDialog.InspectGroup;
 begin
-  with GroupsMemberFrame.ListViewEx do
-    if Assigned(Selected) then
-      TDialogSidView.CreateView(Self, GroupsMemberFrame[Selected.Index].Sid);
+  TDialogSidView.CreateView(Self, Group.Sid);
 end;
 
 procedure TInfoDialog.ListViewAdvancedResize(Sender: TObject);
@@ -546,13 +545,6 @@ begin
     then
     TDialogGrantedAccess.Execute(Owner,
       Token.InfoClass.ObjectInformation.GrantedAccess);
-end;
-
-procedure TInfoDialog.ListViewGroupsContextPopup(Sender: TObject;
-  MousePos: TPoint; var Handled: Boolean);
-begin
-  MenuGroupEnable.Visible := GroupsMemberFrame.ListViewEx.SelCount <> 0;
-  MenuGroupDisable.Visible := GroupsMemberFrame.ListViewEx.SelCount <> 0;
 end;
 
 procedure TInfoDialog.PageControlChange(Sender: TObject);
@@ -641,13 +633,6 @@ begin
   TabObject.Tag := TAB_INVALIDATED;
   TabAudit.Tag := TAB_INVALIDATED;
   PageControlChange(Self);
-end;
-
-procedure TInfoDialog.RestrictedGroupsFrameListViewExDblClick(Sender: TObject);
-begin
-  with GroupsRestrictedFrame.ListViewEx do
-    if Assigned(Selected) then
-      TDialogSidView.CreateView(Self, GroupsRestrictedFrame[Selected.Index].Sid);
 end;
 
 procedure TInfoDialog.SetAuditPolicy(NewAudit: IAudit);

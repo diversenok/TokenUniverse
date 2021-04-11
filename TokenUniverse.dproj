@@ -202,10 +202,6 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\UI.Colors.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas">
-            <Form>GroupsFrame</Form>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\UI.ProcessIcons.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas">
             <Form>AccessMaskFrame</Form>
@@ -222,7 +218,7 @@
             <Form>BitMaskFrame</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Groups2.pas">
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas">
             <Form>FrameGroups</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
