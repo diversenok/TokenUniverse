@@ -24,7 +24,7 @@ function ReSvcCreateService(IsSystemPlus: Boolean): TNtxStatus;
 procedure ReSvcDelegate(RestartMethod: TRestartMethod);
 
 // The payload of TokenUniverse Run-As-System Service.
-procedure ReSvcRunInSession(ScvParams: TArray<String>);
+procedure ReSvcRunInSession(const ScvParams: TArray<String>);
 
 implementation
 
@@ -32,7 +32,7 @@ uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
   NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Processes.Query,
-  NtUtils.Tokens.Query, NtUtils.Processes.Create,
+  NtUtils.Tokens.Query, NtUtils.Processes.Create, NtUtils.Synchronization,
   NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Win32;
 
 { Restart Service client functions }
@@ -90,47 +90,31 @@ end;
 { Restart Service server functions }
 
 function GetCsrssToken: IHandle;
-const
-  SrcProcess = 'csrss.exe';
 var
-  Processes: TArray<TProcessEntry>;
-  i: Integer;
+  hxProcess: IHandle;
 begin
-  NtxEnumerateProcesses(Processes).RaiseOnError;
+  NtxOpenProcessByName(hxProcess, 'csrss.exe',
+    PROCESS_QUERY_LIMITED_INFORMATION, [pnAllowAmbiguousMatch, pnCaseSensitive])
+    .RaiseOnError;
 
-  for i := 0 to High(Processes) do
-    if Processes[i].ImageName = SrcProcess then
-    begin
-      NtxOpenProcessTokenById(Result, Processes[i].Basic.ProcessId,
-        TOKEN_DUPLICATE).RaiseOnError;
-      Exit;
-    end;
-
-  raise Exception.Create(SrcProcess + ' is not found on the system.');
+  NtxOpenProcessToken(Result, hxProcess.Handle, TOKEN_DUPLICATE).RaiseOnError;
 end;
 
 function PrepareToken(SessionID: Integer): IHandle;
-var
-  hxToken: IHandle;
 begin
   // We are already running as SYSTEM, but if we want to obtain a rare
   // `SeCreateTokenPrivilege` (aka SYSTEM+ token) we need to steal it from
   // csrss.exe
   if ParamStr(2) = RESVC_SYSPLUS_PARAM then
-    hxToken := GetCsrssToken
+    Result := GetCsrssToken
   else
-    NtxOpenProcessToken(hxToken, NtCurrentProcess,
-      TOKEN_DUPLICATE).RaiseOnError;
+    Result := NtxCurrentProcessToken;
 
-  // Duplicate
-  NtxDuplicateToken(Result, hxToken.Handle, TokenPrimary).RaiseOnError;
-
-  // Change session
-  NtxSetToken(Result.Handle, TokenSessionId, @SessionId,
-    SizeOf(SessionId)).RaiseOnError;
+  NtxDuplicateTokenLocal(Result, TokenPrimary).RaiseOnError;
+  NtxToken.Set(Result.Handle, TokenSessionId, SessionID).RaiseOnError;
 end;
 
-procedure ReSvcRunInSession(ScvParams: TArray<String>);
+procedure ReSvcRunInSession;
 var
   Options: TCreateProcessOptions;
   ProcessInfo: TProcessInfo;
@@ -146,7 +130,7 @@ begin
   if (Length(ScvParams) >= 2) and TryStrToInt(ScvParams[1], Session) then
     Options.hxToken := PrepareToken(Session)
   else
-    Options.hxToken := PrepareToken(0);
+    Options.hxToken := PrepareToken(USER_SHARED_DATA.ActiveConsoleId);
 
   // TODO: determine interactive session and active desktop
 

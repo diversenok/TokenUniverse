@@ -31,7 +31,7 @@ type
 implementation
 
 uses
-  Ntapi.ntkeapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt, Ntapi.ntpsapi,
+  Ntapi.ntexapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt, Ntapi.ntpsapi,
   Ntapi.ntdef, NtUtils, NtUtils.Threads, NtUiLib.Exceptions, Ntapi.ntstatus,
   System.UITypes;
 
@@ -99,7 +99,7 @@ begin
     Caption := IntToStr(Process.Threads[i].Basic.ClientID.UniqueThread);
     SubItems.Add(DateTimeToStr(LargeIntegerToDateTime(
       Process.Threads[i].Basic.CreateTime)));
-    if Process.Threads[i].Basic.WaitReason = KWaitReason.Suspended then
+    if Process.Threads[i].Basic.WaitReason = TWaitReason.Suspended then
       Color := ColorSettings.clSuspended
     else
     begin

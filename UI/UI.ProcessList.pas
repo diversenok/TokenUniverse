@@ -61,7 +61,7 @@ implementation
 
 uses
   Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes,
-  UI.ProcessIcons, NtUtils, Ntapi.ntkeapi, UI.Colors, Vcl.Dialogs,
+  UI.ProcessIcons, NtUtils, Ntapi.ntexapi, UI.Colors, Vcl.Dialogs,
   NtUILib.Exceptions, Ntapi.ntstatus, Winapi.WinNt, Ntapi.ntpsapi,
   System.UITypes;
 
@@ -324,7 +324,7 @@ var
   i: Integer;
 begin
   for i := 0 to High(Process.Threads) do
-    if Process.Threads[i].Basic.WaitReason <> KWaitReason.Suspended then
+    if Process.Threads[i].Basic.WaitReason <> TWaitReason.Suspended then
       Exit(False);
 
   Result := True;

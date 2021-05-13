@@ -161,7 +161,7 @@ procedure TDialogSidView.LinkLabelMinusOneLinkClick(Sender: TObject;
 var
   Parent: ISid;
 begin
-  if RtlxParentSid(Parent, Sid).IsSuccess then
+  if RtlxParentSid(Parent, Sid.Data).IsSuccess then
     TDialogSidView.CreateView(Owner, Parent);
 end;
 

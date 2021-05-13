@@ -822,12 +822,12 @@ const
     (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
 var
   Status: TNtxStatus;
-  LuidArray: TArray<TLuid>;
+  LuidArray: TArray<TSeWellKnownPrivilege>;
   i: Integer;
 begin
   SetLength(LuidArray, Length(Privileges));
   for i := 0 to High(Privileges) do
-    LuidArray[i] := Privileges[i].Luid;
+    LuidArray[i] := TSeWellKnownPrivilege(Privileges[i].Luid);
 
   Status := NtxAdjustPrivileges(hxToken.Handle, LuidArray,
     ActionToAttribute[Action], True);
