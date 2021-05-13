@@ -55,7 +55,7 @@ begin
       ppShowWindowMode, ppEnvironment]
 
   else if Pointer(@Method) = Pointer(@WdcxCreateProcess) then
-    Result := [ppCurrentDirectory]
+    Result := [ppCurrentDirectory, ppRequireElevation]
 
   else if Pointer(@Method) = Pointer(@ComxShellExecute) then
     Result := [ppCurrentDirectory, ppRequireElevation, ppShowWindowMode]
