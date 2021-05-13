@@ -75,12 +75,15 @@ begin
 end;
 
 procedure TLogonDialog.ButtonContinueClick;
+var
+  Handle: HWND;
 begin
   // When logging users with additional groups at least one of them shoud be a
   // logon group
   if GroupsFrame.VST.RootNodeCount > 0 then
     SuggestCurrentLogonGroup;
 
+  Handle := FormMain.Handle;
   Enabled := False;
 
   try
@@ -109,6 +112,7 @@ begin
     Enabled := True;
   end;
   ModalResult := mrOk;
+  Close;
 end;
 
 procedure TLogonDialog.ComboLogonTypeChange;
