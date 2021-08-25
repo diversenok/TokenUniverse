@@ -419,14 +419,14 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Tokens.Query,
-  NtUtils.Processes, NtUtils.WinStation, NtUtils.Tokens,
+  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Tokens.Info,
+  NtUtils.Processes, NtUtils.WinStation, NtUtils.Tokens, NtUiLib.Errors,
   NtUtils.Tokens.Impersonate, DelphiUiLib.Reflection.Strings,
   System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc,
   NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions,
   NtUiLib.Reflection.AccessMasks, DelphiUiLib.Reflection.Numeric, NtUtils.SysUtils,
   DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiLib.Reflection.Types,
-  Ntapi.ntrtl, NtUtils.Processes.Query;
+  Ntapi.ntrtl, NtUtils.Processes.Info, DelphiUtils.AutoObjects;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -495,7 +495,7 @@ end;
 
 procedure TToken.AssignToProcess(PID: NativeUInt);
 begin
-  NtxAssignPrimaryTokenById(PID, hxToken.Handle).RaiseOnError;
+  NtxAssignPrimaryTokenById(PID, hxToken).RaiseOnError;
 
   // Assigning primary token to a process might change token's Session ID
   InfoClass.ValidateCache(tdTokenSessionId);
@@ -507,12 +507,12 @@ end;
 
 procedure TToken.AssignToThread(TID: NativeUInt);
 begin
-  NtxSetThreadTokenById(TID, hxToken.Handle).RaiseOnError;
+  NtxSetThreadTokenById(TID, hxToken).RaiseOnError;
 end;
 
 procedure TToken.AssignToThreadSafe(TID: NativeUInt);
 begin
-  NtxSafeSetThreadTokenById(TID, hxToken.Handle).RaiseOnError;
+  NtxSafeSetThreadTokenById(TID, hxToken).RaiseOnError;
 end;
 
 function TToken.ConvertToReal: IToken;
@@ -546,7 +546,7 @@ end;
 
 constructor TToken.CreateByHandle(Handle: THandle);
 begin
-  hxToken := TAutoHandle.Capture(Handle);
+  hxToken := NtxObject.Capture(Handle);
   FCaption := Format('Inherited %d [0x%x]', [hxToken.Handle, hxToken.Handle]);
 end;
 
@@ -577,7 +577,7 @@ begin
     ImpersonationLvl := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  NtxDuplicateToken(hxToken, SrcToken.Handle.Handle, TokenType,
+  NtxDuplicateToken(hxToken, SrcToken.Handle, TokenType,
     ImpersonationLvl, AttributeBuilder.UseEffectiveOnly(EffectiveOnly).
     UseDesiredAccess(Access)).RaiseOnError;
 
@@ -618,7 +618,7 @@ constructor TToken.CreateOpenEffective(TID: NativeUInt; ImageName: String;
   ImpersonationLevel: TSecurityImpersonationLevel; Access: TAccessMask;
   Attributes: Cardinal; EffectiveOnly: Boolean);
 begin
-  NtxDuplicateEffectiveTokenById(hxToken, TID, ImpersonationLevel, Access,
+  NtxCopyEffectiveTokenById(hxToken, TID, ImpersonationLevel, Access,
     Attributes, EffectiveOnly).RaiseOnError;
 
   FCaption := Format('Eff. thread %d of %s', [TID, ImageName]);
@@ -682,7 +682,7 @@ begin
   for i := 0 to High(PrivilegesToDelete) do
     Remove[i] := PrivilegesToDelete[i].Luid;
 
-  NtxFilterToken(hxToken, SrcToken.Handle.Handle, Flags, Disable, Remove,
+  NtxFilterToken(hxToken, SrcToken.Handle, Flags, Disable, Remove,
     Restrict).RaiseOnError;
 
   FCaption := 'Restricted ' + SrcToken.Caption;
@@ -701,7 +701,7 @@ constructor TToken.CreateSaferToken(SrcToken: IToken; ScopeId: TSaferScopeId;
 var
   LevelName: String;
 begin
-  SafexComputeSaferTokenById(hxToken, SrcToken.Handle.Handle, ScopeId, LevelId,
+  SafexComputeSaferTokenById(hxToken, SrcToken.Handle, ScopeId, LevelId,
     MakeInert).RaiseOnError;
 
   case LevelId of
@@ -792,7 +792,7 @@ begin
   for i := 0 to High(Groups) do
     Sids[i] := Groups[i].Sid;
 
-  NtxAdjustGroups(hxToken.Handle, Sids, ActionToAttribute[Action],
+  NtxAdjustGroups(hxToken, Sids, ActionToAttribute[Action],
     Action = gaResetDefault).RaiseOnError;
 
   // Update the cache and notify event listeners
@@ -807,11 +807,11 @@ function TToken.OpenLinkedToken(out Token: IToken): TNtxStatus;
 var
   Handle: THandle;
 begin
-  Result := NtxToken.Query(hxToken.Handle, TokenLinkedToken,
+  Result := NtxToken.Query(hxToken, TokenLinkedToken,
     Handle);
 
   if Result.IsSuccess then
-    Token := TToken.Create(TAutoHandle.Capture(Handle),
+    Token := TToken.Create(NtxObject.Capture(Handle),
       'Linked token for ' + Caption);
 end;
 
@@ -829,7 +829,7 @@ begin
   for i := 0 to High(Privileges) do
     LuidArray[i] := TSeWellKnownPrivilege(Privileges[i].Luid);
 
-  Status := NtxAdjustPrivileges(hxToken.Handle, LuidArray,
+  Status := NtxAdjustPrivileges(hxToken, LuidArray,
     ActionToAttribute[Action], True);
 
   // The function could modify privileges even without succeeding.
@@ -842,14 +842,14 @@ begin
   // not considered as an error. Such behavior does not fit into our
   // model so we should overwrite it.
   if Status.Status = STATUS_NOT_ALL_ASSIGNED then
-    raise ENtError.CreateNtx(Status)
+    raise ENtError.Create(Status)
   else
     Status.RaiseOnError;
 end;
 
 class procedure TToken.RevertThreadToken(TID: NativeUInt);
 begin
-  NtxSetThreadTokenById(TID, 0).RaiseOnError;
+  NtxSetThreadTokenById(TID, nil).RaiseOnError;
 end;
 
 function TToken.SendHandleToProcess(PID: NativeUInt): NativeUInt;
@@ -1184,7 +1184,7 @@ begin
 
     tdTokenUser:
     begin
-      Result := NtxQueryGroupToken(Token.hxToken.Handle, TokenUser,
+      Result := NtxQueryGroupToken(Token.hxToken, TokenUser,
         Token.Cache.User).IsSuccess;
 
       // The default value of attributes for user is 0 and means "Enabled".
@@ -1198,7 +1198,7 @@ begin
 
     tdTokenGroups:
     begin
-      Result := NtxQueryGroupsToken(Token.hxToken.Handle, TokenGroups,
+      Result := NtxQueryGroupsToken(Token.hxToken, TokenGroups,
         Token.Cache.Groups).IsSuccess;
 
       if Result then
@@ -1207,7 +1207,7 @@ begin
 
     tdTokenPrivileges:
     begin
-      Result := NtxQueryPrivilegesToken(Token.hxToken.Handle,
+      Result := NtxQueryPrivilegesToken(Token.hxToken,
         Token.Cache.Privileges).IsSuccess;
 
       if Result then
@@ -1216,7 +1216,7 @@ begin
 
     tdTokenOwner:
     begin
-      Result := NtxQuerySidToken(Token.hxToken.Handle, TokenOwner,
+      Result := NtxQuerySidToken(Token.hxToken, TokenOwner,
         Token.Cache.Owner).IsSuccess;
 
       if Result then
@@ -1226,7 +1226,7 @@ begin
 
     tdTokenPrimaryGroup:
     begin
-     Result := NtxQuerySidToken(Token.hxToken.Handle, TokenPrimaryGroup,
+     Result := NtxQuerySidToken(Token.hxToken, TokenPrimaryGroup,
         Token.Cache.PrimaryGroup).IsSuccess;
 
      if Result then
@@ -1236,7 +1236,7 @@ begin
 
     tdTokenDefaultDacl:
     begin
-      Result := NtxQueryDefaultDaclToken(Token.hxToken.Handle,
+      Result := NtxQueryDefaultDaclToken(Token.hxToken,
         Token.Cache.DefaultDacl).IsSuccess;
 
       if Result then
@@ -1244,12 +1244,12 @@ begin
     end;
 
     tdTokenSource:
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenSource,
+      Result := NtxToken.Query(Token.hxToken, TokenSource,
         Token.Cache.Source).IsSuccess;
 
     tdTokenType:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenType,
+      Result := NtxToken.Query(Token.hxToken, TokenType,
         lType).IsSuccess;
       if Result then
       begin
@@ -1257,7 +1257,7 @@ begin
           Token.Cache.TokenType := ttPrimary
         else
         begin
-          Result := NtxToken.Query(Token.hxToken.Handle, TokenImpersonationLevel,
+          Result := NtxToken.Query(Token.hxToken, TokenImpersonationLevel,
             lImpersonation).IsSuccess;
           if Result then
             Token.Cache.TokenType := TTokenTypeEx(lImpersonation);
@@ -1267,7 +1267,7 @@ begin
 
     tdTokenStatistics:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenStatistics,
+      Result := NtxToken.Query(Token.hxToken, TokenStatistics,
         Token.Cache.Statistics).IsSuccess;
 
       if Result then
@@ -1285,12 +1285,12 @@ begin
     end;
 
     tdTokenRestrictedSids:
-      Result := NtxQueryGroupsToken(Token.hxToken.Handle, TokenRestrictedSids,
+      Result := NtxQueryGroupsToken(Token.hxToken, TokenRestrictedSids,
         Token.Cache.RestrictedSids).IsSuccess;
 
     tdTokenSessionId:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenSessionId,
+      Result := NtxToken.Query(Token.hxToken, TokenSessionId,
         Token.Cache.Session).IsSuccess;
       if Result then
         if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
@@ -1299,24 +1299,24 @@ begin
 
     tdTokenAuditPolicy:
     begin
-      Result := NtxQueryToken(Token.hxToken.Handle, TokenAuditPolicy,
+      Result := NtxQueryToken(Token.hxToken, TokenAuditPolicy,
         xMemory).IsSuccess;
       if Result then
       begin
-        Token.Cache.AuditPolicy := TTokenPerUserAudit.CreateCopy(
-          xMemory.Data, xMemory.Size);
+          Token.Cache.AuditPolicy := TTokenPerUserAudit.CreateCopy(
+            xMemory.Data, xMemory.Size);
 
-        Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
+          Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
       end;
     end;
 
     tdTokenSandBoxInert:
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenSandBoxInert,
+      Result := NtxToken.Query(Token.hxToken, TokenSandBoxInert,
         Token.Cache.SandboxInert).IsSuccess;
 
     tdTokenOrigin:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenOrigin,
+      Result := NtxToken.Query(Token.hxToken, TokenOrigin,
         Token.Cache.Origin).IsSuccess;
       if Result then
         if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
@@ -1324,16 +1324,16 @@ begin
     end;
 
     tdTokenElevation:
-      Result := NtxToken.Query(Token.hxToken.Handle,
+      Result := NtxToken.Query(Token.hxToken,
         TokenElevationType, Token.Cache.Elevation).IsSuccess;
 
     tdTokenHasRestrictions:
-      Result := NtxToken.Query(Token.hxToken.Handle,
+      Result := NtxToken.Query(Token.hxToken,
         TokenHasRestrictions, Token.Cache.HasRestrictions).IsSuccess;
 
     tdTokenFlags:
     begin
-      Result := NtxQueryFlagsToken(Token.hxToken.Handle,
+      Result := NtxQueryFlagsToken(Token.hxToken,
         Token.Cache.Flags).IsSuccess;
 
       if Result then
@@ -1343,7 +1343,7 @@ begin
 
     tdTokenVirtualizationAllowed:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle,
+      Result := NtxToken.Query(Token.hxToken,
         TokenVirtualizationAllowed, Token.Cache.VirtualizationAllowed).IsSuccess;
       if Result then
         if Token.Events.OnVirtualizationAllowedChange.Invoke(
@@ -1353,7 +1353,7 @@ begin
 
     tdTokenVirtualizationEnabled:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle,
+      Result := NtxToken.Query(Token.hxToken,
         TokenVirtualizationEnabled, Token.Cache.VirtualizationEnabled).IsSuccess;
       if Result then
         if Token.Events.OnVirtualizationEnabledChange.Invoke(
@@ -1363,7 +1363,7 @@ begin
 
     tdTokenIntegrity:
     begin
-      Result := NtxQueryGroupToken(Token.hxToken.Handle, TokenIntegrityLevel,
+      Result := NtxQueryGroupToken(Token.hxToken, TokenIntegrityLevel,
         Token.Cache.Integrity).IsSuccess;
 
       if Result and
@@ -1373,7 +1373,7 @@ begin
 
     tdTokenUIAccess:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenUIAccess,
+      Result := NtxToken.Query(Token.hxToken, TokenUIAccess,
         Token.Cache.UIAccess).IsSuccess;
       if Result then
         if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
@@ -1382,7 +1382,7 @@ begin
 
     tdTokenMandatoryPolicy:
     begin
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenMandatoryPolicy,
+      Result := NtxToken.Query(Token.hxToken, TokenMandatoryPolicy,
         Token.Cache.MandatoryPolicy).IsSuccess;
       if Result then
         if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
@@ -1393,11 +1393,11 @@ begin
     end;
 
     tdTokenIsRestricted:
-      Result := NtxToken.Query(Token.hxToken.Handle, TokenIsRestricted,
+      Result := NtxToken.Query(Token.hxToken, TokenIsRestricted,
         Token.Cache.IsRestricted).IsSuccess;
 
     tdTokenAppContainer:
-      Result := NtxQuerySidToken(Token.hxToken.Handle, TokenAppContainerSid,
+      Result := NtxQuerySidToken(Token.hxToken, TokenAppContainerSid,
         Token.Cache.AppContainer).IsSuccess;
 
     tdLogonInfo:
@@ -1411,7 +1411,7 @@ begin
     end;
 
     tdObjectInfo:
-      Result := NtxQueryBasicObject(Token.hxToken.Handle,
+      Result := NtxObject.Query(Token.hxToken.Handle, ObjectBasicInformation,
         Token.Cache.ObjectInformation).IsSuccess;
 
     tdHandleInfo:
@@ -1436,9 +1436,8 @@ var
   pAuditPolicy: PTokenAuditPolicy;
 begin
   pAuditPolicy := Value.RawBuffer;
-
   try
-    NtxSetToken(Token.hxToken.Handle, TokenAuditPolicy, pAuditPolicy,
+    NtxSetToken(Token.hxToken, TokenAuditPolicy, pAuditPolicy,
       Value.RawBufferSize).RaiseOnError;
   finally
     Value.FreeRawBuffer(pAuditPolicy);
@@ -1451,13 +1450,13 @@ end;
 
 procedure TTokenData.SetDefaultDacl(Value: IAcl);
 begin
-  NtxSetDefaultDaclToken(Token.hxToken.Handle, Value).RaiseOnError;
+  NtxSetDefaultDaclToken(Token.hxToken, Value).RaiseOnError;
   ValidateCache(tdTokenDefaultDacl);
 end;
 
 procedure TTokenData.SetIntegrityLevel(const Value: Cardinal);
 begin
-  NtxSetIntegrityToken(Token.hxToken.Handle, Value).RaiseOnError;
+  NtxSetIntegrityToken(Token.hxToken, Value).RaiseOnError;
 
   // Update the cache and notify event listeners.
   ValidateCache(tdTokenIntegrity);
@@ -1474,7 +1473,7 @@ begin
   // Since the owner is internally stored as an index in the group table,
   // changing it, in this case, also changes the owner.
   if Token.Cache.IsCached[tdTokenOwner] and
-    (RtlIdentifierAuthoritySid(Token.Cache.Owner.Data).ToInt64 =
+    (RtlxIdentifierAuthoritySid(Token.Cache.Owner.Data) =
       SECURITY_MANDATORY_LABEL_AUTHORITY_ID) then
     ValidateCache(tdTokenOwner);
 
@@ -1484,7 +1483,7 @@ end;
 
 procedure TTokenData.SetMandatoryPolicy(const Value: Cardinal);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenMandatoryPolicy,
+  NtxToken.Set(Token.hxToken, TokenMandatoryPolicy,
     Value).RaiseOnError;
 
   // Update the cache and notify event listeners
@@ -1494,7 +1493,7 @@ end;
 
 procedure TTokenData.SetOrigin(const Value: TLuid);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenOrigin, Value).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenOrigin, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOrigin);
@@ -1506,7 +1505,7 @@ var
   NewOwner: TTokenSidInformation;
 begin
   NewOwner.Sid := Value.Data;
-  NtxToken.&Set(Token.hxToken.Handle, TokenOwner,NewOwner).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenOwner,NewOwner).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenOwner);
@@ -1518,8 +1517,7 @@ var
   NewPrimaryGroup: TTokenSidInformation;
 begin
   NewPrimaryGroup.Sid := Value.Data;
-  NtxToken.&Set(Token.hxToken.Handle, TokenPrimaryGroup,
-    NewPrimaryGroup).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenPrimaryGroup, NewPrimaryGroup).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenPrimaryGroup);
@@ -1528,7 +1526,7 @@ end;
 
 procedure TTokenData.SetSession(const Value: Cardinal);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenSessionId, Value).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenSessionId, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenSessionId);
@@ -1540,8 +1538,7 @@ end;
 
 procedure TTokenData.SetSessionReference(const Value: LongBool);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenSessionReference,
-    Value).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenSessionReference, Value).RaiseOnError;
 
   ValidateCache(tdTokenStatistics);
   ValidateCache(tdTokenFlags);
@@ -1549,7 +1546,7 @@ end;
 
 procedure TTokenData.SetUIAccess(const Value: LongBool);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenUIAccess, Value).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenUIAccess, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenUIAccess);
@@ -1559,8 +1556,7 @@ end;
 
 procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenVirtualizationAllowed,
-    Value).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenVirtualizationAllowed, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenVirtualizationAllowed);
@@ -1571,8 +1567,7 @@ end;
 
 procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
 begin
-  NtxToken.&Set(Token.hxToken.Handle, TokenVirtualizationEnabled,
-    Value).RaiseOnError;
+  NtxToken.Set(Token.hxToken, TokenVirtualizationEnabled, Value).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenVirtualizationEnabled);

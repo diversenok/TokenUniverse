@@ -54,7 +54,7 @@ type
 implementation
 
 uses
-  Winapi.WinNt, NtUiLib.Exceptions, NtUtils.Lsa.Sid, Ntapi.ntrtl, Winapi.ntlsa,
+  Winapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Winapi.ntlsa,
   Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa, Ntapi.ntdef,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric;
 
@@ -161,7 +161,7 @@ procedure TDialogSidView.LinkLabelMinusOneLinkClick(Sender: TObject;
 var
   Parent: ISid;
 begin
-  if RtlxParentSid(Parent, Sid.Data).IsSuccess then
+  if RtlxMakeParentSid(Parent, Sid.Data).IsSuccess then
     TDialogSidView.CreateView(Owner, Parent);
 end;
 

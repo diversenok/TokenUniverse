@@ -31,9 +31,10 @@ implementation
 uses
   Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
-  NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Processes.Query,
-  NtUtils.Tokens.Query, NtUtils.Processes.Create, NtUtils.Synchronization,
-  NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Win32;
+  NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Processes.Info,
+  NtUtils.Tokens.Info, NtUtils.Processes.Create, NtUtils.Synchronization,
+  NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Win32,
+  NtUiLib.Errors;
 
 { Restart Service client functions }
 
@@ -111,7 +112,7 @@ begin
     Result := NtxCurrentProcessToken;
 
   NtxDuplicateTokenLocal(Result, TokenPrimary).RaiseOnError;
-  NtxToken.Set(Result.Handle, TokenSessionId, SessionID).RaiseOnError;
+  NtxToken.Set(Result, TokenSessionId, SessionID).RaiseOnError;
 end;
 
 procedure ReSvcRunInSession;

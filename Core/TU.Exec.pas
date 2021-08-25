@@ -10,7 +10,7 @@ type
     ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
     ppNewConsole, ppRequireElevation, ppShowWindowMode, ppRunAsInvoker,
-    ppEnvironment, ppAppContainer
+    ppEnvironment, ppAppContainer, ppJob
   );
 
 // Determine if a process creation method supports an option
@@ -21,14 +21,14 @@ implementation
 uses
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
-  NtUtils.Processes.Create.Remote;
+  NtUtils.Processes.Create.Remote, NtUtils.Processes.Create.Manual;
 
 function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
 begin
   if Pointer(@Method) = Pointer(@AdvxCreateProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
       ppInheritHandles, ppCreateSuspended, ppBreakaway, ppNewConsole,
-      ppShowWindowMode, ppRunAsInvoker, ppEnvironment, ppAppContainer]
+      ppShowWindowMode, ppRunAsInvoker, ppEnvironment, ppAppContainer, ppJob]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithToken) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppLogonFlags,
@@ -49,6 +49,20 @@ begin
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
       ppInheritHandles, ppCreateSuspended, ppShowWindowMode, ppEnvironment]
+
+  else if Pointer(@Method) = Pointer(@RtlxCreateUserProcessEx) then
+    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
+      ppInheritHandles, ppCreateSuspended, ppShowWindowMode, ppEnvironment,
+      ppJob]
+
+  else if Pointer(@Method) = Pointer(@NtxCreateUserProcess) then
+    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
+      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppShowWindowMode,
+      ppEnvironment, ppJob]
+
+  else if Pointer(@Method) = Pointer(@NtxCreateProcessEx) then
+    Result := [ppCurrentDirectory, ppDesktop, ppParentProcess, ppInheritHandles,
+      ppCreateSuspended, ppBreakaway, ppShowWindowMode, ppEnvironment]
 
   else if Pointer(@Method) = Pointer(@WmixCreateProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppCreateSuspended,

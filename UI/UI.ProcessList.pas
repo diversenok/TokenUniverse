@@ -62,7 +62,7 @@ implementation
 uses
   Winapi.WinUser, Winapi.Shell, UI.Modal.ThreadList, NtUtils.Processes,
   UI.ProcessIcons, NtUtils, Ntapi.ntexapi, UI.Colors, Vcl.Dialogs,
-  NtUILib.Exceptions, Ntapi.ntstatus, Winapi.WinNt, Ntapi.ntpsapi,
+  NtUILib.Errors, Ntapi.ntstatus, Winapi.WinNt, Ntapi.ntpsapi,
   System.UITypes;
 
 {$R *.dfm}

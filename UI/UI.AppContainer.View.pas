@@ -47,7 +47,7 @@ implementation
 
 uses
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.Security.AppContainer,
-  DelphiUiLib.Strings, NtUiLib.Exceptions, UI.MainForm, UI.Sid.View;
+  DelphiUiLib.Strings, NtUiLib.Errors, UI.MainForm, UI.Sid.View;
 
 {$R *.dfm}
 

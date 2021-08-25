@@ -20,7 +20,7 @@ type
 implementation
 
 uses
-  NtUtils, NtUiLib.Exceptions;
+  NtUtils, NtUiLib.Errors;
 
 {$R *.dfm}
 

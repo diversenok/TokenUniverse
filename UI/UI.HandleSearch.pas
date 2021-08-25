@@ -29,8 +29,8 @@ implementation
 uses
   System.UITypes, UI.MainForm, UI.Information, TU.Tokens,
   Winapi.WinNt, Ntapi.ntpebteb, NtUtils, NtUtils.Objects.Snapshots,
-  NtUiLib.Exceptions, DelphiUtils.Arrays, NtUtils.Processes,
-  NtUtils.Processes.Query, NtUtils.Objects;
+  NtUiLib.Errors, DelphiUtils.Arrays, NtUtils.Processes,
+  NtUtils.Processes.Info, NtUtils.Objects;
 
 {$R *.dfm}
 

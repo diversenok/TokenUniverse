@@ -2,7 +2,7 @@ object DialogRun: TDialogRun
   Left = 0
   Top = 0
   Caption = 'Run program...'
-  ClientHeight = 416
+  ClientHeight = 571
   ClientWidth = 331
   Color = clBtnFace
   Constraints.MinHeight = 455
@@ -26,193 +26,60 @@ object DialogRun: TDialogRun
     Left = 3
     Top = 52
     Width = 325
-    Height = 333
+    Height = 488
     Margins.Top = 52
     Margins.Bottom = 31
-    ActivePage = TabMethod
+    ActivePage = TabParams
     Align = alClient
     TabOrder = 2
-    object TabMethod: TTabSheet
-      Caption = 'Method'
-      object LabelOther: TLabel
-        Left = 8
-        Top = 181
-        Width = 76
-        Height = 13
-        Caption = 'Other methods:'
-      end
-      object LabelCred: TLabel
-        Left = 8
-        Top = 133
-        Width = 121
-        Height = 13
-        Caption = 'Using explicit credentials:'
-      end
-      object RadioButtonRtl: TRadioButton
-        Left = 24
-        Top = 102
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'RtlCreateUserProcess'
-        TabOrder = 3
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonShell: TRadioButton
-        Left = 24
-        Top = 200
-        Width = 135
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'ShellExecuteEx'
-        TabOrder = 5
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonWdc: TRadioButton
-        Left = 24
-        Top = 269
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'WdcRunTaskAsInteractiveUser'
-        TabOrder = 8
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonWmi: TRadioButton
-        Left = 24
-        Top = 79
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'WMI'
-        TabOrder = 2
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonAsUser: TRadioButton
-        Left = 24
-        Top = 33
-        Width = 154
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'CreateProcessAsUser'
-        Checked = True
-        TabOrder = 0
-        TabStop = True
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonWithToken: TRadioButton
-        Left = 24
-        Top = 56
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'CreateProcessWithToken'
-        TabOrder = 1
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonWithLogon: TRadioButton
-        Left = 24
-        Top = 152
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'CreateProcessWithLogon'
-        TabOrder = 4
-        OnClick = ChangedExecMethod
-      end
-      object CheckBoxRunas: TCheckBox
-        Left = 184
-        Top = 200
-        Width = 116
-        Height = 15
-        Anchors = [akTop]
-        Caption = 'Request elevation'
-        Enabled = False
-        TabOrder = 10
-      end
-      object LinkLabelToken: TLinkLabel
-        Left = 8
-        Top = 9
-        Width = 292
-        Height = 14
-        Anchors = [akLeft, akTop, akRight]
-        AutoSize = False
-        Caption = 'Using token: <not specified>'
-        TabOrder = 11
-        OnLinkClick = LinkLabelTokenLinkClick
-      end
-      object CheckBoxRunAsInvoker: TCheckBox
-        Left = 184
-        Top = 33
-        Width = 116
-        Height = 17
-        Hint = 
-          'Use this compatibility mechanism if you want to start a program ' +
-          'that requires elevation as a limited user.'
-        AllowGrayed = True
-        Anchors = [akTop]
-        Caption = 'Run as invoker'
-        State = cbGrayed
-        TabOrder = 9
-      end
-      object RadioButtonRemote: TRadioButton
-        Left = 24
-        Top = 246
-        Width = 276
-        Height = 17
-        Hint = 
-          'Call CreateProcess in a context of a different process via shell' +
-          'code injection'
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'CreateProcess via code injection'
-        TabOrder = 7
-        OnClick = ChangedExecMethod
-      end
-      object RadioButtonIShellDispatch: TRadioButton
-        Left = 24
-        Top = 223
-        Width = 276
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'ShellExecute via IShellDispatch2'
-        TabOrder = 6
-        OnClick = ChangedExecMethod
-      end
-    end
     object TabParams: TTabSheet
       Caption = 'Parameters'
       ImageIndex = 4
       object LabelDesktop: TLabel
-        Left = 4
-        Top = 100
+        Left = 3
+        Top = 235
         Width = 43
         Height = 13
         Caption = 'Desktop:'
       end
       object LabelLogonFlags: TLabel
         Left = 161
-        Top = 148
+        Top = 284
         Width = 59
         Height = 13
         Caption = 'Logon flags:'
       end
       object LabelShowMode: TLabel
         Left = 4
-        Top = 148
+        Top = 284
         Width = 71
         Height = 13
         Caption = 'Window mode:'
       end
       object LabelAppContainer: TLabel
         Left = 3
-        Top = 200
+        Top = 336
         Width = 70
         Height = 13
         Caption = 'AppContainer:'
       end
+      object LabelMethod: TLabel
+        Left = 3
+        Top = 7
+        Width = 40
+        Height = 13
+        Caption = 'Method:'
+      end
+      object Label1: TLabel
+        Left = 3
+        Top = 85
+        Width = 76
+        Height = 13
+        Caption = 'Parent process:'
+      end
       object EditParams: TLabeledEdit
         Left = 4
-        Top = 20
+        Top = 156
         Width = 307
         Height = 21
         Anchors = [akLeft, akTop, akRight]
@@ -223,9 +90,9 @@ object DialogRun: TDialogRun
       end
       object GroupBoxFlags: TGroupBox
         Left = 3
-        Top = 223
+        Top = 363
         Width = 307
-        Height = 79
+        Height = 94
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Flags: '
         TabOrder = 5
@@ -263,10 +130,34 @@ object DialogRun: TDialogRun
           State = cbChecked
           TabOrder = 3
         end
+        object CheckBoxRunas: TCheckBox
+          Left = 11
+          Top = 70
+          Width = 116
+          Height = 15
+          Anchors = [akTop]
+          Caption = 'Request elevation'
+          Enabled = False
+          TabOrder = 4
+        end
+        object CheckBoxRunAsInvoker: TCheckBox
+          Left = 158
+          Top = 70
+          Width = 116
+          Height = 17
+          Hint = 
+            'Use this compatibility mechanism if you want to start a program ' +
+            'that requires elevation as a limited user.'
+          AllowGrayed = True
+          Anchors = [akTop]
+          Caption = 'Run as invoker'
+          State = cbGrayed
+          TabOrder = 5
+        end
       end
       object ComboBoxLogonFlags: TComboBox
         Left = 162
-        Top = 164
+        Top = 300
         Width = 149
         Height = 21
         Style = csDropDownList
@@ -280,7 +171,7 @@ object DialogRun: TDialogRun
       end
       object EditDir: TLabeledEdit
         Left = 4
-        Top = 68
+        Top = 204
         Width = 307
         Height = 21
         Anchors = [akLeft, akTop, akRight]
@@ -291,7 +182,7 @@ object DialogRun: TDialogRun
       end
       object ComboBoxDesktop: TComboBox
         Left = 4
-        Top = 116
+        Top = 254
         Width = 307
         Height = 21
         Anchors = [akLeft, akTop, akRight]
@@ -300,7 +191,7 @@ object DialogRun: TDialogRun
       end
       object ComboBoxShowMode: TComboBox
         Left = 4
-        Top = 164
+        Top = 300
         Width = 149
         Height = 21
         Style = csDropDownList
@@ -315,7 +206,7 @@ object DialogRun: TDialogRun
       end
       object ButtonAC: TButton
         Left = 226
-        Top = 195
+        Top = 331
         Width = 83
         Height = 25
         Anchors = [akTop, akRight]
@@ -327,7 +218,7 @@ object DialogRun: TDialogRun
       end
       object EditAppContainer: TEdit
         Left = 79
-        Top = 197
+        Top = 333
         Width = 141
         Height = 21
         Anchors = [akLeft, akTop, akRight]
@@ -335,41 +226,69 @@ object DialogRun: TDialogRun
         TabOrder = 7
         Text = 'No'
       end
-    end
-    object TabEnv: TTabSheet
-      Caption = 'Environment'
-      ImageIndex = 1
-    end
-    object TabParent: TTabSheet
-      Caption = 'Parent process'
-      ImageIndex = 2
+      object ComboMethod: TComboBox
+        Left = 3
+        Top = 24
+        Width = 306
+        Height = 21
+        Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
+        ItemIndex = 0
+        TabOrder = 8
+        Text = 'CreateProcessAsUser'
+        OnChange = ChangedExecMethod
+        Items.Strings = (
+          'CreateProcessAsUser'
+          'CreateProcessWithToken'
+          'CreateProcessWithLogon'
+          'CreateProcess via code injection'
+          'RtlCreateUserProcess'
+          'RtlCreateUserProcessEx'
+          'NtCreateUserProcess'
+          'NtCreateProcessEx'
+          'ShellExecuteEx'
+          'ShellExecute via IShellDispatch'
+          'WdcRunTaskAsInteractiveUser'
+          'WMI')
+      end
       object ButtonChooseParent: TButton
-        Left = 223
-        Top = 14
+        Left = 226
+        Top = 102
         Width = 83
         Height = 25
         Anchors = [akTop, akRight]
         Caption = 'Choose'
         DropDownMenu = PopupClearParent
         Style = bsSplitButton
-        TabOrder = 0
+        TabOrder = 9
         OnClick = ButtonChooseParentClick
       end
       object EditParent: TEdit
-        Left = 16
-        Top = 16
-        Width = 201
+        Left = 3
+        Top = 104
+        Width = 217
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ReadOnly = True
-        TabOrder = 1
+        TabOrder = 10
         Text = '<not specified>'
+      end
+      object LinkLabelToken: TLinkLabel
+        Left = 3
+        Top = 59
+        Width = 292
+        Height = 14
+        Anchors = [akLeft, akTop, akRight]
+        AutoSize = False
+        Caption = 'Using token: <not specified>'
+        TabOrder = 11
+        OnLinkClick = LinkLabelTokenLinkClick
       end
     end
   end
   object ButtonClose: TButton
     Left = 253
-    Top = 387
+    Top = 542
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -381,7 +300,7 @@ object DialogRun: TDialogRun
   end
   object ButtonRun: TButton
     Left = 172
-    Top = 387
+    Top = 542
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -415,7 +334,7 @@ object DialogRun: TDialogRun
   end
   object cbxOpenToken: TCheckBox
     Left = 8
-    Top = 391
+    Top = 546
     Width = 158
     Height = 17
     Anchors = [akLeft, akBottom]

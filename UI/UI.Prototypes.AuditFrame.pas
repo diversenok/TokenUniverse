@@ -49,7 +49,7 @@ implementation
 
 uses
   Winapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Reflection.Strings,
-  NtUiLib.Exceptions, Ntapi.ntdef, NtUtils;
+  NtUiLib.Errors, Ntapi.ntdef, NtUtils;
 
 {$R *.dfm}
 

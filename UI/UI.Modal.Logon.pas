@@ -46,7 +46,7 @@ uses
   TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
   Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes,
-  NtUiLib.Exceptions, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
+  NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
 
@@ -55,7 +55,7 @@ const
 
 function IsLogonSid(Sid: ISid): Boolean;
 begin
-  Result := (RtlIdentifierAuthoritySid(Sid.Data).ToInt64 = SECURITY_NT_AUTHORITY_ID)
+  Result := (RtlxIdentifierAuthoritySid(Sid.Data) = SECURITY_NT_AUTHORITY_ID)
     and (RtlSubAuthorityCountSid(Sid.Data)^ = SECURITY_LOGON_IDS_RID_COUNT) and
     (RtlSubAuthoritySid(Sid.Data, 0)^ = SECURITY_LOGON_IDS_RID);
 end;

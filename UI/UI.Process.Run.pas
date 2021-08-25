@@ -12,18 +12,6 @@ uses
 type
   TDialogRun = class(TChildForm)
     PageControl: TPageControl;
-    TabMethod: TTabSheet;
-    TabEnv: TTabSheet;
-    TabParent: TTabSheet;
-    RadioButtonRtl: TRadioButton;
-    LabelOther: TLabel;
-    RadioButtonShell: TRadioButton;
-    RadioButtonWdc: TRadioButton;
-    RadioButtonWmi: TRadioButton;
-    RadioButtonAsUser: TRadioButton;
-    RadioButtonWithToken: TRadioButton;
-    LabelCred: TLabel;
-    RadioButtonWithLogon: TRadioButton;
     TabParams: TTabSheet;
     EditExe: TLabeledEdit;
     ButtonBrowse: TButton;
@@ -58,9 +46,10 @@ type
     ButtonAC: TButton;
     PopupClearAC: TPopupMenu;
     MenuClearAC: TMenuItem;
-    RadioButtonRemote: TRadioButton;
     cbxOpenToken: TCheckBox;
-    RadioButtonIShellDispatch: TRadioButton;
+    ComboMethod: TComboBox;
+    LabelMethod: TLabel;
+    Label1: TLabel;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -95,10 +84,11 @@ implementation
 
 uses
   Winapi.WinNt, Winapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi,
-  NtUtils.Processes, NtUiLib.Exceptions, NtUtils.Tokens.Query,
+  NtUtils.Processes, NtUiLib.Errors, NtUtils.Tokens.Info,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
-  NtUtils.Processes.Create.Remote, NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
+  NtUtils.Processes.Create.Remote,  NtUtils.Processes.Create.Manual,
+  NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
   UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm,
   TU.Credentials;
 
@@ -106,15 +96,15 @@ uses
 
 procedure TDialogRun.ButtonACClick(Sender: TObject);
 var
-  hToken: THandle;
+  hxToken: IHandle;
   User: ISid;
 begin
   if Assigned(FToken) then
-    hToken := FToken.Handle.Handle
+    hxToken := FToken.Handle
   else
-    hToken := NtCurrentEffectiveToken;
+    hxToken := NtxCurrentEffectiveToken;
 
-  NtxQuerySidToken(hToken, TokenUser, User).RaiseOnError;
+  NtxQuerySidToken(hxToken, TokenUser, User).RaiseOnError;
 
   AppContainerSid := TDialogACProfiles.ExecuteSelect(FormMain, User);
   EditAppContainer.Text := UnvxAppContainerToString(AppContainerSid.Data,
@@ -124,7 +114,10 @@ end;
 procedure TDialogRun.ButtonBrowseClick(Sender: TObject);
 begin
   if OpenDlg.Execute(Handle) then
+  begin
     EditExe.Text := OpenDlg.FileName;
+    ButtonRun.SetFocus;
+  end;
 end;
 
 procedure TDialogRun.ButtonChooseParentClick(Sender: TObject);
@@ -220,26 +213,22 @@ procedure TDialogRun.ChangedExecMethod(Sender: TObject);
 var
   OldParentAccessMask: TProcessAccessMask;
 begin
-  if Sender = RadioButtonAsUser then
-    ExecMethod := AdvxCreateProcess
-  else if Sender = RadioButtonRemote then
-    ExecMethod := AdvxCreateProcessRemote
-  else if Sender = RadioButtonWithToken then
-    ExecMethod := AdvxCreateProcessWithToken
-  else if Sender = RadioButtonWithLogon then
-    ExecMethod := AdvxCreateProcessWithLogon
-  else if Sender = RadioButtonRtl then
-    ExecMethod := RtlxCreateUserProcess
-  else if Sender = RadioButtonShell then
-    ExecMethod := ShlxExecute
-  else if Sender = RadioButtonWdc then
-    ExecMethod := WdcxCreateProcess
-  else if Sender = RadioButtonWMI then
-    ExecMethod := WmixCreateProcess
-  else if Sender = RadioButtonIShellDispatch then
-    ExecMethod := ComxShellExecute
+  case ComboMethod.ItemIndex of
+    0: ExecMethod := AdvxCreateProcess;
+    1: ExecMethod := AdvxCreateProcessWithToken;
+    2: ExecMethod := AdvxCreateProcessWithLogon;
+    3: ExecMethod := AdvxCreateProcessRemote;
+    4: ExecMethod := RtlxCreateUserProcess;
+    5: ExecMethod := RtlxCreateUserProcessEx;
+    6: ExecMethod := NtxCreateUserProcess;
+    7: ExecMethod := NtxCreateProcessEx;
+    8: ExecMethod := ShlxExecute;
+    9: ExecMethod := ComxShellExecute;
+    10: ExecMethod := WdcxCreateProcess;
+    11: ExecMethod := WmixCreateProcess;
   else
     ExecMethod := nil;
+  end;
 
   if ppParentProcess in ExecSupports(ExecMethod) then
   begin
@@ -274,10 +263,10 @@ end;
 
 procedure TDialogRun.FormCreate(Sender: TObject);
 begin
-  MenuCmdClick(Sender);
+  EditExe.Text := GetEnvironmentVariable('ComSpec');
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
-  ChangedExecMethod(RadioButtonAsUser);
+  ChangedExecMethod(Sender);
   UpdateDesktopList;
 end;
 
@@ -315,6 +304,7 @@ end;
 procedure TDialogRun.MenuCmdClick(Sender: TObject);
 begin
   EditExe.Text := GetEnvironmentVariable('ComSpec');
+  ButtonRun.SetFocus;
 end;
 
 procedure TDialogRun.MenuSelfClick(Sender: TObject);

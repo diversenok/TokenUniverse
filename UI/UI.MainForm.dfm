@@ -19,30 +19,12 @@ object FormMain: TFormMain
   OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
-  object Panel1: TPanel
-    Left = 0
-    Top = 0
-    Width = 750
-    Height = 32
-    Align = alTop
-    BevelOuter = bvNone
-    TabOrder = 0
-    object Button1: TButton
-      Left = 3
-      Top = 4
-      Width = 86
-      Height = 25
-      Caption = 'Open Process'
-      TabOrder = 0
-      OnClick = ActionOpenProcess
-    end
-  end
   object ListViewTokens: TListViewEx
     AlignWithMargins = True
     Left = 3
-    Top = 58
+    Top = 35
     Width = 744
-    Height = 242
+    Height = 265
     Align = alBottom
     Anchors = [akLeft, akTop, akRight, akBottom]
     Columns = <>
@@ -61,7 +43,7 @@ object FormMain: TFormMain
     RowSelect = True
     ParentDoubleBuffered = False
     PopupMenu = PopupMenu
-    TabOrder = 1
+    TabOrder = 0
     ViewStyle = vsReport
     OnDblClick = ActionOpen
     OnEdited = ListViewTokensEdited
@@ -71,7 +53,7 @@ object FormMain: TFormMain
   end
   object SearchBox: TButtonedEdit
     Left = 3
-    Top = 34
+    Top = 8
     Width = 597
     Height = 21
     Anchors = [akLeft, akTop, akRight]
@@ -81,20 +63,20 @@ object FormMain: TFormMain
     RightButton.HotImageIndex = 2
     RightButton.ImageIndex = 1
     RightButton.PressedImageIndex = 3
-    TabOrder = 2
+    TabOrder = 1
     TextHint = 'Search'
     OnChange = SearchBoxChange
     OnRightButtonClick = SearchBoxRightButtonClick
   end
   object ComboBoxColumn: TComboBox
     Left = 604
-    Top = 34
+    Top = 8
     Width = 143
     Height = 21
     Style = csDropDownList
     Anchors = [akTop, akRight]
     ItemIndex = 0
-    TabOrder = 3
+    TabOrder = 2
     Text = 'Search in all columns'
     Items.Strings = (
       'Search in all columns')

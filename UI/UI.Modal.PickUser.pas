@@ -66,7 +66,7 @@ implementation
 
 uses
   TU.ObjPicker, UI.Modal.ComboDlg, Winapi.WinNt, UI.Helper,
-  NtUtils.Lsa.Sid, NtUiLib.Exceptions;
+  NtUtils.Lsa.Sid, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -84,7 +84,7 @@ procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
 var
   Sid: ISid;
 begin
-  RtlxNewSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
+  RtlxCreateSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
     [TComboDialog.PickIntegrity(Self)]).RaiseOnError;
 
   SetSelectedGroup(Sid);

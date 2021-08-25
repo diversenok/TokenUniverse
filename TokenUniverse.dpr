@@ -4,7 +4,7 @@ uses
   Vcl.Forms,
   NtUtils,
   NtUtils.Svc.SingleTaskSvc,
-  NtUiLib.Exceptions,
+  NtUiLib.Errors,
   TU.Tokens in 'Core\TU.Tokens.pas',
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
   UI.MainForm in 'UI\UI.MainForm.pas' {FormMain},

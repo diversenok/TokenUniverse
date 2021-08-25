@@ -31,7 +31,7 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntdef, NtUiLib.Exceptions;
+  Ntapi.ntstatus, Ntapi.ntdef, NtUiLib.Errors;
 
 {$R *.dfm}
 

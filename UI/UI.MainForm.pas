@@ -10,8 +10,6 @@ uses
 
 type
   TFormMain = class(TFormEx)
-    Panel1: TPanel;
-    Button1: TButton;
     MainMenu: TMainMenu;
     Program1: TMenuItem;
     View1: TMenuItem;
@@ -129,7 +127,7 @@ uses
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
-  DelphiUtils.Arrays, NtUiLib.Exceptions, Ntapi.ntseapi, NtUtils,
+  DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
   NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms;
 
 {$R *.dfm}
