@@ -45,7 +45,7 @@ type
     procedure ButtonApplyClick(Sender: TObject);
   private
     Sid: ISid;
-    procedure SetUserAudit(NewAudit: IAudit);
+    procedure SetUserAudit(const Audit: TArray<TAuditPolicyEntry>);
     procedure LoadLogonRights;
   public
     class procedure CreateView(AOwner: TComponent; SrcSid: ISid); static;
@@ -189,13 +189,13 @@ begin
   LogonMaskFrame.Value := Rights;
 end;
 
-procedure TDialogSidView.SetUserAudit(NewAudit: IAudit);
+procedure TDialogSidView.SetUserAudit;
 begin
   FrameLsaAudit.LabelStatus.Caption := '';
   FrameLsaAudit.LabelStatus.Hint := '';
 
   try
-    (NewAudit as IPerUserAudit).AssignToUser(Sid.Data).RaiseOnError;
+    LsaxSetUserAudit(Sid.Data, Audit).RaiseOnError;
   finally
     FrameLsaAudit.LoadForSid(Sid.Data);
   end;

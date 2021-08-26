@@ -12,7 +12,7 @@ type
     FrameAudit: TFrameAudit;
     procedure FormCreate(Sender: TObject);
   private
-    procedure SetSystemAudit(NewAudit: IAudit);
+    procedure SetSystemAudit(const NewAudit: TArray<TAuditPolicyEntry>);
   public
     constructor Create(AOwner: TComponent); override;
   end;
@@ -37,10 +37,10 @@ begin
   FrameAudit.LoadForSystem;
 end;
 
-procedure TDialogSystemAudit.SetSystemAudit(NewAudit: IAudit);
+procedure TDialogSystemAudit.SetSystemAudit;
 begin
   try
-    (NewAudit as ISystemAudit).AssignToSystem.RaiseOnError;
+    LsaxSetSystemAudit(NewAudit).RaiseOnError;
   finally
     FrameAudit.LoadForSystem;
   end;

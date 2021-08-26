@@ -8,7 +8,7 @@ uses
   Vcl.ComCtrls, VclEx.ListView, NtUtils.Lsa.Audit;
 
 type
-  TApplyProc = procedure (AuditPolicy: IAudit) of object;
+  TApplyProc = procedure (const AuditPolicy: TArray<TAuditPolicyEntry>) of object;
 
   TFrameAudit = class(TFrame)
     ListView: TListViewEx;
@@ -32,13 +32,13 @@ type
     procedure MenuSuccessClick(Sender: TObject);
     procedure MenuFailureClick(Sender: TObject);
   private
-    Policy: IAudit;
+    AuditPolicy: TArray<TAuditPolicyEntry>;
     ApplyProc: TApplyProc;
     procedure FillRow(Index: Integer);
     procedure SetApplyEvent(Value: TApplyProc);
   public
     procedure DelayedCreate;
-    procedure Load(AuditPoicy: IAudit);
+    procedure Load(const Policy: TArray<TAuditPolicyEntry>);
     procedure LoadForSid(Sid: PSid);
     procedure LoadForSystem;
     procedure ModifySelected(Flag: Integer; NewState: Boolean);
@@ -62,8 +62,8 @@ begin
   for i := 0 to ListView.Items.Count - 1 do
     ListView.Items[i].ColorEnabled := False;
 
-  if Assigned(Policy) and Assigned(ApplyProc)then
-    ApplyProc(Policy);
+  if Assigned(AuditPolicy) and Assigned(ApplyProc)then
+    ApplyProc(AuditPolicy);
 end;
 
 procedure TFrameAudit.FillRow(Index: Integer);
@@ -82,9 +82,9 @@ begin
 
   with ListView.Items[Index] do
     for ColumnInd := 1 to 4 do
-      if Assigned(Policy) then
-        Cell[ColumnInd] := CheckboxToString(Policy.ContainsFlag(Index,
-          ColumnToFlag[ColumnInd]))
+      if Assigned(AuditPolicy) then
+        Cell[ColumnInd] := CheckboxToString(BitTest(AuditPolicy[Index].Policy
+          and ColumnToFlag[ColumnInd]))
       else
         Cell[ColumnInd] := '?';
 end;
@@ -94,7 +94,7 @@ procedure TFrameAudit.ListViewContextPopup(Sender: TObject; MousePos: TPoint;
 var
   i: Integer;
 begin
-  if not Assigned(Policy) then
+  if not Assigned(AuditPolicy) then
   begin
     Handled := True;
     Exit;
@@ -110,16 +110,20 @@ begin
     for i := 0 to ListView.Items.Count - 1 do
       if ListView.Items[i].Selected then
       begin
-        if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_INCLUDE) then
+        if BitTest(AuditPolicy[i].PolicyOverride and
+          PER_USER_AUDIT_SUCCESS_INCLUDE) then
           MenuIncSucc.Checked := True;
 
-        if Policy.ContainsFlag(i, PER_USER_AUDIT_SUCCESS_EXCLUDE) then
+        if BitTest(AuditPolicy[i].PolicyOverride and
+          PER_USER_AUDIT_SUCCESS_EXCLUDE) then
           MenuExcSucc.Checked := True;
 
-        if Policy.ContainsFlag(i, PER_USER_AUDIT_FAILURE_INCLUDE) then
+        if BitTest(AuditPolicy[i].PolicyOverride and
+          PER_USER_AUDIT_FAILURE_INCLUDE) then
           MenuIncFail.Checked := True;
 
-        if Policy.ContainsFlag(i, PER_USER_AUDIT_FAILURE_EXCLUDE) then
+        if BitTest(AuditPolicy[i].PolicyOverride and
+          PER_USER_AUDIT_FAILURE_EXCLUDE) then
           MenuExcFail.Checked := True;
       end;
   end
@@ -131,23 +135,23 @@ begin
     for i := 0 to ListView.Items.Count - 1 do
       if ListView.Items[i].Selected then
       begin
-        if Policy.ContainsFlag(i, POLICY_AUDIT_EVENT_SUCCESS) then
+        if BitTest(AuditPolicy[i].Policy and POLICY_AUDIT_EVENT_SUCCESS) then
           MenuSuccess.Checked := True;
 
-        if Policy.ContainsFlag(i, POLICY_AUDIT_EVENT_FAILURE) then
+        if BitTest(AuditPolicy[i].Policy and POLICY_AUDIT_EVENT_FAILURE) then
           MenuFailure.Checked := True;
       end;
   end;
 end;
 
-procedure TFrameAudit.Load(AuditPoicy: IAudit);
+procedure TFrameAudit.Load(const Policy: TArray<TAuditPolicyEntry>);
 var
   Ind: Integer;
 begin
   DelayedCreate;
 
-  Policy := AuditPoicy;
-  ButtonApply.Enabled := Assigned(Policy) and Assigned(ApplyProc);
+  AuditPolicy := Policy;
+  ButtonApply.Enabled := Assigned(AuditPolicy) and Assigned(ApplyProc);
 
   ListView.Items.BeginUpdate;
 
@@ -164,13 +168,14 @@ procedure TFrameAudit.LoadForSid(Sid: PSid);
 var
   StatusEx: TNtxStatus;
 begin
-  Policy := TPerUserAudit.CreateLoadForUser(Sid, StatusEx);
+  AuditPolicy := nil;
+  StatusEx := LsaxQueryUserAudit(Sid, AuditPolicy);
 
-  if StatusEx.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsarQueryAuditPolicy') then
+  if StatusEx.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'AuditQueryPerUserPolicy') then
   begin
     LabelStatus.Caption := 'Audit policy is not defined for the account';
     LabelStatus.Hint := '';
-    Policy := TPerUserAudit.CreateEmpty(StatusEx);
+    StatusEx := LsaxCreateEmptyAudit(AuditPolicy);
   end;
 
   if not StatusEx.IsSuccess then
@@ -179,14 +184,15 @@ begin
     LabelStatus.Hint := StatusEx.Description;
   end;
 
-  Load(Policy);
+  Load(AuditPolicy);
 end;
 
 procedure TFrameAudit.LoadForSystem;
 var
   StatusEx: TNtxStatus;
 begin
-  Policy := TSystemAudit.CreateQuery(StatusEx);
+  AuditPolicy := nil;
+  StatusEx := LsaxQuerySystemAudit(AuditPolicy);
 
   if not StatusEx.IsSuccess then
   begin
@@ -194,7 +200,7 @@ begin
     LabelStatus.Hint := StatusEx.Description;
   end;
 
-  Load(Policy);
+  Load(AuditPolicy);
 end;
 
 procedure TFrameAudit.MenuExcFailClick(Sender: TObject);
@@ -231,14 +237,20 @@ procedure TFrameAudit.ModifySelected(Flag: Integer; NewState: Boolean);
 var
   i: Integer;
 begin
-  if not Assigned(Policy) then
+  if not Assigned(AuditPolicy) then
     Exit;
 
   ListView.Items.BeginUpdate;
   for i := 0 to ListView.Items.Count - 1 do
     if ListView.Items[i].Selected then
     begin
-      Policy.SetFlag(i, Flag, NewState);
+      if NewState then
+        AuditPolicy[i].PolicyOverride := (AuditPolicy[i].PolicyOverride and $0F)
+          or Byte(Flag)
+      else
+        AuditPolicy[i].PolicyOverride := (AuditPolicy[i].PolicyOverride and $0F)
+          and not Byte(Flag);
+
       FillRow(i);
       ListView.Items[i].Color := ColorSettings.clStale;
     end;
@@ -248,28 +260,20 @@ end;
 procedure TFrameAudit.SetApplyEvent(Value: TApplyProc);
 begin
   ApplyProc := Value;
-  ButtonApply.Enabled := Assigned(Policy) and Assigned(Value);
+  ButtonApply.Enabled := Assigned(AuditPolicy) and Assigned(Value);
 end;
 
 procedure TFrameAudit.DelayedCreate;
 var
-  i: Integer;
+  i, j: Integer;
   StatusEx: TNtxStatus;
-  SubCategories: TArray<TGuid>;
-  Mapping: TAuditCategoryMapping;
+  Mapping: TArray<TAuditCategoryMapping>;
+  Name: String;
 begin
   if ListView.Items.Count > 0 then
     Exit; // Already done
 
-  StatusEx := LsaxEnumerateAuditSubCategories(SubCategories);
-  if not StatusEx.IsSuccess then
-  begin
-    LabelStatus.Caption := StatusEx.ToString;
-    LabelStatus.Hint := StatusEx.Description;
-    Exit;
-  end;
-
-  StatusEx := LsaxQueryAuditCategoryMapping(Mapping);
+  StatusEx := LsaxEnumerateAuditMapping(Mapping);
   if not StatusEx.IsSuccess then
   begin
     LabelStatus.Caption := StatusEx.ToString;
@@ -281,28 +285,34 @@ begin
   ListView.Items.Clear;
 
   // Each audit category is a group
+  ListView.Groups.BeginUpdate;
+  ListView.Groups.Clear;
+
+  for i := 0 to High(Mapping) do
   begin
-    ListView.Groups.BeginUpdate;
-    ListView.Groups.Clear;
-
-    for i := 0 to High(Mapping.Categories) do
-      with ListView.Groups.Add do
-      begin
-        Header := LsaxLookupAuditCategoryName(Mapping.Categories[i]);
-        State := State + [lgsCollapsible];
-      end;
-
-    ListView.Groups.EndUpdate;
-  end;
-
-  // Each subcategory is an item
-  for i := 0 to High(SubCategories) do
-    with ListView.Items.Add do
+    with ListView.Groups.Add do
     begin
-      Caption := LsaxLookupAuditSubCategoryName(SubCategories[i]);
-      GroupID := Mapping.Find(SubCategories[i]);
+      if not LsaxLookupAuditCategoryName(Mapping[i].Category,
+        Name).IsSuccess then
+        Name := Mapping[i].Category.ToString;
+
+      Header := Name;
+      State := State + [lgsCollapsible];
     end;
 
+    for j := 0 to High(Mapping[i].SubCategories) do
+      with ListView.Items.Add do
+      begin
+        if not LsaxLookupAuditSubCategoryName(Mapping[i].SubCategories[j],
+          Name).IsSuccess then
+          Name := Mapping[i].SubCategories[j].ToString;
+
+        Caption := Name;
+        GroupID := i;
+      end;
+  end;
+
+  ListView.Groups.EndUpdate;
   ListView.Items.EndUpdate;
 end;
 

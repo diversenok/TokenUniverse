@@ -113,7 +113,7 @@ type
     procedure ChangedVAllowed(const NewVAllowed: LongBool);
     procedure ChangedVEnabled(const NewVEnabled: LongBool);
     procedure ChangedFlags(const NewFlags: Cardinal);
-    procedure SetAuditPolicy(NewAudit: IAudit);
+    procedure SetAuditPolicy(const Audit: TArray<TAuditPolicyEntry>);
     procedure InspectGroup(const Group: TGroup);
     procedure Refresh;
     procedure UpdateObjectTab;
@@ -635,10 +635,10 @@ begin
   PageControlChange(Self);
 end;
 
-procedure TInfoDialog.SetAuditPolicy(NewAudit: IAudit);
+procedure TInfoDialog.SetAuditPolicy;
 begin
   try
-    Token.InfoClass.AuditPolicy := NewAudit as IPerUserAudit;
+    Token.InfoClass.AuditPolicy := LsaxUserAuditToTokenAudit(Audit);
   finally
     TabAudit.Tag := TAB_INVALIDATED;
     UpdateAuditTab;
@@ -652,13 +652,17 @@ begin
 end;
 
 procedure TInfoDialog.UpdateAuditTab;
+var
+  AuditOverrides: TArray<TAuditPolicyEntry>;
 begin
   if TabAudit.Tag = TAB_UPDATED then
     Exit;
 
   // TODO: Subscribe event
-  if Token.InfoClass.ReQuery(tdTokenAuditPolicy) then
-    FrameAudit.Load(Token.InfoClass.AuditPolicy)
+  if Token.InfoClass.ReQuery(tdTokenAuditPolicy) and
+    LsaxTokenAuditToUserAudit(Token.InfoClass.AuditPolicy.Data,
+    AuditOverrides).IsSuccess then
+    FrameAudit.Load(AuditOverrides)
   else
     FrameAudit.Load(nil);
 

@@ -8,7 +8,7 @@ uses
   Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
   TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
   NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
-  System.Generics.Collections, NtUtils.Lsa.Logon,
+  System.Generics.Collections, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
   NtUtils.Security.Acl, NtUtils.Objects, NtUtils;
 
 type
@@ -60,7 +60,7 @@ type
     Statistics: TTokenStatistics;
     RestrictedSids: TArray<TGroup>;
     Session: Cardinal;
-    AuditPolicy: IPerUserAudit;
+    AuditPolicy: IMemory<PTokenAuditPolicy>;
     SandboxInert: LongBool;
     Origin: TLuid;
     Elevation: TTokenElevationType;
@@ -79,7 +79,7 @@ type
 
     FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
     FOnSessionChange: TCachingEvent<Cardinal>;
-    FOnAuditChange: TCachingEvent<IPerUserAudit>;
+    FOnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>>;
     FOnOriginChange: TCachingEvent<TLuid>;
     FOnUIAccessChange: TCachingEvent<LongBool>;
     FOnIntegrityChange: TCachingEvent<TGroup>;
@@ -98,7 +98,7 @@ type
     property OnOwnerChange: TCachingEvent<ISid> read FOnOwnerChange;
     property OnPrimaryChange: TCachingEvent<ISid> read FOnPrimaryChange;
     property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
-    property OnAuditChange: TCachingEvent<IPerUserAudit> read FOnAuditChange;
+    property OnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>> read FOnAuditChange;
     property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
     property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TCachingEvent<TGroup> read FOnIntegrityChange;
@@ -131,7 +131,7 @@ type
     procedure SetIntegrityLevel(const Value: Cardinal);
     procedure SetMandatoryPolicy(const Value: Cardinal);
     procedure SetSession(const Value: Cardinal);
-    procedure SetAuditPolicy(Value: IPerUserAudit);
+    procedure SetAuditPolicy(const Value: IMemory<PTokenAuditPolicy>);
     procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(Value: ISid);
@@ -150,7 +150,7 @@ type
     function GetRestrictedSids: TArray<TGroup>;
     function GetSandboxInert: LongBool;
     function GetSession: Cardinal;
-    function GetAuditPolicy: IPerUserAudit;
+    function GetAuditPolicy: IMemory<PTokenAuditPolicy>;
     function GetSource: TTokenSource;
     function GetStatistics: TTokenStatistics;
     function GetTokenType: TTokenTypeEx;
@@ -183,7 +183,7 @@ type
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     property SessionReference: LongBool write SetSessionReference;              // class 14 #settable + not gettable
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
-    property AuditPolicy: IPerUserAudit read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
+    property AuditPolicy: IMemory<PTokenAuditPolicy> read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
     property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
@@ -426,7 +426,7 @@ uses
   NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions,
   NtUiLib.Reflection.AccessMasks, DelphiUiLib.Reflection.Numeric, NtUtils.SysUtils,
   DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiLib.Reflection.Types,
-  Ntapi.ntrtl, NtUtils.Processes.Info, DelphiUtils.AutoObjects;
+  Ntapi.ntrtl, NtUtils.Processes.Info;
 
 const
   /// <summary> Stores which data class a string class depends on. </summary>
@@ -877,7 +877,7 @@ begin
   Result := Token.Cache.AppContainer;
 end;
 
-function TTokenData.GetAuditPolicy: IPerUserAudit;
+function TTokenData.GetAuditPolicy: IMemory<PTokenAuditPolicy>;
 begin
   Assert(Token.Cache.IsCached[tdTokenAuditPolicy]);
   Result := Token.Cache.AuditPolicy;
@@ -1303,10 +1303,8 @@ begin
         xMemory).IsSuccess;
       if Result then
       begin
-          Token.Cache.AuditPolicy := TTokenPerUserAudit.CreateCopy(
-            xMemory.Data, xMemory.Size);
-
-          Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
+        IMemory(Token.Cache.AuditPolicy) := xMemory;
+        Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
       end;
     end;
 
@@ -1431,17 +1429,10 @@ begin
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
 end;
 
-procedure TTokenData.SetAuditPolicy(Value: IPerUserAudit);
-var
-  pAuditPolicy: PTokenAuditPolicy;
+procedure TTokenData.SetAuditPolicy(const Value: IMemory<PTokenAuditPolicy>);
 begin
-  pAuditPolicy := Value.RawBuffer;
-  try
-    NtxSetToken(Token.hxToken, TokenAuditPolicy, pAuditPolicy,
-      Value.RawBufferSize).RaiseOnError;
-  finally
-    Value.FreeRawBuffer(pAuditPolicy);
-  end;
+  NtxSetToken(Token.hxToken, TokenAuditPolicy, Value.Data,
+    Value.Size).RaiseOnError;
 
   // Update the cache and notify event listeners
   ValidateCache(tdTokenAuditPolicy);
