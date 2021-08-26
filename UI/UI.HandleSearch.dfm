@@ -86,6 +86,7 @@ object FormHandleSearch: TFormHandleSearch
     Caption = 'Close'
     ModalResult = 2
     TabOrder = 1
+    OnClick = ButtonCloseClick
   end
   object ButtonRefresh: TButton
     Left = 3

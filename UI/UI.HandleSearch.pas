@@ -19,6 +19,7 @@ type
     procedure ButtonRefreshClick(Sender: TObject);
     procedure cmInspectClick(Sender: TObject);
     procedure cmSaveClick(Sender: TObject);
+    procedure ButtonCloseClick(Sender: TObject);
   private
   public
     { Public declarations }
@@ -33,6 +34,11 @@ uses
   NtUtils.Processes.Info, NtUtils.Objects;
 
 {$R *.dfm}
+
+procedure TFormHandleSearch.ButtonCloseClick;
+begin
+  Close;
+end;
 
 procedure TFormHandleSearch.ButtonRefreshClick(Sender: TObject);
 var

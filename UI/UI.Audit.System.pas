@@ -11,6 +11,7 @@ type
   TDialogSystemAudit = class(TChildForm)
     FrameAudit: TFrameAudit;
     procedure FormCreate(Sender: TObject);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
     procedure SetSystemAudit(const NewAudit: TArray<TAuditPolicyEntry>);
   public
@@ -35,6 +36,12 @@ procedure TDialogSystemAudit.FormCreate(Sender: TObject);
 begin
   FrameAudit.OnApplyClick := SetSystemAudit;
   FrameAudit.LoadForSystem;
+end;
+
+procedure TDialogSystemAudit.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #27 then
+    Close;
 end;
 
 procedure TDialogSystemAudit.SetSystemAudit;

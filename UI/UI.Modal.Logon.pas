@@ -34,10 +34,13 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ComboLogonTypeChange(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
   private
     function GetLogonType: TSecurityLogonType;
     procedure EditSingleGroup(const Value: TGroup);
     procedure SuggestCurrentLogonGroup;
+  public
+    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
@@ -72,6 +75,11 @@ var
 begin
   if NT_SUCCESS(NtAllocateLocallyUniqueId(NewLuid)) then
     EditSourceLuid.Text := IntToHexEx(NewLuid);
+end;
+
+procedure TLogonDialog.ButtonCancelClick;
+begin
+  Close;
 end;
 
 procedure TLogonDialog.ButtonContinueClick;
@@ -120,6 +128,11 @@ begin
   EditSourceName.Enabled := (ComboLogonType.ItemIndex = S4U_INDEX);
   EditSourceLuid.Enabled := EditSourceName.Enabled;
   ButtonAllocLuid.Enabled := EditSourceName.Enabled;
+end;
+
+constructor TLogonDialog.Create;
+begin
+  inherited CreateChild(AOwner, True);
 end;
 
 procedure TLogonDialog.EditSingleGroup;

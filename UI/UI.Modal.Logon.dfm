@@ -68,6 +68,7 @@ object LogonDialog: TLogonDialog
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 4
+    OnClick = ButtonCancelClick
   end
   object ButtonContinue: TButton
     Left = 267
