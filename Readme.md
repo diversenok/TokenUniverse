@@ -126,12 +126,13 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [x] CreateProcessWithToken
  - [x] WMI
  - [x] RtlCreateUserProcess
- - [ ] NtCreateUserProcess
- - [ ] NtCreateProcessEx
- - [x] CreateProcessWithLogon
- - [x] ShellExecuteEx
- - [x] ShellExecute via IShellDispatch2
- - [x] CtrateProcess via code injection
+ - [x] RtlCreateUserProcessEx
+ - [x] NtCreateUserProcess
+ - [x] NtCreateProcessEx
+ - [x] CreateProcessWithLogon (credentials)
+ - [x] ShellExecuteEx (no token)
+ - [x] ShellExecute via IShellDispatch2 (no token)
+ - [x] CreateProcess via code injection (no token)
  - [x] WdcRunTaskAsInteractiveUser (no token)
 
 ### Parameters
@@ -145,7 +146,7 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Child process policy
  - [ ] Job assignment
  - [x] Run as invoker compatibility
- - [ ] AppContainer SID
+ - [x] AppContainer SID
  - [ ] Capabilities
 
 ### Interface features
