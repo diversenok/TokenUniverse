@@ -357,8 +357,8 @@ object InfoDialog: TInfoDialog
         OnClick = BtnSetVEnabledClick
       end
       object BtnSetAEnabled: TButton
-        Left = 188
-        Top = 258
+        Left = 191
+        Top = 284
         Width = 24
         Height = 23
         ImageAlignment = iaCenter
