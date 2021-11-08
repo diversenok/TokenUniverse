@@ -54,7 +54,7 @@ type
 implementation
 
 uses
-  Winapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Winapi.ntlsa,
+  Ntapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Ntapi.ntlsa,
   Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa, Ntapi.ntdef,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric;
 

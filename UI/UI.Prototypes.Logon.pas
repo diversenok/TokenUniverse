@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, NtUtils.Lsa.Logon,
-  TU.Tokens, Winapi.WinNt, Vcl.StdCtrls;
+  TU.Tokens, Ntapi.WinNt, Vcl.StdCtrls;
 
 type
   TFrameLogon = class(TFrame)
@@ -38,7 +38,7 @@ implementation
 
 uses
   Vcl.Graphics, UI.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
-  Ntapi.ntseapi, Winapi.NtSecApi, NtUtils,
+  Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils,
   DelphiUiLib.Reflection.Records, DelphiUiLib.Reflection;
 
 {$R *.dfm}

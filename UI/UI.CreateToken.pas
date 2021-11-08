@@ -89,7 +89,7 @@ implementation
 uses
   UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, VirtualTrees,
   UI.Settings, UI.Modal.PickToken, System.UITypes, NtUtils.Lsa.Sid,
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb,
+  Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb,
   NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}

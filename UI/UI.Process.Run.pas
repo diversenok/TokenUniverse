@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment,
-  NtUtils.Objects, Winapi.WinUser, NtUtils, Winapi.ProcessThreadsApi,
+  NtUtils.Objects, Ntapi.WinUser, NtUtils, Ntapi.ProcessThreadsApi,
   NtUtils.Processes.Create, Ntapi.ntpsapi;
 
 type
@@ -83,7 +83,7 @@ type
 implementation
 
 uses
-  Winapi.WinNt, Winapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi,
+  Ntapi.WinNt, Ntapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi,
   NtUtils.Processes, NtUiLib.Errors, NtUtils.Tokens.Info,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,

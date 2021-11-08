@@ -17,7 +17,7 @@ const
 implementation
 
 uses
-  Ntapi.ntstatus, Winapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
+  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
   System.TypInfo, NtUtils, NtUiLib.Exceptions, NtUiLib.Exceptions.Dialog;
 
 const

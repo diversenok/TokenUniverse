@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, UI.Prototypes.Forms, TU.Tokens, Winapi.WinSafer;
+  Vcl.StdCtrls, UI.Prototypes.Forms, TU.Tokens, Ntapi.WinSafer;
 
 type
   TDialogSafer = class(TChildForm)

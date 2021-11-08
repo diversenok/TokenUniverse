@@ -6,7 +6,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls, TU.Tokens,
   VclEx.ListView, UI.Prototypes.Forms, UI.Prototypes.Privileges,
-  UI.Prototypes.Groups, NtUtils.Security.Sid, Winapi.WinNt, Ntapi.ntseapi,
+  UI.Prototypes.Groups, NtUtils.Security.Sid, Ntapi.WinNt, Ntapi.ntseapi,
   NtUtils;
 
 type
@@ -46,7 +46,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
-  Winapi.securitybaseapi, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl;
+  Ntapi.securitybaseapi, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl;
 
 {$R *.dfm}
 

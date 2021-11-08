@@ -11,7 +11,7 @@ interface
   on the same simple type. }
 
 uses
-  Winapi.WinNt, Ntapi.ntseapi, Ntapi.ntrtl, NtUtils.Security.Sid, NtUtils;
+  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntrtl, NtUtils.Security.Sid, NtUtils;
 
 type
   TGroupAdjustAction = (gaResetDefault, gaEnable, gaDisable);

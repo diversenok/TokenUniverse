@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.ComCtrls,
-  Vcl.StdCtrls, UI.Prototypes.Forms, Winapi.WinNt, UI.Prototypes.AccessMask;
+  Vcl.StdCtrls, UI.Prototypes.Forms, Ntapi.WinNt, UI.Prototypes.AccessMask;
 
 type
   TDialogGrantedAccess = class(TChildForm)

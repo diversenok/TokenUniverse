@@ -31,7 +31,7 @@ type
 implementation
 
 uses
-  Ntapi.ntexapi, UI.Colors, NtUtils.WinUser, Winapi.WinNt, Ntapi.ntpsapi,
+  Ntapi.ntexapi, UI.Colors, NtUtils.WinUser, Ntapi.WinNt, Ntapi.ntpsapi,
   Ntapi.ntdef, NtUtils, NtUtils.Threads, NtUiLib.Errors, Ntapi.ntstatus,
   System.UITypes;
 

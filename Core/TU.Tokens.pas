@@ -5,9 +5,9 @@ interface
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 uses
-  Winapi.WinNt, Ntapi.ntobapi, Winapi.WinBase, Winapi.WinSafer,
+  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.WinBase, Ntapi.WinSafer,
   TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
-  NtUtils.Security.Sid, Ntapi.ntseapi, Winapi.NtSecApi, NtUtils.Lsa.Audit,
+  NtUtils.Security.Sid, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils.Lsa.Audit,
   System.Generics.Collections, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
   NtUtils.Security.Acl, NtUtils.Objects, NtUtils;
 

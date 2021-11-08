@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, VclEx.ListView, Vcl.StdCtrls, NtUtils.Security.Sid,
-  Winapi.WinNt, NtUtils.Lsa, UI.Prototypes.Privileges, Vcl.Menus, Ntapi.ntseapi,
+  Ntapi.WinNt, NtUtils.Lsa, UI.Prototypes.Privileges, Vcl.Menus, Ntapi.ntseapi,
   NtUtils;
 
 type

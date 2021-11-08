@@ -29,7 +29,7 @@ procedure ReSvcRunInSession(const ScvParams: TArray<String>);
 implementation
 
 uses
-  Winapi.WinNt, Winapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
+  Ntapi.WinNt, Ntapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
   Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
   NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Processes.Info,
   NtUtils.Tokens.Info, NtUtils.Processes.Create, NtUtils.Synchronization,

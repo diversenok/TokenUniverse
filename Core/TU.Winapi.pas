@@ -3,7 +3,7 @@ unit TU.Winapi;
 interface
 
 uses
-  Winapi.WinNt, Ntapi.ntseapi;
+  Ntapi.WinNt, Ntapi.ntseapi;
 
 type
   TAccessGroup = (agRead, agWrite, agExecute, agStandard);

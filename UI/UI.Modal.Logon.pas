@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups,
-  Winapi.WinBase, Winapi.NtSecApi, Vcl.ExtCtrls, NtUtils;
+  Ntapi.WinBase, Ntapi.NtSecApi, Vcl.ExtCtrls, NtUtils;
 
 type
   TLogonDialog = class(TChildForm)
@@ -47,8 +47,8 @@ implementation
 
 uses
   TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
-  Winapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
-  NtUtils.Security.Sid, Winapi.WinUser, NtUtils.WinUser, System.UITypes,
+  Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
+  NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser, System.UITypes,
   NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
 
 {$R *.dfm}
@@ -84,7 +84,7 @@ end;
 
 procedure TLogonDialog.ButtonContinueClick;
 var
-  Handle: HWND;
+  Handle: THwnd;
 begin
   // When logging users with additional groups at least one of them shoud be a
   // logon group

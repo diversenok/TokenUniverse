@@ -7,7 +7,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
-  TU.Tokens.Types, Winapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
+  TU.Tokens.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
   Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls;
 
@@ -132,7 +132,7 @@ uses
   DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  UI.ProcessIcons, NtUtils.Version, UI.AppContainer.View;
+  UI.ProcessIcons, Ntapi.Versions, UI.AppContainer.View;
 
 const
   TAB_INVALIDATED = 0;

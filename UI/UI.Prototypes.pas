@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView, TU.Tokens,
-  TU.Tokens.Types, Winapi.WinNt, NtUtils.WinStation;
+  TU.Tokens.Types, Ntapi.WinNt, NtUtils.WinStation;
 
 type
   TSessionSource = class
@@ -134,7 +134,7 @@ begin
   ComboBox.Items.Clear;
 
   for i := 0 to High(Sessions) do
-    ComboBox.Items.Add(WsxQueryName(Sessions[i].SessionId));
+    ComboBox.Items.Add(TType.Represent(Sessions[i].SessionId).Text);
 
   if SelectCurrent and (Length(Sessions) > 0) then
     SetSession(RtlGetCurrentPeb.SessionId);

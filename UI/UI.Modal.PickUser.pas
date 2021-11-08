@@ -65,7 +65,7 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg, Winapi.WinNt, UI.Helper,
+  TU.ObjPicker, UI.Modal.ComboDlg, Ntapi.WinNt, UI.Helper,
   NtUtils.Lsa.Sid, NtUiLib.Errors;
 
 {$R *.dfm}
