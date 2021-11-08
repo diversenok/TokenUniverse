@@ -7,7 +7,6 @@ object DialogSafer: TDialogSafer
   Color = clBtnFace
   Constraints.MinHeight = 220
   Constraints.MinWidth = 290
-  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11

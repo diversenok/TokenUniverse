@@ -8,7 +8,6 @@ object LogonDialog: TLogonDialog
   Color = clBtnFace
   Constraints.MinHeight = 320
   Constraints.MinWidth = 266
-  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
