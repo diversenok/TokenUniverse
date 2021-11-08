@@ -1,8 +1,5 @@
 # Token Universe
 
-> **Note**:  
-> Although the program is under heavy development and there are still plenty of things to do, I am planning to release a test version pretty soon.
-
 **Token Universe** is an advanced tool that provides a wide range of possibilities to research **Windows security mechanisms**. It has a convenient interface for creating, viewing, and modifying access tokens, managing Local Security Authority and Security Account Manager's databases. It allows you to obtain and impersonate different security contexts, manage privileges, auditing settings, and so on.
 
 My goal is to create a useful tool that implements almost everything I know about access tokens and Windows security model in general. *And, also, to learn even more in the process.* I believe that such a program can become a valuable instrument for researchers and those who want to learn more about the security subsystem. You are welcome to suggest any ideas and report bugs.
