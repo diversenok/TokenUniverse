@@ -46,12 +46,11 @@ type
     procedure CheckBoxEnabledByDafaultClick(Sender: TObject);
   private
     SelectedGroup: ISid;
-    IsValidGroup: Boolean;
     Mapping: array of TCheckBoxMapping;
     procedure ObjPickerCallback(UserName: String);
     function GetAttributes: Cardinal;
     procedure SetAttributes(Value: Cardinal);
-    procedure SetSelectedGroup(Value: ISid);
+    procedure SetSelectedGroup(const Value: ISid);
     procedure DoDisableAttributes;
   public
     class function PickNew(AOwner: TComponent;
@@ -65,7 +64,7 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.ComboDlg, Ntapi.WinNt, UI.Helper,
+  TU.ObjPicker, UI.Modal.Integrity, Ntapi.WinNt, Ntapi.ntrtl, UI.Helper,
   NtUtils.Lsa.Sid, NtUiLib.Errors;
 
 {$R *.dfm}
@@ -82,10 +81,18 @@ end;
 
 procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
 var
+  CurrentRID: Cardinal;
   Sid: ISid;
 begin
+  CurrentRID := SECURITY_MANDATORY_MEDIUM_RID;
+
+  if Assigned(SelectedGroup) and
+    (RtlxIdentifierAuthoritySid(SelectedGroup.Data) =
+    SECURITY_MANDATORY_LABEL_AUTHORITY_ID) then
+    CurrentRID := RtlxRidSid(SelectedGroup.Data);
+
   RtlxCreateSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
-    [TComboDialog.PickIntegrity(Self)]).RaiseOnError;
+    [TIntegrityPicker.Choose(Self, CurrentRID)]).RaiseOnError;
 
   SetSelectedGroup(Sid);
   SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
@@ -93,7 +100,7 @@ end;
 
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
 begin
-  if ComboBoxSID.Enabled and not IsValidGroup then
+  if ComboBoxSID.Enabled and not Assigned(SelectedGroup) then
     LsaxLookupNameOrSddl(ComboBoxSID.Text, SelectedGroup).RaiseOnError;
 
   ModalResult := mrOk;
@@ -142,7 +149,7 @@ end;
 
 procedure TDialogPickUser.ComboBoxSIDChange(Sender: TObject);
 begin
-  IsValidGroup := False;
+  SelectedGroup := nil;
 end;
 
 procedure TDialogPickUser.DoDisableAttributes;
@@ -283,9 +290,8 @@ begin
     Mapping[i].CheckBox.SetCheckedEx(Value and Mapping[i].Attribute <> 0);
 end;
 
-procedure TDialogPickUser.SetSelectedGroup(Value: ISid);
+procedure TDialogPickUser.SetSelectedGroup;
 begin
-  IsValidGroup := True;
   SelectedGroup := Value;
   ComboBoxSID.Text := LsaxSidToString(SelectedGroup.Data);
 end;

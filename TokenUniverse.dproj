@@ -241,6 +241,10 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\UI.Helper.pas"/>
+        <DCCReference Include="UI\UI.Modal.Integrity.pas">
+            <Form>IntegrityPicker</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

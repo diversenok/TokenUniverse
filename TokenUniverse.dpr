@@ -49,7 +49,8 @@ uses
   UI.AppContainer.List in 'UI\UI.AppContainer.List.pas' {DialogACProfiles},
   UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame},
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
-  UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas';
+  UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
+  UI.Modal.Integrity in 'UI\UI.Modal.Integrity.pas' {IntegrityPicker};
 
 {$R *.res}
 

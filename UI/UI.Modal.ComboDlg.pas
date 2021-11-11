@@ -14,7 +14,6 @@ type
     ButtonOK: TButton;
   public
     class function PickSession(AOwner: TComponent): Cardinal;
-    class function PickIntegrity(AOwner: TComponent): Cardinal;
   end;
 
 var
@@ -25,26 +24,6 @@ implementation
 {$R *.dfm}
 
 { TSessionDialog }
-
-class function TComboDialog.PickIntegrity(AOwner: TComponent): Cardinal;
-var
-  IntegritySource: TIntegritySource;
-begin
-  with TComboDialog.Create(AOwner) do
-  begin
-    Caption := 'Choose integrity level';
-
-    IntegritySource := TIntegritySource.Create(ComboBox);
-    ComboBox.ItemIndex := 2;
-    try
-      ShowModal;
-
-      Result := IntegritySource.SelectedIntegrity;
-    finally
-      IntegritySource.Free;
-    end;
-  end;
-end;
 
 class function TComboDialog.PickSession(AOwner: TComponent): Cardinal;
 var
