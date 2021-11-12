@@ -229,9 +229,14 @@ object FormMain: TFormMain
       ShortCut = 24649
       OnClick = ActionAssignToThread
     end
+    object RevertCurrentThread: TMenuItem
+      Caption = 'Revoke token from current thread'
+      ShortCut = 49234
+      OnClick = ActionRevertCurrentThread
+    end
     object RevertThread: TMenuItem
       Caption = 'Revoke token from thread'
-      ShortCut = 49234
+      ShortCut = 57426
       OnClick = ActionRevertThread
     end
     object N3: TMenuItem

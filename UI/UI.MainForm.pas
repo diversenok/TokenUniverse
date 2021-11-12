@@ -65,6 +65,7 @@ type
     MenuSystemAudit: TMenuItem;
     MenuRunProgram: TMenuItem;
     TimerStateCheck: TTimer;
+    RevertCurrentThread: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -111,6 +112,7 @@ type
     procedure MenuSystemAuditClick(Sender: TObject);
     procedure MenuRunProgramClick(Sender: TObject);
     procedure CurrentUserChanged(Sender: TObject);
+    procedure ActionRevertCurrentThread(Sender: TObject);
   public
     TokenView: TTokenViewSource;
   end;
@@ -278,11 +280,25 @@ begin
   TDialogRestrictToken.CreateFromToken(Self, TokenView.Selected);
 end;
 
-procedure TFormMain.ActionRevertThread(Sender: TObject);
+procedure TFormMain.ActionRevertCurrentThread(Sender: TObject);
 begin
-  TToken.RevertThreadToken(TProcessListDialog.Execute(Self, True).ThreadID);
+  TToken.RevertThreadToken(NtCurrentThreadId);
 
   CurrentUserChanged(Self);
+  MessageDlg('The token was successfully revoked from the current thread.',
+    mtInformation, [mbOK], 0);
+end;
+
+procedure TFormMain.ActionRevertThread(Sender: TObject);
+var
+  TID: TThreadId;
+begin
+  TID := TProcessListDialog.Execute(Self, True).ThreadID;
+  TToken.RevertThreadToken(TID);
+
+  if TID = NtCurrentThreadId then
+    CurrentUserChanged(Self);
+
   MessageDlg('The token was successfully revoked from the thread.',
     mtInformation, [mbOK], 0);
 end;
