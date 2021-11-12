@@ -34,7 +34,7 @@ type
     CheckBoxResource: TCheckBox;
     CheckBoxLogon: TCheckBox;
     ButtonIntegrity: TButton;
-    ButtonLogonID: TButton;
+    ButtonLogonSID: TButton;
     procedure ButtonPickClick(Sender: TObject);
     procedure ComboBoxSIDChange(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
@@ -44,6 +44,7 @@ type
     procedure CheckBoxMandatoryClick(Sender: TObject);
     procedure CheckBoxEnabledClick(Sender: TObject);
     procedure CheckBoxEnabledByDafaultClick(Sender: TObject);
+    procedure ButtonLogonSIDClick(Sender: TObject);
   private
     SelectedGroup: ISid;
     Mapping: array of TCheckBoxMapping;
@@ -64,8 +65,8 @@ type
 implementation
 
 uses
-  TU.ObjPicker, UI.Modal.Integrity, Ntapi.WinNt, Ntapi.ntrtl, UI.Helper,
-  NtUtils.Lsa.Sid, NtUiLib.Errors;
+  TU.ObjPicker, UI.Modal.Integrity, Ntapi.WinNt, Ntapi.ntrtl, Ntapi.ntpsapi,
+  UI.Helper, NtUtils.Lsa.Sid, NtUtils.WinUser, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -96,6 +97,18 @@ begin
 
   SetSelectedGroup(Sid);
   SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
+end;
+
+procedure TDialogPickUser.ButtonLogonSIDClick(Sender: TObject);
+var
+  Sid: ISid;
+begin
+  UsrxQuerySid(GetThreadDesktop(NtCurrentThreadId), Sid).RaiseOnError;
+
+  if Assigned(Sid) then
+    SetSelectedGroup(Sid)
+  else
+    raise Exception.Create('The current desktop does not have a logon SID.');
 end;
 
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);

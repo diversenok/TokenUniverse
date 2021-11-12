@@ -192,14 +192,15 @@ object DialogPickUser: TDialogPickUser
       TabOrder = 2
       OnClick = ButtonIntegrityClick
     end
-    object ButtonLogonID: TButton
+    object ButtonLogonSID: TButton
       Left = 150
       Top = 71
-      Width = 105
+      Width = 107
       Height = 25
-      Caption = 'Choose &Logon ID'
-      Enabled = False
+      Hint = 'Copy the logon SID from the current desktop'
+      Caption = 'Current &Logon SID'
       TabOrder = 5
+      OnClick = ButtonLogonSIDClick
     end
   end
 end
