@@ -483,7 +483,8 @@ var
   Menu: TMenuItem;
 begin
   for Menu in PopupMenu.Items do
-    if (Menu <> NewMenu) and (Menu <> RevertThread) then
+    if (Menu <> NewMenu) and (Menu <> RevertThread) and
+      (Menu <> RevertCurrentThread) then
       Menu.Enabled := Selected;
 end;
 
