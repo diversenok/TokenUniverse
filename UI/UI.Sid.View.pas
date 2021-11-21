@@ -64,7 +64,7 @@ uses
 
 procedure TDialogSidView.ButtonApplyClick(Sender: TObject);
 begin
-  LsaxSetRightsAccountBySid(Sid.Data, LogonMaskFrame.Value).RaiseOnError;
+  LsaxSetRightsAccountBySid(Sid, LogonMaskFrame.Value).RaiseOnError;
   LogonMaskFrame.Value := LogonMaskFrame.Value;
 end;
 
@@ -85,20 +85,20 @@ begin
   begin
     Sid := SrcSid;
 
-    if not LsaxLookupSid(Sid.Data, Lookup).IsSuccess then
+    if not LsaxLookupSid(Sid, Lookup).IsSuccess then
     begin
       Lookup.SidType := SidTypeUndefined;
       Lookup.DomainName := '';
       Lookup.UserName := '';
     end;
 
-    Caption := Caption + ' for "' + LsaxSidToString(Sid.Data) +'"';
+    Caption := Caption + ' for "' + LsaxSidToString(Sid) +'"';
 
     if not (Lookup.SidType in [SidTypeUndefined, SidTypeInvalid,
       SidTypeUnknown]) then
       EditFullName.Text := Lookup.FullName;
 
-    EditSID.Text := RtlxSidToString(Sid.Data);
+    EditSID.Text := RtlxSidToString(Sid);
     EditType.Text := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
         Integer(Lookup.SidType), 'SidType');
     EditSubAuthorities.Text := IntToStr(RtlSubAuthorityCountSid(
@@ -137,7 +137,7 @@ begin
     FrameLsaPrivileges.LoadForSid(Sid);
 
     FrameLsaAudit.OnApplyClick := SetUserAudit;
-    FrameLsaAudit.LoadForSid(Sid.Data);
+    FrameLsaAudit.LoadForSid(Sid);
 
     Show;
   end;
@@ -149,7 +149,7 @@ var
   DomainSid: ISid;
   Lookup: TTranslatedName;
 begin
-  if LsaxLookupSid(Sid.Data, Lookup).IsSuccess and (Lookup.DomainName <> '') then
+  if LsaxLookupSid(Sid, Lookup).IsSuccess and (Lookup.DomainName <> '') then
   begin
     LsaxLookupName(Lookup.DomainName, DomainSid).RaiseOnError;
     TDialogSidView.CreateView(Owner, DomainSid);
@@ -161,7 +161,7 @@ procedure TDialogSidView.LinkLabelMinusOneLinkClick(Sender: TObject;
 var
   Parent: ISid;
 begin
-  if RtlxMakeParentSid(Parent, Sid.Data).IsSuccess then
+  if RtlxMakeParentSid(Parent, Sid).IsSuccess then
     TDialogSidView.CreateView(Owner, Parent);
 end;
 
@@ -170,7 +170,7 @@ var
   xStatus: TNtxStatus;
   Rights: TSystemAccess;
 begin
-  xStatus := LsaxQueryRightsAccountBySid(Sid.Data, Rights);
+  xStatus := LsaxQueryRightsAccountBySid(Sid, Rights);
 
   if xStatus.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
   begin
@@ -195,9 +195,9 @@ begin
   FrameLsaAudit.LabelStatus.Hint := '';
 
   try
-    LsaxSetUserAudit(Sid.Data, Audit).RaiseOnError;
+    LsaxSetUserAudit(Sid, Audit).RaiseOnError;
   finally
-    FrameLsaAudit.LoadForSid(Sid.Data);
+    FrameLsaAudit.LoadForSid(Sid);
   end;
 end;
 

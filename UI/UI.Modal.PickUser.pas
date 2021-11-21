@@ -88,9 +88,9 @@ begin
   CurrentRID := SECURITY_MANDATORY_MEDIUM_RID;
 
   if Assigned(SelectedGroup) and
-    (RtlxIdentifierAuthoritySid(SelectedGroup.Data) =
-    SECURITY_MANDATORY_LABEL_AUTHORITY_ID) then
-    CurrentRID := RtlxRidSid(SelectedGroup.Data);
+    (RtlxIdentifierAuthoritySid(SelectedGroup) =
+    SECURITY_MANDATORY_LABEL_AUTHORITY) then
+    CurrentRID := RtlxRidSid(SelectedGroup);
 
   RtlxCreateSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
     [TIntegrityPicker.Choose(Self, CurrentRID)]).RaiseOnError;
@@ -306,7 +306,7 @@ end;
 procedure TDialogPickUser.SetSelectedGroup;
 begin
   SelectedGroup := Value;
-  ComboBoxSID.Text := LsaxSidToString(SelectedGroup.Data);
+  ComboBoxSID.Text := LsaxSidToString(SelectedGroup);
 end;
 
 end.

@@ -58,7 +58,7 @@ const
 
 function IsLogonSid(Sid: ISid): Boolean;
 begin
-  Result := (RtlxIdentifierAuthoritySid(Sid.Data) = SECURITY_NT_AUTHORITY_ID)
+  Result := (RtlxIdentifierAuthoritySid(Sid) = SECURITY_NT_AUTHORITY)
     and (RtlSubAuthorityCountSid(Sid.Data)^ = SECURITY_LOGON_IDS_RID_COUNT) and
     (RtlSubAuthoritySid(Sid.Data, 0)^ = SECURITY_LOGON_IDS_RID);
 end;

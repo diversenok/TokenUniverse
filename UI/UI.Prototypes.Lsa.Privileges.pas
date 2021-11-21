@@ -84,7 +84,7 @@ begin
     end;
 
   try
-    LsaxManagePrivilegesAccount(Sid.Data, False, PrivToAdd,
+    LsaxManagePrivilegesAccount(Sid, False, PrivToAdd,
       PrivToRemove).RaiseOnError;
   finally
     LoadForSid(Sid);
@@ -104,7 +104,7 @@ var
   Status: TNtxStatus;
 begin
   Self.Sid := Sid;
-  Status := LsaxEnumeratePrivilegesAccountBySid(Sid.Data, CurrentlyAssigned);
+  Status := LsaxEnumeratePrivilegesAccountBySid(Sid, CurrentlyAssigned);
 
   if Status.Matches(STATUS_OBJECT_NAME_NOT_FOUND, 'LsaOpenAccount') then
   begin

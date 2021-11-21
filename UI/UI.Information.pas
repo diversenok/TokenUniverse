@@ -329,9 +329,9 @@ begin
   if Token.InfoClass.Query(tdTokenUser) then
   begin
     ComboOwner.Items.Add(LsaxSidToString(
-      Token.InfoClass.User.Sid.Data));
+      Token.InfoClass.User.Sid));
     ComboPrimary.Items.Add(LsaxSidToString(
-      Token.InfoClass.User.Sid.Data));
+      Token.InfoClass.User.Sid));
   end;
 
   // Add all groups for Primary Group and only those with specific attribtes
@@ -339,10 +339,10 @@ begin
   for i := 0 to High(NewGroups) do
   begin
     ComboPrimary.Items.Add(LsaxSidToString(
-      NewGroups[i].Sid.Data));
+      NewGroups[i].Sid));
     if NewGroups[i].Attributes and SE_GROUP_OWNER <> 0 then
       ComboOwner.Items.Add(LsaxSidToString(
-        NewGroups[i].Sid.Data));
+        NewGroups[i].Sid));
   end;
 
   ComboPrimary.Items.EndUpdate;
@@ -352,14 +352,14 @@ end;
 procedure TInfoDialog.ChangedIntegrity(const NewIntegrity: TGroup);
 begin
   ComboIntegrity.Color := clWindow;
-  IntegritySource.SelectedIntegrity := RtlxRidSid(NewIntegrity.Sid.Data);
+  IntegritySource.SelectedIntegrity := RtlxRidSid(NewIntegrity.Sid);
   ComboIntegrity.Hint := TType.Represent(NewIntegrity).Hint;
 end;
 
 procedure TInfoDialog.ChangedOwner(const NewOwner: ISid);
 begin
   ComboOwner.Color := clWindow;
-  ComboOwner.Text := LsaxSidToString(NewOwner.Data);
+  ComboOwner.Text := LsaxSidToString(NewOwner);
 end;
 
 procedure TInfoDialog.ChangedPolicy(const NewPolicy: Cardinal);
@@ -377,7 +377,7 @@ end;
 procedure TInfoDialog.ChangedPrimaryGroup(const NewPrimary: ISid);
 begin
   ComboPrimary.Color := clWindow;
-  ComboPrimary.Text := LsaxSidToString(NewPrimary.Data);
+  ComboPrimary.Text := LsaxSidToString(NewPrimary);
 end;
 
 procedure TInfoDialog.ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
@@ -621,7 +621,7 @@ begin
           EditAppContainer.Text := 'No'
         else
         begin
-          EditAppContainer.Text := RtlxSidToString(AppContainer.Data);
+          EditAppContainer.Text := RtlxSidToString(AppContainer);
           EditAppContainer.Enabled := True;
         end;
       end;

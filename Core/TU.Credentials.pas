@@ -109,7 +109,7 @@ begin
 
       try
         LsaxLookupNameOrSddl(UserBuffer, Sid).RaiseOnError;
-        LsaxLookupSid(Sid.Data, AccountName).RaiseOnError;
+        LsaxLookupSid(Sid, AccountName).RaiseOnError;
 
         if Assigned(Callback) then
           Callback(AccountName.DomainName, AccountName.UserName, PasswordBuffer);

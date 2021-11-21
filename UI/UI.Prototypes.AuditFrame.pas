@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
-  Vcl.ComCtrls, VclEx.ListView, NtUtils.Lsa.Audit;
+  Vcl.ComCtrls, VclEx.ListView, NtUtils.Lsa.Audit, NtUtils;
 
 type
   TApplyProc = procedure (const AuditPolicy: TArray<TAuditPolicyEntry>) of object;
@@ -39,7 +39,7 @@ type
   public
     procedure DelayedCreate;
     procedure Load(const Policy: TArray<TAuditPolicyEntry>);
-    procedure LoadForSid(Sid: PSid);
+    procedure LoadForSid(const Sid: ISid);
     procedure LoadForSystem;
     procedure ModifySelected(Flag: Integer; NewState: Boolean);
     property OnApplyClick: TApplyProc read ApplyProc write SetApplyEvent;
@@ -49,7 +49,7 @@ implementation
 
 uses
   Ntapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Reflection.Strings,
-  NtUiLib.Errors, Ntapi.ntdef, NtUtils;
+  NtUiLib.Errors, Ntapi.ntdef;
 
 {$R *.dfm}
 
@@ -164,7 +164,7 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-procedure TFrameAudit.LoadForSid(Sid: PSid);
+procedure TFrameAudit.LoadForSid;
 var
   StatusEx: TNtxStatus;
 begin

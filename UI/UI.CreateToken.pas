@@ -99,9 +99,9 @@ begin
   GroupsFrame.Add([NewGroup]);
 
   if BitTest(NewGroup.Attributes and SE_GROUP_OWNER) then
-    ComboOwner.Items.Add(LsaxSidToString(NewGroup.Sid.Data));
+    ComboOwner.Items.Add(LsaxSidToString(NewGroup.Sid));
 
-  ComboPrimary.Items.Add(LsaxSidToString(NewGroup.Sid.Data));
+  ComboPrimary.Items.Add(LsaxSidToString(NewGroup.Sid));
 end;
 
 procedure TDialogCreateToken.ButtonAddSIDClick;
@@ -140,8 +140,7 @@ begin
   // User
   if Source.InfoClass.Query(tdTokenUser) then
   begin
-    ComboUser.Text := LsaxSidToString(
-      Source.InfoClass.User.Sid.Data);
+    ComboUser.Text := LsaxSidToString(Source.InfoClass.User.Sid);
     ComboUserChange(Sender);
     CheckBoxUserState.Checked := BitTest(Source.InfoClass.User.Attributes and
       SE_GROUP_USE_FOR_DENY_ONLY);
@@ -177,12 +176,11 @@ begin
 
   // Owner
   if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := LsaxSidToString(Source.InfoClass.Owner.Data);
+    ComboOwner.Text := LsaxSidToString(Source.InfoClass.Owner);
 
   // Primary group
   if Source.InfoClass.Query(tdTokenPrimaryGroup) then
-    ComboPrimary.Text := LsaxSidToString(
-      Source.InfoClass.PrimaryGroup.Data);
+    ComboPrimary.Text := LsaxSidToString(Source.InfoClass.PrimaryGroup);
 
   // Privileges
   if Source.InfoClass.Query(tdTokenPrivileges) then
@@ -389,7 +387,7 @@ var
   Sid: ISid;
 begin
   LsaxLookupNameOrSddl(UserName, Sid).RaiseOnError;
-  ComboUser.Text := LsaxSidToString(Sid.Data);
+  ComboUser.Text := LsaxSidToString(Sid);
   ComboUserChange(ButtonPickUser);
 end;
 
@@ -434,7 +432,7 @@ begin
     // Only groups with Owner flag can be assigned as owners
     for Group in GroupsFrame.All do
       if BitTest(Group.Attributes and SE_GROUP_OWNER) then
-        ComboOwner.Items.Add(LsaxSidToString(Group.Sid.Data));
+        ComboOwner.Items.Add(LsaxSidToString(Group.Sid));
 
     // Restore choise
     if (Mode = guEditOne) and (SavedOwnerCount = ComboOwner.Items.Count) then

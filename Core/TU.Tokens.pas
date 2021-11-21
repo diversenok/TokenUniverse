@@ -606,7 +606,7 @@ begin
     Source, LogonID, TokenUser, PrimaryGroup, Groups, Privileges, Owner, nil,
     Expires).RaiseOnError;
 
-  FCaption := 'New token: ' + LsaxSidToString(User.Data);
+  FCaption := 'New token: ' + LsaxSidToString(User);
 end;
 
 constructor TToken.CreateOpenCurrent(Access: TAccessMask);
@@ -1068,7 +1068,7 @@ begin
         .Format<TTokenAccessMask>();
 
     tsUserName:
-      Result := LsaxSidToString(Token.Cache.User.Sid.Data);
+      Result := LsaxSidToString(Token.Cache.User.Sid);
 
     tsUserState:
       Result := TNumeric.Represent(Token.Cache.User.Attributes).Text;
@@ -1081,7 +1081,7 @@ begin
 
     tsIntegrity:
       Result := TNumeric.Represent(TIntegriyRid(RtlxRidSid(
-        Token.Cache.Integrity.Sid.Data))).Text;
+        Token.Cache.Integrity.Sid))).Text;
 
     tsObjectAddress:
       Result := PtrToHexEx(Token.Cache.HandleInformation.PObject);
@@ -1105,10 +1105,10 @@ begin
       Result := EnabledDisabledToString(Token.Cache.UIAccess);
 
     tsOwner:
-      Result := LsaxSidToString(Token.Cache.Owner.Data);
+      Result := LsaxSidToString(Token.Cache.Owner);
 
     tsPrimaryGroup:
-      Result := LsaxSidToString(Token.Cache.PrimaryGroup.Data);
+      Result := LsaxSidToString(Token.Cache.PrimaryGroup);
 
     tsSandboxInert:
       Result := YesNoToString(Token.Cache.SandboxInert);
@@ -1464,8 +1464,8 @@ begin
   // Since the owner is internally stored as an index in the group table,
   // changing it, in this case, also changes the owner.
   if Token.Cache.IsCached[tdTokenOwner] and
-    (RtlxIdentifierAuthoritySid(Token.Cache.Owner.Data) =
-      SECURITY_MANDATORY_LABEL_AUTHORITY_ID) then
+    (RtlxIdentifierAuthoritySid(Token.Cache.Owner) =
+      SECURITY_MANDATORY_LABEL_AUTHORITY) then
     ValidateCache(tdTokenOwner);
 
   // Note: this logic does not apply to the primary group since it is stored

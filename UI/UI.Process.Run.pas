@@ -107,8 +107,7 @@ begin
   NtxQuerySidToken(hxToken, TokenUser, User).RaiseOnError;
 
   AppContainerSid := TDialogACProfiles.ExecuteSelect(FormMain, User);
-  EditAppContainer.Text := UnvxAppContainerToString(AppContainerSid.Data,
-    User.Data);
+  EditAppContainer.Text := UnvxAppContainerToString(AppContainerSid, User);
 end;
 
 procedure TDialogRun.ButtonBrowseClick(Sender: TObject);

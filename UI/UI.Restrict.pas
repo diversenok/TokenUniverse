@@ -185,13 +185,13 @@ begin
   Group.Attributes := SE_GROUP_ENABLED_BY_DEFAULT or SE_GROUP_ENABLED;
 
   // RESTRICTED is useful to provide access to WinSta0 and Default desktop
-  if SddlxCreateWellKnownSid(Group.Sid,
-    TWellKnownSidType.WinRestrictedCodeSid).IsSuccess then
+  if SddlxCreateWellKnownSid(TWellKnownSidType.WinRestrictedCodeSid,
+    Group.Sid).IsSuccess then
     ManuallyAdded := ManuallyAdded + [Group];
 
   // WRITE RESTRICTED can also be useful
-  if SddlxCreateWellKnownSid(Group.Sid,
-    TWellKnownSidType.WinWriteRestrictedCodeSid).IsSuccess then
+  if SddlxCreateWellKnownSid(TWellKnownSidType.WinWriteRestrictedCodeSid,
+    Group.Sid).IsSuccess then
     ManuallyAdded := ManuallyAdded + [Group];
 
   // Populare groups
