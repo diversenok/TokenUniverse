@@ -4,11 +4,11 @@ object DialogPickUser: TDialogPickUser
   Anchors = [akTop]
   BorderIcons = [biSystemMenu]
   Caption = 'Choose user or group'
-  ClientHeight = 288
-  ClientWidth = 294
+  ClientHeight = 181
+  ClientWidth = 554
   Color = clBtnFace
-  Constraints.MinHeight = 225
-  Constraints.MinWidth = 310
+  Constraints.MinHeight = 220
+  Constraints.MinWidth = 570
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,31 +21,9 @@ object DialogPickUser: TDialogPickUser
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object ComboBoxSID: TComboBox
-    Left = 8
-    Top = 10
-    Width = 218
-    Height = 21
-    Anchors = [akLeft, akTop, akRight]
-    TabOrder = 0
-    OnChange = ComboBoxSIDChange
-  end
-  object ButtonFilter: TButton
-    Left = 232
-    Top = 6
-    Width = 25
-    Height = 25
-    Hint = 'Filter suggestions'
-    Anchors = [akTop, akRight]
-    ImageIndex = 3
-    ImageMargins.Left = 2
-    ImageMargins.Top = 1
-    Images = FormMain.SmallIcons
-    TabOrder = 5
-  end
   object ButtonOK: TButton
-    Left = 213
-    Top = 257
+    Left = 473
+    Top = 150
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -56,7 +34,7 @@ object DialogPickUser: TDialogPickUser
   end
   object ButtonCancel: TButton
     Left = 8
-    Top = 257
+    Top = 150
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -66,7 +44,7 @@ object DialogPickUser: TDialogPickUser
     TabOrder = 4
   end
   object ButtonPick: TButton
-    Left = 263
+    Left = 523
     Top = 6
     Width = 25
     Height = 25
@@ -76,14 +54,14 @@ object DialogPickUser: TDialogPickUser
     ImageMargins.Left = 2
     ImageMargins.Top = 1
     Images = FormMain.SmallIcons
-    TabOrder = 6
+    TabOrder = 5
     OnClick = ButtonPickClick
   end
   object GroupBoxMain: TGroupBox
     Left = 8
     Top = 37
     Width = 278
-    Height = 100
+    Height = 106
     Caption = 'Main attributes '
     TabOrder = 1
     object CheckBoxEnabled: TCheckBox
@@ -141,43 +119,43 @@ object DialogPickUser: TDialogPickUser
     end
   end
   object GroupBoxAdditional: TGroupBox
-    Left = 8
-    Top = 143
-    Width = 278
+    Left = 292
+    Top = 37
+    Width = 253
     Height = 106
     Caption = 'Additional attributes '
     TabOrder = 2
     object CheckBoxIntegrityEnabled: TCheckBox
-      Left = 14
+      Left = 16
       Top = 48
-      Width = 130
+      Width = 114
       Height = 17
       Anchors = [akTop]
       Caption = 'Integrity Enabled'
       TabOrder = 1
     end
     object CheckBoxIntegrity: TCheckBox
-      Left = 14
+      Left = 16
       Top = 25
-      Width = 130
+      Width = 114
       Height = 17
       Anchors = [akTop]
       Caption = 'Integrity'
       TabOrder = 0
     end
     object CheckBoxResource: TCheckBox
-      Left = 150
+      Left = 134
       Top = 25
-      Width = 120
+      Width = 104
       Height = 17
       Anchors = [akTop]
       Caption = 'Resource'
       TabOrder = 3
     end
     object CheckBoxLogon: TCheckBox
-      Left = 150
+      Left = 134
       Top = 48
-      Width = 150
+      Width = 104
       Height = 17
       Anchors = [akTop]
       Caption = 'Logon ID'
@@ -188,19 +166,29 @@ object DialogPickUser: TDialogPickUser
       Top = 71
       Width = 105
       Height = 25
+      Anchors = [akTop]
       Caption = 'Choose &Intrgirty'
       TabOrder = 2
       OnClick = ButtonIntegrityClick
     end
     object ButtonLogonSID: TButton
-      Left = 150
+      Left = 134
       Top = 71
       Width = 107
       Height = 25
       Hint = 'Copy the logon SID from the current desktop'
+      Anchors = [akTop]
       Caption = 'Current &Logon SID'
       TabOrder = 5
       OnClick = ButtonLogonSIDClick
     end
+  end
+  object ComboBoxSID: TEdit
+    Left = 8
+    Top = 8
+    Width = 505
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 0
   end
 end

@@ -17,8 +17,6 @@ type
   end;
 
   TDialogPickUser = class(TChildForm)
-    ComboBoxSID: TComboBox;
-    ButtonFilter: TButton;
     ButtonOK: TButton;
     ButtonCancel: TButton;
     ButtonPick: TButton;
@@ -35,6 +33,7 @@ type
     CheckBoxLogon: TCheckBox;
     ButtonIntegrity: TButton;
     ButtonLogonSID: TButton;
+    ComboBoxSID: TEdit;
     procedure ButtonPickClick(Sender: TObject);
     procedure ComboBoxSIDChange(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
@@ -66,7 +65,8 @@ implementation
 
 uses
   TU.ObjPicker, UI.Modal.Integrity, Ntapi.WinNt, Ntapi.ntrtl, Ntapi.ntpsapi,
-  UI.Helper, NtUtils.Lsa.Sid, NtUtils.WinUser, NtUiLib.Errors;
+  UI.Helper, NtUtils.Lsa.Sid, NtUtils.WinUser, NtUiLib.Errors,
+  NtUiLib.AutoCompletion.Sid;
 
 {$R *.dfm}
 
@@ -185,6 +185,8 @@ begin
   Mapping[6].Create(CheckBoxIntegrityEnabled, SE_GROUP_INTEGRITY_ENABLED);
   Mapping[7].Create(CheckBoxResource, SE_GROUP_RESOURCE);
   Mapping[8].Create(CheckBoxLogon, SE_GROUP_LOGON_ID);
+
+  ShlxEnableSidSuggestions(ComboBoxSID.Handle);
 end;
 
 function TDialogPickUser.GetAttributes: Cardinal;
@@ -216,7 +218,6 @@ begin
   with TDialogPickUser.Create(AOwner) do
   begin
     ComboBoxSID.Enabled := False;
-    ButtonFilter.Enabled := False;
     ButtonPick.Enabled := False;
     ButtonIntegrity.Enabled := False;
     ComboBoxSID.Text := '< Multiple values >';
