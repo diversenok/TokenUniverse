@@ -109,6 +109,9 @@ begin
     SetSelectedGroup(Sid)
   else
     raise Exception.Create('The current desktop does not have a logon SID.');
+
+  SetAttributes(SE_GROUP_LOGON_ID or SE_GROUP_ENABLED or
+    SE_GROUP_ENABLED_BY_DEFAULT);
 end;
 
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);

@@ -5,7 +5,7 @@ object DialogPickUser: TDialogPickUser
   BorderIcons = [biSystemMenu]
   Caption = 'Choose user or group'
   ClientHeight = 181
-  ClientWidth = 554
+  ClientWidth = 567
   Color = clBtnFace
   Constraints.MinHeight = 220
   Constraints.MinWidth = 570
@@ -22,7 +22,7 @@ object DialogPickUser: TDialogPickUser
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
-    Left = 473
+    Left = 486
     Top = 150
     Width = 75
     Height = 25
@@ -44,11 +44,11 @@ object DialogPickUser: TDialogPickUser
     TabOrder = 4
   end
   object ButtonPick: TButton
-    Left = 523
+    Left = 536
     Top = 6
     Width = 25
     Height = 25
-    Hint = 'Use default user selection dialog'
+    Hint = 'Show the default user selection dialog'
     Anchors = [akTop, akRight]
     ImageIndex = 2
     ImageMargins.Left = 2
@@ -62,13 +62,14 @@ object DialogPickUser: TDialogPickUser
     Top = 37
     Width = 278
     Height = 106
-    Caption = 'Main attributes '
+    Caption = 'Primary attributes '
     TabOrder = 1
     object CheckBoxEnabled: TCheckBox
       Left = 14
       Top = 26
       Width = 130
       Height = 17
+      Hint = 'Makes the group valid for access checks'
       Anchors = [akTop]
       Caption = '&Enabled'
       Checked = True
@@ -81,6 +82,7 @@ object DialogPickUser: TDialogPickUser
       Top = 49
       Width = 130
       Height = 17
+      Hint = 'Denotes the default state; does NOT affect access checks'
       Anchors = [akTop]
       Caption = 'Enabled by &default'
       Checked = True
@@ -93,6 +95,7 @@ object DialogPickUser: TDialogPickUser
       Top = 26
       Width = 120
       Height = 17
+      Hint = 'Mandatory groups cannot be disabled'
       Anchors = [akTop]
       Caption = '&Mandatory'
       TabOrder = 3
@@ -103,6 +106,7 @@ object DialogPickUser: TDialogPickUser
       Top = 49
       Width = 120
       Height = 17
+      Hint = 'The system will consider this group only for denying access'
       Anchors = [akTop]
       Caption = '&Use for deny only'
       TabOrder = 4
@@ -113,6 +117,7 @@ object DialogPickUser: TDialogPickUser
       Top = 72
       Width = 130
       Height = 17
+      Hint = 'Marks the group as a valid token owner'
       Anchors = [akTop]
       Caption = '&Owner'
       TabOrder = 2
@@ -121,48 +126,53 @@ object DialogPickUser: TDialogPickUser
   object GroupBoxAdditional: TGroupBox
     Left = 292
     Top = 37
-    Width = 253
+    Width = 267
     Height = 106
+    Hint = 'The system will consider this group only for denying access'
     Caption = 'Additional attributes '
     TabOrder = 2
     object CheckBoxIntegrityEnabled: TCheckBox
-      Left = 16
+      Left = 18
       Top = 48
       Width = 114
       Height = 17
+      Hint = 'Denotes a group as a valid source of token'#39's integrity level'
       Anchors = [akTop]
       Caption = 'Integrity Enabled'
       TabOrder = 1
     end
     object CheckBoxIntegrity: TCheckBox
-      Left = 16
+      Left = 18
       Top = 25
       Width = 114
       Height = 17
+      Hint = 'Does not seem to have any effects'
       Anchors = [akTop]
-      Caption = 'Integrity'
+      Caption = 'I&ntegrity'
       TabOrder = 0
     end
     object CheckBoxResource: TCheckBox
-      Left = 134
+      Left = 144
       Top = 25
       Width = 104
       Height = 17
+      Hint = 'Identifies a domain-local group'
       Anchors = [akTop]
-      Caption = 'Resource'
+      Caption = '&Resource'
       TabOrder = 3
     end
     object CheckBoxLogon: TCheckBox
-      Left = 134
+      Left = 144
       Top = 48
       Width = 104
       Height = 17
+      Hint = 'Marks a group as a Logon SID'
       Anchors = [akTop]
-      Caption = 'Logon ID'
+      Caption = 'Lo&gon ID'
       TabOrder = 4
     end
     object ButtonIntegrity: TButton
-      Left = 14
+      Left = 18
       Top = 71
       Width = 105
       Height = 25
@@ -172,7 +182,7 @@ object DialogPickUser: TDialogPickUser
       OnClick = ButtonIntegrityClick
     end
     object ButtonLogonSID: TButton
-      Left = 134
+      Left = 144
       Top = 71
       Width = 107
       Height = 25
@@ -186,9 +196,11 @@ object DialogPickUser: TDialogPickUser
   object ComboBoxSID: TEdit
     Left = 8
     Top = 8
-    Width = 505
+    Width = 518
     Height = 21
+    Hint = 'Start typing or press DOWN to show suggestions'
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
+    TextHint = 'Start typing or press DOWN to show suggestions'
   end
 end
