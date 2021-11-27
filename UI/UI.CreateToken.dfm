@@ -224,9 +224,10 @@ object DialogCreateToken: TDialogCreateToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited VST: TVirtualStringTree
+        inherited VST: TVirtualStringTreeEx
           Width = 380
           Height = 307
+          NodePopupMenu = PopupMenuGroups
         end
       end
     end

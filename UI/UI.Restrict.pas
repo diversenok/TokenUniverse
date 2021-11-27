@@ -143,8 +143,6 @@ constructor TDialogRestrictToken.CreateFromToken;
 begin
   Token := SrcToken;
   inherited CreateChild(AOwner, True);
-  GroupsDisableFrame.Checkboxes := True;
-  GroupsRestrictFrame.Checkboxes := True;
   GroupsDisableFrame.OnDefaultAction := InspectGroup;
   GroupsRestrictFrame.OnDefaultAction := InspectGroup;
   Show;

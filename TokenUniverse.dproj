@@ -245,6 +245,7 @@
             <Form>IntegrityPicker</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

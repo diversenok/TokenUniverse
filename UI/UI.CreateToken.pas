@@ -323,9 +323,7 @@ begin
   CheckBoxSession.Enabled := RtlGetCurrentPeb.SessionId <> 0;
   ButtonAllocLuidClick(Self);
 
-  GroupsFrame.NodePopupMenu := PopupMenuGroups;
   GroupsFrame.OnDefaultAction := EditSingleGroup;
-
   PrivilegesFrame.ColoringChecked := pcStateBased;
   PrivilegesFrame.ColoringUnChecked := pcRemoved;
   PrivilegesFrame.LoadEvery;
@@ -378,7 +376,7 @@ end;
 
 procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
 begin
-  GroupsFrame.RemoveSelected;
+  GroupsFrame.VST.DeleteSelectedNodes;
   UpdatePrimaryAndOwner(guRemove);
 end;
 

@@ -443,7 +443,6 @@ begin
   inherited CreateChild(AOwner, True);
 
   GroupsRestrictedFrame.OnDefaultAction := InspectGroup;
-  GroupsMemberFrame.NodePopupMenu := GroupPopup;
   GroupsMemberFrame.OnDefaultAction := InspectGroup;
   Show;
 end;

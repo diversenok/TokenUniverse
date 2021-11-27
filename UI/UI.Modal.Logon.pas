@@ -148,7 +148,6 @@ end;
 procedure TLogonDialog.FormCreate;
 begin
   ButtonAllocLuidClick(Sender);
-  GroupsFrame.NodePopupMenu := PopupMenu;
   GroupsFrame.OnDefaultAction := EditSingleGroup;
 end;
 
@@ -185,7 +184,7 @@ end;
 
 procedure TLogonDialog.MenuRemoveClick;
 begin
-  GroupsFrame.RemoveSelected;
+  GroupsFrame.VST.DeleteSelectedNodes;
 end;
 
 procedure TLogonDialog.SuggestCurrentLogonGroup;

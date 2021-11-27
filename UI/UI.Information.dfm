@@ -604,9 +604,10 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TVirtualStringTree
+        inherited VST: TVirtualStringTreeEx
           Width = 388
           Height = 369
+          NodePopupMenu = GroupPopup
         end
       end
     end
@@ -646,7 +647,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TVirtualStringTree
+        inherited VST: TVirtualStringTreeEx
           Width = 388
           Height = 369
         end

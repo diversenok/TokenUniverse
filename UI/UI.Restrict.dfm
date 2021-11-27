@@ -63,9 +63,10 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TVirtualStringTree
+        inherited VST: TVirtualStringTreeEx
           Width = 376
           Height = 369
+          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
         end
       end
     end
@@ -142,9 +143,10 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
-        inherited VST: TVirtualStringTree
+        inherited VST: TVirtualStringTreeEx
           Width = 376
           Height = 331
+          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
         end
       end
     end

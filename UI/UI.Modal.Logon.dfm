@@ -173,9 +173,10 @@ object LogonDialog: TLogonDialog
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited VST: TVirtualStringTree
+      inherited VST: TVirtualStringTreeEx
         Width = 334
         Height = 212
+        NodePopupMenu = PopupMenu
         Columns = <
           item
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
