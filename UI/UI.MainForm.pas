@@ -463,7 +463,7 @@ end;
 
 procedure TFormMain.SelectColumnsClick(Sender: TObject);
 begin
-  TDialogColumns.Create(Self).ShowModal;
+  TDialogColumns.CreateChild(Self, cfmApplication).ShowModal;
 end;
 
 procedure TFormMain.TokenRestrictSaferClick(Sender: TObject);

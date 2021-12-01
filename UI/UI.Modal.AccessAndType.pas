@@ -54,7 +54,7 @@ end;
 class function TDialogAccessAndType.ExecuteDuplication(AOwner: TComponent;
   Source: IToken): IToken;
 begin
-  with TDialogAccessAndType.Create(AOwner) do
+  with TDialogAccessAndType.CreateChild(AOwner, cfmApplication) do
   begin
     if Source.InfoClass.Query(tdTokenType) then
       SelectedTokenType := Source.InfoClass.TokenTypeInfo;

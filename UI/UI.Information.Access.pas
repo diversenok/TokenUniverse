@@ -32,7 +32,7 @@ end;
 class procedure TDialogGrantedAccess.Execute(AOwner: TComponent;
   Access: TAccessMask);
 begin
-  with TDialogGrantedAccess.CreateChild(AOwner, True) do
+  with TDialogGrantedAccess.CreateChild(AOwner, cfmApplication) do
   begin
     with AccessMaskFrame do
     begin
@@ -41,7 +41,7 @@ begin
       IsReadOnly := True;
     end;
 
-    Show;
+    ShowModal;
   end;
 end;
 

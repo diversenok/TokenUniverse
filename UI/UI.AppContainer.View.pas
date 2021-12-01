@@ -73,7 +73,7 @@ end;
 class procedure TDialogAppContainer.Execute(AOwner: TComponent; UserSid,
   AppContainerSid: ISid);
 begin
-  with TDialogAppContainer.CreateChild(AOwner, True) do
+  with TDialogAppContainer.CreateChild(AOwner, cfmDesktop) do
   begin
     Load(UserSid, AppContainerSid);
     Show;

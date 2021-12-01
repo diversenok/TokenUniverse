@@ -250,7 +250,7 @@ end;
 
 constructor TDialogRun.Create(AOwner: TComponent);
 begin
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
   ParentAccessMask := PROCESS_CREATE_PROCESS;
 end;
 

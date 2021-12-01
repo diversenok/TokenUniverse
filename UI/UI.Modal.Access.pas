@@ -31,7 +31,7 @@ uses
 class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
   Source: IToken): IToken;
 begin
-  with TDialogAccess.Create(AOwner) do
+  with TDialogAccess.CreateChild(AOwner, cfmApplication) do
   begin
     AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
 

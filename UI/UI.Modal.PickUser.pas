@@ -285,7 +285,7 @@ end;
 class function TDialogPickUser.PickNew(AOwner: TComponent;
   DisableAttributes: Boolean): TGroup;
 begin
-  with TDialogPickUser.Create(AOwner) do
+  with TDialogPickUser.CreateChild(AOwner, cfmApplication) do
   begin
     if DisableAttributes then
     begin

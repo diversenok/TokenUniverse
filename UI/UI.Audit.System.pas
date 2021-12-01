@@ -29,7 +29,7 @@ uses
 
 constructor TDialogSystemAudit.Create(AOwner: TComponent);
 begin
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
 end;
 
 procedure TDialogSystemAudit.FormCreate(Sender: TObject);

@@ -29,7 +29,7 @@ class function TComboDialog.PickSession(AOwner: TComponent): Cardinal;
 var
   SessionSource: TSessionSource;
 begin
-  with TComboDialog.Create(AOwner) do
+  with TComboDialog.CreateChild(AOwner, cfmApplication) do
   begin
     Caption := 'Choose session';
     ComboBox.Text := 'Unable to query. Insert it manually.';

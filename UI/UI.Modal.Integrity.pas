@@ -5,10 +5,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls,
-  Vcl.ExtCtrls, VclEx.Form, Ntapi.WinNt;
+  Vcl.ExtCtrls, Ntapi.WinNt, UI.Prototypes.Forms;
 
 type
-  TIntegrityPicker = class(TFormEx)
+  TIntegrityPicker = class(TChildForm)
     TrackBar: TTrackBar;
     ComboBox: TComboBox;
     btnCancel: TButton;
@@ -40,7 +40,7 @@ uses
 
 class function TIntegrityPicker.Choose;
 begin
-  with TIntegrityPicker.Create(AOwner) do
+  with TIntegrityPicker.CreateChild(AOwner, cfmApplication) do
   begin
     Value := InitialValue;
     UpdateComboBoxValue;

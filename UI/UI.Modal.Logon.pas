@@ -132,7 +132,7 @@ end;
 
 constructor TLogonDialog.Create;
 begin
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
 end;
 
 procedure TLogonDialog.EditSingleGroup;

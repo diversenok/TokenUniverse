@@ -440,7 +440,7 @@ constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
 begin
   Assert(Assigned(SrcToken));
   Token := SrcToken;
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
 
   GroupsRestrictedFrame.OnDefaultAction := InspectGroup;
   GroupsMemberFrame.OnDefaultAction := InspectGroup;

@@ -155,7 +155,7 @@ class function TProcessListDialog.Execute(AOwner: TComponent;
 var
   Process: PProcessEntry;
 begin
-  with TProcessListDialog.Create(AOwner) do
+  with TProcessListDialog.CreateChild(AOwner, cfmApplication) do
   begin
     PickThread := AllowSelectThread;
 

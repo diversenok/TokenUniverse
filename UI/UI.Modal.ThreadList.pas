@@ -85,7 +85,7 @@ constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
 var
   i: Integer;
 begin
-  inherited Create(AOwner);
+  inherited CreateChild(AOwner, cfmApplication);
 
   Caption := Format('Threads of %s [%d]', [Process.ImageName,
     Process.Basic.ProcessId]);

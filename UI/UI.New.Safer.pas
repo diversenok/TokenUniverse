@@ -97,7 +97,7 @@ end;
 constructor TDialogSafer.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
 begin
   Token := SrcToken;
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
   Show;
 end;
 

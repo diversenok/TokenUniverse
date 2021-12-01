@@ -81,7 +81,7 @@ begin
   if not Assigned(SrcSid) then
     Exit;
 
-  with TDialogSidView.CreateChild(AOwner, True) do
+  with TDialogSidView.CreateChild(AOwner, cfmDesktop) do
   begin
     Sid := SrcSid;
 

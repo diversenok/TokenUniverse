@@ -63,7 +63,7 @@ end;
 
 class procedure TDialogACProfiles.Execute(AOwner: TComponent; LockToUser: ISid);
 begin
-  with TDialogACProfiles.CreateChild(AOwner, True) do
+  with TDialogACProfiles.CreateChild(AOwner, cfmDesktop) do
   begin
     UpdateProfileList(LockToUser);
     UpdateAppContainers;
@@ -74,7 +74,7 @@ end;
 class function TDialogACProfiles.ExecuteSelect(AOwner: TComponent;
   LockToUser: ISid): ISid;
 begin
-  with TDialogACProfiles.CreateChild(AOwner, True) do
+  with TDialogACProfiles.CreateChild(AOwner, cfmApplication) do
   begin
     UpdateProfileList(LockToUser);
     UpdateAppContainers;

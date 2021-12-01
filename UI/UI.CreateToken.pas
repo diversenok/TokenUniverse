@@ -299,7 +299,7 @@ end;
 
 constructor TDialogCreateToken.Create;
 begin
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
 end;
 
 procedure TDialogCreateToken.EditSingleGroup;

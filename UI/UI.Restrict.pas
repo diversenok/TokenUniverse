@@ -142,7 +142,7 @@ end;
 constructor TDialogRestrictToken.CreateFromToken;
 begin
   Token := SrcToken;
-  inherited CreateChild(AOwner, True);
+  inherited CreateChild(AOwner, cfmDesktop);
   GroupsDisableFrame.OnDefaultAction := InspectGroup;
   GroupsRestrictFrame.OnDefaultAction := InspectGroup;
   Show;
