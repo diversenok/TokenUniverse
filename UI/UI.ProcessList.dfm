@@ -91,9 +91,28 @@ object ProcessListDialog: TProcessListDialog
       end>
     ReadOnly = True
     RowSelect = True
+    PopupMenu = PopupMenu
     TabOrder = 0
     ViewStyle = vsReport
     OnDblClick = ButtonOkClick
     OnSelectItem = ListViewSelectItem
+    PopupOnItemsOnly = True
+  end
+  object PopupMenu: TPopupMenu
+    Left = 56
+    Top = 104
+    object cmSuspend: TMenuItem
+      Caption = '&Suspend'
+      OnClick = cmActionClick
+    end
+    object cmResume: TMenuItem
+      Caption = '&Resume'
+      OnClick = cmActionClick
+    end
+    object cmTerminate: TMenuItem
+      Caption = '&Terminate'
+      ShortCut = 46
+      OnClick = cmActionClick
+    end
   end
 end

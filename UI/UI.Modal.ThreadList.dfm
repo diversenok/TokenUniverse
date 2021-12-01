@@ -36,11 +36,13 @@ object ThreadListDialog: TThreadListDialog
       end>
     ReadOnly = True
     RowSelect = True
+    PopupMenu = PopupMenu
     TabOrder = 0
     ViewStyle = vsReport
     OnDblClick = ListViewThreadsDblClick
     OnSelectItem = ListViewThreadsSelectItem
     ColoringItems = True
+    PopupOnItemsOnly = True
   end
   object ButtonOk: TButton
     Left = 197
@@ -64,5 +66,22 @@ object ThreadListDialog: TThreadListDialog
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+  end
+  object PopupMenu: TPopupMenu
+    Left = 56
+    Top = 104
+    object cmSuspend: TMenuItem
+      Caption = '&Suspend'
+      OnClick = cmActionClick
+    end
+    object cmResume: TMenuItem
+      Caption = '&Resume'
+      OnClick = cmActionClick
+    end
+    object cmTerminate: TMenuItem
+      Caption = '&Terminate'
+      ShortCut = 46
+      OnClick = cmActionClick
+    end
   end
 end
