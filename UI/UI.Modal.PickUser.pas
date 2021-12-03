@@ -97,6 +97,7 @@ begin
 
   SetSelectedGroup(Sid);
   SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
+  ButtonOK.SetFocus;
 end;
 
 procedure TDialogPickUser.ButtonLogonSIDClick(Sender: TObject);
@@ -112,6 +113,8 @@ begin
 
   SetAttributes(SE_GROUP_LOGON_ID or SE_GROUP_ENABLED or
     SE_GROUP_ENABLED_BY_DEFAULT);
+
+  ButtonOK.SetFocus;
 end;
 
 procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
