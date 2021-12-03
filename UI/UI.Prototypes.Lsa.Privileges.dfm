@@ -23,26 +23,20 @@ object FrameLsaPrivileges: TFrameLsaPrivileges
     TabOrder = 0
     OnClick = ButtonApplyClick
   end
-  inline PrivilegesFrame: TPrivilegesFrame
+  inline PrivilegesFrame: TFramePrivileges
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 314
-    Height = 205
-    Margins.Bottom = 32
+    Height = 204
+    Margins.Bottom = 33
     Align = alClient
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    ParentShowHint = False
-    ShowHint = True
     TabOrder = 1
-    inherited ListViewEx: TListViewEx
+    inherited VST: TVirtualStringTreeEx
       Width = 314
-      Height = 205
-      Checkboxes = True
-      GridLines = False
-      GroupView = True
-      PopupMenu = PopupMenu
+      Height = 204
+      TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
+      NodePopupMenu = PopupMenu
     end
   end
   object PopupMenu: TPopupMenu

@@ -234,23 +234,18 @@ object DialogCreateToken: TDialogCreateToken
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      inline PrivilegesFrame: TPrivilegesFrame
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 380
-        Height = 336
+      inline PrivilegesFrame: TFramePrivileges
+        Left = 0
+        Top = 0
+        Width = 386
+        Height = 342
         Align = alClient
-        DoubleBuffered = True
-        ParentDoubleBuffered = False
-        ParentShowHint = False
-        ShowHint = True
         TabOrder = 0
-        inherited ListViewEx: TListViewEx
-          Width = 380
-          Height = 336
-          Checkboxes = True
-          PopupMenu = PopupMenuPrivileges
+        inherited VST: TVirtualStringTreeEx
+          Width = 386
+          Height = 342
+          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
+          NodePopupMenu = PopupMenuPrivileges
         end
       end
     end
@@ -293,6 +288,7 @@ object DialogCreateToken: TDialogCreateToken
           Width = 103
           Height = 21
           Anchors = [akTop, akRight]
+          Date = 44533.000000000000000000
           Time = 0.500000000000000000
           ShowCheckbox = True
           Enabled = False
@@ -390,16 +386,6 @@ object DialogCreateToken: TDialogCreateToken
   object PopupMenuPrivileges: TPopupMenu
     Left = 143
     Top = 251
-    object MenuDisabled: TMenuItem
-      Caption = 'Disabled'
-      ShortCut = 16452
-      OnClick = MenuDisabledClick
-    end
-    object MenuDisabledModif: TMenuItem
-      Caption = 'Disabled (modified)'
-      ShortCut = 24644
-      OnClick = MenuDisabledModifClick
-    end
     object MenuEnabled: TMenuItem
       Caption = 'Enabled'
       ShortCut = 16453
@@ -409,6 +395,16 @@ object DialogCreateToken: TDialogCreateToken
       Caption = 'Enabled (modified)'
       ShortCut = 24645
       OnClick = MenuEnabledModifClick
+    end
+    object MenuDisabled: TMenuItem
+      Caption = 'Disabled'
+      ShortCut = 16452
+      OnClick = MenuDisabledClick
+    end
+    object MenuDisabledModif: TMenuItem
+      Caption = 'Disabled (modified)'
+      ShortCut = 24644
+      OnClick = MenuDisabledModifClick
     end
   end
 end

@@ -214,10 +214,6 @@
         <DCCReference Include="NtUtilsUI\VclEx\VclEx.ListView.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Prototypes.Forms.pas"/>
         <DCCReference Include="NtUtilsUI\VclEx\VclEx.Form.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
-            <Form>PrivilegesFrame</Form>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\UI.Colors.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.ProcessIcons.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas">
@@ -246,6 +242,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
+            <Form>FramePrivileges</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

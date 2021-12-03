@@ -66,11 +66,11 @@ type
     FrameAudit: TFrameAudit;
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
-    PrivilegesFrame: TPrivilegesFrame;
     StaticAppContainer: TStaticText;
     EditAppContainer: TEdit;
     GroupsRestrictedFrame: TFrameGroups;
     GroupsMemberFrame: TFrameGroups;
+    PrivilegesFrame: TFramePrivileges;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -160,19 +160,19 @@ end;
 
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
-  if PrivilegesFrame.ListViewEx.SelCount <> 0 then
+  if PrivilegesFrame.VST.SelectedCount <> 0 then
     Token.PrivilegeAdjust(PrivilegesFrame.Selected, paDisable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
-  if PrivilegesFrame.ListViewEx.SelCount <> 0 then
+  if PrivilegesFrame.VST.SelectedCount <> 0 then
     Token.PrivilegeAdjust(PrivilegesFrame.Selected, paEnable);
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
 begin
-  if PrivilegesFrame.ListViewEx.SelCount = 0 then
+  if PrivilegesFrame.VST.SelectedCount = 0 then
     Exit;
 
   if TaskMessageDlg('Remove these privileges from the token?',

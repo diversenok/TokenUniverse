@@ -40,7 +40,6 @@ uses
   VclEx.ListView in 'NtUtilsUI\VclEx\VclEx.ListView.pas',
   UI.Prototypes.Forms in 'NtUtilsUI\Common\UI.Prototypes.Forms.pas',
   VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas',
-  UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {PrivilegesFrame: TFrame},
   UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
   UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
   UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame},
@@ -51,7 +50,8 @@ uses
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
   UI.Modal.Integrity in 'UI\UI.Modal.Integrity.pas' {IntegrityPicker},
-  VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas';
+  VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas',
+  UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame};
 
 {$R *.res}
 

@@ -23,9 +23,9 @@ type
     TabSheetPrivDelete: TTabSheet;
     ButtonAddSID: TButton;
     CheckBoxUsual: TCheckBox;
-    PrivilegesFrame: TPrivilegesFrame;
     GroupsRestrictFrame: TFrameGroups;
     GroupsDisableFrame: TFrameGroups;
+    PrivilegesFrame: TFramePrivileges;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);

@@ -170,13 +170,13 @@ object DialogSidView: TDialogSidView
         inherited ButtonApply: TButton
           Top = 261
         end
-        inherited PrivilegesFrame: TPrivilegesFrame
+        inherited PrivilegesFrame: TFramePrivileges
           Width = 367
-          Height = 254
-          inherited ListViewEx: TListViewEx
+          Height = 253
+          inherited VST: TVirtualStringTreeEx
             Width = 367
-            Height = 254
-            PopupMenu = FrameLsaPrivileges.PopupMenu
+            Height = 253
+            NodePopupMenu = FrameLsaPrivileges.PopupMenu
           end
         end
       end

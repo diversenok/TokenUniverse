@@ -55,8 +55,8 @@ type
     CheckBoxNoWriteUp: TCheckBox;
     CheckBoxNewProcMin: TCheckBox;
     CheckBoxSession: TCheckBox;
-    PrivilegesFrame: TPrivilegesFrame;
     GroupsFrame: TFrameGroups;
+    PrivilegesFrame: TFramePrivileges;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -78,7 +78,6 @@ type
     procedure ObjPickerUserCallback(UserName: String);
     procedure AddGroup(NewGroup: TGroup);
     procedure UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
-    procedure SetPrivilegesAttributes(NewValue: Cardinal);
     procedure EditSingleGroup(const Value: TGroup);
   public
     constructor Create(AOwner: TComponent); override;
@@ -331,12 +330,12 @@ end;
 
 procedure TDialogCreateToken.MenuDisabledClick;
 begin
-  SetPrivilegesAttributes(0);
+  PrivilegesFrame.AdjustSelected(0);
 end;
 
 procedure TDialogCreateToken.MenuDisabledModifClick;
 begin
-  SetPrivilegesAttributes(SE_PRIVILEGE_ENABLED_BY_DEFAULT);
+  PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT);
 end;
 
 procedure TDialogCreateToken.MenuEditClick;
@@ -365,13 +364,13 @@ end;
 
 procedure TDialogCreateToken.MenuEnabledClick(Sender: TObject);
 begin
- SetPrivilegesAttributes(SE_PRIVILEGE_ENABLED_BY_DEFAULT or
+ PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT or
    SE_PRIVILEGE_ENABLED);
 end;
 
 procedure TDialogCreateToken.MenuEnabledModifClick(Sender: TObject);
 begin
-  SetPrivilegesAttributes(SE_PRIVILEGE_ENABLED);
+  PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED);
 end;
 
 procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
@@ -387,22 +386,6 @@ begin
   LsaxLookupNameOrSddl(UserName, Sid).RaiseOnError;
   ComboUser.Text := LsaxSidToString(Sid);
   ComboUserChange(ButtonPickUser);
-end;
-
-procedure TDialogCreateToken.SetPrivilegesAttributes(NewValue: Cardinal);
-var
-  i: Integer;
-begin
-  with PrivilegesFrame.ListViewEx do
-  begin
-    Items.BeginUpdate;
-
-    for i := 0 to Pred(Items.Count) do
-      if Items[i].Selected then
-        PrivilegesFrame.UpdateState(i, NewValue);
-
-    Items.EndUpdate;
-  end;
 end;
 
 procedure TDialogCreateToken.UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
