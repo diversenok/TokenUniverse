@@ -43,20 +43,6 @@ object DialogPickUser: TDialogPickUser
     ModalResult = 2
     TabOrder = 4
   end
-  object ButtonPick: TButton
-    Left = 536
-    Top = 6
-    Width = 25
-    Height = 25
-    Hint = 'Show the default user selection dialog'
-    Anchors = [akTop, akRight]
-    ImageIndex = 2
-    ImageMargins.Left = 2
-    ImageMargins.Top = 1
-    Images = FormMain.SmallIcons
-    TabOrder = 5
-    OnClick = ButtonPickClick
-  end
   object GroupBoxMain: TGroupBox
     Left = 8
     Top = 37
@@ -193,14 +179,23 @@ object DialogPickUser: TDialogPickUser
       OnClick = ButtonLogonSIDClick
     end
   end
-  object ComboBoxSID: TEdit
+  inline SidEditor: TSidEditor
     Left = 8
-    Top = 8
-    Width = 518
-    Height = 21
-    Hint = 'Start typing or press DOWN to show suggestions'
+    Top = 5
+    Width = 553
+    Height = 27
     Anchors = [akLeft, akTop, akRight]
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
-    TextHint = 'Start typing or press DOWN to show suggestions'
+    inherited tbxSid: TEdit
+      Width = 490
+    end
+    inherited btnDsPicker: TButton
+      Left = 525
+    end
+    inherited btnCheatsheet: TButton
+      Left = 497
+    end
   end
 end

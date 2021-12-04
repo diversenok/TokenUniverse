@@ -164,7 +164,6 @@
         <DCCReference Include="UI\UI.Modal.PickUser.pas">
             <Form>DialogPickUser</Form>
         </DCCReference>
-        <DCCReference Include="Core\TU.ObjPicker.pas"/>
         <DCCReference Include="UI\UI.CreateToken.pas">
             <Form>DialogCreateToken</Form>
         </DCCReference>
@@ -246,6 +245,16 @@
         <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
             <Form>FramePrivileges</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Builtin.DsObjectPicker.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Sid.Cheatsheet.pas">
+            <Form>SidCheatsheet</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas">
+            <Form>SidEditor</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>

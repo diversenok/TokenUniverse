@@ -75,7 +75,6 @@ type
     procedure ButtonLoadClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
-    procedure ObjPickerUserCallback(UserName: String);
     procedure AddGroup(NewGroup: TGroup);
     procedure UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
     procedure EditSingleGroup(const Value: TGroup);
@@ -86,10 +85,10 @@ type
 implementation
 
 uses
-  UI.Modal.PickUser, TU.ObjPicker, TU.Winapi, VirtualTrees,
-  UI.Settings, UI.Modal.PickToken, System.UITypes, NtUtils.Lsa.Sid,
-  Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntpebteb,
-  NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
+  UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
+  System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
+  Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker;
 
 {$R *.dfm}
 
@@ -262,8 +261,19 @@ begin
 end;
 
 procedure TDialogCreateToken.ButtonPickUserClick;
+var
+  Account: String;
+  Sid: ISid;
 begin
-  CallObjectPicker(Handle, ObjPickerUserCallback);
+  with ComxCallDsObjectPicker(Handle, Account) do
+    if IsHResult and (HResult = S_FALSE) then
+      Abort
+    else
+      RaiseOnError;
+
+  LsaxLookupNameOrSddl(Account, Sid).RaiseOnError;
+  ComboUser.Text := LsaxSidToString(Sid);
+  ComboUserChange(ButtonPickUser);
 end;
 
 procedure TDialogCreateToken.CheckBoxInfiniteClick;
@@ -377,15 +387,6 @@ procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
 begin
   GroupsFrame.VST.DeleteSelectedNodes;
   UpdatePrimaryAndOwner(guRemove);
-end;
-
-procedure TDialogCreateToken.ObjPickerUserCallback(UserName: String);
-var
-  Sid: ISid;
-begin
-  LsaxLookupNameOrSddl(UserName, Sid).RaiseOnError;
-  ComboUser.Text := LsaxSidToString(Sid);
-  ComboUserChange(ButtonPickUser);
 end;
 
 procedure TDialogCreateToken.UpdatePrimaryAndOwner(Mode: TGroupUpdateType);

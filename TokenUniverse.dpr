@@ -19,7 +19,6 @@ uses
   TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
   UI.Modal.PickUser in 'UI\UI.Modal.PickUser.pas' {DialogPickUser},
-  TU.ObjPicker in 'Core\TU.ObjPicker.pas',
   UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken},
   TU.Tokens.Types in 'Core\TU.Tokens.Types.pas',
   UI.Modal.Columns in 'UI\UI.Modal.Columns.pas' {DialogColumns},
@@ -51,7 +50,10 @@ uses
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
   UI.Modal.Integrity in 'UI\UI.Modal.Integrity.pas' {IntegrityPicker},
   VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas',
-  UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame};
+  UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
+  UI.Builtin.DsObjectPicker in 'NtUtilsUI\Prototypes\UI.Builtin.DsObjectPicker.pas',
+  UI.Prototypes.Sid.Cheatsheet in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Cheatsheet.pas' {SidCheatsheet},
+  UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame};
 
 {$R *.res}
 
