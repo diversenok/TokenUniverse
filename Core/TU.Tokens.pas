@@ -18,20 +18,21 @@ type
   TTokenDataClass = (tdNone, tdTokenUser, tdTokenGroups, tdTokenPrivileges,
     tdTokenOwner, tdTokenPrimaryGroup, tdTokenDefaultDacl, tdTokenSource,
     tdTokenType, tdTokenStatistics, tdTokenRestrictedSids, tdTokenSessionId,
-    tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin, tdTokenElevation,
-    tdTokenHasRestrictions, tdTokenFlags, tdTokenVirtualizationAllowed,
-    tdTokenVirtualizationEnabled, tdTokenIntegrity, tdTokenUIAccess,
-    tdTokenMandatoryPolicy, tdTokenIsRestricted, tdTokenAppContainer,
-    tdLogonInfo, tdObjectInfo, tdHandleInfo);
+    tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin,
+    tdTokenElevationType, tdTokenElevated, tdTokenHasRestrictions, tdTokenFlags,
+    tdTokenVirtualizationAllowed, tdTokenVirtualizationEnabled,
+    tdTokenIntegrity, tdTokenUIAccess, tdTokenMandatoryPolicy,
+    tdTokenIsRestricted, tdTokenAppContainer, tdLogonInfo, tdObjectInfo,
+    tdHandleInfo);
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
-    tsUserState, tsSession, tsElevation, tsIntegrity, tsObjectAddress, tsHandle,
-    tsNoWriteUpPolicy, tsNewProcessMinPolicy, tsUIAccess, tsOwner,
-    tsPrimaryGroup, tsSandboxInert, tsHasRestrictions, tsFlags, tsIsRestricted,
-    tsVirtualization, tsTokenID, tsExprires, tsDynamicCharged,
-    tsDynamicAvailable, tsGroupCount, tsPrivilegeCount, tsModifiedID, tsLogonID,
-    tsSourceLUID, tsSourceName, tsOrigin);
+    tsUserState, tsSession, tsElevationType, tsElevated, tsIntegrity,
+    tsObjectAddress, tsHandle, tsNoWriteUpPolicy, tsNewProcessMinPolicy,
+    tsUIAccess, tsOwner, tsPrimaryGroup, tsSandboxInert, tsHasRestrictions,
+    tsFlags, tsIsRestricted, tsVirtualization, tsTokenID, tsExprires,
+    tsDynamicCharged, tsDynamicAvailable, tsGroupCount, tsPrivilegeCount,
+    tsModifiedID, tsLogonID, tsSourceLUID, tsSourceName, tsOrigin);
 
   IToken = interface;
   TToken = class;
@@ -63,7 +64,8 @@ type
     AuditPolicy: IMemory<PTokenAuditPolicy>;
     SandboxInert: LongBool;
     Origin: TLuid;
-    Elevation: TTokenElevationType;
+    ElevationType: TTokenElevationType;
+    Elevated: LongBool;
     HasRestrictions: LongBool;
     Flags: TTokenFlags;
     VirtualizationAllowed: LongBool;
@@ -81,6 +83,7 @@ type
     FOnSessionChange: TCachingEvent<Cardinal>;
     FOnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>>;
     FOnOriginChange: TCachingEvent<TLuid>;
+    FOnElevatedChange: TCachingEvent<LongBool>;
     FOnUIAccessChange: TCachingEvent<LongBool>;
     FOnIntegrityChange: TCachingEvent<TGroup>;
     FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
@@ -100,6 +103,7 @@ type
     property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
     property OnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>> read FOnAuditChange;
     property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
+    property OnElevatedChange: TCachingEvent<LongBool> read FOnElevatedChange;
     property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TCachingEvent<TGroup> read FOnIntegrityChange;
     property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
@@ -138,7 +142,8 @@ type
     procedure SetPrimaryGroup(Value: ISid);
     function GetVirtualizationAllowed: LongBool;
     function GetVirtualizationEnabled: LongBool;
-    function GetElevation: TTokenElevationType;
+    function GetElevationType: TTokenElevationType;
+    function GetElevated: LongBool;
     function GetGroups: TArray<TGroup>;
     function GetHasRestrictions: LongBool;
     function GetIntegrity: TGroup;
@@ -185,7 +190,8 @@ type
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
     property AuditPolicy: IMemory<PTokenAuditPolicy> read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
-    property Elevation: TTokenElevationType read GetElevation;                  // classes 18 & 20
+    property ElevationType: TTokenElevationType read GetElevationType;          // class 18
+    property Elevated: LongBool read GetElevated;                               // class 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
     property Flags: Cardinal read GetFlags;                                     // class 22 AccessInformation
@@ -432,13 +438,14 @@ const
   /// <summary> Stores which data class a string class depends on. </summary>
   StringClassToDataClass: array [TTokenStringClass] of TTokenDataClass =
     (tdTokenType, tdObjectInfo, tdTokenUser, tdTokenUser, tdTokenSessionId,
-    tdTokenElevation, tdTokenIntegrity, tdHandleInfo, tdNone, tdTokenMandatoryPolicy,
-    tdTokenMandatoryPolicy, tdTokenUIAccess, tdTokenOwner, tdTokenPrimaryGroup,
-    tdTokenSandBoxInert, tdTokenHasRestrictions, tdTokenFlags,
-    tdTokenIsRestricted, tdTokenVirtualizationAllowed, tdTokenStatistics,
+    tdTokenElevationType, tdTokenElevated, tdTokenIntegrity, tdHandleInfo,
+    tdNone, tdTokenMandatoryPolicy, tdTokenMandatoryPolicy, tdTokenUIAccess,
+    tdTokenOwner, tdTokenPrimaryGroup, tdTokenSandBoxInert,
+    tdTokenHasRestrictions, tdTokenFlags, tdTokenIsRestricted,
+    tdTokenVirtualizationAllowed, tdTokenStatistics, tdTokenStatistics,
     tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenSource,
-    tdTokenSource, tdTokenOrigin);
+    tdTokenStatistics, tdTokenStatistics, tdTokenSource, tdTokenSource,
+    tdTokenOrigin);
 
 { TTokenCacheAndEvents }
 
@@ -837,6 +844,7 @@ begin
   InfoClass.ValidateCache(tdTokenPrivileges);
   InfoClass.ValidateCache(tdTokenStatistics);
   InfoClass.ValidateCache(tdTokenFlags);
+  InfoClass.ValidateCache(tdTokenElevated);
 
   // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
   // not considered as an error. Such behavior does not fit into our
@@ -889,10 +897,16 @@ begin
   Result := Token.Cache.DefaultDacl;
 end;
 
-function TTokenData.GetElevation: TTokenElevationType;
+function TTokenData.GetElevated: LongBool;
 begin
-  Assert(Token.Cache.IsCached[tdTokenElevation]);
-  Result := Token.Cache.Elevation;
+  Assert(Token.Cache.IsCached[tdTokenElevated]);
+  Result := Token.Cache.Elevated;
+end;
+
+function TTokenData.GetElevationType: TTokenElevationType;
+begin
+  Assert(Token.Cache.IsCached[tdTokenElevationType]);
+  Result := Token.Cache.ElevationType;
 end;
 
 function TTokenData.GetFlags: Cardinal;
@@ -1076,8 +1090,11 @@ begin
     tsSession: // Detailed?
       Result := Token.Cache.Session.ToString;
 
-    tsElevation:
-      Result := TNumeric.Represent(Token.Cache.Elevation).Text;
+    tsElevationType:
+      Result := TNumeric.Represent(Token.Cache.ElevationType).Text;
+
+    tsElevated:
+      Result := YesNoToString(Token.Cache.Elevated);
 
     tsIntegrity:
       Result := TNumeric.Represent(TIntegriyRid(RtlxRidSid(
@@ -1316,14 +1333,24 @@ begin
     begin
       Result := NtxToken.Query(Token.hxToken, TokenOrigin,
         Token.Cache.Origin).IsSuccess;
+
       if Result then
         if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
           InvokeStringEvent(tsOrigin);
     end;
 
-    tdTokenElevation:
+    tdTokenElevationType:
       Result := NtxToken.Query(Token.hxToken,
-        TokenElevationType, Token.Cache.Elevation).IsSuccess;
+        TokenElevationType, Token.Cache.ElevationType).IsSuccess;
+
+    tdTokenElevated:
+    begin
+      Result := NtxToken.Query(Token.hxToken,
+        TokenElevation, Token.Cache.Elevated).IsSuccess;
+
+      if Result then
+        Token.Events.OnElevatedChange.Invoke(Token.Cache.Elevated);
+    end;
 
     tdTokenHasRestrictions:
       Result := NtxToken.Query(Token.hxToken,

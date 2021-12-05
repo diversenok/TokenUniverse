@@ -378,8 +378,8 @@ begin
 
   // Open current process and, maybe, its linked token
   with TokenView.Add(TToken.CreateOpenCurrent) do
-    if InfoClass.Query(tdTokenElevation) and
-      (InfoClass.Elevation <> TokenElevationTypeDefault) and
+    if InfoClass.Query(tdTokenElevationType) and
+      (InfoClass.ElevationType <> TokenElevationTypeDefault) and
       OpenLinkedToken(Linked).IsSuccess then
         TokenView.Add(Linked);
 

@@ -112,6 +112,7 @@ type
     procedure ChangedPrimaryGroup(const NewPrimary: ISid);
     procedure ChangedVAllowed(const NewVAllowed: LongBool);
     procedure ChangedVEnabled(const NewVEnabled: LongBool);
+    procedure ChangedElevated(const NewElevated: LongBool);
     procedure ChangedFlags(const NewFlags: Cardinal);
     procedure SetAuditPolicy(const Audit: TArray<TAuditPolicyEntry>);
     procedure InspectGroup(const Group: TGroup);
@@ -304,6 +305,14 @@ begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
+procedure TInfoDialog.ChangedElevated(const NewElevated: LongBool);
+begin
+  ListViewGeneral.Items[4].SubItems[0] := Format('%s (%s)', [
+      Token.InfoClass.QueryString(tsElevated),
+      Token.InfoClass.QueryString(tsElevationType)
+    ]);
+end;
+
 procedure TInfoDialog.ChangedFlags(const NewFlags: Cardinal);
 begin
   ListViewAdvanced.Items[13].SubItems[0] := Token.InfoClass.QueryString(tsFlags);
@@ -480,6 +489,7 @@ begin
   Token.Events.OnIntegrityChange.Unsubscribe(ChangedIntegrity);
   Token.Events.OnUIAccessChange.Unsubscribe(ChangedUIAccess);
   Token.Events.OnSessionChange.Unsubscribe(ChangedSession);
+  Token.Events.OnElevatedChange.Unsubscribe(ChangedElevated);
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   IntegritySource.Free;
   SessionSource.Free;
@@ -499,6 +509,7 @@ begin
   // information that is stored in the event handlers. By doing that in this
   // order we avoid multiple calls while sharing the data between different
   // tokens pointing the same kernel object.
+  Token.Events.OnElevatedChange.Subscribe(ChangedElevated);
   Token.Events.OnSessionChange.Subscribe(ChangedSession);
   Token.Events.OnUIAccessChange.Subscribe(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Subscribe(ChangedIntegrity);
@@ -568,7 +579,6 @@ begin
     Items[1].SubItems[0] := Token.InfoClass.QueryString(tsHandle);
     Items[2].SubItems[0] := Token.InfoClass.QueryString(tsAccess, True);
     Items[3].SubItems[0] := Token.InfoClass.QueryString(tsTokenType);
-    Items[4].SubItems[0] := Token.InfoClass.QueryString(tsElevation);
   end;
   ListViewGeneral.Items.EndUpdate;
 
@@ -587,6 +597,7 @@ begin
   Token.InfoClass.ReQuery(tdTokenIntegrity);
   Token.InfoClass.ReQuery(tdTokenSessionId);
   Token.InfoClass.ReQuery(tdTokenOrigin);
+  Token.InfoClass.ReQuery(tdTokenElevated);
   Token.InfoClass.ReQuery(tdTokenUIAccess);
   Token.InfoClass.ReQuery(tdTokenMandatoryPolicy);
   Token.InfoClass.ReQuery(tdTokenPrivileges);
