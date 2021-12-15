@@ -9,7 +9,7 @@ uses
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
   TU.Tokens.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
-  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls;
+  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, UI.Prototypes.Acl;
 
 type
   TInfoDialog = class(TChildForm)
@@ -71,6 +71,7 @@ type
     GroupsRestrictedFrame: TFrameGroups;
     GroupsMemberFrame: TFrameGroups;
     PrivilegesFrame: TFramePrivileges;
+    FrameDefaultDacl: TFrameAcl;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -608,6 +609,9 @@ begin
   Token.InfoClass.ReQuery(tdTokenVirtualizationAllowed);
   Token.InfoClass.ReQuery(tdTokenVirtualizationEnabled);
   Token.InfoClass.ReQuery(tdTokenFlags);
+
+  if Token.InfoClass.Query(tdTokenDefaultDacl) then
+    FrameDefaultDacl.Load(Auto.RefOrNil<PAcl>(Token.InfoClass.DefaultDacl), nil);
 
   if Token.InfoClass.Query(tdTokenUser) then
     with Token.InfoClass^, EditUser do

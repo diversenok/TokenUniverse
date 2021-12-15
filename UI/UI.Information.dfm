@@ -655,6 +655,18 @@ object InfoDialog: TInfoDialog
     object TabDefaultDacl: TTabSheet
       Caption = 'Default DACL'
       ImageIndex = 7
+      inline FrameDefaultDacl: TFrameAcl
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
+        Align = alClient
+        TabOrder = 0
+        inherited VST: TVirtualStringTreeEx
+          Width = 388
+          Height = 369
+        end
+      end
     end
     object TabAudit: TTabSheet
       Caption = 'Audit Overrides'
