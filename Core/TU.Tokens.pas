@@ -76,7 +76,7 @@ type
     IsRestricted: LongBool;
     AppContainer: ISid;
     LogonSessionInfo: TLogonSessionCache;
-    ObjectInformation: TObjectBasicInformaion;
+    ObjectInformation: TObjectBasicInformation;
     HandleInformation: TSystemHandleEntry;
 
     FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
@@ -169,7 +169,7 @@ type
     procedure SetVirtualizationAllowed(const Value: LongBool);
     procedure SetVirtualizationEnabled(const Value: LongBool);
     procedure SetDefaultDacl(Value: IAcl);
-    function GetObjectInfo: TObjectBasicInformaion;
+    function GetObjectInfo: TObjectBasicInformation;
     procedure SetSessionReference(const Value: LongBool);
     function GetHandleInfo: TSystemHandleEntry;
     function GetAppContainer: ISid;
@@ -205,7 +205,7 @@ type
     property AppContainer: ISid read GetAppContainer;                           // class 31
     property IsRestricted: LongBool read GetIsRestricted;                       // class 40
     property LogonSessionInfo: TLogonSessionCache read GetLogonSessionInfo;
-    property ObjectInformation: TObjectBasicInformaion read GetObjectInfo;
+    property ObjectInformation: TObjectBasicInformation read GetObjectInfo;
     property HandleInformation: TSystemHandleEntry read GetHandleInfo;
 
     /// <summary>
@@ -957,7 +957,7 @@ begin
   Result := Token.Cache.MandatoryPolicy;
 end;
 
-function TTokenData.GetObjectInfo: TObjectBasicInformaion;
+function TTokenData.GetObjectInfo: TObjectBasicInformation;
 begin
   Assert(Token.Cache.IsCached[tdObjectInfo]);
   Result := Token.Cache.ObjectInformation;
@@ -1097,7 +1097,7 @@ begin
       Result := YesNoToString(Token.Cache.Elevated);
 
     tsIntegrity:
-      Result := TNumeric.Represent(TIntegriyRid(RtlxRidSid(
+      Result := TNumeric.Represent(TIntegrityRid(RtlxRidSid(
         Token.Cache.Integrity.Sid))).Text;
 
     tsObjectAddress:

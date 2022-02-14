@@ -61,8 +61,9 @@ begin
       ppEnvironment, ppJob]
 
   else if Pointer(@Method) = Pointer(@NtxCreateProcessEx) then
-    Result := [ppCurrentDirectory, ppDesktop, ppParentProcess, ppInheritHandles,
-      ppCreateSuspended, ppBreakaway, ppShowWindowMode, ppEnvironment]
+    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
+      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppShowWindowMode,
+      ppEnvironment]
 
   else if Pointer(@Method) = Pointer(@WmixCreateProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppCreateSuspended,

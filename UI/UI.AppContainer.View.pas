@@ -108,7 +108,7 @@ begin
     tbxName.Text := Info.FullName;
     tbxDispName.Text := Info.DisplayName;
 
-    if Info.IsChild then
+    if Assigned(Info.ParentPackage) then
       lnkParent.Caption := 'Parent: <a>Show</a>'
     else
       lnkParent.Caption := 'Parent: None';
@@ -123,7 +123,7 @@ var
 begin
   if Pages.ActivePage = TabChildren then
   begin
-    if ChildrenInitialized or Info.IsChild then
+    if ChildrenInitialized or Assigned(Info.ParentPackage) then
       Exit;
 
     // Delayed loading of child AppContainers
