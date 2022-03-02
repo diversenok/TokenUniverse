@@ -52,7 +52,7 @@ begin
   Item.SubItems.Add(Token.InfoClass.QueryString(tsAccess));
   Item.SubItems.Add(Token.InfoClass.QueryString(tsUserName));
   Item.SubItems.Add(Token.InfoClass.QueryString(tsSession));
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsElevationType));
+  Item.SubItems.Add(Token.InfoClass.QueryString(tsElevationInfo));
   Item.SubItems.Add(Token.InfoClass.QueryString(tsIntegrity));
 
   ListViewTokens.Items.EndUpdate;

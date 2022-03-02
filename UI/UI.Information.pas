@@ -113,7 +113,7 @@ type
     procedure ChangedPrimaryGroup(const NewPrimary: ISid);
     procedure ChangedVAllowed(const NewVAllowed: LongBool);
     procedure ChangedVEnabled(const NewVEnabled: LongBool);
-    procedure ChangedElevated(const NewElevated: LongBool);
+    procedure ChangedElevation(const NewElevation: TTokenElevationInfo);
     procedure ChangedFlags(const NewFlags: Cardinal);
     procedure SetAuditPolicy(const Audit: TArray<TAuditPolicyEntry>);
     procedure InspectGroup(const Group: TGroup);
@@ -306,12 +306,10 @@ begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
-procedure TInfoDialog.ChangedElevated(const NewElevated: LongBool);
+procedure TInfoDialog.ChangedElevation;
 begin
-  ListViewGeneral.Items[4].SubItems[0] := Format('%s (%s)', [
-      Token.InfoClass.QueryString(tsElevated),
-      Token.InfoClass.QueryString(tsElevationType)
-    ]);
+  ListViewGeneral.Items[4].SubItems[0] :=
+    Token.InfoClass.QueryString(tsElevationInfo);
 end;
 
 procedure TInfoDialog.ChangedFlags(const NewFlags: Cardinal);
@@ -490,7 +488,7 @@ begin
   Token.Events.OnIntegrityChange.Unsubscribe(ChangedIntegrity);
   Token.Events.OnUIAccessChange.Unsubscribe(ChangedUIAccess);
   Token.Events.OnSessionChange.Unsubscribe(ChangedSession);
-  Token.Events.OnElevatedChange.Unsubscribe(ChangedElevated);
+  Token.Events.OnElevationInfoChange.Unsubscribe(ChangedElevation);
   Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   IntegritySource.Free;
   SessionSource.Free;
@@ -510,7 +508,7 @@ begin
   // information that is stored in the event handlers. By doing that in this
   // order we avoid multiple calls while sharing the data between different
   // tokens pointing the same kernel object.
-  Token.Events.OnElevatedChange.Subscribe(ChangedElevated);
+  Token.Events.OnElevationInfoChange.Subscribe(ChangedElevation);
   Token.Events.OnSessionChange.Subscribe(ChangedSession);
   Token.Events.OnUIAccessChange.Subscribe(ChangedUIAccess);
   Token.Events.OnIntegrityChange.Subscribe(ChangedIntegrity);
@@ -598,7 +596,7 @@ begin
   Token.InfoClass.ReQuery(tdTokenIntegrity);
   Token.InfoClass.ReQuery(tdTokenSessionId);
   Token.InfoClass.ReQuery(tdTokenOrigin);
-  Token.InfoClass.ReQuery(tdTokenElevated);
+  Token.InfoClass.ReQuery(tdTokenElevationInfo);
   Token.InfoClass.ReQuery(tdTokenUIAccess);
   Token.InfoClass.ReQuery(tdTokenMandatoryPolicy);
   Token.InfoClass.ReQuery(tdTokenPrivileges);

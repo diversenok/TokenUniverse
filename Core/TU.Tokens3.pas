@@ -15,7 +15,7 @@ type
   ITokenAuditPolicy = IMemory<PTokenAuditPolicy>;
 
   TTokenElevationInfo = record
-    Elevated: Boolean;
+    Elevated: LongBool;
     ElevationType: TTokenElevationType;
     function ToString: String;
   end;

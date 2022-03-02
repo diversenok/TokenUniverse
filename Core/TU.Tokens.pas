@@ -12,6 +12,8 @@ uses
   NtUtils.Security.Acl, NtUtils.Objects, NtUtils, TU.Tokens3;
 
 type
+  TTokenElevationInfo = TU.Tokens3.TTokenElevationInfo;
+
   /// <summary>
   ///  A class of information for tokens that can be queried and cached.
   /// </summary>
@@ -19,7 +21,7 @@ type
     tdTokenOwner, tdTokenPrimaryGroup, tdTokenDefaultDacl, tdTokenSource,
     tdTokenType, tdTokenStatistics, tdTokenRestrictedSids, tdTokenSessionId,
     tdTokenAuditPolicy, tdTokenSandBoxInert, tdTokenOrigin,
-    tdTokenElevationType, tdTokenElevated, tdTokenHasRestrictions, tdTokenFlags,
+    tdTokenElevationInfo, tdTokenHasRestrictions, tdTokenFlags,
     tdTokenVirtualizationAllowed, tdTokenVirtualizationEnabled,
     tdTokenIntegrity, tdTokenUIAccess, tdTokenMandatoryPolicy,
     tdTokenIsRestricted, tdTokenAppContainer, tdLogonInfo, tdObjectInfo,
@@ -27,7 +29,7 @@ type
 
   /// <summary> A class of string information for tokens. </summary>
   TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
-    tsUserState, tsSession, tsElevationType, tsElevated, tsIntegrity,
+    tsUserState, tsSession, tsElevationInfo, tsIntegrity,
     tsObjectAddress, tsHandle, tsNoWriteUpPolicy, tsNewProcessMinPolicy,
     tsUIAccess, tsOwner, tsPrimaryGroup, tsSandboxInert, tsHasRestrictions,
     tsFlags, tsIsRestricted, tsVirtualization, tsTokenID, tsExprires,
@@ -60,19 +62,18 @@ type
     TokenType: TTokenTypeEx;
     Statistics: TTokenStatistics;
     RestrictedSids: TArray<TGroup>;
-    Session: Cardinal;
+    Session: TSessionId;
     AuditPolicy: IMemory<PTokenAuditPolicy>;
     SandboxInert: LongBool;
-    Origin: TLuid;
-    ElevationType: TTokenElevationType;
-    Elevated: LongBool;
+    Origin: TLogonId;
+    ElevationInfo: TTokenElevationInfo;
     HasRestrictions: LongBool;
     Flags: TTokenFlags;
     VirtualizationAllowed: LongBool;
     VirtualizationEnabled: LongBool;
     Integrity: TGroup;
     UIAccess: LongBool;
-    MandatoryPolicy: Cardinal;
+    MandatoryPolicy: TTokenMandatoryPolicy;
     IsRestricted: LongBool;
     AppContainer: ISid;
     LogonSessionInfo: TLogonSessionCache;
@@ -83,7 +84,7 @@ type
     FOnSessionChange: TCachingEvent<Cardinal>;
     FOnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>>;
     FOnOriginChange: TCachingEvent<TLuid>;
-    FOnElevatedChange: TCachingEvent<LongBool>;
+    FOnElevationInfoChange: TCachingEvent<TTokenElevationInfo>;
     FOnUIAccessChange: TCachingEvent<LongBool>;
     FOnIntegrityChange: TCachingEvent<TGroup>;
     FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
@@ -103,7 +104,7 @@ type
     property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
     property OnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>> read FOnAuditChange;
     property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
-    property OnElevatedChange: TCachingEvent<LongBool> read FOnElevatedChange;
+    property OnElevationInfoChange: TCachingEvent<TTokenElevationInfo> read FOnElevationInfoChange;
     property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
     property OnIntegrityChange: TCachingEvent<TGroup> read FOnIntegrityChange;
     property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
@@ -142,8 +143,7 @@ type
     procedure SetPrimaryGroup(Value: ISid);
     function GetVirtualizationAllowed: LongBool;
     function GetVirtualizationEnabled: LongBool;
-    function GetElevationType: TTokenElevationType;
-    function GetElevated: LongBool;
+    function GetElevationInfo: TTokenElevationInfo;
     function GetGroups: TArray<TGroup>;
     function GetHasRestrictions: LongBool;
     function GetIntegrity: TGroup;
@@ -190,8 +190,7 @@ type
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
     property AuditPolicy: IMemory<PTokenAuditPolicy> read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
-    property ElevationType: TTokenElevationType read GetElevationType;          // class 18
-    property Elevated: LongBool read GetElevated;                               // class 20
+    property ElevationInfo: TTokenElevationInfo read GetElevationInfo;          // class 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
     property HasRestrictions: LongBool read GetHasRestrictions;                 // class 21
     property Flags: Cardinal read GetFlags;                                     // class 22 AccessInformation
@@ -442,7 +441,7 @@ const
   /// <summary> Stores which data class a string class depends on. </summary>
   StringClassToDataClass: array [TTokenStringClass] of TTokenDataClass =
     (tdTokenType, tdObjectInfo, tdTokenUser, tdTokenUser, tdTokenSessionId,
-    tdTokenElevationType, tdTokenElevated, tdTokenIntegrity, tdHandleInfo,
+    tdTokenElevationInfo, tdTokenIntegrity, tdHandleInfo,
     tdNone, tdTokenMandatoryPolicy, tdTokenMandatoryPolicy, tdTokenUIAccess,
     tdTokenOwner, tdTokenPrimaryGroup, tdTokenSandBoxInert,
     tdTokenHasRestrictions, tdTokenFlags, tdTokenIsRestricted,
@@ -850,7 +849,7 @@ begin
   InfoClass.ValidateCache(tdTokenPrivileges);
   InfoClass.ValidateCache(tdTokenStatistics);
   InfoClass.ValidateCache(tdTokenFlags);
-  InfoClass.ValidateCache(tdTokenElevated);
+  InfoClass.ValidateCache(tdTokenElevationInfo);
 
   // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
   // not considered as an error. Such behavior does not fit into our
@@ -903,16 +902,10 @@ begin
   Result := Token.Cache.DefaultDacl;
 end;
 
-function TTokenData.GetElevated: LongBool;
+function TTokenData.GetElevationInfo: TTokenElevationInfo;
 begin
-  Assert(Token.Cache.IsCached[tdTokenElevated]);
-  Result := Token.Cache.Elevated;
-end;
-
-function TTokenData.GetElevationType: TTokenElevationType;
-begin
-  Assert(Token.Cache.IsCached[tdTokenElevationType]);
-  Result := Token.Cache.ElevationType;
+  Assert(Token.Cache.IsCached[tdTokenElevationInfo]);
+  Result := Token.Cache.ElevationInfo;
 end;
 
 function TTokenData.GetFlags: Cardinal;
@@ -1094,13 +1087,10 @@ begin
       Result := TNumeric.Represent(Token.Cache.User.Attributes).Text;
 
     tsSession: // Detailed?
-      Result := Token.Cache.Session.ToString;
+      Result := Cardinal(Token.Cache.Session).ToString;
 
-    tsElevationType:
-      Result := TNumeric.Represent(Token.Cache.ElevationType).Text;
-
-    tsElevated:
-      Result := YesNoToString(Token.Cache.Elevated);
+    tsElevationInfo:
+      Result := Token.Cache.ElevationInfo.ToString;
 
     tsIntegrity:
       Result := TNumeric.Represent(TIntegrityRid(RtlxRidSid(
@@ -1196,7 +1186,6 @@ function TTokenData.ReQuery(DataClass: TTokenDataClass): Boolean;
 var
   lType: TTokenType;
   lImpersonation: TSecurityImpersonationLevel;
-  xMemory: IMemory;
   Handles: TArray<TSystemHandleEntry>;
 begin
   Result := False;
@@ -1207,8 +1196,7 @@ begin
 
     tdTokenUser:
     begin
-      Result := NtxQueryGroupToken(Token.hxToken, TokenUser,
-        Token.Cache.User).IsSuccess;
+      Result := Token.TokenV3.QueryUser(Token.Cache.User).IsSuccess;
 
       // The default value of attributes for user is 0 and means "Enabled".
       // In this case we replace it with this flag. However, it can also be
@@ -1221,8 +1209,7 @@ begin
 
     tdTokenGroups:
     begin
-      Result := NtxQueryGroupsToken(Token.hxToken, TokenGroups,
-        Token.Cache.Groups).IsSuccess;
+      Result := Token.TokenV3.QueryGroups(Token.Cache.Groups).IsSuccess;
 
       if Result then
         Token.Events.OnGroupsChange.Invoke(Token.Cache.Groups);
@@ -1230,8 +1217,7 @@ begin
 
     tdTokenPrivileges:
     begin
-      Result := NtxQueryPrivilegesToken(Token.hxToken,
-        Token.Cache.Privileges).IsSuccess;
+      Result := Token.TokenV3.QueryPrivileges(Token.Cache.Privileges).IsSuccess;
 
       if Result then
         Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges);
@@ -1239,8 +1225,7 @@ begin
 
     tdTokenOwner:
     begin
-      Result := NtxQuerySidToken(Token.hxToken, TokenOwner,
-        Token.Cache.Owner).IsSuccess;
+      Result := Token.TokenV3.QueryOwner(Token.Cache.Owner).IsSuccess;
 
       if Result then
         if Token.Events.OnOwnerChange.Invoke(Token.Cache.Owner) then
@@ -1249,8 +1234,7 @@ begin
 
     tdTokenPrimaryGroup:
     begin
-     Result := NtxQuerySidToken(Token.hxToken, TokenPrimaryGroup,
-        Token.Cache.PrimaryGroup).IsSuccess;
+     Result := Token.TokenV3.QueryPrimaryGroup(Token.Cache.PrimaryGroup).IsSuccess;
 
      if Result then
        if Token.Events.OnPrimaryChange.Invoke(Token.Cache.PrimaryGroup) then
@@ -1259,29 +1243,27 @@ begin
 
     tdTokenDefaultDacl:
     begin
-      Result := NtxQueryDefaultDaclToken(Token.hxToken,
-        Token.Cache.DefaultDacl).IsSuccess;
+      Result := Token.TokenV3.QueryDefaultDacl(Token.Cache.DefaultDacl).IsSuccess;
 
       if Result then
         Token.Events.OnDefaultDaclChange.Invoke(Token.Cache.DefaultDacl);
     end;
 
     tdTokenSource:
-      Result := NtxToken.Query(Token.hxToken, TokenSource,
-        Token.Cache.Source).IsSuccess;
+      Result := Token.TokenV3.QuerySource(Token.Cache.Source).IsSuccess;
 
     tdTokenType:
     begin
-      Result := NtxToken.Query(Token.hxToken, TokenType,
-        lType).IsSuccess;
+      Result := Token.TokenV3.QueryType(lType).IsSuccess;
+
       if Result then
       begin
         if lType = TokenPrimary then
           Token.Cache.TokenType := ttPrimary
         else
         begin
-          Result := NtxToken.Query(Token.hxToken, TokenImpersonationLevel,
-            lImpersonation).IsSuccess;
+          Result := Token.TokenV3.QueryImpersonation(lImpersonation).IsSuccess;
+
           if Result then
             Token.Cache.TokenType := TTokenTypeEx(lImpersonation);
         end;
@@ -1290,8 +1272,7 @@ begin
 
     tdTokenStatistics:
     begin
-      Result := NtxToken.Query(Token.hxToken, TokenStatistics,
-        Token.Cache.Statistics).IsSuccess;
+      Result := Token.TokenV3.QueryStatistics(Token.Cache.Statistics).IsSuccess;
 
       if Result then
         if Token.Events.OnStatisticsChange.Invoke(Token.Cache.Statistics) then
@@ -1308,13 +1289,12 @@ begin
     end;
 
     tdTokenRestrictedSids:
-      Result := NtxQueryGroupsToken(Token.hxToken, TokenRestrictedSids,
-        Token.Cache.RestrictedSids).IsSuccess;
+      Result := Token.TokenV3.QueryRestrictedSids(Token.Cache.RestrictedSids).IsSuccess;
 
     tdTokenSessionId:
     begin
-      Result := NtxToken.Query(Token.hxToken, TokenSessionId,
-        Token.Cache.Session).IsSuccess;
+      Result := Token.TokenV3.QuerySessionId(Token.Cache.Session).IsSuccess;
+
       if Result then
         if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
           InvokeStringEvent(tsSession);
@@ -1322,50 +1302,38 @@ begin
 
     tdTokenAuditPolicy:
     begin
-      Result := NtxQueryToken(Token.hxToken, TokenAuditPolicy,
-        xMemory).IsSuccess;
+      Result := Token.TokenV3.QueryAuditPolicy(Token.Cache.AuditPolicy).IsSuccess;
+
       if Result then
-      begin
-        IMemory(Token.Cache.AuditPolicy) := xMemory;
         Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
-      end;
     end;
 
     tdTokenSandBoxInert:
-      Result := NtxToken.Query(Token.hxToken, TokenSandBoxInert,
-        Token.Cache.SandboxInert).IsSuccess;
+      Result := Token.TokenV3.QuerySandboxInert(Token.Cache.SandboxInert).IsSuccess;
 
     tdTokenOrigin:
     begin
-      Result := NtxToken.Query(Token.hxToken, TokenOrigin,
-        Token.Cache.Origin).IsSuccess;
+      Result := Token.TokenV3.QueryOrigin(Token.Cache.Origin).IsSuccess;
 
       if Result then
         if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
           InvokeStringEvent(tsOrigin);
     end;
 
-    tdTokenElevationType:
-      Result := NtxToken.Query(Token.hxToken,
-        TokenElevationType, Token.Cache.ElevationType).IsSuccess;
-
-    tdTokenElevated:
+    tdTokenElevationInfo:
     begin
-      Result := NtxToken.Query(Token.hxToken,
-        TokenElevation, Token.Cache.Elevated).IsSuccess;
+      Result := Token.TokenV3.QueryElevation(Token.Cache.ElevationInfo).IsSuccess;
 
       if Result then
-        Token.Events.OnElevatedChange.Invoke(Token.Cache.Elevated);
+        Token.Events.OnElevationInfoChange.Invoke(Token.Cache.ElevationInfo);
     end;
 
     tdTokenHasRestrictions:
-      Result := NtxToken.Query(Token.hxToken,
-        TokenHasRestrictions, Token.Cache.HasRestrictions).IsSuccess;
+      Result := Token.TokenV3.QueryHasRestrictions(Token.Cache.HasRestrictions).IsSuccess;
 
     tdTokenFlags:
     begin
-      Result := NtxQueryFlagsToken(Token.hxToken,
-        Token.Cache.Flags).IsSuccess;
+      Result := Token.TokenV3.QueryFlags(Token.Cache.Flags).IsSuccess;
 
       if Result then
         if Token.Events.OnFlagsChange.Invoke(Token.Cache.Flags) then
@@ -1374,8 +1342,8 @@ begin
 
     tdTokenVirtualizationAllowed:
     begin
-      Result := NtxToken.Query(Token.hxToken,
-        TokenVirtualizationAllowed, Token.Cache.VirtualizationAllowed).IsSuccess;
+      Result := Token.TokenV3.QueryVirtualizationAllowed(Token.Cache.VirtualizationAllowed).IsSuccess;
+
       if Result then
         if Token.Events.OnVirtualizationAllowedChange.Invoke(
           Token.Cache.VirtualizationAllowed) then
@@ -1384,8 +1352,8 @@ begin
 
     tdTokenVirtualizationEnabled:
     begin
-      Result := NtxToken.Query(Token.hxToken,
-        TokenVirtualizationEnabled, Token.Cache.VirtualizationEnabled).IsSuccess;
+      Result := Token.TokenV3.QueryVirtualizationEnabled(Token.Cache.VirtualizationEnabled).IsSuccess;
+
       if Result then
         if Token.Events.OnVirtualizationEnabledChange.Invoke(
           Token.Cache.VirtualizationEnabled) then
@@ -1394,8 +1362,7 @@ begin
 
     tdTokenIntegrity:
     begin
-      Result := NtxQueryGroupToken(Token.hxToken, TokenIntegrityLevel,
-        Token.Cache.Integrity).IsSuccess;
+      Result := Token.TokenV3.QueryIntegrity(Token.Cache.Integrity).IsSuccess;
 
       if Result and
         Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
@@ -1404,8 +1371,8 @@ begin
 
     tdTokenUIAccess:
     begin
-      Result := NtxToken.Query(Token.hxToken, TokenUIAccess,
-        Token.Cache.UIAccess).IsSuccess;
+      Result := Token.TokenV3.QueryUIAccess(Token.Cache.UIAccess).IsSuccess;
+
       if Result then
         if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
           InvokeStringEvent(tsUIAccess);
@@ -1413,8 +1380,8 @@ begin
 
     tdTokenMandatoryPolicy:
     begin
-      Result := NtxToken.Query(Token.hxToken, TokenMandatoryPolicy,
-        Token.Cache.MandatoryPolicy).IsSuccess;
+      Result := Token.TokenV3.QueryMandatoryPolicy(Token.Cache.MandatoryPolicy).IsSuccess;
+
       if Result then
         if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
         begin
@@ -1424,12 +1391,10 @@ begin
     end;
 
     tdTokenIsRestricted:
-      Result := NtxToken.Query(Token.hxToken, TokenIsRestricted,
-        Token.Cache.IsRestricted).IsSuccess;
+      Result := Token.TokenV3.QueryIsRestricted(Token.Cache.IsRestricted).IsSuccess;
 
     tdTokenAppContainer:
-      Result := NtxQuerySidToken(Token.hxToken, TokenAppContainerSid,
-        Token.Cache.AppContainer).IsSuccess;
+      Result := Token.TokenV3.QueryAppContainerSid(Token.Cache.AppContainer).IsSuccess;
 
     tdLogonInfo:
     if Query(tdTokenStatistics) then
@@ -1442,12 +1407,12 @@ begin
     end;
 
     tdObjectInfo:
-      Result := NtxObject.Query(Token.hxToken.Handle, ObjectBasicInformation,
-        Token.Cache.ObjectInformation).IsSuccess;
+      Result := Token.TokenV3.QueryBasicInfo(Token.Cache.ObjectInformation).IsSuccess;
 
     tdHandleInfo:
     begin
       Result := NtxEnumerateHandles(Handles).IsSuccess;
+
       if Result then
       begin
         TArray.FilterInline<TSystemHandleEntry>(Handles,

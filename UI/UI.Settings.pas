@@ -35,8 +35,7 @@ const
     (Caption: 'User Name';          Category: uicGeneral; Width: 160; Alignment: taLeftJustify),
     (Caption: 'User State';         Category: uicGeneral; Width: 70; Alignment: taCenter),
     (Caption: 'Session';            Category: uicGeneral; Width: 50; Alignment: taCenter),
-    (Caption: 'Elevation Type';     Category: uicGeneral; Width: 65; Alignment: taCenter),
-    (Caption: 'Elevated';           Category: uicGeneral; Width: 65; Alignment: taCenter),
+    (Caption: 'Elevation';          Category: uicGeneral; Width: 85; Alignment: taCenter),
     (Caption: 'Integrity';          Category: uicGeneral; Width: 70; Alignment: taCenter),
     (Caption: 'Object Address';     Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
     (Caption: 'Handle';             Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
@@ -69,8 +68,8 @@ implementation
 
 class constructor TSettings.Create;
 begin
-  SelectedColumns := [tsTokenType, tsAccess, tsUserName, tsSession, tsElevationType,
-    tsIntegrity];
+  SelectedColumns := [tsTokenType, tsAccess, tsUserName, tsSession,
+    tsElevationInfo, tsIntegrity];
 
   UseSafeImpersonation := True;
 end;
