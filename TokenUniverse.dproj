@@ -265,6 +265,10 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="Core\TU.Exceptions.pas"/>
+        <DCCReference Include="Core\TU.Observers.pas"/>
+        <DCCReference Include="Core\TU.Tokens3.Events.pas"/>
+        <DCCReference Include="Core\TU.Tokens3.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

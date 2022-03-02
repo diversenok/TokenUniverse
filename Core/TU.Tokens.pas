@@ -9,7 +9,7 @@ uses
   TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
   NtUtils.Security.Sid, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils.Lsa.Audit,
   System.Generics.Collections, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
-  NtUtils.Security.Acl, NtUtils.Objects, NtUtils;
+  NtUtils.Security.Acl, NtUtils.Objects, NtUtils, TU.Tokens3;
 
 type
   /// <summary>
@@ -238,6 +238,7 @@ type
   PTokenEvent = ^TTokenEvent;
 
   IToken = interface
+    ['{A5F087C7-53FE-4C6F-B4E9-2AF5CD270117}']
     procedure SetCaption(const Value: String);
     function GetCaption: String;
     function GetHandle: IHandle;
@@ -263,7 +264,7 @@ type
   /// <summary>
   ///  Token Universe representation of an opend token handle.
   /// </summary>
-  TToken = class(TInterfacedObject, IToken)
+  TToken = class(TInterfacedObject, IToken, IToken3)
   private
     procedure SetCaption(const Value: String);
     function GetCaption: String;
@@ -282,8 +283,11 @@ type
     FOnCaptionChange: TStringCachingEvent;
     FOnCanClose: TTokenEvent;
     FOnClose: TTokenEvent;
-  public
 
+    // Migration to the new IToken interface
+    FTokenV3: IToken3;
+    property TokenV3: IToken3 read FTokenV3 implements IToken3;
+  public
     {--------------------  TToken public section ---------------------------}
 
     property Handle: IHandle read GetHandle;
@@ -498,6 +502,8 @@ begin
 
   if not Assigned(Cache) then
     Cache := TTokenCacheAndEvents.Create;
+
+  FTokenV3 := CaptureTokenHandle(hxToken, FCaption);
 end;
 
 procedure TToken.AssignToProcess(PID: NativeUInt);

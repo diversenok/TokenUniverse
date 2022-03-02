@@ -54,7 +54,11 @@ uses
   UI.Builtin.DsObjectPicker in 'NtUtilsUI\Prototypes\UI.Builtin.DsObjectPicker.pas',
   UI.Prototypes.Sid.Cheatsheet in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Cheatsheet.pas' {SidCheatsheet},
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
-  UI.Prototypes.Acl in 'NtUtilsUI\Prototypes\UI.Prototypes.Acl.pas' {FrameAcl: TFrame};
+  UI.Prototypes.Acl in 'NtUtilsUI\Prototypes\UI.Prototypes.Acl.pas' {FrameAcl: TFrame},
+  TU.Exceptions in 'Core\TU.Exceptions.pas',
+  TU.Observers in 'Core\TU.Observers.pas',
+  TU.Tokens3.Events in 'Core\TU.Tokens3.Events.pas',
+  TU.Tokens3 in 'Core\TU.Tokens3.pas';
 
 {$R *.res}
 

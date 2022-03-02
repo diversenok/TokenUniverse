@@ -1,0 +1,2207 @@
+unit TU.Tokens3;
+
+{
+  This module defines the improved IToken interface.
+}
+
+interface
+
+uses
+  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntobapi, NtUtils, NtUtils.Tokens.Info,
+  NtUtils.Objects.Snapshots, NtUtils.Profiles, DelphiUtils.AutoObjects,
+  DelphiUtils.AutoEvents;
+
+type
+  ITokenAuditPolicy = IMemory<PTokenAuditPolicy>;
+
+  TTokenElevationInfo = record
+    Elevated: Boolean;
+    ElevationType: TTokenElevationType;
+    function ToString: String;
+  end;
+
+  TTokenStringClass = (
+    tsCaption,                 // User-supplied label
+    tsHandle,                  // Handle value
+    tsAccess,                  // Handle access mask
+    tsAddress,                 // Kernel object address
+    tsUser,                    // User SID
+    tsGroups,                  // Number of groups
+    tsPrivileges,              // Number of privileges
+    tsOwner,                   // Owner SID
+    tsPrimaryGroup,            // Primary group SID
+    tsSource,                  // Token source string
+    tsType,                    // Token type and impersonation level
+    tsTokenId,                 // Unique token ID
+    tsLogonId,                 // Logon session ID
+    tsModifiedId,              // Unique modified ID value
+    tsRestrictedSids,          // Number of restricting SIDs
+    tsSessionId,               // Terminal session ID
+    tsSandBoxInert,            // Whether bypassing SRP and App Locker is enabled
+    tsOrigin,                  // Oringinating logon session ID
+    tsElevation,               // Token and logon session elevation state
+    tsFlags,                   // A bit mask of various flags
+    tsRestricted,              // Policy for applying restricting SIDs
+    tsSessionReference,        // Whether the token references a logon session
+    tsVirtualization,          // Filesyestem/registry virtualization policy
+    tsFiltered,                // Whether the token was filtered after creation
+    tsUIAccess,                // Whether UIPI bypassing flag is set
+    tsLowBox,                  // Whether the token is LowBox (aka. AppContainer)
+    tsPrivateNamespace,        // Whether private namespace is enabled
+    tsChildFlags,              // Child process creation policy
+    tsPermissiveLearning,      // Whether permissive learning mode is enabled
+    tsRedirectionTrust,        // Redirection trust policy
+    tsIntegrity,               // Integrity level
+    tsMandatoryPolicy,         // Mandatory policy settings
+    tsCapabilities,            // Number of capabilities
+    tsAppContainerNumber,      // AppContainer number value
+    tsAppContainerName,        // Moniker of the AppContainer porfile
+    tsAppContainerDisplayName, // DisplayName of the AppContainer profile
+    tsUserClaims,              // Number of user claim attributes
+    tsDeviceClaims,            // Number of device claim attributes
+    tsRestrictedUserClaims,    // Number of resricted user claim attributes
+    tsRestrictedDeviceClaims,  // Number of restricted device claim attributes
+    tsDeviceGroups,            // Number of device groups
+    tsRestrictedDeviceGroups,  // Number of resrricted device gropus
+    tsSecAttributes,           // Number of security attributes
+    tsLPAC,                    // Whether Low Privilege AppContainer attribute set
+    tsIsRestricted,            // Whether token is restricted or write-only restricted
+    tsTrustLevel,              // Process protection level
+    tsSingletonAttributes,     // Number of singleton security attributes
+    tsBnoIsolation,            // Whether Base Named Objects isolation is enabled
+    tsIsSandboxed,             // Whether RtlIsSandboxedToken is TRUE
+    tsOriginTrustLevel         // Originating process protection level
+  );
+
+  IToken3 = interface
+    ['{7CF47C07-F5D1-4891-A2B8-83ED0C7419CF}']
+    function GetHandle: IHandle;
+    function GetCaption: String;
+    procedure SetCaption(const Value: String);
+
+    property Handle: IHandle read GetHandle;
+    property Caption: String read GetCaption write SetCaption;
+
+    // Quering
+    function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
+    function QueryBasicInfo(out Info: TObjectBasicInformation): TNtxStatus;
+    function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus;
+    function QueryKernelAddress(out ObjectAddress: Pointer; ForceRefresh: Boolean = False): TNtxStatus;
+    function QueryUser(out User: TGroup): TNtxStatus;
+    function QueryGroups(out Groups: TArray<TGroup>): TNtxStatus;
+    function QueryPrivileges(out Privileges: TArray<TPrivilege>): TNtxStatus;
+    function QueryOwner(out Owner: ISid): TNtxStatus;
+    function QueryPrimaryGroup(out PrimaryGroup: ISid): TNtxStatus;
+    function QueryDefaultDacl(out DefaultDacl: IAcl): TNtxStatus;
+    function QuerySource(out Source: TTokenSource): TNtxStatus;
+    function QueryType(out TokenType: TTokenType): TNtxStatus;
+    function QueryImpersonation(out Level: TSecurityImpersonationLevel): TNtxStatus;
+    function QueryStatistics(out Statistics: TTokenStatistics): TNtxStatus;
+    function QueryRestrictedSids(out Sids: TArray<TGroup>): TNtxStatus;
+    function QuerySessionId(out SessionId: TSessionId): TNtxStatus;
+    function QuerySandboxInert(out SandboxInert: LongBool): TNtxStatus;
+    function QueryAuditPolicy(out AuditPolicy: ITokenAuditPolicy): TNtxStatus;
+    function QueryOrigin(out Origin: TLogonId): TNtxStatus;
+    function QueryElevation(out Elevation: TTokenElevationInfo): TNtxStatus;
+    function QueryLinkedToken(out Token: IToken3): TNtxStatus;
+    function QueryHasRestrictions(out HasRestrictions: LongBool): TNtxStatus;
+    function QueryFlags(out Flags: TTokenFlags): TNtxStatus;
+    function QueryVirtualizationAllowed(out Allowed: LongBool): TNtxStatus;
+    function QueryVirtualizationEnabled(out Enabled: LongBool): TNtxStatus;
+    function QueryIntegrity(out Integrity: TGroup): TNtxStatus;
+    function QueryUIAccess(out UIAccess: LongBool): TNtxStatus;
+    function QueryMandatoryPolicy(out Policy: TTokenMandatoryPolicy): TNtxStatus;
+    function QueryIsAppContainer(out IsAppContainer: LongBool): TNtxStatus;
+    function QueryCapabilities(out Capabilities: TArray<TGroup>): TNtxStatus;
+    function QueryAppContainerSid(out Package: ISid): TNtxStatus;
+    function QueryAppContainerInfo(out AppContainer: TAppContainerInfo): TNtxStatus;
+    function QueryAppContainerNumber(out Number: Cardinal): TNtxStatus;
+    function QueryUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
+    function QueryRestrictedDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
+    function QuerySecurityAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryIsLPAC(out IsLPAC: Boolean): TNtxStatus;
+    function QueryIsRestricted(out IsRestricted: LongBool): TNtxStatus;
+    function QueryTrustLevel(out TrustLevel: ISid): TNtxStatus;
+    function QueryPrivateNamespace(out PrivateNamespace: LongBool): TNtxStatus;
+    function QuerySingletonAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryBnoIsolation(out Isolation: TBnoIsolation): TNtxStatus;
+    function QueryIsSandboxed(out IsSandboxed: LongBool): TNtxStatus;
+    function QueryOriginatingTrustLevel(out TrustLevel: ISid): TNtxStatus;
+
+    // Observing changes
+    function ObserveString(InfoClass: TTokenStringClass; const Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
+    function ObserveBasicInfo(const Callback: TEventCallback<TNtxStatus, TObjectBasicInformation>): IAutoReleasable;
+    function ObserveHandles(const Callback: TEventCallback<TNtxStatus, TArray<TSystemHandleEntry>>): IAutoReleasable;
+    function ObserveKernelAddress(const Callback: TEventCallback<TNtxStatus, Pointer>): IAutoReleasable;
+    function ObserveUser(const Callback: TEventCallback<TNtxStatus, TGroup>): IAutoReleasable;
+    function ObserveGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObservePrivileges(const Callback: TEventCallback<TNtxStatus, TArray<TPrivilege>>): IAutoReleasable;
+    function ObserveOwner(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObservePrimaryGroup(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObserveDefaultDacl(const Callback: TEventCallback<TNtxStatus, IAcl>): IAutoReleasable;
+    function ObserveSource(const Callback: TEventCallback<TNtxStatus, TTokenSource>): IAutoReleasable;
+    function ObserveType(const Callback: TEventCallback<TNtxStatus, TTokenType>): IAutoReleasable;
+    function ObserveImpersonation(const Callback: TEventCallback<TNtxStatus, TSecurityImpersonationLevel>): IAutoReleasable;
+    function ObserveStatistics(const Callback: TEventCallback<TNtxStatus, TTokenStatistics>): IAutoReleasable;
+    function ObserveRestrictedSids(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveSessionId(const Callback: TEventCallback<TNtxStatus, TSessionId>): IAutoReleasable;
+    function ObserveSandboxInert(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveAuditPolicy(const Callback: TEventCallback<TNtxStatus, ITokenAuditPolicy>): IAutoReleasable;
+    function ObserveOrigin(const Callback: TEventCallback<TNtxStatus, TLogonId>): IAutoReleasable;
+    function ObserveElevation(const Callback: TEventCallback<TNtxStatus, TTokenElevationInfo>): IAutoReleasable;
+    function ObserveHasRestrictions(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveFlags(const Callback: TEventCallback<TNtxStatus, TTokenFlags>): IAutoReleasable;
+    function ObserveVirtualizationAllowed(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveVirtualizationEnabled(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveIntegrity(const Callback: TEventCallback<TNtxStatus, TGroup>): IAutoReleasable;
+    function ObserveUIAccess(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveMandatoryPolicy(const Callback: TEventCallback<TNtxStatus, TTokenMandatoryPolicy>): IAutoReleasable;
+    function ObserveIsAppContainer(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveCapabilities(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveAppContainerSid(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObserveAppContainerInfo(const Callback: TEventCallback<TNtxStatus, TAppContainerInfo>): IAutoReleasable;
+    function ObserveAppContainerNumber(const Callback: TEventCallback<TNtxStatus, Cardinal>): IAutoReleasable;
+    function ObserveUserClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveDeviceClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedUserClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedDeviceClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveDeviceGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveRestrictedDeviceGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveSecurityAttributes(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveIsLPAC(const Callback: TEventCallback<TNtxStatus, Boolean>): IAutoReleasable;
+    function ObserveIsRestricted(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveTrustLevel(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObservePrivateNamespace(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveSingletonAttributes(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveBnoIsolation(const Callback: TEventCallback<TNtxStatus, TBnoIsolation>): IAutoReleasable;
+    function ObserveIsSandboxed(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveOriginatingTrustLevel(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+
+    // Refreshing
+    procedure SmartRefresh;
+    procedure RefreshString(InfoClass: TTokenStringClass);
+    function RefreshBasicInfo: TNtxStatus;
+    function RefreshHandles: TNtxStatus;
+    function RefreshKernelAddress: TNtxStatus;
+    function RefreshUser: TNtxStatus;
+    function RefreshGroups: TNtxStatus;
+    function RefreshPrivileges: TNtxStatus;
+    function RefreshOwner: TNtxStatus;
+    function RefreshPrimaryGroup: TNtxStatus;
+    function RefreshDefaultDacl: TNtxStatus;
+    function RefreshSource: TNtxStatus;
+    function RefreshType: TNtxStatus;
+    function RefreshImpersonation: TNtxStatus;
+    function RefreshStatistics: TNtxStatus;
+    function RefreshRestrictedSids: TNtxStatus;
+    function RefreshSessionId: TNtxStatus;
+    function RefreshSandboxInert: TNtxStatus;
+    function RefreshAuditPolicy: TNtxStatus;
+    function RefreshOrigin: TNtxStatus;
+    function RefreshElevation: TNtxStatus;
+    function RefreshHasRestrictions: TNtxStatus;
+    function RefreshFlags: TNtxStatus;
+    function RefreshVirtualizationAllowed: TNtxStatus;
+    function RefreshVirtualizationEnabled: TNtxStatus;
+    function RefreshIntegrity: TNtxStatus;
+    function RefreshUIAccess: TNtxStatus;
+    function RefreshMandatoryPolicy: TNtxStatus;
+    function RefreshIsAppContainer: TNtxStatus;
+    function RefreshCapabilities: TNtxStatus;
+    function RefreshAppContainerSid: TNtxStatus;
+    function RefreshAppContainerInfo: TNtxStatus;
+    function RefreshAppContainerNumber: TNtxStatus;
+    function RefreshUserClaims: TNtxStatus;
+    function RefreshDeviceClaims: TNtxStatus;
+    function RefreshRestrictedUserClaims: TNtxStatus;
+    function RefreshRestrictedDeviceClaims: TNtxStatus;
+    function RefreshDeviceGroups: TNtxStatus;
+    function RefreshRestrictedDeviceGroups: TNtxStatus;
+    function RefreshSecurityAttributes: TNtxStatus;
+    function RefreshIsLPAC: TNtxStatus;
+    function RefreshIsRestricted: TNtxStatus;
+    function RefreshTrustLevel: TNtxStatus;
+    function RefreshPrivateNamespace: TNtxStatus;
+    function RefreshSingletonAttributes: TNtxStatus;
+    function RefreshBnoIsolation: TNtxStatus;
+    function RefreshIsSandboxed: TNtxStatus;
+    function RefreshOriginatingTrustLevel: TNtxStatus;
+
+    // Setting
+    function SetOwner(const Owner: ISid): TNtxStatus;
+    function SetPrimaryGroup(const PrimaryGroup: ISid): TNtxStatus;
+    function SetDefaultDacl(const DefaultDacl: IAcl): TNtxStatus;
+    function SetSessionId(const SessionId: TSessionId): TNtxStatus;
+    function SetSessionReference(const Reference: LongBool): TNtxStatus;
+    function SetAuditPolicy(const AuditPolicy: ITokenAuditPolicy): TNtxStatus;
+    function SetOrigin(const Origin: TLogonId): TNtxStatus;
+    function SetLinkedToken(const Token: IToken3): TNtxStatus;
+    function SetVirtualizationAllowed(const Allowed: LongBool): TNtxStatus;
+    function SetVirtualizationEnabled(const Enabled: LongBool): TNtxStatus;
+    function SetIntegrity(const Level: TIntegrityRid): TNtxStatus;
+    function SetUIAccess(const UIAccess: LongBool): TNtxStatus;
+    function SetMandatoryPolicy(const Policy: TTokenMandatoryPolicy): TNtxStatus;
+    function SetPrivateNamespace(const PrivateNamespace: LongBool): TNtxStatus;
+    function SetChildProcessFlags(const Blocked: LongBool): TNtxStatus;
+
+    // Operations
+    function AssignToProcess(const hxProcess: IHandle): TNtxStatus;
+    function AssignToThread(const hxThread: IHandle): TNtxStatus;
+    function AssignToThreadSafe(const hxThread: IHandle): TNtxStatus;
+  end;
+
+// Make a IToken3 instance from a handle
+function CaptureTokenHandle(
+  const Handle: IHandle;
+  const Caption: String;
+  KernelAddress: Pointer = nil
+): IToken3;
+
+implementation
+
+uses
+  Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
+  NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
+  DelphiUiLib.Reflection.Numeric, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
+  TU.Tokens3.Events, TU.Tokens;
+
+{ Helper functions }
+
+function TrustLevelToString([opt] const TrustSid: ISid): String;
+var
+  SubAuthorities: TArray<Cardinal>;
+begin
+  if not Assigned(TrustSid) then
+    Exit('None');
+
+  SubAuthorities := RtlxSubAuthoritiesSid(TrustSid);
+
+  if (RtlxIdentifierAuthoritySid(TrustSid) <> SECURITY_PROCESS_TRUST_AUTHORITY)
+    or (Length(SubAuthorities) <> SECURITY_PROCESS_TRUST_AUTHORITY_RID_COUNT) then
+    Exit('Invalid');
+
+  Result := TNumeric.Represent<TSecurityTrustType>(SubAuthorities[0]).Text +
+    ' (' + TNumeric.Represent<TSecurityTrustLevel>(SubAuthorities[1]).Text + ')';
+end;
+
+function TTokenElevationInfo.ToString;
+begin
+  Result  := YesNoToString(Elevated) + ' (' + TNumeric.Represent(
+    ElevationType).Text + ')';
+end;
+
+type
+  TToken = class (TInterfacedObject, IToken3)
+    hxToken: IHandle;
+
+    // Per-handle (as opposed to per-kernel-object) strings
+    FCaption, FAccessMask: String;
+
+    FKernelObjectAddress: Pointer;
+    OnCaptionChange: TAutoEvent<TTokenStringClass, String>;
+    FEvents: IAutoTokenEvents;
+
+    constructor Create(const Handle: IHandle; const Caption: String; KernelObjectAddress: Pointer = nil);
+    function GetHandle: IHandle;
+    function GetCaption: String;
+    procedure SetCaption(const Value: String);
+    function GetEvents: TTokenEvents;
+    property Events: TTokenEvents read GetEvents;
+    function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
+    function QueryBasicInfo(out Info: TObjectBasicInformation): TNtxStatus;
+    function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus;
+    function QueryKernelAddress(out ObjectAddress: Pointer; ForceRefresh: Boolean = False): TNtxStatus;
+    function QueryUser(out User: TGroup): TNtxStatus;
+    function QueryGroups(out Groups: TArray<TGroup>): TNtxStatus;
+    function QueryPrivileges(out Privileges: TArray<TPrivilege>): TNtxStatus;
+    function QueryOwner(out Owner: ISid): TNtxStatus;
+    function QueryPrimaryGroup(out PrimaryGroup: ISid): TNtxStatus;
+    function QueryDefaultDacl(out DefaultDacl: IAcl): TNtxStatus;
+    function QuerySource(out Source: TTokenSource): TNtxStatus;
+    function QueryType(out &Type: TTokenType): TNtxStatus;
+    function QueryImpersonation(out Level: TSecurityImpersonationLevel): TNtxStatus;
+    function QueryStatistics(out Statistics: TTokenStatistics): TNtxStatus;
+    function QueryRestrictedSids(out Sids: TArray<TGroup>): TNtxStatus;
+    function QuerySessionId(out SessionId: TSessionId): TNtxStatus;
+    function QuerySandboxInert(out SandboxInert: LongBool): TNtxStatus;
+    function QueryAuditPolicy(out AuditPolicy: ITokenAuditPolicy): TNtxStatus;
+    function QueryOrigin(out Origin: TLogonId): TNtxStatus;
+    function QueryElevation(out Elevation: TTokenElevationInfo): TNtxStatus;
+    function QueryLinkedToken(out Token: IToken3): TNtxStatus;
+    function QueryHasRestrictions(out HasRestrictions: LongBool): TNtxStatus;
+    function QueryFlags(out Flags: TTokenFlags): TNtxStatus;
+    function QueryVirtualizationAllowed(out Allowed: LongBool): TNtxStatus;
+    function QueryVirtualizationEnabled(out Enabled: LongBool): TNtxStatus;
+    function QueryIntegrity(out Integrity: TGroup): TNtxStatus;
+    function QueryUIAccess(out UIAccess: LongBool): TNtxStatus;
+    function QueryMandatoryPolicy(out Policy: TTokenMandatoryPolicy): TNtxStatus;
+    function QueryIsAppContainer(out IsAppContainer: LongBool): TNtxStatus;
+    function QueryCapabilities(out Capabilities: TArray<TGroup>): TNtxStatus;
+    function QueryAppContainerSid(out Package: ISid): TNtxStatus;
+    function QueryAppContainerInfo(out AppContainer: TAppContainerInfo): TNtxStatus;
+    function QueryAppContainerNumber(out Number: Cardinal): TNtxStatus;
+    function QueryUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
+    function QueryRestrictedDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
+    function QuerySecurityAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryIsLPAC(out IsLPAC: Boolean): TNtxStatus;
+    function QueryIsRestricted(out IsRestricted: LongBool): TNtxStatus;
+    function QueryTrustLevel(out TrustLevel: ISid): TNtxStatus;
+    function QueryPrivateNamespace(out PrivateNamespace: LongBool): TNtxStatus;
+    function QuerySingletonAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryBnoIsolation(out Isolation: TBnoIsolation): TNtxStatus;
+    function QueryIsSandboxed(out IsSandboxed: LongBool): TNtxStatus;
+    function QueryOriginatingTrustLevel(out TrustLevel: ISid): TNtxStatus;
+    function ObserveString(InfoClass: TTokenStringClass; const Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
+    function ObserveBasicInfo(const Callback: TEventCallback<TNtxStatus, TObjectBasicInformation>): IAutoReleasable;
+    function ObserveHandles(const Callback: TEventCallback<TNtxStatus, TArray<TSystemHandleEntry>>): IAutoReleasable;
+    function ObserveKernelAddress(const Callback: TEventCallback<TNtxStatus, Pointer>): IAutoReleasable;
+    function ObserveUser(const Callback: TEventCallback<TNtxStatus, TGroup>): IAutoReleasable;
+    function ObserveGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObservePrivileges(const Callback: TEventCallback<TNtxStatus, TArray<TPrivilege>>): IAutoReleasable;
+    function ObserveOwner(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObservePrimaryGroup(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObserveDefaultDacl(const Callback: TEventCallback<TNtxStatus, IAcl>): IAutoReleasable;
+    function ObserveSource(const Callback: TEventCallback<TNtxStatus, TTokenSource>): IAutoReleasable;
+    function ObserveType(const Callback: TEventCallback<TNtxStatus, TTokenType>): IAutoReleasable;
+    function ObserveImpersonation(const Callback: TEventCallback<TNtxStatus, TSecurityImpersonationLevel>): IAutoReleasable;
+    function ObserveStatistics(const Callback: TEventCallback<TNtxStatus, TTokenStatistics>): IAutoReleasable;
+    function ObserveRestrictedSids(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveSessionId(const Callback: TEventCallback<TNtxStatus, TSessionId>): IAutoReleasable;
+    function ObserveSandboxInert(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveAuditPolicy(const Callback: TEventCallback<TNtxStatus, ITokenAuditPolicy>): IAutoReleasable;
+    function ObserveOrigin(const Callback: TEventCallback<TNtxStatus, TLogonId>): IAutoReleasable;
+    function ObserveElevation(const Callback: TEventCallback<TNtxStatus, TTokenElevationInfo>): IAutoReleasable;
+    function ObserveHasRestrictions(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveFlags(const Callback: TEventCallback<TNtxStatus, TTokenFlags>): IAutoReleasable;
+    function ObserveVirtualizationAllowed(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveVirtualizationEnabled(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveIntegrity(const Callback: TEventCallback<TNtxStatus, TGroup>): IAutoReleasable;
+    function ObserveUIAccess(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveMandatoryPolicy(const Callback: TEventCallback<TNtxStatus, TTokenMandatoryPolicy>): IAutoReleasable;
+    function ObserveIsAppContainer(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveCapabilities(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveAppContainerSid(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObserveAppContainerInfo(const Callback: TEventCallback<TNtxStatus, TAppContainerInfo>): IAutoReleasable;
+    function ObserveAppContainerNumber(const Callback: TEventCallback<TNtxStatus, Cardinal>): IAutoReleasable;
+    function ObserveUserClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveDeviceClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedUserClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedDeviceClaims(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveDeviceGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveRestrictedDeviceGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
+    function ObserveSecurityAttributes(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveIsLPAC(const Callback: TEventCallback<TNtxStatus, Boolean>): IAutoReleasable;
+    function ObserveIsRestricted(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveTrustLevel(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObservePrivateNamespace(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveSingletonAttributes(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveBnoIsolation(const Callback: TEventCallback<TNtxStatus, TBnoIsolation>): IAutoReleasable;
+    function ObserveIsSandboxed(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
+    function ObserveOriginatingTrustLevel(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    procedure SmartRefresh;
+    procedure RefreshString(InfoClass: TTokenStringClass);
+    function RefreshBasicInfo: TNtxStatus;
+    function RefreshHandles: TNtxStatus;
+    function RefreshKernelAddress: TNtxStatus;
+    function RefreshUser: TNtxStatus;
+    function RefreshGroups: TNtxStatus;
+    function RefreshPrivileges: TNtxStatus;
+    function RefreshOwner: TNtxStatus;
+    function RefreshPrimaryGroup: TNtxStatus;
+    function RefreshDefaultDacl: TNtxStatus;
+    function RefreshSource: TNtxStatus;
+    function RefreshType: TNtxStatus;
+    function RefreshImpersonation: TNtxStatus;
+    function RefreshStatistics: TNtxStatus;
+    function RefreshRestrictedSids: TNtxStatus;
+    function RefreshSessionId: TNtxStatus;
+    function RefreshSandboxInert: TNtxStatus;
+    function RefreshAuditPolicy: TNtxStatus;
+    function RefreshOrigin: TNtxStatus;
+    function RefreshElevation: TNtxStatus;
+    function RefreshHasRestrictions: TNtxStatus;
+    function RefreshFlags: TNtxStatus;
+    function RefreshVirtualizationAllowed: TNtxStatus;
+    function RefreshVirtualizationEnabled: TNtxStatus;
+    function RefreshIntegrity: TNtxStatus;
+    function RefreshUIAccess: TNtxStatus;
+    function RefreshMandatoryPolicy: TNtxStatus;
+    function RefreshIsAppContainer: TNtxStatus;
+    function RefreshCapabilities: TNtxStatus;
+    function RefreshAppContainerSid: TNtxStatus;
+    function RefreshAppContainerInfo: TNtxStatus;
+    function RefreshAppContainerNumber: TNtxStatus;
+    function RefreshUserClaims: TNtxStatus;
+    function RefreshDeviceClaims: TNtxStatus;
+    function RefreshRestrictedUserClaims: TNtxStatus;
+    function RefreshRestrictedDeviceClaims: TNtxStatus;
+    function RefreshDeviceGroups: TNtxStatus;
+    function RefreshRestrictedDeviceGroups: TNtxStatus;
+    function RefreshSecurityAttributes: TNtxStatus;
+    function RefreshIsLPAC: TNtxStatus;
+    function RefreshIsRestricted: TNtxStatus;
+    function RefreshTrustLevel: TNtxStatus;
+    function RefreshPrivateNamespace: TNtxStatus;
+    function RefreshSingletonAttributes: TNtxStatus;
+    function RefreshBnoIsolation: TNtxStatus;
+    function RefreshIsSandboxed: TNtxStatus;
+    function RefreshOriginatingTrustLevel: TNtxStatus;
+    function SetOwner(const Owner: ISid): TNtxStatus;
+    function SetPrimaryGroup(const PrimaryGroup: ISid): TNtxStatus;
+    function SetDefaultDacl(const DefaultDacl: IAcl): TNtxStatus;
+    function SetSessionId(const SessionId: TSessionId): TNtxStatus;
+    function SetSessionReference(const Reference: LongBool): TNtxStatus;
+    function SetAuditPolicy(const AuditPolicy: ITokenAuditPolicy): TNtxStatus;
+    function SetOrigin(const Origin: TLogonId): TNtxStatus;
+    function SetLinkedToken(const Token: IToken3): TNtxStatus;
+    function SetVirtualizationAllowed(const Allowed: LongBool): TNtxStatus;
+    function SetVirtualizationEnabled(const Enabled: LongBool): TNtxStatus;
+    function SetIntegrity(const Level: TIntegrityRid): TNtxStatus;
+    function SetUIAccess(const UIAccess: LongBool): TNtxStatus;
+    function SetMandatoryPolicy(const Policy: TTokenMandatoryPolicy): TNtxStatus;
+    function SetPrivateNamespace(const PrivateNamespace: LongBool): TNtxStatus;
+    function SetChildProcessFlags(const Blocked: LongBool): TNtxStatus;
+    function AssignToProcess(const hxProcess: IHandle): TNtxStatus;
+    function AssignToThread(const hxThread: IHandle): TNtxStatus;
+    function AssignToThreadSafe(const hxThread: IHandle): TNtxStatus;
+  end;
+
+function CaptureTokenHandle;
+begin
+  Result := TToken.Create(Handle, Caption, KernelAddress);
+end;
+
+{ TToken }
+
+function TToken.AssignToProcess;
+begin
+  Result := NtxAssignPrimaryToken(hxProcess.Handle, hxToken);
+  SmartRefresh;
+end;
+
+function TToken.AssignToThread;
+begin
+  Result := NtxSetThreadToken(hxThread.Handle, hxToken);
+  SmartRefresh;
+end;
+
+function TToken.AssignToThreadSafe;
+begin
+  Result := NtxSafeSetThreadToken(hxThread, hxToken);
+  SmartRefresh;
+end;
+
+constructor TToken.Create;
+begin
+  hxToken := Handle;
+  FCaption := Caption;
+  FKernelObjectAddress := KernelObjectAddress;
+  OnCaptionChange.SetCustomInvoker(SafeStringInvoker);
+end;
+
+function TToken.GetCaption;
+begin
+  Result := FCaption;
+end;
+
+function TToken.GetEvents;
+var
+  Statistics: TTokenStatistics;
+begin
+  if not Assigned(FEvents) then
+  begin
+    // Establish identity of the token.
+    // NOTE: do not use IToken's method to avoid inifinite recursion
+    if not NtxToken.Query(hxToken, TokenStatistics, Statistics).IsSuccess then
+      Statistics.TokenId := 0;
+
+    FEvents := RetrieveTokenEvents(Statistics.TokenId);
+  end;
+
+  Result := FEvents.Data;
+end;
+
+function TToken.GetHandle;
+begin
+  Result := hxToken;
+end;
+
+function TToken.ObserveAppContainerInfo;
+var
+  Info: TAppContainerInfo;
+begin
+  Callback(QueryAppContainerInfo(Info), Info);
+  Result := Events.OnAppContainerInfo.Subscribe(Callback);
+end;
+
+function TToken.ObserveAppContainerNumber;
+var
+  Info: Cardinal;
+begin
+  Callback(QueryAppContainerNumber(Info), Info);
+  Result := Events.OnAppContainerNumber.Subscribe(Callback);
+end;
+
+function TToken.ObserveAppContainerSid;
+var
+  Info: ISid;
+begin
+  Callback(QueryAppContainerSid(Info), Info);
+  Result := Events.OnAppContainerSid.Subscribe(Callback);
+end;
+
+function TToken.ObserveAuditPolicy;
+var
+  Info: ITokenAuditPolicy;
+begin
+  Callback(QueryAuditPolicy(Info), Info);
+  Result := Events.OnAuditPolicy.Subscribe(Callback);
+end;
+
+function TToken.ObserveBasicInfo;
+var
+  Info: TObjectBasicInformation;
+begin
+  Callback(QueryBasicInfo(Info), Info);
+  Result := Events.OnBasicInfo.Subscribe(Callback);
+end;
+
+function TToken.ObserveBnoIsolation;
+var
+  Info: TBnoIsolation;
+begin
+  Callback(QueryBnoIsolation(Info), Info);
+  Result := Events.OnBnoIsolation.Subscribe(Callback);
+end;
+
+function TToken.ObserveCapabilities;
+var
+  Info: TArray<TGroup>;
+begin
+  Callback(QueryCapabilities(Info), Info);
+  Result := Events.OnCapabilities.Subscribe(Callback);
+end;
+
+function TToken.ObserveDefaultDacl;
+var
+  Info: IAcl;
+begin
+  Callback(QueryDefaultDacl(Info), Info);
+  Result := Events.OnDefaultDacl.Subscribe(Callback);
+end;
+
+function TToken.ObserveDeviceClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Callback(QueryDeviceClaims(Info), Info);
+  Result := Events.OnDeviceClaims.Subscribe(Callback);
+end;
+
+function TToken.ObserveDeviceGroups;
+var
+  Info: TArray<TGroup>;
+begin
+  Callback(QueryDeviceGroups(Info), Info);
+  Result := Events.OnDeviceGroups.Subscribe(Callback);
+end;
+
+function TToken.ObserveElevation;
+var
+  Info: TTokenElevationInfo;
+begin
+  Callback(QueryElevation(Info), Info);
+  Result := Events.OnElevation.Subscribe(Callback);
+end;
+
+function TToken.ObserveFlags;
+var
+  Info: TTokenFlags;
+begin
+  Callback(QueryFlags(Info), Info);
+  Result := Events.OnFlags.Subscribe(Callback);
+end;
+
+function TToken.ObserveGroups;
+var
+  Info: TArray<TGroup>;
+begin
+  Callback(QueryGroups(Info), Info);
+  Result := Events.OnGroups.Subscribe(Callback);
+end;
+
+function TToken.ObserveHandles;
+var
+  Info: TArray<TSystemHandleEntry>;
+begin
+  Callback(QueryHandles(Info), Info);
+  Result := Events.OnHandles.Subscribe(Callback);
+end;
+
+function TToken.ObserveHasRestrictions;
+var
+  Info: LongBool;
+begin
+  Callback(QueryHasRestrictions(Info), Info);
+  Result := Events.OnHasRestrictions.Subscribe(Callback);
+end;
+
+function TToken.ObserveImpersonation;
+var
+  Info: TSecurityImpersonationLevel;
+begin
+  Callback(QueryImpersonation(Info), Info);
+  Result := Events.OnImpersonation.Subscribe(Callback);
+end;
+
+function TToken.ObserveIntegrity;
+var
+  Info: TGroup;
+begin
+  Callback(QueryIntegrity(Info), Info);
+  Result := Events.OnIntegrity.Subscribe(Callback);
+end;
+
+function TToken.ObserveIsAppContainer;
+var
+  Info: LongBool;
+begin
+  Callback(QueryIsAppContainer(Info), Info);
+  Result := Events.OnIsAppContainer.Subscribe(Callback);
+end;
+
+function TToken.ObserveIsLPAC;
+var
+  Info: Boolean;
+begin
+  Callback(QueryIsLPAC(Info), Info);
+  Result := Events.OnIsLPAC.Subscribe(Callback);
+end;
+
+function TToken.ObserveIsRestricted;
+var
+  Info: LongBool;
+begin
+  Callback(QueryIsRestricted(Info), Info);
+  Result := Events.OnIsRestricted.Subscribe(Callback);
+end;
+
+function TToken.ObserveIsSandboxed;
+var
+  Info: LongBool;
+begin
+  Callback(QueryIsSandboxed(Info), Info);
+  Result := Events.OnIsSandboxed.Subscribe(Callback);
+end;
+
+function TToken.ObserveKernelAddress;
+var
+  Info: Pointer;
+begin
+  Callback(QueryKernelAddress(Info), Info);
+  Result := Events.OnKernelAddress.Subscribe(Callback);
+end;
+
+function TToken.ObserveMandatoryPolicy;
+var
+  Info: TTokenMandatoryPolicy;
+begin
+  Callback(QueryMandatoryPolicy(Info), Info);
+  Result := Events.OnMandatoryPolicy.Subscribe(Callback);
+end;
+
+function TToken.ObserveOrigin;
+var
+  Info: TLogonId;
+begin
+  Callback(QueryOrigin(Info), Info);
+  Result := Events.OnOrigin.Subscribe(Callback);
+end;
+
+function TToken.ObserveOriginatingTrustLevel;
+var
+  Info: ISid;
+begin
+  Callback(QueryOriginatingTrustLevel(Info), Info);
+  Result := Events.OnOriginatingTrustLevel.Subscribe(Callback);
+end;
+
+function TToken.ObserveOwner;
+var
+  Info: ISid;
+begin
+  Callback(QueryOwner(Info), Info);
+  Result := Events.OnOwner.Subscribe(Callback);
+end;
+
+function TToken.ObservePrimaryGroup;
+var
+  Info: ISid;
+begin
+  Callback(QueryPrimaryGroup(Info), Info);
+  Result := Events.OnPrimaryGroup.Subscribe(Callback);
+end;
+
+function TToken.ObservePrivateNamespace;
+var
+  Info: LongBool;
+begin
+  Callback(QueryPrivateNamespace(Info), Info);
+  Result := Events.OnPrivateNamespace.Subscribe(Callback);
+end;
+
+function TToken.ObservePrivileges;
+var
+  Info: TArray<TPrivilege>;
+begin
+  Callback(QueryPrivileges(Info), Info);
+  Result := Events.OnPrivileges.Subscribe(Callback);
+end;
+
+function TToken.ObserveRestrictedDeviceClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Callback(QueryRestrictedDeviceClaims(Info), Info);
+  Result := Events.OnRestrictedDeviceClaims.Subscribe(Callback);
+end;
+
+function TToken.ObserveRestrictedDeviceGroups;
+var
+  Info: TArray<TGroup>;
+begin
+  Callback(QueryRestrictedDeviceGroups(Info), Info);
+  Result := Events.OnRestrictedDeviceGroups.Subscribe(Callback);
+end;
+
+function TToken.ObserveRestrictedSids;
+var
+  Info: TArray<TGroup>;
+begin
+  Callback(QueryRestrictedSids(Info), Info);
+  Result := Events.OnRestrictedSids.Subscribe(Callback);
+end;
+
+function TToken.ObserveRestrictedUserClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Callback(QueryRestrictedUserClaims(Info), Info);
+  Result := Events.OnRestrictedUserClaims.Subscribe(Callback);
+end;
+
+function TToken.ObserveSandboxInert;
+var
+  Info: LongBool;
+begin
+  Callback(QuerySandboxInert(Info), Info);
+  Result := Events.OnSandboxInert.Subscribe(Callback);
+end;
+
+function TToken.ObserveSecurityAttributes;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Callback(QuerySecurityAttributes(Info), Info);
+  Result := Events.OnSecurityAttributes.Subscribe(Callback);
+end;
+
+function TToken.ObserveSessionId;
+var
+  Info: TSessionId;
+begin
+  Callback(QuerySessionId(Info), Info);
+  Result := Events.OnSessionId.Subscribe(Callback);
+end;
+
+function TToken.ObserveSingletonAttributes;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Callback(QuerySingletonAttributes(Info), Info);
+  Result := Events.OnSingletonAttributes.Subscribe(Callback);
+end;
+
+function TToken.ObserveSource;
+var
+  Info: TTokenSource;
+begin
+  Callback(QuerySource(Info), Info);
+  Result := Events.OnSource.Subscribe(Callback);
+end;
+
+function TToken.ObserveStatistics;
+var
+  Info: TTokenStatistics;
+begin
+  Callback(QueryStatistics(Info), Info);
+  Result := Events.OnStatistics.Subscribe(Callback);
+end;
+
+function TToken.ObserveString;
+begin
+  Callback(InfoClass, QueryString(InfoClass, ForceRefresh));
+
+  case InfoClass of
+    // Use per-handle event
+    tsCaption: Result := OnCaptionChange.Subscribe(Callback);
+
+    // Assume these per-handle values never change
+    tsHandle, tsAccess: Result := nil;
+  else
+    // Subscribe for per-kernel-object events
+    Result := Events.OnStringChange[InfoClass].Subscribe(Callback);
+  end;
+end;
+
+function TToken.ObserveTrustLevel;
+var
+  Info: ISid;
+begin
+  Callback(QueryTrustLevel(Info), Info);
+  Result := Events.OnTrustLevel.Subscribe(Callback);
+end;
+
+function TToken.ObserveType;
+var
+  Info: TTokenType;
+begin
+  Callback(QueryType(Info), Info);
+  Result := Events.OnType.Subscribe(Callback);
+end;
+
+function TToken.ObserveUIAccess;
+var
+  Info: LongBool;
+begin
+  Callback(QueryUIAccess(Info), Info);
+  Result := Events.OnUIAccess.Subscribe(Callback);
+end;
+
+function TToken.ObserveUser;
+var
+  Info: TGroup;
+begin
+  Callback(QueryUser(Info), Info);
+  Result := Events.OnUser.Subscribe(Callback);
+end;
+
+function TToken.ObserveUserClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Callback(QueryUserClaims(Info), Info);
+  Result := Events.OnUserClaims.Subscribe(Callback);
+end;
+
+function TToken.ObserveVirtualizationAllowed;
+var
+  Info: LongBool;
+begin
+  Callback(QueryVirtualizationAllowed(Info), Info);
+  Result := Events.OnVirtualizationAllowed.Subscribe(Callback);
+end;
+
+function TToken.ObserveVirtualizationEnabled;
+var
+  Info: LongBool;
+begin
+  Callback(QueryVirtualizationAllowed(Info), Info);
+  Result := Events.OnVirtualizationAllowed.Subscribe(Callback);
+end;
+
+function TToken.QueryAppContainerInfo;
+var
+  User: TGroup;
+  Package: ISid;
+begin
+  // App container profiles are per-user
+  Result := QueryUser(User);
+
+  // Determine package SID
+  if Result.IsSuccess then
+    Result := QueryAppContainerSid(Package);
+
+  if Result.IsSuccess and not Assigned(Package) then
+  begin
+    Result.Location := 'TToken.QueryAppContainerInfo';
+    Result.Status := STATUS_NO_APPLICATION_PACKAGE;
+  end;
+
+  // Read profile info from the registry
+  if Result.IsSuccess then
+    Result := UnvxQueryAppContainer(AppContainer, Package, User.Sid);
+
+  if Result.IsSuccess then
+  begin
+    Events.StringCache[tsAppContainerName] := AppContainer.Name;
+    Events.StringCache[tsAppContainerDisplayName] := AppContainer.DisplayName;
+  end;
+
+  Events.OnAppContainerInfo.Notify(Result, AppContainer);
+end;
+
+function TToken.QueryAppContainerNumber;
+begin
+  Result := NtxToken.Query(hxToken, TokenAppContainerNumber, Number);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsAppContainerNumber] := IntToStrEx(Number);
+
+  Events.OnAppContainerNumber.Notify(Result, Number);
+end;
+
+function TToken.QueryAppContainerSid;
+begin
+  Result := NtxQuerySidToken(hxToken, TokenAppContainerSid, Package);
+
+  if Result.IsSuccess and not Assigned(Package) then
+  begin
+    Events.StringCache[tsAppContainerName] := '(None)';
+    Events.StringCache[tsAppContainerDisplayName] := '(None)';
+  end;
+
+  Events.OnAppContainerSid.Notify(Result, Package);
+end;
+
+function TToken.QueryAuditPolicy;
+begin
+  Result := NtxQueryToken(hxToken, TokenAuditPolicy, IMemory(AuditPolicy));
+  Events.OnAuditPolicy.Notify(Result, AuditPolicy);
+end;
+
+function TToken.QueryBasicInfo;
+begin
+  Result := NtxObject.Query(hxToken.Handle, ObjectBasicInformation, Info);
+
+  if Result.IsSuccess then
+    FAccessMask := Info.GrantedAccess.Format<TTokenAccessMask>;
+
+  Events.OnBasicInfo.Notify(Result, Info);
+end;
+
+function TToken.QueryBnoIsolation;
+begin
+  Result := NtxQueryBnoIsolationToken(hxToken, Isolation);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsBnoIsolation] := EnabledDisabledToString(
+      Isolation.Enabled);
+
+  Events.OnBnoIsolation.Notify(Result, Isolation);
+end;
+
+function TToken.QueryCapabilities;
+begin
+  Result := NtxQueryGroupsToken(hxToken, TokenCapabilities, Capabilities);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsCapabilities] := IntToStrEx(Length(Capabilities));
+
+  Events.OnCapabilities.Notify(Result, Capabilities);
+end;
+
+function TToken.QueryDefaultDacl;
+begin
+  Result := NtxQueryDefaultDaclToken(hxToken, DefaultDacl);
+  Events.OnDefaultDacl.Notify(Result, DefaultDacl);
+end;
+
+function TToken.QueryDeviceClaims;
+begin
+  Result := NtxQueryClaimsToken(hxToken, TokenDeviceClaimAttributes, Claims);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsDeviceClaims] := IntToStrEx(Length(Claims));
+
+  Events.OnDeviceClaims.Notify(Result, Claims);
+end;
+
+function TToken.QueryDeviceGroups;
+begin
+  Result := NtxQueryGroupsToken(hxToken, TokenDeviceGroups, Groups);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsDeviceGroups] := IntToStrEx(Length(Groups));
+
+  Events.OnDeviceGroups.Notify(Result, Groups);
+end;
+
+function TToken.QueryElevation;
+begin
+  Result := NtxToken.Query(hxToken, TokenElevation, Elevation.Elevated);
+
+  if Result.IsSuccess then
+    Result := NtxToken.Query(hxToken, TokenElevationType,
+      Elevation.ElevationType);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsElevation] := Elevation.ToString;
+
+  Events.OnElevation.Notify(Result, Elevation);
+end;
+
+function TToken.QueryFlags;
+begin
+  Result := NtxQueryFlagsToken(hxToken, Flags);
+
+  if Result.IsSuccess then
+  begin
+    Events.StringCache[tsFlags] := TNumeric.Represent(Flags).Text;
+
+    if BitTest(Flags and TOKEN_WRITE_RESTRICTED) then
+      Events.StringCache[tsRestricted] := 'Write-only'
+    else
+      Events.StringCache[tsRestricted] := YesNoToString(
+        BitTest(Flags and TOKEN_IS_RESTRICTED));
+
+    Events.StringCache[tsSessionReference] := YesNoToString(
+      not BitTest(Flags and TOKEN_SESSION_NOT_REFERENCED));
+
+    Events.StringCache[tsSandBoxInert] := EnabledDisabledToString(
+      BitTest(Flags and TOKEN_SANDBOX_INERT));
+
+    if BitTest(Flags and TOKEN_VIRTUALIZE_ALLOWED) then
+      Events.StringCache[tsVirtualization] := EnabledDisabledToString(
+        BitTest(Flags and TOKEN_VIRTUALIZE_ENABLED))
+    else if not BitTest(Flags and TOKEN_VIRTUALIZE_ENABLED) then
+      Events.StringCache[tsVirtualization] := 'Not allowed'
+    else
+      Events.StringCache[tsVirtualization] := 'Disallowed & Enabled';
+
+    Events.StringCache[tsFiltered] := YesNoToString(
+      BitTest(Flags and TOKEN_IS_FILTERED));
+
+    Events.StringCache[tsUIAccess] := EnabledDisabledToString(
+      BitTest(Flags and TOKEN_UIACCESS));
+
+    Events.StringCache[tsLowBox] := YesNoToString(
+      BitTest(Flags and TOKEN_LOWBOX));
+
+    Events.StringCache[tsPrivateNamespace] := YesNoToString(
+      BitTest(Flags and TOKEN_PRIVATE_NAMESPACE));
+
+    if BitTest(Flags and TOKEN_NO_CHILD_PROCESS) then
+      Events.StringCache[tsChildFlags] := 'Blocked'
+    else if BitTest(Flags and TOKEN_NO_CHILD_PROCESS_UNLESS_SECURE) then
+      Events.StringCache[tsChildFlags] := 'Blocked Unless Secure'
+    else if BitTest(Flags and TOKEN_NO_CHILD_PROCESS) then
+      Events.StringCache[tsChildFlags] := 'Audit'
+    else
+      Events.StringCache[tsChildFlags] := 'Allowed';
+
+    Events.StringCache[tsPermissiveLearning] := EnabledDisabledToString(
+      BitTest(Flags and TOKEN_PERMISSIVE_LEARNING_MODE));
+
+    if BitTest(Flags and TOKEN_ENFORCE_REDIRECTION_TRUST) then
+      Events.StringCache[tsRedirectionTrust] := 'Enforced'
+    else if BitTest(Flags and TOKEN_AUDIT_REDIRECTION_TRUST) then
+      Events.StringCache[tsRedirectionTrust] := 'Audit'
+    else
+      Events.StringCache[tsRedirectionTrust] := 'Disabled';
+  end;
+
+  Events.OnFlags.Notify(Result, Flags);
+end;
+
+function TToken.QueryGroups;
+begin
+  Result := NtxQueryGroupsToken(hxToken, TokenGroups, Groups);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsGroups] := IntToStrEx(Length(Groups));
+
+  Events.OnGroups.Notify(Result, Groups);
+end;
+
+function TToken.QueryHandles;
+begin
+  Result := NtxEnumerateHandles(Handles);
+
+  if Result.IsSuccess then
+  begin
+    NtxFilterHandlesByHandle(Handles, hxToken.Handle);
+
+    // Save kernel object address
+    if Length(Handles) > 0 then
+    begin
+      FKernelObjectAddress := Handles[0].PObject;
+      Events.StringCache[tsAddress] := PtrToHexEx(FKernelObjectAddress);
+    end
+    else
+      FKernelObjectAddress := nil;
+  end;
+
+  Events.OnHandles.Notify(Result, Handles);
+end;
+
+function TToken.QueryHasRestrictions;
+begin
+  Result := NtxToken.Query(hxToken, TokenHasRestrictions, HasRestrictions);
+  Events.OnHasRestrictions.Notify(Result, HasRestrictions);
+end;
+
+function TToken.QueryImpersonation;
+begin
+  Result := NtxToken.Query(hxToken, TokenImpersonationLevel, Level);
+  Events.OnImpersonation.Notify(Result, Level);
+end;
+
+function TToken.QueryIntegrity;
+begin
+  Result := NtxQueryGroupToken(hxToken, TokenIntegrityLevel, Integrity);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsIntegrity] := TNumeric.Represent<TIntegrityRid>(
+      RtlxRidSid(Integrity.Sid, SECURITY_MANDATORY_UNTRUSTED_RID)).Text;
+
+  Events.OnIntegrity.Notify(Result, Integrity);
+end;
+
+function TToken.QueryIsAppContainer;
+begin
+  Result := NtxToken.Query(hxToken, TokenIsAppContainer, IsAppContainer);
+
+  if Result.IsSuccess then
+    Events.OnIsAppContainer.Notify(Result, IsAppContainer);
+end;
+
+function TToken.QueryIsLPAC;
+begin
+  Result := NtxQueryLpacToken(hxToken, IsLPAC);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsLPAC] := YesNoToString(IsLPAC);
+
+  Events.OnIsLPAC.Notify(Result, IsLPAC);
+end;
+
+function TToken.QueryIsRestricted;
+begin
+  Result := NtxToken.Query(hxToken, TokenIsRestricted, IsRestricted);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsIsRestricted] := YesNoToString(IsRestricted);
+
+  Events.OnIsRestricted.Notify(Result, IsRestricted);
+end;
+
+function TToken.QueryIsSandboxed;
+begin
+  Result := NtxToken.Query(hxToken, TokenIsSandboxed, IsSandboxed);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsIsSandboxed] := YesNoToString(IsSandboxed);
+
+  Events.OnIsSandboxed.Notify(Result, IsSandboxed);
+end;
+
+function TToken.QueryKernelAddress;
+var
+  Handles: TArray<TSystemHandleEntry>;
+begin
+  if ForceRefresh then
+    FKernelObjectAddress := nil;
+
+  if Assigned(FKernelObjectAddress) then
+  begin
+    Result.Status := STATUS_SUCCESS;
+    ObjectAddress := FKernelObjectAddress;
+    Exit;
+  end;
+
+  // Invoke handle snapshotting which will update the cached address value
+  Result := QueryHandles(Handles);
+
+  if Result.IsSuccess and (Length(Handles) <= 0) then
+  begin
+    Result.Location := 'TToken.QueryKernelAddress';
+    Result.Status := STATUS_NOT_FOUND;
+  end;
+
+  if Result.IsSuccess then
+    ObjectAddress := FKernelObjectAddress;
+
+  Events.OnKernelAddress.Notify(Result, ObjectAddress);
+end;
+
+function TToken.QueryLinkedToken;
+var
+  hToken: THandle;
+begin
+  Result := NtxToken.Query(hxToken, TokenLinkedToken, hToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(NtxObject.Capture(hToken),
+      'Linked token for ' + FCaption);
+end;
+
+function TToken.QueryMandatoryPolicy;
+begin
+  Result := NtxToken.Query(hxToken, TokenMandatoryPolicy, Policy);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsMandatoryPolicy] := TNumeric.Represent(Policy).Text;
+
+  Events.OnMandatoryPolicy.Notify(Result, Policy);
+end;
+
+function TToken.QueryOrigin;
+begin
+  Result := NtxToken.Query(hxToken, TokenOrigin, Origin);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsOrigin] := IntToHexEx(Origin);
+
+  Events.OnOrigin.Notify(Result, Origin);
+end;
+
+function TToken.QueryOriginatingTrustLevel;
+begin
+  Result := NtxQuerySidToken(hxToken, TokenOriginatingProcessTrustLevel,
+    TrustLevel);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsOriginTrustLevel] := TrustLevelToString(TrustLevel);
+
+  Events.OnOriginatingTrustLevel.Notify(Result, TrustLevel);
+end;
+
+function TToken.QueryOwner;
+begin
+  Result := NtxQuerySidToken(hxToken, TokenOwner, Owner);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsOwner] := LsaxSidToString(Owner);
+
+  Events.OnOwner.Notify(Result, Owner);
+end;
+
+function TToken.QueryPrimaryGroup;
+begin
+  Result := NtxQuerySidToken(hxToken, TokenPrimaryGroup, PrimaryGroup);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsPrimaryGroup] := LsaxSidToString(PrimaryGroup);
+
+  Events.OnPrimaryGroup.Notify(Result, PrimaryGroup);
+end;
+
+function TToken.QueryPrivateNamespace;
+begin
+  Result := NtxToken.Query(hxToken, TokenPrivateNameSpace, PrivateNamespace);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsPrivateNamespace] := YesNoToString(PrivateNamespace);
+
+  Events.OnPrivateNamespace.Notify(Result, PrivateNamespace);
+end;
+
+function TToken.QueryPrivileges;
+begin
+  Result := NtxQueryPrivilegesToken(hxToken, Privileges);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsPrivileges] := IntToStrEx(Length(Privileges));
+
+  Events.OnPrivileges.Notify(Result, Privileges);
+end;
+
+function TToken.QueryRestrictedDeviceClaims;
+begin
+  Result := NtxQueryClaimsToken(hxToken, TokenRestrictedUserClaimAttributes,
+    Claims);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsRestrictedDeviceClaims] := IntToStrEx(Length(Claims));
+
+  Events.OnRestrictedDeviceClaims.Notify(Result, Claims);
+end;
+
+function TToken.QueryRestrictedDeviceGroups;
+begin
+  Result := NtxQueryGroupsToken(hxToken, TokenRestrictedDeviceGroups, Groups);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsRestrictedDeviceGroups] := IntToStrEx(Length(Groups));
+
+  Events.OnRestrictedDeviceGroups.Notify(Result, Groups);
+end;
+
+function TToken.QueryRestrictedSids;
+begin
+  Result := NtxQueryGroupsToken(hxToken, TokenRestrictedSids, Sids);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsRestrictedSids] := IntToStrEx(Length(Sids));
+
+  Events.OnRestrictedSids.Notify(Result, Sids);
+end;
+
+function TToken.QueryRestrictedUserClaims;
+begin
+  Result := NtxQueryClaimsToken(hxToken, TokenRestrictedDeviceClaimAttributes,
+    Claims);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsRestrictedUserClaims] := IntToStrEx(Length(Claims));
+
+  Events.OnRestrictedUserClaims.Notify(Result, Claims);
+end;
+
+function TToken.QuerySandboxInert;
+begin
+  Result := NtxToken.Query(hxToken, TokenSandBoxInert, SandboxInert);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsSandBoxInert] := EnabledDisabledToString(SandboxInert);
+
+  Events.OnSandboxInert.Notify(Result, SandboxInert);
+end;
+
+function TToken.QuerySecurityAttributes;
+begin
+  Result := NtxQueryAttributesToken(hxToken, TokenSecurityAttributes, Attributes);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsSecAttributes] := IntToStrEx(Length(Attributes));
+
+  Events.OnSecurityAttributes.Notify(Result, Attributes);
+end;
+
+function TToken.QuerySessionId;
+begin
+  Result := NtxToken.Query(hxToken, TokenSessionId, SessionId);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsSessionId] := IntToStrEx(SessionId);
+
+  Events.OnSessionId.Notify(Result, SessionId);
+end;
+
+function TToken.QuerySingletonAttributes;
+begin
+  Result := NtxQueryAttributesToken(hxToken, TokenSingletonAttributes,
+    Attributes);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsSingletonAttributes] := IntToStrEx(Length(Attributes));
+
+  Events.OnSingletonAttributes.Notify(Result, Attributes);
+end;
+
+function TToken.QuerySource;
+begin
+  Result := NtxToken.Query(hxToken, TokenSource, Source);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsSource] := Source.Name;
+
+  Events.OnSource.Notify(Result, Source);
+end;
+
+function TToken.QueryStatistics;
+begin
+  Result := NtxToken.Query(hxToken, TokenStatistics, Statistics);
+
+  if Result.IsSuccess then
+  begin
+    Events.StringCache[tsTokenId] := IntToHexEx(Statistics.TokenId);
+    Events.StringCache[tsLogonId] := IntToHexEx(Statistics.AuthenticationId);
+
+    if Statistics.TokenType = TokenPrimary then
+      Events.StringCache[tsType] := 'Primary'
+    else
+      Events.StringCache[tsType] := TNumeric.Represent(
+        Statistics.ImpersonationLevel).Text;
+
+    Events.StringCache[tsGroups] := IntToStrEx(Statistics.GroupCount);
+    Events.StringCache[tsPrivileges] := IntToStrEx(Statistics.PrivilegeCount);
+    Events.StringCache[tsModifiedId] := IntToHexEx(Statistics.ModifiedId);
+  end;
+
+  Events.OnStatistics.Notify(Result, Statistics);
+end;
+
+function TToken.QueryString;
+var
+  KernelAddress: Pointer;
+  Success: Boolean;
+begin
+  // Reset the cache on forced refresh without triggering the events
+  if ForceRefresh then
+    Events.FStrings[InfoClass] := '';
+
+  // Check per-handle properties
+  case InfoClass of
+    tsCaption: Exit(FCaption);
+    tsHandle: Exit(IntToHexEx(hxToken.Handle));
+    tsAccess:
+      begin
+        if ForceRefresh then
+          FAccessMask := '';
+
+        if (FAccessMask <> '') or RefreshBasicInfo.IsSuccess then
+          Exit(FAccessMask);
+      end;
+  end;
+
+  // Try to retrieve cached per-object properties
+  if Events.StringCache[InfoClass] <> '' then
+    Exit(Events.StringCache[InfoClass]);
+
+  Success := False;
+
+  // Query the information and populate the cached strings
+  case InfoClass of
+    tsAddress:                 Success := QueryKernelAddress(KernelAddress, ForceRefresh).IsSuccess;
+    tsUser:                    Success := RefreshUser.IsSuccess;
+    tsOwner:                   Success := RefreshOwner.IsSuccess;
+    tsPrimaryGroup:            Success := RefreshPrimaryGroup.IsSuccess;
+    tsSource:                  Success := RefreshSource.IsSuccess;
+    tsGroups,
+    tsPrivileges,
+    tsType,
+    tsTokenId,
+    tsLogonId,
+    tsModifiedId:              Success := RefreshStatistics.IsSuccess;
+    tsRestrictedSids:          Success := RefreshRestrictedSids.IsSuccess;
+    tsSessionId:               Success := RefreshSessionId.IsSuccess;
+    tsOrigin:                  Success := RefreshOrigin.IsSuccess;
+    tsElevation:               Success := RefreshElevation.IsSuccess;
+    tsSandBoxInert,
+    tsFlags,
+    tsRestricted,
+    tsSessionReference,
+    tsVirtualization,
+    tsFiltered,
+    tsUIAccess,
+    tsLowBox,
+    tsPrivateNamespace,
+    tsChildFlags,
+    tsPermissiveLearning,
+    tsRedirectionTrust:        Success := RefreshFlags.IsSuccess;
+    tsIntegrity:               Success := RefreshIntegrity.IsSuccess;
+    tsMandatoryPolicy:         Success := RefreshMandatoryPolicy.IsSuccess;
+    tsCapabilities:            Success := RefreshCapabilities.IsSuccess;
+    tsAppContainerNumber:      Success := RefreshAppContainerNumber.IsSuccess;
+    tsAppContainerName,
+    tsAppContainerDisplayName: Success := RefreshAppContainerInfo.IsSuccess;
+    tsUserClaims:              Success := RefreshUserClaims.IsSuccess;
+    tsDeviceClaims:            Success := RefreshDeviceClaims.IsSuccess;
+    tsRestrictedUserClaims:    Success := RefreshRestrictedUserClaims.IsSuccess;
+    tsRestrictedDeviceClaims:  Success := RefreshRestrictedDeviceClaims.IsSuccess;
+    tsDeviceGroups:            Success := RefreshDeviceGroups.IsSuccess;
+    tsRestrictedDeviceGroups:  Success := RefreshRestrictedDeviceGroups.IsSuccess;
+    tsSecAttributes:           Success := RefreshSecurityAttributes.IsSuccess;
+    tsLPAC:                    Success := RefreshIsLPAC.IsSuccess;
+    tsIsRestricted:            Success := RefreshIsRestricted.IsSuccess;
+    tsTrustLevel:              Success := RefreshTrustLevel.IsSuccess;
+    tsSingletonAttributes:     Success := RefreshSingletonAttributes.IsSuccess;
+    tsBnoIsolation:            Success := RefreshBnoIsolation.IsSuccess;
+    tsIsSandboxed:             Success := RefreshIsSandboxed.IsSuccess;
+    tsOriginTrustLevel:        Success := RefreshOriginatingTrustLevel.IsSuccess;
+  end;
+
+  if Success then
+    Result := Events.StringCache[InfoClass]
+  else
+    Result := 'Unknown';
+end;
+
+function TToken.QueryTrustLevel;
+begin
+  Result := NtxQuerySidToken(hxToken, TokenProcessTrustLevel, TrustLevel);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsTrustLevel] := TrustLevelToString(TrustLevel);
+
+  Events.OnTrustLevel.Notify(Result, TrustLevel);
+end;
+
+function TToken.QueryType;
+begin
+  Result := NtxToken.Query(hxToken, TokenType, &Type);
+  Events.OnType.Notify(Result, &Type);
+end;
+
+function TToken.QueryUIAccess;
+begin
+  Result := NtxToken.Query(hxToken, TokenUIAccess, UIAccess);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsUIAccess] := EnabledDisabledToString(UIAccess);
+
+  Events.OnUIAccess.Notify(Result, UIAccess);
+end;
+
+function TToken.QueryUser;
+begin
+  Result := NtxQueryGroupToken(hxToken, TokenUser, User);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsUser] := LsaxSidToString(User.Sid);
+
+  Events.OnUser.Notify(Result, User);
+end;
+
+function TToken.QueryUserClaims;
+begin
+  Result := NtxQueryClaimsToken(hxToken, TokenUserClaimAttributes, Claims);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsUserClaims] := IntToStrEx(Length(Claims));
+
+  Events.OnUserClaims.Notify(Result, Claims);
+end;
+
+function TToken.QueryVirtualizationAllowed;
+begin
+  Result := NtxToken.Query(hxToken, TokenVirtualizationAllowed, Allowed);
+  Events.OnVirtualizationAllowed.Notify(Result, Allowed);
+end;
+
+function TToken.QueryVirtualizationEnabled;
+begin
+  Result := NtxToken.Query(hxToken, TokenVirtualizationEnabled, Enabled);
+  Events.OnVirtualizationEnabled.Notify(Result, Enabled);
+end;
+
+function TToken.RefreshAppContainerInfo;
+var
+  Info: TAppContainerInfo;
+begin
+  Result := QueryAppContainerInfo(Info);
+end;
+
+function TToken.RefreshAppContainerNumber;
+var
+  Info: Cardinal;
+begin
+  Result := QueryAppContainerNumber(Info);
+end;
+
+function TToken.RefreshAppContainerSid;
+var
+  Info: ISid;
+begin
+  Result := QueryAppContainerSid(Info);
+end;
+
+function TToken.RefreshAuditPolicy;
+var
+  Info: ITokenAuditPolicy;
+begin
+  Result := QueryAuditPolicy(Info);
+end;
+
+function TToken.RefreshBasicInfo;
+var
+  Info: TObjectBasicInformation;
+begin
+  Result := QueryBasicInfo(Info);
+end;
+
+function TToken.RefreshBnoIsolation;
+var
+  Info: TBnoIsolation;
+begin
+  Result := QueryBnoIsolation(Info);
+end;
+
+function TToken.RefreshCapabilities;
+var
+  Info: TArray<TGroup>;
+begin
+  Result := QueryCapabilities(Info);
+end;
+
+function TToken.RefreshDefaultDacl;
+var
+  Info: IAcl;
+begin
+  Result := QueryDefaultDacl(Info);
+end;
+
+function TToken.RefreshDeviceClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Result := QueryDeviceClaims(Info);
+end;
+
+function TToken.RefreshDeviceGroups;
+var
+  Info: TArray<TGroup>;
+begin
+  Result := QueryDeviceGroups(Info);
+end;
+
+function TToken.RefreshElevation;
+var
+  Info: TTokenElevationInfo;
+begin
+  Result := QueryElevation(Info);
+end;
+
+function TToken.RefreshFlags;
+var
+  Info: TTokenFlags;
+begin
+  Result := QueryFlags(Info);
+end;
+
+function TToken.RefreshGroups;
+var
+  Info: TArray<TGroup>;
+begin
+  Result := QueryGroups(Info);
+end;
+
+function TToken.RefreshHandles;
+var
+  Info: TArray<TSystemHandleEntry>;
+begin
+  Result := QueryHandles(Info);
+end;
+
+function TToken.RefreshHasRestrictions;
+var
+  Info: LongBool;
+begin
+  Result := QueryHasRestrictions(Info);
+end;
+
+function TToken.RefreshImpersonation;
+var
+  Info: TSecurityImpersonationLevel;
+begin
+  Result := QueryImpersonation(Info);
+end;
+
+function TToken.RefreshIntegrity;
+var
+  Info: TGroup;
+begin
+  Result := QueryIntegrity(Info);
+end;
+
+function TToken.RefreshIsAppContainer;
+var
+  Info: LongBool;
+begin
+  Result := QueryIsAppContainer(Info);
+end;
+
+function TToken.RefreshIsLPAC;
+var
+  Info: Boolean;
+begin
+  Result := QueryIsLPAC(Info);
+end;
+
+function TToken.RefreshIsRestricted;
+var
+  Info: LongBool;
+begin
+  Result := QueryIsRestricted(Info);
+end;
+
+function TToken.RefreshIsSandboxed;
+var
+  Info: LongBool;
+begin
+  Result := QueryIsSandboxed(Info);
+end;
+
+function TToken.RefreshKernelAddress;
+var
+  Info: Pointer;
+begin
+  Result := QueryKernelAddress(Info, True);
+end;
+
+function TToken.RefreshMandatoryPolicy;
+var
+  Info: TTokenMandatoryPolicy;
+begin
+  Result := QueryMandatoryPolicy(Info);
+end;
+
+function TToken.RefreshOrigin;
+var
+  Info: TLogonId;
+begin
+  Result := QueryOrigin(Info);
+end;
+
+function TToken.RefreshOriginatingTrustLevel;
+var
+  Info: ISid;
+begin
+  Result := QueryOriginatingTrustLevel(Info);
+end;
+
+function TToken.RefreshOwner;
+var
+  Info: ISid;
+begin
+  Result := QueryOwner(Info);
+end;
+
+function TToken.RefreshPrimaryGroup;
+var
+  Info: ISid;
+begin
+  Result := QueryPrimaryGroup(Info);
+end;
+
+function TToken.RefreshPrivateNamespace;
+var
+  Info: LongBool;
+begin
+  Result := QueryPrivateNamespace(Info);
+end;
+
+function TToken.RefreshPrivileges;
+var
+  Info: TArray<TPrivilege>;
+begin
+  Result := QueryPrivileges(Info);
+end;
+
+function TToken.RefreshRestrictedDeviceClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Result := QueryRestrictedDeviceClaims(Info);
+end;
+
+function TToken.RefreshRestrictedDeviceGroups;
+var
+  Info: TArray<TGroup>;
+begin
+  Result := QueryRestrictedDeviceGroups(Info);
+end;
+
+function TToken.RefreshRestrictedSids;
+var
+  Info: TArray<TGroup>;
+begin
+  Result := QueryRestrictedSids(Info);
+end;
+
+function TToken.RefreshRestrictedUserClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Result := QueryRestrictedUserClaims(Info);
+end;
+
+function TToken.RefreshSandboxInert;
+var
+  Info: LongBool;
+begin
+  Result := QuerySandboxInert(Info);
+end;
+
+function TToken.RefreshSecurityAttributes;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Result := QuerySecurityAttributes(Info);
+end;
+
+function TToken.RefreshSessionId;
+var
+  Info: TSessionId;
+begin
+  Result := QuerySessionId(Info);
+end;
+
+function TToken.RefreshSingletonAttributes;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Result := QuerySingletonAttributes(Info);
+end;
+
+function TToken.RefreshSource;
+var
+  Info: TTokenSource;
+begin
+  Result := QuerySource(Info);
+end;
+
+function TToken.RefreshStatistics;
+var
+  Info: TTokenStatistics;
+begin
+  Result := QueryStatistics(Info);
+end;
+
+procedure TToken.RefreshString;
+begin
+  // Skip values that don't change or stored as private fields
+  if not (InfoClass in [tsCaption, tsHandle, tsAccess]) then
+    QueryString(InfoClass, True);
+end;
+
+function TToken.RefreshTrustLevel;
+var
+  Info: ISid;
+begin
+  Result := QueryTrustLevel(Info);
+end;
+
+function TToken.RefreshType;
+var
+  Info: TTokenType;
+begin
+  Result := QueryType(Info);
+end;
+
+function TToken.RefreshUIAccess;
+var
+  Info: LongBool;
+begin
+  Result := QueryUIAccess(Info);
+end;
+
+function TToken.RefreshUser;
+var
+  Info: TGroup;
+begin
+  Result := QueryUser(Info);
+end;
+
+function TToken.RefreshUserClaims;
+var
+  Info: TArray<TSecurityAttribute>;
+begin
+  Result := QueryUserClaims(Info);
+end;
+
+function TToken.RefreshVirtualizationAllowed;
+var
+  Info: LongBool;
+begin
+  Result := QueryVirtualizationAllowed(Info);
+end;
+
+function TToken.RefreshVirtualizationEnabled;
+var
+  Info: LongBool;
+begin
+  Result := QueryVirtualizationAllowed(Info);
+end;
+
+function TToken.SetAuditPolicy;
+begin
+  Result := NtxSetToken(hxToken, TokenAuditPolicy, AuditPolicy.Data,
+    AuditPolicy.Size);
+  SmartRefresh;
+end;
+
+procedure TToken.SetCaption;
+begin
+  if FCaption <> Value then
+  begin
+    FCaption := Value;
+    OnCaptionChange.Invoke(tsCaption, Value);
+  end;
+end;
+
+function TToken.SetChildProcessFlags;
+begin
+  Result := NtxToken.Set(hxToken, TokenChildProcessFlags, Blocked);
+  SmartRefresh;
+end;
+
+function TToken.SetDefaultDacl;
+begin
+  Result := NtxSetDefaultDaclToken(hxToken, DefaultDacl);
+  SmartRefresh;
+end;
+
+function TToken.SetIntegrity;
+begin
+  Result := NtxSetIntegrityToken(hxToken, Level);
+  SmartRefresh;
+end;
+
+function TToken.SetLinkedToken;
+var
+  hToken: THandle;
+begin
+  hToken := Token.Handle.Handle;
+  Result := NtxToken.Set(hxToken, TokenLinkedToken, hToken);
+
+  // Linking logon session changes elevation type of both tokens
+  SmartRefresh;
+  Token.SmartRefresh;
+end;
+
+function TToken.SetMandatoryPolicy;
+begin
+  Result := NtxToken.Set(hxToken, TokenMandatoryPolicy, Policy);
+  SmartRefresh;
+end;
+
+function TToken.SetOrigin;
+begin
+  Result := NtxToken.Set(hxToken, TokenOrigin, Origin);
+  SmartRefresh;
+end;
+
+function TToken.SetOwner;
+var
+  Buffer: TTokenSidInformation;
+begin
+  Buffer.Sid := Owner.Data;
+  Result := NtxToken.Set(hxToken, TokenOwner, Buffer);
+  SmartRefresh;
+end;
+
+function TToken.SetPrimaryGroup;
+var
+  Buffer: TTokenSidInformation;
+begin
+  Buffer.Sid := PrimaryGroup.Data;
+  Result := NtxToken.Set(hxToken, TokenPrimaryGroup, Buffer);
+  SmartRefresh;
+end;
+
+function TToken.SetPrivateNamespace;
+begin
+  Result := NtxToken.Set(hxToken, TokenPrivateNameSpace, PrivateNamespace);
+  SmartRefresh;
+end;
+
+function TToken.SetSessionId;
+begin
+  Result := NtxToken.Set(hxToken, TokenSessionId, SessionId);
+  SmartRefresh;
+end;
+
+function TToken.SetSessionReference;
+begin
+  Result := NtxToken.Set(hxToken, TokenSessionReference, Reference);
+  SmartRefresh;
+end;
+
+function TToken.SetUIAccess;
+begin
+  Result := NtxToken.Set(hxToken, TokenUIAccess, UIAccess);
+  SmartRefresh;
+end;
+
+function TToken.SetVirtualizationAllowed;
+begin
+  Result := NtxToken.Set(hxToken, TokenVirtualizationAllowed, Allowed);
+  SmartRefresh;
+end;
+
+function TToken.SetVirtualizationEnabled;
+begin
+  Result := NtxToken.Set(hxToken, TokenVirtualizationEnabled, Enabled);
+  SmartRefresh;
+end;
+
+procedure TToken.SmartRefresh;
+begin
+  if Events.OnBasicInfo.HasObservers then
+    RefreshBasicInfo;
+
+  // Skip refreshing on kernel address subscribers since it's a heavy operation
+  if Events.OnHandles.HasObservers then
+    RefreshHandles;
+
+  // See the check for the user below (as part of AppContainer info)
+
+  if Events.OnGroups.HasObservers then
+    RefreshGroups;
+
+  if Events.OnPrivileges.HasObservers then
+    RefreshPrivileges;
+
+  if Events.OnOwner.HasObservers or
+    Events.OnStringChange[tsOwner].HasSubscribers then
+    RefreshOwner;
+
+  if Events.OnPrimaryGroup.HasObservers or
+    Events.OnStringChange[tsPrimaryGroup].HasSubscribers then
+    RefreshPrimaryGroup;
+
+  if Events.OnDefaultDacl.HasObservers then
+    RefreshDefaultDacl;
+
+  if Events.OnSource.HasObservers or
+    Events.OnStringChange[tsSource].HasSubscribers then
+    RefreshSource;
+
+  if Events.OnType.HasObservers then
+    RefreshType;
+
+  if Events.OnImpersonation.HasObservers then
+    RefreshImpersonation;
+
+  if Events.OnStatistics.HasObservers or
+    Events.OnStringChange[tsGroups].HasSubscribers or
+    Events.OnStringChange[tsPrivileges].HasSubscribers or
+    Events.OnStringChange[tsType].HasSubscribers or
+    Events.OnStringChange[tsTokenId].HasSubscribers or
+    Events.OnStringChange[tsLogonId].HasSubscribers or
+    Events.OnStringChange[tsModifiedId].HasSubscribers then
+    RefreshStatistics;
+
+  if Events.OnRestrictedSids.HasObservers or
+    Events.OnStringChange[tsRestrictedSids].HasSubscribers then
+    RefreshRestrictedSids;
+
+  if Events.OnSessionId.HasObservers or
+    Events.OnStringChange[tsSessionId].HasSubscribers then
+    RefreshSessionId;
+
+  if Events.OnSandboxInert.HasObservers then
+    RefreshSandboxInert;
+
+  if Events.OnAuditPolicy.HasObservers then
+    RefreshAuditPolicy;
+
+  if Events.OnOrigin.HasObservers or
+    Events.OnStringChange[tsOrigin].HasSubscribers then
+
+  if Events.OnElevation.HasObservers or
+    Events.OnStringChange[tsElevation].HasSubscribers then
+    RefreshElevation;
+
+  if Events.OnHasRestrictions.HasObservers then
+    RefreshHasRestrictions;
+
+  if Events.OnFlags.HasObservers or
+    Events.OnStringChange[tsSandBoxInert].HasSubscribers or
+    Events.OnStringChange[tsFlags].HasSubscribers or
+    Events.OnStringChange[tsRestricted].HasSubscribers or
+    Events.OnStringChange[tsSessionReference].HasSubscribers or
+    Events.OnStringChange[tsVirtualization].HasSubscribers or
+    Events.OnStringChange[tsFiltered].HasSubscribers or
+    Events.OnStringChange[tsUIAccess].HasSubscribers or
+    Events.OnStringChange[tsLowBox].HasSubscribers or
+    Events.OnStringChange[tsPrivateNamespace].HasSubscribers or
+    Events.OnStringChange[tsChildFlags].HasSubscribers or
+    Events.OnStringChange[tsPermissiveLearning].HasSubscribers or
+    Events.OnStringChange[tsRedirectionTrust].HasSubscribers then
+    RefreshFlags;
+
+  if Events.OnVirtualizationAllowed.HasObservers then
+    RefreshVirtualizationAllowed;
+
+  if Events.OnVirtualizationEnabled.HasObservers then
+    RefreshVirtualizationEnabled;
+
+  if Events.OnIntegrity.HasObservers or
+    Events.OnStringChange[tsIntegrity].HasSubscribers then
+    RefreshIntegrity;
+
+  if Events.OnMandatoryPolicy.HasObservers or
+    Events.OnStringChange[tsMandatoryPolicy].HasSubscribers then
+    RefreshMandatoryPolicy;
+
+  if Events.OnIsAppContainer.HasObservers then
+    RefreshIsAppContainer;
+
+  if Events.OnCapabilities.HasObservers or
+    Events.OnStringChange[tsCapabilities].HasSubscribers then
+    RefreshCapabilities;
+
+  if (Events.OnAppContainerInfo.HasObservers or
+    Events.OnStringChange[tsAppContainerName].HasSubscribers or
+    Events.OnStringChange[tsAppContainerDisplayName].HasSubscribers)
+    and RefreshAppContainerInfo.IsSuccess then
+    // Querying AppContainer info requires querying the user and package SID;
+    // if the operation succeeds, no need to query them again
+  else
+  begin
+    if Events.OnUser.HasObservers or
+      Events.OnStringChange[tsUser].HasSubscribers then
+      RefreshUser;
+
+    if Events.OnAppContainerSid.HasObservers then
+      RefreshAppContainerSid;
+  end;
+
+  if Events.OnAppContainerNumber.HasObservers or
+    Events.OnStringChange[tsAppContainerNumber].HasSubscribers then
+    RefreshAppContainerNumber;
+
+  if Events.OnUserClaims.HasObservers or
+    Events.OnStringChange[tsUserClaims].HasSubscribers then
+    RefreshUserClaims;
+
+  if Events.OnDeviceClaims.HasObservers or
+    Events.OnStringChange[tsDeviceClaims].HasSubscribers then
+    RefreshDeviceClaims;
+
+  if Events.OnRestrictedUserClaims.HasObservers or
+    Events.OnStringChange[tsRestrictedUserClaims].HasSubscribers then
+    RefreshRestrictedUserClaims;
+
+  if Events.OnRestrictedDeviceClaims.HasObservers or
+    Events.OnStringChange[tsRestrictedDeviceClaims].HasSubscribers then
+    RefreshRestrictedDeviceClaims;
+
+  if Events.OnDeviceGroups.HasObservers or
+    Events.OnStringChange[tsDeviceGroups].HasSubscribers then
+    RefreshDeviceGroups;
+
+  if Events.OnRestrictedDeviceGroups.HasObservers or
+    Events.OnStringChange[tsRestrictedDeviceGroups].HasSubscribers then
+    RefreshRestrictedDeviceGroups;
+
+  if Events.OnSecurityAttributes.HasObservers or
+    Events.OnStringChange[tsSecAttributes].HasSubscribers then
+    RefreshSecurityAttributes;
+
+  if Events.OnIsLPAC.HasObservers or
+    Events.OnStringChange[tsLPAC].HasSubscribers then
+    RefreshIsLPAC;
+
+  if Events.OnIsRestricted.HasObservers or
+    Events.OnStringChange[tsIsRestricted].HasSubscribers then
+    RefreshIsRestricted;
+
+  if Events.OnTrustLevel.HasObservers or
+    Events.OnStringChange[tsTrustLevel].HasSubscribers then
+    RefreshTrustLevel;
+
+  if Events.OnPrivateNamespace.HasObservers then
+    RefreshPrivateNamespace;
+
+  if Events.OnSingletonAttributes.HasObservers or
+    Events.OnStringChange[tsSingletonAttributes].HasSubscribers then
+    RefreshSingletonAttributes;
+
+  if Events.OnBnoIsolation.HasObservers or
+    Events.OnStringChange[tsBnoIsolation].HasSubscribers then
+    RefreshBnoIsolation;
+
+  if Events.OnIsSandboxed.HasObservers or
+    Events.OnStringChange[tsIsSandboxed].HasSubscribers then
+    RefreshIsSandboxed;
+
+  if Events.OnOriginatingTrustLevel.HasObservers or
+    Events.OnStringChange[tsOriginTrustLevel].HasSubscribers then
+    RefreshOriginatingTrustLevel;
+end;
+
+end.
