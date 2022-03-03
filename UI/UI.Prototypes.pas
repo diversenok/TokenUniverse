@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView, TU.Tokens,
-  TU.Tokens.Types, Ntapi.WinNt, NtUtils.WinStation;
+  TU.Tokens.Types, Ntapi.WinNt, NtUtils.WinStation, TU.Tokens3, NtUtils;
 
 type
   TSessionSource = class
@@ -58,20 +58,21 @@ type
   private
     Row: TRowSource;
     ColumnIndex: Integer;
-    procedure SetTextCallback(const Value: String);
+    Subscription: IAutoReleasable;
+    procedure SetTextCallback(const InfoClass: TTokenStringClass; const Value: String);
   public
     constructor Create(Row: TRowSource; ColumnIndex: Integer);
-    destructor Destroy; override;
   end;
 
   TRowSource = class
   private
     Cells: array of TCellSource;
-    procedure TokenCaptionCallback(const Value: String);
+    procedure TokenCaptionCallback(const InfoClass: TTokenStringClass; const Value: String);
   public
     Token: IToken;
     Item: TListItemEx;
     Owner: TTokenViewSource;
+    CaptionSubscription: IAutoReleasable;
     constructor Create(Token: IToken; Owner: TTokenViewSource);
     destructor Destroy; override;
   end;
@@ -95,7 +96,7 @@ type
 implementation
 
 uses
-  UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils,
+  UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa,
   NtUtils.Lsa.Logon, NtUtils.Lsa.Sid, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection;
 
@@ -387,18 +388,11 @@ begin
   Self.ColumnIndex := ColumnIndex;
 
   // Each cell subscribes corresponding string querying event
-  Row.Token.Events.SubscribeString(
-    Row.Owner.DataClasses[ColumnIndex], SetTextCallback, Row.Token);
-end;
-
-destructor TCellSource.Destroy;
-begin
-  Row.Token.Events.UnSubscribeString(
+  Subscription := (Row.Token as IToken3).ObserveString(
     Row.Owner.DataClasses[ColumnIndex], SetTextCallback);
-  inherited;
 end;
 
-procedure TCellSource.SetTextCallback(const Value: String);
+procedure TCellSource.SetTextCallback;
 begin
   Assert(Row.Item.SubItems.Count > ColumnIndex);
   Row.Item.SubItems[ColumnIndex] := Value;
@@ -418,8 +412,8 @@ begin
   Item.OwnedData := Self;
 
   // Subscribe main column updates
-  Token.OnCaptionChange.Subscribe(TokenCaptionCallback, False);
-  TokenCaptionCallback(Token.Caption);
+  CaptionSubscription := (Token as IToken3).ObserveString(tsCaption,
+    TokenCaptionCallback);
 
   // Initialize sources for all other columns
   SetLength(Cells, Length(Owner.DataClasses));
@@ -438,12 +432,10 @@ begin
   for i := 0 to High(Cells) do
     Cells[i].Free;
 
-  Token.OnCaptionChange.Unsubscribe(TokenCaptionCallback);
-
   inherited;
 end;
 
-procedure TRowSource.TokenCaptionCallback(const Value: String);
+procedure TRowSource.TokenCaptionCallback;
 begin
   Item.Caption := Value;
 end;

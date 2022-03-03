@@ -29,7 +29,7 @@ type
 implementation
 
 uses
-  TU.Tokens.Types;
+  TU.Tokens.Types, TU.Tokens3;
 
 {$R *.dfm}
 
@@ -48,12 +48,12 @@ begin
   Item.GroupID := Group;
   Item.Data := Pointer(Group);
 
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsTokenType));
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsAccess));
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsUserName));
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsSession));
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsElevationInfo));
-  Item.SubItems.Add(Token.InfoClass.QueryString(tsIntegrity));
+  Item.SubItems.Add((Token as IToken3).QueryString(tsType));
+  Item.SubItems.Add((Token as IToken3).QueryString(tsAccess));
+  Item.SubItems.Add((Token as IToken3).QueryString(tsUser));
+  Item.SubItems.Add((Token as IToken3).QueryString(tsSessionId));
+  Item.SubItems.Add((Token as IToken3).QueryString(tsElevation));
+  Item.SubItems.Add((Token as IToken3).QueryString(tsIntegrity));
 
   ListViewTokens.Items.EndUpdate;
 end;
@@ -98,7 +98,7 @@ end;
 
 procedure TFrameTokenList.RenameToken(NewName: String; Item: TListItemEx);
 begin
-  IToken(Item.OwnedIData).Caption := NewName;
+  IToken3(Item.OwnedIData).Caption := NewName;
   Item.Caption := NewName; // TODO: move to OnCaptionChange
 end;
 

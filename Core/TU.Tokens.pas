@@ -5,7 +5,7 @@ interface
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 uses
-  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.WinBase, Ntapi.WinSafer,
+  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.WinSafer,
   TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
   NtUtils.Security.Sid, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils.Lsa.Audit,
   System.Generics.Collections, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
@@ -26,15 +26,6 @@ type
     tdTokenIntegrity, tdTokenUIAccess, tdTokenMandatoryPolicy,
     tdTokenIsRestricted, tdTokenAppContainer, tdLogonInfo, tdObjectInfo,
     tdHandleInfo);
-
-  /// <summary> A class of string information for tokens. </summary>
-  TTokenStringClass = (tsTokenType, tsAccess, tsUserName,
-    tsUserState, tsSession, tsElevationInfo, tsIntegrity,
-    tsObjectAddress, tsHandle, tsNoWriteUpPolicy, tsNewProcessMinPolicy,
-    tsUIAccess, tsOwner, tsPrimaryGroup, tsSandboxInert, tsHasRestrictions,
-    tsFlags, tsIsRestricted, tsVirtualization, tsTokenID, tsExprires,
-    tsDynamicCharged, tsDynamicAvailable, tsGroupCount, tsPrivilegeCount,
-    tsModifiedID, tsLogonID, tsSourceLUID, tsSourceName, tsOrigin);
 
   IToken = interface;
   TToken = class;
@@ -79,51 +70,6 @@ type
     LogonSessionInfo: TLogonSessionCache;
     ObjectInformation: TObjectBasicInformation;
     HandleInformation: TSystemHandleEntry;
-
-    FOnOwnerChange, FOnPrimaryChange: TCachingEvent<ISid>;
-    FOnSessionChange: TCachingEvent<Cardinal>;
-    FOnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>>;
-    FOnOriginChange: TCachingEvent<TLuid>;
-    FOnElevationInfoChange: TCachingEvent<TTokenElevationInfo>;
-    FOnUIAccessChange: TCachingEvent<LongBool>;
-    FOnIntegrityChange: TCachingEvent<TGroup>;
-    FOnVirtualizationAllowedChange: TCachingEvent<LongBool>;
-    FOnVirtualizationEnabledChange: TCachingEvent<LongBool>;
-    FOnPolicyChange: TCachingEvent<Cardinal>;
-    FOnPrivilegesChange: TCachingEvent<TArray<TPrivilege>>;
-    FOnGroupsChange: TCachingEvent<TArray<TGroup>>;
-    FOnStatisticsChange: TCachingEvent<TTokenStatistics>;
-    FOnDefaultDaclChange: TEvent<IAcl>;
-    FOnFlagsChange: TCachingEvent<Cardinal>;
-    OnStringDataChange: array [TTokenStringClass] of TEvent<String>;
-  public
-    constructor Create;
-
-    property OnOwnerChange: TCachingEvent<ISid> read FOnOwnerChange;
-    property OnPrimaryChange: TCachingEvent<ISid> read FOnPrimaryChange;
-    property OnSessionChange: TCachingEvent<Cardinal> read FOnSessionChange;
-    property OnAuditChange: TCachingEvent<IMemory<PTokenAuditPolicy>> read FOnAuditChange;
-    property OnOriginChange: TCachingEvent<TLuid> read FOnOriginChange;
-    property OnElevationInfoChange: TCachingEvent<TTokenElevationInfo> read FOnElevationInfoChange;
-    property OnUIAccessChange: TCachingEvent<LongBool> read FOnUIAccessChange;
-    property OnIntegrityChange: TCachingEvent<TGroup> read FOnIntegrityChange;
-    property OnVirtualizationAllowedChange: TCachingEvent<LongBool> read FOnVirtualizationAllowedChange;
-    property OnVirtualizationEnabledChange: TCachingEvent<LongBool> read FOnVirtualizationEnabledChange;
-    property OnPolicyChange: TCachingEvent<Cardinal> read FOnPolicyChange;
-    property OnPrivilegesChange: TCachingEvent<TArray<TPrivilege>> read FOnPrivilegesChange;
-    property OnGroupsChange: TCachingEvent<TArray<TGroup>> read FOnGroupsChange;
-    property OnStatisticsChange: TCachingEvent<TTokenStatistics> read FOnStatisticsChange;
-    property OnDefaultDaclChange: TEvent<IAcl> read FOnDefaultDaclChange;
-    property OnFlagsChange: TCachingEvent<Cardinal> read FOnFlagsChange;
-
-    /// <summary>
-    ///  Calls the event listener with the newly obtained string and subscribes
-    ///  for future events.
-    /// </summary>
-    procedure SubscribeString(StringClass: TTokenStringClass;
-      Listener: TEventListener<String>; TokenToQuery: IToken);
-    procedure UnSubscribeString(StringClass: TTokenStringClass;
-      Listener: TEventListener<String>);
   end;
 
   /// <summary>
@@ -165,7 +111,6 @@ type
     function GetIsRestricted: LongBool;
     function GetDefaultDacl: IAcl;
     function GetFlags: Cardinal;
-    procedure InvokeStringEvent(StringClass: TTokenStringClass);
     procedure SetVirtualizationAllowed(const Value: LongBool);
     procedure SetVirtualizationEnabled(const Value: LongBool);
     procedure SetDefaultDacl(Value: IAcl);
@@ -222,17 +167,11 @@ type
     ///  Make sure that a cached value (if present) is up-to-date.
     /// </summary>
     procedure ValidateCache(DataClass: TTokenDataClass);
-
-    /// <summary> Get a string representation of an info class. </summary>
-    function QueryString(StringClass: TTokenStringClass;
-      Detailed: Boolean = False): String;
   end;
   PTokenData = ^TTokenData;
 
   {-------------------  TToken object definition  ---------------------------}
 
-  TStringCachingEvent = TCachingEvent<String>;
-  PStringCachingEvent = ^TStringCachingEvent;
   TTokenEvent = TEvent<IToken>;
   PTokenEvent = ^TTokenEvent;
 
@@ -243,20 +182,12 @@ type
     function GetHandle: IHandle;
     function GetInfoClassData: PTokenData;
     function GetCache: TTokenCacheAndEvents;
-    function GetCaptionChange: PStringCachingEvent;
     property Handle: IHandle read GetHandle;
     function ConvertToReal: IToken;
     property InfoClass: PTokenData read GetInfoClassData;
     property Events: TTokenCacheAndEvents read GetCache;
     property Caption: String read GetCaption write SetCaption;
-    property OnCaptionChange: PStringCachingEvent read GetCaptionChange;
-    procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
-      Action: TPrivilegeAdjustAction);
-    procedure GroupAdjust(Groups: TArray<TGroup>; Action: TGroupAdjustAction);
     function SendHandleToProcess(PID: NativeUInt): NativeUInt;
-    procedure AssignToProcess(PID: NativeUInt);
-    procedure AssignToThread(TID: NativeUInt);
-    procedure AssignToThreadSafe(TID: NativeUInt);
     function OpenLinkedToken(out Token: IToken): TNtxStatus;
   end;
 
@@ -270,7 +201,6 @@ type
     function GetHandle: IHandle;
     function GetInfoClassData: PTokenData;
     function GetCache: TTokenCacheAndEvents;
-    function GetCaptionChange: PStringCachingEvent;
     function GetOnClose: PTokenEvent;
     function GetOnCanClose: PTokenEvent;
   protected
@@ -279,7 +209,6 @@ type
     Cache: TTokenCacheAndEvents;
 
     FCaption: String;
-    FOnCaptionChange: TStringCachingEvent;
     FOnCanClose: TTokenEvent;
     FOnClose: TTokenEvent;
 
@@ -293,10 +222,7 @@ type
     function ConvertToReal: IToken;
 
     property InfoClass: PTokenData read GetInfoClassData;
-    property Events: TTokenCacheAndEvents read GetCache;
-
     property Caption: String read GetCaption write SetCaption;
-    property OnCaptionChange: PStringCachingEvent read GetCaptionChange;
 
     /// <summary>
     ///  The event is called to test whether the token can be destroyed.
@@ -310,22 +236,7 @@ type
     property OnClose: PTokenEvent read GetOnClose;
     destructor Destroy; override;
 
-    procedure PrivilegeAdjust(Privileges: TArray<TPrivilege>;
-      Action: TPrivilegeAdjustAction);
-    procedure GroupAdjust(Groups: TArray<TGroup>; Action: TGroupAdjustAction);
     function SendHandleToProcess(PID: NativeUInt): NativeUInt;
-
-    /// <summary> Assignes primary token to a process. </summary>
-    procedure AssignToProcess(PID: NativeUInt);
-
-    /// <summary> Assigned impersonation token to a thread. </summary>
-    procedure AssignToThread(TID: NativeUInt);
-
-    /// <summary>
-    ///  Assigned a token to a thread and make sure that the
-    ///  privileged part of the impersonation succeeds.
-    /// </summary>
-    procedure AssignToThreadSafe(TID: NativeUInt);
 
     /// <summary> Removes the thread impersonation token. </summary>
     class procedure RevertThreadToken(TID: NativeUInt);
@@ -428,69 +339,10 @@ type
 implementation
 
 uses
-  Ntapi.ntdef, Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Tokens.Info,
+  Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Tokens.Info,
   NtUtils.Processes, NtUtils.WinStation, NtUtils.Tokens, NtUiLib.Errors,
-  NtUtils.Tokens.Impersonate, DelphiUiLib.Reflection.Strings,
-  System.SysUtils, System.TypInfo, NtUtils.Tokens.Logon, NtUtils.Tokens.Misc,
-  NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions,
-  NtUiLib.Reflection.AccessMasks, DelphiUiLib.Reflection.Numeric, NtUtils.SysUtils,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection, NtUiLib.Reflection.Types,
-  Ntapi.ntrtl, NtUtils.Processes.Info;
-
-const
-  /// <summary> Stores which data class a string class depends on. </summary>
-  StringClassToDataClass: array [TTokenStringClass] of TTokenDataClass =
-    (tdTokenType, tdObjectInfo, tdTokenUser, tdTokenUser, tdTokenSessionId,
-    tdTokenElevationInfo, tdTokenIntegrity, tdHandleInfo,
-    tdNone, tdTokenMandatoryPolicy, tdTokenMandatoryPolicy, tdTokenUIAccess,
-    tdTokenOwner, tdTokenPrimaryGroup, tdTokenSandBoxInert,
-    tdTokenHasRestrictions, tdTokenFlags, tdTokenIsRestricted,
-    tdTokenVirtualizationAllowed, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdTokenStatistics, tdTokenStatistics,
-    tdTokenStatistics, tdTokenStatistics, tdTokenSource, tdTokenSource,
-    tdTokenOrigin);
-
-{ TTokenCacheAndEvents }
-
-constructor TTokenCacheAndEvents.Create;
-begin
-  inherited;
-  FOnOwnerChange.ComparisonFunction := CompareSIDs;
-  FOnPrimaryChange.ComparisonFunction := CompareSIDs;
-  FOnSessionChange.ComparisonFunction := CompareCardinals;
-  FOnOriginChange.ComparisonFunction := CompareLUIDs;
-  FOnUIAccessChange.ComparisonFunction := CompareLongBools;
-  FOnIntegrityChange.ComparisonFunction := CompareGroups;
-  FOnPolicyChange.ComparisonFunction := CompareCardinals;
-  FOnPrivilegesChange.ComparisonFunction := ComparePrivileges;
-  FOnGroupsChange.ComparisonFunction := CompareGroupArrays;
-  FOnStatisticsChange.ComparisonFunction := CompareStatistics;
-  FOnVirtualizationAllowedChange.ComparisonFunction := CompareLongBools;
-  FOnVirtualizationEnabledChange.ComparisonFunction := CompareLongBools;
-  FOnFlagsChange.ComparisonFunction := CompareCardinals;
-end;
-
-procedure TTokenCacheAndEvents.SubscribeString(StringClass: TTokenStringClass;
-  Listener: TEventListener<String>; TokenToQuery: IToken);
-begin
-  // Query the string and call the new event listener with it
-  Listener(TokenToQuery.InfoClass.QueryString(StringClass));
-
-  // Note: tsHandle and tsAccess should be per-handle events and should be
-  // stored inside TTokenData. They are currently not supported for invocation.
-
-  // Subscribe for future events
-  OnStringDataChange[StringClass].Subscribe(Listener);
-end;
-
-procedure TTokenCacheAndEvents.UnSubscribeString(StringClass: TTokenStringClass;
-  Listener: TEventListener<String>);
-begin
-  // Note: tsHandle and tsAccess should be per-handle events and should be
-  // stored inside TTokenData. They are currently not supported for invocation.
-
-  OnStringDataChange[StringClass].Unsubscribe(Listener);
-end;
+  NtUtils.Tokens.Impersonate, System.SysUtils, NtUtils.Tokens.Logon,
+  NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions;
 
 { TToken }
 
@@ -503,28 +355,6 @@ begin
     Cache := TTokenCacheAndEvents.Create;
 
   FTokenV3 := CaptureTokenHandle(hxToken, FCaption);
-end;
-
-procedure TToken.AssignToProcess(PID: NativeUInt);
-begin
-  NtxAssignPrimaryTokenById(PID, hxToken).RaiseOnError;
-
-  // Assigning primary token to a process might change token's Session ID
-  InfoClass.ValidateCache(tdTokenSessionId);
-
-  // Although changing session does not usually change Modified ID it is good to
-  // update it
-  InfoClass.ValidateCache(tdTokenStatistics);
-end;
-
-procedure TToken.AssignToThread(TID: NativeUInt);
-begin
-  NtxSetThreadTokenById(TID, hxToken).RaiseOnError;
-end;
-
-procedure TToken.AssignToThreadSafe(TID: NativeUInt);
-begin
-  NtxSafeSetThreadTokenById(TID, hxToken).RaiseOnError;
 end;
 
 function TToken.ConvertToReal: IToken;
@@ -766,11 +596,6 @@ begin
   Result := FCaption;
 end;
 
-function TToken.GetCaptionChange: PStringCachingEvent;
-begin
-  Result := @FOnCaptionChange;
-end;
-
 function TToken.GetHandle: IHandle;
 begin
   Result := hxToken;
@@ -791,30 +616,6 @@ begin
   Result := @FOnClose;
 end;
 
-procedure TToken.GroupAdjust(Groups: TArray<TGroup>; Action:
-  TGroupAdjustAction);
-const
-  ActionToAttribute: array [TGroupAdjustAction] of Cardinal = (0,
-    SE_GROUP_ENABLED, 0);
-var
-  i: integer;
-  Sids: TArray<ISid>;
-begin
-  SetLength(Sids, Length(Groups));
-  for i := 0 to High(Groups) do
-    Sids[i] := Groups[i].Sid;
-
-  NtxAdjustGroups(hxToken, Sids, ActionToAttribute[Action],
-    Action = gaResetDefault).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  InfoClass.ValidateCache(tdTokenGroups);
-  InfoClass.ValidateCache(tdTokenStatistics);
-
-  // Adjusting groups may change integrity attributes
-  InfoClass.ValidateCache(tdTokenIntegrity);
-end;
-
 function TToken.OpenLinkedToken(out Token: IToken): TNtxStatus;
 var
   Handle: THandle;
@@ -825,39 +626,6 @@ begin
   if Result.IsSuccess then
     Token := TToken.Create(NtxObject.Capture(Handle),
       'Linked token for ' + Caption);
-end;
-
-procedure TToken.PrivilegeAdjust(Privileges: TArray<TPrivilege>;
-  Action: TPrivilegeAdjustAction);
-const
-  ActionToAttribute: array [TPrivilegeAdjustAction] of Cardinal =
-    (SE_PRIVILEGE_ENABLED, 0, SE_PRIVILEGE_REMOVED);
-var
-  Status: TNtxStatus;
-  LuidArray: TArray<TSeWellKnownPrivilege>;
-  i: Integer;
-begin
-  SetLength(LuidArray, Length(Privileges));
-  for i := 0 to High(Privileges) do
-    LuidArray[i] := TSeWellKnownPrivilege(Privileges[i].Luid);
-
-  Status := NtxAdjustPrivileges(hxToken, LuidArray,
-    ActionToAttribute[Action], True);
-
-  // The function could modify privileges even without succeeding.
-  // Update the cache and notify event listeners.
-  InfoClass.ValidateCache(tdTokenPrivileges);
-  InfoClass.ValidateCache(tdTokenStatistics);
-  InfoClass.ValidateCache(tdTokenFlags);
-  InfoClass.ValidateCache(tdTokenElevationInfo);
-
-  // Note: the system call might return STATUS_NOT_ALL_ASSIGNED which is
-  // not considered as an error. Such behavior does not fit into our
-  // model so we should overwrite it.
-  if Status.Status = STATUS_NOT_ALL_ASSIGNED then
-    raise ENtError.Create(Status)
-  else
-    Status.RaiseOnError;
 end;
 
 class procedure TToken.RevertThreadToken(TID: NativeUInt);
@@ -879,7 +647,9 @@ end;
 procedure TToken.SetCaption(const Value: String);
 begin
   FCaption := Value;
-  OnCaptionChange.Invoke(FCaption);
+
+  if Assigned(TokenV3) then
+    TokenV3.Caption := Value;
 end;
 
 { TTokenData }
@@ -1046,140 +816,10 @@ begin
   Result := Token.Cache.VirtualizationEnabled;
 end;
 
-procedure TTokenData.InvokeStringEvent(StringClass: TTokenStringClass);
-begin
-  // Note that tsHandle and tsAccess are per-handle events
-  case StringClass of
-    tsHandle: ; // Not supported yet
-    tsAccess: ; // Not supported yet
-  else
-    Token.Events.OnStringDataChange[StringClass].Invoke(
-      QueryString(StringClass));
-  end;
-end;
-
 function TTokenData.Query(DataClass: TTokenDataClass): Boolean;
 begin
   Result := Token.Cache.IsCached[DataClass] or
     (Assigned(Token.hxToken) and ReQuery(DataClass));
-end;
-
-function TTokenData.QueryString(StringClass: TTokenStringClass;
-  Detailed: Boolean): String;
-begin
-  if not Query(StringClassToDataClass[StringClass]) then
-    Exit('');
-
-  {$REGION 'Converting cached data to string'}
-  case StringClass of
-    tsTokenType:
-      Result := Token.Cache.TokenType.ToString;
-
-    // Note: this is a per-handle value. Beware of per-kernel-object events.
-    tsAccess:
-      Result := Token.Cache.ObjectInformation.GrantedAccess
-        .Format<TTokenAccessMask>();
-
-    tsUserName:
-      Result := LsaxSidToString(Token.Cache.User.Sid);
-
-    tsUserState:
-      Result := TNumeric.Represent(Token.Cache.User.Attributes).Text;
-
-    tsSession: // Detailed?
-      Result := Cardinal(Token.Cache.Session).ToString;
-
-    tsElevationInfo:
-      Result := Token.Cache.ElevationInfo.ToString;
-
-    tsIntegrity:
-      Result := TNumeric.Represent(TIntegrityRid(RtlxRidSid(
-        Token.Cache.Integrity.Sid))).Text;
-
-    tsObjectAddress:
-      Result := PtrToHexEx(Token.Cache.HandleInformation.PObject);
-
-    // Note: this is a per-handle value. Beware of per-kernel-object events.
-    tsHandle:
-      if Detailed then
-        Result := Format('0x%x (%d)', [Token.Handle, Token.Handle])
-      else
-        Result := IntToHexEx(Token.Handle.Handle);
-
-    tsNoWriteUpPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy and
-        TOKEN_MANDATORY_POLICY_NO_WRITE_UP <> 0);
-
-    tsNewProcessMinPolicy:
-      Result := EnabledDisabledToString(Token.Cache.MandatoryPolicy and
-        TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN <> 0);
-
-    tsUIAccess:
-      Result := EnabledDisabledToString(Token.Cache.UIAccess);
-
-    tsOwner:
-      Result := LsaxSidToString(Token.Cache.Owner);
-
-    tsPrimaryGroup:
-      Result := LsaxSidToString(Token.Cache.PrimaryGroup);
-
-    tsSandboxInert:
-      Result := YesNoToString(Token.Cache.SandboxInert);
-
-    tsHasRestrictions:
-      Result := YesNoToString(Token.Cache.HasRestrictions);
-
-    tsFlags:
-      Result := TNumeric.Represent(Token.Cache.Flags).Text;
-
-    tsIsRestricted:
-      Result := YesNoToString(Token.Cache.IsRestricted);
-
-    tsVirtualization:
-      if Query(tdTokenVirtualizationEnabled) then
-      begin
-        if VirtualizationAllowed  then
-          Result := EnabledDisabledToString(VirtualizationEnabled)
-        else if not VirtualizationEnabled then
-          Result := 'Not allowed'
-        else
-          Result := 'Disallowed & Enabled';
-      end;
-
-    tsTokenID:
-      Result := IntToHexEx(Token.Cache.Statistics.TokenId);
-
-    tsExprires:
-      Result := TType.Represent(Token.Cache.Statistics.ExpirationTime).Text;
-
-    tsDynamicCharged:
-      Result := BytesToString(Token.InfoClass.Statistics.DynamicCharged);
-
-    tsDynamicAvailable:
-      Result := BytesToString(Token.InfoClass.Statistics.DynamicAvailable);
-
-    tsGroupCount:
-      Result := Token.Cache.Statistics.GroupCount.ToString;
-
-    tsPrivilegeCount:
-      Result := Token.Cache.Statistics.PrivilegeCount.ToString;
-
-    tsModifiedID:
-      Result := IntToHexEx(Token.Cache.Statistics.ModifiedId);
-
-    tsLogonID:
-      Result := IntToHexEx(Token.Cache.Statistics.AuthenticationId);
-
-    tsSourceLUID:
-      Result := IntToHexEx(Token.Cache.Source.SourceIdentifier);
-
-    tsSourceName:
-      Result := Token.Cache.Source.Name;
-
-    tsOrigin:
-      Result := IntToHexEx(Token.Cache.Origin);
-  end;
-  {$ENDREGION}
 end;
 
 function TTokenData.ReQuery(DataClass: TTokenDataClass): Boolean;
@@ -1208,46 +848,19 @@ begin
     end;
 
     tdTokenGroups:
-    begin
       Result := Token.TokenV3.QueryGroups(Token.Cache.Groups).IsSuccess;
 
-      if Result then
-        Token.Events.OnGroupsChange.Invoke(Token.Cache.Groups);
-    end;
-
     tdTokenPrivileges:
-    begin
       Result := Token.TokenV3.QueryPrivileges(Token.Cache.Privileges).IsSuccess;
 
-      if Result then
-        Token.Events.OnPrivilegesChange.Invoke(Token.Cache.Privileges);
-    end;
-
     tdTokenOwner:
-    begin
       Result := Token.TokenV3.QueryOwner(Token.Cache.Owner).IsSuccess;
 
-      if Result then
-        if Token.Events.OnOwnerChange.Invoke(Token.Cache.Owner) then
-          InvokeStringEvent(tsOwner);
-    end;
-
     tdTokenPrimaryGroup:
-    begin
      Result := Token.TokenV3.QueryPrimaryGroup(Token.Cache.PrimaryGroup).IsSuccess;
 
-     if Result then
-       if Token.Events.OnPrimaryChange.Invoke(Token.Cache.PrimaryGroup) then
-         InvokeStringEvent(tsPrimaryGroup);
-    end;
-
     tdTokenDefaultDacl:
-    begin
       Result := Token.TokenV3.QueryDefaultDacl(Token.Cache.DefaultDacl).IsSuccess;
-
-      if Result then
-        Token.Events.OnDefaultDaclChange.Invoke(Token.Cache.DefaultDacl);
-    end;
 
     tdTokenSource:
       Result := Token.TokenV3.QuerySource(Token.Cache.Source).IsSuccess;
@@ -1271,124 +884,46 @@ begin
     end;
 
     tdTokenStatistics:
-    begin
       Result := Token.TokenV3.QueryStatistics(Token.Cache.Statistics).IsSuccess;
-
-      if Result then
-        if Token.Events.OnStatisticsChange.Invoke(Token.Cache.Statistics) then
-        begin
-          InvokeStringEvent(tsTokenID);
-          InvokeStringEvent(tsExprires);
-          InvokeStringEvent(tsDynamicCharged);
-          InvokeStringEvent(tsDynamicAvailable);
-          InvokeStringEvent(tsGroupCount);
-          InvokeStringEvent(tsPrivilegeCount);
-          InvokeStringEvent(tsModifiedID);
-          InvokeStringEvent(tsLogonID);
-        end;
-    end;
 
     tdTokenRestrictedSids:
       Result := Token.TokenV3.QueryRestrictedSids(Token.Cache.RestrictedSids).IsSuccess;
 
     tdTokenSessionId:
-    begin
       Result := Token.TokenV3.QuerySessionId(Token.Cache.Session).IsSuccess;
 
-      if Result then
-        if Token.Events.OnSessionChange.Invoke(Token.Cache.Session) then
-          InvokeStringEvent(tsSession);
-    end;
-
     tdTokenAuditPolicy:
-    begin
       Result := Token.TokenV3.QueryAuditPolicy(Token.Cache.AuditPolicy).IsSuccess;
-
-      if Result then
-        Token.Events.OnAuditChange.Invoke(Token.Cache.AuditPolicy);
-    end;
 
     tdTokenSandBoxInert:
       Result := Token.TokenV3.QuerySandboxInert(Token.Cache.SandboxInert).IsSuccess;
 
     tdTokenOrigin:
-    begin
       Result := Token.TokenV3.QueryOrigin(Token.Cache.Origin).IsSuccess;
 
-      if Result then
-        if Token.Events.OnOriginChange.Invoke(Token.Cache.Origin) then
-          InvokeStringEvent(tsOrigin);
-    end;
-
     tdTokenElevationInfo:
-    begin
       Result := Token.TokenV3.QueryElevation(Token.Cache.ElevationInfo).IsSuccess;
-
-      if Result then
-        Token.Events.OnElevationInfoChange.Invoke(Token.Cache.ElevationInfo);
-    end;
 
     tdTokenHasRestrictions:
       Result := Token.TokenV3.QueryHasRestrictions(Token.Cache.HasRestrictions).IsSuccess;
 
     tdTokenFlags:
-    begin
       Result := Token.TokenV3.QueryFlags(Token.Cache.Flags).IsSuccess;
 
-      if Result then
-        if Token.Events.OnFlagsChange.Invoke(Token.Cache.Flags) then
-          InvokeStringEvent(tsFlags);
-    end;
-
     tdTokenVirtualizationAllowed:
-    begin
       Result := Token.TokenV3.QueryVirtualizationAllowed(Token.Cache.VirtualizationAllowed).IsSuccess;
 
-      if Result then
-        if Token.Events.OnVirtualizationAllowedChange.Invoke(
-          Token.Cache.VirtualizationAllowed) then
-          InvokeStringEvent(tsVirtualization);
-    end;
-
     tdTokenVirtualizationEnabled:
-    begin
       Result := Token.TokenV3.QueryVirtualizationEnabled(Token.Cache.VirtualizationEnabled).IsSuccess;
 
-      if Result then
-        if Token.Events.OnVirtualizationEnabledChange.Invoke(
-          Token.Cache.VirtualizationEnabled) then
-          InvokeStringEvent(tsVirtualization);
-    end;
-
     tdTokenIntegrity:
-    begin
       Result := Token.TokenV3.QueryIntegrity(Token.Cache.Integrity).IsSuccess;
 
-      if Result and
-        Token.Events.OnIntegrityChange.Invoke(Token.Cache.Integrity) then
-          InvokeStringEvent(tsIntegrity);
-    end;
-
     tdTokenUIAccess:
-    begin
       Result := Token.TokenV3.QueryUIAccess(Token.Cache.UIAccess).IsSuccess;
 
-      if Result then
-        if Token.Cache.FOnUIAccessChange.Invoke(Token.Cache.UIAccess) then
-          InvokeStringEvent(tsUIAccess);
-    end;
-
     tdTokenMandatoryPolicy:
-    begin
       Result := Token.TokenV3.QueryMandatoryPolicy(Token.Cache.MandatoryPolicy).IsSuccess;
-
-      if Result then
-        if Token.Cache.FOnPolicyChange.Invoke(Token.Cache.MandatoryPolicy) then
-        begin
-          InvokeStringEvent(tsNoWriteUpPolicy);
-          InvokeStringEvent(tsNewProcessMinPolicy);
-        end;
-    end;
 
     tdTokenIsRestricted:
       Result := Token.TokenV3.QueryIsRestricted(Token.Cache.IsRestricted).IsSuccess;
@@ -1427,141 +962,64 @@ begin
   Token.Cache.IsCached[DataClass] := Token.Cache.IsCached[DataClass] or Result;
 end;
 
-procedure TTokenData.SetAuditPolicy(const Value: IMemory<PTokenAuditPolicy>);
+procedure TTokenData.SetAuditPolicy;
 begin
-  NtxSetToken(Token.hxToken, TokenAuditPolicy, Value.Data,
-    Value.Size).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenAuditPolicy);
-  ValidateCache(tdTokenStatistics);
+  Token.TokenV3.SetAuditPolicy(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetDefaultDacl(Value: IAcl);
+procedure TTokenData.SetDefaultDacl;
 begin
-  NtxSetDefaultDaclToken(Token.hxToken, Value).RaiseOnError;
-  ValidateCache(tdTokenDefaultDacl);
+  Token.TokenV3.SetDefaultDacl(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetIntegrityLevel(const Value: Cardinal);
+procedure TTokenData.SetIntegrityLevel;
 begin
-  NtxSetIntegrityToken(Token.hxToken, Value).RaiseOnError;
-
-  // Update the cache and notify event listeners.
-  ValidateCache(tdTokenIntegrity);
-  ValidateCache(tdTokenStatistics);
-  ValidateCache(tdTokenFlags);
-
-  // Lowering integrity might disable sensitive privileges
-  ValidateCache(tdTokenPrivileges);
-
-  // Integrity SID is also stored in the group list. So, update groups too.
-  ValidateCache(tdTokenGroups);
-
-  // Sometimes the integrity level SID might be assigned as the token owner.
-  // Since the owner is internally stored as an index in the group table,
-  // changing it, in this case, also changes the owner.
-  if Token.Cache.IsCached[tdTokenOwner] and
-    (RtlxIdentifierAuthoritySid(Token.Cache.Owner) =
-      SECURITY_MANDATORY_LABEL_AUTHORITY) then
-    ValidateCache(tdTokenOwner);
-
-  // Note: this logic does not apply to the primary group since it is stored
-  // as a separate SID, not as a reference.
+  Token.TokenV3.SetIntegrity(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetMandatoryPolicy(const Value: Cardinal);
+procedure TTokenData.SetMandatoryPolicy;
 begin
-  NtxToken.Set(Token.hxToken, TokenMandatoryPolicy,
-    Value).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenMandatoryPolicy);
-  ValidateCache(tdTokenStatistics);
+  Token.TokenV3.SetMandatoryPolicy(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetOrigin(const Value: TLuid);
+procedure TTokenData.SetOrigin;
 begin
-  NtxToken.Set(Token.hxToken, TokenOrigin, Value).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenOrigin);
-  ValidateCache(tdTokenStatistics);
+  Token.TokenV3.SetOrigin(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetOwner(Value: ISid);
-var
-  NewOwner: TTokenSidInformation;
+procedure TTokenData.SetOwner;
 begin
-  NewOwner.Sid := Value.Data;
-  NtxToken.Set(Token.hxToken, TokenOwner,NewOwner).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenOwner);
-  ValidateCache(tdTokenStatistics);
+  Token.TokenV3.SetOwner(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetPrimaryGroup(Value: ISid);
-var
-  NewPrimaryGroup: TTokenSidInformation;
+procedure TTokenData.SetPrimaryGroup;
 begin
-  NewPrimaryGroup.Sid := Value.Data;
-  NtxToken.Set(Token.hxToken, TokenPrimaryGroup, NewPrimaryGroup).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenPrimaryGroup);
-  ValidateCache(tdTokenStatistics);
+  Token.TokenV3.SetPrimaryGroup(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetSession(const Value: Cardinal);
+procedure TTokenData.SetSession;
 begin
-  NtxToken.Set(Token.hxToken, TokenSessionId, Value).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenSessionId);
-
-  // Although changing session does not usually change Modified ID it is good to
-  // update it
-  ValidateCache(tdTokenStatistics);
+  Token.TokenV3.SetSessionId(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetSessionReference(const Value: LongBool);
+procedure TTokenData.SetSessionReference;
 begin
-  NtxToken.Set(Token.hxToken, TokenSessionReference, Value).RaiseOnError;
-
-  ValidateCache(tdTokenStatistics);
-  ValidateCache(tdTokenFlags);
+  Token.TokenV3.SetSessionReference(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetUIAccess(const Value: LongBool);
+procedure TTokenData.SetUIAccess;
 begin
-  NtxToken.Set(Token.hxToken, TokenUIAccess, Value).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenUIAccess);
-  ValidateCache(tdTokenStatistics);
-  ValidateCache(tdTokenFlags);
+  Token.TokenV3.SetUIAccess(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetVirtualizationAllowed(const Value: LongBool);
+procedure TTokenData.SetVirtualizationAllowed;
 begin
-  NtxToken.Set(Token.hxToken, TokenVirtualizationAllowed, Value).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenVirtualizationAllowed);
-  ValidateCache(tdTokenVirtualizationEnabled); // Just to be sure
-  ValidateCache(tdTokenStatistics);
-  ValidateCache(tdTokenFlags);
+  Token.TokenV3.SetVirtualizationAllowed(Value).RaiseOnError;
 end;
 
-procedure TTokenData.SetVirtualizationEnabled(const Value: LongBool);
+procedure TTokenData.SetVirtualizationEnabled;
 begin
-  NtxToken.Set(Token.hxToken, TokenVirtualizationEnabled, Value).RaiseOnError;
-
-  // Update the cache and notify event listeners
-  ValidateCache(tdTokenVirtualizationEnabled);
-  ValidateCache(tdTokenStatistics);
-  ValidateCache(tdTokenFlags);
+  Token.TokenV3.SetVirtualizationEnabled(Value).RaiseOnError;
 end;
 
 procedure TTokenData.ValidateCache(DataClass: TTokenDataClass);

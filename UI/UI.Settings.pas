@@ -3,7 +3,7 @@ unit UI.Settings;
 interface
 
 uses
-  TU.Tokens, System.Classes;
+  TU.Tokens, TU.Tokens3, System.Classes;
 
 type
   TColumns = set of TTokenStringClass;
@@ -18,48 +18,68 @@ type
   end;
 
 type
-  TColumnCategory = (uicGeneral, uicAdvanced, uicStatistics, uicLogon,
-    uicSource);
-
   TColumnInfo = record
     Caption: String;
-    Category: TColumnCategory;
     Width: Integer;
     Alignment: TAlignment;
   end;
 
 const
   ColumsInfo: array [TTokenStringClass] of TColumnInfo = (
-    (Caption: 'Token Type';         Category: uicGeneral; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Granted Access';     Category: uicGeneral; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'User Name';          Category: uicGeneral; Width: 160; Alignment: taLeftJustify),
-    (Caption: 'User State';         Category: uicGeneral; Width: 70; Alignment: taCenter),
-    (Caption: 'Session';            Category: uicGeneral; Width: 50; Alignment: taCenter),
-    (Caption: 'Elevation';          Category: uicGeneral; Width: 85; Alignment: taCenter),
-    (Caption: 'Integrity';          Category: uicGeneral; Width: 70; Alignment: taCenter),
-    (Caption: 'Object Address';     Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Handle';             Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'No-write-up';        Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'New-process-min';    Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'UIAccess';           Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Owner';              Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Primary Group';      Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Sandbox Inert';      Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Has Restrictions';   Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Flags';              Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Is Restricted';      Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Virtualization';     Category: uicAdvanced; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Token ID';           Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Exprires';           Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Dynamic Charged';    Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Dynamic Available';  Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Group Count';        Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Privilege Count';    Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Modified ID';        Category: uicStatistics; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Logon/Auth ID';      Category: uicLogon; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Source LUID';        Category: uicSource; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Source Name';        Category: uicSource; Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Origin';             Category: uicAdvanced; Width: 100; Alignment: taLeftJustify)
+    (Caption: 'Caption';                  Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Handle';                   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Access';                   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Kernel Address';           Width: 100; Alignment: taLeftJustify),
+    (Caption: 'User Name';                Width: 170; Alignment: taLeftJustify),
+    (Caption: 'Groups';                   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Privileges';               Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Owner';                    Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Primary Group';            Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Source';                   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Source ID';                Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Token Type';               Width: 85; Alignment: taLeftJustify),
+    (Caption: 'Token ID';                 Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Logon ID';                 Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Modified ID';              Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Exprires';                 Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Dynamic Charged';          Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Dynamic Available';        Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Restricted SIDs';          Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Session';                  Width: 50; Alignment: taCenter),
+    (Caption: 'Sandbox Inert';            Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Origin';                   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Elevation';                Width: 90; Alignment: taCenter),
+    (Caption: 'Flags';                    Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Restricted';               Width: 100; Alignment: taLeftJustify),
+    (Caption: 'SessionReference';         Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Virtualization';           Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Filtered';                 Width: 100; Alignment: taLeftJustify),
+    (Caption: 'UIAccess';                 Width: 100; Alignment: taLeftJustify),
+    (Caption: 'LowBox';                   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Private Namespace';        Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Child Flags';              Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Permissive Learning';      Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Redirection Trust';        Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Integrity';                Width: 70; Alignment: taCenter),
+    (Caption: 'Mandatory Policy';         Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Capabilities';             Width: 100; Alignment: taLeftJustify),
+    (Caption: 'AppContainer Number';      Width: 100; Alignment: taLeftJustify),
+    (Caption: 'AppContainer Name';        Width: 100; Alignment: taLeftJustify),
+    (Caption: 'AppContainer Description'; Width: 100; Alignment: taLeftJustify),
+    (Caption: 'User Claims';              Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Device Claims';            Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Restricted User Claims';   Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Restricted Device Claims'; Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Device Groups';            Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Restricted Device Groups'; Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Security Attributes';      Width: 100; Alignment: taLeftJustify),
+    (Caption: 'LPAC';                     Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Is Restricted';            Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Trust Level';              Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Singleton Attributes';     Width: 100; Alignment: taLeftJustify),
+    (Caption: 'BNO Isolation';            Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Sandboxed';                Width: 100; Alignment: taLeftJustify),
+    (Caption: 'Originating Trust';        Width: 100; Alignment: taLeftJustify)
   );
 
 implementation
@@ -68,8 +88,8 @@ implementation
 
 class constructor TSettings.Create;
 begin
-  SelectedColumns := [tsTokenType, tsAccess, tsUserName, tsSession,
-    tsElevationInfo, tsIntegrity];
+  SelectedColumns := [tsType, tsAccess, tsUser, tsSessionId,
+    tsElevation, tsIntegrity];
 
   UseSafeImpersonation := True;
 end;

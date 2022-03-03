@@ -15,7 +15,6 @@ object DialogRestrictToken: TDialogRestrictToken
   Font.Style = []
   OldCreateOrder = False
   ShowHint = True
-  OnClose = FormClose
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13

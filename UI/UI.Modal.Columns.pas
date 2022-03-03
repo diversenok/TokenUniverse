@@ -26,7 +26,7 @@ var
 implementation
 
 uses
-  TU.Tokens, UI.Settings;
+  TU.Tokens, UI.Settings, TU.Tokens3;
 
 {$R *.dfm}
 
@@ -48,7 +48,7 @@ begin
     with ListViewColumns.Items.Add do
     begin
       Caption := ColumsInfo[tsc].Caption;
-      GroupID := Integer(ColumsInfo[tsc].Category);
+      GroupID := 0;
       Checked := tsc in TSettings.SelectedColumns;
     end;
 end;

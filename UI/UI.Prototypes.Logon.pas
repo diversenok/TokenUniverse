@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, NtUtils.Lsa.Logon,
-  TU.Tokens, Ntapi.WinNt, Vcl.StdCtrls;
+  TU.Tokens, Ntapi.WinNt, Vcl.StdCtrls, Ntapi.ntseapi, NtUtils;
 
 type
   TFrameLogon = class(TFrame)
@@ -23,8 +23,10 @@ type
   private
     Token: IToken;
     LogonSource: TLogonSessionSource;
-    procedure OnOriginChange(const NewOrigin: TLuid);
-    procedure OnFlagsChange(const NewFlags: Cardinal);
+    OriginSubscription: IAutoReleasable;
+    FlagsSubscription: IAutoReleasable;
+    procedure OnOriginChange(const Status: TNtxStatus; const NewOrigin: TLogonId);
+    procedure OnFlagsChange(const Status: TNtxStatus; const NewFlags: TTokenFlags);
     function GetSubscribed: Boolean;
   public
     property Subscribed: Boolean read GetSubscribed;
@@ -38,8 +40,8 @@ implementation
 
 uses
   Vcl.Graphics, UI.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
-  Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils,
-  DelphiUiLib.Reflection.Records, DelphiUiLib.Reflection;
+  Ntapi.NtSecApi, DelphiUiLib.Reflection.Records, DelphiUiLib.Reflection,
+  TU.Tokens3;
 
 {$R *.dfm}
 
@@ -59,7 +61,7 @@ begin
     // TODO: think how to fix duplicate events
     ComboOrigin.Color := clWindow;
     if Token.InfoClass.Query(tdTokenOrigin) then
-      OnOriginChange(Token.InfoClass.Origin);
+      OnOriginChange(Default(TNtxStatus), Token.InfoClass.Origin);
   end;
 end;
 
@@ -71,7 +73,7 @@ begin
   finally
     CheckBoxReference.Font.Style := [];
     if Token.InfoClass.Query(tdTokenFlags) then
-      OnFlagsChange(Token.InfoClass.Flags);
+      OnFlagsChange(Default(TNtxStatus), Token.InfoClass.Flags);
   end;
 end;
 
@@ -105,14 +107,20 @@ begin
   Result := Assigned(Token);
 end;
 
-procedure TFrameLogon.OnFlagsChange(const NewFlags: Cardinal);
+procedure TFrameLogon.OnFlagsChange;
 begin
-  CheckBoxReference.Checked := NewFlags and TOKEN_SESSION_NOT_REFERENCED = 0;
-  CheckBoxReference.Font.Style := [];
+  if Status.IsSuccess then
+  begin
+    CheckBoxReference.Checked := NewFlags and TOKEN_SESSION_NOT_REFERENCED = 0;
+    CheckBoxReference.Font.Style := [];
+  end;
 end;
 
-procedure TFrameLogon.OnOriginChange(const NewOrigin: TLuid);
+procedure TFrameLogon.OnOriginChange;
 begin
+  if not Status.IsSuccess then
+    Exit;
+
   ComboOrigin.Color := clWindow;
   LogonSource.SelectedLogonSession := NewOrigin;
 
@@ -186,8 +194,8 @@ begin
     GroupId := GROUP_IND_ORIGIN;
   end;
 
-  Token.Events.OnOriginChange.Subscribe(OnOriginChange);
-  Token.Events.OnFlagsChange.Subscribe(OnFlagsChange);
+  OriginSubscription := (Token as IToken3).ObserveOrigin(OnOriginChange);
+  FlagsSubscription := (Token as IToken3).ObserveFlags(OnFlagsChange);
 
   ListView.Items.EndUpdate;
 end;
@@ -195,11 +203,7 @@ end;
 procedure TFrameLogon.UnsubscribeToken(const Dummy: IToken);
 begin
   if Assigned(Token) then
-  begin
-    Token.Events.OnFlagsChange.Unsubscribe(OnFlagsChange);
-    Token.Events.OnOriginChange.Unsubscribe(OnOriginChange);
     Token := nil;
-  end;
 end;
 
 end.

@@ -4,7 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, UI.Prototypes.Forms, TU.Tokens, Ntapi.WinSafer;
+  Vcl.StdCtrls, UI.Prototypes.Forms, TU.Tokens, Ntapi.WinSafer, NtUtils,
+  TU.Tokens3;
 
 type
   TDialogSafer = class(TChildForm)
@@ -20,15 +21,15 @@ type
     LabelName: TLabel;
     LabelFriendlyName: TLabel;
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
     procedure ComboBoxLevelChange(Sender: TObject);
   private
     Token: IToken;
+    CaptionSubscripion: IAutoReleasable;
     function GetScopeId: TSaferScopeId;
     function GetLevelId: TSaferLevelId;
-    procedure ChangedCaption(const NewCaption: String);
+    procedure ChangedCaption(const InfoClass: TTokenStringClass; const NewCaption: String);
   public
     constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
   end;
@@ -37,7 +38,7 @@ implementation
 
 uses
   UI.Settings, UI.MainForm, TU.Suggestions, System.UITypes,
-  NtUtils.WinSafer, NtUtils;
+  NtUtils.WinSafer;
 
 {$R *.dfm}
 
@@ -71,7 +72,7 @@ begin
     Close;
 end;
 
-procedure TDialogSafer.ChangedCaption(const NewCaption: String);
+procedure TDialogSafer.ChangedCaption;
 begin
   Caption := Format('Create Safer Token for "%s"', [NewCaption]);
 end;
@@ -101,17 +102,12 @@ begin
   Show;
 end;
 
-procedure TDialogSafer.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  Token.OnCaptionChange.Unsubscribe(ChangedCaption);
-end;
-
 procedure TDialogSafer.FormCreate(Sender: TObject);
 begin
   Assert(Assigned(Token));
 
-  Token.OnCaptionChange.Subscribe(ChangedCaption);
-  ChangedCaption(Token.Caption);
+  CaptionSubscripion := (Token as IToken3).ObserveString(tsCaption,
+    ChangedCaption);
 
   if Token.InfoClass.Query(tdTokenSandBoxInert) then
     CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;

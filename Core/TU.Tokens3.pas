@@ -30,11 +30,15 @@ type
     tsPrivileges,              // Number of privileges
     tsOwner,                   // Owner SID
     tsPrimaryGroup,            // Primary group SID
-    tsSource,                  // Token source string
+    tsSourceName,              // Token source string
+    tsSourceId,                // Token source LUID
     tsType,                    // Token type and impersonation level
     tsTokenId,                 // Unique token ID
     tsLogonId,                 // Logon session ID
     tsModifiedId,              // Unique modified ID value
+    tsExprires,                // Token expiration time
+    tsDynamicCharged,          // Number of bytes changed for the dynamic part of the object
+    tsDynamicAvailable,        // Number of bytes available for the dynamic part of the object
     tsRestrictedSids,          // Number of restricting SIDs
     tsSessionId,               // Terminal session ID
     tsSandBoxInert,            // Whether bypassing SRP and App Locker is enabled
@@ -250,8 +254,14 @@ type
 
     // Operations
     function AssignToProcess(const hxProcess: IHandle): TNtxStatus;
+    function AssignToProcessById(const PID: TProcessId): TNtxStatus;
     function AssignToThread(const hxThread: IHandle): TNtxStatus;
+    function AssignToThreadById(const TID: TThreadId): TNtxStatus;
     function AssignToThreadSafe(const hxThread: IHandle): TNtxStatus;
+    function AssignToThreadSafeById(const TID: TThreadId): TNtxStatus;
+    function AdjustGroupsReset: TNtxStatus;
+    function AdjustGroups(const SIDs: TArray<ISid>; const NewState: TGroupAttributes): TNtxStatus;
+    function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMising: Boolean = False): TNtxStatus;
   end;
 
 // Make a IToken3 instance from a handle
@@ -266,8 +276,9 @@ implementation
 uses
   Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
   NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
-  DelphiUiLib.Reflection.Numeric, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
+  DelphiUiLib.Reflection.Numeric, DelphiUiLib.Strings, DelphiUiLib.Reflection,
+  DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.Types,
+  NtUiLib.Reflection.AccessMasks,
   TU.Tokens3.Events, TU.Tokens;
 
 { Helper functions }
@@ -471,8 +482,14 @@ type
     function SetPrivateNamespace(const PrivateNamespace: LongBool): TNtxStatus;
     function SetChildProcessFlags(const Blocked: LongBool): TNtxStatus;
     function AssignToProcess(const hxProcess: IHandle): TNtxStatus;
+    function AssignToProcessById(const PID: TProcessId): TNtxStatus;
     function AssignToThread(const hxThread: IHandle): TNtxStatus;
+    function AssignToThreadById(const TID: TThreadId): TNtxStatus;
     function AssignToThreadSafe(const hxThread: IHandle): TNtxStatus;
+    function AssignToThreadSafeById(const TID: TThreadId): TNtxStatus;
+    function AdjustGroupsReset: TNtxStatus;
+    function AdjustGroups(const SIDs: TArray<ISid>; const NewState: TGroupAttributes): TNtxStatus;
+    function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMising: Boolean): TNtxStatus;
   end;
 
 function CaptureTokenHandle;
@@ -482,9 +499,33 @@ end;
 
 { TToken }
 
+function TToken.AdjustGroups;
+begin
+  Result := NtxAdjustGroups(hxToken, Sids, NewState, False);
+  SmartRefresh;
+end;
+
+function TToken.AdjustGroupsReset;
+begin
+  Result := NtxAdjustGroups(hxToken, nil, 0, True);
+  SmartRefresh;
+end;
+
+function TToken.AdjustPrivileges;
+begin
+  Result := NtxAdjustPrivileges(hxToken, Privileges, NewState, IgnoreMising);
+  SmartRefresh;
+end;
+
 function TToken.AssignToProcess;
 begin
   Result := NtxAssignPrimaryToken(hxProcess.Handle, hxToken);
+  SmartRefresh;
+end;
+
+function TToken.AssignToProcessById;
+begin
+  Result := NtxAssignPrimaryTokenById(PID, hxToken);
   SmartRefresh;
 end;
 
@@ -494,9 +535,21 @@ begin
   SmartRefresh;
 end;
 
+function TToken.AssignToThreadById;
+begin
+  Result := NtxSetThreadTokenById(TID, hxToken);
+  SmartRefresh;
+end;
+
 function TToken.AssignToThreadSafe;
 begin
   Result := NtxSafeSetThreadToken(hxThread, hxToken);
+  SmartRefresh;
+end;
+
+function TToken.AssignToThreadSafeById;
+begin
+  Result := NtxSafeSetThreadTokenById(TID, hxToken);
   SmartRefresh;
 end;
 
@@ -1404,7 +1457,10 @@ begin
   Result := NtxToken.Query(hxToken, TokenSource, Source);
 
   if Result.IsSuccess then
-    Events.StringCache[tsSource] := Source.Name;
+  begin
+    Events.StringCache[tsSourceName] := Source.Name;
+    Events.StringCache[tsSourceId] := IntToHexEx(Source.SourceIdentifier);
+  end;
 
   Events.OnSource.Notify(Result, Source);
 end;
@@ -1417,6 +1473,8 @@ begin
   begin
     Events.StringCache[tsTokenId] := IntToHexEx(Statistics.TokenId);
     Events.StringCache[tsLogonId] := IntToHexEx(Statistics.AuthenticationId);
+    Events.StringCache[tsExprires] := TType.Represent(
+      Statistics.ExpirationTime).Text;
 
     if Statistics.TokenType = TokenPrimary then
       Events.StringCache[tsType] := 'Primary'
@@ -1424,6 +1482,10 @@ begin
       Events.StringCache[tsType] := TNumeric.Represent(
         Statistics.ImpersonationLevel).Text;
 
+    Events.StringCache[tsDynamicCharged] := BytesToString(
+      Statistics.DynamicCharged);
+    Events.StringCache[tsDynamicAvailable] := BytesToString(
+      Statistics.DynamicAvailable);
     Events.StringCache[tsGroups] := IntToStrEx(Statistics.GroupCount);
     Events.StringCache[tsPrivileges] := IntToStrEx(Statistics.PrivilegeCount);
     Events.StringCache[tsModifiedId] := IntToHexEx(Statistics.ModifiedId);
@@ -1467,13 +1529,17 @@ begin
     tsUser:                    Success := RefreshUser.IsSuccess;
     tsOwner:                   Success := RefreshOwner.IsSuccess;
     tsPrimaryGroup:            Success := RefreshPrimaryGroup.IsSuccess;
-    tsSource:                  Success := RefreshSource.IsSuccess;
+    tsSourceName,
+    tsSourceId:                Success := RefreshSource.IsSuccess;
     tsGroups,
     tsPrivileges,
     tsType,
     tsTokenId,
     tsLogonId,
-    tsModifiedId:              Success := RefreshStatistics.IsSuccess;
+    tsModifiedId,
+    tsExprires,
+    tsDynamicCharged,
+    tsDynamicAvailable:        Success := RefreshStatistics.IsSuccess;
     tsRestrictedSids:          Success := RefreshRestrictedSids.IsSuccess;
     tsSessionId:               Success := RefreshSessionId.IsSuccess;
     tsOrigin:                  Success := RefreshOrigin.IsSuccess;
@@ -2046,7 +2112,8 @@ begin
     RefreshDefaultDacl;
 
   if Events.OnSource.HasObservers or
-    Events.OnStringChange[tsSource].HasSubscribers then
+    Events.OnStringChange[tsSourceName].HasSubscribers or
+    Events.OnStringChange[tsSourceId].HasSubscribers then
     RefreshSource;
 
   if Events.OnType.HasObservers then
@@ -2061,7 +2128,10 @@ begin
     Events.OnStringChange[tsType].HasSubscribers or
     Events.OnStringChange[tsTokenId].HasSubscribers or
     Events.OnStringChange[tsLogonId].HasSubscribers or
-    Events.OnStringChange[tsModifiedId].HasSubscribers then
+    Events.OnStringChange[tsModifiedId].HasSubscribers or
+    Events.OnStringChange[tsExprires].HasSubscribers or
+    Events.OnStringChange[tsDynamicCharged].HasSubscribers or
+    Events.OnStringChange[tsDynamicAvailable].HasSubscribers then
     RefreshStatistics;
 
   if Events.OnRestrictedSids.HasObservers or

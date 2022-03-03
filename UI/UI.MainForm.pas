@@ -130,7 +130,7 @@ uses
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
-  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms;
+  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3;
 
 {$R *.dfm}
 
@@ -139,12 +139,13 @@ uses
 procedure TFormMain.ActionAssignToProcess(Sender: TObject);
 var
   Token: IToken;
+  TokenType: TTokenType;
 begin
   Token := TokenView.Selected;
 
   // Ask the user if he wants to duplicate non-primary tokens
-  if Token.InfoClass.Query(tdTokenType) and
-    (Token.InfoClass.TokenTypeInfo <> ttPrimary) then
+  if (Token as IToken3).QueryType(TokenType).IsSuccess and
+    (TokenType <> TokenPrimary) then
     case TaskMessageDlg(USE_TYPE_MISMATCH, USE_NEED_PRIMARY, mtWarning,
       [mbYes, mbIgnore, mbCancel], -1) of
 
@@ -160,7 +161,8 @@ begin
         ;
     end;
 
-  Token.AssignToProcess(TProcessListDialog.Execute(Self, False).ProcessID);
+  (Token as IToken3).AssignToProcessById(
+    TProcessListDialog.Execute(Self, False).ProcessID).RaiseOnError;
 
   MessageDlg('The token was successfully assigned to the process.',
     mtInformation, [mbOK], 0);
@@ -169,12 +171,13 @@ end;
 procedure TFormMain.ActionAssignToThread(Sender: TObject);
 var
   Token: IToken;
+  TokenType: TTokenType;
 begin
   Token := TokenView.Selected;
 
   // Ask the user if he wants to duplicate primary tokens
-  if Token.InfoClass.Query(tdTokenType) and
-    (Token.InfoClass.TokenTypeInfo = ttPrimary) then
+  if (Token as IToken3).QueryType(TokenType).IsSuccess and
+    (TokenType = TokenPrimary) then
     case TaskMessageDlg(USE_TYPE_MISMATCH, USE_NEED_IMPERSONATION, mtWarning,
       [mbYes, mbIgnore, mbCancel], -1) of
 
@@ -191,9 +194,11 @@ begin
     end;
 
   if TSettings.UseSafeImpersonation then
-    Token.AssignToThreadSafe(TProcessListDialog.Execute(Self, True).ThreadID)
+    (Token as IToken3).AssignToThreadSafeById(TProcessListDialog.Execute(Self,
+      True).ThreadID).RaiseOnError
   else
-    Token.AssignToThread(TProcessListDialog.Execute(Self, True).ThreadID);
+    (Token as IToken3).AssignToThreadById(TProcessListDialog.Execute(Self,
+      True).ThreadID).RaiseOnError;
 
   CurrentUserChanged(Self);
   MessageDlg('The token was successfully assigned to the thread.',

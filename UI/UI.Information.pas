@@ -9,7 +9,7 @@ uses
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
   TU.Tokens.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
-  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, UI.Prototypes.Acl;
+  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, UI.Prototypes.Acl, TU.Tokens3;
 
 type
   TInfoDialog = class(TChildForm)
@@ -101,20 +101,34 @@ type
     Token: IToken;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
-    procedure ChangedCaption(const NewCaption: String);
-    procedure ChangedIntegrity(const NewIntegrity: TGroup);
-    procedure ChangedSession(const NewSession: Cardinal);
-    procedure ChangedUIAccess(const NewUIAccess: LongBool);
-    procedure ChangedPolicy(const NewPolicy: Cardinal);
-    procedure ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
-    procedure ChangedGroups(const NewGroups: TArray<TGroup>);
-    procedure ChangedStatistics(const NewStatistics: TTokenStatistics);
-    procedure ChangedOwner(const NewOwner: ISid);
-    procedure ChangedPrimaryGroup(const NewPrimary: ISid);
-    procedure ChangedVAllowed(const NewVAllowed: LongBool);
-    procedure ChangedVEnabled(const NewVEnabled: LongBool);
-    procedure ChangedElevation(const NewElevation: TTokenElevationInfo);
-    procedure ChangedFlags(const NewFlags: Cardinal);
+    CaptionSubscription: IAutoReleasable;
+    IntegritySubscription: IAutoReleasable;
+    SessionSubscription: IAutoReleasable;
+    UIAccessSubscription: IAutoReleasable;
+    PolicySubscription: IAutoReleasable;
+    PrivilegesSubscription: IAutoReleasable;
+    GroupsSubscription: IAutoReleasable;
+    StatisticsSubscription: IAutoReleasable;
+    OwnerSubscription: IAutoReleasable;
+    PrimaryGroupSubscription: IAutoReleasable;
+    VAllowedSubscription: IAutoReleasable;
+    VEnabledSubscription: IAutoReleasable;
+    ElevationSubscription: IAutoReleasable;
+    FlagsSubscription: IAutoReleasable;
+    procedure ChangedCaption(const InfoClass: TTokenStringClass; const NewCaption: String);
+    procedure ChangedIntegrity(const Status: TNtxStatus; const NewIntegrity: TGroup);
+    procedure ChangedSession(const Status: TNtxStatus; const NewSession: TSessionId);
+    procedure ChangedUIAccess(const Status: TNtxStatus; const NewUIAccess: LongBool);
+    procedure ChangedPolicy(const Status: TNtxStatus; const NewPolicy: TTokenMandatoryPolicy);
+    procedure ChangedPrivileges(const Status: TNtxStatus; const NewPrivileges: TArray<TPrivilege>);
+    procedure ChangedGroups(const Status: TNtxStatus; const NewGroups: TArray<TGroup>);
+    procedure ChangedStatistics(const Status: TNtxStatus; const NewStatistics: TTokenStatistics);
+    procedure ChangedOwner(const Status: TNtxStatus; const NewOwner: ISid);
+    procedure ChangedPrimaryGroup(const Status: TNtxStatus; const NewPrimary: ISid);
+    procedure ChangedVAllowed(const Status: TNtxStatus; const NewVAllowed: LongBool);
+    procedure ChangedVEnabled(const Status: TNtxStatus; const NewVEnabled: LongBool);
+    procedure ChangedElevation(const Status: TNtxStatus; const NewElevation: TTokenElevationInfo);
+    procedure ChangedFlags(const Status: TNtxStatus; const NewFlags: TTokenFlags);
     procedure SetAuditPolicy(const Audit: TArray<TAuditPolicyEntry>);
     procedure InspectGroup(const Group: TGroup);
     procedure Refresh;
@@ -128,13 +142,13 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList,
+  System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
   UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
   NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  UI.ProcessIcons, Ntapi.Versions, UI.AppContainer.View;
+  UI.ProcessIcons, Ntapi.Versions, UI.AppContainer.View, NtUiLib.Exceptions;
 
 const
   TAB_INVALIDATED = 0;
@@ -142,34 +156,70 @@ const
 
 {$R *.dfm}
 
+function GroupsToSids(const Groups: TArray<TGroup>): TArray<ISid>;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Groups));
+
+  for i := 0 to High(Groups) do
+    Result[i] := Groups[i].Sid;
+end;
+
 procedure TInfoDialog.ActionGroupDisable(Sender: TObject);
 begin
   if GroupsMemberFrame.VST.SelectedCount > 0 then
-    Token.GroupAdjust(GroupsMemberFrame.Selected, gaDisable);
+    (Token as IToken3).AdjustGroups(GroupsToSids(GroupsMemberFrame.Selected),
+      SE_GROUP_DISABLED).RaiseOnError;
 end;
 
 procedure TInfoDialog.ActionGroupEnable(Sender: TObject);
 begin
   if GroupsMemberFrame.VST.SelectedCount > 0 then
-    Token.GroupAdjust(GroupsMemberFrame.Selected, gaEnable);
+    (Token as IToken3).AdjustGroups(GroupsToSids(GroupsMemberFrame.Selected),
+      SE_GROUP_ENABLED).RaiseOnError;
 end;
 
 procedure TInfoDialog.ActionGroupReset(Sender: TObject);
 begin
   if GroupsMemberFrame.VST.SelectedCount > 0 then
-    Token.GroupAdjust(GroupsMemberFrame.Selected, gaResetDefault);
+    (Token as IToken3).AdjustGroupsReset.RaiseOnError;
+end;
+
+function PrivilegesToWellKnown(
+  const Privileges: TArray<TPrivilege>
+): TArray<TSeWellKnownPrivilege>;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Privileges));
+
+  for i := 0 to High(Privileges) do
+    Result[i] := TSeWellKnownPrivilege(Privileges[i].Luid);
+end;
+
+procedure RaiseOnWarningOrError(const Status: TNtxStatus);
+begin
+  if Status.Status = STATUS_NOT_ALL_ASSIGNED then
+    raise ENtError.Create(Status)
+  else
+    Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
 begin
   if PrivilegesFrame.VST.SelectedCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegesFrame.Selected, paDisable);
+    RaiseOnWarningOrError((Token as IToken3).AdjustPrivileges(
+      PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_DISABLED,
+      True));
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
 begin
   if PrivilegesFrame.VST.SelectedCount <> 0 then
-    Token.PrivilegeAdjust(PrivilegesFrame.Selected, paEnable);
+    RaiseOnWarningOrError((Token as IToken3).AdjustPrivileges(
+      PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_ENABLED,
+      True));
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
@@ -181,7 +231,9 @@ begin
     'This action can''t be undone.', mtWarning, mbYesNo, -1) <> idYes then
     Exit;
 
-  Token.PrivilegeAdjust(PrivilegesFrame.Selected, paRemove);
+  RaiseOnWarningOrError((Token as IToken3).AdjustPrivileges(
+    PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_REMOVED,
+    True));
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
@@ -191,7 +243,7 @@ begin
     ComboIntegrity.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenIntegrity) then
-      ChangedIntegrity(Token.InfoClass.Integrity);
+      ChangedIntegrity(Default(TNtxStatus), Token.InfoClass.Integrity);
     raise;
   end;
 end;
@@ -206,7 +258,7 @@ begin
     ComboOwner.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenOwner) then
-      ChangedOwner(Token.InfoClass.Owner);
+      ChangedOwner(Default(TNtxStatus), Token.InfoClass.Owner);
     raise;
   end;
 end;
@@ -230,7 +282,7 @@ begin
     CheckBoxNewProcessMin.Font.Style := [];
   except
     if Token.InfoClass.Query(tdTokenMandatoryPolicy) then
-      ChangedPolicy(Token.InfoClass.MandatoryPolicy);
+      ChangedPolicy(Default(TNtxStatus), Token.InfoClass.MandatoryPolicy);
     raise;
   end;
 end;
@@ -245,7 +297,7 @@ begin
     ComboPrimary.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenPrimaryGroup) then
-      ChangedPrimaryGroup(Token.InfoClass.PrimaryGroup);
+      ChangedPrimaryGroup(Default(TNtxStatus), Token.InfoClass.PrimaryGroup);
     raise;
   end;
 end;
@@ -256,7 +308,7 @@ begin
     Token.InfoClass.Session := SessionSource.SelectedSession;
   except
     if Token.InfoClass.Query(tdTokenSessionId) then
-      ChangedSession(Token.InfoClass.Session);
+      ChangedSession(Default(TNtxStatus), Token.InfoClass.Session);
     raise;
   end;
 end;
@@ -272,7 +324,7 @@ begin
     ComboUIAccess.Color := clWindow;
   except
     if Token.InfoClass.Query(tdTokenUIAccess) then
-      ChangedUIAccess(Token.InfoClass.UIAccess);
+      ChangedUIAccess(Default(TNtxStatus), Token.InfoClass.UIAccess);
     raise;
   end;
 end;
@@ -284,7 +336,7 @@ begin
     CheckBoxVAllowed.Font.Style := [];
   except
     if Token.InfoClass.Query(tdTokenVirtualizationAllowed) then
-      ChangedVAllowed(Token.InfoClass.VirtualizationAllowed);
+      ChangedVAllowed(Default(TNtxStatus), Token.InfoClass.VirtualizationAllowed);
     raise;
   end;
 end;
@@ -296,31 +348,36 @@ begin
     CheckBoxVEnabled.Font.Style := [];
   except
     if Token.InfoClass.Query(tdTokenVirtualizationEnabled) then
-      ChangedVEnabled(Token.InfoClass.VirtualizationEnabled);
+      ChangedVEnabled(Default(TNtxStatus), Token.InfoClass.VirtualizationEnabled);
     raise;
   end;
 end;
 
-procedure TInfoDialog.ChangedCaption(const NewCaption: String);
+procedure TInfoDialog.ChangedCaption;
 begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
 end;
 
 procedure TInfoDialog.ChangedElevation;
 begin
-  ListViewGeneral.Items[4].SubItems[0] :=
-    Token.InfoClass.QueryString(tsElevationInfo);
+  if Status.IsSuccess then
+    ListViewGeneral.Items[4].SubItems[0] :=
+      (Token as IToken3).QueryString(tsElevation);
 end;
 
-procedure TInfoDialog.ChangedFlags(const NewFlags: Cardinal);
+procedure TInfoDialog.ChangedFlags;
 begin
-  ListViewAdvanced.Items[13].SubItems[0] := Token.InfoClass.QueryString(tsFlags);
+  if Status.IsSuccess then
+    ListViewAdvanced.Items[10].SubItems[0] := (Token as IToken3).QueryString(tsFlags);
 end;
 
-procedure TInfoDialog.ChangedGroups(const NewGroups: TArray<TGroup>);
+procedure TInfoDialog.ChangedGroups;
 var
   i: Integer;
 begin
+  if not Status.IsSuccess then
+    Exit;
+
   TabGroups.Caption := Format('Groups (%d)', [Length(NewGroups)]);
 
   // Update group list
@@ -357,21 +414,30 @@ begin
   ComboOwner.Items.EndUpdate;
 end;
 
-procedure TInfoDialog.ChangedIntegrity(const NewIntegrity: TGroup);
+procedure TInfoDialog.ChangedIntegrity;
 begin
-  ComboIntegrity.Color := clWindow;
-  IntegritySource.SelectedIntegrity := RtlxRidSid(NewIntegrity.Sid);
-  ComboIntegrity.Hint := TType.Represent(NewIntegrity).Hint;
+  if Status.IsSuccess then
+  begin
+    ComboIntegrity.Color := clWindow;
+    IntegritySource.SelectedIntegrity := RtlxRidSid(NewIntegrity.Sid);
+    ComboIntegrity.Hint := TType.Represent(NewIntegrity).Hint;
+  end;
 end;
 
-procedure TInfoDialog.ChangedOwner(const NewOwner: ISid);
+procedure TInfoDialog.ChangedOwner;
 begin
-  ComboOwner.Color := clWindow;
-  ComboOwner.Text := LsaxSidToString(NewOwner);
+  if Status.IsSuccess then
+  begin
+    ComboOwner.Color := clWindow;
+    ComboOwner.Text := LsaxSidToString(NewOwner);
+  end;
 end;
 
-procedure TInfoDialog.ChangedPolicy(const NewPolicy: Cardinal);
+procedure TInfoDialog.ChangedPolicy;
 begin
+  if not Status.IsSuccess then
+    Exit;
+
   CheckBoxNoWriteUp.Checked := NewPolicy and
     TOKEN_MANDATORY_POLICY_NO_WRITE_UP <> 0;
 
@@ -382,60 +448,79 @@ begin
   CheckBoxNewProcessMin.Font.Style := [];
 end;
 
-procedure TInfoDialog.ChangedPrimaryGroup(const NewPrimary: ISid);
+procedure TInfoDialog.ChangedPrimaryGroup;
 begin
-  ComboPrimary.Color := clWindow;
-  ComboPrimary.Text := LsaxSidToString(NewPrimary);
-end;
-
-procedure TInfoDialog.ChangedPrivileges(const NewPrivileges: TArray<TPrivilege>);
-begin
-  TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
-  PrivilegesFrame.Load(NewPrivileges);
-end;
-
-procedure TInfoDialog.ChangedSession(const NewSession: Cardinal);
-begin
-  ComboSession.Color := clWindow;
-  SessionSource.SelectedSession := NewSession;
-end;
-
-procedure TInfoDialog.ChangedStatistics(const NewStatistics: TTokenStatistics);
-begin
-  with ListViewAdvanced do
+  if Status.IsSuccess then
   begin
-    Items[2].SubItems[0] := Token.InfoClass.QueryString(tsTokenID);
-    Items[3].SubItems[0] := Token.InfoClass.QueryString(tsLogonID);
-    Items[4].SubItems[0] := Token.InfoClass.QueryString(tsExprires);
-    Items[5].SubItems[0] := Token.InfoClass.QueryString(tsDynamicCharged);
-    Items[6].SubItems[0] := Token.InfoClass.QueryString(tsDynamicAvailable);
-    Items[7].SubItems[0] := Token.InfoClass.QueryString(tsGroupCount);
-    Items[8].SubItems[0] := Token.InfoClass.QueryString(tsPrivilegeCount);
-    Items[9].SubItems[0] := Token.InfoClass.QueryString(tsModifiedID);
-    // TODO: Error hints
+    ComboPrimary.Color := clWindow;
+    ComboPrimary.Text := LsaxSidToString(NewPrimary);
   end;
 end;
 
-procedure TInfoDialog.ChangedUIAccess(const NewUIAccess: LongBool);
+procedure TInfoDialog.ChangedPrivileges;
 begin
-  ComboUIAccess.Color := clWhite;
-  ComboUIAccess.ItemIndex := Integer(NewUIAccess = True);
+  if Status.IsSuccess then
+  begin
+    TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
+    PrivilegesFrame.Load(NewPrivileges);
+  end;
 end;
 
-procedure TInfoDialog.ChangedVAllowed(const NewVAllowed: LongBool);
+procedure TInfoDialog.ChangedSession;
 begin
-  CheckBoxVAllowed.OnClick := nil;
-  CheckBoxVAllowed.Font.Style := [];
-  CheckBoxVAllowed.Checked := NewVAllowed;
-  CheckBoxVAllowed.OnClick := CheckBoxClick;
+  if Status.IsSuccess then
+  begin
+    ComboSession.Color := clWindow;
+    SessionSource.SelectedSession := NewSession;
+  end;
 end;
 
-procedure TInfoDialog.ChangedVEnabled(const NewVEnabled: LongBool);
+procedure TInfoDialog.ChangedStatistics;
 begin
-  CheckBoxVEnabled.OnClick := nil;
-  CheckBoxVEnabled.Font.Style := [];
-  CheckBoxVEnabled.Checked := NewVEnabled;
-  CheckBoxVEnabled.OnClick := CheckBoxClick;
+  if Status.IsSuccess then
+    with ListViewAdvanced do
+    begin
+      Items[2].SubItems[0] := (Token as IToken3).QueryString(tsTokenID);
+      Items[3].SubItems[0] := (Token as IToken3).QueryString(tsLogonID);
+      Items[4].SubItems[0] := (Token as IToken3).QueryString(tsExprires);
+      Items[5].SubItems[0] := (Token as IToken3).QueryString(tsDynamicCharged);
+      Items[6].SubItems[0] := (Token as IToken3).QueryString(tsDynamicAvailable);
+      Items[7].SubItems[0] := (Token as IToken3).QueryString(tsGroups);
+      Items[8].SubItems[0] := (Token as IToken3).QueryString(tsPrivileges);
+      Items[9].SubItems[0] := (Token as IToken3).QueryString(tsModifiedID);
+      // TODO: Error hints
+    end;
+end;
+
+procedure TInfoDialog.ChangedUIAccess;
+begin
+  if Status.IsSuccess then
+  begin
+    ComboUIAccess.Color := clWhite;
+    ComboUIAccess.ItemIndex := Integer(NewUIAccess = True);
+  end;
+end;
+
+procedure TInfoDialog.ChangedVAllowed;
+begin
+  if Status.IsSuccess then
+  begin
+    CheckBoxVAllowed.OnClick := nil;
+    CheckBoxVAllowed.Font.Style := [];
+    CheckBoxVAllowed.Checked := NewVAllowed;
+    CheckBoxVAllowed.OnClick := CheckBoxClick;
+  end;
+end;
+
+procedure TInfoDialog.ChangedVEnabled;
+begin
+  if Status.IsSuccess then
+  begin
+    CheckBoxVEnabled.OnClick := nil;
+    CheckBoxVEnabled.Font.Style := [];
+    CheckBoxVEnabled.Checked := NewVEnabled;
+    CheckBoxVEnabled.OnClick := CheckBoxClick;
+  end;
 end;
 
 procedure TInfoDialog.CheckBoxClick(Sender: TObject);
@@ -476,20 +561,6 @@ end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Token.Events.OnFlagsChange.Unsubscribe(ChangedFlags);
-  Token.Events.OnVirtualizationEnabledChange.Unsubscribe(ChangedVEnabled);
-  Token.Events.OnVirtualizationAllowedChange.Unsubscribe(ChangedVAllowed);
-  Token.Events.OnPrimaryChange.Unsubscribe(ChangedPrimaryGroup);
-  Token.Events.OnOwnerChange.Unsubscribe(ChangedOwner);
-  Token.Events.OnStatisticsChange.Unsubscribe(ChangedStatistics);
-  Token.Events.OnGroupsChange.Unsubscribe(ChangedGroups);
-  Token.Events.OnPrivilegesChange.Unsubscribe(ChangedPrivileges);
-  Token.Events.OnPolicyChange.Unsubscribe(ChangedPolicy);
-  Token.Events.OnIntegrityChange.Unsubscribe(ChangedIntegrity);
-  Token.Events.OnUIAccessChange.Unsubscribe(ChangedUIAccess);
-  Token.Events.OnSessionChange.Unsubscribe(ChangedSession);
-  Token.Events.OnElevationInfoChange.Unsubscribe(ChangedElevation);
-  Token.OnCaptionChange.Unsubscribe(ChangedCaption);
   IntegritySource.Free;
   SessionSource.Free;
 end;
@@ -504,26 +575,20 @@ begin
   // handler, and distributes changed one to every existing event listener
   Refresh;
 
-  // Than subscribtion calls our event listeners with the latest availible
-  // information that is stored in the event handlers. By doing that in this
-  // order we avoid multiple calls while sharing the data between different
-  // tokens pointing the same kernel object.
-  Token.Events.OnElevationInfoChange.Subscribe(ChangedElevation);
-  Token.Events.OnSessionChange.Subscribe(ChangedSession);
-  Token.Events.OnUIAccessChange.Subscribe(ChangedUIAccess);
-  Token.Events.OnIntegrityChange.Subscribe(ChangedIntegrity);
-  Token.Events.OnPolicyChange.Subscribe(ChangedPolicy);
-  Token.Events.OnPrivilegesChange.Subscribe(ChangedPrivileges);
-  Token.Events.OnGroupsChange.Subscribe(ChangedGroups);
-  Token.Events.OnStatisticsChange.Subscribe(ChangedStatistics);
-  Token.Events.OnOwnerChange.Subscribe(ChangedOwner);
-  Token.Events.OnPrimaryChange.Subscribe(ChangedPrimaryGroup);
-  Token.Events.OnVirtualizationAllowedChange.Subscribe(ChangedVAllowed);
-  Token.Events.OnVirtualizationEnabledChange.Subscribe(ChangedVEnabled);
-  Token.Events.OnFlagsChange.Subscribe(ChangedFlags);
-
-  Token.OnCaptionChange.Subscribe(ChangedCaption);
-  Token.OnCaptionChange.Invoke(Token.Caption);
+  IntegritySubscription := (Token as IToken3).ObserveIntegrity(ChangedIntegrity);
+  SessionSubscription := (Token as IToken3).ObserveSessionId(ChangedSession);
+  UIAccessSubscription := (Token as IToken3).ObserveUIAccess(ChangedUIAccess);
+  PolicySubscription := (Token as IToken3).ObserveMandatoryPolicy(ChangedPolicy);
+  PrivilegesSubscription := (Token as IToken3).ObservePrivileges(ChangedPrivileges);
+  GroupsSubscription := (Token as IToken3).ObserveGroups(ChangedGroups);
+  StatisticsSubscription := (Token as IToken3).ObserveStatistics(ChangedStatistics);
+  OwnerSubscription := (Token as IToken3).ObserveOwner(ChangedOwner);
+  PrimaryGroupSubscription := (Token as IToken3).ObservePrimaryGroup(ChangedPrimaryGroup);
+  VAllowedSubscription := (Token as IToken3).ObserveVirtualizationAllowed(ChangedVAllowed);
+  VEnabledSubscription := (Token as IToken3).ObserveVirtualizationEnabled(ChangedVEnabled);
+  ElevationSubscription := (Token as IToken3).ObserveElevation(ChangedElevation);
+  FlagsSubscription := (Token as IToken3).ObserveFlags(ChangedFlags);
+  CaptionSubscription := (Token as IToken3).ObserveString(tsCaption, ChangedCaption);
 
   TabRestricted.Caption := Format('Restricting SIDs (%d)',
     [GroupsRestrictedFrame.VST.RootNodeCount]);
@@ -570,43 +635,26 @@ procedure TInfoDialog.Refresh;
 var
   Repr: TRepresentation;
 begin
+  (Token as IToken3).SmartRefresh;
+
   ListViewGeneral.Items.BeginUpdate;
   with ListViewGeneral do
   begin
-    Items[0].SubItems[0] := Token.InfoClass.QueryString(tsObjectAddress);
+    Items[0].SubItems[0] := (Token as IToken3).QueryString(tsAddress);
     ListViewObject.Items[0].SubItems[0] := Items[0].SubItems[0];
-    Items[1].SubItems[0] := Token.InfoClass.QueryString(tsHandle);
-    Items[2].SubItems[0] := Token.InfoClass.QueryString(tsAccess, True);
-    Items[3].SubItems[0] := Token.InfoClass.QueryString(tsTokenType);
+    Items[1].SubItems[0] := (Token as IToken3).QueryString(tsHandle);
+    Items[2].SubItems[0] := (Token as IToken3).QueryString(tsAccess, True);
+    Items[3].SubItems[0] := (Token as IToken3).QueryString(tsType);
   end;
   ListViewGeneral.Items.EndUpdate;
 
   ListViewAdvanced.Items.BeginUpdate;
   with ListViewAdvanced do
   begin
-    Items[0].SubItems[0] := Token.InfoClass.QueryString(tsSourceName);
-    Items[1].SubItems[0] := Token.InfoClass.QueryString(tsSourceLUID);
-    Items[10].SubItems[0] := Token.InfoClass.QueryString(tsSandboxInert);
-    Items[11].SubItems[0] := Token.InfoClass.QueryString(tsHasRestrictions);
-    Items[12].SubItems[0] := Token.InfoClass.QueryString(tsIsRestricted);
+    Items[0].SubItems[0] := (Token as IToken3).QueryString(tsSourceName);
+    Items[1].SubItems[0] := (Token as IToken3).QueryString(tsSourceId);
   end;
   ListViewAdvanced.Items.EndUpdate;
-
-  // This triggers events if the value has changed
-  Token.InfoClass.ReQuery(tdTokenIntegrity);
-  Token.InfoClass.ReQuery(tdTokenSessionId);
-  Token.InfoClass.ReQuery(tdTokenOrigin);
-  Token.InfoClass.ReQuery(tdTokenElevationInfo);
-  Token.InfoClass.ReQuery(tdTokenUIAccess);
-  Token.InfoClass.ReQuery(tdTokenMandatoryPolicy);
-  Token.InfoClass.ReQuery(tdTokenPrivileges);
-  Token.InfoClass.ReQuery(tdTokenGroups);
-  Token.InfoClass.ReQuery(tdTokenStatistics);
-  Token.InfoClass.ReQuery(tdTokenOwner);
-  Token.InfoClass.ReQuery(tdTokenPrimaryGroup);
-  Token.InfoClass.ReQuery(tdTokenVirtualizationAllowed);
-  Token.InfoClass.ReQuery(tdTokenVirtualizationEnabled);
-  Token.InfoClass.ReQuery(tdTokenFlags);
 
   if Token.InfoClass.Query(tdTokenDefaultDacl) then
     FrameDefaultDacl.Load(Auto.RefOrNil<PAcl>(Token.InfoClass.DefaultDacl), nil);
