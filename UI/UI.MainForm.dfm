@@ -199,7 +199,7 @@ object FormMain: TFormMain
       OnClick = ActionRestrict
     end
     object TokenRestrictSafer: TMenuItem
-      Caption = 'Create restricted token via Safer API...'
+      Caption = 'Create restricted token via WinSafer API...'
       Enabled = False
       ShortCut = 24658
       OnClick = TokenRestrictSaferClick

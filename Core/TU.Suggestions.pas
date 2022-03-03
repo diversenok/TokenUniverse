@@ -10,9 +10,8 @@ const
    'includes everything from Anonymous up to Delegation). ' +
    'Do you want to duplicate it first?';
 
-  NO_SANBOX_INERT = 'The resulting token doesn''t contain SandboxInert flag ' +
-    'despite you tried to enable it. Looks like this action requires ' +
-    'Tcb privilege on your system.';
+  NO_SANBOX_INERT = 'The system did not set the Sandbox Inert flag despite ' +
+    'being requested to.';
 
 implementation
 

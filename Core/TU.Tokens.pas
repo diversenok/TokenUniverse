@@ -323,10 +323,6 @@ type
     constructor CreateAnonymous(Access: TAccessMask = MAXIMUM_ALLOWED;
       HandleAttributes: Cardinal = 0);
 
-    /// <summary> Create a restricted token using Safer API. </summary>
-    constructor CreateSaferToken(SrcToken: IToken; ScopeId: TSaferScopeId;
-      LevelId: TSaferLevelId; MakeInert: Boolean = False);
-
     /// <summary>
     ///  Opens a linked token for the current token.
     ///  Requires SeTcbPrivilege to open a primary token.
@@ -536,34 +532,6 @@ begin
   LsaxLogonS4U(hxToken, Domain, User, Source, AddGroups).RaiseOnError;
 
   FCaption := 'S4U logon of ' + User;
-end;
-
-constructor TToken.CreateSaferToken(SrcToken: IToken; ScopeId: TSaferScopeId;
-  LevelId: TSaferLevelId; MakeInert: Boolean = False);
-var
-  LevelName: String;
-begin
-  SafexComputeSaferTokenById(hxToken, SrcToken.Handle, ScopeId, LevelId,
-    MakeInert).RaiseOnError;
-
-  case LevelId of
-    SAFER_LEVELID_FULLYTRUSTED:
-      LevelName := 'Unrestricted';
-
-    SAFER_LEVELID_NORMALUSER:
-      LevelName := 'Normal';
-
-    SAFER_LEVELID_CONSTRAINED:
-      LevelName := 'Constrained';
-
-    SAFER_LEVELID_UNTRUSTED:
-      LevelName := 'Untrusted';
-
-    SAFER_LEVELID_DISALLOWED:
-      LevelName := 'Disallowed'
-  end;
-
-  FCaption := LevelName + ' Safer for ' + SrcToken.Caption
 end;
 
 constructor TToken.CreateWithLogon(LogonType: TSecurityLogonType;

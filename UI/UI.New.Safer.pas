@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, UI.Prototypes.Forms, TU.Tokens, Ntapi.WinSafer, NtUtils,
+  Vcl.StdCtrls, UI.Prototypes.Forms, Ntapi.WinSafer, NtUtils,
   TU.Tokens3;
 
 type
@@ -25,48 +25,74 @@ type
     procedure ButtonOKClick(Sender: TObject);
     procedure ComboBoxLevelChange(Sender: TObject);
   private
-    Token: IToken;
+    Token: IToken3;
     CaptionSubscripion: IAutoReleasable;
     function GetScopeId: TSaferScopeId;
     function GetLevelId: TSaferLevelId;
     procedure ChangedCaption(const InfoClass: TTokenStringClass; const NewCaption: String);
   public
-    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
+    constructor CreateFromToken(AOwner: TComponent; const SrcToken: IToken3);
   end;
 
 implementation
 
 uses
   UI.Settings, UI.MainForm, TU.Suggestions, System.UITypes,
-  NtUtils.WinSafer;
+  NtUtils.WinSafer, NtUiLib.Errors, TU.Tokens;
 
 {$R *.dfm}
 
 { TDialogSafer }
 
-procedure TDialogSafer.ButtonCancelClick(Sender: TObject);
+procedure TDialogSafer.ButtonCancelClick;
 begin
   Close;
 end;
 
-procedure TDialogSafer.ButtonOKClick(Sender: TObject);
+procedure TDialogSafer.ButtonOKClick;
 var
+  hxNewToken: IHandle;
   NewToken: IToken;
+  LevelName: String;
+  SandboxInert: LongBool;
 begin
-  NewToken := TToken.CreateSaferToken(Token, GetScopeId, GetLevelId,
-    CheckBoxSandboxInert.Checked);
+  SafexComputeSaferTokenById(hxNewToken, Token.Handle, GetScopeId, GetLevelId,
+    CheckBoxSandboxInert.Checked).RaiseOnError;
+
+  case GetLevelId of
+    SAFER_LEVELID_FULLYTRUSTED:
+      LevelName := 'Unrestricted';
+
+    SAFER_LEVELID_NORMALUSER:
+      LevelName := 'Normal';
+
+    SAFER_LEVELID_CONSTRAINED:
+      LevelName := 'Constrained';
+
+    SAFER_LEVELID_UNTRUSTED:
+      LevelName := 'Untrusted';
+
+    SAFER_LEVELID_DISALLOWED:
+      LevelName := 'Disallowed'
+  else
+    LevelName := 'Unknown';
+  end;
+
+  NewToken := TToken.Create(hxNewToken, LevelName + ' Safer for ' +
+    Token.Caption);
 
   FormMain.TokenView.Add(NewToken);
 
-  // Check whether SandboxInert was actually enabled
-  if CheckBoxSandboxInert.Checked then
-    if NewToken.InfoClass.Query(tdTokenSandBoxInert) and
-      not NewToken.InfoClass.SandboxInert then
-      begin
-        if not TSettings.NoCloseCreationDialogs then
-          Hide;
-        MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
-      end;
+  // Check whether Sandbox Inert was actually enabled
+  if CheckBoxSandboxInert.Checked and
+    (NewToken as IToken3).QuerySandboxInert(SandboxInert).IsSuccess and
+    not SandboxInert then
+  begin
+    if not TSettings.NoCloseCreationDialogs then
+      Hide;
+
+    MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
+  end;
 
   if not TSettings.NoCloseCreationDialogs then
     Close;
@@ -77,7 +103,7 @@ begin
   Caption := Format('Create Safer Token for "%s"', [NewCaption]);
 end;
 
-procedure TDialogSafer.ComboBoxLevelChange(Sender: TObject);
+procedure TDialogSafer.ComboBoxLevelChange;
 var
   hxLevel: IHandle;
   Name, Description: string;
@@ -95,27 +121,30 @@ begin
   LabelDescription.Caption := Description;
 end;
 
-constructor TDialogSafer.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
+constructor TDialogSafer.CreateFromToken;
 begin
   Token := SrcToken;
   inherited CreateChild(AOwner, cfmDesktop);
   Show;
 end;
 
-procedure TDialogSafer.FormCreate(Sender: TObject);
+procedure TDialogSafer.FormCreate;
+var
+  SandboxInert: LongBool;
 begin
-  Assert(Assigned(Token));
+  if not Assigned(Token) then
+    raise EAccessViolation.Create('Token is not set');
 
   CaptionSubscripion := (Token as IToken3).ObserveString(tsCaption,
     ChangedCaption);
 
-  if Token.InfoClass.Query(tdTokenSandBoxInert) then
-    CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;
+  CheckBoxSandboxInert.Checked := Token.QuerySandboxInert(
+    SandboxInert).IsSuccess and SandboxInert;
 
   ComboBoxLevelChange(Sender);
 end;
 
-function TDialogSafer.GetLevelId: TSaferLevelId;
+function TDialogSafer.GetLevelId;
 begin
   case ComboBoxLevel.ItemIndex of
     0: Result := SAFER_LEVELID_FULLYTRUSTED;
@@ -128,7 +157,7 @@ begin
   end;
 end;
 
-function TDialogSafer.GetScopeId: TSaferScopeId;
+function TDialogSafer.GetScopeId;
 begin
   if ComboBoxScope.ItemIndex = 0 then
     Result := SAFER_SCOPEID_MACHINE

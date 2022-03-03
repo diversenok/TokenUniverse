@@ -473,7 +473,7 @@ end;
 
 procedure TFormMain.TokenRestrictSaferClick(Sender: TObject);
 begin
-  TDialogSafer.CreateFromToken(Self, TokenView.Selected);
+  TDialogSafer.CreateFromToken(Self, TokenView.Selected as IToken3);
 end;
 
 procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;
