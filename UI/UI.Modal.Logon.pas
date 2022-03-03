@@ -50,7 +50,7 @@ uses
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser, System.UITypes,
   NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  Ntapi.ntpsapi;
+  Ntapi.ntpsapi, UI.Exceptions;
 
 {$R *.dfm}
 
@@ -71,7 +71,7 @@ begin
       SuggestCurrentLogonGroup;
   except
     on E: Exception do
-      FormMain.ApplicationEventsException(Self, E)
+      ReportException(E);
   end;
 
   GroupsFrame.Add([TDialogPickUser.PickNew(Self)]);

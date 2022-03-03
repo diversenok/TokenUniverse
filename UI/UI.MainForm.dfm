@@ -585,11 +585,6 @@ object FormMain: TFormMain
       0000000000000001000000000000FFFF00000000000000000000000000000000
       000000000000}
   end
-  object ApplicationEvents: TApplicationEvents
-    OnException = ApplicationEventsException
-    Left = 264
-    Top = 112
-  end
   object SearchButtons: TImageList
     Left = 264
     Top = 176

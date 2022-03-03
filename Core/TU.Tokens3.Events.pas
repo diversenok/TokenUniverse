@@ -84,7 +84,7 @@ implementation
 
 uses
   Ntapi.crt, NtUtils.Security.Sid,
-  DelphiUtils.Arrays, System.SysUtils, TU.Exceptions;
+  DelphiUtils.Arrays, System.SysUtils, UI.Exceptions;
 
 type
   TEventStorage = record

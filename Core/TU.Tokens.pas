@@ -5,11 +5,9 @@ interface
 {$MINENUMSIZE 4}
 {$WARN SYMBOL_PLATFORM OFF}
 uses
-  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.WinSafer,
-  TU.Tokens.Types, NtUtils.Objects.Snapshots, DelphiUtils.Events,
-  NtUtils.Security.Sid, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils.Lsa.Audit,
-  System.Generics.Collections, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
-  NtUtils.Security.Acl, NtUtils.Objects, NtUtils, TU.Tokens3;
+  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.ntseapi, Ntapi.NtSecApi,
+  NtUtils.Objects.Snapshots, NtUtils.Lsa.Logon, NtUtils.Objects, NtUtils,
+  TU.Tokens.Types, TU.Tokens3;
 
 type
   TTokenElevationInfo = TU.Tokens3.TTokenElevationInfo;
@@ -54,7 +52,7 @@ type
     Statistics: TTokenStatistics;
     RestrictedSids: TArray<TGroup>;
     Session: TSessionId;
-    AuditPolicy: IMemory<PTokenAuditPolicy>;
+    AuditPolicy: ITokenAuditPolicy;
     SandboxInert: LongBool;
     Origin: TLogonId;
     ElevationInfo: TTokenElevationInfo;
@@ -82,7 +80,7 @@ type
     procedure SetIntegrityLevel(const Value: Cardinal);
     procedure SetMandatoryPolicy(const Value: Cardinal);
     procedure SetSession(const Value: Cardinal);
-    procedure SetAuditPolicy(const Value: IMemory<PTokenAuditPolicy>);
+    procedure SetAuditPolicy(const Value: ITokenAuditPolicy);
     procedure SetOrigin(const Value: TLuid);
     procedure SetUIAccess(const Value: LongBool);
     procedure SetOwner(Value: ISid);
@@ -101,7 +99,7 @@ type
     function GetRestrictedSids: TArray<TGroup>;
     function GetSandboxInert: LongBool;
     function GetSession: Cardinal;
-    function GetAuditPolicy: IMemory<PTokenAuditPolicy>;
+    function GetAuditPolicy: ITokenAuditPolicy;
     function GetSource: TTokenSource;
     function GetStatistics: TTokenStatistics;
     function GetTokenType: TTokenTypeEx;
@@ -133,7 +131,7 @@ type
     // TODO: class 13 TokenGroupsAndPrivileges (maybe use for optimization)
     property SessionReference: LongBool write SetSessionReference;              // class 14 #settable + not gettable
     property SandboxInert: LongBool read GetSandboxInert;                       // class 15
-    property AuditPolicy: IMemory<PTokenAuditPolicy> read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
+    property AuditPolicy: ITokenAuditPolicy read GetAuditPolicy write SetAuditPolicy;// class 16 #settable
     property Origin: TLuid read GetOrigin write SetOrigin;                      // class 17 #settable
     property ElevationInfo: TTokenElevationInfo read GetElevationInfo;          // class 18 & 20
     // LinkedToken (class 19 #settable) is exported directly by TToken
@@ -172,9 +170,6 @@ type
 
   {-------------------  TToken object definition  ---------------------------}
 
-  TTokenEvent = TEvent<IToken>;
-  PTokenEvent = ^TTokenEvent;
-
   IToken = interface
     ['{A5F087C7-53FE-4C6F-B4E9-2AF5CD270117}']
     procedure SetCaption(const Value: String);
@@ -201,16 +196,12 @@ type
     function GetHandle: IHandle;
     function GetInfoClassData: PTokenData;
     function GetCache: TTokenCacheAndEvents;
-    function GetOnClose: PTokenEvent;
-    function GetOnCanClose: PTokenEvent;
   protected
     hxToken: IHandle;
     FInfoClassData: TTokenData;
     Cache: TTokenCacheAndEvents;
 
     FCaption: String;
-    FOnCanClose: TTokenEvent;
-    FOnClose: TTokenEvent;
 
     // Migration to the new IToken interface
     FTokenV3: IToken3;
@@ -224,16 +215,6 @@ type
     property InfoClass: PTokenData read GetInfoClassData;
     property Caption: String read GetCaption write SetCaption;
 
-    /// <summary>
-    ///  The event is called to test whether the token can be destroyed.
-    ///  The listener can deny object destruction by calling
-    ///  <see cref="System.SysUtils.EAbort"/>.
-    /// </summary>
-    property OnCanClose: PTokenEvent read GetOnCanClose;
-
-    /// <summary> The event is called on token destruction. </summary>
-    /// <remarks> Be aware of exceptions at this point. </remarks>
-    property OnClose: PTokenEvent read GetOnClose;
     destructor Destroy; override;
 
     function SendHandleToProcess(PID: NativeUInt): NativeUInt;
@@ -335,10 +316,9 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.ntpsapi, NtUtils.Tokens.Info,
-  NtUtils.Processes, NtUtils.WinStation, NtUtils.Tokens, NtUiLib.Errors,
-  NtUtils.Tokens.Impersonate, System.SysUtils, NtUtils.Tokens.Logon,
-  NtUtils.WinSafer, DelphiUtils.Arrays, NtUtils.Lsa.Sid, NtUiLib.Exceptions;
+  Ntapi.ntpsapi, NtUtils.Tokens.Info, NtUtils.Processes, NtUtils.WinStation,
+  NtUtils.Tokens, NtUiLib.Errors, NtUtils.Tokens.Impersonate, System.SysUtils,
+  NtUtils.Tokens.Logon, DelphiUtils.Arrays, NtUtils.Lsa.Sid;
 
 { TToken }
 
@@ -545,9 +525,6 @@ end;
 
 destructor TToken.Destroy;
 begin
-  // Inform event listeners that we are closing the handle
-  OnClose.Invoke(Self);
-
   // Unregister from the factory before we close the handle
   Cache.Free;
 
@@ -572,16 +549,6 @@ end;
 function TToken.GetInfoClassData: PTokenData;
 begin
   Result := @FInfoClassData;
-end;
-
-function TToken.GetOnCanClose: PTokenEvent;
-begin
-  Result := @FOnCanClose;
-end;
-
-function TToken.GetOnClose: PTokenEvent;
-begin
-  Result := @FOnClose;
 end;
 
 function TToken.OpenLinkedToken(out Token: IToken): TNtxStatus;
@@ -628,7 +595,7 @@ begin
   Result := Token.Cache.AppContainer;
 end;
 
-function TTokenData.GetAuditPolicy: IMemory<PTokenAuditPolicy>;
+function TTokenData.GetAuditPolicy: ITokenAuditPolicy;
 begin
   Assert(Token.Cache.IsCached[tdTokenAuditPolicy]);
   Result := Token.Cache.AuditPolicy;

@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList, Vcl.AppEvnts,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
   VclEx.ListView, UI.Prototypes, VclEx.Form;
 
@@ -43,7 +43,6 @@ type
     TokenOpenLinked: TMenuItem;
     TokenOpenInfo: TMenuItem;
     SmallIcons: TImageList;
-    ApplicationEvents: TApplicationEvents;
     N1: TMenuItem;
     MenuExit: TMenuItem;
     SelectColumns: TMenuItem;
@@ -83,7 +82,6 @@ type
     procedure ActionOpen(Sender: TObject);
     procedure RunAsSystemClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ApplicationEventsException(Sender: TObject; E: Exception);
     procedure ActionSteal(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ActionWTSQuery(Sender: TObject);
@@ -345,11 +343,6 @@ begin
   TokenView.Add(TToken.CreateQueryWts(TComboDialog.PickSession(Self)));
 end;
 
-procedure TFormMain.ApplicationEventsException(Sender: TObject; E: Exception);
-begin
-  ShowNtxException(Application.Handle, E);
-end;
-
 procedure TFormMain.CurrentUserChanged(Sender: TObject);
 begin
   if Active or (Sender <> TimerStateCheck) then
@@ -358,7 +351,7 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  TFormEvents.OnMainFormClose.Invoke(Self);
+  TFormEvents.OnMainFormClose.Invoke;
   TokenView.Free;
 end;
 

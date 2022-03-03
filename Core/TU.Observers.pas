@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  System.SysUtils, TU.Exceptions;
+  System.SysUtils, UI.Exceptions;
 
 { TAutoObservers<T> }
 
