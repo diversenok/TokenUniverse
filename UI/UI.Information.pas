@@ -143,12 +143,13 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
-  UI.Information.Access, UI.Sid.View, NtUtils.Processes.Snapshots,
-  NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.Strings,
+  UI.Information.Access, UI.Sid.View, NtUtils.Objects.Snapshots,
+  NtUiLib.Errors, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
-  Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection,
+  Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  UI.ProcessIcons, Ntapi.Versions, UI.AppContainer.View, NtUiLib.Exceptions;
+  UI.ProcessIcons, Ntapi.Versions, UI.AppContainer.View, NtUiLib.Exceptions,
+  Ntapi.ntobapi;
 
 const
   TAB_INVALIDATED = 0;
@@ -237,119 +238,150 @@ begin
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
+var
+  Status: TNtxStatus;
 begin
-  try
-    Token.InfoClass.IntegrityLevel := IntegritySource.SelectedIntegrity;
-    ComboIntegrity.Color := clWindow;
-  except
-    if Token.InfoClass.Query(tdTokenIntegrity) then
-      ChangedIntegrity(Default(TNtxStatus), Token.InfoClass.Integrity);
-    raise;
+  Status := (Token as IToken3).SetIntegrity(IntegritySource.SelectedIntegrity);
+  ComboIntegrity.Color := clWindow;
+
+  if not Status.IsSuccess then
+  begin
+    IntegritySubscription := nil;
+    IntegritySubscription := (Token as IToken3).ObserveIntegrity(ChangedIntegrity);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetOwnerClick(Sender: TObject);
 var
   Sid: ISid;
+  Status: TNtxStatus;
 begin
-  try
-    LsaxLookupNameOrSddl(ComboOwner.Text, Sid).RaiseOnError;
-    Token.InfoClass.Owner := Sid;
-    ComboOwner.Color := clWindow;
-  except
-    if Token.InfoClass.Query(tdTokenOwner) then
-      ChangedOwner(Default(TNtxStatus), Token.InfoClass.Owner);
-    raise;
+  LsaxLookupNameOrSddl(ComboOwner.Text, Sid).RaiseOnError;
+  Status := (Token as IToken3).SetOwner(Sid);
+  ComboOwner.Color := clWindow;
+
+  if not Status.IsSuccess then
+  begin
+    OwnerSubscription := nil;
+    OwnerSubscription := (Token as IToken3).ObserveOwner(ChangedOwner);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetPolicyClick(Sender: TObject);
 var
-  Policy: Cardinal;
+  Policy: TTokenMandatoryPolicy;
+  Status: TNtxStatus;
 begin
-  try
-    Policy := 0;
+  Policy := 0;
 
-    if CheckBoxNoWriteUp.Checked then
-      Policy := Policy or TOKEN_MANDATORY_POLICY_NO_WRITE_UP;
+  if CheckBoxNoWriteUp.Checked then
+    Policy := Policy or TOKEN_MANDATORY_POLICY_NO_WRITE_UP;
 
-    if CheckBoxNewProcessMin.Checked then
-      Policy := Policy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
+  if CheckBoxNewProcessMin.Checked then
+    Policy := Policy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
 
-    Token.InfoClass.MandatoryPolicy := Policy;
+  Status := (Token as IToken3).SetMandatoryPolicy(Policy);
+  CheckBoxNoWriteUp.Font.Style := [];
+  CheckBoxNewProcessMin.Font.Style := [];
 
-    CheckBoxNoWriteUp.Font.Style := [];
-    CheckBoxNewProcessMin.Font.Style := [];
-  except
-    if Token.InfoClass.Query(tdTokenMandatoryPolicy) then
-      ChangedPolicy(Default(TNtxStatus), Token.InfoClass.MandatoryPolicy);
-    raise;
+  if not Status.IsSuccess then
+  begin
+    PolicySubscription := nil;
+    PolicySubscription := (Token as IToken3).ObserveMandatoryPolicy(ChangedPolicy);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetPrimaryClick(Sender: TObject);
 var
   Sid: ISid;
+  Status: TNtxStatus;
 begin
-  try
-    LsaxLookupNameOrSddl(ComboPrimary.Text, Sid).RaiseOnError;
-    Token.InfoClass.PrimaryGroup := Sid;
-    ComboPrimary.Color := clWindow;
-  except
-    if Token.InfoClass.Query(tdTokenPrimaryGroup) then
-      ChangedPrimaryGroup(Default(TNtxStatus), Token.InfoClass.PrimaryGroup);
-    raise;
+  LsaxLookupNameOrSddl(ComboPrimary.Text, Sid).RaiseOnError;
+  Status := (Token as IToken3).SetPrimaryGroup(Sid);
+  ComboPrimary.Color := clWindow;
+
+  if not Status.IsSuccess then
+  begin
+    PrimaryGroupSubscription := nil;
+    PrimaryGroupSubscription := (Token as IToken3).ObservePrimaryGroup(
+      ChangedPrimaryGroup);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
+var
+  Status: TNtxStatus;
 begin
-  try
-    Token.InfoClass.Session := SessionSource.SelectedSession;
-  except
-    if Token.InfoClass.Query(tdTokenSessionId) then
-      ChangedSession(Default(TNtxStatus), Token.InfoClass.Session);
-    raise;
+  Status := (Token as IToken3).SetSessionId(SessionSource.SelectedSession);
+
+  if not Status.IsSuccess then
+  begin
+    SessionSubscription := nil;
+    SessionSubscription := (Token as IToken3).ObserveSessionId(ChangedSession);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetUIAccessClick(Sender: TObject);
+var
+  UIAccess: LongBool;
+  Status: TNtxStatus;
 begin
-  try
-    if ComboUIAccess.ItemIndex = -1 then
-      Token.InfoClass.UIAccess := LongBool(StrToUIntEx(ComboUIAccess.Text,
-        'UIAccess value'))
-    else
-      Token.InfoClass.UIAccess := LongBool(ComboUIAccess.ItemIndex);
-    ComboUIAccess.Color := clWindow;
-  except
-    if Token.InfoClass.Query(tdTokenUIAccess) then
-      ChangedUIAccess(Default(TNtxStatus), Token.InfoClass.UIAccess);
-    raise;
+  if ComboUIAccess.ItemIndex = -1 then
+    UIAccess := LongBool(StrToUIntEx(ComboUIAccess.Text, 'UIAccess value'))
+  else
+    UIAccess := LongBool(ComboUIAccess.ItemIndex);
+
+  Status := (Token as IToken3).SetUIAccess(UIAccess);
+  ComboUIAccess.Color := clWindow;
+
+  if not Status.IsSuccess then
+  begin
+    UIAccessSubscription := nil;
+    UIAccessSubscription := (Token as IToken3).ObserveUIAccess(ChangedUIAccess);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetVAllowedClick(Sender: TObject);
+var
+  Status: TNtxStatus;
 begin
-  try
-    Token.InfoClass.VirtualizationAllowed := CheckBoxVAllowed.Checked;
-    CheckBoxVAllowed.Font.Style := [];
-  except
-    if Token.InfoClass.Query(tdTokenVirtualizationAllowed) then
-      ChangedVAllowed(Default(TNtxStatus), Token.InfoClass.VirtualizationAllowed);
-    raise;
+  Status := (Token as IToken3).SetVirtualizationAllowed(CheckBoxVAllowed.Checked);
+  CheckBoxVAllowed.Font.Style := [];
+
+  if not Status.IsSuccess then
+  begin
+    VAllowedSubscription := nil;
+    VAllowedSubscription := (Token as IToken3).ObserveVirtualizationAllowed(
+      ChangedVAllowed);
   end;
+
+  Status.RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetVEnabledClick(Sender: TObject);
+var
+  Status: TNtxStatus;
 begin
-  try
-    Token.InfoClass.VirtualizationEnabled := CheckBoxVEnabled.Checked;
-    CheckBoxVEnabled.Font.Style := [];
-  except
-    if Token.InfoClass.Query(tdTokenVirtualizationEnabled) then
-      ChangedVEnabled(Default(TNtxStatus), Token.InfoClass.VirtualizationEnabled);
-    raise;
+  Status := (Token as IToken3).SetVirtualizationEnabled(CheckBoxVEnabled.Checked);
+  CheckBoxVEnabled.Font.Style := [];
+
+  if not Status.IsSuccess then
+  begin
+    VEnabledSubscription := nil;
+    VEnabledSubscription  := (Token as IToken3).ObserveVirtualizationEnabled(
+      ChangedVEnabled);
   end;
 end;
 
@@ -374,6 +406,8 @@ end;
 procedure TInfoDialog.ChangedGroups;
 var
   i: Integer;
+  User: TGroup;
+  UserName: String;
 begin
   if not Status.IsSuccess then
     Exit;
@@ -391,12 +425,11 @@ begin
   ComboPrimary.Items.Clear;
 
   // Add User since it is always assignable
-  if Token.InfoClass.Query(tdTokenUser) then
+  if (Token as IToken3).QueryUser(User).IsSuccess then
   begin
-    ComboOwner.Items.Add(LsaxSidToString(
-      Token.InfoClass.User.Sid));
-    ComboPrimary.Items.Add(LsaxSidToString(
-      Token.InfoClass.User.Sid));
+    UserName := LsaxSidToString(User.Sid);
+    ComboOwner.Items.Add(UserName);
+    ComboPrimary.Items.Add(UserName);
   end;
 
   // Add all groups for Primary Group and only those with specific attribtes
@@ -546,17 +579,19 @@ begin
 end;
 
 procedure TInfoDialog.EditAppContainerDblClick(Sender: TObject);
+var
+  Info: TAppContainerInfo;
 begin
-  if Token.InfoClass.Query(tdTokenUser) and Token.InfoClass.Query(
-    tdTokenAppContainer) and Assigned(Token.InfoClass.AppContainer) then
-    TDialogAppContainer.Execute(FormMain, Token.InfoClass.User.Sid,
-      Token.InfoClass.AppContainer);
+  if (Token as IToken3).QueryAppContainerInfo(Info).IsSuccess then
+    TDialogAppContainer.Execute(FormMain, Info.User, Info.Package);
 end;
 
 procedure TInfoDialog.EditUserDblClick(Sender: TObject);
+var
+  User: TGroup;
 begin
-  if Token.InfoClass.Query(tdTokenUser) then
-    TDialogSidView.CreateView(FormMain, Token.InfoClass.User.Sid);
+  if (Token as IToken3).QueryUser(User).IsSuccess then
+    TDialogSidView.CreateView(FormMain, User.Sid);
 end;
 
 procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -613,12 +648,13 @@ begin
 end;
 
 procedure TInfoDialog.ListViewGeneralDblClick(Sender: TObject);
+var
+  BasicInfo: TObjectBasicInformation;
 begin
   if Assigned(ListViewGeneral.Selected) and
-    (ListViewGeneral.Selected.Index = 2) and Token.InfoClass.Query(tdObjectInfo)
-    then
-    TDialogGrantedAccess.Execute(Owner,
-      Token.InfoClass.ObjectInformation.GrantedAccess);
+    (ListViewGeneral.Selected.Index = 2) and
+    (Token as IToken3).QueryBasicInfo(BasicInfo).IsSuccess then
+    TDialogGrantedAccess.Execute(Owner, BasicInfo.GrantedAccess);
 end;
 
 procedure TInfoDialog.PageControlChange(Sender: TObject);
@@ -634,6 +670,10 @@ end;
 procedure TInfoDialog.Refresh;
 var
   Repr: TRepresentation;
+  DefaultDacl: IAcl;
+  User: TGroup;
+  Package: ISid;
+  RestrictedSids: TArray<TGroup>;
 begin
   (Token as IToken3).SmartRefresh;
 
@@ -656,39 +696,43 @@ begin
   end;
   ListViewAdvanced.Items.EndUpdate;
 
-  if Token.InfoClass.Query(tdTokenDefaultDacl) then
-    FrameDefaultDacl.Load(Auto.RefOrNil<PAcl>(Token.InfoClass.DefaultDacl), nil);
+  if (Token as IToken3).QueryDefaultDacl(DefaultDacl).IsSuccess then
+    FrameDefaultDacl.Load(Auto.RefOrNil<PAcl>(DefaultDacl), nil);
 
-  if Token.InfoClass.Query(tdTokenUser) then
-    with Token.InfoClass^, EditUser do
+  if (Token as IToken3).QueryUser(User).IsSuccess then
+  begin
+    // For user, 0 means default (enabled) state, but it can also
+    // be use-for-deny-only.
+    if User.Attributes = 0 then
+      User.Attributes := SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
+
+    Repr := TType.Represent(User);
+
+    EditUser.Text := Repr.Text;
+    EditUser.Hint := Repr.Hint;
+
+    if User.Attributes and SE_GROUP_USE_FOR_DENY_ONLY <> 0 then
+      EditUser.Color := ColorSettings.clDisabled
+    else
+      EditUser.Color := ColorSettings.clEnabled;
+
+    // AppContainer is user-specific
+    if not RtlOsVersionAtLeast(OsWin8) then
+      EditAppContainer.Text := 'Not supported'
+    else if (Token as IToken3).QueryAppContainerSid(Package).IsSuccess then
     begin
-      Repr := TType.Represent(User);
-
-      EditUser.Text := Repr.Text;
-      EditUser.Hint := Repr.Hint;
-
-      if User.Attributes and SE_GROUP_USE_FOR_DENY_ONLY <> 0 then
-        EditUser.Color := ColorSettings.clDisabled
+      if not Assigned(Package) then
+        EditAppContainer.Text := 'No'
       else
-        EditUser.Color := ColorSettings.clEnabled;
-
-      // AppContainer is user-specific
-      if not RtlOsVersionAtLeast(OsWin8) then
-        EditAppContainer.Text := 'Not supported'
-      else if Query(tdTokenAppContainer) then
       begin
-        if not Assigned(AppContainer) then
-          EditAppContainer.Text := 'No'
-        else
-        begin
-          EditAppContainer.Text := RtlxSidToString(AppContainer);
-          EditAppContainer.Enabled := True;
-        end;
+        EditAppContainer.Text := RtlxSidToString(Package);
+        EditAppContainer.Enabled := True;
       end;
     end;
+  end;
 
-  if Token.InfoClass.Query(tdTokenRestrictedSids) then
-    GroupsRestrictedFrame.Load(Token.InfoClass.RestrictedSids);
+  if (Token as IToken3).QueryRestrictedSids(RestrictedSids).IsSuccess then
+    GroupsRestrictedFrame.Load(RestrictedSids);
 
   TabObject.Tag := TAB_INVALIDATED;
   TabAudit.Tag := TAB_INVALIDATED;
@@ -698,7 +742,7 @@ end;
 procedure TInfoDialog.SetAuditPolicy;
 begin
   try
-    Token.InfoClass.AuditPolicy := LsaxUserAuditToTokenAudit(Audit);
+    (Token as IToken3).SetAuditPolicy(LsaxUserAuditToTokenAudit(Audit)).RaiseOnError;
   finally
     TabAudit.Tag := TAB_INVALIDATED;
     UpdateAuditTab;
@@ -714,14 +758,14 @@ end;
 procedure TInfoDialog.UpdateAuditTab;
 var
   AuditOverrides: TArray<TAuditPolicyEntry>;
+  AuditPolicy: ITokenAuditPolicy;
 begin
   if TabAudit.Tag = TAB_UPDATED then
     Exit;
 
   // TODO: Subscribe event
-  if Token.InfoClass.ReQuery(tdTokenAuditPolicy) and
-    LsaxTokenAuditToUserAudit(Token.InfoClass.AuditPolicy.Data,
-    AuditOverrides).IsSuccess then
+  if (Token as IToken3).QueryAuditPolicy(AuditPolicy).IsSuccess and
+    LsaxTokenAuditToUserAudit(AuditPolicy.Data, AuditOverrides).IsSuccess then
     FrameAudit.Load(AuditOverrides)
   else
     FrameAudit.Load(nil);
@@ -734,8 +778,8 @@ begin
   if TabLogon.Tag = TAB_UPDATED then
     Exit;
 
-  Token.InfoClass.ReQuery(tdTokenStatistics);
-  Token.InfoClass.ReQuery(tdTokenOrigin);
+  (Token as IToken3).RefreshStatistics;
+  (Token as IToken3).RefreshOrigin;
 
   if not FrameLogon.Subscribed then
     FrameLogon.SubscribeToken(Token);
@@ -745,11 +789,9 @@ end;
 
 procedure TInfoDialog.UpdateObjectTab;
 var
+  BasicInfo: TObjectBasicInformation;
+  KernelAddress: Pointer;
   Handles: TArray<TSystemHandleEntry>;
-  OpenedSomewhereElse: Boolean;
-  Processes: TArray<TProcessEntry>;
-  Process: PProcessEntry;
-  ProcessesSnapshotted: Boolean;
   ObjTypes: TArray<TObjectTypeEntry>;
   ObjEntry: PObjectEntry;
   CreatorImageName: String;
@@ -758,38 +800,29 @@ begin
   if TabObject.Tag = TAB_UPDATED then
     Exit;
 
-  ProcessesSnapshotted := False;
-
   // Update basic object information
-  if Token.InfoClass.ReQuery(tdObjectInfo) then
-    with ListViewObject, Token.InfoClass.ObjectInformation do
+  if (Token as IToken3).QueryBasicInfo(BasicInfo).IsSuccess then
+    with ListViewObject do
     begin
-      Items[1].SubItems[0] := TNumeric.Represent(Attributes).Text;
-      Items[2].SubItems[0] := BytesToString(PagedPoolCharge);
-      Items[3].SubItems[0] := BytesToString(NonPagedPoolCharge);
-      Items[4].SubItems[0] := IntToStr(PointerCount);
-      Items[5].SubItems[0] := IntToStr(HandleCount);
+      Items[1].SubItems[0] := TNumeric.Represent(BasicInfo.Attributes).Text;
+      Items[2].SubItems[0] := BytesToString(BasicInfo.PagedPoolCharge);
+      Items[3].SubItems[0] := BytesToString(BasicInfo.NonPagedPoolCharge);
+      Items[4].SubItems[0] := IntToStr(BasicInfo.PointerCount);
+      Items[5].SubItems[0] := IntToStr(BasicInfo.HandleCount);
     end;
 
   ListViewProcesses.Items.BeginUpdate;
   ListViewProcesses.Items.Clear;
   ListViewProcesses.SmallImages := TProcessIcons.ImageList;
 
-  if not Token.InfoClass.Query(tdHandleInfo) then
-    Exit;
+  KernelAddress := nil;
 
-  // Snapshot handles and find the ones pointing to that object
-  if NtxEnumerateHandles(Handles).IsSuccess then
+  // Snapshot handles that point to that object
+  if (Token as IToken3).QueryHandles(Handles).IsSuccess then
   begin
-    TArray.FilterInline<TSystemHandleEntry>(Handles, ByAddress(
-      Token.InfoClass.HandleInformation.PObject));
-
-    OpenedSomewhereElse := False;
-
-    // Add handle from current process and check if there are any other
     for i := 0 to High(Handles) do
-      if Handles[i].UniqueProcessId = NtCurrentProcessId then
-        with ListViewProcesses.Items.Add do
+      with ListViewProcesses.Items.Add do
+        if Handles[i].UniqueProcessId = NtCurrentProcessId then
         begin
           Caption := 'Current process';
           SubItems.Add(IntToStr(NtCurrentProcessId));
@@ -797,69 +830,33 @@ begin
           SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
           ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
         end
-      else
-        OpenedSomewhereElse := True;
-
-    // Add handles from other processes
-    if OpenedSomewhereElse then
-    begin
-      if not NtxEnumerateProcesses(Processes).IsSuccess then
-        SetLength(Processes, 0);
-
-      ProcessesSnapshotted := True;
-
-      for i := 0 to High(Handles) do
-      if (Handles[i].UniqueProcessId <> NtCurrentProcessId) then
-        with ListViewProcesses.Items.Add do
+        else
         begin
-          Process := NtxFindProcessById(Processes, Handles[i].UniqueProcessId);
-
-          if Assigned(Process) then
-            Caption := Process.ImageName
-          else
-            Caption := 'Unknown process';
-
+          Caption := TType.Represent(Handles[i].UniqueProcessId).Text;
           SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
           SubItems.Add(IntToHexEx(Handles[i].HandleValue));
           SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
           ImageIndex := TProcessIcons.GetIconByPid(Handles[i].UniqueProcessId);
         end;
-    end;
+
+    if Length(Handles) > 0 then
+      KernelAddress := Handles[0].PObject;
   end;
 
   // Obtain object creator by snapshotting objects on the system
   with ListViewObject.Items[6] do
     if NtxObjectEnumerationSupported then
     begin
-      if NtxEnumerateObjects(ObjTypes).IsSuccess then
+      if Assigned(KernelAddress) and NtxEnumerateObjects(ObjTypes).IsSuccess then
       begin
-        ObjEntry := NtxFindObjectByAddress(ObjTypes,
-          Token.InfoClass.HandleInformation.PObject);
+        ObjEntry := NtxFindObjectByAddress(ObjTypes, KernelAddress);
 
         if Assigned(ObjEntry) then
         begin
           if ObjEntry.Other.CreatorUniqueProcess = NtCurrentProcessId then
-             CreatorImageName := 'Current process'
+            CreatorImageName := 'Current process'
           else
-          begin
-            // The creator is somone else, we need to snapshot processes
-            // if it's not done already.
-            if not ProcessesSnapshotted then
-              if not NtxEnumerateProcesses(Processes).IsSuccess then
-                SetLength(Processes, 0);
-
-            Process := NtxFindProcessById(Processes,
-              ObjEntry.Other.CreatorUniqueProcess);
-
-            if Assigned(Process) then
-            begin
-              Hint := 'Since process IDs might be reused, ' +
-                      'image name might be incorrect';
-              CreatorImageName := Process.ImageName;
-            end
-            else // Use default unknown name
-              CreatorImageName := 'Unknown process';
-          end;
+            CreatorImageName := TType.Represent(ObjEntry.Other.CreatorUniqueProcess).Text;
 
           SubItems[0] := Format('PID %d (%s)', [
             ObjEntry.Other.CreatorUniqueProcess, CreatorImageName]);

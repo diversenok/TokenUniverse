@@ -69,6 +69,7 @@ end;
 procedure TDialogRestrictToken.ButtonOKClick;
 var
   NewToken: IToken;
+  GotSabdoxInert: LongBool;
 begin
   NewToken := TToken.CreateRestricted(Token, GetFlags,
     GroupsDisableFrame.Checked,
@@ -78,12 +79,13 @@ begin
   FormMain.TokenView.Add(NewToken);
 
   // Check whether SandboxInert was actually enabled
-  if CheckBoxSandboxInert.Checked then
-    if NewToken.InfoClass.Query(tdTokenSandBoxInert) and
-      not NewToken.InfoClass.SandboxInert then
+  if CheckBoxSandboxInert.Checked and
+    (NewToken as IToken3).QuerySandboxInert(GotSabdoxInert).IsSuccess and
+      not GotSabdoxInert then
       begin
         if not TSettings.NoCloseCreationDialogs then
           Hide;
+
         MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
       end;
 
@@ -98,6 +100,7 @@ end;
 
 procedure TDialogRestrictToken.ChangedGroups;
 var
+  User: TGroup;
   Groups, AlreadyRestricted: TArray<TGroup>;
 begin
   if not Status.IsSuccess then
@@ -106,8 +109,8 @@ begin
   Groups := Copy(NewGroups, 0, Length(NewGroups));
 
   // User can be both disabled and restricted
-  if Token.InfoClass.Query(tdTokenUser) then
-    Groups := Groups + [Token.InfoClass.User];
+  if (Token as IToken3).QueryUser(User).IsSuccess then
+    Groups := Groups + [User];
 
   // Populate disable list
   GroupsDisableFrame.Load(Groups);
@@ -124,9 +127,7 @@ begin
   Groups := Groups + ManuallyAdded;
 
   // Restricting SIDs can include arbitrary groups
-  if Token.InfoClass.Query(tdTokenRestrictedSids) then
-    AlreadyRestricted := Token.InfoClass.RestrictedSids
-  else
+  if not (Token as IToken3).QueryRestrictedSids(AlreadyRestricted).IsSuccess then
     AlreadyRestricted := nil;
 
   // Include already restricted groups as well
@@ -168,13 +169,14 @@ end;
 procedure TDialogRestrictToken.FormCreate;
 var
   Group: TGroup;
+  SabdoxInert: LongBool;
 begin
   Assert(Assigned(Token));
 
   CaptionSubscription := (Token as IToken3).ObserveString(tsCaption, ChangedCaption);
 
-  if Token.InfoClass.Query(tdTokenSandBoxInert) then
-    CheckBoxSandboxInert.Checked := Token.InfoClass.SandboxInert;
+  CheckBoxSandboxInert.Checked := (Token as IToken3).QuerySandboxInert(
+    SabdoxInert).IsSuccess and SabdoxInert;
 
   // Privileges
   PrivilegesFrame.ColoringUnChecked := pcStateBased;

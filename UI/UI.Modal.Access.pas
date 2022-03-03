@@ -24,20 +24,21 @@ type
 implementation
 
 uses
-   TU.Tokens.Types, Ntapi.ntseapi;
+   TU.Tokens.Types, Ntapi.ntseapi, Ntapi.ntobapi, TU.Tokens3, NtUtils;
 
 {$R *.dfm}
 
 class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
   Source: IToken): IToken;
+var
+  BasicInfo: TObjectBasicInformation;
 begin
   with TDialogAccess.CreateChild(AOwner, cfmApplication) do
   begin
     AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
 
-    if Source.InfoClass.Query(tdObjectInfo) then
-      AccessMaskFrame.AccessMask :=
-        Source.InfoClass.ObjectInformation.GrantedAccess;
+    if (Source as IToken3).QueryBasicInfo(BasicInfo).IsSuccess then
+      AccessMaskFrame.AccessMask := BasicInfo.GrantedAccess;
 
     ShowModal;
 

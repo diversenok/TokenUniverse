@@ -103,14 +103,10 @@ begin
       for j := 0 to High(PerProcess[i].Values) do
       begin
         // Try to get a copy
-        if Assigned(hxProcess) then
-          NtxDuplicateHandleFrom(hxProcess.Handle,
-            PerProcess[i].Values[j].HandleValue, hxToken)
-        else
-          hxToken := nil;
-
-        Frame.AddToken(TToken.CreatePseudo(PerProcess[i].Values[j], ImageName,
-          hxToken), Index);
+        if Assigned(hxProcess) and NtxDuplicateHandleFrom(hxProcess.Handle,
+          PerProcess[i].Values[j].HandleValue, hxToken).IsSuccess then
+          Frame.AddToken(TToken.Create(hxToken, Format('Handle %d @ %s',
+            [PerProcess[i].Values[j].HandleValue, ImageName])), Index);
       end;
     end;
   end;
@@ -122,13 +118,13 @@ end;
 procedure TFormHandleSearch.cmInspectClick(Sender: TObject);
 begin
   if Assigned(Frame.GetSelectedToken()) then
-    TInfoDialog.CreateFromToken(FormMain, Frame.GetSelectedToken.ConvertToReal);
+    TInfoDialog.CreateFromToken(FormMain, Frame.GetSelectedToken);
 end;
 
 procedure TFormHandleSearch.cmSaveClick(Sender: TObject);
 begin
   if Assigned(Frame.GetSelectedToken()) then
-    FormMain.TokenView.Add(Frame.GetSelectedToken.ConvertToReal);
+    FormMain.TokenView.Add(Frame.GetSelectedToken);
 end;
 
 end.

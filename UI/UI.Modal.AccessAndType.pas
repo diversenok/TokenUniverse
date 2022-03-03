@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  Ntapi.ntseapi;
+  Ntapi.ntseapi, TU.Tokens3, NtUtils;
 
 {$R *.dfm}
 
@@ -53,11 +53,18 @@ end;
 
 class function TDialogAccessAndType.ExecuteDuplication(AOwner: TComponent;
   Source: IToken): IToken;
+var
+  Statistics: TTokenStatistics;
 begin
   with TDialogAccessAndType.CreateChild(AOwner, cfmApplication) do
   begin
-    if Source.InfoClass.Query(tdTokenType) then
-      SelectedTokenType := Source.InfoClass.TokenTypeInfo;
+    if (Source as IToken3).QueryStatistics(Statistics).IsSuccess then
+    begin
+      if Statistics.TokenType = TokenPrimary then
+        SelectedTokenType := ttPrimary
+      else
+        SelectedTokenType := TTokenTypeEx(Statistics.ImpersonationLevel);
+    end;
 
     ShowModal;
 

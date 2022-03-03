@@ -88,7 +88,8 @@ uses
   UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
   Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker;
+  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker, TU.Tokens3,
+  Ntapi.ntobapi;
 
 {$R *.dfm}
 
@@ -122,13 +123,20 @@ end;
 
 procedure TDialogCreateToken.ButtonLoadClick;
 var
-  Source: IToken;
+  Source: IToken3;
   Expiration: TDateTime;
+  BasicInfo: TObjectBasicInformation;
+  User: TGroup;
+  Statistics: TTokenStatistics;
+  Groups: TArray<TGroup>;
+  Owner, PrimaryGroup: ISid;
+  Privileges: TArray<TPrivilege>;
+  TokenSource: TTokenSource;
 begin
-  Source := TDialogPickToken.Execute(Self);
+  Source := TDialogPickToken.Execute(Self) as IToken3;
 
-  if not Source.InfoClass.Query(tdObjectInfo) or not BitTest(
-    Source.InfoClass.ObjectInformation.GrantedAccess and TOKEN_QUERY) then
+  if not Source.QueryBasicInfo(BasicInfo).IsSuccess or
+    not BitTest(BasicInfo.GrantedAccess and TOKEN_QUERY) then
   begin
     MessageDlg('This token does not have Query access.', mtError, mbOKCancel,
       -1);
@@ -136,27 +144,24 @@ begin
   end;
 
   // User
-  if Source.InfoClass.Query(tdTokenUser) then
+  if Source.QueryUser(User).IsSuccess then
   begin
-    ComboUser.Text := LsaxSidToString(Source.InfoClass.User.Sid);
+    ComboUser.Text := LsaxSidToString(User.Sid);
     ComboUserChange(Sender);
-    CheckBoxUserState.Checked := BitTest(Source.InfoClass.User.Attributes and
+    CheckBoxUserState.Checked := BitTest(User.Attributes and
       SE_GROUP_USE_FOR_DENY_ONLY);
   end;
 
   // Logon ID & Expiration
-  if Source.InfoClass.Query(tdTokenStatistics) then
+  if Source.QueryStatistics(Statistics).IsSuccess then
   begin
-    LogonIDSource.SelectedLogonSession :=
-      Source.InfoClass.Statistics.AuthenticationId;
+    LogonIDSource.SelectedLogonSession := Statistics.AuthenticationId;
 
-    CheckBoxInfinite.Checked := (
-      Source.InfoClass.Statistics.ExpirationTime = Int64.MaxValue);
+    CheckBoxInfinite.Checked := (Statistics.ExpirationTime = Int64.MaxValue);
 
     if not CheckBoxInfinite.Checked then
     begin
-      Expiration := LargeIntegerToDateTime(Source.InfoClass.Statistics.
-        ExpirationTime);
+      Expiration := LargeIntegerToDateTime(Statistics.ExpirationTime);
 
       // Date only
       DateExpires.DateTime := Trunc(Expiration);
@@ -167,29 +172,28 @@ begin
   end;
 
   // Groups
-  if Source.InfoClass.Query(tdTokenGroups) then
-    GroupsFrame.Load(Source.InfoClass.Groups);
+  if Source.QueryGroups(Groups).IsSuccess then
+    GroupsFrame.Load(Groups);
 
   UpdatePrimaryAndOwner(guEditOne);
 
   // Owner
-  if Source.InfoClass.Query(tdTokenOwner) then
-    ComboOwner.Text := LsaxSidToString(Source.InfoClass.Owner);
+  if Source.QueryOwner(Owner).IsSuccess then
+    ComboOwner.Text := LsaxSidToString(Owner);
 
   // Primary group
-  if Source.InfoClass.Query(tdTokenPrimaryGroup) then
-    ComboPrimary.Text := LsaxSidToString(Source.InfoClass.PrimaryGroup);
+  if Source.QueryPrimaryGroup(PrimaryGroup).IsSuccess then
+    ComboPrimary.Text := LsaxSidToString(PrimaryGroup);
 
   // Privileges
-  if Source.InfoClass.Query(tdTokenPrivileges) then
-    PrivilegesFrame.Checked := Source.InfoClass.Privileges;
+  if Source.QueryPrivileges(Privileges).IsSuccess then
+    PrivilegesFrame.Checked := Privileges;
 
   // Source
-  if Source.InfoClass.Query(tdTokenSource) then
+  if Source.QuerySource(TokenSource).IsSuccess then
   begin
-    EditSourceName.Text := Source.InfoClass.Source.Name;
-    EditSourceLuid.Text := IntToHexEx(
-      Source.InfoClass.Source.SourceIdentifier);
+    EditSourceName.Text := TokenSource.Name;
+    EditSourceLuid.Text := IntToHexEx(TokenSource.SourceIdentifier);
   end;
 end;
 
@@ -198,7 +202,7 @@ var
   Token: IToken;
   Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
-  NewPolicy: Cardinal;
+  NewPolicy: TTokenMandatoryPolicy;
   Source: TTokenSource;
   User, Owner, PrimaryGroup: ISid;
 begin
@@ -250,11 +254,11 @@ begin
     NewPolicy := NewPolicy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
 
   if NewPolicy <> 0 then
-    Token.InfoClass.MandatoryPolicy := NewPolicy;
+    (Token as IToken3).SetMandatoryPolicy(NewPolicy).RaiseOnError;
 
   // Post-creation: change session
   if CheckBoxSession.Checked then
-    Token.InfoClass.Session := RtlGetCurrentPeb.SessionId;
+    (Token as IToken3).SetSessionId(RtlGetCurrentPeb.SessionId).RaiseOnError;
 
   if not TSettings.NoCloseCreationDialogs then
     Close;

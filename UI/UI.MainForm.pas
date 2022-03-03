@@ -357,6 +357,8 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
+  Token: IToken;
+  Elevation: TTokenElevationInfo;
   Handles: TArray<TProcessHandleEntry>;
   Linked: IToken;
   i: integer;
@@ -374,12 +376,13 @@ begin
       TokenView.Add(TToken.CreateByHandle(Handles[i].HandleValue));
   end;
 
+  Token := TokenView.Add(TToken.CreateOpenCurrent);
+
   // Open current process and, maybe, its linked token
-  with TokenView.Add(TToken.CreateOpenCurrent) do
-    if InfoClass.Query(tdTokenElevationInfo) and
-      (InfoClass.ElevationInfo.ElevationType <> TokenElevationTypeDefault) and
-      OpenLinkedToken(Linked).IsSuccess then
-        TokenView.Add(Linked);
+  if (Token as IToken3).QueryElevation(Elevation).IsSuccess and
+    (Elevation.ElevationType <> TokenElevationTypeDefault) and
+    Token.OpenLinkedToken(Linked).IsSuccess then
+      TokenView.Add(Linked);
 
   SetForegroundWindow(Handle);
 end;
