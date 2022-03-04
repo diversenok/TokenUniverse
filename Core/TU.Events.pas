@@ -38,16 +38,40 @@ implementation
 uses
   System.SysUtils, UI.Exceptions;
 
+// Workaround internal compiler error by re-declaring exception-safe invokers
+// instead of using generic methods of TExceptionSafeInvoker
+procedure SafeHandleInvoker(
+  const Callback: TEventCallback<TArray<TSystemHandleEntry>>;
+  const Parmeter: TArray<TSystemHandleEntry>
+);
+begin
+  try
+    Callback(Parmeter);
+  except
+    on E: Exception do
+      ReportException(E);
+  end;
+end;
+
+procedure SafeObjectInvoker(
+  const Callback: TEventCallback<TArray<TObjectTypeEntry>>;
+  const Parmeter: TArray<TObjectTypeEntry>
+);
+begin
+  try
+    Callback(Parmeter);
+  except
+    on E: Exception do
+      ReportException(E);
+  end;
+end;
+
 { TGlobalEvents }
 
 class constructor TGlobalEvents.Create;
 begin
-  TGlobalEvents.FOnHandleSnapshot.SetCustomInvoker(
-    TExceptionSafeInvoker.OneParameter<TArray<TSystemHandleEntry>>);
-
-  TGlobalEvents.FOnObjectSnapshot.SetCustomInvoker(
-    TExceptionSafeInvoker.OneParameter<TArray<TObjectTypeEntry>>);
-
+  TGlobalEvents.FOnHandleSnapshot.SetCustomInvoker(SafeHandleInvoker);
+  TGlobalEvents.FOnObjectSnapshot.SetCustomInvoker(SafeObjectInvoker);
   TGlobalEvents.FOnLinkLogonSessions.SetCustomInvoker(
     TExceptionSafeInvoker.NoParameters);
 end;
@@ -101,3 +125,4 @@ begin
 end;
 
 end.
+

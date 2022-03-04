@@ -583,22 +583,25 @@ end;
 procedure TToken.ChangedSystemHandles;
 var
   Handles: TArray<TSystemHandleEntry>;
+  Entry: TSystemHandleEntry;
 begin
-  if not Events.OnHandles.HasObservers and Assigned(FKernelObjectAddress) then
-    Exit;
-
-  // Find entries that describe this token
-  Handles := RtlxFilterHandlesByHandle(AllHandles, hxToken.Handle);
-
-  // Save kernel object address
-  if Length(Handles) > 0 then
+  if Events.OnHandles.HasObservers then
   begin
-    FKernelObjectAddress := Handles[0].PObject;
+    // Find entries that describe this token and notify subscribers
+    Handles := RtlxFilterHandlesByHandle(AllHandles, hxToken.Handle);
+    Events.OnHandles.Notify(Default(TNtxStatus), Handles);
+  end
+  else
+    Handles := AllHandles;
+
+  // Save kernel address
+  if not Assigned(FKernelObjectAddress) and RtlxFindHandleEntry(Handles,
+    NtCurrentProcessId, hxToken.Handle, Entry).IsSuccess then
+  begin
+    FKernelObjectAddress := Entry.PObject;
     Events.StringCache[tsAddress] := PtrToHexEx(FKernelObjectAddress);
     Events.OnKernelAddress.Notify(Default(TNtxStatus), FKernelObjectAddress);
   end;
-
-  Events.OnHandles.Notify(Default(TNtxStatus), Handles);
 end;
 
 procedure TToken.ChangedSystemObjects;
