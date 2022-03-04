@@ -19,11 +19,6 @@ type
     FEqualityCheck: TEqualityCheck<T>;
     FHasLastValue: Boolean;
     FLastValue: T;
-    procedure Invoker(
-      const Callback: TEventCallback<TNtxStatus, T>;
-      const Status: TNtxStatus;
-      const Value: T
-    );
   public
     procedure Initialize(const EqualityCheck: TEqualityCheck<T>);
     function HasObservers: Boolean;
@@ -44,25 +39,12 @@ begin
 end;
 
 procedure TAutoObservers<T>.Initialize;
-var
-  pSelf: ^TAutoObservers<T>;
 begin
-  pSelf := @Self; // workaround 'cannot capture symbol "Self"'
   FEvents := Default(TAutoEvent<TNtxStatus, T>);
-  FEvents.SetCustomInvoker(pSelf.Invoker);
+  FEvents.SetCustomInvoker(TExceptionSafeInvoker.TwoParameters<TNtxStatus, T>);
   FEqualityCheck := EqualityCheck;
   FHasLastValue := False;
   FLastValue := Default(T);
-end;
-
-procedure TAutoObservers<T>.Invoker;
-begin
-  try
-    Callback(Status, Value);
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
 end;
 
 procedure TAutoObservers<T>.Notify;

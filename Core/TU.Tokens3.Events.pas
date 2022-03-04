@@ -15,9 +15,13 @@ uses
 type
   // Shared observers between tokens that point to the same kernel object
   TTokenEvents = class
+  public
+    CreatorPIDIsKnown: Boolean;
+    CreatorPID: TProcessId;
     OnBasicInfo: TAutoObservers<TObjectBasicInformation>;
     OnHandles: TAutoObservers<TArray<TSystemHandleEntry>>;
     OnKernelAddress: TAutoObservers<Pointer>;
+    OnCreatorPID: TAutoObservers<TProcessId>;
     OnUser: TAutoObservers<TGroup>;
     OnGroups: TAutoObservers<TArray<TGroup>>;
     OnPrivileges: TAutoObservers<TArray<TPrivilege>>;
@@ -41,6 +45,7 @@ type
     OnIntegrity: TAutoObservers<TGroup>;
     OnUIAccess: TAutoObservers<LongBool>;
     OnMandatoryPolicy: TAutoObservers<TTokenMandatoryPolicy>;
+    OnLogonSids: TAutoObservers<TArray<TGroup>>;
     OnIsAppContainer: TAutoObservers<LongBool>;
     OnCapabilities: TAutoObservers<TArray<TGroup>>;
     OnAppContainerSid: TAutoObservers<ISid>;
@@ -148,6 +153,8 @@ end;
 
 procedure SafeStringInvoker;
 begin
+  // Workaround internal compiler error by re-implementing the function instread
+  // of using TExceptionSafeInvoker.TwoParameters<TTokenStringClass, String>
   try
     Callback(InfoClass, Value);
   except
@@ -178,6 +185,11 @@ begin
 end;
 
 function CompareKernelAddress(const A, B: Pointer): Boolean;
+begin
+  Result := A = B;
+end;
+
+function ComparePIDs(const A, B: TProcessId): Boolean;
 begin
   Result := A = B;
 end;
@@ -297,6 +309,7 @@ begin
   OnBasicInfo.Initialize(CompareBasicInfo);
   OnHandles.Initialize(CompareHandles);
   OnKernelAddress.Initialize(CompareKernelAddress);
+  OnCreatorPID.Initialize(ComparePIDs);
   OnUser.Initialize(CompareGroup);
   OnGroups.Initialize(CompareGroups);
   OnPrivileges.Initialize(ComparePrivileges);

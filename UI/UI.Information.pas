@@ -790,11 +790,7 @@ end;
 procedure TInfoDialog.UpdateObjectTab;
 var
   BasicInfo: TObjectBasicInformation;
-  KernelAddress: Pointer;
   Handles: TArray<TSystemHandleEntry>;
-  ObjTypes: TArray<TObjectTypeEntry>;
-  ObjEntry: PObjectEntry;
-  CreatorImageName: String;
   i: Integer;
 begin
   if TabObject.Tag = TAB_UPDATED then
@@ -815,61 +811,30 @@ begin
   ListViewProcesses.Items.Clear;
   ListViewProcesses.SmallImages := TProcessIcons.ImageList;
 
-  KernelAddress := nil;
-
   // Snapshot handles that point to that object
   if (Token as IToken3).QueryHandles(Handles).IsSuccess then
   begin
     for i := 0 to High(Handles) do
       with ListViewProcesses.Items.Add do
+      begin
         if Handles[i].UniqueProcessId = NtCurrentProcessId then
         begin
           Caption := 'Current process';
-          SubItems.Add(IntToStr(NtCurrentProcessId));
-          SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-          SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
           ImageIndex := TProcessIcons.GetIcon(ParamStr(0));
         end
         else
         begin
           Caption := TType.Represent(Handles[i].UniqueProcessId).Text;
-          SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
-          SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-          SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
           ImageIndex := TProcessIcons.GetIconByPid(Handles[i].UniqueProcessId);
         end;
 
-    if Length(Handles) > 0 then
-      KernelAddress := Handles[0].PObject;
+        SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
+        SubItems.Add(IntToHexEx(Handles[i].HandleValue));
+        SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
+      end;
   end;
 
-  // Obtain object creator by snapshotting objects on the system
-  with ListViewObject.Items[6] do
-    if NtxObjectEnumerationSupported then
-    begin
-      if Assigned(KernelAddress) and NtxEnumerateObjects(ObjTypes).IsSuccess then
-      begin
-        ObjEntry := NtxFindObjectByAddress(ObjTypes, KernelAddress);
-
-        if Assigned(ObjEntry) then
-        begin
-          if ObjEntry.Other.CreatorUniqueProcess = NtCurrentProcessId then
-            CreatorImageName := 'Current process'
-          else
-            CreatorImageName := TType.Represent(ObjEntry.Other.CreatorUniqueProcess).Text;
-
-          SubItems[0] := Format('PID %d (%s)', [
-            ObjEntry.Other.CreatorUniqueProcess, CreatorImageName]);
-        end
-        else
-          SubItems[0] := 'Kernel';
-      end
-      else
-        SubItems[0] := 'Unknown';
-    end
-    else
-      Hint := 'Enable global flag FLG_MAINTAIN_OBJECT_TYPELIST (0x4000).';
-
+  ListViewObject.Items[6].SubItems[0] := (Token as IToken3).QueryString(tsCreator);
   ListViewProcesses.Items.EndUpdate;
   TabObject.Tag := TAB_UPDATED;
 end;

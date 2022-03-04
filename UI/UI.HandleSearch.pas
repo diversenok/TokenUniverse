@@ -50,7 +50,7 @@ var
   i, j: Integer;
 begin
   NtxEnumerateHandles(Handles).RaiseOnError;
-  NtxFindType('Token', TokenIndex).RaiseOnError;
+  RtlxFindKernelType('Token', TokenIndex).RaiseOnError;
 
   // Include only tokens from other processes
   TArray.FilterInline<TSystemHandleEntry>(Handles,

@@ -269,6 +269,7 @@
         <DCCReference Include="Core\TU.Tokens3.Events.pas"/>
         <DCCReference Include="Core\TU.Tokens3.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Exceptions.pas"/>
+        <DCCReference Include="Core\TU.Events.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
