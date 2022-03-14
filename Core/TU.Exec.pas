@@ -9,8 +9,8 @@ type
   TExecParamSet = set of (
     ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
     ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppNewConsole, ppRequireElevation, ppShowWindowMode, ppRunAsInvoker,
-    ppEnvironment, ppAppContainer, ppJob
+    ppForceBreakaway, ppNewConsole, ppRequireElevation, ppShowWindowMode,
+    ppRunAsInvoker, ppEnvironment, ppAppContainer, ppJob
   );
 
 // Determine if a process creation method supports an option
@@ -57,13 +57,13 @@ begin
 
   else if Pointer(@Method) = Pointer(@NtxCreateUserProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppShowWindowMode,
-      ppEnvironment, ppJob]
+      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppForceBreakaway,
+      ppShowWindowMode, ppEnvironment, ppJob]
 
   else if Pointer(@Method) = Pointer(@NtxCreateProcessEx) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppShowWindowMode,
-      ppEnvironment]
+      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppForceBreakaway,
+      ppShowWindowMode, ppEnvironment]
 
   else if Pointer(@Method) = Pointer(@WmixCreateProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppCreateSuspended,

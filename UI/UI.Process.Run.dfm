@@ -2,7 +2,7 @@ object DialogRun: TDialogRun
   Left = 0
   Top = 0
   Caption = 'Run program...'
-  ClientHeight = 571
+  ClientHeight = 589
   ClientWidth = 331
   Color = clBtnFace
   Constraints.MinHeight = 455
@@ -26,7 +26,7 @@ object DialogRun: TDialogRun
     Left = 3
     Top = 52
     Width = 325
-    Height = 488
+    Height = 506
     Margins.Top = 52
     Margins.Bottom = 31
     ActivePage = TabParams
@@ -90,9 +90,9 @@ object DialogRun: TDialogRun
       end
       object GroupBoxFlags: TGroupBox
         Left = 3
-        Top = 363
+        Top = 361
         Width = 307
-        Height = 94
+        Height = 113
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Flags: '
         TabOrder = 5
@@ -121,8 +121,8 @@ object DialogRun: TDialogRun
           TabOrder = 2
         end
         object CheckBoxNewConsole: TCheckBox
-          Left = 158
-          Top = 47
+          Left = 11
+          Top = 93
           Width = 134
           Height = 17
           Caption = 'Create new console'
@@ -135,24 +135,34 @@ object DialogRun: TDialogRun
           Top = 70
           Width = 116
           Height = 15
-          Anchors = [akTop]
           Caption = 'Request elevation'
           Enabled = False
           TabOrder = 4
         end
         object CheckBoxRunAsInvoker: TCheckBox
           Left = 158
-          Top = 70
+          Top = 68
           Width = 116
           Height = 17
           Hint = 
             'Use this compatibility mechanism if you want to start a program ' +
             'that requires elevation as a limited user.'
           AllowGrayed = True
-          Anchors = [akTop]
           Caption = 'Run as invoker'
           State = cbGrayed
           TabOrder = 5
+        end
+        object CheckBoxForceBreakaway: TCheckBox
+          Left = 158
+          Top = 47
+          Width = 116
+          Height = 15
+          Hint = 
+            'Allows the new process to breakaway from all parent jobs regardl' +
+            'ess of their flags. Requires the Tcb privilege.'
+          Caption = 'Force breakaway'
+          Enabled = False
+          TabOrder = 6
         end
       end
       object ComboBoxLogonFlags: TComboBox
@@ -288,7 +298,7 @@ object DialogRun: TDialogRun
   end
   object ButtonClose: TButton
     Left = 253
-    Top = 542
+    Top = 560
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -300,7 +310,7 @@ object DialogRun: TDialogRun
   end
   object ButtonRun: TButton
     Left = 172
-    Top = 542
+    Top = 560
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -334,7 +344,7 @@ object DialogRun: TDialogRun
   end
   object cbxOpenToken: TCheckBox
     Left = 8
-    Top = 546
+    Top = 564
     Width = 158
     Height = 17
     Anchors = [akLeft, akBottom]

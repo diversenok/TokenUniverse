@@ -50,6 +50,7 @@ type
     ComboMethod: TComboBox;
     LabelMethod: TLabel;
     Label1: TLabel;
+    CheckBoxForceBreakaway: TCheckBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -158,6 +159,9 @@ begin
 
   if CheckBoxBreakaway.Checked then
     Include(Options.Flags, poBreakawayFromJob);
+
+  if CheckBoxForceBreakaway.Checked then
+    Include(Options.Flags, poForceBreakaway);
 
   if CheckBoxSuspended.Checked then
     Include(Options.Flags, poSuspended);
@@ -378,6 +382,7 @@ begin
   CheckBoxInherit.Enabled := ppInheritHandles in SupportedOptions;
   CheckBoxSuspended.Enabled := ppCreateSuspended in SupportedOptions;
   CheckBoxBreakaway.Enabled := ppBreakaway in SupportedOptions;
+  CheckBoxForceBreakaway.Enabled := ppForceBreakaway in SupportedOptions;
   CheckBoxNewConsole.Enabled := ppNewConsole in SupportedOptions;
   CheckBoxRunas.Enabled := ppRequireElevation in SupportedOptions;
   ComboBoxShowMode.Enabled := ppShowWindowMode in SupportedOptions;
