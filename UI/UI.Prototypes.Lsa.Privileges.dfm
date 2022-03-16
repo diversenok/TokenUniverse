@@ -32,7 +32,7 @@ object FrameLsaPrivileges: TFrameLsaPrivileges
     Margins.Bottom = 33
     Align = alClient
     TabOrder = 1
-    inherited VST: TVirtualStringTreeEx
+    inherited VST: TDevirtualizedTree
       Width = 314
       Height = 204
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]

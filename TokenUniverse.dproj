@@ -270,6 +270,9 @@
         <DCCReference Include="Core\TU.Tokens3.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Exceptions.pas"/>
         <DCCReference Include="Core\TU.Events.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.Provider.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

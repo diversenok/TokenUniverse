@@ -597,7 +597,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TVirtualStringTreeEx
+        inherited VST: TDevirtualizedTree
           Width = 388
           Height = 369
           NodePopupMenu = GroupPopup
@@ -614,7 +614,7 @@ object InfoDialog: TInfoDialog
         Height = 369
         Align = alClient
         TabOrder = 0
-        inherited VST: TVirtualStringTreeEx
+        inherited VST: TDevirtualizedTree
           Width = 388
           Height = 369
           NodePopupMenu = PrivilegePopup
@@ -635,7 +635,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TVirtualStringTreeEx
+        inherited VST: TDevirtualizedTree
           Width = 388
           Height = 369
         end
@@ -655,7 +655,7 @@ object InfoDialog: TInfoDialog
         Height = 369
         Align = alClient
         TabOrder = 0
-        inherited VST: TVirtualStringTreeEx
+        inherited VST: TDevirtualizedTree
           Width = 388
           Height = 369
         end

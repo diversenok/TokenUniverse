@@ -173,7 +173,7 @@ object LogonDialog: TLogonDialog
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited VST: TVirtualStringTreeEx
+      inherited VST: TDevirtualizedTree
         Width = 334
         Height = 212
         NodePopupMenu = PopupMenu

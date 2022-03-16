@@ -224,7 +224,7 @@ object DialogCreateToken: TDialogCreateToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited VST: TVirtualStringTreeEx
+        inherited VST: TDevirtualizedTree
           Width = 380
           Height = 307
           NodePopupMenu = PopupMenuGroups
@@ -241,7 +241,7 @@ object DialogCreateToken: TDialogCreateToken
         Height = 342
         Align = alClient
         TabOrder = 0
-        inherited VST: TVirtualStringTreeEx
+        inherited VST: TDevirtualizedTree
           Width = 386
           Height = 342
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]

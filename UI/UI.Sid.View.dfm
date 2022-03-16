@@ -173,7 +173,7 @@ object DialogSidView: TDialogSidView
         inherited PrivilegesFrame: TFramePrivileges
           Width = 367
           Height = 253
-          inherited VST: TVirtualStringTreeEx
+          inherited VST: TDevirtualizedTree
             Width = 367
             Height = 253
             NodePopupMenu = FrameLsaPrivileges.PopupMenu

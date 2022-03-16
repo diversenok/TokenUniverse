@@ -59,7 +59,10 @@ uses
   TU.Tokens3.Events in 'Core\TU.Tokens3.Events.pas',
   TU.Tokens3 in 'Core\TU.Tokens3.pas',
   UI.Exceptions in 'NtUtilsUI\Common\UI.Exceptions.pas',
-  TU.Events in 'Core\TU.Events.pas';
+  TU.Events in 'Core\TU.Events.pas',
+  VirtualTreesEx.DefaultMenu in 'NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas',
+  DevirtualizedTree.Provider in 'NtUtilsUI\Components\DevirtualizedTree.Provider.pas',
+  DevirtualizedTree in 'NtUtilsUI\Components\DevirtualizedTree.pas';
 
 {$R *.res}
 
