@@ -110,7 +110,13 @@ begin
 
   // User can be both disabled and restricted
   if (Token as IToken3).QueryUser(User).IsSuccess then
+  begin
+    // Zero is a default state here that indicated the enabled one
+    if User.Attributes = 0 then
+      User.Attributes := SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
+
     Groups := Groups + [User];
+  end;
 
   // Populate disable list
   GroupsDisableFrame.Load(Groups);
