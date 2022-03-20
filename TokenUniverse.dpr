@@ -82,7 +82,8 @@ begin
   end;
 
   // Normal mode
-  EnableNtxExceptionHandling;
+  EnableNtUiLibExceptionHandling;
+  EnableStackTracingExceptions;
   ReportMemoryLeaksOnShutdown := True;
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
