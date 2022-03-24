@@ -1145,7 +1145,7 @@ begin
     FAccessMask := Info.GrantedAccess.Format<TTokenAccessMask>;
     Events.StringCache[tsHandleCount] := IntToStrEx(Info.HandleCount);
     Events.StringCache[tsPagedPoolCharge] := BytesToString(Info.PagedPoolCharge);
-    Events.StringCache[tsNonPagedPoolCharge] := IntToStrEx(Info.NonPagedPoolCharge);
+    Events.StringCache[tsNonPagedPoolCharge] := BytesToString(Info.NonPagedPoolCharge);
   end;
 
   Events.OnBasicInfo.Notify(Result, Info);
