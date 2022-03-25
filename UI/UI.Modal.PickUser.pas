@@ -3,10 +3,8 @@ unit UI.Modal.PickUser;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, Vcl.ExtCtrls, TU.Tokens, TU.Tokens.Types, NtUtils,
-  UI.MainForm, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, UI.Prototypes.Forms,
   Ntapi.ntseapi, UI.Prototypes.Sid.Edit;
 
 type
@@ -33,8 +31,6 @@ type
     ButtonIntegrity: TButton;
     ButtonLogonSID: TButton;
     SidEditor: TSidEditor;
-    procedure ComboBoxSIDChange(Sender: TObject);
-    procedure ButtonOKClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonIntegrityClick(Sender: TObject);
     procedure CheckBoxDenyOnlyClick(Sender: TObject);
@@ -42,14 +38,14 @@ type
     procedure CheckBoxEnabledClick(Sender: TObject);
     procedure CheckBoxEnabledByDafaultClick(Sender: TObject);
     procedure ButtonLogonSIDClick(Sender: TObject);
+    procedure ButtonOKClick(Sender: TObject);
   private
-    SelectedGroup: ISid;
     Mapping: array of TCheckBoxMapping;
-    function GetAttributes: Cardinal;
-    procedure SetAttributes(Value: Cardinal);
-    procedure SetSelectedGroup(const Value: ISid);
+    function GetAttributes: TGroupAttributes;
+    procedure SetAttributes(Value: TGroupAttributes);
     procedure DoDisableAttributes;
   public
+    property Attributes: TGroupAttributes read GetAttributes write SetAttributes;
     class function PickNew(AOwner: TComponent;
       DisableAttributes: Boolean = False): TGroup;
     class function PickEditOne(AOwner: TComponent; const Group: TGroup;
@@ -61,8 +57,8 @@ type
 implementation
 
 uses
-  UI.Modal.Integrity, Ntapi.WinNt, Ntapi.ntrtl, Ntapi.ntpsapi,
-  UI.Helper, NtUtils.Lsa.Sid, NtUtils.WinUser, NtUiLib.Errors;
+  Ntapi.WinNt, Ntapi.ntpsapi, NtUtils.Security.Sid, NtUtils.WinUser, UI.Helper,
+  UI.Modal.Integrity, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -76,52 +72,56 @@ end;
 
 { TDialogPickUser }
 
-procedure TDialogPickUser.ButtonIntegrityClick(Sender: TObject);
+procedure TDialogPickUser.ButtonIntegrityClick;
 var
   CurrentRID: Cardinal;
   Sid: ISid;
 begin
   CurrentRID := SECURITY_MANDATORY_MEDIUM_RID;
 
-  if Assigned(SelectedGroup) and
-    (RtlxIdentifierAuthoritySid(SelectedGroup) =
+  // Set the slider to the current integrity when selected
+  if SidEditor.TryGetSid(Sid).IsSuccess and
+    (RtlxIdentifierAuthoritySid(Sid) =
     SECURITY_MANDATORY_LABEL_AUTHORITY) then
-    CurrentRID := RtlxRidSid(SelectedGroup);
+    CurrentRID := RtlxRidSid(Sid);
 
   RtlxCreateSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
     [TIntegrityPicker.Choose(Self, CurrentRID)]).RaiseOnError;
 
-  SetSelectedGroup(Sid);
-  SetAttributes(SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED);
+  SidEditor.Sid := Sid;
+  Attributes := SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED;
   ButtonOK.SetFocus;
 end;
 
-procedure TDialogPickUser.ButtonLogonSIDClick(Sender: TObject);
+procedure TDialogPickUser.ButtonLogonSIDClick;
 var
   Sid: ISid;
 begin
   UsrxQuerySid(GetThreadDesktop(NtCurrentThreadId), Sid).RaiseOnError;
 
   if Assigned(Sid) then
-    SetSelectedGroup(Sid)
+    SidEditor.Sid := Sid
   else
     raise Exception.Create('The current desktop does not have a logon SID.');
 
-  SetAttributes(SE_GROUP_LOGON_ID or SE_GROUP_ENABLED or
-    SE_GROUP_ENABLED_BY_DEFAULT);
+  Attributes := SE_GROUP_LOGON_ID or SE_GROUP_ENABLED or
+    SE_GROUP_ENABLED_BY_DEFAULT;
 
   ButtonOK.SetFocus;
 end;
 
-procedure TDialogPickUser.ButtonOKClick(Sender: TObject);
+procedure TDialogPickUser.ButtonOKClick;
+var
+  Sid: ISid;
 begin
-  if SidEditor.Enabled and not Assigned(SelectedGroup) then
-    LsaxLookupNameOrSddl(SidEditor.tbxSid.Text, SelectedGroup).RaiseOnError;
+  // Prevent closing unless the SID is valid
+  if SidEditor.Enabled then
+    SidEditor.TryGetSid(Sid).RaiseOnError;
 
   ModalResult := mrOk;
 end;
 
-procedure TDialogPickUser.CheckBoxDenyOnlyClick(Sender: TObject);
+procedure TDialogPickUser.CheckBoxDenyOnlyClick;
 begin
   if CheckBoxDenyOnly.Checked then
   begin
@@ -131,7 +131,7 @@ begin
   end;
 end;
 
-procedure TDialogPickUser.CheckBoxEnabledByDafaultClick(Sender: TObject);
+procedure TDialogPickUser.CheckBoxEnabledByDafaultClick;
 begin
   if CheckBoxEnabledByDafault.Checked then
     CheckBoxDenyOnly.SetCheckedEx(False)
@@ -139,7 +139,7 @@ begin
     CheckBoxMandatory.SetCheckedEx(False);
 end;
 
-procedure TDialogPickUser.CheckBoxEnabledClick(Sender: TObject);
+procedure TDialogPickUser.CheckBoxEnabledClick;
 begin
   if CheckBoxEnabled.Checked then
     CheckBoxDenyOnly.SetCheckedEx(False)
@@ -147,7 +147,7 @@ begin
     CheckBoxMandatory.SetCheckedEx(False);
 end;
 
-procedure TDialogPickUser.CheckBoxMandatoryClick(Sender: TObject);
+procedure TDialogPickUser.CheckBoxMandatoryClick;
 begin
   if CheckBoxMandatory.Checked then
   begin
@@ -155,11 +155,6 @@ begin
     CheckBoxEnabledByDafault.SetCheckedEx(True);
     CheckBoxDenyOnly.SetCheckedEx(False);
   end;
-end;
-
-procedure TDialogPickUser.ComboBoxSIDChange(Sender: TObject);
-begin
-  SelectedGroup := nil;
 end;
 
 procedure TDialogPickUser.DoDisableAttributes;
@@ -170,7 +165,7 @@ begin
     Mapping[i].CheckBox.Enabled := False;
 end;
 
-procedure TDialogPickUser.FormCreate(Sender: TObject);
+procedure TDialogPickUser.FormCreate;
 begin
   SetLength(Mapping, 9);
   Mapping[0].Create(CheckBoxMandatory, SE_GROUP_MANDATORY);
@@ -184,7 +179,7 @@ begin
   Mapping[8].Create(CheckBoxLogon, SE_GROUP_LOGON_ID);
 end;
 
-function TDialogPickUser.GetAttributes: Cardinal;
+function TDialogPickUser.GetAttributes;
 var
   i: Integer;
 begin
@@ -195,9 +190,7 @@ begin
       Result := Result or Mapping[i].Attribute;
 end;
 
-class procedure TDialogPickUser.PickEditMultiple(AOwner: TComponent;
-  Groups: TArray<TGroup>; out AttributesToAdd, AttributesToDelete:
-  TGroupAttributes);
+class procedure TDialogPickUser.PickEditMultiple;
 var
   BitwiseAnd, BitwiseOr: Cardinal;
   i: Integer;
@@ -252,52 +245,44 @@ begin
   end;
 end;
 
-class function TDialogPickUser.PickEditOne(AOwner: TComponent;
-  const Group: TGroup; DisableAttributes: Boolean): TGroup;
+class function TDialogPickUser.PickEditOne;
 begin
   with TDialogPickUser.Create(AOwner) do
   begin
-    SetSelectedGroup(Group.Sid);
-    SetAttributes(Group.Attributes);
+    SidEditor.Sid := Group.Sid;
+    Attributes := Group.Attributes;
 
     if DisableAttributes then
       DoDisableAttributes;
 
     ShowModal;
-    Result.Sid := SelectedGroup;
+    Result.Sid := SidEditor.Sid;
     Result.Attributes := GetAttributes;
   end;
 end;
 
-class function TDialogPickUser.PickNew(AOwner: TComponent;
-  DisableAttributes: Boolean): TGroup;
+class function TDialogPickUser.PickNew;
 begin
   with TDialogPickUser.CreateChild(AOwner, cfmApplication) do
   begin
     if DisableAttributes then
     begin
-      SetAttributes(SE_GROUP_ENABLED);
+      Attributes := SE_GROUP_ENABLED;
       DoDisableAttributes;
     end;
 
     ShowModal;
-    Result.Sid := SelectedGroup;
+    Result.Sid := SidEditor.Sid;
     Result.Attributes := GetAttributes;
   end;
 end;
 
-procedure TDialogPickUser.SetAttributes(Value: Cardinal);
+procedure TDialogPickUser.SetAttributes;
 var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
     Mapping[i].CheckBox.SetCheckedEx(Value and Mapping[i].Attribute <> 0);
-end;
-
-procedure TDialogPickUser.SetSelectedGroup;
-begin
-  SelectedGroup := Value;
-  SidEditor.tbxSid.Text := LsaxSidToString(SelectedGroup);
 end;
 
 end.
