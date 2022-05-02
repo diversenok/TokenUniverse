@@ -278,6 +278,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas"/>
         <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.Provider.pas"/>
         <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.pas"/>
+        <DCCReference Include="Core\TU.Tokens3.Open.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
@@ -1434,7 +1435,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
@@ -1442,7 +1443,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -1450,7 +1451,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
@@ -1458,7 +1459,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

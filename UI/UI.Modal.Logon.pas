@@ -50,7 +50,7 @@ uses
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser, System.UITypes,
   NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  Ntapi.ntpsapi, UI.Exceptions;
+  Ntapi.ntpsapi, UI.Exceptions, TU.Tokens3.Open;
 
 {$R *.dfm}
 
@@ -103,6 +103,7 @@ begin
       procedure (Domain, User, Password: String)
       var
         Source: TTokenSource;
+        Token: IToken;
       begin
         if ComboLogonType.ItemIndex = S4U_INDEX then
         begin
@@ -111,12 +112,14 @@ begin
           Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
             'Source LUID');
 
-          FormMain.TokenView.Add(TToken.CreateS4ULogon(Domain, User, Source,
-            GroupsFrame.All));
+          MakeS4ULogonToken(Token, Domain, User, Source, GroupsFrame.All)
+            .RaiseOnError;
         end
         else
-          FormMain.TokenView.Add(TToken.CreateWithLogon(GetLogonType, Domain, User,
-            Password, GroupsFrame.All));
+          MakeLogonToken(Token, GetLogonType, Domain, User, Password,
+            GroupsFrame.All).RaiseOnError;
+
+        FormMain.TokenView.Add(Token);
       end,
       ComboLogonType.ItemIndex = S4U_INDEX
     );

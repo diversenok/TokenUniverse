@@ -128,7 +128,7 @@ uses
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
-  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3;
+  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3, TU.Tokens3.Open;
 
 {$R *.dfm}
 
@@ -137,80 +137,47 @@ uses
 procedure TFormMain.ActionAssignToProcess(Sender: TObject);
 var
   Token: IToken;
-  TokenType: TTokenType;
 begin
   Token := TokenView.Selected;
 
-  // Ask the user if he wants to duplicate non-primary tokens
-  if (Token as IToken3).QueryType(TokenType).IsSuccess and
-    (TokenType <> TokenPrimary) then
-    case TaskMessageDlg(USE_TYPE_MISMATCH, USE_NEED_PRIMARY, mtWarning,
-      [mbYes, mbIgnore, mbCancel], -1) of
+  if AskConvertToPrimary(Handle, Token) then
+    TokenView.Add(Token);
 
-      idCancel:
-        Abort;
+  (Token as IToken3).AssignToProcessById(TProcessListDialog
+    .Execute(Self, False).ProcessID)
+    .RaiseOnError;
 
-      // Duplicate existing token to a primary one and add to the list
-      idYes:
-        Token := TokenView.Add(TToken.CreateDuplicateToken(Token,
-          MAXIMUM_ALLOWED, ttPrimary, False));
-
-      idIgnore:
-        ;
-    end;
-
-  (Token as IToken3).AssignToProcessById(
-    TProcessListDialog.Execute(Self, False).ProcessID).RaiseOnError;
-
-  MessageDlg('The token was successfully assigned to the process.',
-    mtInformation, [mbOK], 0);
+  ShowSuccessMessage(Handle, 'The token was successfully assigned to the process.');
 end;
 
 procedure TFormMain.ActionAssignToThread(Sender: TObject);
 var
   Token: IToken;
-  TokenType: TTokenType;
+  TID: TThreadId;
 begin
   Token := TokenView.Selected;
 
-  // Ask the user if he wants to duplicate primary tokens
-  if (Token as IToken3).QueryType(TokenType).IsSuccess and
-    (TokenType = TokenPrimary) then
-    case TaskMessageDlg(USE_TYPE_MISMATCH, USE_NEED_IMPERSONATION, mtWarning,
-      [mbYes, mbIgnore, mbCancel], -1) of
+  if AskConvertToImpersonation(Handle, Token) then
+    TokenView.Add(Token);
 
-      idCancel:
-        Abort;
-
-      // Duplicate existing token to an impersonation one and add to the list
-      idYes:
-        Token := TokenView.Add(TToken.CreateDuplicateToken(Token,
-          MAXIMUM_ALLOWED, ttImpersonation, False));
-
-      idIgnore:
-        ;
-    end;
+  TID := TProcessListDialog.Execute(Self, True).ThreadID;
 
   if TSettings.UseSafeImpersonation then
-    (Token as IToken3).AssignToThreadSafeById(TProcessListDialog.Execute(Self,
-      True).ThreadID).RaiseOnError
+    (Token as IToken3).AssignToThreadSafeById(TID).RaiseOnError
   else
-    (Token as IToken3).AssignToThreadById(TProcessListDialog.Execute(Self,
-      True).ThreadID).RaiseOnError;
+    (Token as IToken3).AssignToThreadById(TID).RaiseOnError;
 
-  CurrentUserChanged(Self);
-  MessageDlg('The token was successfully assigned to the thread.',
-    mtInformation, [mbOK], 0);
+  if TID = NtCurrentThreadId then
+    CurrentUserChanged(Self);
+
+  ShowSuccessMessage(Handle, 'The token was successfully assigned to the thread.');
 end;
 
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
-  if TSettings.PromptOnHandleClose then
-    if MessageDlg('Are you sure you want to close this handle?', mtConfirmation,
-      mbYesNoCancel, 0) <> IDYES then
-        Abort;
-
-  TokenView.Delete(ListViewTokens.Selected.Index);
+  if not TSettings.PromptOnHandleClose or AskForConfirmation(Handle,
+    'Are you sure you want to close this handle?') then
+    TokenView.Delete(ListViewTokens.Selected.Index);
 end;
 
 procedure TFormMain.ActionDuplicate(Sender: TObject);
@@ -236,11 +203,11 @@ end;
 
 procedure TFormMain.ActionOpenEffective(Sender: TObject);
 var
-  Client: TClientIdEx;
+  Token: IToken;
 begin
-  Client := TProcessListDialog.Execute(Self, True);
-  TokenView.Add(TToken.CreateOpenEffective(Client.ThreadID,
-    Client.ImageName));
+  MakeCopyViaDirectImpersonation(Token, nil, TProcessListDialog.Execute(Self,
+    True).ThreadID, SecurityImpersonation).RaiseOnError;
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
@@ -253,23 +220,30 @@ end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 var
-  Client: TClientIdEx;
+  Token: IToken;
 begin
-  Client := TProcessListDialog.Execute(Self, False);
-  TokenView.Add(TToken.CreateOpenProcess(Client.ProcessID, Client.ImageName));
+  MakeOpenProcessToken(Token, nil, TProcessListDialog.Execute(Self,
+    False).ProcessID).RaiseOnError;
+
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
+var
+  Token: IToken;
 begin
-  TokenView.Add(TToken.CreateOpenCurrent);
+  MakeOpenProcessToken(Token, nil, NtCurrentProcessId).RaiseOnError;
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.ActionOpenThread(Sender: TObject);
 var
-  Client: TClientIdEx;
+  Token: IToken;
 begin
-  Client := TProcessListDialog.Execute(Self, True);
-  TokenView.Add(TToken.CreateOpenThread(Client.ThreadID, Client.ImageName));
+  MakeOpenThreadToken(Token, nil, TProcessListDialog.Execute(Self,
+    True).ThreadID).RaiseOnError;
+
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
@@ -288,8 +262,7 @@ begin
   TToken.RevertThreadToken(NtCurrentThreadId);
 
   CurrentUserChanged(Self);
-  MessageDlg('The token was successfully revoked from the current thread.',
-    mtInformation, [mbOK], 0);
+  ShowSuccessMessage(Handle, 'The token was successfully revoked from the current thread.');
 end;
 
 procedure TFormMain.ActionRevertThread(Sender: TObject);
@@ -302,8 +275,7 @@ begin
   if TID = NtCurrentThreadId then
     CurrentUserChanged(Self);
 
-  MessageDlg('The token was successfully revoked from the thread.',
-    mtInformation, [mbOK], 0);
+  ShowSuccessMessage(Handle, 'The token was successfully revoked from the thread.');
 end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
@@ -328,9 +300,8 @@ begin
   NewHandle := TokenView.Selected.SendHandleToProcess(
     TProcessListDialog.Execute(Self, False).ProcessID);
 
-  MessageDlg(Format('The handle was successfully sent.'#$D#$A +
-    'Its value is %d (0x%x)', [NewHandle, NewHandle]), mtInformation,
-    [mbOK], 0);
+  ShowSuccessMessage(Handle, Format('The handle was successfully sent.'#$D#$A +
+    'Its value is %d (0x%X)', [NewHandle, NewHandle]));
 end;
 
 procedure TFormMain.ActionSteal(Sender: TObject);
@@ -339,8 +310,11 @@ begin
 end;
 
 procedure TFormMain.ActionWTSQuery(Sender: TObject);
+var
+  Token: IToken;
 begin
-  TokenView.Add(TToken.CreateQueryWts(TComboDialog.PickSession(Self)));
+  MakeSessionToken(Token, TComboDialog.PickSession(Self)).RaiseOnError;
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.CurrentUserChanged(Sender: TObject);
@@ -376,13 +350,16 @@ begin
       TokenView.Add(TToken.CreateByHandle(Handles[i].HandleValue));
   end;
 
-  Token := TokenView.Add(TToken.CreateOpenCurrent);
+  MakeOpenProcessToken(Token, nil, NtCurrentProcessId).RaiseOnError;
+  TokenView.Add(Token);
 
   // Open current process and, maybe, its linked token
   if (Token as IToken3).QueryElevation(Elevation).IsSuccess and
     (Elevation.ElevationType <> TokenElevationTypeDefault) and
     Token.OpenLinkedToken(Linked).IsSuccess then
       TokenView.Add(Linked);
+
+  LoadLibrary('xmllite.dll');
 
   SetForegroundWindow(Handle);
 end;
@@ -523,8 +500,11 @@ begin
 end;
 
 procedure TFormMain.NewAnonymousClick(Sender: TObject);
+var
+  Token: IToken;
 begin
-  TokenView.Add(TToken.CreateAnonymous);
+  MakeAnonymousToken(Token).RaiseOnError;
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.NewNtCreateTokenClick(Sender: TObject);

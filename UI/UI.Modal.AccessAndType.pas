@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  Ntapi.ntseapi, TU.Tokens3, NtUtils;
+  Ntapi.ntseapi, TU.Tokens3, NtUtils, TU.Tokens3.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -68,8 +68,8 @@ begin
 
     ShowModal;
 
-    Result := TToken.CreateDuplicateToken(Source, AccessMaskFrame.AccessMask,
-      SelectedTokenType, CheckBoxEffective.Checked);
+    MakeDuplicateToken(Result, Source, SelectedTokenType,
+      AccessMaskFrame.AccessMask, CheckBoxEffective.Checked).RaiseOnError;
   end;
 end;
 

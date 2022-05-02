@@ -89,10 +89,12 @@ type
     ['{7CF47C07-F5D1-4891-A2B8-83ED0C7419CF}']
     function GetHandle: IHandle;
     function GetCaption: String;
+    function GetCachedKernelAddress: Pointer;
     procedure SetCaption(const Value: String);
 
     property Handle: IHandle read GetHandle;
     property Caption: String read GetCaption write SetCaption;
+    property CachedKernelAddress: Pointer read GetCachedKernelAddress;
 
     // Quering
     function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
@@ -342,6 +344,7 @@ type
     function GetHandle: IHandle;
     function GetCaption: String;
     procedure SetCaption(const Value: String);
+    function GetCachedKernelAddress: Pointer;
     function GetEvents: TTokenEvents;
     property Events: TTokenEvents read GetEvents;
     function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
@@ -642,6 +645,11 @@ begin
   SystemHandlesSubscription := TGlobalEvents.SubscribeHandles(ChangedSystemHandles);
   SystemObjectsSubscription := TGlobalEvents.SubscribeObjects(ChangedSystemObjects);
   LinkedLogonSessionsSubscription := TGlobalEvents.OnLinkLogonSessions.Subscribe(LinkedLogonSessions);
+end;
+
+function TToken.GetCachedKernelAddress;
+begin
+  Result := FKernelObjectAddress;
 end;
 
 function TToken.GetCaption;
@@ -1435,7 +1443,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenLinkedToken, hToken);
 
   if Result.IsSuccess then
-    Token := CaptureTokenHandle(NtxObject.Capture(hToken),
+    Token := CaptureTokenHandle(Auto.CaptureHandle(hToken),
       'Linked token for ' + FCaption);
 end;
 

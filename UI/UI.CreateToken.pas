@@ -89,7 +89,7 @@ uses
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
   Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker, TU.Tokens3,
-  Ntapi.ntobapi;
+  Ntapi.ntobapi, TU.Tokens3.Open;
 
 {$R *.dfm}
 
@@ -232,17 +232,9 @@ begin
   LsaxLookupNameOrSddl(OwnerGroupName, Owner).RaiseOnError;
   LsaxLookupNameOrSddl(PrimaryGroupName, PrimaryGroup).RaiseOnError;
 
-  Token := TToken.CreateNtCreateToken(
-    User,
-    CheckBoxUserState.Checked,
-    GroupsFrame.All,
-    PrivilegesFrame.Checked,
-    LogonIDSource.SelectedLogonSession,
-    Owner,
-    PrimaryGroup,
-    Source,
-    Expires
-  );
+  MakeNewToken(Token, ttPrimary, User, CheckBoxUserState.Checked,
+    GroupsFrame.All, PrivilegesFrame.Checked, LogonIDSource.SelectedLogonSession,
+    PrimaryGroup, Source, Owner, nil, Expires).RaiseOnError;
 
   FormMain.TokenView.Add(Token);
 

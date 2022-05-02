@@ -24,7 +24,8 @@ type
 implementation
 
 uses
-   TU.Tokens.Types, Ntapi.ntseapi, Ntapi.ntobapi, TU.Tokens3, NtUtils;
+   TU.Tokens.Types, Ntapi.ntseapi, Ntapi.ntobapi, TU.Tokens3, NtUtils,
+   TU.Tokens3.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -42,8 +43,8 @@ begin
 
     ShowModal;
 
-    Result := TToken.CreateDuplicateHandle(Source, AccessMaskFrame.AccessMask,
-      RadioButtonSame.Checked);
+    MakeDuplicateHandle(Result, Source, AccessMaskFrame.AccessMask,
+      RadioButtonSame.Checked).RaiseOnError;
   end;
 end;
 

@@ -54,7 +54,6 @@ var
   hxNewToken: IHandle;
   NewToken: IToken;
   LevelName: String;
-  SandboxInert: LongBool;
 begin
   SafexComputeSaferTokenById(hxNewToken, Token.Handle, GetScopeId, GetLevelId,
     CheckBoxSandboxInert.Checked).RaiseOnError;
@@ -83,16 +82,8 @@ begin
 
   FormMain.TokenView.Add(NewToken);
 
-  // Check whether Sandbox Inert was actually enabled
-  if CheckBoxSandboxInert.Checked and
-    (NewToken as IToken3).QuerySandboxInert(SandboxInert).IsSuccess and
-    not SandboxInert then
-  begin
-    if not TSettings.NoCloseCreationDialogs then
-      Hide;
-
-    MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
-  end;
+  if CheckBoxSandboxInert.Checked then
+    CheckSandboxInert(Handle, NewToken);
 
   if not TSettings.NoCloseCreationDialogs then
     Close;

@@ -49,7 +49,8 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
-  Ntapi.securitybaseapi, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl;
+  Ntapi.securitybaseapi, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl,
+  TU.Tokens3.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -69,25 +70,20 @@ end;
 procedure TDialogRestrictToken.ButtonOKClick;
 var
   NewToken: IToken;
-  GotSabdoxInert: LongBool;
 begin
-  NewToken := TToken.CreateRestricted(Token, GetFlags,
-    GroupsDisableFrame.Checked,
-    GroupsRestrictFrame.Checked,
-    PrivilegesFrame.Checked);
+  MakeFilteredToken(
+    NewToken,
+    Token,
+    GetFlags,
+    GroupsToSids(GroupsDisableFrame.Checked),
+    PrivilegesToIDs(PrivilegesFrame.Checked),
+    GroupsToSids(GroupsRestrictFrame.Checked)
+  ).RaiseOnError;
 
   FormMain.TokenView.Add(NewToken);
 
-  // Check whether SandboxInert was actually enabled
-  if CheckBoxSandboxInert.Checked and
-    (NewToken as IToken3).QuerySandboxInert(GotSabdoxInert).IsSuccess and
-      not GotSabdoxInert then
-      begin
-        if not TSettings.NoCloseCreationDialogs then
-          Hide;
-
-        MessageDlg(NO_SANBOX_INERT, mtWarning, [mbOK], 0);
-      end;
+  if CheckBoxSandboxInert.Checked then
+    CheckSandboxInert(Handle, NewToken);
 
   if not TSettings.NoCloseCreationDialogs then
     Close;

@@ -2,27 +2,119 @@ unit TU.Suggestions;
 
 interface
 
-const
-  USE_TYPE_MISMATCH = 'Wrong token type';
-  USE_NEED_PRIMARY = 'This action requires a primary token while you ' +
-   'are trying to use an impersonation one. Do you want to duplicate it first?';
-  USE_NEED_IMPERSONATION = 'This is not an impersonation token (which ' +
-   'includes everything from Anonymous up to Delegation). ' +
-   'Do you want to duplicate it first?';
+uses
+  Ntapi.WinUser, TU.Tokens, TU.Tokens3;
 
-  NO_SANBOX_INERT = 'The system did not set the Sandbox Inert flag despite ' +
-    'being requested to.';
+// Default messages
+procedure ShowSuccessMessage(Parent: THwnd; const Text: String);
+function AskForConfirmation(Parent: THwnd; const Text: String): Boolean;
+
+// Operation suggestions
+function AskConvertToPrimary(Parent: THwnd; var Token: IToken): Boolean;
+function AskConvertToImpersonation(Parent: THwnd; var Token: IToken): Boolean;
+procedure CheckSandboxInert(Parent: THwnd; const Token: IToken);
 
 implementation
 
 uses
   Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
-  System.TypInfo, NtUtils, NtUiLib.Exceptions, NtUiLib.Exceptions.Dialog;
+  System.TypInfo, NtUtils, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
+  TU.Tokens3.Open, TU.Tokens.Types, NtUiLib.Errors, System.SysUtils;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +
     'help the project by opening an issue on our GitHub page'#$D#$A +
     'https://github.com/diversenok/TokenUniverse';
+
+  SUGGESTION_TITLE = 'Pro Tip';
+  TOKEN_TYPE_MISMATCH = 'Wrong Token Type';
+  TOKEN_NEED_PRIMARY = 'This action requires a primary token while you ' +
+   'are trying to use an impersonation one. Do you want to duplicate it first?';
+  TOKEN_NEED_IMPERSONATION = 'This action requires an impersonation token ' +
+   '(which includes everything from Anonymous up to Delegation) while you ' +
+   'are trying to use a primary one. Do you want to duplicate it first?';
+
+  TOKEN_NO_SANDBOX_INERT = 'Not Sandbox Inert';
+  TOKEN_NO_SANDBOX_INERT_TEXT = 'The operation did not enable the Sandbox ' +
+    'Inert flag despite being requested to beacuse doing so requires system ' +
+    'privileges.';
+
+procedure ShowSuccessMessage;
+begin
+  UsrxShowTaskDialog(Parent, 'Success', 'Success', Text, diInfo, dbOk);
+end;
+
+function AskForConfirmation;
+begin
+  Result := UsrxShowTaskDialog(Parent, 'Confirmation', 'Confirmation Required',
+    Text, diConfirmation, dbYesNoCancel) = IDYES;
+end;
+
+function AskConvertToPrimary;
+var
+  CurrentType: TTokenType;
+  NewToken: IToken;
+begin
+  Result := False;
+
+  if not (Token as IToken3).QueryType(CurrentType).IsSuccess then
+    Exit;
+
+  if CurrentType = TokenPrimary then
+    Exit;
+
+  case UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_TYPE_MISMATCH,
+    TOKEN_NEED_PRIMARY, diWarning, dbYesAbortIgnore) of
+
+    IDABORT, IDCANCEL:
+      Abort;
+
+    IDYES:
+      begin
+        MakeDuplicateToken(NewToken, Token, ttPrimary).RaiseOnError;
+        Token := NewToken;
+        Result := True;
+      end;
+  end;
+end;
+
+function AskConvertToImpersonation;
+var
+  CurrentType: TTokenType;
+  NewToken: IToken;
+begin
+  Result := False;
+
+  if not (Token as IToken3).QueryType(CurrentType).IsSuccess then
+    Exit;
+
+  if CurrentType = TokenImpersonation then
+    Exit;
+
+  case UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_TYPE_MISMATCH,
+    TOKEN_NEED_IMPERSONATION, diWarning, dbYesAbortIgnore) of
+
+    IDABORT, IDCANCEL:
+      Abort;
+
+    IDYES:
+      begin
+        MakeDuplicateToken(NewToken, Token, ttImpersonation).RaiseOnError;
+        Token := NewToken;
+        Result := True;
+      end;
+  end;
+end;
+
+procedure CheckSandboxInert;
+var
+  SandboxInert: LongBool;
+begin
+  if (Token as IToken3).QuerySandboxInert(SandboxInert).IsSuccess and
+    not SandboxInert then
+    UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_NO_SANDBOX_INERT,
+      TOKEN_NO_SANDBOX_INERT_TEXT, diWarning);
+end;
 
 type
   TSuggestion = record
