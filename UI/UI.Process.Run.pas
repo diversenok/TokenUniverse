@@ -51,6 +51,7 @@ type
     LabelMethod: TLabel;
     Label1: TLabel;
     CheckBoxForceBreakaway: TCheckBox;
+    CheckBoxIgnoreElevation: TCheckBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -172,6 +173,9 @@ begin
   if CheckBoxNewConsole.Checked then
     Include(Options.Flags, poNewConsole);
 
+  if CheckBoxIgnoreElevation.Checked then
+    Include(Options.Flags, poIgnoreElevation);
+
   if ComboBoxShowMode.ItemIndex <> Integer(SW_SHOW_NORMAL) then
     Include(Options.Flags, poUseWindowMode);
 
@@ -234,7 +238,7 @@ begin
     ExecMethod := nil;
   end;
 
-  if ppParentProcess in ExecSupports(ExecMethod) then
+  if spoParentProcess in ExecSupports(ExecMethod) then
   begin
     OldParentAccessMask := ParentAccessMask;
 
@@ -376,21 +380,21 @@ var
 begin
   SupportedOptions := ExecSupports(ExecMethod);
 
-  EditDir.Enabled := ppCurrentDirectory in SupportedOptions;
-  ComboBoxDesktop.Enabled := ppDesktop in SupportedOptions;
-  ComboBoxLogonFlags.Enabled := ppLogonFlags in SupportedOptions;
-  CheckBoxInherit.Enabled := ppInheritHandles in SupportedOptions;
-  CheckBoxSuspended.Enabled := ppCreateSuspended in SupportedOptions;
-  CheckBoxBreakaway.Enabled := ppBreakaway in SupportedOptions;
-  CheckBoxForceBreakaway.Enabled := ppForceBreakaway in SupportedOptions;
-  CheckBoxNewConsole.Enabled := ppNewConsole in SupportedOptions;
-  CheckBoxRunas.Enabled := ppRequireElevation in SupportedOptions;
-  ComboBoxShowMode.Enabled := ppShowWindowMode in SupportedOptions;
-  CheckBoxRunAsInvoker.Enabled := ppRunAsInvoker in SupportedOptions;
-  EditParent.Enabled := ppParentProcess in SupportedOptions;
-  ButtonChooseParent.Enabled := ppParentProcess in SupportedOptions;
-  EditAppContainer.Enabled := ppAppContainer in SupportedOptions;
-  ButtonAC.Enabled := ppAppContainer in SupportedOptions;
+  ComboBoxDesktop.Enabled := spoDesktop in SupportedOptions;
+  ComboBoxLogonFlags.Enabled := spoCredentials in SupportedOptions;
+  CheckBoxInherit.Enabled := spoInheritHandles in SupportedOptions;
+  CheckBoxSuspended.Enabled := spoSuspended in SupportedOptions;
+  CheckBoxBreakaway.Enabled := spoBreakawayFromJob in SupportedOptions;
+  CheckBoxForceBreakaway.Enabled := spoForceBreakaway in SupportedOptions;
+  CheckBoxNewConsole.Enabled := spoNewConsole in SupportedOptions;
+  CheckBoxRunas.Enabled := spoRequireElevation in SupportedOptions;
+  CheckBoxIgnoreElevation.Enabled := spoIgnoreElevation in SupportedOptions;
+  ComboBoxShowMode.Enabled := spoWindowMode in SupportedOptions;
+  CheckBoxRunAsInvoker.Enabled := spoRunAsInvoker in SupportedOptions;
+  EditParent.Enabled := spoParentProcess in SupportedOptions;
+  ButtonChooseParent.Enabled := spoParentProcess in SupportedOptions;
+  EditAppContainer.Enabled := spoAppContainer in SupportedOptions;
+  ButtonAC.Enabled := spoAppContainer in SupportedOptions;
 end;
 
 end.

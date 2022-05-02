@@ -101,6 +101,7 @@ object DialogRun: TDialogRun
           Top = 24
           Width = 115
           Height = 17
+          Hint = 'Allow the new process inherit handles from the parent process'
           Caption = 'Inherit handles'
           TabOrder = 0
         end
@@ -109,32 +110,36 @@ object DialogRun: TDialogRun
           Top = 47
           Width = 115
           Height = 17
+          Hint = 'Do not let the process start immediately'
           Caption = 'Create suspended'
-          TabOrder = 1
+          TabOrder = 2
         end
         object CheckBoxBreakaway: TCheckBox
           Left = 158
           Top = 24
           Width = 134
           Height = 17
+          Hint = 'Start the new process outside the parent'#39's job object if allowed'
           Caption = 'Breakaway from job'
-          TabOrder = 2
+          TabOrder = 1
         end
         object CheckBoxNewConsole: TCheckBox
           Left = 11
-          Top = 93
+          Top = 90
           Width = 134
           Height = 17
+          Hint = 'Create a new console instead of inheriting one from the parent'
           Caption = 'Create new console'
           Checked = True
           State = cbChecked
-          TabOrder = 3
+          TabOrder = 6
         end
         object CheckBoxRunas: TCheckBox
           Left = 11
           Top = 70
           Width = 116
           Height = 15
+          Hint = 'Ask User Account Control for elevation'
           Caption = 'Request elevation'
           Enabled = False
           TabOrder = 4
@@ -145,8 +150,8 @@ object DialogRun: TDialogRun
           Width = 116
           Height = 17
           Hint = 
-            'Use this compatibility mechanism if you want to start a program ' +
-            'that requires elevation as a limited user.'
+            'Configure __COMPAT_LAYER environment variable to enable/disable ' +
+            'RunAsInvoker compatibility mechanism'
           AllowGrayed = True
           Caption = 'Run as invoker'
           State = cbGrayed
@@ -162,7 +167,17 @@ object DialogRun: TDialogRun
             'ess of their flags. Requires the Tcb privilege.'
           Caption = 'Force breakaway'
           Enabled = False
-          TabOrder = 6
+          TabOrder = 3
+        end
+        object CheckBoxIgnoreElevation: TCheckBox
+          Left = 158
+          Top = 91
+          Width = 116
+          Height = 15
+          Hint = 'Force starting the process without elevation'
+          Caption = 'Ignore elevation'
+          Enabled = False
+          TabOrder = 7
         end
       end
       object ComboBoxLogonFlags: TComboBox

@@ -6,12 +6,7 @@ uses
   NtUtils.Processes.Create;
 
 type
-  TExecParamSet = set of (
-    ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-    ppLogonFlags, ppInheritHandles, ppCreateSuspended, ppBreakaway,
-    ppForceBreakaway, ppNewConsole, ppRequireElevation, ppShowWindowMode,
-    ppRunAsInvoker, ppEnvironment, ppAppContainer, ppJob
-  );
+  TExecParamSet = set of TSupportedCreateProcessOptions;
 
 // Determine if a process creation method supports an option
 function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
@@ -23,58 +18,59 @@ uses
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
   NtUtils.Processes.Create.Remote, NtUtils.Processes.Create.Manual;
 
-function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
+function ExecSupports;
 begin
   if Pointer(@Method) = Pointer(@AdvxCreateProcess) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppForceBreakaway,
-      ppNewConsole, ppShowWindowMode, ppRunAsInvoker, ppEnvironment,
-      ppAppContainer, ppJob]
+    Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+      spoForceBreakaway, spoNewConsole, spoRunAsInvoker, spoIgnoreElevation,
+      spoEnvironment, spoSecurity, spoWindowMode, spoDesktop, spoToken,
+      spoParentProcess, spoJob, spoHandleList, spoMitigationPolicies,
+      spoChildPolicy, spoLPAC, spoAppContainer]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithToken) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppLogonFlags,
-      ppCreateSuspended, ppShowWindowMode, ppEnvironment]
+    Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
+      spoToken]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithLogon) then
-    Result := [ppCurrentDirectory, ppDesktop, ppLogonFlags,
-      ppCreateSuspended, ppShowWindowMode, ppEnvironment]
+    Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
+      spoCredentials]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessRemote) then
-    Result := [ppCurrentDirectory, ppDesktop, ppParentProcess, ppInheritHandles,
-      ppCreateSuspended, ppBreakaway, ppNewConsole]
+    Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+      spoNewConsole, spoDesktop, spoParentProcess, spoTimeout]
 
   else if Pointer(@Method) = Pointer(@ShlxExecute) then
-    Result := [ppCurrentDirectory, ppNewConsole, ppRequireElevation,
-      ppShowWindowMode, ppRunAsInvoker]
+    Result := [spoNewConsole, spoRequireElevation, spoRunAsInvoker,
+      spoWindowMode]
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcess) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppShowWindowMode, ppEnvironment]
+    Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
+      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob]
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcessEx) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppShowWindowMode, ppEnvironment,
-      ppJob]
+    Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
+      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob]
 
   else if Pointer(@Method) = Pointer(@NtxCreateUserProcess) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppForceBreakaway,
-      ppShowWindowMode, ppEnvironment, ppJob]
+    Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+      spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
+      spoToken, spoParentProcess, spoJob, spoHandleList, spoChildPolicy,
+      spoLPAC]
 
   else if Pointer(@Method) = Pointer(@NtxCreateProcessEx) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppForceBreakaway,
-      ppShowWindowMode, ppEnvironment]
+    Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+      spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
+      spoToken, spoParentProcess, spoSection]
 
   else if Pointer(@Method) = Pointer(@WmixCreateProcess) then
-    Result := [ppCurrentDirectory, ppDesktop, ppToken, ppCreateSuspended,
-      ppShowWindowMode, ppEnvironment]
+    Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
+      spoToken]
 
   else if Pointer(@Method) = Pointer(@WdcxCreateProcess) then
-    Result := [ppCurrentDirectory, ppRequireElevation]
+    Result := [spoRequireElevation]
 
   else if Pointer(@Method) = Pointer(@ComxShellExecute) then
-    Result := [ppCurrentDirectory, ppRequireElevation, ppShowWindowMode]
+    Result := [spoRequireElevation, spoWindowMode]
 
   else
     Result := [];
