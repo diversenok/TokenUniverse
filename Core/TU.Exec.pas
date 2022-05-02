@@ -27,8 +27,9 @@ function ExecSupports(Method: TCreateProcessMethod): TExecParamSet;
 begin
   if Pointer(@Method) = Pointer(@AdvxCreateProcess) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppParentProcess,
-      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppNewConsole,
-      ppShowWindowMode, ppRunAsInvoker, ppEnvironment, ppAppContainer, ppJob]
+      ppInheritHandles, ppCreateSuspended, ppBreakaway, ppForceBreakaway,
+      ppNewConsole, ppShowWindowMode, ppRunAsInvoker, ppEnvironment,
+      ppAppContainer, ppJob]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithToken) then
     Result := [ppCurrentDirectory, ppDesktop, ppToken, ppLogonFlags,

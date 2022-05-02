@@ -149,8 +149,8 @@ begin
   Options.Parameters := EditParams.Text;
   Options.CurrentDirectory := EditDir.Text;
   Options.Desktop := ComboBoxDesktop.Text;
-  Options.Attributes.hxParentProcess := hxParentProcess;
-  Options.Attributes.AppContainer := AppContainerSid;
+  Options.hxParentProcess := hxParentProcess;
+  Options.AppContainer := AppContainerSid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
   Options.WindowMode := TShowMode(ComboBoxShowMode.ItemIndex);
 
