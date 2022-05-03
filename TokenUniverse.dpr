@@ -63,7 +63,8 @@ uses
   VirtualTreesEx.DefaultMenu in 'NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas',
   DevirtualizedTree.Provider in 'NtUtilsUI\Components\DevirtualizedTree.Provider.pas',
   DevirtualizedTree in 'NtUtilsUI\Components\DevirtualizedTree.pas',
-  TU.Tokens3.Open in 'Core\TU.Tokens3.Open.pas';
+  TU.Tokens3.Open in 'Core\TU.Tokens3.Open.pas',
+  UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame};
 
 {$R *.res}
 

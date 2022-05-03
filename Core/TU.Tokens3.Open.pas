@@ -232,6 +232,8 @@ begin
 
   if PID = 0 then
     Caption := 'Unknown Process'
+  else if PID = NtCurrentProcessId then
+    Caption := Format('Current Process [%d]', [PID])
   else
     Caption := TType.Represent(PID).Text;
 
@@ -271,6 +273,8 @@ begin
 
   if TID = 0 then
     Caption := 'Unknown Thread'
+  else if TID = NtCurrentThreadId then
+    Caption := Format('Current Thread [%d]', [TID])
   else
     Caption := TType.Represent(TID).Text;
 

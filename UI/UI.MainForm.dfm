@@ -2,8 +2,8 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Caption = 'Token Universe :: Main Window'
-  ClientHeight = 303
-  ClientWidth = 750
+  ClientHeight = 290
+  ClientWidth = 818
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,70 +15,25 @@ object FormMain: TFormMain
   OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
-  OnKeyDown = FormKeyDown
   PixelsPerInch = 96
   TextHeight = 13
-  object ListViewTokens: TListViewEx
-    AlignWithMargins = True
-    Left = 3
-    Top = 35
-    Width = 744
-    Height = 265
-    Align = alBottom
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Columns = <>
-    DoubleBuffered = True
-    FullDrag = True
-    GridLines = True
-    Groups = <
-      item
-        Header = 'Search results:'
-        GroupID = 0
-        State = [lgsNormal]
-        HeaderAlign = taLeftJustify
-        FooterAlign = taLeftJustify
-        TitleImage = -1
-      end>
-    RowSelect = True
-    ParentDoubleBuffered = False
-    PopupMenu = PopupMenu
+  inline TokenView: TFrameTokens
+    Left = 0
+    Top = 0
+    Width = 818
+    Height = 290
+    Align = alClient
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
-    ViewStyle = vsReport
-    OnDblClick = ActionOpen
-    OnEdited = ListViewTokensEdited
-    OnEditing = FrameListViewTokensEditing
-    OnSelectItem = ListViewTokenSelectItem
-    OnEditingEnd = FrameListViewTokensEditingEnd
-  end
-  object SearchBox: TButtonedEdit
-    Left = 3
-    Top = 8
-    Width = 597
-    Height = 21
-    Anchors = [akLeft, akTop, akRight]
-    Images = SearchButtons
-    LeftButton.ImageIndex = 0
-    LeftButton.Visible = True
-    RightButton.HotImageIndex = 2
-    RightButton.ImageIndex = 1
-    RightButton.PressedImageIndex = 3
-    TabOrder = 1
-    TextHint = 'Search'
-    OnChange = SearchBoxChange
-    OnRightButtonClick = SearchBoxRightButtonClick
-  end
-  object ComboBoxColumn: TComboBox
-    Left = 604
-    Top = 8
-    Width = 143
-    Height = 21
-    Style = csDropDownList
-    Anchors = [akTop, akRight]
-    ItemIndex = 0
-    TabOrder = 2
-    Text = 'Search in all columns'
-    Items.Strings = (
-      'Search in all columns')
+    inherited VST: TDevirtualizedTree
+      Width = 818
+      Height = 290
+      TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
+      OnGetPopupMenu = TokenViewVSTGetPopupMenu
+      PopupMenuEx = TokenMenu
+      NoItemsText = 'No opened tokens'
+    end
   end
   object MainMenu: TMainMenu
     Images = SmallIcons
@@ -107,6 +62,78 @@ object FormMain: TFormMain
       object MenuExit: TMenuItem
         Caption = 'Exit'
         OnClick = MenuExitClick
+      end
+    end
+    object cmToken: TMenuItem
+      Caption = 'Token'
+      object cmOpenCurrent: TMenuItem
+        Caption = 'Open current process'
+        ShortCut = 24655
+        OnClick = ActionOpenSelf
+      end
+      object cmOpenProcess: TMenuItem
+        Caption = 'Open process...'
+        ShortCut = 16463
+        OnClick = ActionOpenProcess
+      end
+      object cmOpenThread: TMenuItem
+        Caption = 'Open thread...'
+        ShortCut = 49231
+        OnClick = ActionOpenThread
+      end
+      object cmOpenEffective: TMenuItem
+        Caption = 'Open effective token...'
+        ShortCut = 57423
+        OnClick = ActionOpenEffective
+      end
+      object N4: TMenuItem
+        Caption = '-'
+      end
+      object cmLogonUser: TMenuItem
+        Caption = 'Logon user...'
+        ShortCut = 16460
+        OnClick = ActionLogon
+      end
+      object cmQuerySession: TMenuItem
+        Caption = 'Query session token...'
+        ShortCut = 16469
+        OnClick = ActionWTSQuery
+      end
+      object cmCreateToken: TMenuItem
+        Caption = 'Create using NtCreateToken...'
+        ShortCut = 16462
+        OnClick = NewNtCreateTokenClick
+      end
+      object cmAnonymousToken: TMenuItem
+        Caption = 'Anonymous token'
+        ShortCut = 49217
+        OnClick = NewAnonymousClick
+      end
+      object N5: TMenuItem
+        Caption = '-'
+      end
+      object cmCopyHandle: TMenuItem
+        Caption = 'Copy handle from other process...'
+        ShortCut = 24643
+        OnClick = ActionSteal
+      end
+      object cmSearchToken: TMenuItem
+        Caption = 'Search for token handles...'
+        ShortCut = 16454
+        OnClick = ActionSearch
+      end
+      object N6: TMenuItem
+        Caption = '-'
+      end
+      object cmRevokeCurrent: TMenuItem
+        Caption = 'Revoke token from current thread'
+        ShortCut = 49234
+        OnClick = ActionRevertCurrentThread
+      end
+      object cmRevokeToken: TMenuItem
+        Caption = 'Revoke token from thread...'
+        ShortCut = 57426
+        OnClick = ActionRevertThread
       end
     end
     object MenuTools: TMenuItem
@@ -155,25 +182,16 @@ object FormMain: TFormMain
       Caption = 'Help'
     end
   end
-  object PopupMenu: TPopupMenu
+  object TokenMenu: TPopupMenu
     Left = 168
     Top = 112
-    object TokenOpenInfo: TMenuItem
-      Caption = 'Open information'
-      Default = True
-      Enabled = False
-      ShortCut = 13
-      OnClick = ActionOpen
-    end
     object TokenRename: TMenuItem
       Caption = 'Rename'
-      Enabled = False
       ShortCut = 113
       OnClick = ActionRename
     end
     object TokenClose: TMenuItem
       Caption = 'Close handle'
-      Enabled = False
       ShortCut = 46
       OnClick = ActionClose
     end
@@ -182,31 +200,26 @@ object FormMain: TFormMain
     end
     object TokenDuplicate: TMenuItem
       Caption = 'Duplicate token...'
-      Enabled = False
       ShortCut = 16452
       OnClick = ActionDuplicate
     end
     object TokenDuplicateHandle: TMenuItem
       Caption = 'Duplicate handle...'
-      Enabled = False
       ShortCut = 24644
       OnClick = ActionDuplicateHandle
     end
     object TokenRestrict: TMenuItem
       Caption = 'Create restricted token...'
-      Enabled = False
       ShortCut = 16466
       OnClick = ActionRestrict
     end
     object TokenRestrictSafer: TMenuItem
       Caption = 'Create restricted token via WinSafer API...'
-      Enabled = False
       ShortCut = 24658
       OnClick = TokenRestrictSaferClick
     end
     object TokenOpenLinked: TMenuItem
       Caption = 'Open linked token'
-      Enabled = False
       ShortCut = 24652
       OnClick = ActionOpenLinked
     end
@@ -215,96 +228,23 @@ object FormMain: TFormMain
     end
     object TokenSendHandle: TMenuItem
       Caption = 'Copy handle to another process...'
-      Enabled = False
       OnClick = ActionSendHandle
     end
     object AssignToProcess: TMenuItem
       Caption = 'Assign token to process (Primary)...'
-      Enabled = False
       ShortCut = 24641
       OnClick = ActionAssignToProcess
     end
     object AssignToThread: TMenuItem
       Caption = 'Assign token to thread (Impersonation)...'
-      Enabled = False
       ShortCut = 24649
       OnClick = ActionAssignToThread
-    end
-    object RevertCurrentThread: TMenuItem
-      Caption = 'Revoke token from current thread'
-      ShortCut = 49234
-      OnClick = ActionRevertCurrentThread
-    end
-    object RevertThread: TMenuItem
-      Caption = 'Revoke token from thread...'
-      ShortCut = 57426
-      OnClick = ActionRevertThread
     end
     object N3: TMenuItem
       Caption = '-'
     end
-    object NewMenu: TMenuItem
-      Caption = 'New'
-      object NewOpenSelf: TMenuItem
-        Caption = 'Open current process'
-        ShortCut = 24655
-        OnClick = ActionOpenSelf
-      end
-      object NewOpenProcess: TMenuItem
-        Caption = 'Open process...'
-        ShortCut = 16463
-        OnClick = ActionOpenProcess
-      end
-      object NewOpenThread: TMenuItem
-        Caption = 'Open thread...'
-        ShortCut = 49231
-        OnClick = ActionOpenThread
-      end
-      object NewOpenEffective: TMenuItem
-        Caption = 'Open effective token...'
-        ShortCut = 57423
-        OnClick = ActionOpenEffective
-      end
-      object HLine3: TMenuItem
-        Caption = '-'
-      end
-      object NewLogonUser: TMenuItem
-        Caption = 'Logon user...'
-        ShortCut = 16460
-        OnClick = ActionLogon
-      end
-      object NewQueryUserToken: TMenuItem
-        Caption = 'Query session token...'
-        ShortCut = 16469
-        OnClick = ActionWTSQuery
-      end
-      object NewNtCreateToken: TMenuItem
-        Caption = 'Create using NtCreateToken...'
-        ShortCut = 16462
-        OnClick = NewNtCreateTokenClick
-      end
-      object NewAnonymous: TMenuItem
-        Caption = 'Anonymous token'
-        ShortCut = 49217
-        OnClick = NewAnonymousClick
-      end
-      object HLine4: TMenuItem
-        Caption = '-'
-      end
-      object NewCopyHandle: TMenuItem
-        Caption = 'Copy handle from other process...'
-        ShortCut = 24643
-        OnClick = ActionSteal
-      end
-      object NewSearchHandle: TMenuItem
-        Caption = 'Search for token handles...'
-        ShortCut = 16454
-        OnClick = ActionSearch
-      end
-    end
     object TokenRun: TMenuItem
       Caption = 'Run program with this token...'
-      Enabled = False
       ShortCut = 16453
       OnClick = ActionRunWithToken
     end

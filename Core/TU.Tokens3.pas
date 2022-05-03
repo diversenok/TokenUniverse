@@ -1261,9 +1261,10 @@ begin
 
     if BitTest(Flags and TOKEN_WRITE_RESTRICTED) then
       Events.StringCache[tsRestricted] := 'Write-only'
+    else if BitTest(Flags and TOKEN_IS_RESTRICTED) then
+      Events.StringCache[tsRestricted] := 'Fully'
     else
-      Events.StringCache[tsRestricted] := YesNoToString(
-        BitTest(Flags and TOKEN_IS_RESTRICTED));
+      Events.StringCache[tsRestricted] := 'No';
 
     Events.StringCache[tsSessionReference] := YesNoToString(
       not BitTest(Flags and TOKEN_SESSION_NOT_REFERENCED));
@@ -1457,7 +1458,9 @@ begin
       Events.StringCache[tsLogonSid] := LsaxSidToString(LogonSids[0].Sid)
     else
       Events.StringCache[tsLogonSid] := '(None)';
-  end;
+  end
+  else if Result.Status = STATUS_NOT_FOUND then
+    Events.StringCache[tsLogonSid] := '(Not found)';
 
   Events.OnLogonSids.Notify(Result, LogonSids);
 end;
@@ -1477,7 +1480,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenOrigin, Origin);
 
   if Result.IsSuccess then
-    Events.StringCache[tsOrigin] := IntToHexEx(Origin);
+    Events.StringCache[tsOrigin] := IntToHexEx(Origin, 8);
 
   Events.OnOrigin.Notify(Result, Origin);
 end;
@@ -1636,7 +1639,7 @@ begin
   if Result.IsSuccess then
   begin
     Events.StringCache[tsSourceName] := Source.Name;
-    Events.StringCache[tsSourceId] := IntToHexEx(Source.SourceIdentifier);
+    Events.StringCache[tsSourceId] := IntToHexEx(Source.SourceIdentifier, 8);
   end;
 
   Events.OnSource.Notify(Result, Source);
@@ -1648,8 +1651,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsTokenId] := IntToHexEx(Statistics.TokenId);
-    Events.StringCache[tsLogonId] := IntToHexEx(Statistics.AuthenticationId);
+    Events.StringCache[tsTokenId] := IntToHexEx(Statistics.TokenId, 8);
+    Events.StringCache[tsLogonId] := IntToHexEx(Statistics.AuthenticationId, 8);
     Events.StringCache[tsExprires] := TType.Represent(
       Statistics.ExpirationTime).Text;
 
@@ -1665,7 +1668,7 @@ begin
       Statistics.DynamicAvailable);
     Events.StringCache[tsGroups] := IntToStrEx(Statistics.GroupCount);
     Events.StringCache[tsPrivileges] := IntToStrEx(Statistics.PrivilegeCount);
-    Events.StringCache[tsModifiedId] := IntToHexEx(Statistics.ModifiedId);
+    Events.StringCache[tsModifiedId] := IntToHexEx(Statistics.ModifiedId, 8);
   end;
 
   Events.OnStatistics.Notify(Result, Statistics);
@@ -1682,7 +1685,7 @@ begin
   // Check per-handle properties
   case InfoClass of
     tsCaption: Exit(FCaption);
-    tsHandle: Exit(IntToHexEx(hxToken.Handle));
+    tsHandle: Exit(IntToHexEx(hxToken.Handle, 4));
     tsAccess:
       begin
         if ForceRefresh then

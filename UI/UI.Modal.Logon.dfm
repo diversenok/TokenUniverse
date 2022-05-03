@@ -176,7 +176,8 @@ object LogonDialog: TLogonDialog
       inherited VST: TDevirtualizedTree
         Width = 334
         Height = 212
-        NodePopupMenu = PopupMenu
+        PopupMenuEx = PopupMenu
+        NoItemsText = 'No additional groups'
         Columns = <
           item
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]

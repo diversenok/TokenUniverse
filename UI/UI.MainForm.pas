@@ -6,7 +6,8 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
-  VclEx.ListView, UI.Prototypes, VclEx.Form;
+  VclEx.ListView, UI.Prototypes, VclEx.Form, UI.New.TokenFrame,
+  VirtualTrees;
 
 type
   TFormMain = class(TFormEx)
@@ -17,7 +18,7 @@ type
     RunAsAdmin: TMenuItem;
     RunAsSystem: TMenuItem;
     RunAsSystemPlus: TMenuItem;
-    PopupMenu: TPopupMenu;
+    TokenMenu: TPopupMenu;
     TokenDuplicate: TMenuItem;
     TokenRestrict: TMenuItem;
     TokenRename: TMenuItem;
@@ -25,63 +26,58 @@ type
     HLine1: TMenuItem;
     TokenRun: TMenuItem;
     TokenSendHandle: TMenuItem;
-    NewMenu: TMenuItem;
-    NewOpenSelf: TMenuItem;
-    NewOpenProcess: TMenuItem;
-    NewOpenThread: TMenuItem;
-    HLine3: TMenuItem;
-    NewLogonUser: TMenuItem;
-    NewQueryUserToken: TMenuItem;
-    NewNtCreateToken: TMenuItem;
-    HLine4: TMenuItem;
-    NewCopyHandle: TMenuItem;
-    NewSearchHandle: TMenuItem;
     TokenDuplicateHandle: TMenuItem;
     MenuPromptHandleClose: TMenuItem;
     Showiconsinprocesslist1: TMenuItem;
     Displayallsearchresults1: TMenuItem;
     TokenOpenLinked: TMenuItem;
-    TokenOpenInfo: TMenuItem;
     SmallIcons: TImageList;
     N1: TMenuItem;
     MenuExit: TMenuItem;
     SelectColumns: TMenuItem;
     AssignToProcess: TMenuItem;
     MenuCloseCreationDlg: TMenuItem;
-    ListViewTokens: TListViewEx;
     SearchButtons: TImageList;
-    SearchBox: TButtonedEdit;
-    ComboBoxColumn: TComboBox;
     AssignToThread: TMenuItem;
     N2: TMenuItem;
-    RevertThread: TMenuItem;
     N3: TMenuItem;
-    NewAnonymous: TMenuItem;
     TokenRestrictSafer: TMenuItem;
-    NewOpenEffective: TMenuItem;
     MenuSafeImpersonation: TMenuItem;
     MenuTools: TMenuItem;
     MenuSystemAudit: TMenuItem;
     MenuRunProgram: TMenuItem;
     TimerStateCheck: TTimer;
-    RevertCurrentThread: TMenuItem;
+    TokenView: TFrameTokens;
+    cmToken: TMenuItem;
+    cmOpenCurrent: TMenuItem;
+    cmOpenProcess: TMenuItem;
+    cmOpenThread: TMenuItem;
+    cmOpenEffective: TMenuItem;
+    N4: TMenuItem;
+    cmLogonUser: TMenuItem;
+    cmQuerySession: TMenuItem;
+    cmCreateToken: TMenuItem;
+    cmAnonymousToken: TMenuItem;
+    N5: TMenuItem;
+    cmCopyHandle: TMenuItem;
+    cmSearchToken: TMenuItem;
+    N6: TMenuItem;
+    cmRevokeCurrent: TMenuItem;
+    cmRevokeToken: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
     procedure ActionOpenProcess(Sender: TObject);
     procedure ActionRename(Sender: TObject);
     procedure ActionRunWithToken(Sender: TObject);
-    procedure ListViewTokenSelectItem(Sender: TObject; Item: TListItem;
-      Selected: Boolean);
     procedure ActionOpenSelf(Sender: TObject);
     procedure RunAsAdminClick(Sender: TObject);
     procedure ActionSendHandle(Sender: TObject);
     procedure ActionDuplicateHandle(Sender: TObject);
     procedure ActionSearch(Sender: TObject);
     procedure ActionOpenLinked(Sender: TObject);
-    procedure ActionOpen(Sender: TObject);
+    procedure ActionOpen(Node: PVirtualNode);
     procedure RunAsSystemClick(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ActionSteal(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ActionWTSQuery(Sender: TObject);
@@ -92,13 +88,8 @@ type
     procedure SelectColumnsClick(Sender: TObject);
     procedure MenuCloseCreationDlgClick(Sender: TObject);
     procedure MenuPromptHandleCloseClick(Sender: TObject);
-    procedure FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
-      var AllowEdit: Boolean);
-    procedure FrameListViewTokensEditingEnd(Sender: TObject);
-    procedure SearchBoxChange(Sender: TObject);
     procedure ListViewTokensEdited(Sender: TObject; Item: TListItem;
       var S: string);
-    procedure SearchBoxRightButtonClick(Sender: TObject);
     procedure ActionOpenThread(Sender: TObject);
     procedure ActionRevertThread(Sender: TObject);
     procedure ActionAssignToProcess(Sender: TObject);
@@ -111,8 +102,9 @@ type
     procedure MenuRunProgramClick(Sender: TObject);
     procedure CurrentUserChanged(Sender: TObject);
     procedure ActionRevertCurrentThread(Sender: TObject);
-  public
-    TokenView: TTokenViewSource;
+    procedure TokenViewVSTGetPopupMenu(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; const P: TPoint;
+      var AskParent: Boolean; var PopupMenu: TPopupMenu);
   end;
 
 var
@@ -176,8 +168,8 @@ end;
 procedure TFormMain.ActionClose(Sender: TObject);
 begin
   if not TSettings.PromptOnHandleClose or AskForConfirmation(Handle,
-    'Are you sure you want to close this handle?') then
-    TokenView.Delete(ListViewTokens.Selected.Index);
+    'Are you sure you want to close selected handles?') then
+    TokenView.DeleteSelected;
 end;
 
 procedure TFormMain.ActionDuplicate(Sender: TObject);
@@ -196,7 +188,7 @@ begin
   TLogonDialog.Create(Self).Show;
 end;
 
-procedure TFormMain.ActionOpen(Sender: TObject);
+procedure TFormMain.ActionOpen;
 begin
   TInfoDialog.CreateFromToken(Self, TokenView.Selected);
 end;
@@ -248,8 +240,8 @@ end;
 
 procedure TFormMain.ActionRename(Sender: TObject);
 begin
-  if Assigned(ListViewTokens.Selected) then
-    ListViewTokens.Selected.EditCaption;
+  if TokenView.VST.SelectedCount = 1 then
+    TokenView.VST.EditNode(TokenView.VST.FocusedNode, Integer(tsCaption));
 end;
 
 procedure TFormMain.ActionRestrict(Sender: TObject);
@@ -280,7 +272,7 @@ end;
 
 procedure TFormMain.ActionRunWithToken(Sender: TObject);
 begin
-  if Assigned(ListViewTokens.Selected) then
+  if Assigned(TokenView.Selected) then
     with TDialogRun.Create(Self) do
     begin
       UseToken := TokenView.Selected;
@@ -337,7 +329,7 @@ var
   Linked: IToken;
   i: integer;
 begin
-  TokenView := TTokenViewSource.Create(ListViewTokens);
+  TokenView.VST.OnInspectNode := ActionOpen;
   CurrentUserChanged(Self);
 
   // Search for inherited handles
@@ -362,32 +354,6 @@ begin
   LoadLibrary('xmllite.dll');
 
   SetForegroundWindow(Handle);
-end;
-
-procedure TFormMain.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  if Key = VK_F3 then
-    SearchBox.SetFocus;
-
-  if Key = VK_ESCAPE then
-    SearchBox.Text := '';
-end;
-
-procedure TFormMain.FrameListViewTokensEditing(Sender: TObject; Item: TListItem;
-  var AllowEdit: Boolean);
-begin
-  // Disable some shortcuts while editing item caption so that pressing <Enter>
-  // or <Delete> would not open the information window or close the handle.
-  TokenOpenInfo.ShortCut := 0;
-  TokenClose.ShortCut := 0;
-end;
-
-procedure TFormMain.FrameListViewTokensEditingEnd(Sender: TObject);
-begin
-  // Editing is over. Restrore the shortcuts back.
-  TokenOpenInfo.ShortCut := VK_RETURN;
-  TokenClose.ShortCut := VK_DELETE;
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);
@@ -415,30 +381,6 @@ begin
   Close;
 end;
 
-procedure TFormMain.SearchBoxChange(Sender: TObject);
-var
-  SearchPattern: String;
-  i: Integer;
-begin
-  SearchPattern := String(SearchBox.Text).ToLower;
-
-  ListViewTokens.GroupView := SearchPattern <> '';
-  SearchBox.RightButton.Visible := SearchPattern <> '';
-
-  if ListViewTokens.GroupView then
-    for i := 0 to ListViewTokens.Items.Count - 1 do
-      with ListViewTokens.Items[i] do
-        if Matches(SearchPattern, ComboBoxColumn.ItemIndex - 1) then
-          GroupID := 0
-        else
-          GroupID := -1;
-end;
-
-procedure TFormMain.SearchBoxRightButtonClick(Sender: TObject);
-begin
-  SearchBox.Text := '';
-end;
-
 procedure TFormMain.SelectColumnsClick(Sender: TObject);
 begin
   TDialogColumns.CreateChild(Self, cfmApplication).ShowModal;
@@ -449,21 +391,19 @@ begin
   TDialogSafer.CreateFromToken(Self, TokenView.Selected as IToken3);
 end;
 
+procedure TFormMain.TokenViewVSTGetPopupMenu;
+var
+  Menu: TMenuItem;
+begin
+  for Menu in TokenMenu.Items do
+    if Menu <> TokenClose then
+      Menu.Visible := TokenView.VST.SelectedCount = 1;
+end;
+
 procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;
   var S: string);
 begin
   TokenView.Selected.Caption := S;
-end;
-
-procedure TFormMain.ListViewTokenSelectItem(Sender: TObject; Item: TListItem;
-  Selected: Boolean);
-var
-  Menu: TMenuItem;
-begin
-  for Menu in PopupMenu.Items do
-    if (Menu <> NewMenu) and (Menu <> RevertThread) and
-      (Menu <> RevertCurrentThread) then
-      Menu.Enabled := Selected;
 end;
 
 procedure TFormMain.MenuCloseCreationDlgClick(Sender: TObject);

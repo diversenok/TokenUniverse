@@ -227,7 +227,7 @@ object DialogCreateToken: TDialogCreateToken
         inherited VST: TDevirtualizedTree
           Width = 380
           Height = 307
-          NodePopupMenu = PopupMenuGroups
+          PopupMenuEx = PopupMenuGroups
         end
       end
     end
@@ -245,7 +245,7 @@ object DialogCreateToken: TDialogCreateToken
           Width = 386
           Height = 342
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-          NodePopupMenu = PopupMenuPrivileges
+          PopupMenuEx = PopupMenuPrivileges
         end
       end
     end

@@ -36,7 +36,7 @@ object FrameLsaPrivileges: TFrameLsaPrivileges
       Width = 314
       Height = 204
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-      NodePopupMenu = PopupMenu
+      PopupMenuEx = PopupMenu
     end
   end
   object PopupMenu: TPopupMenu

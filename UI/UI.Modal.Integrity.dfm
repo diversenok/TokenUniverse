@@ -22,6 +22,7 @@ object IntegrityPicker: TIntegrityPicker
     Top = 103
     Width = 48
     Height = 13
+    Anchors = [akLeft, akBottom]
     Caption = 'Untrusted'
   end
   object lblSystem: TLabel
@@ -30,7 +31,7 @@ object IntegrityPicker: TIntegrityPicker
     Width = 35
     Height = 13
     Alignment = taRightJustify
-    Anchors = [akTop, akRight]
+    Anchors = [akRight, akBottom]
     Caption = 'System'
   end
   object lblMedium: TLabel
@@ -39,7 +40,7 @@ object IntegrityPicker: TIntegrityPicker
     Width = 36
     Height = 13
     Alignment = taCenter
-    Anchors = [akTop]
+    Anchors = [akBottom]
     Caption = 'Medium'
   end
   object lblHigh: TLabel
@@ -48,7 +49,7 @@ object IntegrityPicker: TIntegrityPicker
     Width = 21
     Height = 13
     Alignment = taCenter
-    Anchors = [akTop]
+    Anchors = [akBottom]
     Caption = 'High'
   end
   object lblLow: TLabel
@@ -57,7 +58,7 @@ object IntegrityPicker: TIntegrityPicker
     Width = 19
     Height = 13
     Alignment = taCenter
-    Anchors = [akTop]
+    Anchors = [akBottom]
     Caption = 'Low'
   end
   object TrackBar: TTrackBar
@@ -65,7 +66,7 @@ object IntegrityPicker: TIntegrityPicker
     Top = 62
     Width = 268
     Height = 35
-    Anchors = [akLeft, akTop, akRight]
+    Anchors = [akLeft, akRight, akBottom]
     LineSize = 512
     Max = 16384
     PageSize = 4096

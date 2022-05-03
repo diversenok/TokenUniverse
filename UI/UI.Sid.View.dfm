@@ -176,7 +176,7 @@ object DialogSidView: TDialogSidView
           inherited VST: TDevirtualizedTree
             Width = 367
             Height = 253
-            NodePopupMenu = FrameLsaPrivileges.PopupMenu
+            PopupMenuEx = FrameLsaPrivileges.PopupMenu
           end
         end
       end

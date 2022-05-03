@@ -600,7 +600,7 @@ object InfoDialog: TInfoDialog
         inherited VST: TDevirtualizedTree
           Width = 388
           Height = 369
-          NodePopupMenu = GroupPopup
+          PopupMenuEx = GroupPopup
         end
       end
     end
@@ -617,7 +617,7 @@ object InfoDialog: TInfoDialog
         inherited VST: TDevirtualizedTree
           Width = 388
           Height = 369
-          NodePopupMenu = PrivilegePopup
+          PopupMenuEx = PrivilegePopup
         end
       end
     end
