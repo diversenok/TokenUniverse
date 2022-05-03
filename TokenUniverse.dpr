@@ -64,7 +64,8 @@ uses
   DevirtualizedTree.Provider in 'NtUtilsUI\Components\DevirtualizedTree.Provider.pas',
   DevirtualizedTree in 'NtUtilsUI\Components\DevirtualizedTree.pas',
   TU.Tokens3.Open in 'Core\TU.Tokens3.Open.pas',
-  UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame};
+  UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame},
+  TU.AccountRights in 'Core\TU.AccountRights.pas';
 
 {$R *.res}
 
