@@ -33,7 +33,7 @@ implementation
 uses
   Ntapi.ntexapi, UI.Colors, NtUtils.WinUser, Ntapi.WinNt, Ntapi.ntpsapi,
   Ntapi.ntdef, NtUtils, NtUtils.Threads, NtUiLib.Errors, Ntapi.ntstatus,
-  System.UITypes;
+  Ntapi.ntpebteb, System.UITypes;
 
 {$R *.dfm}
 

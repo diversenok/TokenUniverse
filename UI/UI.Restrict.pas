@@ -49,7 +49,7 @@ implementation
 
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
-  Ntapi.securitybaseapi, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl,
+  Ntapi.WinBase, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl,
   TU.Tokens3.Open, NtUiLib.Errors;
 
 {$R *.dfm}

@@ -63,8 +63,7 @@ begin
       spoToken, spoParentProcess, spoSection]
 
   else if Pointer(@Method) = Pointer(@WmixCreateProcess) then
-    Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
-      spoToken]
+    Result := [spoSuspended, spoWindowMode, spoDesktop, spoToken]
 
   else if Pointer(@Method) = Pointer(@WdcxCreateProcess) then
     Result := [spoRequireElevation]
