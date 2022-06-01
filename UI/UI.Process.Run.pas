@@ -58,6 +58,19 @@ type
     CheckBoxChildRestricted: TCheckBox;
     CheckBoxChildUnlessSecure: TCheckBox;
     CheckBoxChildOverride: TCheckBox;
+    Manifest: TTabSheet;
+    RadioButtonManifestNone: TRadioButton;
+    RadioButtonManifestEmbedded: TRadioButton;
+    RadioButtonManifestExternalExe: TRadioButton;
+    EditManifestExecutable: TEdit;
+    RadioButtonManifestExternal: TRadioButton;
+    EditManifestFile: TEdit;
+    RadioButtonManifestCustom: TRadioButton;
+    CheckBoxManifestThemes: TCheckBox;
+    LabelManifestDpi: TLabel;
+    ComboBoxManifestDpi: TComboBox;
+    CheckBoxManifestGdiScaling: TCheckBox;
+    CheckBoxManifestLongPaths: TCheckBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -73,6 +86,9 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ButtonACClick(Sender: TObject);
     procedure MenuClearACClick(Sender: TObject);
+    procedure EditManifestExecutableEnter(Sender: TObject);
+    procedure EditManifestFileEnter(Sender: TObject);
+    procedure CheckBoxManifestThemesEnter(Sender: TObject);
   private
     ExecMethod: TCreateProcessMethod;
     FToken: IToken;
@@ -92,14 +108,16 @@ type
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi,
-  NtUtils.Processes, NtUiLib.Errors, NtUtils.Tokens.Info,
-  NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
-  NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
-  NtUtils.Processes.Create.Remote,  NtUtils.Processes.Create.Manual,
-  NtUtils.Profiles, NtUtils.Tokens, TU.Exec,
-  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm,
-  TU.Credentials;
+  Ntapi.WinNt, Ntapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi, Ntapi.ntstatus,
+  Ntapi.ntcsrapi, Ntapi.Versions, NtUtils.Processes, NtUiLib.Errors,
+  NtUtils.Tokens.Info, NtUtils.Processes.Create.Win32, NtUtils.Profiles,
+  NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Native,
+  NtUtils.Processes.Create.Com, NtUtils.Processes.Create.Remote,
+  NtUtils.Processes.Create.Manual, NtUtils.Tokens, NtUtils.Csr,
+  NtUiLib.TaskDialog, NtUtils.SysUtils, NtUtils.Threads, NtUtils.Manifests,
+  NtUtils.Sections,
+  NtUtils.Processes.Info, NtUtils.Files.Open, TU.Exec, UI.Information,
+  UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Credentials;
 
 {$R *.dfm}
 
@@ -150,6 +168,10 @@ var
   Options: TCreateProcessOptions;
   ProcInfo: TProcessInfo;
   hxToken: IHandle;
+  AutoCancel: IAutoReleasable;
+  ManifestBuilfer: IManifestBuilder;
+  ManifestRva: TMemory;
+  hxManifestSection: IHandle;
 begin
   if (@ExecMethod = @AdvxCreateProcessRemote) and
     not Assigned(hxParentProcess) then
@@ -245,7 +267,95 @@ begin
   if Assigned(ExecMethod) then
     ExecMethod(Options, ProcInfo).RaiseOnError
   else
-    raise Exception.Create('No exec method available');
+    raise Exception.Create('No exec method selected');
+
+  // Manually register with SxS if necessary
+  if (spoDetectManifest in ExecSupports(ExecMethod)) and
+    not RadioButtonManifestNone.Checked then
+  begin
+    // Terminate on failure
+    AutoCancel := NtxDelayedTerminateProcess(ProcInfo.hxProcess,
+      STATUS_CANCELLED);
+
+    // Embedded
+    if RadioButtonManifestEmbedded.Checked and
+      (@ExecMethod <> @AdvxCreateProcess) then
+      CsrxRegisterProcessCreation(Options, ProcInfo).RaiseOnError
+
+    // External PE file
+    else if RadioButtonManifestExternalExe.Checked then
+    begin
+      RtlxCreateFileSection(
+        hxManifestSection,
+        FileOpenParameters.UseFileName(EditManifestExecutable.Text, fnWin32),
+        RtlxSecImageNoExecute
+      ).RaiseOnError;
+
+      RtlxFindManifestInSection(
+        hxManifestSection.Handle,
+        ManifestRva
+      ).RaiseOnError;
+
+      CsrxRegisterProcessManifest(
+        ProcInfo.hxProcess.Handle,
+        ProcInfo.ClientId,
+        hxManifestSection.Handle,
+        BASE_MSG_HANDLETYPE_SECTION,
+        ManifestRva,
+        RtlxExtractRootPath(Options.ApplicationWin32)
+      ).RaiseOnError
+    end
+
+    // External XML file
+    else if RadioButtonManifestExternal.Checked then
+      CsrxRegisterProcessManifestFromFile(
+        ProcInfo.hxProcess.Handle,
+        ProcInfo.ClientId,
+        EditManifestFile.Text,
+        RtlxExtractRootPath(
+        Options.ApplicationWin32)
+      ).RaiseOnError
+
+    // Custom
+    else if RadioButtonManifestCustom.Checked then
+    begin
+      ManifestBuilfer := NewManifestBuilder
+        .UseRuntimeThemes(CheckBoxManifestThemes.Checked)
+        .UseGdiScaling(CheckBoxManifestGdiScaling.Checked)
+        .UseLongPathAware(CheckBoxManifestLongPaths.Checked);
+
+      case ComboBoxManifestDpi.ItemIndex of
+        1: ManifestBuilfer := ManifestBuilfer
+            .UseDpiAware(dpiAwareFalse)
+            .UseDpiAwareness(dpiUnaware);
+
+        2: ManifestBuilfer := ManifestBuilfer
+            .UseDpiAware(dpiAwareTrue)
+            .UseDpiAwareness(dpiSystem);
+
+        3: ManifestBuilfer := ManifestBuilfer
+            .UseDpiAware(dpiAwareTruePerMonitor)
+            .UseDpiAwareness(dpiPerMonitor);
+
+        4: ManifestBuilfer := ManifestBuilfer
+            .UseDpiAware(dpiAwareTruePerMonitor)
+            .UseDpiAwareness(dpiPerMonitorV2);
+      end;
+
+      CsrxRegisterProcessManifestFromString(
+        ProcInfo.hxProcess.Handle,
+        ProcInfo.ClientId,
+        ManifestBuilfer.Build,
+        RtlxExtractRootPath(Options.ApplicationWin32)
+      ).RaiseOnError
+    end;
+
+    // Prevent termination on failure
+    AutoCancel.AutoRelease := False;
+
+    if not CheckBoxSuspended.Checked then
+      NtxResumeThread(ProcInfo.hxThread.Handle);
+  end;
 
   // Suggest opening the token since we have a handle anyway
   if Assigned(ProcInfo.hxProcess) and cbxOpenToken.Checked and
@@ -296,10 +406,25 @@ begin
   UpdateEnabledState;
 end;
 
+procedure TDialogRun.CheckBoxManifestThemesEnter;
+begin
+  RadioButtonManifestCustom.Checked := True;
+end;
+
 constructor TDialogRun.Create(AOwner: TComponent);
 begin
   inherited CreateChild(AOwner, cfmDesktop);
   ParentAccessMask := PROCESS_CREATE_PROCESS;
+end;
+
+procedure TDialogRun.EditManifestExecutableEnter;
+begin
+  RadioButtonManifestExternalExe.Checked := True;
+end;
+
+procedure TDialogRun.EditManifestFileEnter;
+begin
+  RadioButtonManifestExternal.Checked := True;
 end;
 
 procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -313,6 +438,13 @@ begin
   EditExe.Text := GetEnvironmentVariable('ComSpec');
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
+  SHAutoComplete(EditManifestExecutable.Handle, SHACF_FILESYS_ONLY);
+  SHAutoComplete(EditManifestFile.Handle, SHACF_FILESYS_ONLY);
+
+  // Disable SxS registration on older version until we add support them
+  if not RtlOsVersionAtLeast(OsWin1020H1) then
+    RadioButtonManifestNone.Checked := True;
+
   ChangedExecMethod(Sender);
   UpdateDesktopList;
 end;
@@ -438,6 +570,18 @@ begin
   CheckBoxChildRestricted.Enabled := spoChildPolicy in SupportedOptions;
   CheckBoxChildUnlessSecure.Enabled := spoChildPolicy in SupportedOptions;
   CheckBoxChildOverride.Enabled := spoChildPolicy in SupportedOptions;
+  RadioButtonManifestNone.Enabled := spoDetectManifest in SupportedOptions;
+  RadioButtonManifestEmbedded.Enabled := spoDetectManifest in SupportedOptions;
+  RadioButtonManifestExternalExe.Enabled := spoDetectManifest in SupportedOptions;
+  EditManifestExecutable.Enabled := spoDetectManifest in SupportedOptions;
+  RadioButtonManifestExternal.Enabled := spoDetectManifest in SupportedOptions;
+  EditManifestFile.Enabled := spoDetectManifest in SupportedOptions;
+  RadioButtonManifestCustom.Enabled := spoDetectManifest in SupportedOptions;
+  CheckBoxManifestThemes.Enabled := spoDetectManifest in SupportedOptions;
+  CheckBoxManifestGdiScaling.Enabled := spoDetectManifest in SupportedOptions;
+  CheckBoxManifestLongPaths.Enabled := spoDetectManifest in SupportedOptions;
+  LabelManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
+  ComboBoxManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
 end;
 
 end.

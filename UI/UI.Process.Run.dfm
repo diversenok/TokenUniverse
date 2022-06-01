@@ -360,6 +360,146 @@ object DialogRun: TDialogRun
         end
       end
     end
+    object Manifest: TTabSheet
+      Caption = 'Manifest'
+      ImageIndex = 2
+      object LabelManifestDpi: TLabel
+        Left = 19
+        Top = 248
+        Width = 77
+        Height = 13
+        Caption = 'DPI Awareness:'
+        Enabled = False
+      end
+      object RadioButtonManifestNone: TRadioButton
+        Left = 3
+        Top = 8
+        Width = 311
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'No registration (unless already included by Win32 API)'
+        Enabled = False
+        TabOrder = 0
+      end
+      object RadioButtonManifestEmbedded: TRadioButton
+        Left = 3
+        Top = 31
+        Width = 311
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Use embedded manifest'
+        Checked = True
+        Enabled = False
+        TabOrder = 1
+        TabStop = True
+      end
+      object RadioButtonManifestExternalExe: TRadioButton
+        Left = 3
+        Top = 54
+        Width = 311
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Use embedded manifest from another executable:'
+        Enabled = False
+        TabOrder = 2
+      end
+      object EditManifestExecutable: TEdit
+        Left = 19
+        Top = 77
+        Width = 286
+        Height = 21
+        Enabled = False
+        TabOrder = 3
+        TextHint = 'A path to a DLL on an EXE file'
+        OnEnter = EditManifestExecutableEnter
+      end
+      object RadioButtonManifestExternal: TRadioButton
+        Left = 3
+        Top = 104
+        Width = 311
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Use external manifest:'
+        Enabled = False
+        TabOrder = 4
+      end
+      object EditManifestFile: TEdit
+        Left = 19
+        Top = 127
+        Width = 286
+        Height = 21
+        Enabled = False
+        TabOrder = 5
+        TextHint = 'A path to an XML manifest file'
+        OnEnter = EditManifestFileEnter
+      end
+      object RadioButtonManifestCustom: TRadioButton
+        Left = 3
+        Top = 154
+        Width = 311
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Use custom manifest:'
+        Enabled = False
+        TabOrder = 6
+      end
+      object CheckBoxManifestThemes: TCheckBox
+        Left = 19
+        Top = 177
+        Width = 286
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Runtime themes'
+        Checked = True
+        Enabled = False
+        State = cbChecked
+        TabOrder = 7
+        OnEnter = CheckBoxManifestThemesEnter
+      end
+      object ComboBoxManifestDpi: TComboBox
+        Left = 19
+        Top = 267
+        Width = 286
+        Height = 21
+        Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
+        Enabled = False
+        ItemIndex = 4
+        TabOrder = 10
+        Text = 'Per Monitor v2'
+        OnEnter = CheckBoxManifestThemesEnter
+        Items.Strings = (
+          'None'
+          'Unaware'
+          'System'
+          'Per Monitor'
+          'Per Monitor v2')
+      end
+      object CheckBoxManifestGdiScaling: TCheckBox
+        Left = 19
+        Top = 200
+        Width = 295
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'GDI Scaling'
+        Checked = True
+        Enabled = False
+        State = cbChecked
+        TabOrder = 8
+        OnEnter = CheckBoxManifestThemesEnter
+      end
+      object CheckBoxManifestLongPaths: TCheckBox
+        Left = 19
+        Top = 223
+        Width = 295
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Long Path Aware'
+        Enabled = False
+        TabOrder = 9
+        OnEnter = CheckBoxManifestThemesEnter
+      end
+    end
   end
   object ButtonClose: TButton
     Left = 253
