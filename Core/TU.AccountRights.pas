@@ -100,7 +100,7 @@ var
   Right: TSystemAccessIndex;
 begin
   // Map wsecedit.dll for extracting embedded strings
-  Result := RtlxMapReadonlyFile(ResourceDll, FileOpenParameters
+  Result := RtlxOpenAndMapFile(ResourceDll, FileOpenParameters
     .UseFileName(wsecedit));
 
   if not Result.IsSuccess then

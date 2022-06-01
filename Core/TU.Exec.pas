@@ -25,7 +25,7 @@ begin
       spoForceBreakaway, spoNewConsole, spoRunAsInvoker, spoIgnoreElevation,
       spoEnvironment, spoSecurity, spoWindowMode, spoDesktop, spoToken,
       spoParentProcess, spoJob, spoHandleList, spoMitigationPolicies,
-      spoChildPolicy, spoLPAC, spoAppContainer]
+      spoChildPolicy, spoLPAC, spoAppContainer, spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithToken) then
     Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
@@ -45,22 +45,24 @@ begin
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcess) then
     Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
-      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob]
+      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcessEx) then
     Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
-      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob]
+      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob,
+      spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@NtxCreateUserProcess) then
     Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
       spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
       spoToken, spoParentProcess, spoJob, spoHandleList, spoChildPolicy,
-      spoLPAC]
+      spoLPAC, spoAdditinalFileAccess, spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@NtxCreateProcessEx) then
     Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
       spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
-      spoToken, spoParentProcess, spoSection]
+      spoToken, spoParentProcess, spoSection, spoAdditinalFileAccess,
+      spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@WmixCreateProcess) then
     Result := [spoSuspended, spoWindowMode, spoDesktop, spoToken]
