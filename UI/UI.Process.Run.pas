@@ -52,6 +52,12 @@ type
     Label1: TLabel;
     CheckBoxForceBreakaway: TCheckBox;
     CheckBoxIgnoreElevation: TCheckBox;
+    Isolation: TTabSheet;
+    CheckBoxLPAC: TCheckBox;
+    GroupBoxChildFlags: TGroupBox;
+    CheckBoxChildRestricted: TCheckBox;
+    CheckBoxChildUnlessSecure: TCheckBox;
+    CheckBoxChildOverride: TCheckBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -145,6 +151,15 @@ var
   ProcInfo: TProcessInfo;
   hxToken: IHandle;
 begin
+  if (@ExecMethod = @AdvxCreateProcessRemote) and
+    not Assigned(hxParentProcess) then
+  begin
+    UsrxShowTaskDialog(Handle, 'Error', 'Invalid Parent Process',
+      'The selected method requires explicitly specifying a parent process.',
+      diError, dbOk);
+    Exit;
+  end;
+
   Options := Default(TCreateProcessOptions);
   Options.Application := EditExe.Text;
   Options.Parameters := EditParams.Text;
@@ -189,6 +204,30 @@ begin
 
   if CheckBoxRunas.Checked then
     Include(Options.Flags, poRequireElevation);
+
+  if CheckBoxLPAC.Checked then
+    Include(Options.Flags, poLPAC);
+
+  if CheckBoxChildRestricted.Checked then
+    Options.ChildPolicy := Options.ChildPolicy or
+      PROCESS_CREATION_CHILD_PROCESS_RESTRICTED;
+
+  if CheckBoxChildUnlessSecure.Checked then
+    Options.ChildPolicy := Options.ChildPolicy or
+      PROCESS_CREATION_CHILD_PROCESS_RESTRICTED_UNLESS_SECURE;
+
+  if CheckBoxChildOverride.Checked then
+    Options.ChildPolicy := Options.ChildPolicy or
+      PROCESS_CREATION_CHILD_PROCESS_OVERRIDE;
+
+  if (spoDetectManifest in ExecSupports(ExecMethod)) and
+    not RadioButtonManifestNone.Checked then
+  begin
+    Include(Options.Flags, poDetectManifest);
+
+    // Also suspend while we register with SxS
+    Include(Options.Flags, poSuspended);
+  end;
 
   // Prompt for credentials if necessary
   if @ExecMethod = @AdvxCreateProcessWithLogon then
@@ -395,6 +434,10 @@ begin
   ButtonChooseParent.Enabled := spoParentProcess in SupportedOptions;
   EditAppContainer.Enabled := spoAppContainer in SupportedOptions;
   ButtonAC.Enabled := spoAppContainer in SupportedOptions;
+  CheckBoxLPAC.Enabled := spoLPAC in SupportedOptions;
+  CheckBoxChildRestricted.Enabled := spoChildPolicy in SupportedOptions;
+  CheckBoxChildUnlessSecure.Enabled := spoChildPolicy in SupportedOptions;
+  CheckBoxChildOverride.Enabled := spoChildPolicy in SupportedOptions;
 end;
 
 end.

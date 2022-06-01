@@ -2,10 +2,10 @@ object DialogRun: TDialogRun
   Left = 0
   Top = 0
   Caption = 'Run program...'
-  ClientHeight = 589
+  ClientHeight = 555
   ClientWidth = 331
   Color = clBtnFace
-  Constraints.MinHeight = 455
+  Constraints.MinHeight = 594
   Constraints.MinWidth = 347
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -26,7 +26,7 @@ object DialogRun: TDialogRun
     Left = 3
     Top = 52
     Width = 325
-    Height = 506
+    Height = 472
     Margins.Top = 52
     Margins.Bottom = 31
     ActivePage = TabParams
@@ -56,13 +56,6 @@ object DialogRun: TDialogRun
         Height = 13
         Caption = 'Window mode:'
       end
-      object LabelAppContainer: TLabel
-        Left = 3
-        Top = 336
-        Width = 70
-        Height = 13
-        Caption = 'AppContainer:'
-      end
       object LabelMethod: TLabel
         Left = 3
         Top = 7
@@ -89,8 +82,8 @@ object DialogRun: TDialogRun
         TabOrder = 0
       end
       object GroupBoxFlags: TGroupBox
-        Left = 3
-        Top = 361
+        Left = 4
+        Top = 328
         Width = 307
         Height = 113
         Anchors = [akLeft, akRight, akBottom]
@@ -229,28 +222,6 @@ object DialogRun: TDialogRun
           'Show minimized'
           'Show maximized')
       end
-      object ButtonAC: TButton
-        Left = 226
-        Top = 331
-        Width = 83
-        Height = 25
-        Anchors = [akTop, akRight]
-        Caption = 'Choose'
-        DropDownMenu = PopupClearAC
-        Style = bsSplitButton
-        TabOrder = 6
-        OnClick = ButtonACClick
-      end
-      object EditAppContainer: TEdit
-        Left = 79
-        Top = 333
-        Width = 141
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        ReadOnly = True
-        TabOrder = 7
-        Text = 'No'
-      end
       object ComboMethod: TComboBox
         Left = 3
         Top = 24
@@ -259,7 +230,7 @@ object DialogRun: TDialogRun
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 8
+        TabOrder = 6
         Text = 'CreateProcessAsUser'
         OnChange = ChangedExecMethod
         Items.Strings = (
@@ -285,7 +256,7 @@ object DialogRun: TDialogRun
         Caption = 'Choose'
         DropDownMenu = PopupClearParent
         Style = bsSplitButton
-        TabOrder = 9
+        TabOrder = 7
         OnClick = ButtonChooseParentClick
       end
       object EditParent: TEdit
@@ -295,7 +266,7 @@ object DialogRun: TDialogRun
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ReadOnly = True
-        TabOrder = 10
+        TabOrder = 8
         Text = '<not specified>'
       end
       object LinkLabelToken: TLinkLabel
@@ -306,14 +277,93 @@ object DialogRun: TDialogRun
         Anchors = [akLeft, akTop, akRight]
         AutoSize = False
         Caption = 'Using token: <not specified>'
-        TabOrder = 11
+        TabOrder = 9
         OnLinkClick = LinkLabelTokenLinkClick
+      end
+    end
+    object Isolation: TTabSheet
+      Caption = 'Isolation'
+      ImageIndex = 1
+      object LabelAppContainer: TLabel
+        Left = 3
+        Top = 16
+        Width = 70
+        Height = 13
+        Caption = 'AppContainer:'
+      end
+      object ButtonAC: TButton
+        Left = 226
+        Top = 11
+        Width = 83
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Choose'
+        DropDownMenu = PopupClearAC
+        Style = bsSplitButton
+        TabOrder = 0
+        OnClick = ButtonACClick
+      end
+      object EditAppContainer: TEdit
+        Left = 79
+        Top = 13
+        Width = 141
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        ReadOnly = True
+        TabOrder = 1
+        Text = 'No'
+      end
+      object CheckBoxLPAC: TCheckBox
+        Left = 79
+        Top = 40
+        Width = 230
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Low Privileged AppContainer'
+        Enabled = False
+        TabOrder = 2
+      end
+      object GroupBoxChildFlags: TGroupBox
+        Left = 3
+        Top = 72
+        Width = 306
+        Height = 105
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Child Process Policy: '
+        TabOrder = 3
+        object CheckBoxChildRestricted: TCheckBox
+          Left = 16
+          Top = 24
+          Width = 273
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Restricted (block child processes)'
+          TabOrder = 0
+        end
+        object CheckBoxChildUnlessSecure: TCheckBox
+          Left = 16
+          Top = 47
+          Width = 273
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Restricted unless secure'
+          TabOrder = 1
+        end
+        object CheckBoxChildOverride: TCheckBox
+          Left = 16
+          Top = 70
+          Width = 273
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Override'
+          TabOrder = 2
+        end
       end
     end
   end
   object ButtonClose: TButton
     Left = 253
-    Top = 560
+    Top = 526
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -325,7 +375,7 @@ object DialogRun: TDialogRun
   end
   object ButtonRun: TButton
     Left = 172
-    Top = 560
+    Top = 526
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -359,7 +409,7 @@ object DialogRun: TDialogRun
   end
   object cbxOpenToken: TCheckBox
     Left = 8
-    Top = 564
+    Top = 530
     Width = 158
     Height = 17
     Anchors = [akLeft, akBottom]
