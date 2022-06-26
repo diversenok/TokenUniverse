@@ -42,7 +42,11 @@ type
   public
     function AddRoot(Root: PVirtualNode; const Name: String): PVirtualNode;
     procedure AddMany(const Tokens: TArray<IToken>; Root: PVirtualNode = nil);
-    procedure Add(const Token: IToken; Root: PVirtualNode = nil);
+    function Add(
+      const Token: IToken;
+      CaptureFocus: Boolean = True;
+      Root: PVirtualNode = nil
+    ): PVirtualNode;
     procedure DeleteSelected;
 
     property HasSelectedToken: Boolean read GetHasSelectedToken;
@@ -118,22 +122,31 @@ end;
 
 { TFrameTokens }
 
-procedure TFrameTokens.Add;
-begin
-  AddMany([Token], Root);
-end;
-
-procedure TFrameTokens.AddMany;
-var
-  i: Integer;
+function TFrameTokens.Add;
 begin
   if not Assigned(Root) then
     Root := VST.RootNode;
 
   VST.BeginUpdateAuto;
+  Result := VST.AddChild(Root);
+  Result.Provider := TTokenNode.Create(Token, VST.Header.Columns);
 
-  for i := 0 to High(Tokens) do
-    VST.AddChild(Root).Provider := TTokenNode.Create(Tokens[i], VST.Header.Columns);
+  if CaptureFocus then
+  begin
+    VST.ClearSelection;
+    VST.FocusedNode := Result;
+    VST.Selected[Result] := True;
+  end;
+end;
+
+procedure TFrameTokens.AddMany;
+var
+  Token: IToken;
+begin
+  VST.BeginUpdateAuto;
+
+  for Token in Tokens do
+    Add(Token, False, Root);
 
   VST.SelectSometing;
 end;
