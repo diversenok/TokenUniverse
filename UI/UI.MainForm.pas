@@ -353,7 +353,7 @@ begin
 
   LoadLibrary('xmllite.dll');
 
-  SetForegroundWindow(Handle);
+  SetForegroundWindow(TokenView.VST.Handle);
 end;
 
 procedure TFormMain.RunAsAdminClick(Sender: TObject);

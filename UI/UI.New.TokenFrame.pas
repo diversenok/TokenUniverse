@@ -133,8 +133,9 @@ begin
   VST.BeginUpdateAuto;
 
   for i := 0 to High(Tokens) do
-    VST.AddChild(Root).Provider := TTokenNode.Create(Tokens[i],
-      VST.Header.Columns);
+    VST.AddChild(Root).Provider := TTokenNode.Create(Tokens[i], VST.Header.Columns);
+
+  VST.SelectSometing;
 end;
 
 function TFrameTokens.AddRoot;
@@ -185,13 +186,8 @@ begin
 end;
 
 procedure TFrameTokens.DeleteSelected;
-var
-  Node: PVirtualNode;
 begin
-  VST.BeginUpdateAuto;
-
-  for Node in VST.SelectedNodes.ToArray do
-    VST.DeleteNode(Node);
+  VST.DeleteSelectedNodesEx;
 end;
 
 function TFrameTokens.GetAllTokens;
