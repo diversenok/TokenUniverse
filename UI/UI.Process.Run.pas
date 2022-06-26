@@ -109,13 +109,12 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.Shlwapi, NtUtils.WinUser, Ntapi.ntseapi, Ntapi.ntstatus,
-  Ntapi.ntcsrapi, Ntapi.Versions, NtUtils.Processes, NtUiLib.Errors,
+  Ntapi.ntcsrapi, NtUtils.Processes, NtUiLib.Errors, NtUtils.Sections,
   NtUtils.Tokens.Info, NtUtils.Processes.Create.Win32, NtUtils.Profiles,
   NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Native,
   NtUtils.Processes.Create.Com, NtUtils.Processes.Create.Remote,
   NtUtils.Processes.Create.Manual, NtUtils.Tokens, NtUtils.Csr,
   NtUiLib.TaskDialog, NtUtils.SysUtils, NtUtils.Threads, NtUtils.Manifests,
-  NtUtils.Sections,
   NtUtils.Processes.Info, NtUtils.Files.Open, TU.Exec, UI.Information,
   UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Credentials;
 
@@ -298,11 +297,12 @@ begin
 
       CsrxRegisterProcessManifest(
         ProcInfo.hxProcess.Handle,
+        ProcInfo.hxThread.Handle,
         ProcInfo.ClientId,
         hxManifestSection.Handle,
         BASE_MSG_HANDLETYPE_SECTION,
         ManifestRva,
-        RtlxExtractRootPath(Options.ApplicationWin32)
+        Options.ApplicationWin32
       ).RaiseOnError
     end
 
@@ -310,10 +310,10 @@ begin
     else if RadioButtonManifestExternal.Checked then
       CsrxRegisterProcessManifestFromFile(
         ProcInfo.hxProcess.Handle,
+        ProcInfo.hxThread.Handle,
         ProcInfo.ClientId,
         EditManifestFile.Text,
-        RtlxExtractRootPath(
-        Options.ApplicationWin32)
+        Options.ApplicationWin32
       ).RaiseOnError
 
     // Custom
@@ -344,9 +344,10 @@ begin
 
       CsrxRegisterProcessManifestFromString(
         ProcInfo.hxProcess.Handle,
+        ProcInfo.hxThread.Handle,
         ProcInfo.ClientId,
         ManifestBuilfer.Build,
-        RtlxExtractRootPath(Options.ApplicationWin32)
+        Options.ApplicationWin32
       ).RaiseOnError
     end;
 
@@ -440,11 +441,6 @@ begin
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
   SHAutoComplete(EditManifestExecutable.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditManifestFile.Handle, SHACF_FILESYS_ONLY);
-
-  // Disable SxS registration on older version until we add support them
-  if not RtlOsVersionAtLeast(OsWin1020H1) then
-    RadioButtonManifestNone.Checked := True;
-
   ChangedExecMethod(Sender);
   UpdateDesktopList;
 end;

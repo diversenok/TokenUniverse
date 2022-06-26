@@ -408,6 +408,7 @@ object DialogRun: TDialogRun
         Top = 77
         Width = 286
         Height = 21
+        Anchors = [akLeft, akTop, akRight]
         Enabled = False
         TabOrder = 3
         TextHint = 'A path to a DLL on an EXE file'
@@ -428,6 +429,7 @@ object DialogRun: TDialogRun
         Top = 127
         Width = 286
         Height = 21
+        Anchors = [akLeft, akTop, akRight]
         Enabled = False
         TabOrder = 5
         TextHint = 'A path to an XML manifest file'
