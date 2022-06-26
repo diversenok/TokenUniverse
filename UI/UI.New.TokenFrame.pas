@@ -10,16 +10,20 @@ uses
 
 type
   ITokenNode = interface (INodeProvider)
-    ['{6F211C2D-3D96-41B0-A14F-55C74939D37D}']
+    ['{756BC6F1-77F9-4BDA-BEB8-0789E418278D}']
     function GetToken: IToken;
+    procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
     property Token: IToken read GetToken;
   end;
 
   TTokenNode = class (TCustomNodeProvider, ITokenNode)
     FToken: IToken;
+    FSubscriptions: array [TTokenStringClass] of IAutoReleasable;
+    procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
+    procedure ColumnUpdated(const Column: TTokenStringClass; const NewValue: String);
     function GetToken: IToken;
     function GetColumn(Index: Integer): String; override;
-    constructor Create(const Source: IToken);
+    constructor Create(const Source: IToken; Columns: TVirtualTreeColumns);
   end;
 
   TFrameTokens = class(TFrame)
@@ -28,6 +32,8 @@ type
       Column: TColumnIndex; NewText: string);
     procedure VSTEditing(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var Allowed: Boolean);
+    procedure VSTColumnVisibilityChanged(const Sender: TBaseVirtualTree;
+      const Column: TColumnIndex; Visible: Boolean);
   private
     function GetSelectedToken: IToken;
     function GetAllTokens: TArray<IToken>;
@@ -56,10 +62,28 @@ uses
 
 { TTokenNode }
 
+procedure TTokenNode.ColumnUpdated;
+begin
+  // The text changed; ask the tree to redraw the item when visible
+  if Assigned(Tree) and Assigned(Node) then
+    Tree.InvalidateNode(Node);
+end;
+
 constructor TTokenNode.Create;
+var
+  ColumnId: TColumnIndex;
 begin
   inherited Create(0);
   FToken := Source;
+
+  // Subscribe to changes for all currently visible columns
+  ColumnId := Columns.GetFirstVisibleColumn;
+
+  while ColumnId <> InvalidColumn do
+  begin
+    UpdateColumnVisibiliy(TTokenStringClass(ColumnId), True);
+    ColumnId := Columns.GetNextVisibleColumn(ColumnId);
+  end;
 end;
 
 function TTokenNode.GetColumn;
@@ -68,7 +92,7 @@ var
 begin
   if (InfoClass < Low(TTokenStringClass)) or
     (InfoClass > High(TTokenStringClass)) then
-    Exit('');
+    raise EArgumentException.Create('Invalid index in TTokenNode.GetColumn');
 
   Result := (FToken as IToken3).QueryString(InfoClass);
 end;
@@ -76,6 +100,20 @@ end;
 function TTokenNode.GetToken;
 begin
   Result := FToken;
+end;
+
+procedure TTokenNode.UpdateColumnVisibiliy;
+begin
+  if (Column < Low(TTokenStringClass)) or
+    (Column > High(TTokenStringClass)) then
+    raise EArgumentException.Create('Invalid index in TTokenNode.UpdateColumnVisibiliy');
+
+  // Either subscribe for updates or clear the existing subscription
+  if Visible then
+    FSubscriptions[Column] := (FToken as IToken3).ObserveString(Column,
+      ColumnUpdated)
+  else
+    FSubscriptions[Column] := nil;
 end;
 
 { TFrameTokens }
@@ -95,7 +133,8 @@ begin
   VST.BeginUpdateAuto;
 
   for i := 0 to High(Tokens) do
-    VST.AddChild(Root).Provider := TTokenNode.Create(Tokens[i]);
+    VST.AddChild(Root).Provider := TTokenNode.Create(Tokens[i],
+      VST.Header.Columns);
 end;
 
 function TFrameTokens.AddRoot;
@@ -185,6 +224,17 @@ begin
     Result := TokenNode.Token
   else
     Abort;
+end;
+
+procedure TFrameTokens.VSTColumnVisibilityChanged;
+var
+  Node: PVirtualNode;
+  TokenNode: ITokenNode;
+begin
+  // Notify each node that it needs to [un]subscribe an info class
+  for Node in VST.Nodes do
+    if Node.TryGetProvider(ITokenNode, TokenNode) then
+      TokenNode.UpdateColumnVisibiliy(TTokenStringClass(Column), Visible);
 end;
 
 procedure TFrameTokens.VSTEditing;

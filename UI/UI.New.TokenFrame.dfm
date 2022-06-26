@@ -29,6 +29,7 @@ object FrameTokens: TFrameTokens
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
     TreeOptions.PaintOptions = [toHideFocusRect, toHotTrack, toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect]
+    OnColumnVisibilityChanged = VSTColumnVisibilityChanged
     OnEditing = VSTEditing
     OnNewText = VSTNewText
     Touch.InteractiveGestures = [igPan, igPressAndTap]
