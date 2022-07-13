@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.StdCtrls, Vcl.ComCtrls,
-  UI.TokenListFrame, VclEx.ListView, UI.Prototypes.Forms;
+  UI.TokenListFrame, VclEx.ListView, UI.Prototypes.Forms, TU.Tokens3;
 
 type
   TFormHandleSearch = class(TChildForm)
@@ -105,7 +105,7 @@ begin
         // Try to get a copy
         if Assigned(hxProcess) and NtxDuplicateHandleFrom(hxProcess.Handle,
           PerProcess[i].Values[j].HandleValue, hxToken).IsSuccess then
-          Frame.AddToken(TToken.Create(hxToken, Format('Handle %d @ %s',
+          Frame.AddToken(CaptureTokenHandle(hxToken, Format('Handle %d @ %s',
             [PerProcess[i].Values[j].HandleValue, ImageName])), Index);
       end;
     end;

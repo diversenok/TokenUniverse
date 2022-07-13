@@ -280,7 +280,7 @@ type
     function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMising: Boolean = False): TNtxStatus;
   end;
 
-// Make a IToken3 instance from a handle
+// Make an IToken3 instance from a handle
 function CaptureTokenHandle(
   const Handle: IHandle;
   const Caption: String;

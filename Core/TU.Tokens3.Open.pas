@@ -6,13 +6,6 @@ uses
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils,
   TU.Tokens, TU.Tokens.Types, DelphiApi.Reflection;
 
-// Capture a handle into IToken
-function CaptureToken(
-  const Handle: IHandle;
-  const Caption: String;
-  KernelAddress: Pointer = nil
-): IToken;
-
 // Create an anonymous token
 function MakeAnonymousToken(
   out Token: IToken;
@@ -121,11 +114,6 @@ uses
   NtUtils.Tokens.Logon, NtUtils.Lsa.Sid,
   DelphiUiLib.Reflection, System.SysUtils, TU.Tokens3;
 
-function CaptureToken;
-begin
-  Result := TToken.Create(Handle, Caption);
-end;
-
 function MakeAnonymousToken;
 var
   hxToken: IHandle;
@@ -133,18 +121,18 @@ begin
   Result := NtxOpenAnonymousToken(hxToken, DesiredAccess);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, 'Anonymous token');
+    Token := CaptureTokenHandle(hxToken, 'Anonymous token');
 end;
 
 function MakeDuplicateHandle;
 var
   hxToken: IHandle;
 begin
-  Result := NtxDuplicateHandleLocal(Source.Handle.Handle, hxToken,
+  Result := NtxDuplicateHandleLocal((Source as IToken3).Handle.Handle, hxToken,
     DesiredAccess);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, Source.Caption + ' (ref)',
+    Token := CaptureTokenHandle(hxToken, (Source as IToken3).Caption + ' (ref)',
       (Source as IToken3).CachedKernelAddress);
 end;
 
@@ -165,7 +153,7 @@ begin
     ImpersonationLevel := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  Result := NtxDuplicateToken(hxToken, Source.Handle, TokenType,
+  Result := NtxDuplicateToken(hxToken, (Source as IToken3).Handle, TokenType,
     ImpersonationLevel, AttributeBuilder.UseEffectiveOnly(EffectiveOnly).
     UseDesiredAccess(DesiredAccess));
 
@@ -173,20 +161,23 @@ begin
     Exit;
 
   if EffectiveOnly then
-    Token := CaptureToken(hxToken, Source.Caption +  ' (eff. copy)')
+    Token := CaptureTokenHandle(hxToken,
+      (Source as IToken3).Caption +  ' (eff. copy)')
   else
-    Token := CaptureToken(hxToken, Source.Caption +  ' (copy)');
+    Token := CaptureTokenHandle(hxToken,
+      (Source as IToken3).Caption +  ' (copy)');
 end;
 
 function MakeFilteredToken;
 var
   hxToken: IHandle;
 begin
-  Result := NtxFilterToken(hxToken, Source.Handle, Flags, SidsToDisable,
-    PrivilegesToDelete, SidsToRestrict);
+  Result := NtxFilterToken(hxToken, (Source as IToken3).Handle, Flags,
+    SidsToDisable, PrivilegesToDelete, SidsToRestrict);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, 'Restricted ' + Source.Caption);
+    Token := CaptureTokenHandle(hxToken, 'Restricted ' +
+      (Source as IToken3).Caption);
 end;
 
 function MakeSessionToken;
@@ -196,7 +187,7 @@ begin
   Result := WsxQueryToken(hxToken, SessionID);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, Format('Session %d token', [SessionID]));
+    Token := CaptureTokenHandle(hxToken, Format('Session %d token', [SessionID]));
 end;
 
 function MakeOpenProcessToken;
@@ -237,7 +228,7 @@ begin
   else
     Caption := TType.Represent(PID).Text;
 
-  Token := CaptureToken(hxToken, Caption);
+  Token := CaptureTokenHandle(hxToken, Caption);
 end;
 
 function MakeOpenThreadToken;
@@ -278,7 +269,7 @@ begin
   else
     Caption := TType.Represent(TID).Text;
 
-  Token := CaptureToken(hxToken, Caption);
+  Token := CaptureTokenHandle(hxToken, Caption);
 end;
 
 function MakeCopyViaDirectImpersonation;
@@ -322,7 +313,7 @@ begin
   if EffectiveOnly then
     Caption := Caption + ' (eff.)';
 
-  Token := CaptureToken(hxToken, 'Impersonated ' + Caption);
+  Token := CaptureTokenHandle(hxToken, 'Impersonated ' + Caption);
 end;
 
 function MakeLogonToken;
@@ -333,7 +324,7 @@ begin
     AdditionalGroups);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, 'Logon Of ' + User);
+    Token := CaptureTokenHandle(hxToken, 'Logon Of ' + User);
 end;
 
 function MakeS4ULogonToken;
@@ -343,7 +334,7 @@ begin
   Result := LsaxLogonS4U(hxToken, Domain, User, Source, AdditionalGroups);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, 'S4U Logon Of ' + User);
+    Token := CaptureTokenHandle(hxToken, 'S4U Logon Of ' + User);
 end;
 
 function MakeNewToken;
@@ -376,7 +367,7 @@ begin
     Expires);
 
   if Result.IsSuccess then
-    Token := CaptureToken(hxToken, 'New ' + LsaxSidToString(User));
+    Token := CaptureTokenHandle(hxToken, 'New ' + LsaxSidToString(User));
 end;
 
 end.

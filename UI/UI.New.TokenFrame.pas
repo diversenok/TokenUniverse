@@ -278,7 +278,7 @@ var
 begin
   if (Column = Integer(tsCaption)) and
     VST.FocusedNode.TryGetProvider(ITokenNode, TokenNode) then
-    TokenNode.Token.Caption := NewText;
+    (TokenNode.Token as IToken3).Caption := NewText;
 end;
 
 end.

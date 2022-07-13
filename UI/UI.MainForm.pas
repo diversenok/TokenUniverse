@@ -120,7 +120,8 @@ uses
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
-  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3, TU.Tokens3.Open;
+  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3, TU.Tokens3.Open,
+  NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects;
 
 {$R *.dfm}
 
@@ -206,7 +207,7 @@ procedure TFormMain.ActionOpenLinked(Sender: TObject);
 var
   Linked: IToken;
 begin
-  TokenView.Selected.OpenLinkedToken(Linked).RaiseOnError;
+  (TokenView.Selected as IToken3).QueryLinkedToken(Linked).RaiseOnError;
   TokenView.Add(Linked);
 end;
 
@@ -251,7 +252,7 @@ end;
 
 procedure TFormMain.ActionRevertCurrentThread(Sender: TObject);
 begin
-  TToken.RevertThreadToken(NtCurrentThreadId);
+  NtxSetThreadTokenById(NtCurrentThreadId, nil).RaiseOnError;
 
   CurrentUserChanged(Self);
   ShowSuccessMessage(Handle, 'The token was successfully revoked from the current thread.');
@@ -262,7 +263,7 @@ var
   TID: TThreadId;
 begin
   TID := TProcessListDialog.Execute(Self, True).ThreadID;
-  TToken.RevertThreadToken(TID);
+  NtxSetThreadTokenById(TID, nil).RaiseOnError;
 
   if TID = NtCurrentThreadId then
     CurrentUserChanged(Self);
@@ -287,10 +288,14 @@ end;
 
 procedure TFormMain.ActionSendHandle(Sender: TObject);
 var
+  hxTargetProcess: IHandle;
   NewHandle: NativeUInt;
 begin
-  NewHandle := TokenView.Selected.SendHandleToProcess(
-    TProcessListDialog.Execute(Self, False).ProcessID);
+  NtxOpenProcess(hxTargetProcess, TProcessListDialog.Execute(Self,
+    False).ProcessID, PROCESS_DUP_HANDLE).RaiseOnError;
+
+  NtxDuplicateHandleTo(hxTargetProcess.Handle,
+    (TokenView.Selected as IToken3).Handle.Handle, NewHandle).RaiseOnError;
 
   ShowSuccessMessage(Handle, Format('The handle was successfully sent.'#$D#$A +
     'Its value is %d (0x%X)', [NewHandle, NewHandle]));
@@ -339,7 +344,8 @@ begin
     TArray.FilterInline<TProcessHandleEntry>(Handles, ByType(5));
 
     for i := 0 to High(Handles) do
-      TokenView.Add(TToken.CreateByHandle(Handles[i].HandleValue));
+      TokenView.Add(CaptureTokenHandle(Auto.CaptureHandle(Handle),
+        Format('Inherited %d [0x%x]', [Handle, Handle])));
   end;
 
   MakeOpenProcessToken(Token, nil, NtCurrentProcessId).RaiseOnError;
@@ -348,7 +354,7 @@ begin
   // Open current process and, maybe, its linked token
   if (Token as IToken3).QueryElevation(Elevation).IsSuccess and
     (Elevation.ElevationType <> TokenElevationTypeDefault) and
-    Token.OpenLinkedToken(Linked).IsSuccess then
+    (Token as IToken3).QueryLinkedToken(Linked).IsSuccess then
       TokenView.Add(Linked);
 
   LoadLibrary('xmllite.dll');
@@ -403,7 +409,7 @@ end;
 procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;
   var S: string);
 begin
-  TokenView.Selected.Caption := S;
+  (TokenView.Selected as IToken3).Caption := S;
 end;
 
 procedure TFormMain.MenuCloseCreationDlgClick(Sender: TObject);

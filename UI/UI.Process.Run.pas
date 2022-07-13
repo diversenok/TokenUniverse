@@ -128,7 +128,7 @@ var
   User: ISid;
 begin
   if Assigned(FToken) then
-    hxToken := FToken.Handle
+    hxToken := (FToken as IToken3).Handle
   else
     hxToken := NtxCurrentEffectiveToken;
 
@@ -193,7 +193,7 @@ begin
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
 
   if Assigned(FToken) then
-    Options.hxToken := FToken.Handle;
+    Options.hxToken := (FToken as IToken3).Handle;
 
   if CheckBoxBreakaway.Checked then
     Include(Options.Flags, poBreakawayFromJob);

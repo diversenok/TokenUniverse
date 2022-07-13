@@ -77,7 +77,7 @@ begin
     LevelName := 'Unknown';
   end;
 
-  NewToken := TToken.Create(hxNewToken, LevelName + ' Safer for ' +
+  NewToken := CaptureTokenHandle(hxNewToken, LevelName + ' Safer for ' +
     Token.Caption);
 
   FormMain.TokenView.Add(NewToken);

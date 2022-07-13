@@ -21,7 +21,7 @@ type
 implementation
 
 uses
-  UI.MainForm;
+  UI.MainForm, TU.Tokens3;
 
 {$R *.dfm}
 
@@ -37,7 +37,7 @@ begin
     Tokens := FormMain.TokenView.Tokens;
 
     for i := 0 to High(Tokens) do
-      ListViewTokens.Items.Add.Caption := Tokens[i].Caption;
+      ListViewTokens.Items.Add.Caption := (Tokens[i] as IToken3).Caption;
 
     ShowModal;
 

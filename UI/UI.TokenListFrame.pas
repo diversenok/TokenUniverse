@@ -43,7 +43,7 @@ begin
   ListViewTokens.Items.BeginUpdate;
   Item := ListViewTokens.Items.Add;
 
-  Item.Caption := Token.Caption;
+  Item.Caption := (Token as IToken3).Caption;
   Item.OwnedIData := Token;
   Item.GroupID := Group;
   Item.Data := Pointer(Group);
