@@ -1,10 +1,10 @@
-unit TU.Tokens3.Open;
+unit TU.Tokens.Open;
 
 interface
 
 uses
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils,
-  TU.Tokens3, TU.Tokens.Old.Types, DelphiApi.Reflection;
+  TU.Tokens, TU.Tokens.Old.Types, DelphiApi.Reflection;
 
 // Create an anonymous token
 function MakeAnonymousToken(

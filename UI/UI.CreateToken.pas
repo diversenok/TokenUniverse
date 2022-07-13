@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms,
-  UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens3, TU.Tokens.Old.Types,
+  UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
   NtUtils;
 
@@ -89,7 +89,7 @@ uses
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
   Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker,
-  Ntapi.ntobapi, TU.Tokens3.Open;
+  Ntapi.ntobapi, TU.Tokens.Open;
 
 {$R *.dfm}
 

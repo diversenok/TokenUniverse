@@ -1,4 +1,4 @@
-unit TU.Tokens3;
+unit TU.Tokens;
 
 {
   This module defines the improved IToken interface.
@@ -294,7 +294,7 @@ uses
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
   DelphiUiLib.Reflection.Numeric, DelphiUiLib.Strings, DelphiUiLib.Reflection,
   DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.Types,
-  NtUiLib.Reflection.AccessMasks, System.SysUtils, TU.Tokens3.Events, TU.Events;
+  NtUiLib.Reflection.AccessMasks, System.SysUtils, TU.Tokens.Events, TU.Events;
 
 { Helper functions }
 

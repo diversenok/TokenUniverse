@@ -46,11 +46,11 @@ type
 implementation
 
 uses
-  TU.Credentials, UI.MainForm, UI.Modal.PickUser, TU.Tokens3,
+  TU.Credentials, UI.MainForm, UI.Modal.PickUser, TU.Tokens,
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser, System.UITypes,
   NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  Ntapi.ntpsapi, UI.Exceptions, TU.Tokens3.Open;
+  Ntapi.ntpsapi, UI.Exceptions, TU.Tokens.Open;
 
 {$R *.dfm}
 

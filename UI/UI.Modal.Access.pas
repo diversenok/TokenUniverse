@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens3,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens,
   UI.Prototypes.Forms, VclEx.ListView, UI.Prototypes.AccessMask;
 
 type
@@ -25,7 +25,7 @@ implementation
 
 uses
    TU.Tokens.Old.Types, Ntapi.ntseapi, Ntapi.ntobapi, NtUtils,
-   TU.Tokens3.Open, NtUiLib.Errors;
+   TU.Tokens.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 

@@ -114,13 +114,13 @@ implementation
 
 uses
   System.UITypes, TU.Tokens.Old.Types, Ntapi.WinNt,
-  NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens3,
+  NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens,
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
-  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3.Open,
+  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
   NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects;
 
 {$R *.dfm}

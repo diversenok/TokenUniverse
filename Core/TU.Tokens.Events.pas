@@ -1,4 +1,4 @@
-unit TU.Tokens3.Events;
+unit TU.Tokens.Events;
 
 {
   This internal module powers the new infrastructure for sharing observers
@@ -10,7 +10,7 @@ interface
 uses
   Ntapi.WinNt, Ntapi.ntobapi, Ntapi.ntseapi, NtUtils, NtUtils.Objects.Snapshots,
   NtUtils.Tokens.Info, NtUtils.Profiles, DelphiUtils.AutoObjects,
-  DelphiUtils.AutoEvents, TU.Observers, TU.Tokens3;
+  DelphiUtils.AutoEvents, TU.Observers, TU.Tokens;
 
 type
   // Shared observers between tokens that point to the same kernel object

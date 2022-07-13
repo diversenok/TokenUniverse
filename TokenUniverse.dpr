@@ -55,14 +55,14 @@ uses
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
   UI.Prototypes.Acl in 'NtUtilsUI\Prototypes\UI.Prototypes.Acl.pas' {FrameAcl: TFrame},
   TU.Observers in 'Core\TU.Observers.pas',
-  TU.Tokens3.Events in 'Core\TU.Tokens3.Events.pas',
-  TU.Tokens3 in 'Core\TU.Tokens3.pas',
+  TU.Tokens.Events in 'Core\TU.Tokens.Events.pas',
+  TU.Tokens in 'Core\TU.Tokens.pas',
   UI.Exceptions in 'NtUtilsUI\Common\UI.Exceptions.pas',
   TU.Events in 'Core\TU.Events.pas',
   VirtualTreesEx.DefaultMenu in 'NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas',
   DevirtualizedTree.Provider in 'NtUtilsUI\Components\DevirtualizedTree.Provider.pas',
   DevirtualizedTree in 'NtUtilsUI\Components\DevirtualizedTree.pas',
-  TU.Tokens3.Open in 'Core\TU.Tokens3.Open.pas',
+  TU.Tokens.Open in 'Core\TU.Tokens.Open.pas',
   UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame},
   TU.AccountRights in 'Core\TU.AccountRights.pas';
 

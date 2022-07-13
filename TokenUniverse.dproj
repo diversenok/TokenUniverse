@@ -270,14 +270,14 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="Core\TU.Observers.pas"/>
-        <DCCReference Include="Core\TU.Tokens3.Events.pas"/>
-        <DCCReference Include="Core\TU.Tokens3.pas"/>
+        <DCCReference Include="Core\TU.Tokens.Events.pas"/>
+        <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Exceptions.pas"/>
         <DCCReference Include="Core\TU.Events.pas"/>
         <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas"/>
         <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.Provider.pas"/>
         <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.pas"/>
-        <DCCReference Include="Core\TU.Tokens3.Open.pas"/>
+        <DCCReference Include="Core\TU.Tokens.Open.pas"/>
         <DCCReference Include="UI\UI.New.TokenFrame.pas">
             <Form>FrameTokens</Form>
             <FormType>dfm</FormType>

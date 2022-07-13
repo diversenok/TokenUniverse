@@ -3,7 +3,7 @@ unit TU.Suggestions;
 interface
 
 uses
-  Ntapi.WinUser, TU.Tokens3;
+  Ntapi.WinUser, TU.Tokens;
 
 // Default messages
 procedure ShowSuccessMessage(Parent: THwnd; const Text: String);
@@ -19,7 +19,7 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
   System.TypInfo, NtUtils, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
-  TU.Tokens3.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils;
+  TU.Tokens.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +

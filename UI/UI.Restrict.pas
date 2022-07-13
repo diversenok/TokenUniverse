@@ -7,7 +7,7 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes.Forms, UI.Prototypes.Privileges,
   UI.Prototypes.Groups, NtUtils.Security.Sid, Ntapi.WinNt, Ntapi.ntseapi,
-  NtUtils, TU.Tokens3;
+  NtUtils, TU.Tokens;
 
 type
   TDialogRestrictToken = class(TChildForm)
@@ -50,7 +50,7 @@ implementation
 uses
   UI.MainForm, System.UITypes, UI.Modal.PickUser, UI.Settings, TU.Suggestions,
   Ntapi.WinBase, UI.Sid.View, DelphiUtils.Arrays, Ntapi.ntrtl,
-  TU.Tokens3.Open, NtUiLib.Errors;
+  TU.Tokens.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 

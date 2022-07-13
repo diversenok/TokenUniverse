@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Messages, System.SysUtils,  System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  VclEx.ListView, UI.Prototypes.Forms, TU.Tokens3;
+  VclEx.ListView, UI.Prototypes.Forms, TU.Tokens;
 
 type
   TDialogPickToken = class(TChildForm)

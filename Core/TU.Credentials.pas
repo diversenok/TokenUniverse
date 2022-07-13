@@ -5,7 +5,7 @@ interface
 // TODO: check delayed import
 
 uses
-  Winapi.Windows, TU.Tokens3;
+  Winapi.Windows, TU.Tokens;
 
 type
   TCredentialsCallback = reference to procedure(Domain, User, Password: String);

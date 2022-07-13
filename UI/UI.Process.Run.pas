@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
-  Vcl.ExtCtrls, Vcl.Menus, TU.Tokens3, NtUtils.Environment,
+  Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment,
   NtUtils.Objects, Ntapi.WinUser, NtUtils, Ntapi.ProcessThreadsApi,
   NtUtils.Processes.Create, Ntapi.ntpsapi;
 
@@ -118,7 +118,7 @@ uses
   NtUiLib.TaskDialog, NtUtils.SysUtils, NtUtils.Threads, NtUtils.Manifests,
   NtUtils.Processes.Info, NtUtils.Files.Open, TU.Exec, UI.Information,
   UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Credentials,
-  TU.Tokens3.Open;
+  TU.Tokens.Open;
 
 {$R *.dfm}
 

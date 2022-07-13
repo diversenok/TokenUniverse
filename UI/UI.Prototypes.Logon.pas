@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, NtUtils.Lsa.Logon,
-  TU.Tokens3, Ntapi.WinNt, Vcl.StdCtrls, Ntapi.ntseapi, NtUtils;
+  TU.Tokens, Ntapi.WinNt, Vcl.StdCtrls, Ntapi.ntseapi, NtUtils;
 
 type
   TFrameLogon = class(TFrame)
