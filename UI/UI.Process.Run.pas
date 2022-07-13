@@ -91,18 +91,18 @@ type
     procedure CheckBoxManifestThemesEnter(Sender: TObject);
   private
     ExecMethod: TCreateProcessMethod;
-    FToken: IToken3;
+    FToken: IToken;
     ParentAccessMask: TProcessAccessMask;
     hxParentProcess: IHandle;
     AppContainerSid: ISid;
     CaptionSubscription: IAutoReleasable;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(const InfoClass: TTokenStringClass; const NewCaption: String);
-    procedure SetToken(const Value: IToken3);
+    procedure SetToken(const Value: IToken);
     procedure UpdateDesktopList;
     function TryOpenToken(const Info: TProcessInfo): TNtxStatus;
   public
-    property UseToken: IToken3 read FToken write SetToken;
+    property UseToken: IToken read FToken write SetToken;
     constructor Create(AOwner: TComponent); override;
   end;
 
@@ -128,7 +128,7 @@ var
   User: ISid;
 begin
   if Assigned(FToken) then
-    hxToken := (FToken as IToken3).Handle
+    hxToken := FToken.Handle
   else
     hxToken := NtxCurrentEffectiveToken;
 
@@ -193,7 +193,7 @@ begin
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
 
   if Assigned(FToken) then
-    Options.hxToken := (FToken as IToken3).Handle;
+    Options.hxToken := FToken.Handle;
 
   if CheckBoxBreakaway.Checked then
     Include(Options.Flags, poBreakawayFromJob);
@@ -490,19 +490,19 @@ begin
   LinkLabelToken.Caption := 'Using token: <a>' + NewCaption + '</a>';
 end;
 
-procedure TDialogRun.SetToken(const Value: IToken3);
+procedure TDialogRun.SetToken;
 begin
   FToken := Value;
 
   if not Assigned(Value) then
     LinkLabelToken.Caption := 'Using token: <not specified>'
   else
-    CaptionSubscription := (Value as IToken3).ObserveString(tsCaption, OnCaptionChange);
+    CaptionSubscription := Value.ObserveString(tsCaption, OnCaptionChange);
 end;
 
 function TDialogRun.TryOpenToken;
 var
-  Token: IToken3;
+  Token: IToken;
   PID: TProcessId;
 begin
   if not (piProcessHandle in Info.ValidFields) then

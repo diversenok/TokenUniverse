@@ -103,7 +103,7 @@ begin
       procedure (Domain, User, Password: String)
       var
         Source: TTokenSource;
-        Token: IToken3;
+        Token: IToken;
       begin
         if ComboLogonType.ItemIndex = S4U_INDEX then
         begin

@@ -85,7 +85,7 @@ type
     tsOriginTrustLevel         // Originating process protection level
   );
 
-  IToken3 = interface
+  IToken = interface
     ['{7CF47C07-F5D1-4891-A2B8-83ED0C7419CF}']
     function GetHandle: IHandle;
     function GetCaption: String;
@@ -118,7 +118,7 @@ type
     function QueryAuditPolicy(out AuditPolicy: ITokenAuditPolicy): TNtxStatus;
     function QueryOrigin(out Origin: TLogonId): TNtxStatus;
     function QueryElevation(out Elevation: TTokenElevationInfo): TNtxStatus;
-    function QueryLinkedToken(out Token: IToken3): TNtxStatus;
+    function QueryLinkedToken(out Token: IToken): TNtxStatus;
     function QueryHasRestrictions(out HasRestrictions: LongBool): TNtxStatus;
     function QueryFlags(out Flags: TTokenFlags): TNtxStatus;
     function QueryVirtualizationAllowed(out Allowed: LongBool): TNtxStatus;
@@ -259,7 +259,7 @@ type
     function SetSessionReference(const Reference: LongBool): TNtxStatus;
     function SetAuditPolicy(const AuditPolicy: ITokenAuditPolicy): TNtxStatus;
     function SetOrigin(const Origin: TLogonId): TNtxStatus;
-    function SetLinkedToken(const Token: IToken3): TNtxStatus;
+    function SetLinkedToken(const Token: IToken): TNtxStatus;
     function SetVirtualizationAllowed(const Allowed: LongBool): TNtxStatus;
     function SetVirtualizationEnabled(const Enabled: LongBool): TNtxStatus;
     function SetIntegrity(const Level: TIntegrityRid): TNtxStatus;
@@ -280,12 +280,12 @@ type
     function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMising: Boolean = False): TNtxStatus;
   end;
 
-// Make an IToken3 instance from a handle
+// Make an IToken instance from a handle
 function CaptureTokenHandle(
   const Handle: IHandle;
   const Caption: String;
   KernelAddress: Pointer = nil
-): IToken3;
+): IToken;
 
 implementation
 
@@ -322,7 +322,7 @@ begin
 end;
 
 type
-  TToken = class (TInterfacedObject, IToken3)
+  TToken = class (TInterfacedObject, IToken)
     hxToken: IHandle;
     FKernelObjectAddress: Pointer;
 
@@ -368,7 +368,7 @@ type
     function QueryAuditPolicy(out AuditPolicy: ITokenAuditPolicy): TNtxStatus;
     function QueryOrigin(out Origin: TLogonId): TNtxStatus;
     function QueryElevation(out Elevation: TTokenElevationInfo): TNtxStatus;
-    function QueryLinkedToken(out Token: IToken3): TNtxStatus;
+    function QueryLinkedToken(out Token: IToken): TNtxStatus;
     function QueryHasRestrictions(out HasRestrictions: LongBool): TNtxStatus;
     function QueryFlags(out Flags: TTokenFlags): TNtxStatus;
     function QueryVirtualizationAllowed(out Allowed: LongBool): TNtxStatus;
@@ -503,7 +503,7 @@ type
     function SetSessionReference(const Reference: LongBool): TNtxStatus;
     function SetAuditPolicy(const AuditPolicy: ITokenAuditPolicy): TNtxStatus;
     function SetOrigin(const Origin: TLogonId): TNtxStatus;
-    function SetLinkedToken(const Token: IToken3): TNtxStatus;
+    function SetLinkedToken(const Token: IToken): TNtxStatus;
     function SetVirtualizationAllowed(const Allowed: LongBool): TNtxStatus;
     function SetVirtualizationEnabled(const Enabled: LongBool): TNtxStatus;
     function SetIntegrity(const Level: TIntegrityRid): TNtxStatus;

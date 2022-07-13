@@ -8,22 +8,22 @@ uses
 
 // Create an anonymous token
 function MakeAnonymousToken(
-  out Token: IToken3;
+  out Token: IToken;
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
 ): TNtxStatus;
 
 // Duplicate a handle to a token
 function MakeDuplicateHandle(
-  out Token: IToken3;
-  const Source: IToken3;
+  out Token: IToken;
+  const Source: IToken;
   DesiredAccess: TAccessMask;
   SameAccess: Boolean = False
 ): TNtxStatus;
 
 // Duplicate a token
 function MakeDuplicateToken(
-  out Token: IToken3;
-  const Source: IToken3;
+  out Token: IToken;
+  const Source: IToken;
   TokenTypeEx: TTokenTypeEx;
   DesiredAccess: TAccessMask = TOKEN_ALL_ACCESS;
   EffectiveOnly: Boolean = False
@@ -31,8 +31,8 @@ function MakeDuplicateToken(
 
 // Restrict a token
 function MakeFilteredToken(
-  out Token: IToken3;
-  const Source: IToken3;
+  out Token: IToken;
+  const Source: IToken;
   Flags: TTokenFilterFlags;
   [opt] const SidsToDisable: TArray<ISid> = nil;
   [opt] const PrivilegesToDelete: TArray<TPrivilegeId> = nil;
@@ -41,13 +41,13 @@ function MakeFilteredToken(
 
 // Open a session token
 function MakeSessionToken(
-  out Token: IToken3;
+  out Token: IToken;
   SessionID: TSessionId
 ): TNtxStatus;
 
 // Open a token of a process
 function MakeOpenProcessToken(
-  out Token: IToken3;
+  out Token: IToken;
   [opt, Access(PROCESS_QUERY_LIMITED_INFORMATION)] hxProcess: IHandle;
   [opt] PID: TProcessId;
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
@@ -55,7 +55,7 @@ function MakeOpenProcessToken(
 
 // Open a token of a thread
 function MakeOpenThreadToken(
-  out Token: IToken3;
+  out Token: IToken;
   [opt, Access(THREAD_QUERY_LIMITED_INFORMATION)] hxThread: IHandle;
   [opt] TID: TThreadId;
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
@@ -63,7 +63,7 @@ function MakeOpenThreadToken(
 
 // Copy an effective token using direct impersonation
 function MakeCopyViaDirectImpersonation(
-  out Token: IToken3;
+  out Token: IToken;
   [opt, Access(THREAD_QUERY_LIMITED_INFORMATION)] hxThread: IHandle;
   [opt] TID: TThreadId;
   ImpersonationLevel: TSecurityImpersonationLevel = SecurityImpersonation;
@@ -73,7 +73,7 @@ function MakeCopyViaDirectImpersonation(
 
 // Logon a user using credentials
 function MakeLogonToken(
-  out Token: IToken3;
+  out Token: IToken;
   LogonType: TSecurityLogonType;
   const Domain: String;
   const User: String;
@@ -83,7 +83,7 @@ function MakeLogonToken(
 
 // Logon a user via S4U
 function MakeS4ULogonToken(
-  out Token: IToken3;
+  out Token: IToken;
   const Domain : String;
   const User: String;
   const Source: TTokenSource;
@@ -92,7 +92,7 @@ function MakeS4ULogonToken(
 
 // Create a new token from scratch
 function MakeNewToken(
-  out Token: IToken3;
+  out Token: IToken;
   TokenTypeEx: TTokenTypeEx;
   const User: ISid;
   DisableUser: Boolean;
@@ -128,12 +128,12 @@ function MakeDuplicateHandle;
 var
   hxToken: IHandle;
 begin
-  Result := NtxDuplicateHandleLocal((Source as IToken3).Handle.Handle, hxToken,
+  Result := NtxDuplicateHandleLocal(Source.Handle.Handle, hxToken,
     DesiredAccess);
 
   if Result.IsSuccess then
-    Token := CaptureTokenHandle(hxToken, (Source as IToken3).Caption + ' (ref)',
-      (Source as IToken3).CachedKernelAddress);
+    Token := CaptureTokenHandle(hxToken, Source.Caption + ' (ref)',
+      Source.CachedKernelAddress);
 end;
 
 function MakeDuplicateToken;
@@ -153,7 +153,7 @@ begin
     ImpersonationLevel := TSecurityImpersonationLevel(TokenTypeEx);
   end;
 
-  Result := NtxDuplicateToken(hxToken, (Source as IToken3).Handle, TokenType,
+  Result := NtxDuplicateToken(hxToken, Source.Handle, TokenType,
     ImpersonationLevel, AttributeBuilder.UseEffectiveOnly(EffectiveOnly).
     UseDesiredAccess(DesiredAccess));
 
@@ -161,23 +161,20 @@ begin
     Exit;
 
   if EffectiveOnly then
-    Token := CaptureTokenHandle(hxToken,
-      (Source as IToken3).Caption +  ' (eff. copy)')
+    Token := CaptureTokenHandle(hxToken, Source.Caption +  ' (eff. copy)')
   else
-    Token := CaptureTokenHandle(hxToken,
-      (Source as IToken3).Caption +  ' (copy)');
+    Token := CaptureTokenHandle(hxToken, Source.Caption +  ' (copy)');
 end;
 
 function MakeFilteredToken;
 var
   hxToken: IHandle;
 begin
-  Result := NtxFilterToken(hxToken, (Source as IToken3).Handle, Flags,
+  Result := NtxFilterToken(hxToken, Source.Handle, Flags,
     SidsToDisable, PrivilegesToDelete, SidsToRestrict);
 
   if Result.IsSuccess then
-    Token := CaptureTokenHandle(hxToken, 'Restricted ' +
-      (Source as IToken3).Caption);
+    Token := CaptureTokenHandle(hxToken, 'Restricted ' + Source.Caption);
 end;
 
 function MakeSessionToken;

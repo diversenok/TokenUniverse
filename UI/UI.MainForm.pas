@@ -129,14 +129,14 @@ uses
 
 procedure TFormMain.ActionAssignToProcess(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   Token := TokenView.Selected;
 
   if AskConvertToPrimary(Handle, Token) then
     TokenView.Add(Token);
 
-  (Token as IToken3).AssignToProcessById(TProcessListDialog
+  Token.AssignToProcessById(TProcessListDialog
     .Execute(Self, False).ProcessID)
     .RaiseOnError;
 
@@ -145,7 +145,7 @@ end;
 
 procedure TFormMain.ActionAssignToThread(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
   TID: TThreadId;
 begin
   Token := TokenView.Selected;
@@ -156,9 +156,9 @@ begin
   TID := TProcessListDialog.Execute(Self, True).ThreadID;
 
   if TSettings.UseSafeImpersonation then
-    (Token as IToken3).AssignToThreadSafeById(TID).RaiseOnError
+    Token.AssignToThreadSafeById(TID).RaiseOnError
   else
-    (Token as IToken3).AssignToThreadById(TID).RaiseOnError;
+    Token.AssignToThreadById(TID).RaiseOnError;
 
   if TID = NtCurrentThreadId then
     CurrentUserChanged(Self);
@@ -196,7 +196,7 @@ end;
 
 procedure TFormMain.ActionOpenEffective(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   MakeCopyViaDirectImpersonation(Token, nil, TProcessListDialog.Execute(Self,
     True).ThreadID, SecurityImpersonation).RaiseOnError;
@@ -205,15 +205,15 @@ end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
 var
-  Linked: IToken3;
+  Linked: IToken;
 begin
-  (TokenView.Selected as IToken3).QueryLinkedToken(Linked).RaiseOnError;
+  TokenView.Selected.QueryLinkedToken(Linked).RaiseOnError;
   TokenView.Add(Linked);
 end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   MakeOpenProcessToken(Token, nil, TProcessListDialog.Execute(Self,
     False).ProcessID).RaiseOnError;
@@ -223,7 +223,7 @@ end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   MakeOpenProcessToken(Token, nil, NtCurrentProcessId).RaiseOnError;
   TokenView.Add(Token);
@@ -231,7 +231,7 @@ end;
 
 procedure TFormMain.ActionOpenThread(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   MakeOpenThreadToken(Token, nil, TProcessListDialog.Execute(Self,
     True).ThreadID).RaiseOnError;
@@ -295,7 +295,7 @@ begin
     False).ProcessID, PROCESS_DUP_HANDLE).RaiseOnError;
 
   NtxDuplicateHandleTo(hxTargetProcess.Handle,
-    (TokenView.Selected as IToken3).Handle.Handle, NewHandle).RaiseOnError;
+    TokenView.Selected.Handle.Handle, NewHandle).RaiseOnError;
 
   ShowSuccessMessage(Handle, Format('The handle was successfully sent.'#$D#$A +
     'Its value is %d (0x%X)', [NewHandle, NewHandle]));
@@ -308,7 +308,7 @@ end;
 
 procedure TFormMain.ActionWTSQuery(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   MakeSessionToken(Token, TComboDialog.PickSession(Self)).RaiseOnError;
   TokenView.Add(Token);
@@ -328,10 +328,10 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
   Elevation: TTokenElevationInfo;
   Handles: TArray<TProcessHandleEntry>;
-  Linked: IToken3;
+  Linked: IToken;
   i: integer;
 begin
   TokenView.VST.OnInspectNode := ActionOpen;
@@ -352,9 +352,9 @@ begin
   TokenView.Add(Token);
 
   // Open current process and, maybe, its linked token
-  if (Token as IToken3).QueryElevation(Elevation).IsSuccess and
+  if Token.QueryElevation(Elevation).IsSuccess and
     (Elevation.ElevationType <> TokenElevationTypeDefault) and
-    (Token as IToken3).QueryLinkedToken(Linked).IsSuccess then
+    Token.QueryLinkedToken(Linked).IsSuccess then
       TokenView.Add(Linked);
 
   LoadLibrary('xmllite.dll');
@@ -394,7 +394,7 @@ end;
 
 procedure TFormMain.TokenRestrictSaferClick(Sender: TObject);
 begin
-  TDialogSafer.CreateFromToken(Self, TokenView.Selected as IToken3);
+  TDialogSafer.CreateFromToken(Self, TokenView.Selected);
 end;
 
 procedure TFormMain.TokenViewVSTGetPopupMenu;
@@ -409,7 +409,7 @@ end;
 procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;
   var S: string);
 begin
-  (TokenView.Selected as IToken3).Caption := S;
+  TokenView.Selected.Caption := S;
 end;
 
 procedure TFormMain.MenuCloseCreationDlgClick(Sender: TObject);
@@ -447,7 +447,7 @@ end;
 
 procedure TFormMain.NewAnonymousClick(Sender: TObject);
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   MakeAnonymousToken(Token).RaiseOnError;
   TokenView.Add(Token);

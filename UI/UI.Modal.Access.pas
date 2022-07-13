@@ -17,8 +17,8 @@ type
     GroupBoxAccess: TGroupBox;
     AccessMaskFrame: TAccessMaskFrame;
   public
-    class function ExecuteDuplication(AOwner: TComponent; Source: IToken3):
-      IToken3;
+    class function ExecuteDuplication(AOwner: TComponent; const Source: IToken):
+      IToken;
   end;
 
 implementation
@@ -29,8 +29,7 @@ uses
 
 {$R *.dfm}
 
-class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
-  Source: IToken3): IToken3;
+class function TDialogAccess.ExecuteDuplication;
 var
   BasicInfo: TObjectBasicInformation;
 begin
@@ -38,7 +37,7 @@ begin
   begin
     AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
 
-    if (Source as IToken3).QueryBasicInfo(BasicInfo).IsSuccess then
+    if Source.QueryBasicInfo(BasicInfo).IsSuccess then
       AccessMaskFrame.AccessMask := BasicInfo.GrantedAccess;
 
     ShowModal;

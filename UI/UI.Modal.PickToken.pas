@@ -15,7 +15,7 @@ type
     procedure ListViewTokensSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
   public
-    class function Execute(AOwner: TComponent): IToken3;
+    class function Execute(AOwner: TComponent): IToken;
   end;
 
 implementation
@@ -27,9 +27,9 @@ uses
 
 { TDialogSelectToken }
 
-class function TDialogPickToken.Execute(AOwner: TComponent): IToken3;
+class function TDialogPickToken.Execute;
 var
-  Tokens: TArray<IToken3>;
+  Tokens: TArray<IToken>;
   i: Integer;
 begin
   with TDialogPickToken.Create(AOwner) do
@@ -37,7 +37,7 @@ begin
     Tokens := FormMain.TokenView.Tokens;
 
     for i := 0 to High(Tokens) do
-      ListViewTokens.Items.Add.Caption := (Tokens[i] as IToken3).Caption;
+      ListViewTokens.Items.Add.Caption := Tokens[i].Caption;
 
     ShowModal;
 

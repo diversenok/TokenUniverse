@@ -123,7 +123,7 @@ end;
 
 procedure TDialogCreateToken.ButtonLoadClick;
 var
-  Source: IToken3;
+  Source: IToken;
   Expiration: TDateTime;
   BasicInfo: TObjectBasicInformation;
   User: TGroup;
@@ -133,7 +133,7 @@ var
   Privileges: TArray<TPrivilege>;
   TokenSource: TTokenSource;
 begin
-  Source := TDialogPickToken.Execute(Self) as IToken3;
+  Source := TDialogPickToken.Execute(Self);
 
   if not Source.QueryBasicInfo(BasicInfo).IsSuccess or
     not BitTest(BasicInfo.GrantedAccess and TOKEN_QUERY) then
@@ -199,7 +199,7 @@ end;
 
 procedure TDialogCreateToken.ButtonOKClick;
 var
-  Token: IToken3;
+  Token: IToken;
   Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: TTokenMandatoryPolicy;
@@ -246,11 +246,11 @@ begin
     NewPolicy := NewPolicy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
 
   if NewPolicy <> 0 then
-    (Token as IToken3).SetMandatoryPolicy(NewPolicy).RaiseOnError;
+    Token.SetMandatoryPolicy(NewPolicy).RaiseOnError;
 
   // Post-creation: change session
   if CheckBoxSession.Checked then
-    (Token as IToken3).SetSessionId(RtlGetCurrentPeb.SessionId).RaiseOnError;
+    Token.SetSessionId(RtlGetCurrentPeb.SessionId).RaiseOnError;
 
   if not TSettings.NoCloseCreationDialogs then
     Close;

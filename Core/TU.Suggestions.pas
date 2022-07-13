@@ -10,9 +10,9 @@ procedure ShowSuccessMessage(Parent: THwnd; const Text: String);
 function AskForConfirmation(Parent: THwnd; const Text: String): Boolean;
 
 // Operation suggestions
-function AskConvertToPrimary(Parent: THwnd; var Token: IToken3): Boolean;
-function AskConvertToImpersonation(Parent: THwnd; var Token: IToken3): Boolean;
-procedure CheckSandboxInert(Parent: THwnd; const Token: IToken3);
+function AskConvertToPrimary(Parent: THwnd; var Token: IToken): Boolean;
+function AskConvertToImpersonation(Parent: THwnd; var Token: IToken): Boolean;
+procedure CheckSandboxInert(Parent: THwnd; const Token: IToken);
 
 implementation
 
@@ -53,11 +53,11 @@ end;
 function AskConvertToPrimary;
 var
   CurrentType: TTokenType;
-  NewToken: IToken3;
+  NewToken: IToken;
 begin
   Result := False;
 
-  if not (Token as IToken3).QueryType(CurrentType).IsSuccess then
+  if not Token.QueryType(CurrentType).IsSuccess then
     Exit;
 
   if CurrentType = TokenPrimary then
@@ -81,11 +81,11 @@ end;
 function AskConvertToImpersonation;
 var
   CurrentType: TTokenType;
-  NewToken: IToken3;
+  NewToken: IToken;
 begin
   Result := False;
 
-  if not (Token as IToken3).QueryType(CurrentType).IsSuccess then
+  if not Token.QueryType(CurrentType).IsSuccess then
     Exit;
 
   if CurrentType = TokenImpersonation then
@@ -110,7 +110,7 @@ procedure CheckSandboxInert;
 var
   SandboxInert: LongBool;
 begin
-  if (Token as IToken3).QuerySandboxInert(SandboxInert).IsSuccess and
+  if Token.QuerySandboxInert(SandboxInert).IsSuccess and
     not SandboxInert then
     UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_NO_SANDBOX_INERT,
       TOKEN_NO_SANDBOX_INERT_TEXT, diWarning);

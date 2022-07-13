@@ -30,8 +30,8 @@ type
   public
     property SelectedTokenType: TTokenTypeEx read FSelectedType write
       SetSelectedType;
-    class function ExecuteDuplication(AOwner: TComponent; Source: IToken3):
-      IToken3;
+    class function ExecuteDuplication(AOwner: TComponent; const Source: IToken):
+      IToken;
   end;
 
 implementation
@@ -51,14 +51,13 @@ begin
   FSelectedType := ttPrimary;
 end;
 
-class function TDialogAccessAndType.ExecuteDuplication(AOwner: TComponent;
-  Source: IToken3): IToken3;
+class function TDialogAccessAndType.ExecuteDuplication;
 var
   Statistics: TTokenStatistics;
 begin
   with TDialogAccessAndType.CreateChild(AOwner, cfmApplication) do
   begin
-    if (Source as IToken3).QueryStatistics(Statistics).IsSuccess then
+    if Source.QueryStatistics(Statistics).IsSuccess then
     begin
       if Statistics.TokenType = TokenPrimary then
         SelectedTokenType := ttPrimary

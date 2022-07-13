@@ -19,11 +19,11 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     procedure ClearAll;
-    function AddToken(Token: IToken3; Group: Integer = 0): IToken3;
+    function AddToken(const Token: IToken; Group: Integer = 0): IToken;
     procedure DeleteToken(Item: TListItemEx; SelectNext: Boolean = False);
     procedure RenameToken(NewName: String; Item: TListItemEx);
-    function GetSelectedToken: IToken3;
-    function GetToken(Item: TListItemEx): IToken3;
+    function GetSelectedToken: IToken;
+    function GetToken(Item: TListItemEx): IToken;
   end;
 
 implementation
@@ -33,7 +33,7 @@ uses
 
 {$R *.dfm}
 
-function TFrameTokenList.AddToken(Token: IToken3; Group: Integer): IToken3;
+function TFrameTokenList.AddToken;
 var
   Item: TListItemEx;
 begin
@@ -43,17 +43,17 @@ begin
   ListViewTokens.Items.BeginUpdate;
   Item := ListViewTokens.Items.Add;
 
-  Item.Caption := (Token as IToken3).Caption;
+  Item.Caption := Token.Caption;
   Item.OwnedIData := Token;
   Item.GroupID := Group;
   Item.Data := Pointer(Group);
 
-  Item.SubItems.Add((Token as IToken3).QueryString(tsType));
-  Item.SubItems.Add((Token as IToken3).QueryString(tsAccess));
-  Item.SubItems.Add((Token as IToken3).QueryString(tsUser));
-  Item.SubItems.Add((Token as IToken3).QueryString(tsSessionId));
-  Item.SubItems.Add((Token as IToken3).QueryString(tsElevation));
-  Item.SubItems.Add((Token as IToken3).QueryString(tsIntegrity));
+  Item.SubItems.Add(Token.QueryString(tsType));
+  Item.SubItems.Add(Token.QueryString(tsAccess));
+  Item.SubItems.Add(Token.QueryString(tsUser));
+  Item.SubItems.Add(Token.QueryString(tsSessionId));
+  Item.SubItems.Add(Token.QueryString(tsElevation));
+  Item.SubItems.Add(Token.QueryString(tsIntegrity));
 
   ListViewTokens.Items.EndUpdate;
 end;
@@ -83,22 +83,22 @@ begin
     ListViewTokens.Items[OriginalIndex].Selected := True;}
 end;
 
-function TFrameTokenList.GetSelectedToken: IToken3;
+function TFrameTokenList.GetSelectedToken;
 begin
   if Assigned(ListViewTokens.Selected) then
-    Result := IToken3(ListViewTokens.Selected.OwnedIData)
+    Result := IToken(ListViewTokens.Selected.OwnedIData)
   else
     Result := nil;
 end;
 
-function TFrameTokenList.GetToken(Item: TListItemEx): IToken3;
+function TFrameTokenList.GetToken;
 begin
-  Result := IToken3(Item.OwnedIData);
+  Result := IToken(Item.OwnedIData);
 end;
 
 procedure TFrameTokenList.RenameToken(NewName: String; Item: TListItemEx);
 begin
-  IToken3(Item.OwnedIData).Caption := NewName;
+  IToken(Item.OwnedIData).Caption := NewName;
   Item.Caption := NewName; // TODO: move to OnCaptionChange
 end;
 

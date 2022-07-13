@@ -11,19 +11,19 @@ uses
 type
   ITokenNode = interface (INodeProvider)
     ['{756BC6F1-77F9-4BDA-BEB8-0789E418278D}']
-    function GetToken: IToken3;
+    function GetToken: IToken;
     procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
-    property Token: IToken3 read GetToken;
+    property Token: IToken read GetToken;
   end;
 
   TTokenNode = class (TCustomNodeProvider, ITokenNode)
-    FToken: IToken3;
+    FToken: IToken;
     FSubscriptions: array [TTokenStringClass] of IAutoReleasable;
     procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
     procedure ColumnUpdated(const Column: TTokenStringClass; const NewValue: String);
-    function GetToken: IToken3;
+    function GetToken: IToken;
     function GetColumn(Index: Integer): String; override;
-    constructor Create(const Source: IToken3; Columns: TVirtualTreeColumns);
+    constructor Create(const Source: IToken; Columns: TVirtualTreeColumns);
   end;
 
   TFrameTokens = class(TFrame)
@@ -35,21 +35,21 @@ type
     procedure VSTColumnVisibilityChanged(const Sender: TBaseVirtualTree;
       const Column: TColumnIndex; Visible: Boolean);
   private
-    function GetSelectedToken: IToken3;
-    function GetAllTokens: TArray<IToken3>;
+    function GetSelectedToken: IToken;
+    function GetAllTokens: TArray<IToken>;
     function GetHasSelectedToken: Boolean;
   public
     function AddRoot(const Caption: String; Root: PVirtualNode = nil): PVirtualNode;
-    procedure AddMany(const Tokens: TArray<IToken3>; Root: PVirtualNode = nil);
+    procedure AddMany(const Tokens: TArray<IToken>; Root: PVirtualNode = nil);
     function Add(
-      const Token: IToken3;
+      const Token: IToken;
       Root: PVirtualNode = nil;
       CaptureFocus: Boolean = True
     ): PVirtualNode;
     procedure DeleteSelected;
     property HasSelectedToken: Boolean read GetHasSelectedToken;
-    property Selected: IToken3 read GetSelectedToken;
-    property Tokens: TArray<IToken3> read GetAllTokens;
+    property Selected: IToken read GetSelectedToken;
+    property Tokens: TArray<IToken> read GetAllTokens;
     constructor Create(Owner: TComponent); override;
   end;
 
@@ -95,7 +95,7 @@ begin
     (InfoClass > High(TTokenStringClass)) then
     raise EArgumentException.Create('Invalid index in TTokenNode.GetColumn');
 
-  Result := (FToken as IToken3).QueryString(InfoClass);
+  Result := FToken.QueryString(InfoClass);
 end;
 
 function TTokenNode.GetToken;
@@ -111,7 +111,7 @@ begin
 
   // Either subscribe for updates or clear the existing subscription
   if Visible then
-    FSubscriptions[Column] := (FToken as IToken3).ObserveString(Column,
+    FSubscriptions[Column] := FToken.ObserveString(Column,
       ColumnUpdated)
   else
     FSubscriptions[Column] := nil;
@@ -138,7 +138,7 @@ end;
 
 procedure TFrameTokens.AddMany;
 var
-  Token: IToken3;
+  Token: IToken;
 begin
   VST.BeginUpdateAuto;
 
@@ -217,8 +217,8 @@ end;
 
 function TFrameTokens.GetAllTokens;
 begin
-  Result := TArray.Convert<PVirtualNode, IToken3>(VST.Nodes.ToArray,
-    function (const Node: PVirtualNode; out Token: IToken3): Boolean
+  Result := TArray.Convert<PVirtualNode, IToken>(VST.Nodes.ToArray,
+    function (const Node: PVirtualNode; out Token: IToken): Boolean
     var
       TokenNode: ITokenNode;
     begin
@@ -278,7 +278,7 @@ var
 begin
   if (Column = Integer(tsCaption)) and
     VST.FocusedNode.TryGetProvider(ITokenNode, TokenNode) then
-    (TokenNode.Token as IToken3).Caption := NewText;
+    TokenNode.Token.Caption := NewText;
 end;
 
 end.

@@ -21,7 +21,7 @@ type
     procedure BtnSetRefClick(Sender: TObject);
     procedure CheckBoxReferenceClick(Sender: TObject);
   private
-    Token: IToken3;
+    Token: IToken;
     LogonSource: TLogonSessionSource;
     OriginSubscription: IAutoReleasable;
     FlagsSubscription: IAutoReleasable;
@@ -30,8 +30,8 @@ type
     function GetSubscribed: Boolean;
   public
     property Subscribed: Boolean read GetSubscribed;
-    procedure SubscribeToken(const Token: IToken3);
-    procedure UnsubscribeToken(const Dummy: IToken3 = nil);
+    procedure SubscribeToken(const Token: IToken);
+    procedure UnsubscribeToken(const Dummy: IToken = nil);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -57,12 +57,12 @@ var
   Status: TNtxStatus;
 begin
   Assert(Assigned(Token));
-  Status := (Token as IToken3).SetOrigin(LogonSource.SelectedLogonSession);
+  Status := Token.SetOrigin(LogonSource.SelectedLogonSession);
 
   if not Status.IsSuccess then
   begin
     OriginSubscription := nil;
-    OriginSubscription := (Token as IToken3).ObserveOrigin(OnOriginChange);
+    OriginSubscription := Token.ObserveOrigin(OnOriginChange);
   end;
 
   Status.RaiseOnError;
@@ -71,7 +71,7 @@ end;
 procedure TFrameLogon.BtnSetRefClick(Sender: TObject);
 begin
   Assert(Assigned(Token));
-  (Token as IToken3).SetSessionReference(CheckBoxReference.Checked);
+  Token.SetSessionReference(CheckBoxReference.Checked);
 end;
 
 procedure TFrameLogon.CheckBoxReferenceClick(Sender: TObject);
@@ -126,14 +126,14 @@ begin
   with ListView.Items[ListView.Items.Count - 1] do
     if NewOrigin = 0 then
       Cell[1] := '0 (value not set)'
-    else if (Token as IToken3).QueryStatistics(Statistics).IsSuccess and
+    else if Token.QueryStatistics(Statistics).IsSuccess and
       (Statistics.AuthenticationId = NewOrigin) then
       Cell[1] := 'Same as current'
     else
       Cell[1] := IntToHexEx(NewOrigin);
 end;
 
-procedure TFrameLogon.SubscribeToken(const Token: IToken3);
+procedure TFrameLogon.SubscribeToken;
 var
   Statistics: TTokenStatistics;
   WellKnownSid: ISid;
@@ -153,7 +153,7 @@ begin
       GroupId := GROUP_IND_LOGON;
     end;
 
-  if (Token as IToken3).QueryStatistics(Statistics).IsSuccess then
+  if Token.QueryStatistics(Statistics).IsSuccess then
   begin
     ListView.Items[0].Cell[1] := IntToHexEx(Statistics.AuthenticationId);
     WellKnownSid := LsaxLookupKnownLogonSessionSid(Statistics.AuthenticationId);
@@ -199,13 +199,13 @@ begin
     GroupId := GROUP_IND_ORIGIN;
   end;
 
-  OriginSubscription := (Token as IToken3).ObserveOrigin(OnOriginChange);
-  FlagsSubscription := (Token as IToken3).ObserveFlags(OnFlagsChange);
+  OriginSubscription := Token.ObserveOrigin(OnOriginChange);
+  FlagsSubscription := Token.ObserveFlags(OnFlagsChange);
 
   ListView.Items.EndUpdate;
 end;
 
-procedure TFrameLogon.UnsubscribeToken(const Dummy: IToken3);
+procedure TFrameLogon.UnsubscribeToken;
 begin
   if Assigned(Token) then
     Token := nil;
