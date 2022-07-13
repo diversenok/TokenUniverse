@@ -113,14 +113,14 @@ var
 implementation
 
 uses
-  System.UITypes, TU.Tokens.Types, Ntapi.WinNt,
-  NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens,
+  System.UITypes, TU.Tokens.Old.Types, Ntapi.WinNt,
+  NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens3,
   UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
-  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3, TU.Tokens3.Open,
+  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens3.Open,
   NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects;
 
 {$R *.dfm}
@@ -129,7 +129,7 @@ uses
 
 procedure TFormMain.ActionAssignToProcess(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   Token := TokenView.Selected;
 
@@ -145,7 +145,7 @@ end;
 
 procedure TFormMain.ActionAssignToThread(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
   TID: TThreadId;
 begin
   Token := TokenView.Selected;
@@ -196,7 +196,7 @@ end;
 
 procedure TFormMain.ActionOpenEffective(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   MakeCopyViaDirectImpersonation(Token, nil, TProcessListDialog.Execute(Self,
     True).ThreadID, SecurityImpersonation).RaiseOnError;
@@ -205,7 +205,7 @@ end;
 
 procedure TFormMain.ActionOpenLinked(Sender: TObject);
 var
-  Linked: IToken;
+  Linked: IToken3;
 begin
   (TokenView.Selected as IToken3).QueryLinkedToken(Linked).RaiseOnError;
   TokenView.Add(Linked);
@@ -213,7 +213,7 @@ end;
 
 procedure TFormMain.ActionOpenProcess(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   MakeOpenProcessToken(Token, nil, TProcessListDialog.Execute(Self,
     False).ProcessID).RaiseOnError;
@@ -223,7 +223,7 @@ end;
 
 procedure TFormMain.ActionOpenSelf(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   MakeOpenProcessToken(Token, nil, NtCurrentProcessId).RaiseOnError;
   TokenView.Add(Token);
@@ -231,7 +231,7 @@ end;
 
 procedure TFormMain.ActionOpenThread(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   MakeOpenThreadToken(Token, nil, TProcessListDialog.Execute(Self,
     True).ThreadID).RaiseOnError;
@@ -308,7 +308,7 @@ end;
 
 procedure TFormMain.ActionWTSQuery(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   MakeSessionToken(Token, TComboDialog.PickSession(Self)).RaiseOnError;
   TokenView.Add(Token);
@@ -328,10 +328,10 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
   Elevation: TTokenElevationInfo;
   Handles: TArray<TProcessHandleEntry>;
-  Linked: IToken;
+  Linked: IToken3;
   i: integer;
 begin
   TokenView.VST.OnInspectNode := ActionOpen;
@@ -447,7 +447,7 @@ end;
 
 procedure TFormMain.NewAnonymousClick(Sender: TObject);
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   MakeAnonymousToken(Token).RaiseOnError;
   TokenView.Add(Token);

@@ -4,8 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls, TU.Tokens,
-  UI.Prototypes.Forms, VclEx.ListView, TU.Tokens.Types,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls, TU.Tokens3,
+  UI.Prototypes.Forms, VclEx.ListView, TU.Tokens.Old.Types,
   UI.Prototypes.AccessMask;
 
 type
@@ -30,14 +30,14 @@ type
   public
     property SelectedTokenType: TTokenTypeEx read FSelectedType write
       SetSelectedType;
-    class function ExecuteDuplication(AOwner: TComponent; Source: IToken):
-      IToken;
+    class function ExecuteDuplication(AOwner: TComponent; Source: IToken3):
+      IToken3;
   end;
 
 implementation
 
 uses
-  Ntapi.ntseapi, TU.Tokens3, NtUtils, TU.Tokens3.Open, NtUiLib.Errors;
+  Ntapi.ntseapi, NtUtils, TU.Tokens3.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -52,7 +52,7 @@ begin
 end;
 
 class function TDialogAccessAndType.ExecuteDuplication(AOwner: TComponent;
-  Source: IToken): IToken;
+  Source: IToken3): IToken3;
 var
   Statistics: TTokenStatistics;
 begin

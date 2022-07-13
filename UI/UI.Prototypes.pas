@@ -3,8 +3,8 @@ unit UI.Prototypes;
 interface
 
 uses
-  System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView, TU.Tokens,
-  TU.Tokens.Types, Ntapi.WinNt, NtUtils.WinStation, TU.Tokens3, NtUtils;
+  System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView, TU.Tokens3,
+  TU.Tokens.Old.Types, Ntapi.WinNt, NtUtils.WinStation, NtUtils;
 
 type
   TSessionSource = class
@@ -69,11 +69,11 @@ type
     Cells: array of TCellSource;
     procedure TokenCaptionCallback(const InfoClass: TTokenStringClass; const Value: String);
   public
-    Token: IToken;
+    Token: IToken3;
     Item: TListItemEx;
     Owner: TTokenViewSource;
     CaptionSubscription: IAutoReleasable;
-    constructor Create(Token: IToken; Owner: TTokenViewSource);
+    constructor Create(Token: IToken3; Owner: TTokenViewSource);
     destructor Destroy; override;
   end;
 
@@ -81,15 +81,15 @@ type
   private
     ListView: TListViewEx;
     DataClasses: array of TTokenStringClass;
-    function GetToken(Ind: Integer): IToken;
+    function GetToken(Ind: Integer): IToken3;
     function GetCount: Integer;
   public
     constructor Create(OwnedListView: TListViewEx);
-    function Add(Token: IToken): IToken;
+    function Add(Token: IToken3): IToken3;
     procedure Delete(Index: Integer);
-    function Selected: IToken;
+    function Selected: IToken3;
     property Count: Integer read GetCount;
-    property Tokens[Ind: Integer]: IToken read GetToken;
+    property Tokens[Ind: Integer]: IToken3 read GetToken;
     destructor Destroy; override;
   end;
 
@@ -404,7 +404,7 @@ end;
 
 { TRowSource }
 
-constructor TRowSource.Create(Token: IToken; Owner: TTokenViewSource);
+constructor TRowSource.Create(Token: IToken3; Owner: TTokenViewSource);
 var
   i: integer;
 begin
@@ -446,7 +446,7 @@ end;
 
 { TTokenViewSource }
 
-function TTokenViewSource.Add(Token: IToken): IToken;
+function TTokenViewSource.Add(Token: IToken3): IToken3;
 begin
   // This will create a new ListView Item and assign this object
   // as it's OwnedData
@@ -516,13 +516,13 @@ begin
   Result := ListView.Items.Count;
 end;
 
-function TTokenViewSource.GetToken(Ind: Integer): IToken;
+function TTokenViewSource.GetToken(Ind: Integer): IToken3;
 begin
   Assert(Assigned(ListView));
   Result := (ListView.Items[Ind].OwnedData as TRowSource).Token;
 end;
 
-function TTokenViewSource.Selected: IToken;
+function TTokenViewSource.Selected: IToken3;
 begin
   if Assigned(ListView.Selected) then
     Result := (ListView.Selected.OwnedData as TRowSource).Token

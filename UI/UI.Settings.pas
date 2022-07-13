@@ -3,7 +3,7 @@ unit UI.Settings;
 interface
 
 uses
-  TU.Tokens, TU.Tokens3, System.Classes;
+  TU.Tokens3, System.Classes;
 
 type
   TColumns = set of TTokenStringClass;

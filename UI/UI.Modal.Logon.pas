@@ -46,7 +46,7 @@ type
 implementation
 
 uses
-  TU.Credentials, TU.Tokens, UI.MainForm, UI.Modal.PickUser,
+  TU.Credentials, UI.MainForm, UI.Modal.PickUser, TU.Tokens3,
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
   NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser, System.UITypes,
   NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
@@ -103,7 +103,7 @@ begin
       procedure (Domain, User, Password: String)
       var
         Source: TTokenSource;
-        Token: IToken;
+        Token: IToken3;
       begin
         if ComboLogonType.ItemIndex = S4U_INDEX then
         begin

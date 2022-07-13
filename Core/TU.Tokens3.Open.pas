@@ -4,26 +4,26 @@ interface
 
 uses
   Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils,
-  TU.Tokens, TU.Tokens.Types, DelphiApi.Reflection;
+  TU.Tokens3, TU.Tokens.Old.Types, DelphiApi.Reflection;
 
 // Create an anonymous token
 function MakeAnonymousToken(
-  out Token: IToken;
+  out Token: IToken3;
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
 ): TNtxStatus;
 
 // Duplicate a handle to a token
 function MakeDuplicateHandle(
-  out Token: IToken;
-  const Source: IToken;
+  out Token: IToken3;
+  const Source: IToken3;
   DesiredAccess: TAccessMask;
   SameAccess: Boolean = False
 ): TNtxStatus;
 
 // Duplicate a token
 function MakeDuplicateToken(
-  out Token: IToken;
-  const Source: IToken;
+  out Token: IToken3;
+  const Source: IToken3;
   TokenTypeEx: TTokenTypeEx;
   DesiredAccess: TAccessMask = TOKEN_ALL_ACCESS;
   EffectiveOnly: Boolean = False
@@ -31,8 +31,8 @@ function MakeDuplicateToken(
 
 // Restrict a token
 function MakeFilteredToken(
-  out Token: IToken;
-  const Source: IToken;
+  out Token: IToken3;
+  const Source: IToken3;
   Flags: TTokenFilterFlags;
   [opt] const SidsToDisable: TArray<ISid> = nil;
   [opt] const PrivilegesToDelete: TArray<TPrivilegeId> = nil;
@@ -41,13 +41,13 @@ function MakeFilteredToken(
 
 // Open a session token
 function MakeSessionToken(
-  out Token: IToken;
+  out Token: IToken3;
   SessionID: TSessionId
 ): TNtxStatus;
 
 // Open a token of a process
 function MakeOpenProcessToken(
-  out Token: IToken;
+  out Token: IToken3;
   [opt, Access(PROCESS_QUERY_LIMITED_INFORMATION)] hxProcess: IHandle;
   [opt] PID: TProcessId;
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
@@ -55,7 +55,7 @@ function MakeOpenProcessToken(
 
 // Open a token of a thread
 function MakeOpenThreadToken(
-  out Token: IToken;
+  out Token: IToken3;
   [opt, Access(THREAD_QUERY_LIMITED_INFORMATION)] hxThread: IHandle;
   [opt] TID: TThreadId;
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
@@ -63,7 +63,7 @@ function MakeOpenThreadToken(
 
 // Copy an effective token using direct impersonation
 function MakeCopyViaDirectImpersonation(
-  out Token: IToken;
+  out Token: IToken3;
   [opt, Access(THREAD_QUERY_LIMITED_INFORMATION)] hxThread: IHandle;
   [opt] TID: TThreadId;
   ImpersonationLevel: TSecurityImpersonationLevel = SecurityImpersonation;
@@ -73,7 +73,7 @@ function MakeCopyViaDirectImpersonation(
 
 // Logon a user using credentials
 function MakeLogonToken(
-  out Token: IToken;
+  out Token: IToken3;
   LogonType: TSecurityLogonType;
   const Domain: String;
   const User: String;
@@ -83,7 +83,7 @@ function MakeLogonToken(
 
 // Logon a user via S4U
 function MakeS4ULogonToken(
-  out Token: IToken;
+  out Token: IToken3;
   const Domain : String;
   const User: String;
   const Source: TTokenSource;
@@ -92,7 +92,7 @@ function MakeS4ULogonToken(
 
 // Create a new token from scratch
 function MakeNewToken(
-  out Token: IToken;
+  out Token: IToken3;
   TokenTypeEx: TTokenTypeEx;
   const User: ISid;
   DisableUser: Boolean;
@@ -112,7 +112,7 @@ uses
   Ntapi.ntpsapi, NtUtils.Tokens.Impersonate, NtUtils.Tokens, NtUtils.WinStation,
   NtUtils.Processes, NtUtils.Processes.Info, NtUtils.Threads, NtUtils.Objects,
   NtUtils.Tokens.Logon, NtUtils.Lsa.Sid,
-  DelphiUiLib.Reflection, System.SysUtils, TU.Tokens3;
+  DelphiUiLib.Reflection, System.SysUtils;
 
 function MakeAnonymousToken;
 var

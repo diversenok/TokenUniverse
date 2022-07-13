@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms,
-  UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Types,
+  UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens3, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
   NtUtils;
 
@@ -88,7 +88,7 @@ uses
   UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
   Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker, TU.Tokens3,
+  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker,
   Ntapi.ntobapi, TU.Tokens3.Open;
 
 {$R *.dfm}
@@ -199,7 +199,7 @@ end;
 
 procedure TDialogCreateToken.ButtonOKClick;
 var
-  Token: IToken;
+  Token: IToken3;
   Expires: TLargeInteger;
   OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: TTokenMandatoryPolicy;

@@ -5,9 +5,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.Buttons, TU.Tokens, System.ImageList, Vcl.ImgList,
+  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList,
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
-  TU.Tokens.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
+  TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
   Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, UI.Prototypes.Acl, TU.Tokens3;
 
@@ -98,7 +98,7 @@ type
     procedure EditUserDblClick(Sender: TObject);
     procedure EditAppContainerDblClick(Sender: TObject);
   private
-    Token: IToken;
+    Token: IToken3;
     SessionSource: TSessionSource;
     IntegritySource: TIntegritySource;
     CaptionSubscription: IAutoReleasable;
@@ -136,7 +136,7 @@ type
     procedure UpdateAuditTab;
     procedure UpdateLogonTab;
   public
-    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
+    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken3);
   end;
 
 implementation
@@ -562,7 +562,7 @@ begin
   (Sender as TCheckBox).Font.Style := [fsBold];
 end;
 
-constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: IToken);
+constructor TInfoDialog.CreateFromToken(AOwner: TComponent; SrcToken: IToken3);
 begin
   Assert(Assigned(SrcToken));
   Token := SrcToken;

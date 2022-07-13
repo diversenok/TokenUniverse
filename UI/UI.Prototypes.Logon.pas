@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, NtUtils.Lsa.Logon,
-  TU.Tokens, Ntapi.WinNt, Vcl.StdCtrls, Ntapi.ntseapi, NtUtils;
+  TU.Tokens3, Ntapi.WinNt, Vcl.StdCtrls, Ntapi.ntseapi, NtUtils;
 
 type
   TFrameLogon = class(TFrame)
@@ -21,7 +21,7 @@ type
     procedure BtnSetRefClick(Sender: TObject);
     procedure CheckBoxReferenceClick(Sender: TObject);
   private
-    Token: IToken;
+    Token: IToken3;
     LogonSource: TLogonSessionSource;
     OriginSubscription: IAutoReleasable;
     FlagsSubscription: IAutoReleasable;
@@ -30,8 +30,8 @@ type
     function GetSubscribed: Boolean;
   public
     property Subscribed: Boolean read GetSubscribed;
-    procedure SubscribeToken(const Token: IToken);
-    procedure UnsubscribeToken(const Dummy: IToken = nil);
+    procedure SubscribeToken(const Token: IToken3);
+    procedure UnsubscribeToken(const Dummy: IToken3 = nil);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -41,7 +41,7 @@ implementation
 uses
   Vcl.Graphics, UI.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
   Ntapi.NtSecApi, DelphiUiLib.Reflection.Records, DelphiUiLib.Reflection,
-  TU.Tokens3, NtUiLib.Errors;
+  NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -133,7 +133,7 @@ begin
       Cell[1] := IntToHexEx(NewOrigin);
 end;
 
-procedure TFrameLogon.SubscribeToken(const Token: IToken);
+procedure TFrameLogon.SubscribeToken(const Token: IToken3);
 var
   Statistics: TTokenStatistics;
   WellKnownSid: ISid;
@@ -205,7 +205,7 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-procedure TFrameLogon.UnsubscribeToken(const Dummy: IToken);
+procedure TFrameLogon.UnsubscribeToken(const Dummy: IToken3);
 begin
   if Assigned(Token) then
     Token := nil;

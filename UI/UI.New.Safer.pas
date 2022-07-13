@@ -38,7 +38,7 @@ implementation
 
 uses
   UI.Settings, UI.MainForm, TU.Suggestions, System.UITypes,
-  NtUtils.WinSafer, NtUiLib.Errors, TU.Tokens;
+  NtUtils.WinSafer, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -52,7 +52,7 @@ end;
 procedure TDialogSafer.ButtonOKClick;
 var
   hxNewToken: IHandle;
-  NewToken: IToken;
+  NewToken: IToken3;
   LevelName: String;
 begin
   SafexComputeSaferTokenById(hxNewToken, Token.Handle, GetScopeId, GetLevelId,

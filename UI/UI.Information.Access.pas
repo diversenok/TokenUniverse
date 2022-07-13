@@ -18,7 +18,7 @@ type
 implementation
 
 uses
-  Ntapi.ntseapi, TU.Tokens.Types;
+  Ntapi.ntseapi, TU.Tokens.Old.Types;
 
 {$R *.dfm}
 

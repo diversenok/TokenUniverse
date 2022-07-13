@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, System.ImageList, Vcl.ImgList, Vcl.ComCtrls,
-  TU.Tokens, VclEx.ListView;
+  TU.Tokens3, VclEx.ListView;
 
 type
   TFrameTokenList = class(TFrame)
@@ -19,21 +19,21 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     procedure ClearAll;
-    function AddToken(Token: IToken; Group: Integer = 0): IToken;
+    function AddToken(Token: IToken3; Group: Integer = 0): IToken3;
     procedure DeleteToken(Item: TListItemEx; SelectNext: Boolean = False);
     procedure RenameToken(NewName: String; Item: TListItemEx);
-    function GetSelectedToken: IToken;
-    function GetToken(Item: TListItemEx): IToken;
+    function GetSelectedToken: IToken3;
+    function GetToken(Item: TListItemEx): IToken3;
   end;
 
 implementation
 
 uses
-  TU.Tokens.Types, TU.Tokens3;
+  TU.Tokens.Old.Types;
 
 {$R *.dfm}
 
-function TFrameTokenList.AddToken(Token: IToken; Group: Integer): IToken;
+function TFrameTokenList.AddToken(Token: IToken3; Group: Integer): IToken3;
 var
   Item: TListItemEx;
 begin
@@ -83,17 +83,17 @@ begin
     ListViewTokens.Items[OriginalIndex].Selected := True;}
 end;
 
-function TFrameTokenList.GetSelectedToken: IToken;
+function TFrameTokenList.GetSelectedToken: IToken3;
 begin
   if Assigned(ListViewTokens.Selected) then
-    Result := IToken(ListViewTokens.Selected.OwnedIData)
+    Result := IToken3(ListViewTokens.Selected.OwnedIData)
   else
     Result := nil;
 end;
 
-function TFrameTokenList.GetToken(Item: TListItemEx): IToken;
+function TFrameTokenList.GetToken(Item: TListItemEx): IToken3;
 begin
-  Result := IToken(Item.OwnedIData);
+  Result := IToken3(Item.OwnedIData);
 end;
 
 procedure TFrameTokenList.RenameToken(NewName: String; Item: TListItemEx);

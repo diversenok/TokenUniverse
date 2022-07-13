@@ -5,7 +5,7 @@ interface
 // TODO: check delayed import
 
 uses
-  Winapi.Windows, TU.Tokens;
+  Winapi.Windows, TU.Tokens3;
 
 type
   TCredentialsCallback = reference to procedure(Domain, User, Password: String);
@@ -16,7 +16,7 @@ procedure PromptCredentialsUI(ParentWindow: HWND;
 implementation
 
 uses
-  System.SysUtils, Winapi.Ole2, TU.Tokens.Types, NtUtils,
+  System.SysUtils, Winapi.Ole2, TU.Tokens.Old.Types, NtUtils,
   NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUiLib.Errors, NtUiLib.Exceptions;
 
 type

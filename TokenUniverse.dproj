@@ -138,7 +138,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="UI\UI.TokenListFrame.pas">
             <Form>FrameTokenList</Form>
             <DesignClass>TFrame</DesignClass>
@@ -174,7 +173,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.CreateToken.pas">
             <Form>DialogCreateToken</Form>
         </DCCReference>
-        <DCCReference Include="Core\TU.Tokens.Types.pas"/>
+        <DCCReference Include="Core\TU.Tokens.Old.Types.pas"/>
         <DCCReference Include="UI\UI.Modal.Columns.pas">
             <Form>DialogColumns</Form>
         </DCCReference>

@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens3,
   UI.Prototypes.Forms, VclEx.ListView, UI.Prototypes.AccessMask;
 
 type
@@ -17,20 +17,20 @@ type
     GroupBoxAccess: TGroupBox;
     AccessMaskFrame: TAccessMaskFrame;
   public
-    class function ExecuteDuplication(AOwner: TComponent; Source: IToken):
-      IToken;
+    class function ExecuteDuplication(AOwner: TComponent; Source: IToken3):
+      IToken3;
   end;
 
 implementation
 
 uses
-   TU.Tokens.Types, Ntapi.ntseapi, Ntapi.ntobapi, TU.Tokens3, NtUtils,
+   TU.Tokens.Old.Types, Ntapi.ntseapi, Ntapi.ntobapi, NtUtils,
    TU.Tokens3.Open, NtUiLib.Errors;
 
 {$R *.dfm}
 
 class function TDialogAccess.ExecuteDuplication(AOwner: TComponent;
-  Source: IToken): IToken;
+  Source: IToken3): IToken3;
 var
   BasicInfo: TObjectBasicInformation;
 begin

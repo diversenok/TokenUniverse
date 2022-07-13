@@ -5,9 +5,9 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
-  Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment,
+  Vcl.ExtCtrls, Vcl.Menus, TU.Tokens3, NtUtils.Environment,
   NtUtils.Objects, Ntapi.WinUser, NtUtils, Ntapi.ProcessThreadsApi,
-  NtUtils.Processes.Create, Ntapi.ntpsapi, TU.Tokens3;
+  NtUtils.Processes.Create, Ntapi.ntpsapi;
 
 type
   TDialogRun = class(TChildForm)
@@ -91,18 +91,18 @@ type
     procedure CheckBoxManifestThemesEnter(Sender: TObject);
   private
     ExecMethod: TCreateProcessMethod;
-    FToken: IToken;
+    FToken: IToken3;
     ParentAccessMask: TProcessAccessMask;
     hxParentProcess: IHandle;
     AppContainerSid: ISid;
     CaptionSubscription: IAutoReleasable;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(const InfoClass: TTokenStringClass; const NewCaption: String);
-    procedure SetToken(const Value: IToken);
+    procedure SetToken(const Value: IToken3);
     procedure UpdateDesktopList;
     function TryOpenToken(const Info: TProcessInfo): TNtxStatus;
   public
-    property UseToken: IToken read FToken write SetToken;
+    property UseToken: IToken3 read FToken write SetToken;
     constructor Create(AOwner: TComponent); override;
   end;
 
@@ -490,7 +490,7 @@ begin
   LinkLabelToken.Caption := 'Using token: <a>' + NewCaption + '</a>';
 end;
 
-procedure TDialogRun.SetToken(const Value: IToken);
+procedure TDialogRun.SetToken(const Value: IToken3);
 begin
   FToken := Value;
 
@@ -502,7 +502,7 @@ end;
 
 function TDialogRun.TryOpenToken;
 var
-  Token: IToken;
+  Token: IToken3;
   PID: TProcessId;
 begin
   if not (piProcessHandle in Info.ValidFields) then

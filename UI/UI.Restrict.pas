@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls, TU.Tokens,
+  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes.Forms, UI.Prototypes.Privileges,
   UI.Prototypes.Groups, NtUtils.Security.Sid, Ntapi.WinNt, Ntapi.ntseapi,
   NtUtils, TU.Tokens3;
@@ -31,7 +31,7 @@ type
     procedure ButtonOKClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
   private
-    Token: IToken;
+    Token: IToken3;
     ManuallyAdded: TArray<TGroup>;
     CaptionSubscription: IAutoReleasable;
     PrivilegesSubscription: IAutoReleasable;
@@ -42,7 +42,7 @@ type
     procedure ChangedGroups(const Status: TNtxStatus; const NewGroups: TArray<TGroup>);
     procedure InspectGroup(const Group: TGroup);
   public
-    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken);
+    constructor CreateFromToken(AOwner: TComponent; SrcToken: IToken3);
   end;
 
 implementation
@@ -69,7 +69,7 @@ end;
 
 procedure TDialogRestrictToken.ButtonOKClick;
 var
-  NewToken: IToken;
+  NewToken: IToken3;
 begin
   MakeFilteredToken(
     NewToken,

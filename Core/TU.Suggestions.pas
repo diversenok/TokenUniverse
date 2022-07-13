@@ -3,23 +3,23 @@ unit TU.Suggestions;
 interface
 
 uses
-  Ntapi.WinUser, TU.Tokens, TU.Tokens3;
+  Ntapi.WinUser, TU.Tokens3;
 
 // Default messages
 procedure ShowSuccessMessage(Parent: THwnd; const Text: String);
 function AskForConfirmation(Parent: THwnd; const Text: String): Boolean;
 
 // Operation suggestions
-function AskConvertToPrimary(Parent: THwnd; var Token: IToken): Boolean;
-function AskConvertToImpersonation(Parent: THwnd; var Token: IToken): Boolean;
-procedure CheckSandboxInert(Parent: THwnd; const Token: IToken);
+function AskConvertToPrimary(Parent: THwnd; var Token: IToken3): Boolean;
+function AskConvertToImpersonation(Parent: THwnd; var Token: IToken3): Boolean;
+procedure CheckSandboxInert(Parent: THwnd; const Token: IToken3);
 
 implementation
 
 uses
   Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
   System.TypInfo, NtUtils, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
-  TU.Tokens3.Open, TU.Tokens.Types, NtUiLib.Errors, System.SysUtils;
+  TU.Tokens3.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +
@@ -53,7 +53,7 @@ end;
 function AskConvertToPrimary;
 var
   CurrentType: TTokenType;
-  NewToken: IToken;
+  NewToken: IToken3;
 begin
   Result := False;
 
@@ -81,7 +81,7 @@ end;
 function AskConvertToImpersonation;
 var
   CurrentType: TTokenType;
-  NewToken: IToken;
+  NewToken: IToken3;
 begin
   Result := False;
 

@@ -6,24 +6,24 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
   VirtualTreesEx, DevirtualizedTree, DevirtualizedTree.Provider,
-  NtUtils, TU.Tokens, TU.Tokens3;
+  NtUtils, TU.Tokens3;
 
 type
   ITokenNode = interface (INodeProvider)
     ['{756BC6F1-77F9-4BDA-BEB8-0789E418278D}']
-    function GetToken: IToken;
+    function GetToken: IToken3;
     procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
-    property Token: IToken read GetToken;
+    property Token: IToken3 read GetToken;
   end;
 
   TTokenNode = class (TCustomNodeProvider, ITokenNode)
-    FToken: IToken;
+    FToken: IToken3;
     FSubscriptions: array [TTokenStringClass] of IAutoReleasable;
     procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
     procedure ColumnUpdated(const Column: TTokenStringClass; const NewValue: String);
-    function GetToken: IToken;
+    function GetToken: IToken3;
     function GetColumn(Index: Integer): String; override;
-    constructor Create(const Source: IToken; Columns: TVirtualTreeColumns);
+    constructor Create(const Source: IToken3; Columns: TVirtualTreeColumns);
   end;
 
   TFrameTokens = class(TFrame)
@@ -35,21 +35,21 @@ type
     procedure VSTColumnVisibilityChanged(const Sender: TBaseVirtualTree;
       const Column: TColumnIndex; Visible: Boolean);
   private
-    function GetSelectedToken: IToken;
-    function GetAllTokens: TArray<IToken>;
+    function GetSelectedToken: IToken3;
+    function GetAllTokens: TArray<IToken3>;
     function GetHasSelectedToken: Boolean;
   public
     function AddRoot(const Caption: String; Root: PVirtualNode = nil): PVirtualNode;
-    procedure AddMany(const Tokens: TArray<IToken>; Root: PVirtualNode = nil);
+    procedure AddMany(const Tokens: TArray<IToken3>; Root: PVirtualNode = nil);
     function Add(
-      const Token: IToken;
+      const Token: IToken3;
       Root: PVirtualNode = nil;
       CaptureFocus: Boolean = True
     ): PVirtualNode;
     procedure DeleteSelected;
     property HasSelectedToken: Boolean read GetHasSelectedToken;
-    property Selected: IToken read GetSelectedToken;
-    property Tokens: TArray<IToken> read GetAllTokens;
+    property Selected: IToken3 read GetSelectedToken;
+    property Tokens: TArray<IToken3> read GetAllTokens;
     constructor Create(Owner: TComponent); override;
   end;
 
@@ -138,7 +138,7 @@ end;
 
 procedure TFrameTokens.AddMany;
 var
-  Token: IToken;
+  Token: IToken3;
 begin
   VST.BeginUpdateAuto;
 
@@ -217,8 +217,8 @@ end;
 
 function TFrameTokens.GetAllTokens;
 begin
-  Result := TArray.Convert<PVirtualNode, IToken>(VST.Nodes.ToArray,
-    function (const Node: PVirtualNode; out Token: IToken): Boolean
+  Result := TArray.Convert<PVirtualNode, IToken3>(VST.Nodes.ToArray,
+    function (const Node: PVirtualNode; out Token: IToken3): Boolean
     var
       TokenNode: ITokenNode;
     begin

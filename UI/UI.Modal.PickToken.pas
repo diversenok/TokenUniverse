@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Messages, System.SysUtils,  System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  VclEx.ListView, UI.Prototypes.Forms, TU.Tokens;
+  VclEx.ListView, UI.Prototypes.Forms, TU.Tokens3;
 
 type
   TDialogPickToken = class(TChildForm)
@@ -15,21 +15,21 @@ type
     procedure ListViewTokensSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
   public
-    class function Execute(AOwner: TComponent): IToken;
+    class function Execute(AOwner: TComponent): IToken3;
   end;
 
 implementation
 
 uses
-  UI.MainForm, TU.Tokens3;
+  UI.MainForm;
 
 {$R *.dfm}
 
 { TDialogSelectToken }
 
-class function TDialogPickToken.Execute(AOwner: TComponent): IToken;
+class function TDialogPickToken.Execute(AOwner: TComponent): IToken3;
 var
-  Tokens: TArray<IToken>;
+  Tokens: TArray<IToken3>;
   i: Integer;
 begin
   with TDialogPickToken.Create(AOwner) do

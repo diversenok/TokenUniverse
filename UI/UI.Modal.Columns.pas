@@ -26,7 +26,7 @@ var
 implementation
 
 uses
-  TU.Tokens, UI.Settings, TU.Tokens3;
+  UI.Settings, TU.Tokens3;
 
 {$R *.dfm}
 
