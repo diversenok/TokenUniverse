@@ -72,7 +72,7 @@ begin
   end;
 end;
 
-procedure TDialogAccessAndType.SetSelectedType(const Value: TTokenTypeEx);
+procedure TDialogAccessAndType.SetSelectedType;
 begin
   RadioButtonAnonymous.Checked := (Value = ttAnonymous);
   RadioButtonIdentification.Checked := (Value = ttIdentification);

@@ -25,7 +25,7 @@ implementation
 
 { TSessionDialog }
 
-class function TComboDialog.PickSession(AOwner: TComponent): Cardinal;
+class function TComboDialog.PickSession;
 var
   SessionSource: TSessionSource;
 begin

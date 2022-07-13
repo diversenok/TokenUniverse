@@ -167,7 +167,7 @@ begin
   Result := VST.AddChild(Root, Provider);
 end;
 
-constructor TFrameTokens.Create(Owner: TComponent);
+constructor TFrameTokens.Create;
 const
   DEFAULT_COLUMN_OPTIONS = [
     TVTColumnOption.coAllowClick,

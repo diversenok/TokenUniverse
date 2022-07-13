@@ -24,7 +24,7 @@ type
     CurrentlyAssigned: TArray<TPrivilege>;
   public
     procedure DeleyedCreate;
-    procedure LoadForSid(Sid: ISid);
+    procedure LoadForSid(const Sid: ISid);
   end;
 
 implementation
@@ -36,7 +36,7 @@ uses
 
 { TFrameLsaPolicy }
 
-procedure TFrameLsaPrivileges.ButtonApplyClick(Sender: TObject);
+procedure TFrameLsaPrivileges.ButtonApplyClick;
 var
   Added, Removed: TArray<TPrivilege>;
 begin
@@ -70,7 +70,7 @@ begin
   PrivilegesFrame.LoadEvery;
 end;
 
-procedure TFrameLsaPrivileges.LoadForSid(Sid: ISid);
+procedure TFrameLsaPrivileges.LoadForSid;
 var
   Status: TNtxStatus;
 begin
@@ -97,12 +97,12 @@ begin
   PrivilegesFrame.Checked := CurrentlyAssigned;
 end;
 
-procedure TFrameLsaPrivileges.MenuDisableClick(Sender: TObject);
+procedure TFrameLsaPrivileges.MenuDisableClick;
 begin
   PrivilegesFrame.AdjustSelected(0);
 end;
 
-procedure TFrameLsaPrivileges.MenuEnableClick(Sender: TObject);
+procedure TFrameLsaPrivileges.MenuEnableClick;
 begin
   PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED or
     SE_PRIVILEGE_ENABLED_BY_DEFAULT);

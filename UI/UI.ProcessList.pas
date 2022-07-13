@@ -69,7 +69,7 @@ uses
 
 { TProcessListDialog }
 
-function TProcessListDialog.AddChild(ParentIndex: Integer): TListItemEx;
+function TProcessListDialog.AddChild;
 var
   NextSibling, ParentIndent: Integer;
 begin
@@ -88,7 +88,7 @@ begin
   Result.Indent := ParentIndent + 1;
 end;
 
-procedure TProcessListDialog.ButtonOkClick(Sender: TObject);
+procedure TProcessListDialog.ButtonOkClick;
 begin
   if PickThread and Assigned(ListView.Selected) then
     ThreadID := TThreadListDialog.Execute(Self,
@@ -97,7 +97,7 @@ begin
   ModalResult := mrOk;
 end;
 
-procedure TProcessListDialog.cmActionClick(Sender: TObject);
+procedure TProcessListDialog.cmActionClick;
 var
   Process: PProcessItemEx;
   hxProcess: IHandle;
@@ -150,8 +150,7 @@ begin
   inherited;
 end;
 
-class function TProcessListDialog.Execute(AOwner: TComponent;
-  AllowSelectThread: Boolean): TClientIdEx;
+class function TProcessListDialog.Execute;
 var
   Process: PProcessEntry;
 begin
@@ -174,8 +173,7 @@ begin
   end;
 end;
 
-procedure TProcessListDialog.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TProcessListDialog.FormKeyDown;
 begin
   if Key = VK_F5 then
     ReloadProcessList(Sender);
@@ -190,8 +188,7 @@ begin
   end;
 end;
 
-procedure TProcessListDialog.ListViewSelectItem(Sender: TObject;
-  Item: TListItem; Selected: Boolean);
+procedure TProcessListDialog.ListViewSelectItem;
 begin
   ButtonOk.Enabled := (ListView.SelCount <> 0);
 end;
@@ -210,7 +207,7 @@ begin
   TProcessIcons.ImageList.EndUpdate;
 end;
 
-procedure TProcessListDialog.ReloadProcessList(Sender: TObject);
+procedure TProcessListDialog.ReloadProcessList;
 var
   i, ChildInd, ParentInd: integer;
   Processes: TArray<TProcessEntry>;
@@ -248,7 +245,7 @@ begin
   SearchBoxChange(Sender);
 end;
 
-procedure TProcessListDialog.SearchBoxChange(Sender: TObject);
+procedure TProcessListDialog.SearchBoxChange;
 var
   i, LoopAdded: integer;
   SearchQuery: String;
@@ -307,19 +304,19 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-procedure TProcessListDialog.SearchBoxRightButtonClick(Sender: TObject);
+procedure TProcessListDialog.SearchBoxRightButtonClick;
 begin
   SearchBox.Text := '';
 end;
 
 { TProcessItemEx }
 
-constructor TProcessItemEx.Create(const Src: TProcessEntry);
+constructor TProcessItemEx.Create;
 begin
   Process := Src;
 end;
 
-function TProcessItemEx.IsSuspended: Boolean;
+function TProcessItemEx.IsSuspended;
 var
   i: Integer;
 begin

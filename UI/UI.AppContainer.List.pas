@@ -25,12 +25,12 @@ type
     procedure SearchBoxRightButtonClick(Sender: TObject);
   private
     Profiles: TArray<ISid>;
-    procedure UpdateProfileList(LockToUser: ISid = nil);
+    procedure UpdateProfileList(const LockToUser: ISid = nil);
     procedure UpdateAppContainers;
     function User: ISid;
   public
-    class procedure Execute(AOwner: TComponent; LockToUser: ISid = nil); static;
-    class function ExecuteSelect(AOwner: TComponent; LockToUser: ISid): ISid;
+    class procedure Execute(AOwner: TComponent; const LockToUser: ISid = nil); static;
+    class function ExecuteSelect(AOwner: TComponent; const LockToUser: ISid): ISid;
       static;
   end;
 
@@ -44,24 +44,24 @@ uses
 
 { TDialogACProfiles }
 
-procedure TDialogACProfiles.ButtonCloseClick(Sender: TObject);
+procedure TDialogACProfiles.ButtonCloseClick;
 begin
   Close;
 end;
 
-procedure TDialogACProfiles.cmInspectClick(Sender: TObject);
+procedure TDialogACProfiles.cmInspectClick;
 begin
   if Assigned(lvAppContainers.Selected) then
     TDialogAppContainer.Execute(FormMain, User,
       ISid(lvAppContainers.Selected.OwnedIData));
 end;
 
-procedure TDialogACProfiles.cmSelectClick(Sender: TObject);
+procedure TDialogACProfiles.cmSelectClick;
 begin
   ModalResult := mrOk;
 end;
 
-class procedure TDialogACProfiles.Execute(AOwner: TComponent; LockToUser: ISid);
+class procedure TDialogACProfiles.Execute;
 begin
   with TDialogACProfiles.CreateChild(AOwner, cfmDesktop) do
   begin
@@ -71,8 +71,7 @@ begin
   end;
 end;
 
-class function TDialogACProfiles.ExecuteSelect(AOwner: TComponent;
-  LockToUser: ISid): ISid;
+class function TDialogACProfiles.ExecuteSelect;
 begin
   with TDialogACProfiles.CreateChild(AOwner, cfmApplication) do
   begin
@@ -89,7 +88,7 @@ begin
   end;
 end;
 
-procedure TDialogACProfiles.SearchBoxChange(Sender: TObject);
+procedure TDialogACProfiles.SearchBoxChange;
 var
   i: Integer;
 begin
@@ -106,7 +105,7 @@ begin
   lvAppContainers.Items.EndUpdate;
 end;
 
-procedure TDialogACProfiles.SearchBoxRightButtonClick(Sender: TObject);
+procedure TDialogACProfiles.SearchBoxRightButtonClick;
 begin
   SearchBox.Text := '';
 end;
@@ -141,7 +140,7 @@ begin
   lvAppContainers.Items.EndUpdate;
 end;
 
-procedure TDialogACProfiles.UpdateProfileList(LockToUser: ISid = nil);
+procedure TDialogACProfiles.UpdateProfileList;
 var
   i: Integer;
 begin
@@ -167,7 +166,7 @@ begin
   end;
 end;
 
-function TDialogACProfiles.User: ISid;
+function TDialogACProfiles.User;
 begin
   Result := Profiles[cbProfile.ItemIndex];
 end;

@@ -127,7 +127,7 @@ uses
 
 { TFormMain }
 
-procedure TFormMain.ActionAssignToProcess(Sender: TObject);
+procedure TFormMain.ActionAssignToProcess;
 var
   Token: IToken;
 begin
@@ -143,7 +143,7 @@ begin
   ShowSuccessMessage(Handle, 'The token was successfully assigned to the process.');
 end;
 
-procedure TFormMain.ActionAssignToThread(Sender: TObject);
+procedure TFormMain.ActionAssignToThread;
 var
   Token: IToken;
   TID: TThreadId;
@@ -166,25 +166,25 @@ begin
   ShowSuccessMessage(Handle, 'The token was successfully assigned to the thread.');
 end;
 
-procedure TFormMain.ActionClose(Sender: TObject);
+procedure TFormMain.ActionClose;
 begin
   if not TSettings.PromptOnHandleClose or AskForConfirmation(Handle,
     'Are you sure you want to close selected handles?') then
     TokenView.DeleteSelected;
 end;
 
-procedure TFormMain.ActionDuplicate(Sender: TObject);
+procedure TFormMain.ActionDuplicate;
 begin
   TokenView.Add(TDialogAccessAndType.ExecuteDuplication(Self,
     TokenView.Selected));
 end;
 
-procedure TFormMain.ActionDuplicateHandle(Sender: TObject);
+procedure TFormMain.ActionDuplicateHandle;
 begin
   TokenView.Add(TDialogAccess.ExecuteDuplication(Self, TokenView.Selected));
 end;
 
-procedure TFormMain.ActionLogon(Sender: TObject);
+procedure TFormMain.ActionLogon;
 begin
   TLogonDialog.Create(Self).Show;
 end;
@@ -194,7 +194,7 @@ begin
   TInfoDialog.CreateFromToken(Self, TokenView.Selected);
 end;
 
-procedure TFormMain.ActionOpenEffective(Sender: TObject);
+procedure TFormMain.ActionOpenEffective;
 var
   Token: IToken;
 begin
@@ -203,7 +203,7 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.ActionOpenLinked(Sender: TObject);
+procedure TFormMain.ActionOpenLinked;
 var
   Linked: IToken;
 begin
@@ -211,7 +211,7 @@ begin
   TokenView.Add(Linked);
 end;
 
-procedure TFormMain.ActionOpenProcess(Sender: TObject);
+procedure TFormMain.ActionOpenProcess;
 var
   Token: IToken;
 begin
@@ -221,7 +221,7 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.ActionOpenSelf(Sender: TObject);
+procedure TFormMain.ActionOpenSelf;
 var
   Token: IToken;
 begin
@@ -229,7 +229,7 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.ActionOpenThread(Sender: TObject);
+procedure TFormMain.ActionOpenThread;
 var
   Token: IToken;
 begin
@@ -239,18 +239,18 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.ActionRename(Sender: TObject);
+procedure TFormMain.ActionRename;
 begin
   if TokenView.VST.SelectedCount = 1 then
     TokenView.VST.EditNode(TokenView.VST.FocusedNode, Integer(tsCaption));
 end;
 
-procedure TFormMain.ActionRestrict(Sender: TObject);
+procedure TFormMain.ActionRestrict;
 begin
   TDialogRestrictToken.CreateFromToken(Self, TokenView.Selected);
 end;
 
-procedure TFormMain.ActionRevertCurrentThread(Sender: TObject);
+procedure TFormMain.ActionRevertCurrentThread;
 begin
   NtxSetThreadTokenById(NtCurrentThreadId, nil).RaiseOnError;
 
@@ -258,7 +258,7 @@ begin
   ShowSuccessMessage(Handle, 'The token was successfully revoked from the current thread.');
 end;
 
-procedure TFormMain.ActionRevertThread(Sender: TObject);
+procedure TFormMain.ActionRevertThread;
 var
   TID: TThreadId;
 begin
@@ -271,7 +271,7 @@ begin
   ShowSuccessMessage(Handle, 'The token was successfully revoked from the thread.');
 end;
 
-procedure TFormMain.ActionRunWithToken(Sender: TObject);
+procedure TFormMain.ActionRunWithToken;
 begin
   if Assigned(TokenView.Selected) then
     with TDialogRun.Create(Self) do
@@ -281,12 +281,12 @@ begin
     end;
 end;
 
-procedure TFormMain.ActionSearch(Sender: TObject);
+procedure TFormMain.ActionSearch;
 begin
   TFormHandleSearch.Create(Self).Show;
 end;
 
-procedure TFormMain.ActionSendHandle(Sender: TObject);
+procedure TFormMain.ActionSendHandle;
 var
   hxTargetProcess: IHandle;
   NewHandle: NativeUInt;
@@ -301,12 +301,12 @@ begin
     'Its value is %d (0x%X)', [NewHandle, NewHandle]));
 end;
 
-procedure TFormMain.ActionSteal(Sender: TObject);
+procedure TFormMain.ActionSteal;
 begin
   TProcessListDialog.Execute(Self, False);//TODO: Copy handle from process
 end;
 
-procedure TFormMain.ActionWTSQuery(Sender: TObject);
+procedure TFormMain.ActionWTSQuery;
 var
   Token: IToken;
 begin
@@ -314,19 +314,19 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.CurrentUserChanged(Sender: TObject);
+procedure TFormMain.CurrentUserChanged;
 begin
   if Active or (Sender <> TimerStateCheck) then
     Caption := 'Token Universe :: Main Window [' + FormatCurrentState + ']';
 end;
 
-procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFormMain.FormClose;
 begin
   TFormEvents.OnMainFormClose.Invoke;
   TokenView.Free;
 end;
 
-procedure TFormMain.FormCreate(Sender: TObject);
+procedure TFormMain.FormCreate;
 var
   Token: IToken;
   Elevation: TTokenElevationInfo;
@@ -362,13 +362,13 @@ begin
   SetForegroundWindow(TokenView.VST.Handle);
 end;
 
-procedure TFormMain.RunAsAdminClick(Sender: TObject);
+procedure TFormMain.RunAsAdminClick;
 begin
   ReSvcDelegate(rmElevate);
   Close;
 end;
 
-procedure TFormMain.RunAsSystemClick(Sender: TObject);
+procedure TFormMain.RunAsSystemClick;
 var
   Status: TNtxStatus;
 begin
@@ -387,7 +387,7 @@ begin
   Close;
 end;
 
-procedure TFormMain.SelectColumnsClick(Sender: TObject);
+procedure TFormMain.SelectColumnsClick;
 begin
   TDialogColumns.CreateChild(Self, cfmApplication).ShowModal;
 end;
@@ -406,46 +406,45 @@ begin
       Menu.Visible := TokenView.VST.SelectedCount = 1;
 end;
 
-procedure TFormMain.ListViewTokensEdited(Sender: TObject; Item: TListItem;
-  var S: string);
+procedure TFormMain.ListViewTokensEdited;
 begin
   TokenView.Selected.Caption := S;
 end;
 
-procedure TFormMain.MenuCloseCreationDlgClick(Sender: TObject);
+procedure TFormMain.MenuCloseCreationDlgClick;
 begin
   TSettings.NoCloseCreationDialogs := not TSettings.NoCloseCreationDialogs;
   MenuCloseCreationDlg.Checked := TSettings.NoCloseCreationDialogs;
 end;
 
-procedure TFormMain.MenuExitClick(Sender: TObject);
+procedure TFormMain.MenuExitClick;
 begin
   Close;
 end;
 
-procedure TFormMain.MenuPromptHandleCloseClick(Sender: TObject);
+procedure TFormMain.MenuPromptHandleCloseClick;
 begin
   TSettings.PromptOnHandleClose := not TSettings.PromptOnHandleClose;
   MenuPromptHandleClose.Checked := TSettings.PromptOnHandleClose;
 end;
 
-procedure TFormMain.MenuRunProgramClick(Sender: TObject);
+procedure TFormMain.MenuRunProgramClick;
 begin
   TDialogRun.Create(Self).Show;
 end;
 
-procedure TFormMain.MenuSafeImpersonationClick(Sender: TObject);
+procedure TFormMain.MenuSafeImpersonationClick;
 begin
   TSettings.UseSafeImpersonation := not TSettings.UseSafeImpersonation;
   MenuSafeImpersonation.Checked := TSettings.UseSafeImpersonation;
 end;
 
-procedure TFormMain.MenuSystemAuditClick(Sender: TObject);
+procedure TFormMain.MenuSystemAuditClick;
 begin
   TDialogSystemAudit.Create(Self).Show;
 end;
 
-procedure TFormMain.NewAnonymousClick(Sender: TObject);
+procedure TFormMain.NewAnonymousClick;
 var
   Token: IToken;
 begin
@@ -453,7 +452,7 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.NewNtCreateTokenClick(Sender: TObject);
+procedure TFormMain.NewNtCreateTokenClick;
 begin
   TDialogCreateToken.Create(Self).Show;
 end;

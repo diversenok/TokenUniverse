@@ -10,8 +10,11 @@ uses
 type
   TCredentialsCallback = reference to procedure(Domain, User, Password: String);
 
-procedure PromptCredentialsUI(ParentWindow: HWND;
-  Callback: TCredentialsCallback; AllowNoPassword: Boolean = False);
+procedure PromptCredentialsUI(
+  ParentWindow: HWND;
+  const Callback: TCredentialsCallback;
+  AllowNoPassword: Boolean = False
+);
 
 implementation
 
@@ -48,8 +51,7 @@ function CredUnPackAuthenticationBufferW(dwFlags: Cardinal;
   var cchMaxDomainname: Cardinal; pszPassword: PWideChar;
   var cchMaxPassword: Cardinal): LongBool; stdcall; external credui delayed;
 
-procedure PromptCredentialsUI(ParentWindow: HWND;
-  Callback: TCredentialsCallback; AllowNoPassword: Boolean = False);
+procedure PromptCredentialsUI;
 var
   CredInfo: TCredUIInfoW;
   ErrorCode, AuthPackage: Cardinal;

@@ -24,13 +24,12 @@ uses
 
 { TDialogGrantedAccess }
 
-procedure TDialogGrantedAccess.ButtonCloseClick(Sender: TObject);
+procedure TDialogGrantedAccess.ButtonCloseClick;
 begin
   Close;
 end;
 
-class procedure TDialogGrantedAccess.Execute(AOwner: TComponent;
-  Access: TAccessMask);
+class procedure TDialogGrantedAccess.Execute;
 begin
   with TDialogGrantedAccess.CreateChild(AOwner, cfmApplication) do
   begin
@@ -45,7 +44,7 @@ begin
   end;
 end;
 
-procedure TDialogGrantedAccess.FormKeyPress(Sender: TObject; var Key: Char);
+procedure TDialogGrantedAccess.FormKeyPress;
 begin
   if Key = #27 then
     Close;

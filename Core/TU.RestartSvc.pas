@@ -38,7 +38,7 @@ uses
 
 { Restart Service client functions }
 
-function ReSvcCreateService(IsSystemPlus: Boolean): TNtxStatus;
+function ReSvcCreateService;
 var
   CommandLine: String;
   hxSvc: IScmHandle;
@@ -67,7 +67,7 @@ begin
   ScmxDeleteService(hxSvc.Handle);
 end;
 
-procedure ReSvcDelegate(RestartMethod: TRestartMethod);
+procedure ReSvcDelegate;
 var
   Options: TCreateProcessOptions;
   ProcessInfo: TProcessInfo;

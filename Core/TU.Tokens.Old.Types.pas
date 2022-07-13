@@ -35,8 +35,7 @@ uses
 
 { TTokenTypeExHelper }
 
-function TTokenTypeExHelper.SecurityImpersonationLevel:
-  TSecurityImpersonationLevel;
+function TTokenTypeExHelper.SecurityImpersonationLevel;
 begin
   if Self = ttPrimary then
     Result := SecurityImpersonation
@@ -44,7 +43,7 @@ begin
     Result := TSecurityImpersonationLevel(Self);
 end;
 
-function TTokenTypeExHelper.TokenTypeValue: TTokenType;
+function TTokenTypeExHelper.TokenTypeValue;
 begin
   if Self = ttPrimary then
     Result := TokenPrimary
@@ -52,7 +51,7 @@ begin
     Result := TokenImpersonation;
 end;
 
-function TTokenTypeExHelper.ToString: String;
+function TTokenTypeExHelper.ToString;
 begin
   case Self of
     ttAnonymous: Result :=  'Anonymous';
@@ -63,7 +62,7 @@ begin
   end
 end;
 
-function FormatCurrentState: String;
+function FormatCurrentState;
 begin
   if not LsaxGetFullUserName(Result).IsSuccess then
     Result := 'Unknown user';
@@ -71,7 +70,7 @@ begin
   Result := Result + ' @ ' + IntToStr(RtlGetCurrentPeb.SessionId);
 end;
 
-function TokenGenericMapping: TGenericMapping;
+function TokenGenericMapping;
 var
   Types: TArray<TObjectTypeInfo>;
 begin

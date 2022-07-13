@@ -52,7 +52,7 @@ const
 
 { TFrameLogon }
 
-procedure TFrameLogon.BtnSetOriginClick(Sender: TObject);
+procedure TFrameLogon.BtnSetOriginClick;
 var
   Status: TNtxStatus;
 begin
@@ -68,23 +68,23 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TFrameLogon.BtnSetRefClick(Sender: TObject);
+procedure TFrameLogon.BtnSetRefClick;
 begin
   Assert(Assigned(Token));
   Token.SetSessionReference(CheckBoxReference.Checked);
 end;
 
-procedure TFrameLogon.CheckBoxReferenceClick(Sender: TObject);
+procedure TFrameLogon.CheckBoxReferenceClick;
 begin
   CheckBoxReference.Font.Style := [fsBold];
 end;
 
-procedure TFrameLogon.ComboOriginChange(Sender: TObject);
+procedure TFrameLogon.ComboOriginChange;
 begin
   ComboOrigin.Color := ColorSettings.clStale;
 end;
 
-constructor TFrameLogon.Create(AOwner: TComponent);
+constructor TFrameLogon.Create;
 begin
   inherited;
   // TODO: TLogonSessionSource triggers enumeration, postpone it until
@@ -99,7 +99,7 @@ begin
   inherited;
 end;
 
-function TFrameLogon.GetSubscribed: Boolean;
+function TFrameLogon.GetSubscribed;
 begin
   Result := Assigned(Token);
 end;

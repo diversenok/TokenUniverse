@@ -75,7 +75,7 @@ type
     procedure ButtonLoadClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
-    procedure AddGroup(NewGroup: TGroup);
+    procedure AddGroup(const NewGroup: TGroup);
     procedure UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
     procedure EditSingleGroup(const Value: TGroup);
   public
@@ -368,24 +368,24 @@ begin
   end;
 end;
 
-procedure TDialogCreateToken.MenuEnabledClick(Sender: TObject);
+procedure TDialogCreateToken.MenuEnabledClick;
 begin
  PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT or
    SE_PRIVILEGE_ENABLED);
 end;
 
-procedure TDialogCreateToken.MenuEnabledModifClick(Sender: TObject);
+procedure TDialogCreateToken.MenuEnabledModifClick;
 begin
   PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED);
 end;
 
-procedure TDialogCreateToken.MenuRemoveClick(Sender: TObject);
+procedure TDialogCreateToken.MenuRemoveClick;
 begin
   GroupsFrame.VST.DeleteSelectedNodes;
   UpdatePrimaryAndOwner(guRemove);
 end;
 
-procedure TDialogCreateToken.UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
+procedure TDialogCreateToken.UpdatePrimaryAndOwner;
 var
   i: Integer;
   Group: TGroup;

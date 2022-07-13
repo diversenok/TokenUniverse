@@ -122,7 +122,7 @@ uses
 
 {$R *.dfm}
 
-procedure TDialogRun.ButtonACClick(Sender: TObject);
+procedure TDialogRun.ButtonACClick;
 var
   hxToken: IHandle;
   User: ISid;
@@ -138,7 +138,7 @@ begin
   EditAppContainer.Text := UnvxAppContainerToString(AppContainerSid, User);
 end;
 
-procedure TDialogRun.ButtonBrowseClick(Sender: TObject);
+procedure TDialogRun.ButtonBrowseClick;
 begin
   if OpenDlg.Execute(Handle) then
   begin
@@ -147,7 +147,7 @@ begin
   end;
 end;
 
-procedure TDialogRun.ButtonChooseParentClick(Sender: TObject);
+procedure TDialogRun.ButtonChooseParentClick;
 var
   ClientIdEx: TClientIdEx;
 begin
@@ -159,12 +159,12 @@ begin
     ClientIdEx.ProcessID]);
 end;
 
-procedure TDialogRun.ButtonCloseClick(Sender: TObject);
+procedure TDialogRun.ButtonCloseClick;
 begin
   Close;
 end;
 
-procedure TDialogRun.ButtonRunClick(Sender: TObject);
+procedure TDialogRun.ButtonRunClick;
 var
   Options: TCreateProcessOptions;
   ProcInfo: TProcessInfo;
@@ -364,7 +364,7 @@ begin
     TryOpenToken(ProcInfo);
 end;
 
-procedure TDialogRun.ChangedExecMethod(Sender: TObject);
+procedure TDialogRun.ChangedExecMethod;
 var
   OldParentAccessMask: TProcessAccessMask;
 begin
@@ -409,7 +409,7 @@ begin
   RadioButtonManifestCustom.Checked := True;
 end;
 
-constructor TDialogRun.Create(AOwner: TComponent);
+constructor TDialogRun.Create;
 begin
   inherited CreateChild(AOwner, cfmDesktop);
   ParentAccessMask := PROCESS_CREATE_PROCESS;
@@ -425,13 +425,13 @@ begin
   RadioButtonManifestExternal.Checked := True;
 end;
 
-procedure TDialogRun.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TDialogRun.FormClose;
 begin
   UseToken := nil;
   MenuClearParentClick(Sender);
 end;
 
-procedure TDialogRun.FormCreate(Sender: TObject);
+procedure TDialogRun.FormCreate;
 begin
   EditExe.Text := GetEnvironmentVariable('ComSpec');
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
@@ -442,8 +442,7 @@ begin
   UpdateDesktopList;
 end;
 
-procedure TDialogRun.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TDialogRun.FormKeyDown;
 begin
   // Ctrl+N to switch between tabs
   if (Shift = [ssCtrl]) and (Key >= Ord('1')) and (Key <= Ord('4')) then
@@ -454,32 +453,31 @@ begin
     ButtonBrowse.Click;
 end;
 
-procedure TDialogRun.LinkLabelTokenLinkClick(Sender: TObject;
-  const Link: string; LinkType: TSysLinkType);
+procedure TDialogRun.LinkLabelTokenLinkClick;
 begin
   if Assigned(FToken) then
     TInfoDialog.CreateFromToken(Self, FToken);
 end;
 
-procedure TDialogRun.MenuClearACClick(Sender: TObject);
+procedure TDialogRun.MenuClearACClick;
 begin
   AppContainerSid := nil;
   EditAppContainer.Text := 'No';
 end;
 
-procedure TDialogRun.MenuClearParentClick(Sender: TObject);
+procedure TDialogRun.MenuClearParentClick;
 begin
   hxParentProcess := nil;
   EditParent.Text := '<not specified>';
 end;
 
-procedure TDialogRun.MenuCmdClick(Sender: TObject);
+procedure TDialogRun.MenuCmdClick;
 begin
   EditExe.Text := GetEnvironmentVariable('ComSpec');
   ButtonRun.SetFocus;
 end;
 
-procedure TDialogRun.MenuSelfClick(Sender: TObject);
+procedure TDialogRun.MenuSelfClick;
 begin
   EditExe.Text := ParamStr(0);
   ButtonRun.SetFocus;

@@ -27,18 +27,18 @@ uses
 
 { TDialogSystemAudit }
 
-constructor TDialogSystemAudit.Create(AOwner: TComponent);
+constructor TDialogSystemAudit.Create;
 begin
   inherited CreateChild(AOwner, cfmDesktop);
 end;
 
-procedure TDialogSystemAudit.FormCreate(Sender: TObject);
+procedure TDialogSystemAudit.FormCreate;
 begin
   FrameAudit.OnApplyClick := SetSystemAudit;
   FrameAudit.LoadForSystem;
 end;
 
-procedure TDialogSystemAudit.FormKeyPress(Sender: TObject; var Key: Char);
+procedure TDialogSystemAudit.FormKeyPress;
 begin
   if Key = #27 then
     Close;

@@ -106,14 +106,13 @@ uses
 
 { TSessionSource }
 
-constructor TSessionSource.Create(OwnedComboBox: TComboBox;
-  SelectCurrent: Boolean);
+constructor TSessionSource.Create;
 begin
   ComboBox := OwnedComboBox;
   RefreshSessionList(SelectCurrent);
 end;
 
-function TSessionSource.GetSession: Cardinal;
+function TSessionSource.GetSession;
 begin
   Assert(Assigned(ComboBox));
 
@@ -123,7 +122,7 @@ begin
     Result := Sessions[ComboBox.ItemIndex].SessionId;
 end;
 
-procedure TSessionSource.RefreshSessionList(SelectCurrent: Boolean);
+procedure TSessionSource.RefreshSessionList;
 var
   i: Integer;
 begin
@@ -147,7 +146,7 @@ begin
   ComboBox.Items.EndUpdate;
 end;
 
-procedure TSessionSource.SetSession(const Value: Cardinal);
+procedure TSessionSource.SetSession;
 var
   i: Integer;
 begin
@@ -168,7 +167,7 @@ end;
 
 { TIntegritySource }
 
-constructor TIntegritySource.Create(OwnedComboBox: TComboBox);
+constructor TIntegritySource.Create;
 begin
   ComboBox := OwnedComboBox;
   RefreshList;
@@ -218,7 +217,7 @@ begin
   end;
 end;
 
-procedure TIntegritySource.SetIntegrity(Value: Cardinal);
+procedure TIntegritySource.SetIntegrity;
 begin
   Assert(Assigned(ComboBox));
 
@@ -285,8 +284,7 @@ end;
 
 { TAccessMaskSource }
 
-class function TAccessMaskSource.GetAccessMask(
-  ListView: TListView): TAccessMask;
+class function TAccessMaskSource.GetAccessMask;
 var
   i: integer;
 begin
@@ -298,8 +296,7 @@ begin
       Result := Result or AccessValues[i];
 end;
 
-class procedure TAccessMaskSource.InitAccessEntries(ListView: TListView;
-  Access: TAccessMask);
+class procedure TAccessMaskSource.InitAccessEntries;
 var
   i: integer;
   AccessGroup: TAccessGroup;
@@ -325,13 +322,13 @@ end;
 
 { TLogonSessionSource }
 
-constructor TLogonSessionSource.Create(OwnedComboBox: TComboBox);
+constructor TLogonSessionSource.Create;
 begin
   ComboBox := OwnedComboBox;
   UpdateLogonSessions;
 end;
 
-function TLogonSessionSource.GetSelected: TLuid;
+function TLogonSessionSource.GetSelected;
 begin
   Assert(ComboBox.Items.Count = Length(FLogonSessions));
 
@@ -348,7 +345,7 @@ begin
     Result := FLogonSessions[ComboBox.ItemIndex];
 end;
 
-procedure TLogonSessionSource.SetSelected(const Value: TLuid);
+procedure TLogonSessionSource.SetSelected;
 var
   i: integer;
 begin
@@ -386,7 +383,7 @@ end;
 
 { TCellSource }
 
-constructor TCellSource.Create(Row: TRowSource; ColumnIndex: Integer);
+constructor TCellSource.Create;
 begin
   Self.Row := Row;
   Self.ColumnIndex := ColumnIndex;
@@ -453,7 +450,7 @@ begin
   Result := Token;
 end;
 
-constructor TTokenViewSource.Create(OwnedListView: TListViewEx);
+constructor TTokenViewSource.Create;
 var
   tsc: TTokenStringClass;
   ColumnCount: Integer;
@@ -496,7 +493,7 @@ begin
   end;
 end;
 
-procedure TTokenViewSource.Delete(Index: Integer);
+procedure TTokenViewSource.Delete;
 begin
   // This will delete the item, the assiciated row object, unsubscribe
   // all column events and close the token
@@ -509,7 +506,7 @@ begin
   inherited;
 end;
 
-function TTokenViewSource.GetCount: Integer;
+function TTokenViewSource.GetCount;
 begin
   Assert(Assigned(ListView));
   Result := ListView.Items.Count;

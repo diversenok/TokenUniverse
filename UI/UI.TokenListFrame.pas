@@ -65,7 +65,7 @@ begin
   SearchBox.Text := '';
 end;
 
-constructor TFrameTokenList.Create(AOwner: TComponent);
+constructor TFrameTokenList.Create;
 var
   i: integer;
 begin
@@ -74,8 +74,7 @@ begin
     ComboBoxColumn.Items.Add(ListViewTokens.Columns[i].Caption);
 end;
 
-procedure TFrameTokenList.DeleteToken(Item: TListItemEx;
-  SelectNext: Boolean = False);
+procedure TFrameTokenList.DeleteToken;
 begin
   Item.Delete;
 
@@ -96,13 +95,13 @@ begin
   Result := IToken(Item.OwnedIData);
 end;
 
-procedure TFrameTokenList.RenameToken(NewName: String; Item: TListItemEx);
+procedure TFrameTokenList.RenameToken;
 begin
   IToken(Item.OwnedIData).Caption := NewName;
   Item.Caption := NewName; // TODO: move to OnCaptionChange
 end;
 
-procedure TFrameTokenList.SearchBoxChange(Sender: TObject);
+procedure TFrameTokenList.SearchBoxChange;
 var
   SearchPattern: String;
   i: Integer;
@@ -121,7 +120,7 @@ begin
         GroupID := -1;
 end;
 
-procedure TFrameTokenList.SearchBoxRightButtonClick(Sender: TObject);
+procedure TFrameTokenList.SearchBoxRightButtonClick;
 begin
   SearchBox.Text := '';
 end;

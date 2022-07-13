@@ -48,8 +48,7 @@ begin
   end;
 end;
 
-procedure TDialogPickToken.ListViewTokensSelectItem(Sender: TObject;
-  Item: TListItem; Selected: Boolean);
+procedure TDialogPickToken.ListViewTokensSelectItem;
 begin
   ButtonOK.Enabled := Assigned(ListViewTokens.Selected);
 end;

@@ -39,7 +39,7 @@ uses
 
 { TThreadListDialog }
 
-procedure TThreadListDialog.cmActionClick(Sender: TObject);
+procedure TThreadListDialog.cmActionClick;
 var
   Thread: TClientId;
   hxThread: IHandle;
@@ -80,8 +80,7 @@ begin
   end;
 end;
 
-constructor TThreadListDialog.CreateFrom(AOwner: TComponent;
-  const Process: TProcessEntry);
+constructor TThreadListDialog.CreateFrom;
 var
   i: Integer;
 begin
@@ -115,8 +114,7 @@ begin
   ListViewThreads.Items.EndUpdate;
 end;
 
-class function TThreadListDialog.Execute(AOwner: TComponent;
-  const Process: TProcessEntry): NativeUInt;
+class function TThreadListDialog.Execute;
 begin
   with TThreadListDialog.CreateFrom(AOwner, Process) do
   begin
@@ -132,13 +130,12 @@ begin
   end;
 end;
 
-procedure TThreadListDialog.ListViewThreadsDblClick(Sender: TObject);
+procedure TThreadListDialog.ListViewThreadsDblClick;
 begin
   ModalResult := mrOk;
 end;
 
-procedure TThreadListDialog.ListViewThreadsSelectItem(Sender: TObject;
-  Item: TListItem; Selected: Boolean);
+procedure TThreadListDialog.ListViewThreadsSelectItem;
 begin
   ButtonOk.Enabled := (ListViewThreads.SelCount <> 0);
 end;

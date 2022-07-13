@@ -38,8 +38,8 @@ type
     Info: TAppContainerInfo;
     ChildrenInitialized: Boolean;
   public
-    procedure Load(UserSid, AppContainerSid: ISid);
-    class procedure Execute(AOwner: TComponent; UserSid, AppContainerSid: ISid);
+    procedure Load(const UserSid, AppContainerSid: ISid);
+    class procedure Execute(AOwner: TComponent; const UserSid, AppContainerSid: ISid);
       static;
   end;
 
@@ -53,25 +53,24 @@ uses
 
 { TFormAppContainer }
 
-procedure TDialogAppContainer.ButtonCloseClick(Sender: TObject);
+procedure TDialogAppContainer.ButtonCloseClick;
 begin
   Close;
 end;
 
-procedure TDialogAppContainer.tbxSidDblClick(Sender: TObject);
+procedure TDialogAppContainer.tbxSidDblClick;
 begin
   TDialogSidView.CreateView(Owner, AppContainer);
 end;
 
-procedure TDialogAppContainer.cmInspectClick(Sender: TObject);
+procedure TDialogAppContainer.cmInspectClick;
 begin
   if Assigned(lvChildren.Selected) then
     TDialogAppContainer.Execute(FormMain, User,
       ISid(lvChildren.Selected.OwnedIData));
 end;
 
-class procedure TDialogAppContainer.Execute(AOwner: TComponent; UserSid,
-  AppContainerSid: ISid);
+class procedure TDialogAppContainer.Execute;
 begin
   with TDialogAppContainer.CreateChild(AOwner, cfmDesktop) do
   begin
@@ -80,8 +79,7 @@ begin
   end;
 end;
 
-procedure TDialogAppContainer.lnkParentLinkClick(Sender: TObject;
-  const Link: string; LinkType: TSysLinkType);
+procedure TDialogAppContainer.lnkParentLinkClick;
 var
   ParentAC: ISid;
 begin
@@ -89,13 +87,12 @@ begin
   TDialogAppContainer.Execute(FormMain, User, ParentAC);
 end;
 
-procedure TDialogAppContainer.lnkUserLinkClick(Sender: TObject;
-  const Link: string; LinkType: TSysLinkType);
+procedure TDialogAppContainer.lnkUserLinkClick;
 begin
   TDialogSidView.CreateView(Owner, User);
 end;
 
-procedure TDialogAppContainer.Load(UserSid, AppContainerSid: ISid);
+procedure TDialogAppContainer.Load;
 begin
   User := UserSid;
   AppContainer := AppContainerSid;
@@ -115,7 +112,7 @@ begin
   end;
 end;
 
-procedure TDialogAppContainer.PagesChange(Sender: TObject);
+procedure TDialogAppContainer.PagesChange;
 var
   Children: TArray<ISid>;
   ChildInfo: TAppContainerInfo;

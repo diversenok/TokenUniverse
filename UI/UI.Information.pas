@@ -167,21 +167,21 @@ begin
     Result[i] := Groups[i].Sid;
 end;
 
-procedure TInfoDialog.ActionGroupDisable(Sender: TObject);
+procedure TInfoDialog.ActionGroupDisable;
 begin
   if GroupsMemberFrame.VST.SelectedCount > 0 then
     Token.AdjustGroups(GroupsToSids(GroupsMemberFrame.Selected),
       SE_GROUP_DISABLED).RaiseOnError;
 end;
 
-procedure TInfoDialog.ActionGroupEnable(Sender: TObject);
+procedure TInfoDialog.ActionGroupEnable;
 begin
   if GroupsMemberFrame.VST.SelectedCount > 0 then
     Token.AdjustGroups(GroupsToSids(GroupsMemberFrame.Selected),
       SE_GROUP_ENABLED).RaiseOnError;
 end;
 
-procedure TInfoDialog.ActionGroupReset(Sender: TObject);
+procedure TInfoDialog.ActionGroupReset;
 begin
   if GroupsMemberFrame.VST.SelectedCount > 0 then
     Token.AdjustGroupsReset.RaiseOnError;
@@ -207,7 +207,7 @@ begin
     Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.ActionPrivilegeDisable(Sender: TObject);
+procedure TInfoDialog.ActionPrivilegeDisable;
 begin
   if PrivilegesFrame.VST.SelectedCount <> 0 then
     RaiseOnWarningOrError(Token.AdjustPrivileges(
@@ -215,7 +215,7 @@ begin
       True));
 end;
 
-procedure TInfoDialog.ActionPrivilegeEnable(Sender: TObject);
+procedure TInfoDialog.ActionPrivilegeEnable;
 begin
   if PrivilegesFrame.VST.SelectedCount <> 0 then
     RaiseOnWarningOrError(Token.AdjustPrivileges(
@@ -223,7 +223,7 @@ begin
       True));
 end;
 
-procedure TInfoDialog.ActionPrivilegeRemove(Sender: TObject);
+procedure TInfoDialog.ActionPrivilegeRemove;
 begin
   if PrivilegesFrame.VST.SelectedCount = 0 then
     Exit;
@@ -237,7 +237,7 @@ begin
     True));
 end;
 
-procedure TInfoDialog.BtnSetIntegrityClick(Sender: TObject);
+procedure TInfoDialog.BtnSetIntegrityClick;
 var
   Status: TNtxStatus;
 begin
@@ -253,7 +253,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetOwnerClick(Sender: TObject);
+procedure TInfoDialog.BtnSetOwnerClick;
 var
   Sid: ISid;
   Status: TNtxStatus;
@@ -271,7 +271,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetPolicyClick(Sender: TObject);
+procedure TInfoDialog.BtnSetPolicyClick;
 var
   Policy: TTokenMandatoryPolicy;
   Status: TNtxStatus;
@@ -297,7 +297,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetPrimaryClick(Sender: TObject);
+procedure TInfoDialog.BtnSetPrimaryClick;
 var
   Sid: ISid;
   Status: TNtxStatus;
@@ -316,7 +316,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetSessionClick(Sender: TObject);
+procedure TInfoDialog.BtnSetSessionClick;
 var
   Status: TNtxStatus;
 begin
@@ -331,7 +331,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetUIAccessClick(Sender: TObject);
+procedure TInfoDialog.BtnSetUIAccessClick;
 var
   UIAccess: LongBool;
   Status: TNtxStatus;
@@ -353,7 +353,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetVAllowedClick(Sender: TObject);
+procedure TInfoDialog.BtnSetVAllowedClick;
 var
   Status: TNtxStatus;
 begin
@@ -370,7 +370,7 @@ begin
   Status.RaiseOnError;
 end;
 
-procedure TInfoDialog.BtnSetVEnabledClick(Sender: TObject);
+procedure TInfoDialog.BtnSetVEnabledClick;
 var
   Status: TNtxStatus;
 begin
@@ -556,7 +556,7 @@ begin
   end;
 end;
 
-procedure TInfoDialog.CheckBoxClick(Sender: TObject);
+procedure TInfoDialog.CheckBoxClick;
 begin
   Assert(Sender is TCheckBox);
   (Sender as TCheckBox).Font.Style := [fsBold];
@@ -573,12 +573,12 @@ begin
   Show;
 end;
 
-procedure TInfoDialog.DoCloseForm(Sender: TObject);
+procedure TInfoDialog.DoCloseForm;
 begin
   Close;
 end;
 
-procedure TInfoDialog.EditAppContainerDblClick(Sender: TObject);
+procedure TInfoDialog.EditAppContainerDblClick;
 var
   Info: TAppContainerInfo;
 begin
@@ -586,7 +586,7 @@ begin
     TDialogAppContainer.Execute(FormMain, Info.User, Info.Package);
 end;
 
-procedure TInfoDialog.EditUserDblClick(Sender: TObject);
+procedure TInfoDialog.EditUserDblClick;
 var
   User: TGroup;
 begin
@@ -594,13 +594,13 @@ begin
     TDialogSidView.CreateView(FormMain, User.Sid);
 end;
 
-procedure TInfoDialog.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TInfoDialog.FormClose;
 begin
   IntegritySource.Free;
   SessionSource.Free;
 end;
 
-procedure TInfoDialog.FormCreate(Sender: TObject);
+procedure TInfoDialog.FormCreate;
 begin
   SessionSource := TSessionSource.Create(ComboSession, False);
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
@@ -629,8 +629,7 @@ begin
     [GroupsRestrictedFrame.VST.RootNodeCount]);
 end;
 
-procedure TInfoDialog.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TInfoDialog.FormKeyDown;
 begin
   if Key = VK_F5 then
     Refresh;
@@ -641,13 +640,13 @@ begin
   TDialogSidView.CreateView(Self, Group.Sid);
 end;
 
-procedure TInfoDialog.ListViewAdvancedResize(Sender: TObject);
+procedure TInfoDialog.ListViewAdvancedResize;
 begin
   // HACK: designs-time AutoSize causes horizontal scrollbar to appear
   ListViewAdvanced.Columns[1].AutoSize := True;
 end;
 
-procedure TInfoDialog.ListViewGeneralDblClick(Sender: TObject);
+procedure TInfoDialog.ListViewGeneralDblClick;
 var
   BasicInfo: TObjectBasicInformation;
 begin
@@ -657,7 +656,7 @@ begin
     TDialogGrantedAccess.Execute(Owner, BasicInfo.GrantedAccess);
 end;
 
-procedure TInfoDialog.PageControlChange(Sender: TObject);
+procedure TInfoDialog.PageControlChange;
 begin
   if PageControl.ActivePageIndex = TabObject.TabIndex then
     UpdateObjectTab
@@ -749,7 +748,7 @@ begin
   end;
 end;
 
-procedure TInfoDialog.SetStaleColor(Sender: TObject);
+procedure TInfoDialog.SetStaleColor;
 begin
   Assert(Sender is TComboBox);
   (Sender as TComboBox).Color := ColorSettings.clStale;

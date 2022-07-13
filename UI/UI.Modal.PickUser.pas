@@ -50,7 +50,7 @@ type
       DisableAttributes: Boolean = False): TGroup;
     class function PickEditOne(AOwner: TComponent; const Group: TGroup;
       DisableAttributes: Boolean = False): TGroup;
-    class procedure PickEditMultiple(AOwner: TComponent; Groups: TArray<TGroup>;
+    class procedure PickEditMultiple(AOwner: TComponent; const Groups: TArray<TGroup>;
       out AttributesToAdd, AttributesToDelete: TGroupAttributes);
   end;
 

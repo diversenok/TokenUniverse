@@ -55,7 +55,7 @@ uses
 
 { TFrameAudit }
 
-procedure TFrameAudit.ButtonApplyClick(Sender: TObject);
+procedure TFrameAudit.ButtonApplyClick;
 var
   i: Integer;
 begin
@@ -66,7 +66,7 @@ begin
     ApplyProc(AuditPolicy);
 end;
 
-procedure TFrameAudit.FillRow(Index: Integer);
+procedure TFrameAudit.FillRow;
 const
   ColumnToFlag: array [1 .. 4] of Integer = (
     PER_USER_AUDIT_SUCCESS_INCLUDE, PER_USER_AUDIT_SUCCESS_EXCLUDE,
@@ -89,8 +89,7 @@ begin
         Cell[ColumnInd] := '?';
 end;
 
-procedure TFrameAudit.ListViewContextPopup(Sender: TObject; MousePos: TPoint;
-  var Handled: Boolean);
+procedure TFrameAudit.ListViewContextPopup;
 var
   i: Integer;
 begin
@@ -144,7 +143,7 @@ begin
   end;
 end;
 
-procedure TFrameAudit.Load(const Policy: TArray<TAuditPolicyEntry>);
+procedure TFrameAudit.Load;
 var
   Ind: Integer;
 begin
@@ -203,37 +202,37 @@ begin
   Load(AuditPolicy);
 end;
 
-procedure TFrameAudit.MenuExcFailClick(Sender: TObject);
+procedure TFrameAudit.MenuExcFailClick;
 begin
   ModifySelected(PER_USER_AUDIT_FAILURE_EXCLUDE, not MenuExcFail.Checked);
 end;
 
-procedure TFrameAudit.MenuExcSuccClick(Sender: TObject);
+procedure TFrameAudit.MenuExcSuccClick;
 begin
   ModifySelected(PER_USER_AUDIT_SUCCESS_EXCLUDE, not MenuExcSucc.Checked);
 end;
 
-procedure TFrameAudit.MenuFailureClick(Sender: TObject);
+procedure TFrameAudit.MenuFailureClick;
 begin
   ModifySelected(POLICY_AUDIT_EVENT_FAILURE, not MenuFailure.Checked);
 end;
 
-procedure TFrameAudit.MenuIncFailClick(Sender: TObject);
+procedure TFrameAudit.MenuIncFailClick;
 begin
   ModifySelected(PER_USER_AUDIT_FAILURE_INCLUDE, not MenuIncFail.Checked);
 end;
 
-procedure TFrameAudit.MenuIncSuccClick(Sender: TObject);
+procedure TFrameAudit.MenuIncSuccClick;
 begin
   ModifySelected(PER_USER_AUDIT_SUCCESS_INCLUDE, not MenuIncSucc.Checked);
 end;
 
-procedure TFrameAudit.MenuSuccessClick(Sender: TObject);
+procedure TFrameAudit.MenuSuccessClick;
 begin
   ModifySelected(POLICY_AUDIT_EVENT_SUCCESS, not MenuSuccess.Checked);
 end;
 
-procedure TFrameAudit.ModifySelected(Flag: Integer; NewState: Boolean);
+procedure TFrameAudit.ModifySelected;
 var
   i: Integer;
 begin
@@ -257,7 +256,7 @@ begin
   ListView.Items.EndUpdate;
 end;
 
-procedure TFrameAudit.SetApplyEvent(Value: TApplyProc);
+procedure TFrameAudit.SetApplyEvent;
 begin
   ApplyProc := Value;
   ButtonApply.Enabled := Assigned(AuditPolicy) and Assigned(Value);

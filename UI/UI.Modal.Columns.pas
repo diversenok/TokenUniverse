@@ -30,7 +30,7 @@ uses
 
 {$R *.dfm}
 
-procedure TDialogColumns.ButtonOKClick(Sender: TObject);
+procedure TDialogColumns.ButtonOKClick;
 var
   i: Integer;
 begin
@@ -40,7 +40,7 @@ begin
       Include(TSettings.SelectedColumns, TTokenStringClass(i));
 end;
 
-procedure TDialogColumns.FormCreate(Sender: TObject);
+procedure TDialogColumns.FormCreate;
 var
   tsc: TTokenStringClass;
 begin

@@ -40,7 +40,7 @@ begin
   Close;
 end;
 
-procedure TFormHandleSearch.ButtonRefreshClick(Sender: TObject);
+procedure TFormHandleSearch.ButtonRefreshClick;
 var
   Handles: TArray<TSystemHandleEntry>;
   PerProcess: TArray<TArrayGroup<TProcessId, TSystemHandleEntry>>;
@@ -115,13 +115,13 @@ begin
   Frame.ListViewTokens.Items.EndUpdate;
 end;
 
-procedure TFormHandleSearch.cmInspectClick(Sender: TObject);
+procedure TFormHandleSearch.cmInspectClick;
 begin
   if Assigned(Frame.GetSelectedToken()) then
     TInfoDialog.CreateFromToken(FormMain, Frame.GetSelectedToken);
 end;
 
-procedure TFormHandleSearch.cmSaveClick(Sender: TObject);
+procedure TFormHandleSearch.cmSaveClick;
 begin
   if Assigned(Frame.GetSelectedToken()) then
     FormMain.TokenView.Add(Frame.GetSelectedToken);
