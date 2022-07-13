@@ -671,7 +671,7 @@ begin
     FEvents := RetrieveTokenEvents(Statistics.TokenId);
   end;
 
-  Result := FEvents.Data;
+  Result := FEvents.Self;
 end;
 
 function TToken.GetHandle;

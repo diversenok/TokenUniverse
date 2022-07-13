@@ -91,6 +91,10 @@ uses
   Ntapi.crt, NtUtils.Security.Sid,
   DelphiUtils.Arrays, System.SysUtils, UI.Exceptions;
 
+{$BOOLEVAL OFF}
+{$IFOPT R+}{$DEFINE R+}{$ENDIF}
+{$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
 type
   TEventStorage = record
     Identity: TLuid;
@@ -126,7 +130,7 @@ begin
     begin
       {$R-}{$Q-}
       Result := Entry.Identity - Identity;
-      {$R+}{$Q+}
+      {$IFDEF R+}{$R+}{$ENDIF}{$IFDEF Q+}{$Q+}{$ENDIF}
     end
   );
 

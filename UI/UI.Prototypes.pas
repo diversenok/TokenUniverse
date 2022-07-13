@@ -100,6 +100,10 @@ uses
   NtUtils.Lsa.Logon, NtUtils.Lsa.Sid, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection;
 
+{$BOOLEVAL OFF}
+{$IFOPT R+}{$DEFINE R+}{$ENDIF}
+{$IFOPT Q+}{$DEFINE Q+}{$ENDIF}
+
 { TSessionSource }
 
 constructor TSessionSource.Create(OwnedComboBox: TComboBox;
@@ -336,9 +340,9 @@ begin
     if ComboBox.Text = NO_LOGON then
       Result := 0
     else
-    {$R-}
+    {$Q-}{$R-}
       Result := TLuid(StrToUInt64Ex(ComboBox.Text, 'logon ID'));
-    {$R+}
+    {$IFDEF R+}{$R+}{$ENDIF}{$IFDEF Q+}{$Q+}{$ENDIF}
   end
   else
     Result := FLogonSessions[ComboBox.ItemIndex];

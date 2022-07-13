@@ -100,6 +100,7 @@ type
     procedure OnCaptionChange(const InfoClass: TTokenStringClass; const NewCaption: String);
     procedure SetToken(const Value: IToken);
     procedure UpdateDesktopList;
+    function TryOpenToken(const Info: TProcessInfo): TNtxStatus;
   public
     property UseToken: IToken read FToken write SetToken;
     constructor Create(AOwner: TComponent); override;
@@ -116,7 +117,8 @@ uses
   NtUtils.Processes.Create.Manual, NtUtils.Tokens, NtUtils.Csr,
   NtUiLib.TaskDialog, NtUtils.SysUtils, NtUtils.Threads, NtUtils.Manifests,
   NtUtils.Processes.Info, NtUtils.Files.Open, TU.Exec, UI.Information,
-  UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Credentials;
+  UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Credentials,
+  TU.Tokens3.Open;
 
 {$R *.dfm}
 
@@ -166,7 +168,6 @@ procedure TDialogRun.ButtonRunClick(Sender: TObject);
 var
   Options: TCreateProcessOptions;
   ProcInfo: TProcessInfo;
-  hxToken: IHandle;
   AutoCancel: IAutoReleasable;
   ManifestBuilfer: IManifestBuilder;
   ManifestRva: TMemory;
@@ -189,7 +190,7 @@ begin
   Options.hxParentProcess := hxParentProcess;
   Options.AppContainer := AppContainerSid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
-  Options.WindowMode := TShowMode(ComboBoxShowMode.ItemIndex);
+  Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
 
   if Assigned(FToken) then
     Options.hxToken := FToken.Handle;
@@ -212,7 +213,7 @@ begin
   if CheckBoxIgnoreElevation.Checked then
     Include(Options.Flags, poIgnoreElevation);
 
-  if ComboBoxShowMode.ItemIndex <> Integer(SW_SHOW_NORMAL) then
+  if ComboBoxShowMode.ItemIndex <> Integer(TShowMode32.SW_SHOW_NORMAL) then
     Include(Options.Flags, poUseWindowMode);
 
   if CheckBoxRunAsInvoker.State <> cbGrayed then
@@ -358,13 +359,9 @@ begin
       NtxResumeThread(ProcInfo.hxThread.Handle);
   end;
 
-  // Suggest opening the token since we have a handle anyway
-  if Assigned(ProcInfo.hxProcess) and cbxOpenToken.Checked and
-    NtxOpenProcessToken(hxToken, ProcInfo.hxProcess.Handle,
-    MAXIMUM_ALLOWED).IsSuccess then
-    FormMain.TokenView.Add(TToken.Create(hxToken,
-      Format('%s [%d]', [ExtractFileName(EditExe.Text),
-        ProcInfo.ClientId.UniqueProcess])));
+  // Check if we need to open the token since we might have a process handle
+  if cbxOpenToken.Checked then
+    TryOpenToken(ProcInfo);
 end;
 
 procedure TDialogRun.ChangedExecMethod(Sender: TObject);
@@ -501,6 +498,29 @@ begin
     LinkLabelToken.Caption := 'Using token: <not specified>'
   else
     CaptionSubscription := (Value as IToken3).ObserveString(tsCaption, OnCaptionChange);
+end;
+
+function TDialogRun.TryOpenToken;
+var
+  Token: IToken;
+  PID: TProcessId;
+begin
+  if not (piProcessHandle in Info.ValidFields) then
+  begin
+    Result.Location := 'TDialogRun.TryOpenToken';
+    Result.Status := STATUS_INVALID_HANDLE;
+    Exit;
+  end;
+
+  if piProcessID in Info.ValidFields then
+    PID := Info.ClientId.UniqueProcess
+  else
+    PID := 0;
+
+  Result := MakeOpenProcessToken(Token, Info.hxProcess, PID);
+
+  if Result.IsSuccess then
+    FormMain.TokenView.Add(Token);
 end;
 
 procedure TDialogRun.UpdateDesktopList;

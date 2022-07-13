@@ -38,28 +38,25 @@ type
     function GetSelectedToken: IToken;
     function GetAllTokens: TArray<IToken>;
     function GetHasSelectedToken: Boolean;
-    { Private declarations }
   public
-    function AddRoot(Root: PVirtualNode; const Name: String): PVirtualNode;
+    function AddRoot(const Caption: String; Root: PVirtualNode = nil): PVirtualNode;
     procedure AddMany(const Tokens: TArray<IToken>; Root: PVirtualNode = nil);
     function Add(
       const Token: IToken;
-      CaptureFocus: Boolean = True;
-      Root: PVirtualNode = nil
+      Root: PVirtualNode = nil;
+      CaptureFocus: Boolean = True
     ): PVirtualNode;
     procedure DeleteSelected;
-
     property HasSelectedToken: Boolean read GetHasSelectedToken;
     property Selected: IToken read GetSelectedToken;
     property Tokens: TArray<IToken> read GetAllTokens;
-
     constructor Create(Owner: TComponent); override;
   end;
 
 implementation
 
 uses
-  UI.Helper, UI.Settings, VirtualTrees.Header,
+  UI.Helper, UI.Settings, VirtualTrees.Header, VirtualTrees.Types,
   DelphiUtils.Arrays, NtUtils.Errors;
 
 {$R *.dfm}
@@ -146,7 +143,7 @@ begin
   VST.BeginUpdateAuto;
 
   for Token in Tokens do
-    Add(Token, False, Root);
+    Add(Token, Root, False);
 
   VST.SelectSometing;
 end;
@@ -155,8 +152,18 @@ function TFrameTokens.AddRoot;
 var
   Provider: INodeProvider;
 begin
+  if not Assigned(Root) then
+    Root := VST.RootNode;
+
+  VST.BeginUpdateAuto;
+
+  VST.TreeOptions.PaintOptions := VST.TreeOptions.PaintOptions +
+    [TVTPaintOption.toShowRoot];
+
   Provider := TCustomNodeProvider.Create;
   Provider.Column[0] := Caption;
+  Provider.FontStyle := [TFontStyle.fsBold];
+
   Result := VST.AddChild(Root, Provider);
 end;
 
@@ -173,7 +180,6 @@ const
     TVTColumnOption.coSmartResize,
     TVTColumnOption.coAllowFocus,
     TVTColumnOption.coDisableAnimatedResize,
-    TVTColumnOption.coEditable,
     TVTColumnOption.coStyleColor
   ];
 var
@@ -191,10 +197,16 @@ begin
       Width := ColumsInfo[InfoClass].Width;
       Alignment := ColumsInfo[InfoClass].Alignment;
       Options := DEFAULT_COLUMN_OPTIONS;
+      MinWidth := 30;
 
       // Only show selected columns by default
       if InfoClass in TSettings.SelectedColumns then
         Options := Options + [TVTColumnOption.coVisible];
+
+      // The caption column is specal
+      if InfoClass = tsCaption then
+        Options := Options - [TVTColumnOption.coDraggable] +
+          [TVTColumnOption.coEditable, TVTColumnOption.coFixed];
     end;
 end;
 
@@ -240,6 +252,15 @@ var
   Node: PVirtualNode;
   TokenNode: ITokenNode;
 begin
+  if (Column = Integer(tsCaption)) and not Visible then
+  begin
+    // Prevent hiding the caption column
+    VST.Header.Columns[Column].Options := VST.Header.Columns[Column].Options +
+      [TVTColumnOption.coVisible];
+
+    Exit;
+  end;
+
   // Notify each node that it needs to [un]subscribe an info class
   for Node in VST.Nodes do
     if Node.TryGetProvider(ITokenNode, TokenNode) then
@@ -248,7 +269,7 @@ end;
 
 procedure TFrameTokens.VSTEditing;
 begin
-  Allowed := (Column = Integer(tsCaption));
+  Allowed := (Column = Integer(tsCaption)) and HasSelectedToken;
 end;
 
 procedure TFrameTokens.VSTNewText;
