@@ -50,7 +50,7 @@ end;
 procedure TAutoObservers<T>.Notify;
 begin
   // Skip consecutive successful invocations that supply the same value
-  if FHasLastValue and Assigned(FEqualityCheck) and
+  if Status.IsSuccess and FHasLastValue and Assigned(FEqualityCheck) and
     FEqualityCheck(FLastValue, Value) then
     Exit;
 
