@@ -7,9 +7,9 @@ unit TU.Tokens;
 interface
 
 uses
-  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntobapi, NtUtils, NtUtils.Tokens.Info,
-  NtUtils.Objects.Snapshots, NtUtils.Profiles, DelphiUtils.AutoObjects,
-  DelphiUtils.AutoEvents;
+  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntobapi, Ntapi.winsta, NtUtils,
+  NtUtils.Tokens.Info, NtUtils.Objects.Snapshots, NtUtils.Profiles,
+  NtUtils.Lsa.Logon, DelphiUtils.AutoObjects, DelphiUtils.AutoEvents;
 
 type
   ITokenAuditPolicy = IMemory<PTokenAuditPolicy>;
@@ -21,9 +21,14 @@ type
   end;
 
   TTokenStringClass = (
+    { Per-handle }
     tsCaption,                 // User-supplied label
-    tsHandle,                  // Handle value
-    tsAccess,                  // Handle access mask
+    tsHandle,                  // Handle value in hex
+    tsHandleDetailed,          // Handle value in dec and hex
+    tsAccess,                  // Granted access mask as text
+    tsAccessNumeric,           // Granted access mask as value
+
+    { Per kernel object}
     tsHandleCount,             // Number of handles pointing to the object
     tsPagedPoolCharge,         // Number of bytes charged in paged pool
     tsNonPagedPoolCharge,      // Number of bytes charged in non-paged pool
@@ -41,12 +46,16 @@ type
     tsType,                    // Token type and impersonation level
     tsTokenId,                 // Unique token ID
     tsLogonId,                 // Logon session ID
+    tsLogonAuthPackage,        // The name of the authentication packed of the logon session
+    tsLogonType,               // The type of logon from the logon session
+    tsLogonTime,               // The time of logon from the logon session
     tsModifiedId,              // Unique modified ID value
     tsExprires,                // Token expiration time
     tsDynamicCharged,          // Number of bytes changed for the dynamic part of the object
     tsDynamicAvailable,        // Number of bytes available for the dynamic part of the object
     tsRestrictedSids,          // Number of restricting SIDs
     tsSessionId,               // Terminal session ID
+    tsSessionInfo,             // Terminal session information
     tsSandBoxInert,            // Whether bypassing SRP and App Locker is enabled
     tsOrigin,                  // Oringinating logon session ID
     tsElevation,               // Token and logon session elevation state
@@ -85,6 +94,10 @@ type
     tsOriginTrustLevel         // Originating process protection level
   );
 
+  // A subset of strings that are unique for each handle rather than shared
+  // via the kernel object
+  TTokenPerHandleStringClass = tsCaption..tsAccessNumeric;
+
   IToken = interface
     ['{7CF47C07-F5D1-4891-A2B8-83ED0C7419CF}']
     function GetHandle: IHandle;
@@ -112,8 +125,10 @@ type
     function QueryType(out TokenType: TTokenType): TNtxStatus;
     function QueryImpersonation(out Level: TSecurityImpersonationLevel): TNtxStatus;
     function QueryStatistics(out Statistics: TTokenStatistics): TNtxStatus;
+    function QueryLogonInfo(out Info: ILogonSession): TNtxStatus;
     function QueryRestrictedSids(out Sids: TArray<TGroup>): TNtxStatus;
     function QuerySessionId(out SessionId: TSessionId): TNtxStatus;
+    function QuerySessionInfo(out Info: TWinStationInformation): TNtxStatus;
     function QuerySandboxInert(out SandboxInert: LongBool): TNtxStatus;
     function QueryAuditPolicy(out AuditPolicy: ITokenAuditPolicy): TNtxStatus;
     function QueryOrigin(out Origin: TLogonId): TNtxStatus;
@@ -164,8 +179,10 @@ type
     function ObserveType(const Callback: TEventCallback<TNtxStatus, TTokenType>): IAutoReleasable;
     function ObserveImpersonation(const Callback: TEventCallback<TNtxStatus, TSecurityImpersonationLevel>): IAutoReleasable;
     function ObserveStatistics(const Callback: TEventCallback<TNtxStatus, TTokenStatistics>): IAutoReleasable;
+    function ObserveLogonInfo(const Callback: TEventCallback<TNtxStatus, ILogonSession>): IAutoReleasable;
     function ObserveRestrictedSids(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveSessionId(const Callback: TEventCallback<TNtxStatus, TSessionId>): IAutoReleasable;
+    function ObserveSessionInfo(const Callback: TEventCallback<TNtxStatus, TWinStationInformation>): IAutoReleasable;
     function ObserveSandboxInert(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveAuditPolicy(const Callback: TEventCallback<TNtxStatus, ITokenAuditPolicy>): IAutoReleasable;
     function ObserveOrigin(const Callback: TEventCallback<TNtxStatus, TLogonId>): IAutoReleasable;
@@ -216,8 +233,10 @@ type
     function RefreshType: TNtxStatus;
     function RefreshImpersonation: TNtxStatus;
     function RefreshStatistics: TNtxStatus;
+    function RefreshLogonInfo: TNtxStatus;
     function RefreshRestrictedSids: TNtxStatus;
     function RefreshSessionId: TNtxStatus;
+    function RefreshSessionInfo: TNtxStatus;
     function RefreshSandboxInert: TNtxStatus;
     function RefreshAuditPolicy: TNtxStatus;
     function RefreshOrigin: TNtxStatus;
@@ -292,9 +311,10 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.ntpsapi, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
-  DelphiUiLib.Reflection.Numeric, DelphiUiLib.Strings, DelphiUiLib.Reflection,
-  DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.Types,
-  NtUiLib.Reflection.AccessMasks, System.SysUtils, TU.Tokens.Events, TU.Events;
+  NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Reflection.Numeric,
+  DelphiUiLib.Strings, DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings,
+  NtUiLib.Reflection.Types, NtUiLib.Reflection.AccessMasks, System.SysUtils,
+  TU.Tokens.Events, TU.Events;
 
 { Helper functions }
 
@@ -315,6 +335,16 @@ begin
     ' (' + TNumeric.Represent<TSecurityTrustLevel>(SubAuthorities[1]).Text + ')';
 end;
 
+function SessionInfoToString(const Info: TWinStationInformation): String;
+begin
+  Result := IntToStrEx(Info.LogonID);
+
+  if Info.WinStationName <> '' then
+    Result := Format('%s: %s', [Result, Info.WinStationName]);
+
+  Result := Format('%s (%s)', [Result, Info.FullUserName]);
+end;
+
 function TTokenElevationInfo.ToString;
 begin
   Result  := YesNoToString(Elevated) + ' (' + TNumeric.Represent(
@@ -325,12 +355,9 @@ type
   TToken = class (TInterfacedObject, IToken)
     hxToken: IHandle;
     FKernelObjectAddress: Pointer;
-
-    // Per-handle (as opposed to per-kernel-object) strings
-    FCaption, FAccessMask: String;
-
-    OnCaptionChange: TAutoEvent<TTokenStringClass, String>;
-    FEvents: IAutoTokenEvents;
+    FPerHandleStrings: array [TTokenPerHandleStringClass] of String;
+    FPerHandleEvents: array [TTokenPerHandleStringClass] of TAutoEvent<TTokenStringClass, String>;
+    FSharedEvents: IAutoTokenEvents;
 
     // Global subscriptions
     SystemHandlesSubscription: IAutoReleasable;
@@ -347,6 +374,9 @@ type
     function GetCachedKernelAddress: Pointer;
     function GetEvents: TTokenEvents;
     property Events: TTokenEvents read GetEvents;
+    function GetPerHandleString(InfoClass: TTokenPerHandleStringClass): String;
+    procedure SetPerHandleString(InfoClass: TTokenPerHandleStringClass; const Value: String);
+    property PerHandleString[InfoClass: TTokenPerHandleStringClass]: String read GetPerHandleString write SetPerHandleString;
     function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
     function QueryBasicInfo(out Info: TObjectBasicInformation): TNtxStatus;
     function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus;
@@ -362,8 +392,10 @@ type
     function QueryType(out &Type: TTokenType): TNtxStatus;
     function QueryImpersonation(out Level: TSecurityImpersonationLevel): TNtxStatus;
     function QueryStatistics(out Statistics: TTokenStatistics): TNtxStatus;
+    function QueryLogonInfo(out Info: ILogonSession): TNtxStatus;
     function QueryRestrictedSids(out Sids: TArray<TGroup>): TNtxStatus;
     function QuerySessionId(out SessionId: TSessionId): TNtxStatus;
+    function QuerySessionInfo(out Info: TWinStationInformation): TNtxStatus;
     function QuerySandboxInert(out SandboxInert: LongBool): TNtxStatus;
     function QueryAuditPolicy(out AuditPolicy: ITokenAuditPolicy): TNtxStatus;
     function QueryOrigin(out Origin: TLogonId): TNtxStatus;
@@ -412,8 +444,10 @@ type
     function ObserveType(const Callback: TEventCallback<TNtxStatus, TTokenType>): IAutoReleasable;
     function ObserveImpersonation(const Callback: TEventCallback<TNtxStatus, TSecurityImpersonationLevel>): IAutoReleasable;
     function ObserveStatistics(const Callback: TEventCallback<TNtxStatus, TTokenStatistics>): IAutoReleasable;
+    function ObserveLogonInfo(const Callback: TEventCallback<TNtxStatus, ILogonSession>): IAutoReleasable;
     function ObserveRestrictedSids(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveSessionId(const Callback: TEventCallback<TNtxStatus, TSessionId>): IAutoReleasable;
+    function ObserveSessionInfo(const Callback: TEventCallback<TNtxStatus, TWinStationInformation>): IAutoReleasable;
     function ObserveSandboxInert(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveAuditPolicy(const Callback: TEventCallback<TNtxStatus, ITokenAuditPolicy>): IAutoReleasable;
     function ObserveOrigin(const Callback: TEventCallback<TNtxStatus, TLogonId>): IAutoReleasable;
@@ -462,8 +496,10 @@ type
     function RefreshType: TNtxStatus;
     function RefreshImpersonation: TNtxStatus;
     function RefreshStatistics: TNtxStatus;
+    function RefreshLogonInfo: TNtxStatus;
     function RefreshRestrictedSids: TNtxStatus;
     function RefreshSessionId: TNtxStatus;
+    function RefreshSessionInfo: TNtxStatus;
     function RefreshSandboxInert: TNtxStatus;
     function RefreshAuditPolicy: TNtxStatus;
     function RefreshOrigin: TNtxStatus;
@@ -637,11 +673,19 @@ begin
 end;
 
 constructor TToken.Create;
+var
+  i: TTokenStringClass;
 begin
   hxToken := Handle;
-  FCaption := Caption;
   FKernelObjectAddress := KernelObjectAddress;
-  OnCaptionChange.SetCustomInvoker(SafeStringInvoker);
+  FPerHandleStrings[tsCaption] := Caption;
+  FPerHandleStrings[tsHandle] := IntToHexEx(hxToken.Handle, 4);
+  FPerHandleStrings[tsHandleDetailed] := Format('%s (%s)',
+    [IntToStrEx(hxToken.Handle), IntToHexEx(hxToken.Handle, 4)]);
+
+  for i := Low(TTokenPerHandleStringClass) to High(TTokenPerHandleStringClass) do
+    FPerHandleEvents[i].SetCustomInvoker(SafeStringInvoker);
+
   SystemHandlesSubscription := TGlobalEvents.SubscribeHandles(ChangedSystemHandles);
   SystemObjectsSubscription := TGlobalEvents.SubscribeObjects(ChangedSystemObjects);
   LinkedLogonSessionsSubscription := TGlobalEvents.OnLinkLogonSessions.Subscribe(LinkedLogonSessions);
@@ -654,29 +698,40 @@ end;
 
 function TToken.GetCaption;
 begin
-  Result := FCaption;
+  Result := FPerHandleStrings[tsCaption];
 end;
 
 function TToken.GetEvents;
 var
   Statistics: TTokenStatistics;
 begin
-  if not Assigned(FEvents) then
+  if not Assigned(FSharedEvents) then
   begin
     // Establish identity of the token.
     // NOTE: do not use IToken's method to avoid inifinite recursion
     if not NtxToken.Query(hxToken, TokenStatistics, Statistics).IsSuccess then
       Statistics.TokenId := 0;
 
-    FEvents := RetrieveTokenEvents(Statistics.TokenId);
+    FSharedEvents := RetrieveTokenEvents(Statistics.TokenId);
   end;
 
-  Result := FEvents.Self;
+  Result := FSharedEvents.Self;
 end;
 
 function TToken.GetHandle;
 begin
   Result := hxToken;
+end;
+
+function TToken.GetPerHandleString;
+begin
+  {$IFOPT R+}
+  if (InfoClass < Low(TTokenPerHandleStringClass)) or
+    (InfoClass > High(TTokenPerHandleStringClass)) then
+    raise ERangeError.Create('Invalid per-handle token string class');
+  {$ENDIF}
+
+  Result := FPerHandleStrings[InfoClass];
 end;
 
 procedure TToken.LinkedLogonSessions;
@@ -868,6 +923,14 @@ begin
   Result := Events.OnKernelAddress.Subscribe(Callback);
 end;
 
+function TToken.ObserveLogonInfo;
+var
+  Info: ILogonSession;
+begin
+  Callback(QueryLogonInfo(Info), Info);
+  Result := Events.OnLogonInfo.Subscribe(Callback);
+end;
+
 function TToken.ObserveLogonSids;
 var
   Info: TArray<TGroup>;
@@ -988,6 +1051,14 @@ begin
   Result := Events.OnSessionId.Subscribe(Callback);
 end;
 
+function TToken.ObserveSessionInfo;
+var
+  Info: TWinStationInformation;
+begin
+  Callback(QuerySessionInfo(Info), Info);
+  Result := Events.OnSessionInfo.Subscribe(Callback);
+end;
+
 function TToken.ObserveSingletonAttributes;
 var
   Info: TArray<TSecurityAttribute>;
@@ -1016,16 +1087,13 @@ function TToken.ObserveString;
 begin
   Callback(InfoClass, QueryString(InfoClass, ForceRefresh));
 
-  case InfoClass of
-    // Use per-handle event
-    tsCaption: Result := OnCaptionChange.Subscribe(Callback);
-
-    // Assume these per-handle values never change
-    tsHandle, tsAccess: Result := nil;
+  if (InfoClass >= Low(TTokenPerHandleStringClass)) and
+    (InfoClass <= High(TTokenPerHandleStringClass)) then
+    // Subscribe a per-handle event
+    FPerHandleEvents[InfoClass].Subscribe(Callback)
   else
-    // Subscribe for per-kernel-object events
+    // Subscribe a per-kernel-object events
     Result := Events.OnStringChange[InfoClass].Subscribe(Callback);
-  end;
 end;
 
 function TToken.ObserveTrustLevel;
@@ -1150,7 +1218,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    FAccessMask := Info.GrantedAccess.Format<TTokenAccessMask>;
+    PerHandleString[tsAccess] := Info.GrantedAccess.Format<TTokenAccessMask>;
+    PerHandleString[tsAccessNumeric] := IntToHexEx(Info.GrantedAccess, 6);
     Events.StringCache[tsHandleCount] := IntToStrEx(Info.HandleCount);
     Events.StringCache[tsPagedPoolCharge] := BytesToString(Info.PagedPoolCharge);
     Events.StringCache[tsNonPagedPoolCharge] := BytesToString(Info.NonPagedPoolCharge);
@@ -1445,7 +1514,27 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(Auto.CaptureHandle(hToken),
-      'Linked token for ' + FCaption);
+      'Linked token for ' + GetCaption);
+end;
+
+function TToken.QueryLogonInfo;
+var
+  Statistics: TTokenStatistics;
+begin
+  Result := QueryStatistics(Statistics);
+
+  if Result.IsSuccess then
+    Result := LsaxQueryLogonSession(Statistics.AuthenticationId, Info);
+
+  if Result.IsSuccess then
+  begin
+    Events.StringCache[tsLogonAuthPackage] := RtlxStringOrDefault(
+      Info.Data.AuthenticationPackage.ToString, '(None)');
+    Events.StringCache[tsLogonType] := TNumeric.Represent(Info.Data.LogonType).Text;
+    Events.StringCache[tsLogonTime] := TType.Represent(Info.Data.LogonTime).Text;
+  end;
+
+  Events.OnLogonInfo.Notify(Result, Info);
 end;
 
 function TToken.QueryLogonSids;
@@ -1621,6 +1710,21 @@ begin
   Events.OnSessionId.Notify(Result, SessionId);
 end;
 
+function TToken.QuerySessionInfo;
+var
+  SessionId: TSessionId;
+begin
+  Result := QuerySessionId(SessionId);
+
+  if Result.IsSuccess then
+    Result := WsxWinStation.Query(SessionId, WinStationInformation, Info);
+
+  if Result.IsSuccess then
+    Events.StringCache[tsSessionInfo] := SessionInfoToString(Info);
+
+  Events.OnSessionInfo.Notify(Result, Info);
+end;
+
 function TToken.QuerySingletonAttributes;
 begin
   Result := NtxQueryAttributesToken(hxToken, TokenSingletonAttributes,
@@ -1678,27 +1782,37 @@ function TToken.QueryString;
 var
   Success: Boolean;
 begin
-  // Reset the cache on forced refresh without triggering the events
-  if ForceRefresh then
-    Events.FStrings[InfoClass] := '';
+  {$IFOPT R+}
+  if (InfoClass < Low(TTokenStringClass)) or
+    (InfoClass > High(TTokenStringClass)) then
+    raise ERangeError.Create('Invalid token string class');
+  {$ENDIF}
 
-  // Check per-handle properties
   case InfoClass of
-    tsCaption: Exit(FCaption);
-    tsHandle: Exit(IntToHexEx(hxToken.Handle, 4));
-    tsAccess:
+    // Some per-handle properties don't require querying
+    tsCaption, tsHandle, tsHandleDetailed:
+      Exit(PerHandleString[InfoClass]);
+
+    // Others can be refreshed if forced
+    tsAccess, tsAccessNumeric:
       begin
+        // Reset the cache on forced refresh without triggering the events
         if ForceRefresh then
-          FAccessMask := '';
+          FPerHandleStrings[InfoClass] := '';
 
-        if (FAccessMask <> '') or RefreshBasicInfo.IsSuccess then
-          Exit(FAccessMask);
+        if (FPerHandleStrings[InfoClass] <> '') or
+          RefreshBasicInfo.IsSuccess then
+          Exit(FPerHandleStrings[InfoClass]);
       end;
-  end;
+  else
+    // Reset the cache on forced refresh without triggering the events
+    if ForceRefresh then
+      Events.FStrings[InfoClass] := '';
 
-  // Try to retrieve cached per-object properties
-  if Events.StringCache[InfoClass] <> '' then
-    Exit(Events.StringCache[InfoClass]);
+    // Try to retrieve cached per-object properties
+    if Events.StringCache[InfoClass] <> '' then
+      Exit(Events.StringCache[InfoClass]);
+  end;
 
   Success := False;
 
@@ -1725,8 +1839,12 @@ begin
     tsExprires,
     tsDynamicCharged,
     tsDynamicAvailable:        Success := RefreshStatistics.IsSuccess;
+    tsLogonAuthPackage,
+    tsLogonType,
+    tsLogonTime:               Success := RefreshLogonInfo.IsSuccess;
     tsRestrictedSids:          Success := RefreshRestrictedSids.IsSuccess;
     tsSessionId:               Success := RefreshSessionId.IsSuccess;
+    tsSessionInfo:             Success := RefreshSessionInfo.IsSuccess;
     tsOrigin:                  Success := RefreshOrigin.IsSuccess;
     tsElevation:               Success := RefreshElevation.IsSuccess;
     tsSandBoxInert,
@@ -1988,6 +2106,13 @@ begin
     Result := TGlobalEvents.RefreshHandles;
 end;
 
+function TToken.RefreshLogonInfo;
+var
+  Info: ILogonSession;
+begin
+  Result := QueryLogonInfo(Info);
+end;
+
 function TToken.RefreshLogonSids;
 var
   Info: TArray<TGroup>;
@@ -2093,6 +2218,13 @@ begin
   Result := QuerySessionId(Info);
 end;
 
+function TToken.RefreshSessionInfo;
+var
+  Info: TWinStationInformation;
+begin
+  Result := QuerySessionInfo(Info);
+end;
+
 function TToken.RefreshSingletonAttributes;
 var
   Info: TArray<TSecurityAttribute>;
@@ -2116,8 +2248,8 @@ end;
 
 procedure TToken.RefreshString;
 begin
-  // Skip values that don't change or stored as private fields
-  if not (InfoClass in [tsCaption, tsHandle, tsAccess]) then
+  // Skip values that don't change externally
+  if not (InfoClass in [tsCaption, tsHandle, tsHandleDetailed]) then
     QueryString(InfoClass, True);
 end;
 
@@ -2179,11 +2311,7 @@ end;
 
 procedure TToken.SetCaption;
 begin
-  if FCaption <> Value then
-  begin
-    FCaption := Value;
-    OnCaptionChange.Invoke(tsCaption, Value);
-  end;
+  SetPerHandleString(tsCaption, Value);
 end;
 
 function TToken.SetChildProcessFlags;
@@ -2236,6 +2364,21 @@ begin
   SmartRefresh;
 end;
 
+procedure TToken.SetPerHandleString;
+begin
+  {$IFOPT R+}
+  if (InfoClass < Low(TTokenPerHandleStringClass)) or
+    (InfoClass > High(TTokenPerHandleStringClass)) then
+    raise ERangeError.Create('Invalid per-handle token string class');
+  {$ENDIF}
+
+  if FPerHandleStrings[InfoClass] <> Value then
+  begin
+    FPerHandleStrings[InfoClass] := Value;
+    FPerHandleEvents[InfoClass].Invoke(InfoClass, Value);
+  end;
+end;
+
 function TToken.SetPrimaryGroup;
 var
   Buffer: TTokenSidInformation;
@@ -2284,7 +2427,7 @@ end;
 procedure TToken.SmartRefresh;
 begin
   if Events.OnBasicInfo.HasObservers or
-    Events.OnStringChange[tsHandle].HasSubscribers or
+    Events.OnStringChange[tsHandleCount].HasSubscribers or
     Events.OnStringChange[tsPagedPoolCharge].HasSubscribers or
     Events.OnStringChange[tsNonPagedPoolCharge].HasSubscribers then
     RefreshBasicInfo;
@@ -2325,25 +2468,43 @@ begin
   if Events.OnImpersonation.HasObservers then
     RefreshImpersonation;
 
-  if Events.OnStatistics.HasObservers or
-    Events.OnStringChange[tsGroups].HasSubscribers or
-    Events.OnStringChange[tsPrivileges].HasSubscribers or
-    Events.OnStringChange[tsType].HasSubscribers or
-    Events.OnStringChange[tsTokenId].HasSubscribers or
-    Events.OnStringChange[tsLogonId].HasSubscribers or
-    Events.OnStringChange[tsModifiedId].HasSubscribers or
-    Events.OnStringChange[tsExprires].HasSubscribers or
-    Events.OnStringChange[tsDynamicCharged].HasSubscribers or
-    Events.OnStringChange[tsDynamicAvailable].HasSubscribers then
-    RefreshStatistics;
+  if (Events.OnLogonInfo.HasObservers or
+    Events.OnStringChange[tsLogonAuthPackage].HasSubscribers or
+    Events.OnStringChange[tsLogonType].HasSubscribers or
+    Events.OnStringChange[tsLogonTime].HasSubscribers) and
+    RefreshLogonInfo.IsSuccess then
+    // Querying logon session info also queries statistics. No need to do it
+    // again if the operation succeeded.
+  else
+  begin
+    if Events.OnStatistics.HasObservers or
+      Events.OnStringChange[tsGroups].HasSubscribers or
+      Events.OnStringChange[tsPrivileges].HasSubscribers or
+      Events.OnStringChange[tsType].HasSubscribers or
+      Events.OnStringChange[tsTokenId].HasSubscribers or
+      Events.OnStringChange[tsLogonId].HasSubscribers or
+      Events.OnStringChange[tsModifiedId].HasSubscribers or
+      Events.OnStringChange[tsExprires].HasSubscribers or
+      Events.OnStringChange[tsDynamicCharged].HasSubscribers or
+      Events.OnStringChange[tsDynamicAvailable].HasSubscribers then
+      RefreshStatistics;
+  end;
 
   if Events.OnRestrictedSids.HasObservers or
     Events.OnStringChange[tsRestrictedSids].HasSubscribers then
     RefreshRestrictedSids;
 
-  if Events.OnSessionId.HasObservers or
-    Events.OnStringChange[tsSessionId].HasSubscribers then
-    RefreshSessionId;
+  if (Events.OnSessionInfo.HasObservers or
+    Events.OnStringChange[tsSessionInfo].HasSubscribers) and
+    RefreshSessionInfo.IsSuccess then
+    // Querying session info also queries session ID. If the operation
+    // succeeded, no need to query it again
+  else
+  begin
+    if Events.OnSessionId.HasObservers or
+      Events.OnStringChange[tsSessionId].HasSubscribers then
+      RefreshSessionId;
+  end;
 
   if Events.OnSandboxInert.HasObservers then
     RefreshSandboxInert;
