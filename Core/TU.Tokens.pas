@@ -7,8 +7,8 @@ unit TU.Tokens;
 interface
 
 uses
-  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntobapi, Ntapi.winsta, NtUtils,
-  NtUtils.Tokens.Info, NtUtils.Objects.Snapshots, NtUtils.Profiles,
+  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntobapi, Ntapi.winsta, Ntapi.appmodel,
+  NtUtils, NtUtils.Tokens.Info, NtUtils.Objects.Snapshots, NtUtils.Profiles,
   NtUtils.Lsa.Logon, DelphiUtils.AutoObjects, DelphiUtils.AutoEvents;
 
 type
@@ -84,7 +84,10 @@ type
     tsDeviceGroups,            // Number of device groups
     tsRestrictedDeviceGroups,  // Number of resrricted device gropus
     tsSecAttributes,           // Number of security attributes
+    tsSecAttributesNames,      // The names of all security attributes
     tsLPAC,                    // Whether Low Privilege AppContainer attribute set
+    tsPackageFlags,            // Flags that define package attribute behavior
+    tsPackageOrigin,           // The origin of the application package
     tsIsRestricted,            // Whether token is restricted or write-only restricted
     tsTrustLevel,              // Process protection level
     tsSingletonAttributes,     // Number of singleton security attributes
@@ -155,6 +158,7 @@ type
     function QueryRestrictedDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
     function QuerySecurityAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
     function QueryIsLPAC(out IsLPAC: Boolean): TNtxStatus;
+    function QueryPackageClaims(out PkgClaim: TPsPkgClaim): TNtxStatus;
     function QueryIsRestricted(out IsRestricted: LongBool): TNtxStatus;
     function QueryTrustLevel(out TrustLevel: ISid): TNtxStatus;
     function QueryPrivateNamespace(out PrivateNamespace: LongBool): TNtxStatus;
@@ -208,6 +212,7 @@ type
     function ObserveRestrictedDeviceGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveSecurityAttributes(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
     function ObserveIsLPAC(const Callback: TEventCallback<TNtxStatus, Boolean>): IAutoReleasable;
+    function ObservePackageClaims(const Callback: TEventCallback<TNtxStatus, TPsPkgClaim>): IAutoReleasable;
     function ObserveIsRestricted(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveTrustLevel(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
     function ObservePrivateNamespace(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
@@ -262,6 +267,7 @@ type
     function RefreshRestrictedDeviceGroups: TNtxStatus;
     function RefreshSecurityAttributes: TNtxStatus;
     function RefreshIsLPAC: TNtxStatus;
+    function RefreshPackageClaims: TNtxStatus;
     function RefreshIsRestricted: TNtxStatus;
     function RefreshTrustLevel: TNtxStatus;
     function RefreshPrivateNamespace: TNtxStatus;
@@ -422,6 +428,7 @@ type
     function QueryRestrictedDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
     function QuerySecurityAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
     function QueryIsLPAC(out IsLPAC: Boolean): TNtxStatus;
+    function QueryPackageClaims(out PkgClaim: TPsPkgClaim): TNtxStatus;
     function QueryIsRestricted(out IsRestricted: LongBool): TNtxStatus;
     function QueryTrustLevel(out TrustLevel: ISid): TNtxStatus;
     function QueryPrivateNamespace(out PrivateNamespace: LongBool): TNtxStatus;
@@ -473,6 +480,7 @@ type
     function ObserveRestrictedDeviceGroups(const Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveSecurityAttributes(const Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
     function ObserveIsLPAC(const Callback: TEventCallback<TNtxStatus, Boolean>): IAutoReleasable;
+    function ObservePackageClaims(const Callback: TEventCallback<TNtxStatus, TPsPkgClaim>): IAutoReleasable;
     function ObserveIsRestricted(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveTrustLevel(const Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
     function ObservePrivateNamespace(const Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
@@ -525,6 +533,7 @@ type
     function RefreshRestrictedDeviceGroups: TNtxStatus;
     function RefreshSecurityAttributes: TNtxStatus;
     function RefreshIsLPAC: TNtxStatus;
+    function RefreshPackageClaims: TNtxStatus;
     function RefreshIsRestricted: TNtxStatus;
     function RefreshTrustLevel: TNtxStatus;
     function RefreshPrivateNamespace: TNtxStatus;
@@ -969,6 +978,14 @@ var
 begin
   Callback(QueryOwner(Info), Info);
   Result := Events.OnOwner.Subscribe(Callback);
+end;
+
+function TToken.ObservePackageClaims;
+var
+  Info: TPsPkgClaim;
+begin
+  Callback(QueryPackageClaims(Info), Info);
+  Result := Events.OnPackageClaims.Subscribe(Callback);
 end;
 
 function TToken.ObservePrimaryGroup;
@@ -1595,6 +1612,24 @@ begin
   Events.OnOwner.Notify(Result, Owner);
 end;
 
+function TToken.QueryPackageClaims;
+begin
+  Result := NtxQueryPackageClaimsToken(hxToken, PkgClaim);
+
+  if Result.IsSuccess then
+  begin
+    Events.StringCache[tsPackageFlags] := TNumeric.Represent(PkgClaim.Flags).Text;
+    Events.StringCache[tsPackageOrigin] := TNumeric.Represent(PkgClaim.Origin).Text;
+  end
+  else if Result.Status = STATUS_NOT_FOUND then
+  begin
+    Events.StringCache[tsPackageFlags] := '(Not found)';
+    Events.StringCache[tsPackageOrigin] := '(Not found)';
+  end;
+
+  Events.OnPackageClaims.Notify(Result, PkgClaim);
+end;
+
 function TToken.QueryPrimaryGroup;
 begin
   Result := NtxQuerySidToken(hxToken, TokenPrimaryGroup, PrimaryGroup);
@@ -1691,11 +1726,28 @@ begin
 end;
 
 function TToken.QuerySecurityAttributes;
+var
+  Names: TArray<String>;
+  i: Integer;
 begin
   Result := NtxQueryAttributesToken(hxToken, TokenSecurityAttributes, Attributes);
 
   if Result.IsSuccess then
+  begin
     Events.StringCache[tsSecAttributes] := IntToStrEx(Length(Attributes));
+
+    if Length(Attributes) > 0 then
+    begin
+      SetLength(Names, Length(Attributes));
+
+      for i := 0 to High(Attributes) do
+        Names[i] := Attributes[i].Name;
+
+      Events.StringCache[tsSecAttributesNames] := String.Join(', ', Names);
+    end
+    else
+      Events.StringCache[tsSecAttributesNames] := '(None)';
+  end;
 
   Events.OnSecurityAttributes.Notify(Result, Attributes);
 end;
@@ -1872,8 +1924,11 @@ begin
     tsRestrictedDeviceClaims:  Success := RefreshRestrictedDeviceClaims.IsSuccess;
     tsDeviceGroups:            Success := RefreshDeviceGroups.IsSuccess;
     tsRestrictedDeviceGroups:  Success := RefreshRestrictedDeviceGroups.IsSuccess;
-    tsSecAttributes:           Success := RefreshSecurityAttributes.IsSuccess;
+    tsSecAttributes,
+    tsSecAttributesNames:      Success := RefreshSecurityAttributes.IsSuccess;
     tsLPAC:                    Success := RefreshIsLPAC.IsSuccess;
+    tsPackageFlags,
+    tsPackageOrigin:           Success := RefreshPackageClaims.IsSuccess;
     tsIsRestricted:            Success := RefreshIsRestricted.IsSuccess;
     tsTrustLevel:              Success := RefreshTrustLevel.IsSuccess;
     tsSingletonAttributes:     Success := RefreshSingletonAttributes.IsSuccess;
@@ -2146,6 +2201,13 @@ var
   Info: ISid;
 begin
   Result := QueryOwner(Info);
+end;
+
+function TToken.RefreshPackageClaims;
+var
+  Info: TPsPkgClaim;
+begin
+  Result := QueryPackageClaims(Info);
 end;
 
 function TToken.RefreshPrimaryGroup;
@@ -2607,12 +2669,18 @@ begin
     RefreshRestrictedDeviceGroups;
 
   if Events.OnSecurityAttributes.HasObservers or
-    Events.OnStringChange[tsSecAttributes].HasSubscribers then
+    Events.OnStringChange[tsSecAttributes].HasSubscribers or
+    Events.OnStringChange[tsSecAttributesNames].HasSubscribers then
     RefreshSecurityAttributes;
 
   if Events.OnIsLPAC.HasObservers or
     Events.OnStringChange[tsLPAC].HasSubscribers then
     RefreshIsLPAC;
+
+  if Events.OnPackageClaims.HasObservers or
+    Events.OnStringChange[tsPackageFlags].HasSubscribers or
+    Events.OnStringChange[tsPackageOrigin].HasSubscribers then
+    RefreshPackageClaims;
 
   if Events.OnIsRestricted.HasObservers or
     Events.OnStringChange[tsIsRestricted].HasSubscribers then

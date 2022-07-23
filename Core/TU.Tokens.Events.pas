@@ -8,8 +8,8 @@ unit TU.Tokens.Events;
 interface
 
 uses
-  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.ntseapi, Ntapi.winsta, NtUtils,
-  NtUtils.Objects.Snapshots, NtUtils.Tokens.Info, NtUtils.Profiles,
+  Ntapi.WinNt, Ntapi.ntobapi, Ntapi.ntseapi, Ntapi.winsta, Ntapi.appmodel,
+  NtUtils, NtUtils.Objects.Snapshots, NtUtils.Tokens.Info, NtUtils.Profiles,
   NtUtils.Lsa.Logon, DelphiUtils.AutoObjects, DelphiUtils.AutoEvents,
   TU.Observers, TU.Tokens;
 
@@ -62,6 +62,7 @@ type
     OnRestrictedDeviceGroups: TAutoObservers<TArray<TGroup>>;
     OnSecurityAttributes: TAutoObservers<TArray<TSecurityAttribute>>;
     OnIsLPAC: TAutoObservers<Boolean>;
+    OnPackageClaims: TAutoObservers<TPsPkgClaim>;
     OnIsRestricted: TAutoObservers<LongBool>;
     OnTrustLevel: TAutoObservers<ISid>;
     OnPrivateNamespace: TAutoObservers<LongBool>;
@@ -340,6 +341,11 @@ begin
   Result := A = B;
 end;
 
+function ComparePackageClaims(const A, B: TPsPkgClaim): Boolean;
+begin
+  Result := (A.Flags = B.Flags) and (A.Origin = B.Origin)
+end;
+
 function CompareBnoIsolation(const A, B: TBnoIsolation): Boolean;
 begin
   Result := (A.Enabled = B.Enabled) and (A.Prefix = B.Prefix);
@@ -392,6 +398,7 @@ begin
   OnRestrictedDeviceGroups.Initialize(CompareGroups);
   OnSecurityAttributes.Initialize(nil);
   OnIsLPAC.Initialize(CompareBoolean);
+  OnPackageClaims.Initialize(ComparePackageClaims);
   OnIsRestricted.Initialize(CompareLongBool);
   OnTrustLevel.Initialize(CompareSid);
   OnPrivateNamespace.Initialize(CompareLongBool);
