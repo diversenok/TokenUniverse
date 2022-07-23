@@ -40,8 +40,8 @@ begin
       spoNewConsole, spoDesktop, spoParentProcess, spoTimeout]
 
   else if Pointer(@Method) = Pointer(@ShlxExecute) then
-    Result := [spoNewConsole, spoRequireElevation, spoRunAsInvoker,
-      spoWindowMode]
+    Result := [spoSuspended, spoBreakawayFromJob, spoNewConsole,
+      spoRequireElevation, spoRunAsInvoker, spoWindowMode]
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcess) then
     Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
