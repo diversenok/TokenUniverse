@@ -355,7 +355,7 @@ begin
   if Token.QueryElevation(Elevation).IsSuccess and
     (Elevation.ElevationType <> TokenElevationTypeDefault) and
     Token.QueryLinkedToken(Linked).IsSuccess then
-      TokenView.Add(Linked);
+      TokenView.Add(Linked, nil, False);
 
   LoadLibrary('xmllite.dll');
 
