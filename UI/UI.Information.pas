@@ -72,6 +72,8 @@ type
     GroupsMemberFrame: TFrameGroups;
     PrivilegesFrame: TFramePrivileges;
     FrameDefaultDacl: TFrameAcl;
+    PanelGeneral: TPanel;
+    PanelObject: TPanel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);

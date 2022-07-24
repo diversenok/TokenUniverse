@@ -42,7 +42,7 @@ object InfoDialog: TInfoDialog
         Width = 30
         Height = 17
         Caption = 'User:'
-        TabOrder = 19
+        TabOrder = 18
       end
       object EditUser: TEdit
         Left = 112
@@ -54,7 +54,7 @@ object InfoDialog: TInfoDialog
         AutoSelect = False
         AutoSize = False
         ReadOnly = True
-        TabOrder = 1
+        TabOrder = 0
         Text = 'Unknown User'
         OnDblClick = EditUserDblClick
       end
@@ -64,7 +64,7 @@ object InfoDialog: TInfoDialog
         Width = 44
         Height = 17
         Caption = 'Session:'
-        TabOrder = 20
+        TabOrder = 19
       end
       object StaticIntegrity: TStaticText
         Left = 7
@@ -72,7 +72,7 @@ object InfoDialog: TInfoDialog
         Width = 75
         Height = 17
         Caption = 'Integrity level:'
-        TabOrder = 21
+        TabOrder = 20
       end
       object ComboSession: TComboBox
         Left = 112
@@ -81,7 +81,7 @@ object InfoDialog: TInfoDialog
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 2
+        TabOrder = 1
         Text = 'Unknown Session'
         OnChange = SetStaleColor
       end
@@ -92,7 +92,7 @@ object InfoDialog: TInfoDialog
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 4
+        TabOrder = 3
         Text = 'Unknown Integrity Level'
         OnChange = SetStaleColor
       end
@@ -102,7 +102,7 @@ object InfoDialog: TInfoDialog
         Width = 40
         Height = 17
         Caption = 'Owner:'
-        TabOrder = 22
+        TabOrder = 21
       end
       object ComboOwner: TComboBox
         Left = 112
@@ -111,7 +111,7 @@ object InfoDialog: TInfoDialog
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 15
+        TabOrder = 14
         Text = 'Unknown Owner'
         OnChange = SetStaleColor
       end
@@ -122,7 +122,7 @@ object InfoDialog: TInfoDialog
         Height = 21
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 17
+        TabOrder = 16
         Text = 'Unknown Primary group'
         OnChange = SetStaleColor
       end
@@ -132,7 +132,7 @@ object InfoDialog: TInfoDialog
         Width = 75
         Height = 17
         Caption = 'Primary group:'
-        TabOrder = 23
+        TabOrder = 22
       end
       object StaticUIAccess: TStaticText
         Left = 7
@@ -140,7 +140,7 @@ object InfoDialog: TInfoDialog
         Width = 52
         Height = 17
         Caption = 'UIAccess:'
-        TabOrder = 24
+        TabOrder = 23
       end
       object ComboUIAccess: TComboBox
         Left = 112
@@ -154,7 +154,7 @@ object InfoDialog: TInfoDialog
           ' levels or installing global hooks.'
         AutoComplete = False
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 6
+        TabOrder = 5
         Text = 'Unknown UIAccess'
         OnChange = SetStaleColor
         Items.Strings = (
@@ -167,53 +167,7 @@ object InfoDialog: TInfoDialog
         Width = 90
         Height = 17
         Caption = 'Mandatory policy:'
-        TabOrder = 25
-      end
-      object ListViewGeneral: TListViewEx
-        Left = 0
-        Top = 0
-        Width = 388
-        Height = 118
-        Align = alTop
-        BorderStyle = bsNone
-        Columns = <
-          item
-            Width = 120
-          end
-          item
-            AutoSize = True
-          end>
-        Groups = <
-          item
-            Header = 'General information'
-            GroupID = 0
-            State = [lgsNormal]
-            HeaderAlign = taLeftJustify
-            FooterAlign = taLeftJustify
-            TitleImage = -1
-          end>
-        Items.ItemData = {
-          055F0100000500000000000000FFFFFFFFFFFFFFFF0100000000000000000000
-          000E4F0062006A00650063007400200061006400640072006500730073000755
-          006E006B006E006F0077006E0010B8871600000000FFFFFFFFFFFFFFFF010000
-          0000000000000000000C480061006E0064006C0065002000760061006C007500
-          65000755006E006B006E006F0077006E00C07E871600000000FFFFFFFFFFFFFF
-          FF0100000000000000000000000E4700720061006E0074006500640020006100
-          630063006500730073000755006E006B006E006F0077006E00B87B8514000000
-          00FFFFFFFFFFFFFFFF0100000000000000000000000A54006F006B0065006E00
-          200074007900700065000755006E006B006E006F0077006E0058548514000000
-          00FFFFFFFFFFFFFFFF0100000000000000000000000845006C00650076006100
-          7400650064000755006E006B006E006F0077006E0000558514FFFFFFFFFFFFFF
-          FFFFFF}
-        MultiSelect = True
-        GroupView = True
-        ReadOnly = True
-        RowSelect = True
-        ShowColumnHeaders = False
-        TabOrder = 0
-        ViewStyle = vsReport
-        OnDblClick = ListViewGeneralDblClick
-        ClipboardSourceColumn = 1
+        TabOrder = 24
       end
       object CheckBoxNoWriteUp: TCheckBox
         Left = 112
@@ -225,7 +179,7 @@ object InfoDialog: TInfoDialog
           ' have a greater mandatory integrity label.'
         Caption = 'No Write Up'
         State = cbGrayed
-        TabOrder = 8
+        TabOrder = 7
         OnClick = CheckBoxClick
       end
       object CheckBoxNewProcessMin: TCheckBox
@@ -240,7 +194,7 @@ object InfoDialog: TInfoDialog
         Anchors = [akTop, akRight]
         Caption = 'New Process Min'
         State = cbGrayed
-        TabOrder = 9
+        TabOrder = 8
         OnClick = CheckBoxClick
       end
       object StaticVirtualization: TStaticText
@@ -249,7 +203,7 @@ object InfoDialog: TInfoDialog
         Width = 69
         Height = 17
         Caption = 'Virtualization:'
-        TabOrder = 26
+        TabOrder = 25
       end
       object CheckBoxVAllowed: TCheckBox
         Left = 112
@@ -258,7 +212,7 @@ object InfoDialog: TInfoDialog
         Height = 17
         Caption = 'Allowed'
         State = cbGrayed
-        TabOrder = 11
+        TabOrder = 10
         OnClick = CheckBoxClick
       end
       object CheckBoxVEnabled: TCheckBox
@@ -269,7 +223,7 @@ object InfoDialog: TInfoDialog
         Anchors = [akTop, akRight]
         Caption = 'Enabled'
         State = cbGrayed
-        TabOrder = 13
+        TabOrder = 12
         OnClick = CheckBoxClick
       end
       object BtnSetSession: TButton
@@ -281,7 +235,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 3
+        TabOrder = 2
         OnClick = BtnSetSessionClick
       end
       object BtnSetIntegrity: TButton
@@ -293,7 +247,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 5
+        TabOrder = 4
         OnClick = BtnSetIntegrityClick
       end
       object BtnSetUIAccess: TButton
@@ -305,7 +259,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 7
+        TabOrder = 6
         OnClick = BtnSetUIAccessClick
       end
       object BtnSetOwner: TButton
@@ -317,7 +271,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 16
+        TabOrder = 15
         OnClick = BtnSetOwnerClick
       end
       object BtnSetPolicy: TButton
@@ -329,7 +283,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 10
+        TabOrder = 9
         OnClick = BtnSetPolicyClick
       end
       object BtnSetPrimary: TButton
@@ -341,7 +295,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 18
+        TabOrder = 17
         OnClick = BtnSetPrimaryClick
       end
       object BtnSetVEnabled: TButton
@@ -353,7 +307,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 14
+        TabOrder = 13
         OnClick = BtnSetVEnabledClick
       end
       object BtnSetAEnabled: TButton
@@ -364,7 +318,7 @@ object InfoDialog: TInfoDialog
         ImageAlignment = iaCenter
         ImageIndex = 5
         Images = FormMain.SmallIcons
-        TabOrder = 12
+        TabOrder = 11
         OnClick = BtnSetVAllowedClick
       end
       object StaticAppContainer: TStaticText
@@ -373,7 +327,7 @@ object InfoDialog: TInfoDialog
         Width = 74
         Height = 17
         Caption = 'AppContainer:'
-        TabOrder = 27
+        TabOrder = 26
       end
       object EditAppContainer: TEdit
         Left = 112
@@ -386,9 +340,64 @@ object InfoDialog: TInfoDialog
         AutoSize = False
         Enabled = False
         ReadOnly = True
-        TabOrder = 28
+        TabOrder = 27
         Text = 'Unknown AppContainer'
         OnDblClick = EditAppContainerDblClick
+      end
+      object PanelGeneral: TPanel
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 118
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 28
+        object ListViewGeneral: TListViewEx
+          Left = 0
+          Top = 0
+          Width = 388
+          Height = 118
+          Align = alClient
+          BorderStyle = bsNone
+          Columns = <
+            item
+              Width = 120
+            end
+            item
+              AutoSize = True
+            end>
+          Groups = <
+            item
+              Header = 'General information'
+              GroupID = 0
+              State = [lgsNormal]
+              HeaderAlign = taLeftJustify
+              FooterAlign = taLeftJustify
+              TitleImage = -1
+            end>
+          Items.ItemData = {
+            055F0100000500000000000000FFFFFFFFFFFFFFFF0100000000000000000000
+            000E4F0062006A00650063007400200061006400640072006500730073000755
+            006E006B006E006F0077006E0010B8871600000000FFFFFFFFFFFFFFFF010000
+            0000000000000000000C480061006E0064006C0065002000760061006C007500
+            65000755006E006B006E006F0077006E00C07E871600000000FFFFFFFFFFFFFF
+            FF0100000000000000000000000E4700720061006E0074006500640020006100
+            630063006500730073000755006E006B006E006F0077006E00B87B8514000000
+            00FFFFFFFFFFFFFFFF0100000000000000000000000A54006F006B0065006E00
+            200074007900700065000755006E006B006E006F0077006E0058548514000000
+            00FFFFFFFFFFFFFFFF0100000000000000000000000845006C00650076006100
+            7400650064000755006E006B006E006F0077006E0000558514FFFFFFFFFFFFFF
+            FFFFFF}
+          MultiSelect = True
+          GroupView = True
+          ReadOnly = True
+          RowSelect = True
+          ShowColumnHeaders = False
+          TabOrder = 0
+          ViewStyle = vsReport
+          OnDblClick = ListViewGeneralDblClick
+          ClipboardSourceColumn = 1
+        end
       end
     end
     object TabAdvanced: TTabSheet
@@ -514,73 +523,82 @@ object InfoDialog: TInfoDialog
         MultiSelect = True
         ReadOnly = True
         RowSelect = True
-        TabOrder = 1
+        TabOrder = 0
         ViewStyle = vsReport
       end
-      object ListViewObject: TListViewEx
+      object PanelObject: TPanel
         Left = 0
         Top = 0
         Width = 388
         Height = 201
         Align = alTop
-        BorderStyle = bsNone
-        Columns = <
-          item
-            Width = 140
-          end
-          item
-            Width = 220
-          end>
-        Groups = <
-          item
-            Header = 'Kernel object'
-            GroupID = 0
-            State = [lgsNormal]
-            HeaderAlign = taLeftJustify
-            FooterAlign = taLeftJustify
-            TitleImage = -1
-          end
-          item
-            Header = 'Quota charges'
-            GroupID = 1
-            State = [lgsNormal]
-            HeaderAlign = taLeftJustify
-            FooterAlign = taLeftJustify
-            TitleImage = -1
-          end
-          item
-            Header = 'References'
-            GroupID = 2
-            State = [lgsNormal]
-            HeaderAlign = taLeftJustify
-            FooterAlign = taLeftJustify
-            TitleImage = -1
-          end>
-        Items.ItemData = {
-          05F90100000700000000000000FFFFFFFFFFFFFFFF0100000000000000000000
-          000E4F0062006A00650063007400200061006400640072006500730073000755
-          006E006B006E006F0077006E0030AA981600000000FFFFFFFFFFFFFFFF010000
-          000000000000000000125300700065006300690061006C002000610074007400
-          72006900620075007400650073000755006E006B006E006F0077006E0028C898
-          1600000000FFFFFFFFFFFFFFFF01000000010000000000000005500061006700
-          650064000755006E006B006E006F0077006E0078AD981600000000FFFFFFFFFF
-          FFFFFF010000000100000000000000094E006F006E0020005000610067006500
-          64000755006E006B006E006F0077006E005079451E00000000FFFFFFFFFFFFFF
-          FF0100000002000000000000000850006F0069006E0074006500720073000755
-          006E006B006E006F0077006E00B889451E00000000FFFFFFFFFFFFFFFF010000
-          00020000000000000007480061006E0064006C00650073000755006E006B006E
-          006F0077006E00E086451E00000000FFFFFFFFFFFFFFFF010000000000000000
-          00000007430072006500610074006F0072001B3C002000460065006100740075
-          007200650020006900730020006E006F007400200073007500700070006F0072
-          007400650064003E008887451EFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        MultiSelect = True
-        GroupView = True
-        ReadOnly = True
-        RowSelect = True
-        ShowColumnHeaders = False
-        TabOrder = 0
-        ViewStyle = vsReport
-        ClipboardSourceColumn = 1
+        BevelOuter = bvNone
+        TabOrder = 1
+        object ListViewObject: TListViewEx
+          Left = 0
+          Top = 0
+          Width = 388
+          Height = 201
+          Align = alClient
+          BorderStyle = bsNone
+          Columns = <
+            item
+              Width = 140
+            end
+            item
+              Width = 220
+            end>
+          Groups = <
+            item
+              Header = 'Kernel object'
+              GroupID = 0
+              State = [lgsNormal]
+              HeaderAlign = taLeftJustify
+              FooterAlign = taLeftJustify
+              TitleImage = -1
+            end
+            item
+              Header = 'Quota charges'
+              GroupID = 1
+              State = [lgsNormal]
+              HeaderAlign = taLeftJustify
+              FooterAlign = taLeftJustify
+              TitleImage = -1
+            end
+            item
+              Header = 'References'
+              GroupID = 2
+              State = [lgsNormal]
+              HeaderAlign = taLeftJustify
+              FooterAlign = taLeftJustify
+              TitleImage = -1
+            end>
+          Items.ItemData = {
+            05F90100000700000000000000FFFFFFFFFFFFFFFF0100000000000000000000
+            000E4F0062006A00650063007400200061006400640072006500730073000755
+            006E006B006E006F0077006E0030AA981600000000FFFFFFFFFFFFFFFF010000
+            000000000000000000125300700065006300690061006C002000610074007400
+            72006900620075007400650073000755006E006B006E006F0077006E0028C898
+            1600000000FFFFFFFFFFFFFFFF01000000010000000000000005500061006700
+            650064000755006E006B006E006F0077006E0078AD981600000000FFFFFFFFFF
+            FFFFFF010000000100000000000000094E006F006E0020005000610067006500
+            64000755006E006B006E006F0077006E005079451E00000000FFFFFFFFFFFFFF
+            FF0100000002000000000000000850006F0069006E0074006500720073000755
+            006E006B006E006F0077006E00B889451E00000000FFFFFFFFFFFFFFFF010000
+            00020000000000000007480061006E0064006C00650073000755006E006B006E
+            006F0077006E00E086451E00000000FFFFFFFFFFFFFFFF010000000000000000
+            00000007430072006500610074006F0072001B3C002000460065006100740075
+            007200650020006900730020006E006F007400200073007500700070006F0072
+            007400650064003E008887451EFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+          MultiSelect = True
+          GroupView = True
+          ReadOnly = True
+          RowSelect = True
+          ShowColumnHeaders = False
+          TabOrder = 0
+          ViewStyle = vsReport
+          ClipboardSourceColumn = 1
+        end
       end
     end
     object TabGroups: TTabSheet
