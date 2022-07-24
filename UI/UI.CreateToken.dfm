@@ -2,11 +2,11 @@ object DialogCreateToken: TDialogCreateToken
   Left = 0
   Top = 0
   Caption = 'Create new token'
-  ClientHeight = 406
-  ClientWidth = 400
+  ClientHeight = 428
+  ClientWidth = 572
   Color = clBtnFace
-  Constraints.MinHeight = 370
-  Constraints.MinWidth = 344
+  Constraints.MinHeight = 467
+  Constraints.MinWidth = 520
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,108 +20,123 @@ object DialogCreateToken: TDialogCreateToken
   PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
-    Left = 241
-    Top = 376
+    Left = 413
+    Top = 398
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Create'
     Default = True
     ModalResult = 1
-    TabOrder = 0
+    TabOrder = 2
     OnClick = ButtonOKClick
   end
   object ButtonCancel: TButton
-    Left = 322
-    Top = 376
+    Left = 494
+    Top = 398
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 1
+    TabOrder = 3
     OnClick = ButtonCancelClick
   end
   object PageControl: TPageControl
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 394
-    Height = 370
+    Width = 566
+    Height = 392
     Margins.Bottom = 33
     ActivePage = TabGeneral
     Align = alClient
-    TabOrder = 2
+    TabOrder = 0
     object TabGeneral: TTabSheet
       Caption = 'General'
       object StaticLogonID: TStaticText
         Left = 12
-        Top = 88
+        Top = 92
         Width = 76
         Height = 17
         Caption = 'Logon Session:'
-        TabOrder = 0
+        TabOrder = 7
       end
       object StaticOwner: TStaticText
         Left = 12
-        Top = 115
+        Top = 119
         Width = 40
         Height = 17
         Caption = 'Owner:'
-        TabOrder = 1
+        TabOrder = 8
       end
       object StaticPrimaryGroup: TStaticText
         Left = 12
-        Top = 142
+        Top = 146
         Width = 75
         Height = 17
         Caption = 'Primary group:'
-        TabOrder = 2
+        TabOrder = 9
       end
       object ComboLogonSession: TComboBox
         Left = 114
-        Top = 84
-        Width = 267
+        Top = 88
+        Width = 439
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 3
+        TabOrder = 1
         Text = 'Choose a logon session'
       end
       object ComboOwner: TComboBox
         Left = 114
-        Top = 111
-        Width = 267
+        Top = 115
+        Width = 439
         Height = 21
+        Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
+        DoubleBuffered = False
         ItemIndex = 0
-        TabOrder = 4
+        ParentDoubleBuffered = False
+        TabOrder = 2
         Text = '< Same as user >'
         Items.Strings = (
           '< Same as user >')
       end
       object ComboPrimary: TComboBox
         Left = 114
-        Top = 138
-        Width = 267
+        Top = 142
+        Width = 439
         Height = 21
+        Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
+        DoubleBuffered = False
         ItemIndex = 0
-        TabOrder = 5
+        ParentDoubleBuffered = False
+        TabOrder = 3
         Text = '< Same as user >'
         Items.Strings = (
           '< Same as user >')
       end
       object GroupBoxUser: TGroupBox
         Left = 3
-        Top = 3
-        Width = 378
+        Top = 8
+        Width = 550
         Height = 70
         Anchors = [akLeft, akTop, akRight]
         Caption = 'User '
-        TabOrder = 6
+        TabOrder = 0
+        object CheckBoxUserState: TCheckBox
+          Left = 7
+          Top = 45
+          Width = 534
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Use for deny only'
+          TabOrder = 1
+        end
         object ButtonPickUser: TButton
-          Left = 346
+          Left = 372
           Top = 15
           Width = 25
           Height = 25
@@ -131,40 +146,40 @@ object DialogCreateToken: TDialogCreateToken
           ImageMargins.Left = 2
           ImageMargins.Top = 1
           Images = FormMain.SmallIcons
-          TabOrder = 0
-          OnClick = ButtonPickUserClick
-        end
-        object ComboUser: TComboBox
-          Left = 9
-          Top = 17
-          Width = 331
-          Height = 21
-          Anchors = [akLeft, akTop, akRight]
-          TabOrder = 1
-          OnChange = ComboUserChange
-        end
-        object CheckBoxUserState: TCheckBox
-          Left = 9
-          Top = 44
-          Width = 331
-          Height = 17
-          Anchors = [akLeft, akTop, akRight]
-          Caption = 'Use for deny only'
           TabOrder = 2
+        end
+        inline SidEditor: TSidEditor
+          Left = 3
+          Top = 15
+          Width = 541
+          Height = 27
+          Anchors = [akLeft, akTop, akRight]
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          inherited tbxSid: TEdit
+            Width = 478
+          end
+          inherited btnDsPicker: TButton
+            Left = 513
+          end
+          inherited btnCheatsheet: TButton
+            Left = 485
+          end
         end
       end
       object GroupBoxPostCreation: TGroupBox
         Left = 5
-        Top = 239
-        Width = 378
+        Top = 261
+        Width = 550
         Height = 100
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'After creation: '
-        TabOrder = 7
+        TabOrder = 6
         object CheckBoxNoWriteUp: TCheckBox
           Left = 7
           Top = 24
-          Width = 331
+          Width = 503
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Enable No Write Up policy'
@@ -175,7 +190,7 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxNewProcMin: TCheckBox
           Left = 7
           Top = 47
-          Width = 331
+          Width = 503
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Enable New Process Min policy'
@@ -186,80 +201,81 @@ object DialogCreateToken: TDialogCreateToken
         object CheckBoxSession: TCheckBox
           Left = 7
           Top = 70
-          Width = 331
+          Width = 503
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Change session to current'
+          Checked = True
+          State = cbChecked
           TabOrder = 2
         end
       end
-    end
-    object TabGroups: TTabSheet
-      Caption = 'Groups'
-      ImageIndex = 1
-      object ButtonAddSID: TButton
-        Left = 152
-        Top = 315
-        Width = 78
-        Height = 25
-        Anchors = [akBottom]
-        Caption = 'Add SID'
-        ImageIndex = 1
-        ImageMargins.Left = 3
-        ImageMargins.Top = 1
-        Images = FormMain.SmallIcons
-        TabOrder = 0
-        OnClick = ButtonAddSIDClick
-      end
-      inline GroupsFrame: TFrameGroups
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 380
-        Height = 307
-        Margins.Bottom = 32
-        Align = alClient
-        DoubleBuffered = True
-        ParentDoubleBuffered = False
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        inherited VST: TDevirtualizedTree
-          Width = 380
-          Height = 307
-          PopupMenuEx = PopupMenuGroups
-        end
-      end
-    end
-    object TabPrivileges: TTabSheet
-      Caption = 'Privileges'
-      ImageIndex = 2
-      inline PrivilegesFrame: TFramePrivileges
-        Left = 0
-        Top = 0
-        Width = 386
-        Height = 342
-        Align = alClient
-        TabOrder = 0
-        inherited VST: TDevirtualizedTree
-          Width = 386
-          Height = 342
-          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-          PopupMenuEx = PopupMenuPrivileges
-        end
-      end
-    end
-    object TabAdvanced: TTabSheet
-      Caption = 'Advanced'
-      ImageIndex = 3
-      object GroupBoxExpires: TGroupBox
-        Left = 3
-        Top = 97
-        Width = 378
+      object GroupBoxSource: TGroupBox
+        Left = 5
+        Top = 173
+        Width = 253
         Height = 82
         Anchors = [akLeft, akTop, akRight]
+        Caption = 'Token Source '
+        TabOrder = 4
+        object EditSourceName: TEdit
+          Left = 69
+          Top = 21
+          Width = 147
+          Height = 21
+          Anchors = [akLeft, akTop, akRight]
+          MaxLength = 8
+          TabOrder = 0
+          Text = 'TOK_UNIV'
+        end
+        object StaticSourceName: TStaticText
+          Left = 12
+          Top = 25
+          Width = 35
+          Height = 17
+          Caption = 'Name:'
+          TabOrder = 3
+        end
+        object StaticSourceLuid: TStaticText
+          Left = 12
+          Top = 52
+          Width = 31
+          Height = 17
+          Caption = 'LUID:'
+          TabOrder = 4
+        end
+        object EditSourceLuid: TEdit
+          Left = 69
+          Top = 48
+          Width = 147
+          Height = 21
+          Anchors = [akLeft, akTop, akRight]
+          TabOrder = 1
+          Text = '0'
+        end
+        object ButtonAllocLuid: TButton
+          Left = 222
+          Top = 46
+          Width = 25
+          Height = 23
+          Hint = 'Allocate new Locally Unique Identifier'
+          Anchors = [akTop, akRight]
+          ImageIndex = 4
+          ImageMargins.Left = 2
+          ImageMargins.Top = 1
+          Images = FormMain.SmallIcons
+          TabOrder = 2
+          OnClick = ButtonAllocLuidClick
+        end
+      end
+      object GroupBoxExpires: TGroupBox
+        Left = 264
+        Top = 173
+        Width = 291
+        Height = 82
+        Anchors = [akTop, akRight]
         Caption = 'Expiration Time '
-        TabOrder = 0
+        TabOrder = 5
         object CheckBoxInfinite: TCheckBox
           Left = 9
           Top = 24
@@ -274,7 +290,7 @@ object DialogCreateToken: TDialogCreateToken
         object DateExpires: TDateTimePicker
           Left = 9
           Top = 47
-          Width = 253
+          Width = 166
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           Date = 401769.000000000000000000
@@ -283,7 +299,7 @@ object DialogCreateToken: TDialogCreateToken
           TabOrder = 1
         end
         object TimeExpires: TDateTimePicker
-          Left = 268
+          Left = 181
           Top = 47
           Width = 103
           Height = 21
@@ -296,82 +312,79 @@ object DialogCreateToken: TDialogCreateToken
           TabOrder = 2
         end
       end
-      object GroupBoxSource: TGroupBox
-        Left = 3
-        Top = 15
-        Width = 190
-        Height = 76
-        Caption = 'Token Source '
+    end
+    object TabGroups: TTabSheet
+      Caption = 'Groups'
+      ImageIndex = 1
+      object ButtonAddSID: TButton
+        Left = 237
+        Top = 337
+        Width = 78
+        Height = 25
+        Anchors = [akBottom]
+        Caption = 'Add SID'
+        ImageIndex = 1
+        ImageMargins.Left = 3
+        ImageMargins.Top = 1
+        Images = FormMain.SmallIcons
+        TabOrder = 0
+        OnClick = ButtonAddSIDClick
+      end
+      inline GroupsFrame: TFrameGroups
+        AlignWithMargins = True
+        Left = 0
+        Top = 0
+        Width = 558
+        Height = 332
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 32
+        Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 1
-        object EditSourceName: TEdit
-          Left = 69
-          Top = 21
-          Width = 84
-          Height = 21
-          Anchors = [akLeft, akTop, akRight]
-          MaxLength = 8
-          TabOrder = 0
-          Text = 'TOK_UNIV'
-        end
-        object StaticSourceName: TStaticText
-          Left = 12
-          Top = 25
-          Width = 35
-          Height = 17
-          Caption = 'Name:'
-          TabOrder = 1
-        end
-        object StaticSourceLuid: TStaticText
-          Left = 12
-          Top = 52
-          Width = 31
-          Height = 17
-          Caption = 'LUID:'
-          TabOrder = 2
-        end
-        object EditSourceLuid: TEdit
-          Left = 69
-          Top = 48
-          Width = 84
-          Height = 21
-          Anchors = [akLeft, akTop, akRight]
-          TabOrder = 3
-          Text = '0'
-        end
-        object ButtonAllocLuid: TButton
-          Left = 159
-          Top = 46
-          Width = 25
-          Height = 23
-          Hint = 'Allocate new Locally Unique Identifier'
-          Anchors = [akLeft, akTop, akRight]
-          ImageIndex = 4
-          ImageMargins.Left = 2
-          ImageMargins.Top = 1
-          Images = FormMain.SmallIcons
-          TabOrder = 4
-          OnClick = ButtonAllocLuidClick
+        inherited VST: TDevirtualizedTree
+          Width = 558
+          Height = 332
+          PopupMenuEx = PopupMenuGroups
         end
       end
     end
-    object TabDefaltDacl: TTabSheet
-      Caption = 'Default DACL'
-      ImageIndex = 4
+    object TabPrivileges: TTabSheet
+      Caption = 'Privileges'
+      ImageIndex = 2
+      inline PrivilegesFrame: TFramePrivileges
+        Left = 0
+        Top = 0
+        Width = 558
+        Height = 364
+        Align = alClient
+        TabOrder = 0
+        inherited VST: TDevirtualizedTree
+          Width = 558
+          Height = 364
+          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
+          PopupMenuEx = PopupMenuPrivileges
+        end
+      end
     end
   end
   object ButtonLoad: TButton
     Left = 3
-    Top = 376
+    Top = 398
     Width = 84
     Height = 25
     Anchors = [akLeft, akBottom]
     Caption = 'Load from...'
-    TabOrder = 3
+    TabOrder = 1
     OnClick = ButtonLoadClick
   end
   object PopupMenuGroups: TPopupMenu
-    Left = 256
-    Top = 248
+    Left = 496
+    Top = 312
     object MenuEdit: TMenuItem
       Caption = 'Edit'
       ShortCut = 113
@@ -384,8 +397,8 @@ object DialogCreateToken: TDialogCreateToken
     end
   end
   object PopupMenuPrivileges: TPopupMenu
-    Left = 143
-    Top = 251
+    Left = 391
+    Top = 307
     object MenuEnabled: TMenuItem
       Caption = 'Enabled'
       ShortCut = 16453

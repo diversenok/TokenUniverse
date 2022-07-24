@@ -7,11 +7,9 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms,
   UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
-  NtUtils;
+  NtUtils, UI.Prototypes.Sid.Edit;
 
 type
-  TGroupUpdateType = (guEditOne, guEditMultiple, guRemove);
-
   TDialogCreateToken = class(TChildForm)
     ButtonOK: TButton;
     ButtonCancel: TButton;
@@ -24,8 +22,6 @@ type
     StaticOwner: TStaticText;
     StaticPrimaryGroup: TStaticText;
     ComboLogonSession: TComboBox;
-    ComboUser: TComboBox;
-    ButtonPickUser: TButton;
     PopupMenuGroups: TPopupMenu;
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
@@ -33,23 +29,11 @@ type
     ComboPrimary: TComboBox;
     CheckBoxUserState: TCheckBox;
     GroupBoxUser: TGroupBox;
-    TabAdvanced: TTabSheet;
-    GroupBoxExpires: TGroupBox;
-    CheckBoxInfinite: TCheckBox;
-    DateExpires: TDateTimePicker;
-    TimeExpires: TDateTimePicker;
-    GroupBoxSource: TGroupBox;
-    EditSourceName: TEdit;
-    StaticSourceName: TStaticText;
-    StaticSourceLuid: TStaticText;
-    EditSourceLuid: TEdit;
-    ButtonAllocLuid: TButton;
     PopupMenuPrivileges: TPopupMenu;
     MenuDisabled: TMenuItem;
     MenuDisabledModif: TMenuItem;
     MenuEnabled: TMenuItem;
     MenuEnabledModif: TMenuItem;
-    TabDefaltDacl: TTabSheet;
     ButtonLoad: TButton;
     GroupBoxPostCreation: TGroupBox;
     CheckBoxNoWriteUp: TCheckBox;
@@ -57,17 +41,27 @@ type
     CheckBoxSession: TCheckBox;
     GroupsFrame: TFrameGroups;
     PrivilegesFrame: TFramePrivileges;
+    ButtonPickUser: TButton;
+    SidEditor: TSidEditor;
+    GroupBoxSource: TGroupBox;
+    EditSourceName: TEdit;
+    StaticSourceName: TStaticText;
+    StaticSourceLuid: TStaticText;
+    EditSourceLuid: TEdit;
+    ButtonAllocLuid: TButton;
+    GroupBoxExpires: TGroupBox;
+    CheckBoxInfinite: TCheckBox;
+    DateExpires: TDateTimePicker;
+    TimeExpires: TDateTimePicker;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
-    procedure ButtonPickUserClick(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
     procedure CheckBoxInfiniteClick(Sender: TObject);
     procedure MenuEditClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
-    procedure ComboUserChange(Sender: TObject);
     procedure MenuDisabledClick(Sender: TObject);
     procedure MenuDisabledModifClick(Sender: TObject);
     procedure MenuEnabledClick(Sender: TObject);
@@ -75,8 +69,17 @@ type
     procedure ButtonLoadClick(Sender: TObject);
   private
     LogonIDSource: TLogonSessionSource;
+    PotentialOwners: TArray<TGroup>;
+    PotentialPrimary: TArray<TGroup>;
+    function FindGroupIndex(const Groups: TArray<TGroup>; const Sid: ISid): Integer;
+    function RetrieveGroup(const Groups: TArray<TGroup>; Index: Integer): ISid;
+    procedure ChangedGroups;
+    procedure ChangedGroupsInternal(
+      var Groups: TArray<TGroup>;
+      const NewGroups: TArray<TGroup>;
+      ComboBox: TComboBox
+    );
     procedure AddGroup(const NewGroup: TGroup);
-    procedure UpdatePrimaryAndOwner(Mode: TGroupUpdateType);
     procedure EditSingleGroup(const Value: TGroup);
   public
     constructor Create(AOwner: TComponent); override;
@@ -88,7 +91,7 @@ uses
   UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
   Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker,
+  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker, DelphiUtils.Arrays,
   Ntapi.ntobapi, TU.Tokens.Open;
 
 {$R *.dfm}
@@ -96,11 +99,7 @@ uses
 procedure TDialogCreateToken.AddGroup;
 begin
   GroupsFrame.Add([NewGroup]);
-
-  if BitTest(NewGroup.Attributes and SE_GROUP_OWNER) then
-    ComboOwner.Items.Add(LsaxSidToString(NewGroup.Sid));
-
-  ComboPrimary.Items.Add(LsaxSidToString(NewGroup.Sid));
+  ChangedGroups;
 end;
 
 procedure TDialogCreateToken.ButtonAddSIDClick;
@@ -125,7 +124,6 @@ procedure TDialogCreateToken.ButtonLoadClick;
 var
   Source: IToken;
   Expiration: TDateTime;
-  BasicInfo: TObjectBasicInformation;
   User: TGroup;
   Statistics: TTokenStatistics;
   Groups: TArray<TGroup>;
@@ -135,76 +133,54 @@ var
 begin
   Source := TDialogPickToken.Execute(Self);
 
-  if not Source.QueryBasicInfo(BasicInfo).IsSuccess or
-    not BitTest(BasicInfo.GrantedAccess and TOKEN_QUERY) then
-  begin
-    MessageDlg('This token does not have Query access.', mtError, mbOKCancel,
-      -1);
-    Abort;
-  end;
-
   // User
-  if Source.QueryUser(User).IsSuccess then
-  begin
-    ComboUser.Text := LsaxSidToString(User.Sid);
-    ComboUserChange(Sender);
-    CheckBoxUserState.Checked := BitTest(User.Attributes and
-      SE_GROUP_USE_FOR_DENY_ONLY);
-  end;
+  Source.QueryUser(User).RaiseOnError;
+  SidEditor.Sid := User.Sid;
+  CheckBoxUserState.Checked := BitTest(User.Attributes and
+    SE_GROUP_USE_FOR_DENY_ONLY);
 
   // Logon ID & Expiration
-  if Source.QueryStatistics(Statistics).IsSuccess then
+  Source.QueryStatistics(Statistics).RaiseOnError;
+  LogonIDSource.SelectedLogonSession := Statistics.AuthenticationId;
+  CheckBoxInfinite.Checked := (Statistics.ExpirationTime = Int64.MaxValue);
+  if not CheckBoxInfinite.Checked then
   begin
-    LogonIDSource.SelectedLogonSession := Statistics.AuthenticationId;
-
-    CheckBoxInfinite.Checked := (Statistics.ExpirationTime = Int64.MaxValue);
-
-    if not CheckBoxInfinite.Checked then
-    begin
-      Expiration := LargeIntegerToDateTime(Statistics.ExpirationTime);
-
-      // Date only
-      DateExpires.DateTime := Trunc(Expiration);
-
-      // Time only
-      TimeExpires.DateTime := Expiration - Trunc(Expiration);
-    end;
+    Expiration := LargeIntegerToDateTime(Statistics.ExpirationTime);
+    DateExpires.DateTime := Trunc(Expiration);
+    TimeExpires.DateTime := Expiration - Trunc(Expiration);
   end;
 
   // Groups
-  if Source.QueryGroups(Groups).IsSuccess then
-    GroupsFrame.Load(Groups);
-
-  UpdatePrimaryAndOwner(guEditOne);
+  Source.QueryGroups(Groups).RaiseOnError;
+  GroupsFrame.Load(Groups);
+  ChangedGroups;
 
   // Owner
-  if Source.QueryOwner(Owner).IsSuccess then
-    ComboOwner.Text := LsaxSidToString(Owner);
+  Source.QueryOwner(Owner).RaiseOnError;
+  ComboOwner.ItemIndex := FindGroupIndex(PotentialOwners, Owner) + 1;
 
   // Primary group
-  if Source.QueryPrimaryGroup(PrimaryGroup).IsSuccess then
-    ComboPrimary.Text := LsaxSidToString(PrimaryGroup);
+  Source.QueryPrimaryGroup(PrimaryGroup).RaiseOnError;
+  ComboPrimary.ItemIndex := FindGroupIndex(PotentialPrimary, PrimaryGroup) + 1;
 
   // Privileges
-  if Source.QueryPrivileges(Privileges).IsSuccess then
-    PrivilegesFrame.Checked := Privileges;
+  Source.QueryPrivileges(Privileges).RaiseOnError;
+  PrivilegesFrame.Checked := Privileges;
 
   // Source
-  if Source.QuerySource(TokenSource).IsSuccess then
-  begin
-    EditSourceName.Text := TokenSource.Name;
-    EditSourceLuid.Text := IntToHexEx(TokenSource.SourceIdentifier);
-  end;
+  Source.QuerySource(TokenSource).RaiseOnError;
+  EditSourceName.Text := TokenSource.Name;
+  EditSourceLuid.Text := IntToHexEx(TokenSource.SourceIdentifier);
 end;
 
 procedure TDialogCreateToken.ButtonOKClick;
 var
   Token: IToken;
   Expires: TLargeInteger;
-  OwnerGroupName, PrimaryGroupName: String;
   NewPolicy: TTokenMandatoryPolicy;
   Source: TTokenSource;
   User, Owner, PrimaryGroup: ISid;
+  LogonSession: TLogonId;
 begin
   if CheckBoxInfinite.Checked then
     Expires := Int64.MaxValue
@@ -213,27 +189,15 @@ begin
   else
     Expires := DateTimeToLargeInteger(DateExpires.Date);
 
-  // ComboOwner may contain '< Same as user >' value
-  if ComboOwner.ItemIndex = 0 then
-    OwnerGroupName := ComboUser.Text
-  else
-    OwnerGroupName := ComboOwner.Text;
-
-  // ComboPrimary may contain '< Same as user >' value
-  if ComboPrimary.ItemIndex = 0 then
-    PrimaryGroupName := ComboUser.Text
-  else
-    PrimaryGroupName := ComboPrimary.Text;
-
+  User := SidEditor.Sid;
+  Owner := RetrieveGroup(PotentialOwners, ComboOwner.ItemIndex);
+  PrimaryGroup := RetrieveGroup(PotentialPrimary, ComboPrimary.ItemIndex);
   Source.Name := EditSourceName.Text;
   Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
-
-  LsaxLookupNameOrSddl(ComboUser.Text, User).RaiseOnError;
-  LsaxLookupNameOrSddl(OwnerGroupName, Owner).RaiseOnError;
-  LsaxLookupNameOrSddl(PrimaryGroupName, PrimaryGroup).RaiseOnError;
+  LogonSession := LogonIDSource.SelectedLogonSession;
 
   MakeNewToken(Token, ttPrimary, User, CheckBoxUserState.Checked,
-    GroupsFrame.All, PrivilegesFrame.Checked, LogonIDSource.SelectedLogonSession,
+    GroupsFrame.All, PrivilegesFrame.Checked, LogonSession,
     PrimaryGroup, Source, Owner, nil, Expires).RaiseOnError;
 
   FormMain.TokenView.Add(Token);
@@ -256,50 +220,51 @@ begin
     Close;
 end;
 
-procedure TDialogCreateToken.ButtonPickUserClick;
+procedure TDialogCreateToken.ChangedGroupsInternal;
 var
-  Account: String;
-  Sid: ISid;
+  Old: ISid;
+  i: Integer;
+  Lookup: TArray<TTranslatedGroup>;
 begin
-  with ComxCallDsObjectPicker(Handle, Account) do
-    if IsHResult and (HResult = S_FALSE) then
-      Abort
-    else
-      RaiseOnError;
+  // Save the current state
+  Old := RetrieveGroup(Groups, ComboBox.ItemIndex);
 
-  LsaxLookupNameOrSddl(Account, Sid).RaiseOnError;
-  ComboUser.Text := LsaxSidToString(Sid);
-  ComboUserChange(ButtonPickUser);
+  // Reset the list
+  ComboBox.Items.BeginUpdate;
+  Auto.Delay(
+    procedure
+    begin
+      ComboBox.Items.EndUpdate;
+    end
+  );
+  ComboBox.Items.Clear;
+  ComboBox.Items.Add('< Same as user >');
+
+  // Add new groups
+  Groups := NewGroups;
+  LsaxLookupGroups(Groups, Lookup);
+  for i := 0 to High(Groups) do
+    ComboBox.Items.Add(Lookup[i].Name.FullName);
+
+  // Restore selection
+  ComboBox.ItemIndex := FindGroupIndex(Groups, Old) + 1;
+end;
+
+procedure TDialogCreateToken.ChangedGroups;
+begin
+  ChangedGroupsInternal(PotentialPrimary, GroupsFrame.All, ComboPrimary);
+  ChangedGroupsInternal(PotentialOwners, TArray.Filter<TGroup>(GroupsFrame.All,
+    function (const Group: TGroup): Boolean
+    begin
+      Result := BitTest(Group.Attributes and SE_GROUP_OWNER);
+    end
+  ), ComboOwner);
 end;
 
 procedure TDialogCreateToken.CheckBoxInfiniteClick;
 begin
   DateExpires.Enabled := not CheckBoxInfinite.Checked;
   TimeExpires.Enabled := not CheckBoxInfinite.Checked;
-end;
-
-procedure TDialogCreateToken.ComboUserChange;
-var
-  NewUser: String;
-  SavedOwnerIndex, SavedPrimaryIndex: Integer;
-begin
-  NewUser := ComboUser.Text;
-  if NewUser = '' then
-    NewUser := '< Same as user >';
-
-  // Save selected indexes since changes will reset it
-  SavedOwnerIndex := ComboOwner.ItemIndex;
-  SavedPrimaryIndex := ComboPrimary.ItemIndex;
-
-  if ComboOwner.Items.Count > 0 then
-    ComboOwner.Items[0] := NewUser;
-
-  if ComboPrimary.Items.Count > 0 then
-    ComboPrimary.Items[0] := NewUser;
-
-  // Forcibly update the Text field
-  ComboOwner.ItemIndex := SavedOwnerIndex;
-  ComboPrimary.ItemIndex := SavedPrimaryIndex;
 end;
 
 constructor TDialogCreateToken.Create;
@@ -317,6 +282,17 @@ begin
   );
 end;
 
+function TDialogCreateToken.FindGroupIndex;
+var
+  i: Integer;
+begin
+  for i := 0 to High(Groups) do
+    if RtlxEqualSids(Groups[i].Sid, Sid) then
+      Exit(i);
+
+  Result := -1;
+end;
+
 procedure TDialogCreateToken.FormClose;
 begin
   LogonIDSource.Free;
@@ -325,7 +301,7 @@ end;
 procedure TDialogCreateToken.FormCreate;
 begin
   LogonIDSource := TLogonSessionSource.Create(ComboLogonSession);
-  CheckBoxSession.Enabled := RtlGetCurrentPeb.SessionId <> 0;
+  LogonIDSource.SelectedLogonSession := ANONYMOUS_LOGON_LUID;
   ButtonAllocLuidClick(Self);
 
   GroupsFrame.OnDefaultAction := EditSingleGroup;
@@ -346,13 +322,12 @@ end;
 
 procedure TDialogCreateToken.MenuEditClick;
 begin
+  if GroupsFrame.VST.SelectedCount <= 0 then
+    Exit;
+
   if GroupsFrame.VST.SelectedCount = 1 then
-  begin
-    EditSingleGroup(Default(TGroup));
-    UpdatePrimaryAndOwner(guEditOne);
-  end
-  else if GroupsFrame.VST.SelectedCount > 1 then
-  begin
+    EditSingleGroup(Default(TGroup))
+  else
     GroupsFrame.EditSelectedGroups(
       procedure (
         const Groups: TArray<TGroup>;
@@ -364,8 +339,8 @@ begin
           AttributesToClear);
       end
     );
-    UpdatePrimaryAndOwner(guEditMultiple);
-  end;
+
+  ChangedGroups;
 end;
 
 procedure TDialogCreateToken.MenuEnabledClick;
@@ -382,89 +357,15 @@ end;
 procedure TDialogCreateToken.MenuRemoveClick;
 begin
   GroupsFrame.VST.DeleteSelectedNodes;
-  UpdatePrimaryAndOwner(guRemove);
+  ChangedGroups;
 end;
 
-procedure TDialogCreateToken.UpdatePrimaryAndOwner;
-var
-  i: Integer;
-  Group: TGroup;
-  SavedPrimaryIndex, SavedOwnerIndex, SavedOwnerCount: Integer;
-  SavedPrimary, SavedOwner: String;
-  Node: PVirtualNode;
+function TDialogCreateToken.RetrieveGroup;
 begin
-  // Save current state to be able to restore it back
-  SavedOwnerCount := ComboOwner.Items.Count;
-  SavedOwnerIndex := ComboOwner.ItemIndex;
-  SavedPrimaryIndex := ComboPrimary.ItemIndex;
-  SavedOwner := ComboOwner.Text;
-  SavedPrimary := ComboPrimary.Text;
-
-  // Refresh potential owners list
-  begin
-    ComboOwner.Items.BeginUpdate;
-
-    for i := Pred(ComboOwner.Items.Count) downto 1 do
-      ComboOwner.Items.Delete(i);
-
-    // Only groups with Owner flag can be assigned as owners
-    for Group in GroupsFrame.All do
-      if BitTest(Group.Attributes and SE_GROUP_OWNER) then
-        ComboOwner.Items.Add(LsaxSidToString(Group.Sid));
-
-    // Restore choise
-    if (Mode = guEditOne) and (SavedOwnerCount = ComboOwner.Items.Count) then
-      ComboOwner.ItemIndex := SavedOwnerIndex // Restore by index
-    else
-    begin
-      // Restore by name or fall back to user
-
-      ComboOwner.ItemIndex := 0;
-      for i := 1 to ComboOwner.Items.Count - 1 do
-        if ComboOwner.Items[i] = SavedOwner then
-          ComboOwner.ItemIndex := i;
-
-      if ComboOwner.ItemIndex = 0 then
-        ComboOwner.Text := ComboOwner.Items[0];
-    end;
-
-    ComboOwner.Items.EndUpdate;
-  end;
-
-  // Refresh potential primary group list.
-  // Optimization: multiple edit does not change their list
-  if Mode <> guEditMultiple then
-  begin
-    ComboPrimary.Items.BeginUpdate;
-
-    for i := ComboPrimary.Items.Count - 1 downto 1 do
-      ComboPrimary.Items.Delete(i);
-
-    // Any group present in the token can be assigned as a primary
-    for Node in GroupsFrame.VST.Nodes do
-      ComboPrimary.Items.Add(GroupsFrame.VST.Text[Node, 0]);
-
-    // Restore choise
-    case Mode of
-      guRemove:
-        // Restore by name or fall back to user
-        begin
-          ComboPrimary.ItemIndex := 0;
-          for i := 1 to ComboPrimary.Items.Count - 1 do
-            if ComboPrimary.Items[i] = SavedPrimary then
-              ComboPrimary.ItemIndex := i;
-
-          if ComboPrimary.ItemIndex = 0 then
-            ComboPrimary.Text := ComboPrimary.Items[0];
-        end;
-
-      guEditOne:
-        // Restore by index
-        ComboPrimary.ItemIndex := SavedPrimaryIndex;
-    end;
-
-    ComboPrimary.Items.EndUpdate;
-  end;
+  if Index > 0 then
+    Result := Groups[Index - 1].Sid
+  else
+    Result := SidEditor.Sid
 end;
 
 end.
