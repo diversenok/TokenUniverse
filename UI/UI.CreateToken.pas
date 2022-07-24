@@ -89,10 +89,10 @@ implementation
 
 uses
   UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
-  System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi,
-  Ntapi.ntseapi, Ntapi.ntpebteb, NtUiLib.Errors, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, UI.Builtin.DsObjectPicker, DelphiUtils.Arrays,
-  Ntapi.ntobapi, TU.Tokens.Open;
+  System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntexapi, Ntapi.ntseapi,
+  Ntapi.ntpebteb, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection.Strings, DelphiUtils.Arrays, TU.Tokens.Open,
+  NtUtils.Tokens.Info;
 
 {$R *.dfm}
 
@@ -111,7 +111,7 @@ procedure TDialogCreateToken.ButtonAllocLuidClick;
 var
   NewLuid: TLuid;
 begin
-  if NT_SUCCESS(NtAllocateLocallyUniqueId(NewLuid)) then
+  if NtAllocateLocallyUniqueId(NewLuid).IsSuccess then
     EditSourceLuid.Text := IntToHexEx(NewLuid);
 end;
 
@@ -180,6 +180,7 @@ var
   NewPolicy: TTokenMandatoryPolicy;
   Source: TTokenSource;
   User, Owner, PrimaryGroup: ISid;
+  DefaultDacl: IAcl;
   LogonSession: TLogonId;
 begin
   if CheckBoxInfinite.Checked then
@@ -215,6 +216,11 @@ begin
   // Post-creation: change session
   if CheckBoxSession.Checked then
     Token.SetSessionId(RtlGetCurrentPeb.SessionId).RaiseOnError;
+
+  // TODO: add default DACL support in token creation UI
+  // For now, just set a sensible default instead of empty one
+  if NtxMakeDefaultDaclToken(Token.Handle, DefaultDacl).IsSuccess then
+    Token.SetDefaultDacl(DefaultDacl);
 
   if not TSettings.NoCloseCreationDialogs then
     Close;
