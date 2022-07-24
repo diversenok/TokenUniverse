@@ -1,65 +1,81 @@
 # Token Universe
 
-**Token Universe** is an advanced tool that provides a wide range of possibilities to research **Windows security mechanisms**. It has a convenient interface for creating, viewing, and modifying access tokens, managing Local Security Authority and Security Account Manager's databases. It allows you to obtain and impersonate different security contexts, manage privileges, auditing settings, and so on.
+**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, and more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
 
-My goal is to create a useful tool that implements almost everything I know about access tokens and Windows security model in general. *And, also, to learn even more in the process.* I believe that such a program can become a valuable instrument for researchers and those who want to learn more about the security subsystem. You are welcome to suggest any ideas and report bugs.
+## Downloads
 
-<details>
-  <summary><b>Screenshots</b></summary>
-  <img src="https://user-images.githubusercontent.com/30962924/59454197-391ce680-8e1a-11e9-8247-fad8d66b9899.png"/>&nbsp;
-  <img src="https://user-images.githubusercontent.com/30962924/59454277-636ea400-8e1a-11e9-8013-1f04804e4c49.png"/>&nbsp;
-  <img src="https://user-images.githubusercontent.com/30962924/59454348-8305cc80-8e1a-11e9-8353-214f7a06c617.png"/>&nbsp;
-  <img src="https://user-images.githubusercontent.com/30962924/59454367-8b5e0780-8e1a-11e9-8204-5acc392d9bb0.png"/>&nbsp;
-  <img src="https://user-images.githubusercontent.com/30962924/50378937-eeca6200-064d-11e9-944a-f168d2bc71c2.png"/>&nbsp;
-  <img src="https://user-images.githubusercontent.com/30962924/50378940-06094f80-064e-11e9-8558-472062b290ef.png"/>&nbsp;
-</details>
+The tool supports Windows 7 and above. See the **[releases](https://github.com/diversenok/TokenUniverse/releases)** page for pre-compiled binaries.
 
-# Feature list
+If you encounter bugs and know how to reproduce them, feel free to [open issues](https://github.com/diversenok/TokenUniverse/issues). Additionally, you can download **debug symbols** (TokenUniverse.dbg) from the releases page and place them into the same folder as TokenUniverse.exe, allowing the program to show stack traces on unhandled exceptions.
 
-## Token-related functionality
+For instructions on how to compile the project, see [a section below](#compiling).
 
-### Obtaining tokens
- - [x] Open process/thread token
- - [x] Open effective thread token (via direct impersonation)
- - [x] Query session token
- - [x] Log in user using explicit credentials
- - [x] Log in user without credentials (S4U logon)
- - [x] Duplicate tokens
- - [x] Duplicate handles
- - [x] Open linked token
- - [x] Filter tokens
- - [ ] Create LowBox tokens
- - [x] Created restricted tokens using Safer API
- - [x] Search for opened handles
- - [x] Create anonymous token
- - [ ] Impersonate logon session token via pipes
- - [ ] Open clipboard token
+Key           | Value
+------------- | -----
+Author        | diversenok
+Version       | 0.2
+Date          | July 24, 2022
+Compiled with | Embarcadero Delphi 10.4
 
-#### Highly privileged operations
- - [x] Add custom group membership while logging in users (requires *Tcb Privilege*)
- - [x] Create custom token from scratch (requires *Create Token Privilege*)
+# Features
 
-### Viewing
- - [x] User
- - [x] Statistics, source, flags
- - [x] Extended flags (TOKEN_\*)
- - [x] Restricting SIDs
- - [ ] App container SID and number
- - [ ] Capabilities
- - [ ] Claims
- - [ ] Trust level
- - [x] Logon session type (filtered/elevated/default)
- - [x] Logon session information
- - [ ] Verbose terminal session information
- - [x] Object and handle information (access, attributes, references)
- - [x] Object creator (PID)
- - [x] List of processes that have handles to this object
- - [ ] Creation and last modification times
+## Viewing & Adjusting Tokens
 
-### Viewing & editing
+![Information Window](https://user-images.githubusercontent.com/30962924/180661335-bf436a31-5364-4bd3-b353-95c63da8dbc9.PNG)
+
+## Opening & Creating Tokens
+
+![Main Window](https://user-images.githubusercontent.com/30962924/180661344-01852c95-ab71-4dec-b987-08009109f91e.PNG)
+
+### Example: Logon 
+
+![Logon Window](https://user-images.githubusercontent.com/30962924/180661347-4a20b391-605f-4ba1-9538-0a8959903fd5.PNG)
+
+### Example: Creation
+
+![Creation Window](https://user-images.githubusercontent.com/30962924/180661357-b314c66f-d142-4ea1-90fe-f2c37f07e45d.PNG)
+
+## Spawning Processes
+
+![Run Window](https://user-images.githubusercontent.com/30962924/180661363-c4210fd9-ef39-4d9d-a8ed-844a5f7bab39.PNG)
+
+## Other
+
+![Other](https://user-images.githubusercontent.com/30962924/180661365-e2a5c35a-3024-4812-b728-e3e364f2dd2f.PNG)
+
+## Feature list
+
+There are a lot of already implemented features, but there are also many more to go. Here is the overview of both:
+
+### Token-related functionality
+
+#### Obtaining tokens
+ - [x] Opening process/thread tokens
+ - [ ] Opening all accessible process/thread tokens
+ - [x] Opening tokens via direct impersonation
+ - [x] Querying terminal session token
+ - [x] Logging in users with credentials
+ - [x] Logging in users without credentials (S4U logon)
+ - [x] Logging into virtual accounts
+ - [x] Adding arbitrary group membership while logging users in
+ - [x] Duplicating tokens
+ - [x] Duplicating handles
+ - [x] Searching for opened handles
+ - [x] Opening linked tokens
+ - [x] Creating restricted tokens
+ - [x] Creating restricted tokens via Safer API
+ - [ ] Creating LowBox (AppContainer) tokens
+ - [x] Creating tokens via NtCreareToken
+ - [x] Creating anonymous token
+ - [x] Creating anonymous token with Everyone membership
+ - [ ] Impersonating logon session token via pipes
+ - [ ] Opening clipboard token
+ - [ ] Impersonating BITS
+
+#### Viewing & editing
  - [x] Groups (enable/disable)
  - [x] Privileges (enable/disable/remove)
- - [x] Session
+ - [x] Session ID
  - [x] Integrity level (lower/raise)
  - [x] UIAccess, mandatory policy
  - [x] Virtualization (enable/disable & allow/disallow)
@@ -67,40 +83,62 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [x] Originating logon session
  - [ ] Default DACL
  - [ ] Security descriptor
+ - [ ] Security attributes
  - [x] Audit overrides
  - [ ] Handle flags (inherit, protect)
+ - [x] SID info
+ - [ ] Privilege info
 
-### Using
+#### Just Viewing
+ - [x] User, restricting SIDs
+ - [x] Statistics, source, flags
+ - [x] Extended flags (TOKEN_\*)
+ - [x] App container SID
+ - [ ] Verbose terminal session information
+ - [x] Elevation type
+ - [x] Logon session information
+ - [ ] Package identity information
+ - [ ] Trust level
+ - [ ] Capabilities
+ - [ ] Claims
+ - [ ] AppModel policy
+ - [x] Object and handle information (access, attributes, references)
+ - [x] Object creator (PID)
+ - [x] List of processes that have handles to this token
+ - [ ] Creation and last modification times
+
+#### Operations
  - [x] Impersonation
  - [x] Safe impersonation
  - [ ] Direct impersonation
- - [x] Assign primary token
- - [x] Send handle to process
- - [x] Create process with token
+ - [x] Assigning primary tokens
+ - [x] Sending handles to another process
+ - [x] Spawning processes with tokens
  - [ ] Share with another instance of TokenUniverse
-
-### Other actions
- - [ ] Compare tokens
+ - [ ] Comparing tokens
  - [ ] Linking logon sessions to create UAC-friendly tokens
- - [ ] Logon session relation map
 
-### AppContainer profiles
+#### AppContainers and Packages
  - [x] Viewing AppContainer information
  - [ ] Listing AppContainer profiles per user
  - [x] Listing child AppContainers
- - [ ] Creating/deleting AppContainers
+ - [ ] Creating/deleting AppContainers 
+ - [ ] Viewing package information
+ - [ ] Listing packages
 
-## Local Security Authority
+### Local Security Authority
  - [x] Global audit settings
  - [x] Per-user audit settings
  - [x] Privilege assignment
  - [x] Logon rights assignment
- - [ ] Quotas
+ - [ ] Virtual account creation
+ - [ ] SID tree
  - [ ] Security
- - [ ] Enumerate accounts with privilege
- - [ ] Enumerate accounts with right
-
-## Security Account Manager
+ - [ ] Enumerating accounts with right/privilege
+ - [ ] Source of rights in the token
+ - [ ] Quotas
+ 
+### Security Account Manager
  - [ ] Domain information
  - [ ] Group information
  - [ ] Alias information
@@ -116,42 +154,40 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Sam object tree
  - [ ] Security
 
-## Process creation
+### Process creation
 
-### Methods
+#### Methods
  - [x] CreateProcessAsUser
  - [x] CreateProcessWithToken
- - [x] WMI
+ - [x] CreateProcessWithLogon (credentials)
+ - [x] CreateProcess via code injection (no token)
  - [x] RtlCreateUserProcess
  - [x] RtlCreateUserProcessEx
  - [x] NtCreateUserProcess
  - [x] NtCreateProcessEx
- - [x] CreateProcessWithLogon (credentials)
  - [x] ShellExecuteEx (no token)
  - [x] ShellExecute via IShellDispatch2 (no token)
- - [x] CreateProcess via code injection (no token)
  - [x] WdcRunTaskAsInteractiveUser (no token)
-
-### Parameters
+ - [x] WMI
+ - [ ] IDesktopAppXActivator (packaged)
+ 
+#### Parameters
  - [x] Current directory
  - [x] Desktop
  - [x] Window show mode
  - [x] Flags (inherit handles, create suspended, breakaway from job, ...)
+ - [x] Force job breakaway
  - [ ] Environmental variables
  - [x] Parent process override
  - [ ] Mitigation policies
- - [ ] Child process policy
+ - [x] Child process policy
+ - [x] Custom SxS registration
  - [ ] Job assignment
- - [x] Run as invoker compatibility
+ - [x] Run as invoker/ignore elevation
  - [x] AppContainer SID
  - [ ] Capabilities
 
-### Interface features
- - [ ] Immediate crash notification
- - [ ] Window station and desktop access checks
- - [ ] Debug messages reports
-
-## Process list
+### Process & thread list
  - [x] Hierarchy
  - [x] Icons
  - [ ] Listing processes from Low integrity & AppContainer
@@ -159,20 +195,32 @@ My goal is to create a useful tool that implements almost everything I know abou
  - [ ] Customizable columns
  - [ ] Highlighting
  - [ ] Security
- - [ ] Handle table manipulation
 
-## Interface features
- - [x] Restart as SYSTEM
- - [x] Restart as SYSTEM+ (with *Create Token Privilege*)
- - [ ] Customizable columns
+### Other
+ - [x] Restarting as admin
+ - [x] Restarting as SYSTEM
+ - [x] Restarting as SYSTEM with SeCreateToken
+ - [x] Customizable columns
+ - [ ] Settings
+ - [ ] Sharing settings across users
  - [ ] Graphical hash icons
- - [x] Auto-detect inherited handles
- - [ ] Our own security editor with arbitrary SIDs and mandatory label modification
- - [ ] Customizable list of suggested SIDs
+ - [x] Auto-detecting inherited handles
+ - [x] SID suggestions
  - [x] Detailed error status information
- - [ ] Detailed suggestions on errors
+ - [ ] Dialog for testing access to objects
+ - [ ] DLL mode
 
-## Misc. ideas
- - [?] Logon session creation (requires an authentication package?)
- - [?] ~~Job-based token filtration~~ (unsupported on Vista+)
- - [?] Privilege and audit category description from wsecedit.dll
+# Compiling
+
+To compile the tool, you can use the free [Community Edition of Embarcadero Delphi](https://www.embarcadero.com/products/delphi/starter). After installing it, the steps are the following:
+
+1. Clone the project **and its submodule dependencies** using `git clone --recurse-submodules`. Alternatively, you can use `git submodule update --init` after cloning the repository.
+2. Make sure there are files under the `NtUtilsUI` directory, otherwise, you didn't clone the submodules.
+3. Install `VirtualTree for VCL` using the IDE menu `Tools` -> `GetIt Package Manager`.    
+![VirtualTree](https://user-images.githubusercontent.com/30962924/180660667-43aa9113-ccc6-4548-8a94-9f81ed84e8eb.png)
+4. Open `NtUtilsUI\Components\VirtualTreesExtension.dproj` in the IDE and click `Install` on the project to register it as a design-time package.    
+![Install](https://user-images.githubusercontent.com/30962924/180660721-50fe47dc-039d-40cf-a190-c99f91ac0e2d.png)
+5. Similarly, open `NtUtilsUI\VclEx\VclExtension.dproj` and click `Install`.
+6. Now you can open and build the main `TokenUniverse.dproj` project.
+
+Additionally, if you also want to generate debug symbols during compilation, you'll need **map2dbg** - a tool that converts `*.map` files generated by Delphi into `*.dbg` files that dbghelp.dll can understand. The project is already configured for generating `*.map` files and using a post-build event, so you can download map2dbg from an answer to this [Stack Overflow question](https://stackoverflow.com/questions/9422703) and place it somewhere where the Delphi compiler can find and invoke it.
