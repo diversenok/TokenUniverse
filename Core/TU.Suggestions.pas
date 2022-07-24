@@ -3,7 +3,7 @@ unit TU.Suggestions;
 interface
 
 uses
-  Ntapi.WinUser, TU.Tokens;
+  Ntapi.WinUser, Ntapi.ntseapi, TU.Tokens;
 
 // Default messages
 procedure ShowSuccessMessage(Parent: THwnd; const Text: String);
@@ -13,13 +13,15 @@ function AskForConfirmation(Parent: THwnd; const Text: String): Boolean;
 function AskConvertToPrimary(Parent: THwnd; var Token: IToken): Boolean;
 function AskConvertToImpersonation(Parent: THwnd; var Token: IToken): Boolean;
 procedure CheckSandboxInert(Parent: THwnd; const Token: IToken);
+procedure CheckPrivilege(Parent: THwnd; Privilege: TSeWellKnownPrivilege);
 
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.ntpsapi,
+  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntpsapi, Ntapi.ntpebteb,
   System.TypInfo, NtUtils, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
-  TU.Tokens.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils;
+  TU.Tokens.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils,
+  DelphiUiLib.Reflection.Numeric;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +
@@ -38,6 +40,10 @@ const
   TOKEN_NO_SANDBOX_INERT_TEXT = 'The operation did not enable the Sandbox ' +
     'Inert flag despite being requested to beacuse doing so requires system ' +
     'privileges.';
+
+  TOKEN_NO_PRIVILEGE = 'Privilege Not Enabled';
+  TOKEN_NO_PRIVILEGE_TEXT = 'The required privilege (%s) is not enabled in ' +
+   'the current token. Do you want to enable it first?';
 
 procedure ShowSuccessMessage;
 begin
@@ -114,6 +120,39 @@ begin
     not SandboxInert then
     UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_NO_SANDBOX_INERT,
       TOKEN_NO_SANDBOX_INERT_TEXT, diWarning);
+end;
+
+procedure CheckPrivilege;
+var
+  Token: IToken;
+  Privileges: TArray<TPrivilege>;
+  i: Integer;
+begin
+  if not MakeOpenEffectiveToken(Token, NtCurrentTeb.ClientID, TOKEN_QUERY or
+    TOKEN_ADJUST_PRIVILEGES).IsSuccess then
+    Exit;
+
+  if not Token.QueryPrivileges(Privileges).IsSuccess then
+    Exit;
+
+  for i := 0 to High(Privileges) do
+    if (Privileges[i].Luid = TPrivilegeId(Privilege)) and
+      not BitTest(Privileges[i].Attributes and SE_PRIVILEGE_ENABLED) then
+    begin
+      case UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_NO_PRIVILEGE,
+        Format(TOKEN_NO_PRIVILEGE_TEXT, [TNumeric.Represent(Privilege).Text]),
+        diWarning, dbYesAbortIgnore) of
+
+        IDYES:
+          Token.AdjustPrivileges([Privilege],
+            SE_PRIVILEGE_ENABLED).RaiseOnError;
+
+        IDABORT:
+          Abort;
+      end;
+
+      Break;
+    end;
 end;
 
 type

@@ -61,6 +61,13 @@ function MakeOpenThreadToken(
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
 ): TNtxStatus;
 
+// Open a token of a thread or a process, whichever is available
+function MakeOpenEffectiveToken(
+  out Token: IToken;
+  CID: TClientId;
+  DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
+): TNtxStatus;
+
 // Copy an effective token using direct impersonation
 function MakeCopyViaDirectImpersonation(
   out Token: IToken;
@@ -109,9 +116,9 @@ function MakeNewToken(
 implementation
 
 uses
-  Ntapi.ntpsapi, NtUtils.Tokens.Impersonate, NtUtils.Tokens, NtUtils.WinStation,
-  NtUtils.Processes, NtUtils.Processes.Info, NtUtils.Threads, NtUtils.Objects,
-  NtUtils.Tokens.Logon, NtUtils.Lsa.Sid,
+  Ntapi.ntpsapi, Ntapi.ntstatus, NtUtils.Tokens.Impersonate, NtUtils.Tokens,
+  NtUtils.WinStation, NtUtils.Processes, NtUtils.Processes.Info,
+  NtUtils.Threads, NtUtils.Objects, NtUtils.Tokens.Logon, NtUtils.Lsa.Sid,
   DelphiUiLib.Reflection, System.SysUtils;
 
 function MakeAnonymousToken;
@@ -267,6 +274,14 @@ begin
     Caption := TType.Represent(TID).Text;
 
   Token := CaptureTokenHandle(hxToken, Caption);
+end;
+
+function MakeOpenEffectiveToken;
+begin
+  Result := MakeOpenThreadToken(Token, nil, CID.UniqueThread, DesiredAccess);
+
+  if Result.Status = STATUS_NO_TOKEN then
+    Result := MakeOpenProcessToken(Token, nil, CID.UniqueProcess, DesiredAccess)
 end;
 
 function MakeCopyViaDirectImpersonation;

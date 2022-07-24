@@ -92,7 +92,7 @@ uses
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntexapi, Ntapi.ntseapi,
   Ntapi.ntpebteb, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Strings,
   DelphiUiLib.Reflection.Strings, DelphiUtils.Arrays, TU.Tokens.Open,
-  NtUtils.Tokens.Info;
+  NtUtils.Tokens.Info, TU.Suggestions;
 
 {$R *.dfm}
 
@@ -197,6 +197,9 @@ begin
   Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
   LogonSession := LogonIDSource.SelectedLogonSession;
 
+  // Check is the user forgot to enable the create token privilege
+  CheckPrivilege(Handle, SE_CREATE_TOKEN_PRIVILEGE);
+
   MakeNewToken(Token, ttPrimary, User, CheckBoxUserState.Checked,
     GroupsFrame.All, PrivilegesFrame.Checked, LogonSession,
     PrimaryGroup, Source, Owner, nil, Expires).RaiseOnError;
@@ -210,7 +213,7 @@ begin
   if CheckBoxNewProcMin.Checked then
     NewPolicy := NewPolicy or TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN;
 
-  if NewPolicy <> 0 then
+  if HasAny(NewPolicy) then
     Token.SetMandatoryPolicy(NewPolicy).RaiseOnError;
 
   // Post-creation: change session
