@@ -116,8 +116,8 @@ begin
             .RaiseOnError;
         end
         else
-          MakeLogonToken(Token, GetLogonType, Domain, User, Password,
-            GroupsFrame.All).RaiseOnError;
+          MakeLogonToken(Token, GetLogonType, LOGON32_PROVIDER_DEFAULT, Domain,
+            User, Password, GroupsFrame.All).RaiseOnError;
 
         FormMain.TokenView.Add(Token);
       end,

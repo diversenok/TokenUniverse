@@ -3,8 +3,8 @@ unit TU.Tokens.Open;
 interface
 
 uses
-  Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.NtSecApi, NtUtils,
-  TU.Tokens, TU.Tokens.Old.Types, DelphiApi.Reflection;
+  Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntseapi, Ntapi.NtSecApi, Ntapi.WinBase,
+  NtUtils, TU.Tokens, TU.Tokens.Old.Types, DelphiApi.Reflection;
 
 // Create an anonymous token
 function MakeAnonymousToken(
@@ -82,6 +82,7 @@ function MakeCopyViaDirectImpersonation(
 function MakeLogonToken(
   out Token: IToken;
   LogonType: TSecurityLogonType;
+  LogonProvider: TLogonProvider;
   const Domain: String;
   const User: String;
   const Password: String;
@@ -333,7 +334,7 @@ var
   hxToken: IHandle;
 begin
   Result := LsaxLogonUser(hxToken, Domain, User, PWideChar(Password), LogonType,
-    AdditionalGroups);
+    LogonProvider, AdditionalGroups);
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'Logon Of ' + User);
