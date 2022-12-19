@@ -46,8 +46,7 @@ begin
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcess) then
     Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
-      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoProtection,
-      spoDetectManifest]
+      spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@RtlxCreateUserProcessEx) then
     Result := [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
@@ -58,7 +57,7 @@ begin
     Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
       spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
       spoToken, spoParentProcess, spoJob, spoHandleList, spoChildPolicy,
-      spoLPAC, spoAdditinalFileAccess, spoDetectManifest]
+      spoLPAC, spoProtection, spoAdditinalFileAccess, spoDetectManifest]
 
   else if Pointer(@Method) = Pointer(@NtxCreateProcessEx) then
     Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
