@@ -71,6 +71,8 @@ type
     ComboBoxManifestDpi: TComboBox;
     CheckBoxManifestGdiScaling: TCheckBox;
     CheckBoxManifestLongPaths: TCheckBox;
+    LabelProtection: TLabel;
+    ComboBoxProtection: TComboBox;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -101,6 +103,7 @@ type
     procedure SetToken(const Value: IToken);
     procedure UpdateDesktopList;
     function TryOpenToken(const Info: TProcessInfo): TNtxStatus;
+    function GetProtection(out Value: TProtectionLevel): Boolean;
   public
     property UseToken: IToken read FToken write SetToken;
     constructor Create(AOwner: TComponent); override;
@@ -241,6 +244,9 @@ begin
   if CheckBoxChildOverride.Checked then
     Options.ChildPolicy := Options.ChildPolicy or
       PROCESS_CREATION_CHILD_PROCESS_OVERRIDE;
+
+  if GetProtection(Options.Protection) then
+    Include(Options.Flags, poUseProtection);
 
   if (spoDetectManifest in ExecSupports(ExecMethod)) and
     not RadioButtonManifestNone.Checked then
@@ -453,6 +459,25 @@ begin
     ButtonBrowse.Click;
 end;
 
+function TDialogRun.GetProtection;
+begin
+  Result := True;
+
+  case ComboBoxProtection.ItemIndex of
+    1: Value := PROTECTION_LEVEL_CODEGEN_LIGHT;
+    2: Value := PROTECTION_LEVEL_ANTIMALWARE_LIGHT;
+    3: Value := PROTECTION_LEVEL_PPL_APP;
+    4: Value := PROTECTION_LEVEL_LSA_LIGHT;
+    5: Value := PROTECTION_LEVEL_WINDOWS_LIGHT;
+    6: Value := PROTECTION_LEVEL_WINTCB_LIGHT;
+    7: Value := PROTECTION_LEVEL_AUTHENTICODE;
+    8: Value := PROTECTION_LEVEL_WINDOWS;
+    9: Value := PROTECTION_LEVEL_WINTCB;
+  else
+    Result := False;
+  end;
+end;
+
 procedure TDialogRun.LinkLabelTokenLinkClick;
 begin
   if Assigned(FToken) then
@@ -584,6 +609,7 @@ begin
   CheckBoxChildRestricted.Enabled := spoChildPolicy in SupportedOptions;
   CheckBoxChildUnlessSecure.Enabled := spoChildPolicy in SupportedOptions;
   CheckBoxChildOverride.Enabled := spoChildPolicy in SupportedOptions;
+  ComboBoxProtection.Enabled := spoProtection in SupportedOptions;
   RadioButtonManifestNone.Enabled := spoDetectManifest in SupportedOptions;
   RadioButtonManifestEmbedded.Enabled := spoDetectManifest in SupportedOptions;
   RadioButtonManifestExternalExe.Enabled := spoDetectManifest in SupportedOptions;

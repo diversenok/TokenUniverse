@@ -291,6 +291,13 @@ object DialogRun: TDialogRun
         Height = 13
         Caption = 'AppContainer:'
       end
+      object LabelProtection: TLabel
+        Left = 3
+        Top = 186
+        Width = 53
+        Height = 13
+        Caption = 'Protection:'
+      end
       object ButtonAC: TButton
         Left = 226
         Top = 11
@@ -358,6 +365,28 @@ object DialogRun: TDialogRun
           Caption = 'Override'
           TabOrder = 2
         end
+      end
+      object ComboBoxProtection: TComboBox
+        Left = 62
+        Top = 183
+        Width = 247
+        Height = 21
+        Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
+        ItemIndex = 0
+        TabOrder = 4
+        Text = 'Not specified'
+        Items.Strings = (
+          'Not specified'
+          'Light (CodeGen)'
+          'Light (Antimalware)'
+          'Light (StoreApp)'
+          'Light (LSA)'
+          'Light (Windows)'
+          'Light (WinTcb)'
+          'Full (Authenticode)'
+          'Full (Windows)'
+          'Full (WinTcb)')
       end
     end
     object Manifest: TTabSheet
