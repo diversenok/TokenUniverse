@@ -1165,8 +1165,8 @@ function TToken.ObserveVirtualizationEnabled;
 var
   Info: LongBool;
 begin
-  Callback(QueryVirtualizationAllowed(Info), Info);
-  Result := Events.OnVirtualizationAllowed.Subscribe(Callback);
+  Callback(QueryVirtualizationEnabled(Info), Info);
+  Result := Events.OnVirtualizationEnabled.Subscribe(Callback);
 end;
 
 function TToken.QueryAppContainerInfo;
@@ -2361,7 +2361,7 @@ function TToken.RefreshVirtualizationEnabled;
 var
   Info: LongBool;
 begin
-  Result := QueryVirtualizationAllowed(Info);
+  Result := QueryVirtualizationEnabled(Info);
 end;
 
 function TToken.SetAuditPolicy;
