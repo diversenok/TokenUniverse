@@ -59,6 +59,13 @@ object FormMain: TFormMain
       object N1: TMenuItem
         Caption = '-'
       end
+      object cmAllocConsole: TMenuItem
+        Caption = 'Allocate Console'
+        OnClick = cmAllocConsoleClick
+      end
+      object N7: TMenuItem
+        Caption = '-'
+      end
       object MenuExit: TMenuItem
         Caption = 'Exit'
         OnClick = MenuExitClick

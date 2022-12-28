@@ -64,6 +64,8 @@ type
     N6: TMenuItem;
     cmRevokeCurrent: TMenuItem;
     cmRevokeToken: TMenuItem;
+    cmAllocConsole: TMenuItem;
+    N7: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -105,6 +107,7 @@ type
     procedure TokenViewVSTGetPopupMenu(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; const P: TPoint;
       var AskParent: Boolean; var PopupMenu: TPopupMenu);
+    procedure cmAllocConsoleClick(Sender: TObject);
   end;
 
 var
@@ -312,6 +315,25 @@ var
 begin
   MakeSessionToken(Token, TComboDialog.PickSession(Self)).RaiseOnError;
   TokenView.Add(Token);
+end;
+
+procedure TFormMain.cmAllocConsoleClick(Sender: TObject);
+var
+  Result: TNtxStatus;
+begin
+  if not cmAllocConsole.Checked then
+  begin
+    Result.Location := 'AllocConsole';
+    Result.Win32Result := AllocConsole;
+  end
+  else
+  begin
+    Result.Location := 'FreeConsole';
+    Result.Win32Result := FreeConsole;
+  end;
+
+  Result.RaiseOnError;
+  cmAllocConsole.Checked := not cmAllocConsole.Checked;
 end;
 
 procedure TFormMain.CurrentUserChanged;
