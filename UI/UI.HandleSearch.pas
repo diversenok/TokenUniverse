@@ -44,19 +44,19 @@ procedure TFormHandleSearch.ButtonRefreshClick;
 var
   Handles: TArray<TSystemHandleEntry>;
   PerProcess: TArray<TArrayGroup<TProcessId, TSystemHandleEntry>>;
-  TokenIndex: Integer;
+  TokenType: TObjectTypeInfo;
   hxProcess, hxToken: IHandle;
   ImageName: String;
   i, j: Integer;
 begin
   NtxEnumerateHandles(Handles).RaiseOnError;
-  RtlxFindKernelType('Token', TokenIndex).RaiseOnError;
+  RtlxFindKernelType('Token', TokenType).RaiseOnError;
 
   // Include only tokens from other processes
   TArray.FilterInline<TSystemHandleEntry>(Handles,
     function (const Entry: TSystemHandleEntry): Boolean
     begin
-      Result := (Entry.ObjectTypeIndex = TokenIndex) and
+      Result := (Entry.ObjectTypeIndex = TokenType.Other.TypeIndex) and
         (Entry.UniqueProcessId <> NtCurrentTeb.ClientID.UniqueProcess);
     end
   );

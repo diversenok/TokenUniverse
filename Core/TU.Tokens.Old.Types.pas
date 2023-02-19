@@ -31,7 +31,7 @@ implementation
 
 uses
   System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Sid,
-  NtUtils.Objects.Snapshots, DelphiUtils.Arrays, NtUtils.Objects;
+  NtUtils.Objects.Snapshots, NtUtils.Objects;
 
 { TTokenTypeExHelper }
 
@@ -72,29 +72,20 @@ end;
 
 function TokenGenericMapping;
 var
-  Types: TArray<TObjectTypeInfo>;
+  TokenType: TObjectTypeInfo;
 begin
-  NtxEnumerateTypes(Types).IsSuccess;
-
-  Result.GenericRead := TOKEN_DUPLICATE or TOKEN_QUERY or TOKEN_QUERY_SOURCE;
-  Result.GenericWrite := TOKEN_ADJUST_PRIVILEGES or TOKEN_ADJUST_GROUPS or
-    TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID;
-  Result.GenericExecute := TOKEN_ASSIGN_PRIMARY or TOKEN_IMPERSONATE;
-  Result.GenericAll := TOKEN_ALL_ACCESS;
-
   // Try to use the type snapshot, but fall back to local definition if needed
-  Result := TArray.ConvertFirstOrDefault<TObjectTypeInfo, TGenericMapping>(
-    Types,
-    function (const Entry: TObjectTypeInfo; out Mapping: TGenericMapping):
-      Boolean
-    begin
-      Result := Entry.TypeName = 'Token';
 
-      if Result then
-        Mapping := Entry.Other.GenericMapping;
-    end,
-    Result
-    );
+  if RtlxFindKernelType('Token', TokenType).IsSuccess then
+    Result := TokenType.Other.GenericMapping
+  else
+  begin
+    Result.GenericRead := TOKEN_DUPLICATE or TOKEN_QUERY or TOKEN_QUERY_SOURCE;
+    Result.GenericWrite := TOKEN_ADJUST_PRIVILEGES or TOKEN_ADJUST_GROUPS or
+      TOKEN_ADJUST_DEFAULT or TOKEN_ADJUST_SESSIONID;
+    Result.GenericExecute := TOKEN_ASSIGN_PRIMARY or TOKEN_IMPERSONATE;
+    Result.GenericAll := TOKEN_ALL_ACCESS;
+  end;
 end;
 
 end.
