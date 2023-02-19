@@ -189,13 +189,13 @@ object DialogPickUser: TDialogPickUser
     ShowHint = True
     TabOrder = 0
     inherited tbxSid: TEdit
-      Width = 490
+      Width = 496
     end
     inherited btnDsPicker: TButton
-      Left = 525
+      Left = 528
     end
     inherited btnCheatsheet: TButton
-      Left = 497
+      Left = 500
     end
   end
 end

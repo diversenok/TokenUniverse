@@ -127,9 +127,9 @@ object DialogCreateToken: TDialogCreateToken
         Caption = 'User '
         TabOrder = 0
         object CheckBoxUserState: TCheckBox
-          Left = 7
+          Left = 9
           Top = 45
-          Width = 534
+          Width = 532
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Use for deny only'
@@ -149,22 +149,22 @@ object DialogCreateToken: TDialogCreateToken
           TabOrder = 2
         end
         inline SidEditor: TSidEditor
-          Left = 3
+          Left = 9
           Top = 15
-          Width = 541
+          Width = 532
           Height = 27
           Anchors = [akLeft, akTop, akRight]
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
           inherited tbxSid: TEdit
-            Width = 478
+            Width = 475
           end
           inherited btnDsPicker: TButton
-            Left = 513
+            Left = 507
           end
           inherited btnCheatsheet: TButton
-            Left = 485
+            Left = 479
           end
         end
       end
