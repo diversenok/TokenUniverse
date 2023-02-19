@@ -66,6 +66,7 @@ type
     cmRevokeToken: TMenuItem;
     cmAllocConsole: TMenuItem;
     N7: TMenuItem;
+    cmAccess: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -108,6 +109,7 @@ type
       Node: PVirtualNode; Column: TColumnIndex; const P: TPoint;
       var AskParent: Boolean; var PopupMenu: TPopupMenu);
     procedure cmAllocConsoleClick(Sender: TObject);
+    procedure cmAccessClick(Sender: TObject);
   end;
 
 var
@@ -122,7 +124,7 @@ uses
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
-  DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils,
+  DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
   NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects;
 
@@ -317,6 +319,11 @@ begin
   TokenView.Add(Token);
 end;
 
+procedure TFormMain.cmAccessClick(Sender: TObject);
+begin
+  TAccessCheckForm.Create(Self).Show;
+end;
+
 procedure TFormMain.cmAllocConsoleClick(Sender: TObject);
 var
   Result: TNtxStatus;
@@ -346,6 +353,9 @@ procedure TFormMain.FormClose;
 begin
   TFormEvents.OnMainFormClose.Invoke;
   TokenView.Free;
+
+  if cmAllocConsole.Checked then
+    FreeConsole;
 end;
 
 procedure TFormMain.FormCreate;

@@ -149,6 +149,11 @@ object FormMain: TFormMain
         Caption = 'Manage System Audit...'
         OnClick = MenuSystemAuditClick
       end
+      object cmAccess: TMenuItem
+        Caption = 'Check access to...'
+        ShortCut = 119
+        OnClick = cmAccessClick
+      end
       object MenuRunProgram: TMenuItem
         Caption = 'Run program...'
         ShortCut = 120
