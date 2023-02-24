@@ -30,11 +30,11 @@ begin
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithToken) then
     Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
-      spoToken]
+      spoToken, spoLogonFlags]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessWithLogon) then
     Result := [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
-      spoCredentials]
+      spoLogonFlags, spoCredentials]
 
   else if Pointer(@Method) = Pointer(@AdvxCreateProcessRemote) then
     Result := [spoSuspended, spoInheritHandles, spoBreakawayFromJob,

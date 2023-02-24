@@ -105,7 +105,7 @@ begin
       AccessMask: TAccessMask
     ): TNtxStatus
     var
-      Parameters: IFileOpenParameters;
+      Parameters: IFileParameters;
     begin
       case KnownType of
         otSymlink:
@@ -116,17 +116,17 @@ begin
 
         otDevice, otFileDirectory, otFile, otNamedPipe:
         begin
-          Parameters := FileOpenParameters
+          Parameters := FileParameters
             .UseFileName(FullPath)
             .UseAccess(AccessMask)
             .UseSyncMode(fsAsynchronous)
-            .UseOpenOptions(FILE_COMPLETE_IF_OPLOCKED or FILE_OPEN_NO_RECALL)
+            .UseOptions(FILE_COMPLETE_IF_OPLOCKED or FILE_OPEN_NO_RECALL)
           ;
 
           // Prefer opening reparse points but let the caller overwrite this
           // behavior by using names ending with "\"
           if (FullPath <> '') and (FullPath[High(FullPath)] <> '\') then
-            Parameters := Parameters.UseOpenOptions(Parameters.OpenOptions or
+            Parameters := Parameters.UseOptions(Parameters.Options or
               FILE_OPEN_REPARSE_POINT);
 
           // Don't use backup intent with pipes because it causes the maximum
@@ -134,7 +134,7 @@ begin
           // introcuding self-inflicted race conditions that randomly fail some
           // of them with STATUS_PIPE_NOT_AVAILABLE.
           if KnownType <> otNamedPipe then
-            Parameters := Parameters.UseOpenOptions(Parameters.OpenOptions or
+            Parameters := Parameters.UseOptions(Parameters.Options or
               FILE_OPEN_FOR_BACKUP_INTENT);
 
           Result := NtxOpenFile(hxObject, Parameters);

@@ -293,7 +293,7 @@ begin
     begin
       RtlxCreateFileSection(
         hxManifestSection,
-        FileOpenParameters.UseFileName(EditManifestExecutable.Text, fnWin32),
+        FileParameters.UseFileName(EditManifestExecutable.Text, fnWin32),
         RtlxSecImageNoExecute
       ).RaiseOnError;
 
@@ -591,7 +591,7 @@ begin
   SupportedOptions := ExecSupports(ExecMethod);
 
   ComboBoxDesktop.Enabled := spoDesktop in SupportedOptions;
-  ComboBoxLogonFlags.Enabled := spoCredentials in SupportedOptions;
+  ComboBoxLogonFlags.Enabled := spoLogonFlags in SupportedOptions;
   CheckBoxInherit.Enabled := spoInheritHandles in SupportedOptions;
   CheckBoxSuspended.Enabled := spoSuspended in SupportedOptions;
   CheckBoxBreakaway.Enabled := spoBreakawayFromJob in SupportedOptions;
