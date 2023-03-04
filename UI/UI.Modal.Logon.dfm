@@ -46,7 +46,6 @@ object LogonDialog: TLogonDialog
     ItemIndex = 1
     TabOrder = 0
     Text = 'Interactive'
-    OnChange = ComboLogonTypeChange
     Items.Strings = (
       'S4U (without a password)'
       'Interactive'
@@ -107,7 +106,6 @@ object LogonDialog: TLogonDialog
       Top = 21
       Width = 83
       Height = 21
-      Enabled = False
       MaxLength = 8
       TabOrder = 0
       Text = 'TOK_UNIV'
@@ -134,7 +132,6 @@ object LogonDialog: TLogonDialog
       Width = 127
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      Enabled = False
       TabOrder = 3
       Text = '0'
     end
@@ -145,7 +142,6 @@ object LogonDialog: TLogonDialog
       Height = 23
       Hint = 'Allocate new Locally Unique Identifier'
       Anchors = [akTop, akRight]
-      Enabled = False
       ImageIndex = 4
       ImageMargins.Left = 2
       ImageMargins.Top = 1

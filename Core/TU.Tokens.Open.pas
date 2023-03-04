@@ -79,13 +79,14 @@ function MakeCopyViaDirectImpersonation(
 ): TNtxStatus;
 
 // Logon a user using credentials
-function MakeLogonToken(
+function MakeInteractiveLogonToken(
   out Token: IToken;
+  MessageType: TLogonSubmitType;
   LogonType: TSecurityLogonType;
-  LogonProvider: TLogonProvider;
   const Domain: String;
   const User: String;
   const Password: String;
+  const Source: TTokenSource;
   [opt] const AdditionalGroups: TArray<TGroup> = nil
 ): TNtxStatus;
 
@@ -95,7 +96,7 @@ function MakeS4ULogonToken(
   const Domain : String;
   const User: String;
   const Source: TTokenSource;
-  const AdditionalGroups: TArray<TGroup> = nil
+  [opt] const AdditionalGroups: TArray<TGroup> = nil
 ): TNtxStatus;
 
 // Create a new token from scratch
@@ -329,25 +330,25 @@ begin
   Token := CaptureTokenHandle(hxToken, 'Impersonated ' + Caption);
 end;
 
-function MakeLogonToken;
+function MakeInteractiveLogonToken;
 var
-  hxToken: IHandle;
+  Info: TLogonInfo;
 begin
-  Result := LsaxLogonUser(hxToken, Domain, User, PWideChar(Password), LogonType,
-    LogonProvider, AdditionalGroups);
+  Result := LsaxLogonUserInteractive(Info, Domain, User, Password, Source,
+    LogonType, MessageType, AdditionalGroups);
 
   if Result.IsSuccess then
-    Token := CaptureTokenHandle(hxToken, 'Logon Of ' + User);
+    Token := CaptureTokenHandle(Info.hxToken, 'Logon of ' + User);
 end;
 
 function MakeS4ULogonToken;
 var
-  hxToken: IHandle;
+  Info: TLogonInfo;
 begin
-  Result := LsaxLogonS4U(hxToken, Domain, User, Source, AdditionalGroups);
+  Result := LsaxLogonUserS4U(Info, Domain, User, Source, 0, AdditionalGroups);
 
   if Result.IsSuccess then
-    Token := CaptureTokenHandle(hxToken, 'S4U Logon Of ' + User);
+    Token := CaptureTokenHandle(Info.hxToken, 'S4U Logon of ' + User);
 end;
 
 function MakeNewToken;

@@ -33,7 +33,6 @@ type
     procedure MenuEditClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ButtonAllocLuidClick(Sender: TObject);
-    procedure ComboLogonTypeChange(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
   private
     function GetLogonType: TSecurityLogonType;
@@ -105,19 +104,17 @@ begin
         Source: TTokenSource;
         Token: IToken;
       begin
-        if ComboLogonType.ItemIndex = S4U_INDEX then
-        begin
-          // Use Services 4 Users logon
-          Source.Name := EditSourceName.Text;
-          Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
-            'Source LUID');
+        Source.Name := EditSourceName.Text;
+        Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
+          'Source LUID');
 
-          MakeS4ULogonToken(Token, Domain, User, Source, GroupsFrame.All)
-            .RaiseOnError;
-        end
+        if ComboLogonType.ItemIndex = S4U_INDEX then
+          MakeS4ULogonToken(Token, Domain, User, Source,
+            GroupsFrame.All).RaiseOnError
         else
-          MakeLogonToken(Token, GetLogonType, LOGON32_PROVIDER_DEFAULT, Domain,
-            User, Password, GroupsFrame.All).RaiseOnError;
+          MakeInteractiveLogonToken(Token, TLogonSubmitType.InteractiveLogon,
+            GetLogonType, Domain, User, Password, Source,
+            GroupsFrame.All).RaiseOnError;
 
         FormMain.TokenView.Add(Token);
       end,
@@ -128,13 +125,6 @@ begin
   end;
   ModalResult := mrOk;
   Close;
-end;
-
-procedure TLogonDialog.ComboLogonTypeChange;
-begin
-  EditSourceName.Enabled := (ComboLogonType.ItemIndex = S4U_INDEX);
-  EditSourceLuid.Enabled := EditSourceName.Enabled;
-  ButtonAllocLuid.Enabled := EditSourceName.Enabled;
 end;
 
 constructor TLogonDialog.Create;
@@ -161,8 +151,10 @@ end;
 function TLogonDialog.GetLogonType;
 const
   LogonTypeMapping: array [1 .. 7] of TSecurityLogonType = (
-    LogonTypeInteractive, LogonTypeNetwork, LogonTypeNetworkCleartext,
-    LogonTypeNewCredentials, LogonTypeUnlock, LogonTypeBatch, LogonTypeService
+    TSecurityLogonType.Interactive, TSecurityLogonType.Network,
+    TSecurityLogonType.NetworkCleartext, TSecurityLogonType.NewCredentials,
+    TSecurityLogonType.Unlock, TSecurityLogonType.Batch,
+    TSecurityLogonType.Service
   );
 begin
   Result := LogonTypeMapping[ComboLogonType.ItemIndex];
