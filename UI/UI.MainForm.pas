@@ -67,6 +67,7 @@ type
     cmAllocConsole: TMenuItem;
     N7: TMenuItem;
     cmAccess: TMenuItem;
+    MenuSecurePrompt: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -110,6 +111,7 @@ type
       var AskParent: Boolean; var PopupMenu: TPopupMenu);
     procedure cmAllocConsoleClick(Sender: TObject);
     procedure cmAccessClick(Sender: TObject);
+    procedure MenuSecurePromptClick(Sender: TObject);
   end;
 
 var
@@ -469,6 +471,12 @@ procedure TFormMain.MenuSafeImpersonationClick;
 begin
   TSettings.UseSafeImpersonation := not TSettings.UseSafeImpersonation;
   MenuSafeImpersonation.Checked := TSettings.UseSafeImpersonation;
+end;
+
+procedure TFormMain.MenuSecurePromptClick(Sender: TObject);
+begin
+  TSettings.PromtOnSecureDesktop := not TSettings.PromtOnSecureDesktop ;
+  MenuSecurePrompt.Checked := TSettings.PromtOnSecureDesktop;
 end;
 
 procedure TFormMain.MenuSystemAuditClick;

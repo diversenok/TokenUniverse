@@ -5,13 +5,13 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms, Vcl.ComCtrls,
-  VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups,
-  Ntapi.WinBase, Ntapi.NtSecApi, Vcl.ExtCtrls, NtUtils;
+  VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups, Ntapi.NtSecApi,
+  Vcl.ExtCtrls, NtUtils;
 
 type
   TLogonDialog = class(TChildForm)
-    ComboLogonType: TComboBox;
-    LabelType: TLabel;
+    cbxLogonType: TComboBox;
+    lblLogonType: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
     ButtonAddSID: TButton;
@@ -27,6 +27,10 @@ type
     ButtonAllocLuid: TButton;
     GroupsPanel: TPanel;
     GroupsFrame: TFrameGroups;
+    lblAuthPackage: TLabel;
+    cbxAuthPackage: TComboBox;
+    lblMessageType: TLabel;
+    cbxMessageType: TComboBox;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);
@@ -35,6 +39,8 @@ type
     procedure ButtonAllocLuidClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
   private
+    function GetAuthPackage: AnsiString;
+    function GetMessageType: TLogonSubmitType;
     function GetLogonType: TSecurityLogonType;
     procedure EditSingleGroup(const Value: TGroup);
     procedure SuggestCurrentLogonGroup;
@@ -45,16 +51,14 @@ type
 implementation
 
 uses
-  TU.Credentials, UI.MainForm, UI.Modal.PickUser, TU.Tokens,
-  Ntapi.WinNt, Ntapi.ntdef, Ntapi.ntexapi, Ntapi.ntseapi, Ntapi.ntrtl,
-  NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser, System.UITypes,
-  NtUiLib.Errors, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  Ntapi.ntpsapi, UI.Exceptions, TU.Tokens.Open;
+  Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntrtl, Ntapi.ntexapi, Ntapi.ntpsapi,
+  Ntapi.wincred, NtUiLib.WinCred, Ntapi.WinError, UI.MainForm,
+  UI.Modal.PickUser, NtUtils.Security.Sid, Ntapi.WinUser,
+  NtUtils.WinUser, NtUtils.Errors, System.UITypes, NtUiLib.Errors,
+  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, UI.Exceptions,
+  TU.Tokens, TU.Tokens.Open, UI.Settings;
 
 {$R *.dfm}
-
-const
-  S4U_INDEX = 0; // Make sure to be consisten with the combobox
 
 function IsLogonSid(Sid: ISid): Boolean;
 begin
@@ -81,7 +85,7 @@ procedure TLogonDialog.ButtonAllocLuidClick;
 var
   NewLuid: TLuid;
 begin
-  if NT_SUCCESS(NtAllocateLocallyUniqueId(NewLuid)) then
+  if NtAllocateLocallyUniqueId(NewLuid).IsSuccess then
     EditSourceLuid.Text := IntToHexEx(NewLuid);
 end;
 
@@ -92,37 +96,44 @@ end;
 
 procedure TLogonDialog.ButtonContinueClick;
 var
-  Handle: THwnd;
+  Status: TNtxStatus;
+  Flags: TCredUiWinFlags;
+  MessageStr: String;
+  Credentials: TLogonCredentials;
+  Source: TTokenSource;
+  Token: IToken;
 begin
-  Handle := FormMain.Handle;
-  Enabled := False;
+  if TSettings.PromtOnSecureDesktop then
+    Flags := CREDUIWIN_SECURE_PROMPT
+  else
+    Flags := 0;
 
-  try
-    PromptCredentialsUI(Handle,
-      procedure (Domain, User, Password: String)
-      var
-        Source: TTokenSource;
-        Token: IToken;
-      begin
-        Source.Name := EditSourceName.Text;
-        Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text,
-          'Source LUID');
+  if GetMessageType in [TLogonSubmitType.S4ULogon,
+    TLogonSubmitType.VirtualLogon] then
+  begin
+    // No need to use the secure desktop just for usernames
+    Flags := Flags and not CREDUIWIN_SECURE_PROMPT;
+    MessageStr := 'Note: password is not required';
+  end
+  else
+    MessageStr := 'Logon a user:';
 
-        if ComboLogonType.ItemIndex = S4U_INDEX then
-          MakeS4ULogonToken(Token, Domain, User, Source,
-            GroupsFrame.All).RaiseOnError
-        else
-          MakeInteractiveLogonToken(Token, TLogonSubmitType.InteractiveLogon,
-            GetLogonType, Domain, User, Password, Source,
-            GroupsFrame.All).RaiseOnError;
+  Status := CredxPromptForWindowsCredentials(Handle, 'Token Universe',
+    MessageStr, Credentials, Flags, 0, GetAuthPackage);
 
-        FormMain.TokenView.Add(Token);
-      end,
-      ComboLogonType.ItemIndex = S4U_INDEX
-    );
-  finally
-    Enabled := True;
-  end;
+  if Status.Win32Error = ERROR_CANCELLED then
+    Abort;
+
+  Status.RaiseOnError;
+  Source.Name := EditSourceName.Text;
+  Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
+
+  MakeLogonToken(Token, GetMessageType, GetLogonType, Credentials, Source,
+  GroupsFrame.All, GetAuthPackage).RaiseOnError;
+
+  FormMain.TokenView.Add(Token);
+
+  // TODO: no-close setting
   ModalResult := mrOk;
   Close;
 end;
@@ -148,16 +159,46 @@ begin
   GroupsFrame.OnDefaultAction := EditSingleGroup;
 end;
 
+function TLogonDialog.GetAuthPackage;
+begin
+  case cbxAuthPackage.ItemIndex of
+    1: Result := MSV1_0_PACKAGE_NAME;
+    2: Result := MICROSOFT_KERBEROS_NAME_A;
+  else
+    Result := NEGOSSP_NAME_A;
+  end;
+end;
+
 function TLogonDialog.GetLogonType;
 const
-  LogonTypeMapping: array [1 .. 7] of TSecurityLogonType = (
+  LOGON_TYPES: array [0..11] of TSecurityLogonType = (
     TSecurityLogonType.Interactive, TSecurityLogonType.Network,
+    TSecurityLogonType.Batch, TSecurityLogonType.Service,
+    TSecurityLogonType.Proxy, TSecurityLogonType.Unlock,
     TSecurityLogonType.NetworkCleartext, TSecurityLogonType.NewCredentials,
-    TSecurityLogonType.Unlock, TSecurityLogonType.Batch,
-    TSecurityLogonType.Service
+    TSecurityLogonType.RemoteInteractive, TSecurityLogonType.CachedInteractive,
+    TSecurityLogonType.CachedRemoteInteractive, TSecurityLogonType.CachedUnlock
   );
 begin
-  Result := LogonTypeMapping[ComboLogonType.ItemIndex];
+  if (cbxLogonType.ItemIndex < 0) or
+    (cbxLogonType.ItemIndex > High(LOGON_TYPES)) then
+    Abort;
+
+  Result := LOGON_TYPES[cbxLogonType.ItemIndex];
+end;
+
+function TLogonDialog.GetMessageType;
+const
+  MESSAGE_TYPES: array [0..3] of TLogonSubmitType = (
+    TLogonSubmitType.InteractiveLogon, TLogonSubmitType.S4ULogon,
+    TLogonSubmitType.VirtualLogon, TLogonSubmitType.NoElevationLogon
+  );
+begin
+  if (cbxMessageType.ItemIndex < 0) or
+    (cbxMessageType.ItemIndex > High(MESSAGE_TYPES)) then
+    Abort;
+
+  Result := MESSAGE_TYPES[cbxMessageType.ItemIndex];
 end;
 
 procedure TLogonDialog.MenuEditClick;
@@ -189,9 +230,9 @@ end;
 procedure TLogonDialog.SuggestCurrentLogonGroup;
 const
   TITLE = 'Add current logon SID?';
-  MSG = 'Adding groups during logon requires explicitly specifying the logon ' +
-    'SID for the new token. Do you want to copy it from the current ' +
-    'desktop? This operation will allow using the token for starting ' +
+  MSG = 'Adding groups during logon often requires explicitly specifying the ' +
+    'logon SID for the new token. Do you want to copy it from the current ' +
+    'desktop? This operation will also allow using the token for starting ' +
     'interactive processes.';
 var
   Group: TGroup;

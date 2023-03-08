@@ -3,8 +3,8 @@ object LogonDialog: TLogonDialog
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Logon user'
-  ClientHeight = 388
-  ClientWidth = 350
+  ClientHeight = 558
+  ClientWidth = 386
   Color = clBtnFace
   Constraints.MinHeight = 320
   Constraints.MinWidth = 266
@@ -19,69 +19,87 @@ object LogonDialog: TLogonDialog
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object LabelType: TLabel
+  object lblLogonType: TLabel
     Left = 8
-    Top = 8
-    Width = 58
+    Top = 112
+    Width = 60
     Height = 13
-    Caption = 'Logon type:'
+    Caption = 'Logon Type:'
   end
   object LabelGroups: TLabel
     Left = 8
-    Top = 116
-    Width = 334
+    Top = 225
+    Width = 370
     Height = 17
     Alignment = taCenter
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 'Additional groups (requires Tcb privilege)'
   end
-  object ComboLogonType: TComboBox
+  object lblAuthPackage: TLabel
     Left = 8
-    Top = 27
-    Width = 334
+    Top = 8
+    Width = 117
+    Height = 13
+    Caption = 'Authentication Package:'
+  end
+  object lblMessageType: TLabel
+    Left = 8
+    Top = 58
+    Width = 73
+    Height = 13
+    Caption = 'Message Type:'
+  end
+  object cbxLogonType: TComboBox
+    Left = 8
+    Top = 131
+    Width = 370
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
     ItemIndex = 1
-    TabOrder = 0
-    Text = 'Interactive'
+    TabOrder = 2
+    Text = 'Network'
     Items.Strings = (
-      'S4U (without a password)'
       'Interactive'
       'Network'
-      'Network clear text'
-      'New credentials'
-      'Unlock'
       'Batch'
-      'Service')
+      'Service'
+      'Proxy'
+      'Unlock'
+      'Network Cleartext'
+      'New Credentials'
+      'Remote Interactive'
+      'Cached Interactive'
+      'Cached Remote Interactive'
+      'Cached Unlock')
   end
   object ButtonCancel: TButton
     Left = 8
-    Top = 355
+    Top = 525
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 4
+    TabOrder = 6
     OnClick = ButtonCancelClick
   end
   object ButtonContinue: TButton
-    Left = 267
-    Top = 355
+    Left = 303
+    Top = 525
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Continue'
     Default = True
-    TabOrder = 3
+    TabOrder = 5
     OnClick = ButtonContinueClick
   end
   object ButtonAddSID: TButton
-    Left = 137
-    Top = 355
+    Left = 155
+    Top = 525
     Width = 78
     Height = 25
     Anchors = [akBottom]
@@ -90,25 +108,26 @@ object LogonDialog: TLogonDialog
     ImageMargins.Left = 3
     ImageMargins.Top = 1
     Images = FormMain.SmallIcons
-    TabOrder = 2
+    TabOrder = 4
     OnClick = ButtonAddSIDClick
   end
   object GroupBoxSource: TGroupBox
     Left = 8
-    Top = 54
-    Width = 334
+    Top = 165
+    Width = 370
     Height = 54
     Anchors = [akLeft, akTop, akRight]
-    Caption = 'Token Source '
-    TabOrder = 1
+    Caption = 'Token Source : '
+    TabOrder = 3
     object EditSourceName: TEdit
       Left = 45
       Top = 21
       Width = 83
       Height = 21
+      Hint = 'To mimic the LogonUser API, use "Advapi  ".'
       MaxLength = 8
       TabOrder = 0
-      Text = 'TOK_UNIV'
+      Text = 'TokUniv.'
     end
     object StaticSourceName: TStaticText
       Left = 8
@@ -129,14 +148,14 @@ object LogonDialog: TLogonDialog
     object EditSourceLuid: TEdit
       Left = 167
       Top = 21
-      Width = 127
+      Width = 163
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 3
       Text = '0'
     end
     object ButtonAllocLuid: TButton
-      Left = 300
+      Left = 336
       Top = 20
       Width = 25
       Height = 23
@@ -152,17 +171,17 @@ object LogonDialog: TLogonDialog
   end
   object GroupsPanel: TPanel
     Left = 8
-    Top = 137
-    Width = 334
-    Height = 212
+    Top = 248
+    Width = 370
+    Height = 271
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
-    TabOrder = 5
+    TabOrder = 7
     inline GroupsFrame: TFrameGroups
       Left = 0
       Top = 0
-      Width = 334
-      Height = 212
+      Width = 370
+      Height = 271
       Align = alClient
       DoubleBuffered = True
       ParentDoubleBuffered = False
@@ -170,8 +189,9 @@ object LogonDialog: TLogonDialog
       ShowHint = True
       TabOrder = 0
       inherited VST: TDevirtualizedTree
-        Width = 334
-        Height = 212
+        Width = 370
+        Height = 271
+        AccessibleName = '1'
         PopupMenuEx = PopupMenu
         NoItemsText = 'No additional groups'
         Columns = <
@@ -207,6 +227,36 @@ object LogonDialog: TLogonDialog
           end>
       end
     end
+  end
+  object cbxAuthPackage: TComboBox
+    Left = 8
+    Top = 27
+    Width = 370
+    Height = 21
+    Style = csDropDownList
+    ItemIndex = 0
+    TabOrder = 0
+    Text = 'Negotiate'
+    Items.Strings = (
+      'Negotiate'
+      'Microsoft Authentication Package V1.0'
+      'Kerberos')
+  end
+  object cbxMessageType: TComboBox
+    Left = 8
+    Top = 77
+    Width = 370
+    Height = 21
+    Style = csDropDownList
+    Anchors = [akLeft, akTop, akRight]
+    ItemIndex = 0
+    TabOrder = 1
+    Text = 'Interactive'
+    Items.Strings = (
+      'Interactive'
+      'S4U'
+      'Virtual'
+      'No Elevation')
   end
   object PopupMenu: TPopupMenu
     Left = 208

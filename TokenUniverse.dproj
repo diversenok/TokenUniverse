@@ -163,7 +163,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <Form>DialogRestrictToken</Form>
         </DCCReference>
         <DCCReference Include="UI\UI.Prototypes.pas"/>
-        <DCCReference Include="Core\TU.Credentials.pas"/>
         <DCCReference Include="UI\UI.Modal.Logon.pas">
             <Form>LogonDialog</Form>
         </DCCReference>

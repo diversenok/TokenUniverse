@@ -120,8 +120,9 @@ uses
   NtUtils.Processes.Create.Manual, NtUtils.Tokens, NtUtils.Csr,
   NtUiLib.TaskDialog, NtUtils.SysUtils, NtUtils.Threads, NtUtils.Manifests,
   NtUtils.Processes.Info, NtUtils.Files.Open, TU.Exec, UI.Information,
-  UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Credentials,
-  TU.Tokens.Open;
+  UI.ProcessList, UI.AppContainer.List, UI.MainForm, TU.Tokens.Open,
+  Ntapi.wincred, NtUiLib.WinCred, NtUtils.Tokens.Logon, UI.Settings,
+  Ntapi.WinError;
 
 {$R *.dfm}
 
@@ -175,6 +176,9 @@ var
   ManifestBuilfer: IManifestBuilder;
   ManifestRva: TMemory;
   hxManifestSection: IHandle;
+  Credentials: TLogonCredentials;
+  PromptFlags: TCredUiWinFlags;
+  Status: TNtxStatus;
 begin
   if (@ExecMethod = @AdvxCreateProcessRemote) and
     not Assigned(hxParentProcess) then
@@ -259,14 +263,25 @@ begin
 
   // Prompt for credentials if necessary
   if @ExecMethod = @AdvxCreateProcessWithLogon then
-    PromptCredentialsUI(Handle,
-      procedure (Domain, User, Password: String)
-      begin
-        Options.Domain := Domain;
-        Options.Username := User;
-        Options.Password := Password;
-      end
-    );
+  begin
+    if TSettings.PromtOnSecureDesktop then
+      PromptFlags := CREDUIWIN_SECURE_PROMPT
+    else
+      PromptFlags := 0;
+
+    Status := CredxPromptForWindowsCredentials(Handle, 'Token Universe',
+      'Credentials for the new process:', Credentials,
+      PromptFlags);
+
+    if Status.Win32Error = ERROR_CANCELLED then
+      Abort;
+
+    Status.RaiseOnError;
+
+    Options.Domain := Credentials.Domain;
+    Options.Username := Credentials.Username;
+    Options.Password := Credentials.Password;
+  end;
 
   // TODO: check that the process didn't crash immediately
 

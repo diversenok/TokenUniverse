@@ -180,6 +180,11 @@ object FormMain: TFormMain
         Checked = True
         OnClick = MenuSafeImpersonationClick
       end
+      object MenuSecurePrompt: TMenuItem
+        Caption = 'Show logon prompt on secure desktop'
+        Checked = True
+        OnClick = MenuSecurePromptClick
+      end
       object Showiconsinprocesslist1: TMenuItem
         Caption = 'Show icons in process list'
         Checked = True

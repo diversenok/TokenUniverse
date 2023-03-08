@@ -15,7 +15,6 @@ uses
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
   UI.Prototypes in 'UI\UI.Prototypes.pas',
-  TU.Credentials in 'Core\TU.Credentials.pas',
   UI.Modal.Logon in 'UI\UI.Modal.Logon.pas' {LogonDialog},
   UI.Modal.PickUser in 'UI\UI.Modal.PickUser.pas' {DialogPickUser},
   UI.CreateToken in 'UI\UI.CreateToken.pas' {DialogCreateToken},
