@@ -234,6 +234,7 @@ object LogonDialog: TLogonDialog
     Width = 370
     Height = 21
     Style = csDropDownList
+    Anchors = [akLeft, akTop, akRight]
     ItemIndex = 0
     TabOrder = 0
     Text = 'Negotiate'
