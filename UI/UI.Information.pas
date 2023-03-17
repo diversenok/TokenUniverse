@@ -698,7 +698,7 @@ begin
   ListViewAdvanced.Items.EndUpdate;
 
   if Token.QueryDefaultDacl(DefaultDacl).IsSuccess then
-    FrameDefaultDacl.Load(Auto.RefOrNil<PAcl>(DefaultDacl), nil);
+    FrameDefaultDacl.Load(DefaultDacl, nil);
 
   if Token.QueryUser(User).IsSuccess then
   begin
