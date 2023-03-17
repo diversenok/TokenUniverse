@@ -2,6 +2,7 @@ program TokenUniverse;
 
 uses
   Vcl.Forms,
+  Ntapi.ntpebteb,
   NtUtils,
   NtUtils.Svc.SingleTaskSvc,
   NtUiLib.Errors,
@@ -83,6 +84,9 @@ begin
     ReSvcCreateService(ParamStr(2) = RESVC_SYSPLUS_PARAM).RaiseOnError;
     Exit;
   end;
+
+  if RtlGetCurrentPeb.ImageBaseAddress <> @ImageBase then
+    IsLibrary := True;
 
   // Normal mode
   EnableNtUiLibExceptionHandling;
