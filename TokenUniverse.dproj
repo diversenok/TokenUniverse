@@ -288,6 +288,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.Access.pas"/>
+        <DCCReference Include="Core\TU.DesktopAccess.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

@@ -291,7 +291,7 @@ begin
     Options.Password := Credentials.Password;
   end;
 
-  TuCreateProcess(Options, OptionsEx, Method, ProcInfo).RaiseOnError;
+  TuCreateProcess(Handle, Options, OptionsEx, Method, ProcInfo).RaiseOnError;
 
   // TODO: check that the process didn't crash immediately
 

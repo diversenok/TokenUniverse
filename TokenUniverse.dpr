@@ -66,7 +66,8 @@ uses
   UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame},
   TU.AccountRights in 'Core\TU.AccountRights.pas',
   UI.Access in 'UI\UI.Access.pas' {AccessCheckForm},
-  TU.Access in 'Core\TU.Access.pas';
+  TU.Access in 'Core\TU.Access.pas',
+  TU.DesktopAccess in 'Core\TU.DesktopAccess.pas';
 
 {$R *.res}
 

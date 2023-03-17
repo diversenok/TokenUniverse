@@ -7,7 +7,7 @@ unit TU.Processes.Create;
 interface
 
 uses
-  NtUtils, NtUtils.Processes.Create, NtUtils.Manifests,
+  Ntapi.WinUser, NtUtils, NtUtils.Processes.Create, NtUtils.Manifests,
   DelphiApi.Reflection;
 
 {$MINENUMSIZE 4}
@@ -66,6 +66,7 @@ function TuPsMethodSupports(
 
 // Create a process via the specified method
 function TuCreateProcess(
+  ParentHwnd: THwnd;
   [in] Options: TCreateProcessOptions;
   const OptionsEx: TTuCreateProcessOptions;
   const KnownMethod: TKnownCreateMethod;
@@ -79,7 +80,8 @@ uses
   NtUtils.Files.Open, NtUtils.Sections, NtUtils.Processes, NtUtils.Csr,
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
-  NtUtils.Processes.Create.Remote, NtUtils.Processes.Create.Manual;
+  NtUtils.Processes.Create.Remote, NtUtils.Processes.Create.Manual,
+  TU.DesktopAccess;
 
 function TuGetPsMethod;
 begin
@@ -180,6 +182,16 @@ begin
     (Mode in [mmUseEmbedded..mmCustom]);
 end;
 
+function RequiresPostCreationTokenCheck(
+  KnownMethod: TKnownCreateMethod;
+  const Options: TCreateProcessOptions
+): Boolean;
+begin
+  // Any method with tokens except for WMI since it's better to do pre-creation
+  Result := (spoToken in TuPsMethodSupports(KnownMethod)) and
+    (KnownMethod <> cmWMI) and Assigned(Options.hxToken);
+end;
+
 function TuCreateProcess;
 var
   Method: TCreateProcessMethod;
@@ -202,8 +214,11 @@ begin
   if OptionsEx.ManifestMode = mmUseEmbedded then
     Include(Options.Flags, poDetectManifest);
 
-  // Always suspend the process when donig SxS registration
-  if RequiresSxSRegistration(KnownMethod, OptionsEx.ManifestMode) then
+  // Always suspend the process when donig SxS registration or when to checking
+  // logon SID's access to the desktop
+  if RequiresSxSRegistration(KnownMethod, OptionsEx.ManifestMode) or
+    RequiresPostCreationTokenCheck(KnownMethod, Options) or
+    (KnownMethod = cmCreateProcessWithLogon) then
   begin
     ResumeLater := not (poSuspended in Options.Flags);
     Include(Options.Flags, poSuspended);
@@ -211,11 +226,27 @@ begin
   else
     ResumeLater := False;
 
+  // When using WMI, check if the token grants desktop access before spawning
+  // process because we won't get a handle to suspend/resume it later
+  if (KnownMethod = cmWMI) and Assigned(Options.hxToken) then
+    TuSuggestDesktopAccess(ParentHwnd, Options.Desktop, Options.hxToken);
+
   // Create the process
   Result := Method(Options, Info);
 
   if not Result.IsSuccess then
     Exit;
+
+  // Logon generated a new token with a new logon SID; read it from the process
+  // and ask if the user wants to adjust access.
+  if (KnownMethod = cmCreateProcessWithLogon) and (Info.ValidFields *
+    [piProcessHandle, piThreadHandle] = [piProcessHandle, piThreadHandle]) then
+    TuSuggestDesktopAccessByProcess(ParentHwnd, Options.Desktop,
+      Info.hxProcess.Handle, Info.hxThread.Handle)
+
+  // Similar, for existing tokens: check if the logon SID grants desktop access
+  else if RequiresPostCreationTokenCheck(KnownMethod, Options) then
+    TuSuggestDesktopAccess(ParentHwnd, Options.Desktop, Options.hxToken);
 
   // Perform the CSR/SxS registration if necessary
   if RequiresSxSRegistration(KnownMethod, OptionsEx.ManifestMode) and
@@ -282,7 +313,7 @@ begin
           .UseRuntimeThemes(OptionsEx.UseRuntimeThemes)
           .UseGdiScaling(OptionsEx.UseGdiScaling)
           .UseLongPathAware(OptionsEx.UseLongPathAware)
-            .UseDpiAwareness(OptionsEx.DpiAwareness);
+          .UseDpiAwareness(OptionsEx.DpiAwareness);
 
         case OptionsEx.DpiAwareness of
           dpiUnaware:
