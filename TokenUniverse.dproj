@@ -229,7 +229,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.AppContainer.View.pas">
             <Form>DialogAppContainer</Form>
         </DCCReference>
-        <DCCReference Include="Core\TU.Exec.pas"/>
+        <DCCReference Include="Core\TU.Processes.Create.pas"/>
         <DCCReference Include="UI\UI.AppContainer.List.pas">
             <Form>DialogACProfiles</Form>
         </DCCReference>

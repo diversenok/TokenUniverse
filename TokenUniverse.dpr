@@ -42,7 +42,7 @@ uses
   UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
   UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame},
   UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer},
-  TU.Exec in 'Core\TU.Exec.pas',
+  TU.Processes.Create in 'Core\TU.Processes.Create.pas',
   UI.AppContainer.List in 'UI\UI.AppContainer.List.pas' {DialogACProfiles},
   UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame},
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
