@@ -363,6 +363,7 @@ end;
 procedure TFormMain.FormCreate;
 var
   Token: IToken;
+  TokenType: TObjectTypeInfo;
   Elevation: TTokenElevationInfo;
   Handles: TArray<TProcessHandleEntry>;
   Linked: IToken;
@@ -372,14 +373,16 @@ begin
   CurrentUserChanged(Self);
 
   // Search for inherited handles
-  if NtxEnumerateHandlesProcess(NtCurrentProcess, Handles).IsSuccess then
+  if RtlxFindKernelType('Token', TokenType).IsSuccess and
+    NtxEnumerateHandlesProcess(NtCurrentProcess, Handles).IsSuccess then
   begin
-    // TODO: obtain token's type index in runtime
-    TArray.FilterInline<TProcessHandleEntry>(Handles, ByType(5));
+    TArray.FilterInline<TProcessHandleEntry>(Handles,
+      ByType(TokenType.Other.TypeIndex));
 
     for i := 0 to High(Handles) do
-      TokenView.Add(CaptureTokenHandle(Auto.CaptureHandle(Handle),
-        Format('Inherited %d [0x%x]', [Handle, Handle])));
+      TokenView.Add(CaptureTokenHandle(Auto.CaptureHandle(
+        Handles[i].HandleValue), Format('Inherited %d [0x%x]',
+        [Handles[i].HandleValue, Handles[i].HandleValue])));
   end;
 
   MakeOpenProcessToken(Token, nil, NtCurrentProcessId).RaiseOnError;
