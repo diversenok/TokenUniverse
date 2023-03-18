@@ -28,6 +28,7 @@ type
     cmNtCreateProcessEx,
     cmShellExecuteEx,
     cmIShellDispatch,
+    cmIDesktopAppxActivator,
     cmWDC,
     cmWMI
   );
@@ -96,6 +97,7 @@ begin
     cmNtCreateProcessEx:         Result := NtxCreateProcessEx;
     cmShellExecuteEx:            Result := ShlxExecute;
     cmIShellDispatch:            Result := ComxShellExecute;
+    cmIDesktopAppxActivator:     Result := AppxCreateProcess;
     cmWDC:                       Result := WdcxCreateProcess;
     cmWMI:                       Result := WmixCreateProcess;
   else
@@ -154,6 +156,9 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   // IShellDispatch
   [spoRequireElevation, spoWindowMode],
 
+  // IDesktopAppXActivator (excluding OS version-dependent parameters)
+  [spoRequireElevation, spoToken, spoAppUserModeId, spoPackageBreakaway],
+
   // WDC
   [spoRequireElevation],
 
@@ -162,11 +167,24 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 );
 
 function TuPsMethodSupports;
+var
+  OsVersion: TWindowsVersion;
 begin
-  if (KnownMethod > cmInvalid) and (KnownMethod <= High(TKnownCreateMethod)) then
-    Result := PS_SUPPORTS[KnownMethod]
-  else
-    Result := [];
+  if (KnownMethod <= cmInvalid) or (KnownMethod > High(TKnownCreateMethod)) then
+    Exit([]);
+
+  Result := PS_SUPPORTS[KnownMethod];
+
+  if KnownMethod = cmIDesktopAppxActivator then
+  begin
+    OsVersion := RtlOsVersion;
+
+    if OsVersion >= OsWin11 then
+      Result := Result + [spoCurrentDirectory, spoCurrentDirectory];
+
+    if OsVersion >= OsWin10RS2 then
+      Result := Result + [spoParentProcessId];
+  end;
 end;
 
 function RequiresSxSRegistration(

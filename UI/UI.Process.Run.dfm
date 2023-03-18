@@ -244,6 +244,7 @@ object DialogRun: TDialogRun
           'NtCreateProcessEx'
           'ShellExecuteEx'
           'ShellExecute via IShellDispatch'
+          'IDesktopAppXActivator'
           'WdcRunTaskAsInteractiveUser'
           'WMI')
       end
@@ -286,21 +287,28 @@ object DialogRun: TDialogRun
       ImageIndex = 1
       object LabelAppContainer: TLabel
         Left = 3
-        Top = 16
+        Top = 59
         Width = 70
         Height = 13
         Caption = 'AppContainer:'
       end
       object LabelProtection: TLabel
         Left = 3
-        Top = 186
+        Top = 252
         Width = 53
         Height = 13
         Caption = 'Protection:'
       end
+      object LabelAppId: TLabel
+        Left = 3
+        Top = 7
+        Width = 81
+        Height = 13
+        Caption = 'AppUserModeId:'
+      end
       object ButtonAC: TButton
-        Left = 226
-        Top = 11
+        Left = 227
+        Top = 76
         Width = 83
         Height = 25
         Anchors = [akTop, akRight]
@@ -311,9 +319,9 @@ object DialogRun: TDialogRun
         OnClick = ButtonACClick
       end
       object EditAppContainer: TEdit
-        Left = 79
-        Top = 13
-        Width = 141
+        Left = 3
+        Top = 78
+        Width = 217
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ReadOnly = True
@@ -321,8 +329,8 @@ object DialogRun: TDialogRun
         Text = 'No'
       end
       object CheckBoxLPAC: TCheckBox
-        Left = 79
-        Top = 40
+        Left = 3
+        Top = 104
         Width = 230
         Height = 17
         Anchors = [akLeft, akTop, akRight]
@@ -332,7 +340,7 @@ object DialogRun: TDialogRun
       end
       object GroupBoxChildFlags: TGroupBox
         Left = 3
-        Top = 72
+        Top = 138
         Width = 306
         Height = 105
         Anchors = [akLeft, akTop, akRight]
@@ -368,7 +376,7 @@ object DialogRun: TDialogRun
       end
       object ComboBoxProtection: TComboBox
         Left = 62
-        Top = 183
+        Top = 249
         Width = 247
         Height = 21
         Style = csDropDownList
@@ -387,6 +395,16 @@ object DialogRun: TDialogRun
           'Full (Authenticode)'
           'Full (Windows)'
           'Full (WinTcb)')
+      end
+      object EditAppId: TEdit
+        Left = 3
+        Top = 26
+        Width = 306
+        Height = 21
+        Hint = '{PackageFamilyName}!{AppId}'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 5
+        TextHint = '{PackageFamilyName}!{AppId}'
       end
     end
     object Manifest: TTabSheet

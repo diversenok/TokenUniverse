@@ -7,7 +7,7 @@ uses
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
-  TU.Processes.Create;
+  TU.Processes.Create, Ntapi.WinNt;
 
 type
   TDialogRun = class(TChildForm)
@@ -73,6 +73,8 @@ type
     CheckBoxManifestLongPaths: TCheckBox;
     LabelProtection: TLabel;
     ComboBoxProtection: TComboBox;
+    EditAppId: TEdit;
+    LabelAppId: TLabel;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -95,6 +97,7 @@ type
     Method: TKnownCreateMethod;
     FToken: IToken;
     ParentAccessMask: TProcessAccessMask;
+    ParentProcessId: TProcessId;
     hxParentProcess: IHandle;
     AppContainerSid: ISid;
     CaptionSubscription: IAutoReleasable;
@@ -112,7 +115,7 @@ type
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntseapi, Ntapi.WinUser,
+  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntseapi, Ntapi.WinUser,
   Ntapi.wincred, Ntapi.Shlwapi,
   NtUtils.Processes, NtUtils.Processes.Create.Remote, NtUtils.Objects,
   NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Profiles,
@@ -155,6 +158,7 @@ begin
   NtxOpenProcess(hxParentProcess, ClientIdEx.ProcessID,
     ParentAccessMask).RaiseOnError;
 
+  ParentProcessId := ClientIdEx.ProcessID;
   EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
     ClientIdEx.ProcessID]);
 end;
@@ -181,15 +185,25 @@ begin
     Exit;
   end;
 
+  if (Method = cmIDesktopAppxActivator) and (EditAppId.Text = '') then
+  begin
+    UsrxShowTaskDialog(Handle, 'Error', 'Invalid AppUserModeId',
+      'The selected method requires explicitly specifying package information.',
+      diError, dbOk);
+    Exit;
+  end;
+
   Options := Default(TCreateProcessOptions);
   Options.Application := EditExe.Text;
   Options.Parameters := EditParams.Text;
   Options.CurrentDirectory := EditDir.Text;
   Options.Desktop := ComboBoxDesktop.Text;
+  Options.ParentProcessId := ParentProcessId;
   Options.hxParentProcess := hxParentProcess;
   Options.AppContainer := AppContainerSid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
+  Options.AppUserModeId := EditAppId.Text;
 
   if Assigned(FToken) then
     Options.hxToken := FToken.Handle;
@@ -407,6 +421,7 @@ end;
 
 procedure TDialogRun.MenuClearParentClick;
 begin
+  ParentProcessId := 0;
   hxParentProcess := nil;
   EditParent.Text := '<not specified>';
 end;
@@ -516,8 +531,8 @@ begin
   CheckBoxIgnoreElevation.Enabled := spoIgnoreElevation in SupportedOptions;
   ComboBoxShowMode.Enabled := spoWindowMode in SupportedOptions;
   CheckBoxRunAsInvoker.Enabled := spoRunAsInvoker in SupportedOptions;
-  EditParent.Enabled := spoParentProcess in SupportedOptions;
-  ButtonChooseParent.Enabled := spoParentProcess in SupportedOptions;
+  EditParent.Enabled := [spoParentProcess, spoParentProcessId] * SupportedOptions <> [];
+  ButtonChooseParent.Enabled := [spoParentProcess, spoParentProcessId] * SupportedOptions <> [];
   EditAppContainer.Enabled := spoAppContainer in SupportedOptions;
   ButtonAC.Enabled := spoAppContainer in SupportedOptions;
   CheckBoxLPAC.Enabled := spoLPAC in SupportedOptions;
@@ -537,6 +552,7 @@ begin
   CheckBoxManifestLongPaths.Enabled := spoDetectManifest in SupportedOptions;
   LabelManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
   ComboBoxManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
+  EditAppId.Enabled := spoAppUserModeId in SupportedOptions;
 
   if spoToken in SupportedOptions then
     LinkLabelToken.Font.Style := LinkLabelToken.Font.Style - [fsStrikeOut]
