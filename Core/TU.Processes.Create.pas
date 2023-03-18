@@ -180,7 +180,7 @@ begin
     OsVersion := RtlOsVersion;
 
     if OsVersion >= OsWin11 then
-      Result := Result + [spoCurrentDirectory, spoCurrentDirectory];
+      Result := Result + [spoCurrentDirectory, spoWindowMode];
 
     if OsVersion >= OsWin10RS2 then
       Result := Result + [spoParentProcessId];
