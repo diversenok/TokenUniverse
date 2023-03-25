@@ -1,6 +1,6 @@
 # Token Universe
 
-**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, and more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
+**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, checking available access to many types of objects, and more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
 
 ## Downloads
 
@@ -13,8 +13,8 @@ For instructions on how to compile the project, see [a section below](#compiling
 Key           | Value
 ------------- | -----
 Author        | diversenok
-Version       | 0.2
-Date          | July 24, 2022
+Version       | 0.3
+Date          | March 25th, 2023
 Compiled with | Embarcadero Delphi 10.4
 
 # Features
@@ -29,7 +29,7 @@ Compiled with | Embarcadero Delphi 10.4
 
 ### Example: Logon 
 
-![Logon Window](https://user-images.githubusercontent.com/30962924/180661347-4a20b391-605f-4ba1-9538-0a8959903fd5.PNG)
+![Logon Window](https://user-images.githubusercontent.com/30962924/227736765-6d25b466-df8e-4606-ad17-de8864c50652.png)
 
 ### Example: Creation
 
@@ -38,6 +38,10 @@ Compiled with | Embarcadero Delphi 10.4
 ## Spawning Processes
 
 ![Run Window](https://user-images.githubusercontent.com/30962924/180661363-c4210fd9-ef39-4d9d-a8ed-844a5f7bab39.PNG)
+
+## Checking Access
+
+![Access Check Window](https://user-images.githubusercontent.com/30962924/227734301-782086c6-aad0-4e67-ac83-32e574dd3ed1.png)
 
 ## Other
 
@@ -143,7 +147,7 @@ There are a lot of already implemented features, but there are also many more to
  - [ ] Group information
  - [ ] Alias information
  - [ ] User information
- - [ ] Enumerate domain groups/aliases/users
+ - [x] Enumerate domain groups/aliases/users
  - [ ] Enumerate group members
  - [ ] Enumerate alias members
  - [ ] Manage group members
@@ -181,20 +185,35 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Parent process override
  - [ ] Mitigation policies
  - [x] Child process policy
+ - [x] Process protection (PPL/Full/etc.)
  - [x] Custom SxS registration
  - [ ] Job assignment
  - [x] Run as invoker/ignore elevation
  - [x] AppContainer SID
  - [ ] Capabilities
+ - [ ] Security descriptor
+ - [x] Verify access to desktop/window station
 
 ### Process & thread list
  - [x] Hierarchy
  - [x] Icons
  - [ ] Listing processes from Low integrity & AppContainer
- - [ ] Basic actions (resume/suspend, ...)
+ - [x] Suspend/resume support
  - [ ] Customizable columns
  - [ ] Highlighting
  - [ ] Security
+
+### Attack Surface Analysis
+ - [x] Checking access to NT namespace objects
+ - [x] Namespace object name suggestions
+ - [x] Checking access to processes/threads/tokens
+ - [x] Checking access to LSA and SAM accounts
+ - [ ] Checking access to window stations and desktops
+ - [ ] Checking access to services and SCM
+ - [ ] Checking access to file shares
+ - [ ] Checking access to kernel transactions
+ - [ ] Checking access to objects in private namespaces
+ - [ ] Enumerating accessible resources
 
 ### Other
  - [x] Restarting as admin
@@ -207,7 +226,6 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Auto-detecting inherited handles
  - [x] SID suggestions
  - [x] Detailed error status information
- - [ ] Dialog for testing access to objects
  - [ ] DLL mode
 
 # Compiling
