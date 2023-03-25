@@ -323,7 +323,7 @@ end;
 
 procedure TFormMain.cmAccessClick(Sender: TObject);
 begin
-  TAccessCheckForm.Create(Self).Show;
+  TAccessCheckForm.CreateChild(Self, cfmDesktop).Show;
 end;
 
 procedure TFormMain.cmAllocConsoleClick(Sender: TObject);

@@ -117,8 +117,8 @@ object AccessCheckForm: TAccessCheckForm
         Height = 25
         Anchors = [akTop, akRight]
         Caption = 'Select...'
-        Enabled = False
         TabOrder = 2
+        OnClick = btnSelectCidClick
       end
       object cbxCidSubType: TComboBox
         Left = 384
@@ -207,10 +207,6 @@ object AccessCheckForm: TAccessCheckForm
         TabOrder = 2
         Text = 'Unknown'
       end
-    end
-    object TabSingleton: TTabSheet
-      Caption = 'Singleton Objects'
-      ImageIndex = 5
     end
   end
   inline AccessMaskFrame: TAccessMaskFrame

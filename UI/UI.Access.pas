@@ -19,7 +19,6 @@ type
     tbxNameType: TEdit;
     TabBySid: TTabSheet;
     AccessMaskFrame: TAccessMaskFrame;
-    TabSingleton: TTabSheet;
     ButtonClose: TButton;
     lblCidtType: TLabel;
     lblCid: TLabel;
@@ -39,6 +38,7 @@ type
     procedure ButtonCloseClick(Sender: TObject);
     procedure tbxCidChange(Sender: TObject);
     procedure tbxSidChange(Sender: TObject);
+    procedure btnSelectCidClick(Sender: TObject);
   private
     procedure ShowAccessMask(
       Value: TAccessMask;
@@ -56,9 +56,22 @@ implementation
 
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
-  NtUtils.SysUtils, NtUtils.Lsa.Sid,
-  NtUiLib.Errors, NtUiLib.AutoCompletion,
-  DelphiUiLib.Reflection.Numeric, TU.Access;
+  NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, NtUiLib.AutoCompletion,
+  DelphiUiLib.Reflection.Numeric, TU.Access, UI.ProcessList;
+
+procedure TAccessCheckForm.btnSelectCidClick;
+var
+  IsThread: Boolean;
+  ClientIdEx: TClientIdEx;
+begin
+  IsThread := cbxCidType.ItemIndex = 1;
+  ClientIdEx := TProcessListDialog.Execute(Self, IsThread);
+
+  if IsThread then
+    tbxCid.Text := RtlxUIntToStr(ClientIdEx.ThreadID)
+  else
+    tbxCid.Text := RtlxUIntToStr(ClientIdEx.ProcessID);
+end;
 
 procedure TAccessCheckForm.ButtonCloseClick;
 begin
