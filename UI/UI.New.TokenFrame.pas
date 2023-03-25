@@ -16,13 +16,13 @@ type
     property Token: IToken read GetToken;
   end;
 
-  TTokenNode = class (TCustomNodeProvider, ITokenNode)
+  TTokenNode = class (TNodeProvider, ITokenNode)
     FToken: IToken;
     FSubscriptions: array [TTokenStringClass] of IAutoReleasable;
     procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
     procedure ColumnUpdated(const Column: TTokenStringClass; const NewValue: String);
     function GetToken: IToken;
-    function GetColumn(Index: Integer): String; override;
+    function GetColumnText(Index: Integer): String; override;
     constructor Create(const Source: IToken; Columns: TVirtualTreeColumns);
   end;
 
@@ -65,9 +65,7 @@ uses
 
 procedure TTokenNode.ColumnUpdated;
 begin
-  // The text changed; ask the tree to redraw the item when visible
-  if Assigned(Tree) and Assigned(Node) then
-    Tree.InvalidateNode(Node);
+  Self.Invalidate;
 end;
 
 constructor TTokenNode.Create;
@@ -87,7 +85,7 @@ begin
   end;
 end;
 
-function TTokenNode.GetColumn;
+function TTokenNode.GetColumnText;
 var
   InfoClass: TTokenStringClass absolute Index;
 begin
@@ -150,7 +148,7 @@ end;
 
 function TFrameTokens.AddRoot;
 var
-  Provider: INodeProvider;
+  Provider: IEditableNodeProvider;
 begin
   if not Assigned(Root) then
     Root := VST.RootNode;
@@ -160,8 +158,8 @@ begin
   VST.TreeOptions.PaintOptions := VST.TreeOptions.PaintOptions +
     [TVTPaintOption.toShowRoot];
 
-  Provider := TCustomNodeProvider.Create;
-  Provider.Column[0] := Caption;
+  Provider := TEditableNodeProvider.Create;
+  Provider.ColumnText[0] := Caption;
   Provider.FontStyle := [TFontStyle.fsBold];
 
   Result := VST.AddChild(Root, Provider);
