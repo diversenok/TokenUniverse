@@ -35,7 +35,7 @@ begin
   begin
     with AccessMaskFrame do
     begin
-      LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
+      LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping, True);
       AccessMask := Access;
       IsReadOnly := True;
     end;

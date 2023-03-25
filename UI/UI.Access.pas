@@ -83,8 +83,8 @@ begin
   AccessMaskFrame.IsReadOnly := True;
   ResetAccessMask;
 
-  ShlxEnableNamespaceSuggestions(tbxName.Handle, NT_NAMESPACE_KNOWN_TYPES).RaiseOnError;
   SidEditor.OnSidChanged := tbxSidChange;
+  ShlxEnableNamespaceSuggestions(tbxName.Handle, NT_NAMESPACE_KNOWN_TYPES);
 end;
 
 procedure TAccessCheckForm.ResetAccessMask;
@@ -94,7 +94,7 @@ end;
 
 procedure TAccessCheckForm.ShowAccessMask;
 begin
-  AccessMaskFrame.LoadType(MaskType, GenericMapping);
+  AccessMaskFrame.LoadType(MaskType, GenericMapping, True);
   AccessMaskFrame.AccessMask := Value;
 end;
 
