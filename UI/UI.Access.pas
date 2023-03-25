@@ -39,6 +39,7 @@ type
     procedure tbxCidChange(Sender: TObject);
     procedure tbxSidChange(Sender: TObject);
     procedure btnSelectCidClick(Sender: TObject);
+    procedure PageControlModesChange(Sender: TObject);
   private
     procedure ShowAccessMask(
       Value: TAccessMask;
@@ -85,6 +86,11 @@ begin
 
   SidEditor.OnSidChanged := tbxSidChange;
   ShlxEnableNamespaceSuggestions(tbxName.Handle, NT_NAMESPACE_KNOWN_TYPES);
+end;
+
+procedure TAccessCheckForm.PageControlModesChange;
+begin
+  ResetAccessMask;
 end;
 
 procedure TAccessCheckForm.ResetAccessMask;

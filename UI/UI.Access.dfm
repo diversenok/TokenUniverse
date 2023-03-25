@@ -23,6 +23,7 @@ object AccessCheckForm: TAccessCheckForm
     ActivePage = TabByName
     Align = alTop
     TabOrder = 0
+    OnChange = PageControlModesChange
     object TabByName: TTabSheet
       Caption = 'By NT Name'
       object lblNameType: TLabel
