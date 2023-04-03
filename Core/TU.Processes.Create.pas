@@ -109,7 +109,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [],
 
   // CreateProcessAsUser
-  [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoNewConsole, spoRunAsInvoker, spoIgnoreElevation,
     spoEnvironment, spoSecurity, spoWindowMode, spoDesktop, spoToken,
     spoParentProcess, spoJob, spoHandleList, spoMitigationPolicies,
@@ -117,53 +117,54 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
     spoDetectManifest],
 
   // CreateProcessWithToken
-  [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
+  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
     spoToken, spoLogonFlags],
 
   // CreateProcessWithLogon
-  [spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
+  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
     spoLogonFlags, spoCredentials],
 
   // CreateProcess via code injection
-  [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoNewConsole, spoDesktop, spoParentProcess, spoTimeout],
 
   // RtlCreateUserProcess
-  [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
-    spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoDetectManifest],
+  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
+    spoSecurity, spoWindowMode, spoDesktop, spoToken, spoParentProcess,
+    spoDetectManifest],
 
   // RtlCreateUserProcessEx
-  [spoSuspended, spoInheritHandles, spoEnvironment, spoSecurity,
-    spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob,
+  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
+    spoSecurity, spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob,
     spoDetectManifest],
 
   // NtCreateUserProcess
-  [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
     spoToken, spoParentProcess, spoJob, spoHandleList, spoChildPolicy,
     spoLPAC, spoProtection, spoAdditinalFileAccess, spoDetectManifest],
 
   // NtCreateProcessEx
-  [spoSuspended, spoInheritHandles, spoBreakawayFromJob,
+  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
     spoToken, spoParentProcess, spoSection, spoAdditinalFileAccess,
     spoDetectManifest],
 
   // ShellExecuteEx
-  [spoSuspended, spoBreakawayFromJob, spoNewConsole,
+  [spoCurrentDirectory, spoSuspended, spoBreakawayFromJob, spoNewConsole,
     spoRequireElevation, spoRunAsInvoker, spoWindowMode],
 
   // IShellDispatch
-  [spoRequireElevation, spoWindowMode],
+  [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
 
   // IDesktopAppXActivator (excluding OS version-dependent parameters)
   [spoRequireElevation, spoToken, spoAppUserModeId, spoPackageBreakaway],
 
   // WDC
-  [spoRequireElevation],
+  [spoCurrentDirectory, spoRequireElevation],
 
   // WMI
-  [spoSuspended, spoWindowMode, spoDesktop, spoToken]
+  [spoCurrentDirectory, spoSuspended, spoWindowMode, spoDesktop, spoToken]
 );
 
 function TuPsMethodSupports;
