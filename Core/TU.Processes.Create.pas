@@ -110,7 +110,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // CreateProcessAsUser
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoNewConsole, spoRunAsInvoker, spoIgnoreElevation,
+    spoForceBreakaway, spoInheritConsole, spoRunAsInvoker, spoIgnoreElevation,
     spoEnvironment, spoSecurity, spoWindowMode, spoDesktop, spoToken,
     spoParentProcess, spoJob, spoHandleList, spoMitigationPolicies,
     spoChildPolicy, spoLPAC, spoAppContainer, spoProtection,
@@ -126,7 +126,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // CreateProcess via code injection
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoNewConsole, spoDesktop, spoParentProcess, spoTimeout],
+    spoInheritConsole, spoDesktop, spoParentProcess, spoTimeout],
 
   // RtlCreateUserProcess
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
@@ -140,9 +140,10 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // NtCreateUserProcess
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
-    spoToken, spoParentProcess, spoJob, spoHandleList, spoChildPolicy,
-    spoLPAC, spoProtection, spoAdditinalFileAccess, spoDetectManifest],
+    spoForceBreakaway, spoInheritConsole, spoEnvironment, spoSecurity,
+    spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob,
+    spoHandleList, spoChildPolicy, spoLPAC, spoProtection,
+    spoAdditinalFileAccess, spoDetectManifest],
 
   // NtCreateProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
@@ -151,7 +152,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
     spoDetectManifest],
 
   // ShellExecuteEx
-  [spoCurrentDirectory, spoSuspended, spoBreakawayFromJob, spoNewConsole,
+  [spoCurrentDirectory, spoSuspended, spoBreakawayFromJob, spoInheritConsole,
     spoRequireElevation, spoRunAsInvoker, spoWindowMode],
 
   // IShellDispatch

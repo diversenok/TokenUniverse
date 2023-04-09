@@ -92,55 +92,53 @@ object DialogRun: TDialogRun
         object CheckBoxInherit: TCheckBox
           Left = 11
           Top = 24
-          Width = 115
+          Width = 134
           Height = 17
           Hint = 'Allow the new process inherit handles from the parent process'
           Caption = 'Inherit handles'
           TabOrder = 0
         end
         object CheckBoxSuspended: TCheckBox
-          Left = 11
-          Top = 47
-          Width = 115
+          Left = 157
+          Top = 24
+          Width = 134
           Height = 17
           Hint = 'Do not let the process start immediately'
           Caption = 'Create suspended'
-          TabOrder = 2
+          TabOrder = 4
         end
         object CheckBoxBreakaway: TCheckBox
-          Left = 158
-          Top = 24
+          Left = 11
+          Top = 68
           Width = 134
           Height = 17
           Hint = 'Start the new process outside the parent'#39's job object if allowed'
           Caption = 'Breakaway from job'
-          TabOrder = 1
+          TabOrder = 2
         end
-        object CheckBoxNewConsole: TCheckBox
+        object CheckBoxInheritConsole: TCheckBox
           Left = 11
-          Top = 90
+          Top = 46
           Width = 134
           Height = 17
           Hint = 'Create a new console instead of inheriting one from the parent'
-          Caption = 'Create new console'
-          Checked = True
-          State = cbChecked
-          TabOrder = 6
+          Caption = 'Inherit console'
+          TabOrder = 1
         end
         object CheckBoxRunas: TCheckBox
-          Left = 11
-          Top = 70
-          Width = 116
+          Left = 157
+          Top = 46
+          Width = 134
           Height = 15
           Hint = 'Ask User Account Control for elevation'
           Caption = 'Request elevation'
           Enabled = False
-          TabOrder = 4
+          TabOrder = 5
         end
         object CheckBoxRunAsInvoker: TCheckBox
-          Left = 158
-          Top = 68
-          Width = 116
+          Left = 157
+          Top = 90
+          Width = 134
           Height = 17
           Hint = 
             'Configure __COMPAT_LAYER environment variable to enable/disable ' +
@@ -148,12 +146,12 @@ object DialogRun: TDialogRun
           AllowGrayed = True
           Caption = 'Run as invoker'
           State = cbGrayed
-          TabOrder = 5
+          TabOrder = 7
         end
         object CheckBoxForceBreakaway: TCheckBox
-          Left = 158
-          Top = 47
-          Width = 116
+          Left = 11
+          Top = 90
+          Width = 134
           Height = 15
           Hint = 
             'Allows the new process to breakaway from all parent jobs regardl' +
@@ -164,13 +162,13 @@ object DialogRun: TDialogRun
         end
         object CheckBoxIgnoreElevation: TCheckBox
           Left = 158
-          Top = 91
-          Width = 116
+          Top = 68
+          Width = 133
           Height = 15
           Hint = 'Force starting the process without elevation'
           Caption = 'Ignore elevation'
           Enabled = False
-          TabOrder = 7
+          TabOrder = 6
         end
       end
       object ComboBoxLogonFlags: TComboBox

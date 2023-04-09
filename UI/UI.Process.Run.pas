@@ -39,7 +39,7 @@ type
     EditParent: TEdit;
     PopupClearParent: TPopupMenu;
     MenuClearParent: TMenuItem;
-    CheckBoxNewConsole: TCheckBox;
+    CheckBoxInheritConsole: TCheckBox;
     CheckBoxRunAsInvoker: TCheckBox;
     EditAppContainer: TEdit;
     LabelAppContainer: TLabel;
@@ -220,8 +220,8 @@ begin
   if CheckBoxInherit.Checked then
     Include(Options.Flags, poInheritHandles);
 
-  if CheckBoxNewConsole.Checked then
-    Include(Options.Flags, poNewConsole);
+  if CheckBoxInheritConsole.Checked then
+    Include(Options.Flags, poInheritConsole);
 
   if CheckBoxIgnoreElevation.Checked then
     Include(Options.Flags, poIgnoreElevation);
@@ -527,7 +527,7 @@ begin
   CheckBoxSuspended.Enabled := spoSuspended in SupportedOptions;
   CheckBoxBreakaway.Enabled := spoBreakawayFromJob in SupportedOptions;
   CheckBoxForceBreakaway.Enabled := spoForceBreakaway in SupportedOptions;
-  CheckBoxNewConsole.Enabled := spoNewConsole in SupportedOptions;
+  CheckBoxInheritConsole.Enabled := spoInheritConsole in SupportedOptions;
   CheckBoxRunas.Enabled := spoRequireElevation in SupportedOptions;
   CheckBoxIgnoreElevation.Enabled := spoIgnoreElevation in SupportedOptions;
   ComboBoxShowMode.Enabled := spoWindowMode in SupportedOptions;
