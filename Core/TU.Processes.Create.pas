@@ -96,9 +96,9 @@ begin
     cmNtCreateUserProcess:       Result := NtxCreateUserProcess;
     cmNtCreateProcessEx:         Result := NtxCreateProcessEx;
     cmShellExecuteEx:            Result := ShlxExecute;
-    cmIShellDispatch:            Result := ComxShellExecute;
-    cmIDesktopAppxActivator:     Result := AppxCreateProcess;
-    cmWDC:                       Result := WdcxCreateProcess;
+    cmIShellDispatch:            Result := ComxShellDispatchExecute;
+    cmIDesktopAppxActivator:     Result := PkgxCreateProcessInPackage;
+    cmWDC:                       Result := WdcxRunAsInteractive;
     cmWMI:                       Result := WmixCreateProcess;
   else
     Result := nil;
@@ -111,18 +111,18 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   // CreateProcessAsUser
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoInheritConsole, spoRunAsInvoker, spoIgnoreElevation,
-    spoEnvironment, spoSecurity, spoWindowMode, spoDesktop, spoToken,
-    spoParentProcess, spoJob, spoHandleList, spoMitigationPolicies,
-    spoChildPolicy, spoLPAC, spoAppContainer, spoProtection,
-    spoDetectManifest],
+    spoEnvironment, spoObjectInherit, spoSecurity, spoWindowMode,
+    spoWindowTitle, spoDesktop, spoToken, spoParentProcess, spoJob,
+    spoDebugPort, spoHandleList, spoMitigationPolicies, spoChildPolicy, spoLPAC,
+    spoAppContainer, spoProtection, spoDetectManifest],
 
   // CreateProcessWithToken
-  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
-    spoToken, spoLogonFlags],
+  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode,
+    spoWindowTitle, spoDesktop, spoToken, spoLogonFlags],
 
   // CreateProcessWithLogon
-  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
-    spoLogonFlags, spoCredentials],
+  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode,
+    spoWindowTitle, spoDesktop, spoLogonFlags, spoCredentials],
 
   // CreateProcess via code injection
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
@@ -130,25 +130,27 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // RtlCreateUserProcess
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
-    spoSecurity, spoWindowMode, spoDesktop, spoToken, spoParentProcess,
-    spoDetectManifest],
+    spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
+    spoParentProcess, spoDebugPort, spoDetectManifest],
 
   // RtlCreateUserProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
-    spoSecurity, spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob,
-    spoDetectManifest],
+    spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
+    spoParentProcess, spoJob, spoDebugPort, spoDetectManifest],
 
   // NtCreateUserProcess
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoInheritConsole, spoEnvironment, spoSecurity,
-    spoWindowMode, spoDesktop, spoToken, spoParentProcess, spoJob,
-    spoHandleList, spoChildPolicy, spoLPAC, spoProtection,
-    spoAdditinalFileAccess, spoDetectManifest],
+    spoForceBreakaway, spoInheritConsole, spoEnvironment, spoObjectInherit,
+    spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle,
+    spoDesktop, spoToken, spoParentProcess, spoJob, spoHandleList,
+    spoChildPolicy, spoLPAC, spoProtection, spoAdditinalFileAccess,
+    spoDetectManifest],
 
   // NtCreateProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoEnvironment, spoSecurity, spoWindowMode, spoDesktop,
-    spoToken, spoParentProcess, spoSection, spoAdditinalFileAccess,
+    spoForceBreakaway, spoEnvironment, spoObjectInherit, spoDesiredAccess,
+    spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
+    spoParentProcess, spoSection, spoAdditinalFileAccess, spoDebugPort,
     spoDetectManifest],
 
   // ShellExecuteEx

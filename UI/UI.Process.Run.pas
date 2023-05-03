@@ -483,7 +483,7 @@ var
   Found: Boolean;
   i: Integer;
 begin
-  Desktops := UsrxEnumAllDesktops;
+  Desktops := UsrxEnumerateAllDesktops;
   Current := UsrxCurrentDesktopName.ToLower;
 
   with ComboBoxDesktop do
