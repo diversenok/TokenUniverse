@@ -128,7 +128,7 @@ uses
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
-  NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects;
+  NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects, TU.Startup;
 
 {$R *.dfm}
 
@@ -394,7 +394,8 @@ begin
     Token.QueryLinkedToken(Linked).IsSuccess then
       TokenView.Add(Linked, nil, False);
 
-  LoadLibrary('xmllite.dll');
+  // Load useful delay dependencies while we can
+  TuPreloadDelayModules;
 
   SetForegroundWindow(TokenView.VST.Handle);
 end;

@@ -67,7 +67,8 @@ uses
   TU.AccountRights in 'Core\TU.AccountRights.pas',
   UI.Access in 'UI\UI.Access.pas' {AccessCheckForm},
   TU.Access in 'Core\TU.Access.pas',
-  TU.DesktopAccess in 'Core\TU.DesktopAccess.pas';
+  TU.DesktopAccess in 'Core\TU.DesktopAccess.pas',
+  TU.Startup in 'Core\TU.Startup.pas';
 
 {$R *.res}
 
