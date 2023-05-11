@@ -98,7 +98,7 @@ begin
     cmShellExecuteEx:            Result := ShlxExecute;
     cmIShellDispatch:            Result := ComxShellDispatchExecute;
     cmIDesktopAppxActivator:     Result := PkgxCreateProcessInPackage;
-    cmWDC:                       Result := WdcxRunAsInteractive;
+    cmWDC:                       Result := SchxRunAsInteractive;
     cmWMI:                       Result := WmixCreateProcess;
   else
     Result := nil;
@@ -164,7 +164,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [spoRequireElevation, spoToken, spoAppUserModeId, spoPackageBreakaway],
 
   // WDC
-  [spoCurrentDirectory, spoRequireElevation],
+  [spoCurrentDirectory, spoRequireElevation, spoSessionID],
 
   // WMI
   [spoCurrentDirectory, spoSuspended, spoWindowMode, spoDesktop, spoToken]
