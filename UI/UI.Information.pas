@@ -146,7 +146,7 @@ implementation
 uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
   UI.Information.Access, UI.Sid.View, NtUtils.Objects.Snapshots,
-  NtUiLib.Errors, DelphiUiLib.Strings,
+  NtUiLib.Errors, DelphiUiLib.Strings, NtUtils.Security.AppContainer,
   DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
@@ -583,9 +583,11 @@ end;
 procedure TInfoDialog.EditAppContainerDblClick;
 var
   Info: TAppContainerInfo;
+  User: TGroup;
 begin
-  if Token.QueryAppContainerInfo(Info).IsSuccess then
-    TDialogAppContainer.Execute(FormMain, Info.User, Info.Package);
+  if Token.QueryAppContainerInfo(Info).IsSuccess and
+    Token.QueryUser(User).IsSuccess then
+    TDialogAppContainer.Execute(FormMain, User.Sid, Info.Sid);
 end;
 
 procedure TInfoDialog.EditUserDblClick;

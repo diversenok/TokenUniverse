@@ -9,7 +9,8 @@ interface
 uses
   Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntobapi, Ntapi.winsta, Ntapi.appmodel,
   NtUtils, NtUtils.Tokens.Info, NtUtils.Objects.Snapshots, NtUtils.Profiles,
-  NtUtils.Lsa.Logon, DelphiUtils.AutoObjects, DelphiUtils.AutoEvents;
+  NtUtils.Security.AppContainer, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
+  DelphiUtils.AutoEvents;
 
 type
   ITokenAuditPolicy = IMemory<PTokenAuditPolicy>;
@@ -1189,11 +1190,11 @@ begin
 
   // Read profile info from the registry
   if Result.IsSuccess then
-    Result := UnvxQueryAppContainer(AppContainer, Package, User.Sid);
+    Result := RtlxQueryAppContainer(AppContainer, Package, User.Sid);
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsAppContainerName] := AppContainer.Name;
+    Events.StringCache[tsAppContainerName] := AppContainer.FullMoniker;
     Events.StringCache[tsAppContainerDisplayName] := AppContainer.DisplayName;
   end;
 

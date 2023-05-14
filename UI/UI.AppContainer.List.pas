@@ -37,8 +37,9 @@ type
 implementation
 
 uses
-  NtUtils.Profiles, NtUtils.Security.Sid, NtUtils.Lsa.Sid,
-  UI.AppContainer.View, UI.MainForm;
+  NtUtils.Profiles, NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.SysUtils,
+  NtUtils.Packages, UI.AppContainer.View, UI.MainForm,
+  NtUtils.Security.AppContainer;
 
 {$R *.dfm}
 
@@ -116,7 +117,7 @@ var
   Info: TAppContainerInfo;
   i: Integer;
 begin
-  if not UnvxEnumerateAppContainers(AppContainers, User).IsSuccess then
+  if not RtlxEnumerateAppContainerSIDs(AppContainers, nil, User).IsSuccess then
     Exit;
 
   lvAppContainers.Items.BeginUpdate;
@@ -127,11 +128,14 @@ begin
     begin
       Cell[2] := RtlxSidToString(AppContainers[i]);
 
-      if UnvxQueryAppContainer(Info, AppContainers[i],
+      if RtlxQueryAppContainer(Info, AppContainers[i],
         User).IsSuccess then
       begin
+        if RtlxPrefixString('@{', Info.DisplayName, True) then
+          PkgxExpandResourceStringVar(Info.DisplayName);
+
         Cell[0] := Info.DisplayName;
-        Cell[1] := Info.Name;
+        Cell[1] := Info.Moniker;
       end;
 
       OwnedIData := AppContainers[i];

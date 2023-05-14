@@ -10,8 +10,8 @@ interface
 uses
   Ntapi.WinNt, Ntapi.ntobapi, Ntapi.ntseapi, Ntapi.winsta, Ntapi.appmodel,
   NtUtils, NtUtils.Objects.Snapshots, NtUtils.Tokens.Info, NtUtils.Profiles,
-  NtUtils.Lsa.Logon, DelphiUtils.AutoObjects, DelphiUtils.AutoEvents,
-  TU.Observers, TU.Tokens;
+  NtUtils.Security.AppContainer, NtUtils.Lsa.Logon, DelphiUtils.AutoObjects,
+  DelphiUtils.AutoEvents, TU.Observers, TU.Tokens;
 
 type
   // Shared observers between tokens that point to the same kernel object
@@ -331,9 +331,8 @@ end;
 
 function CompareAppContainerInfo(const A, B: TAppContainerInfo): Boolean;
 begin
-  Result := CompareSid(A.User, B.User) and CompareSid(A.Package, B.Package) and
-    CompareSid(A.ParentPackage, B.ParentPackage) and (A.Name = B.Name) and
-    (A.DisplayName = B.DisplayName) and (A.ParentName = B.ParentName);
+  Result := CompareSid(A.Sid, B.Sid) and (A.Moniker = B.Moniker) and
+    (A.DisplayName = B.DisplayName) and (A.ParentMoniker = B.ParentMoniker);
 end;
 
 function CompareBoolean(const A, B: Boolean): Boolean;

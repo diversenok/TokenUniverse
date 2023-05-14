@@ -121,7 +121,7 @@ uses
   NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Profiles,
   NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
   UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm,
-  TU.Tokens.Open, UI.Settings, System.UITypes;
+  TU.Tokens.Open, UI.Settings, System.UITypes, NtUtils.Security.Sid;
 
 {$R *.dfm}
 
@@ -138,7 +138,7 @@ begin
   NtxQuerySidToken(hxToken, TokenUser, User).RaiseOnError;
 
   AppContainerSid := TDialogACProfiles.ExecuteSelect(FormMain, User);
-  EditAppContainer.Text := UnvxAppContainerToString(AppContainerSid, User);
+  EditAppContainer.Text := RtlxSidToString(AppContainerSid);
 end;
 
 procedure TDialogRun.ButtonBrowseClick;

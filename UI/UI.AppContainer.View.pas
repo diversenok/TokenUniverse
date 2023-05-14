@@ -5,8 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, UI.Prototypes.Forms, Vcl.StdCtrls,
-  Vcl.ExtCtrls, NtUtils, Vcl.ComCtrls, VclEx.ListView, NtUtils.Profiles,
-  Vcl.Menus;
+  Vcl.ExtCtrls, NtUtils, Vcl.ComCtrls, VclEx.ListView,
+  NtUtils.Security.AppContainer, Vcl.Menus;
 
 type
   TDialogAppContainer = class(TChildForm)
@@ -46,8 +46,8 @@ type
 implementation
 
 uses
-  NtUtils.Security.Sid, NtUtils.Lsa.Sid, NtUtils.Security.AppContainer,
-  DelphiUiLib.Strings, NtUiLib.Errors, UI.MainForm, UI.Sid.View;
+  NtUtils.Security.Sid, NtUtils.Lsa.Sid, DelphiUiLib.Strings, NtUiLib.Errors,
+  UI.MainForm, UI.Sid.View;
 
 {$R *.dfm}
 
@@ -83,7 +83,7 @@ procedure TDialogAppContainer.lnkParentLinkClick;
 var
   ParentAC: ISid;
 begin
-  RtlxAppContainerParent(AppContainer, ParentAC).RaiseOnError;
+  RtlxGetAppContainerParent(AppContainer, ParentAC).RaiseOnError;
   TDialogAppContainer.Execute(FormMain, User, ParentAC);
 end;
 
@@ -100,12 +100,12 @@ begin
   lnkUser.Caption := 'User: <a>' + LsaxSidToString(User) + '</a>';
   tbxSid.Text := RtlxSidToString(AppContainer);
 
-  if UnvxQueryAppContainer(Info, AppContainer, User).IsSuccess then
+  if RtlxQueryAppContainer(Info, AppContainer, User).IsSuccess then
   begin
-    tbxName.Text := Info.FullName;
+    tbxName.Text := Info.FullMoniker;
     tbxDispName.Text := Info.DisplayName;
 
-    if Assigned(Info.ParentPackage) then
+    if Info.IsChild then
       lnkParent.Caption := 'Parent: <a>Show</a>'
     else
       lnkParent.Caption := 'Parent: None';
@@ -120,11 +120,11 @@ var
 begin
   if Pages.ActivePage = TabChildren then
   begin
-    if ChildrenInitialized or Assigned(Info.ParentPackage) then
+    if ChildrenInitialized or Info.IsChild then
       Exit;
 
     // Delayed loading of child AppContainers
-    if UnvxEnumerateChildrenAppContainer(Children, AppContainer,
+    if RtlxEnumerateAppContainerSIDs(Children, AppContainer,
       User).IsSuccess then
     begin
       lvChildren.Items.BeginUpdate;
@@ -132,13 +132,13 @@ begin
       for i := 0 to High(Children) do
         with lvChildren.Items.Add do
         begin
-          if UnvxQueryAppContainer(ChildInfo, Children[i],
+          if RtlxQueryAppContainer(ChildInfo, Children[i],
             User).IsSuccess then
-            Caption := ChildInfo.Name
+            Caption := ChildInfo.Moniker
           else
             Caption := RtlxSidToString(Children[i]);
 
-          Hint := Info.Name + '/' + Caption;
+          Hint := ChildInfo.FullMoniker;
           OwnedIData := Children[i];
         end;
 

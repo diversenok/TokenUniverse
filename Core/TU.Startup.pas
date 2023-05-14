@@ -12,12 +12,15 @@ procedure TuPreloadDelayModules;
 implementation
 
 uses
-  Ntapi.ntsam, Ntapi.xmllite, NtUtils.Ldr;
+  Ntapi.ntsam, Ntapi.winsta, Ntapi.xmllite, NtUtils.Ldr;
 
 procedure TuPreloadDelayModules;
 begin
   // SAM - for SID suggestions
   LdrxCheckDelayedModule(delayed_samlib);
+
+  // WinSta - for session lookup
+  LdrxCheckDelayedModule(delayed_winsta);
 
   // XmlLite - for the task dialog
   LdrxCheckDelayedModule(delayed_xmllite);
