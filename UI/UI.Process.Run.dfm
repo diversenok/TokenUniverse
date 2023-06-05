@@ -243,6 +243,7 @@ object DialogRun: TDialogRun
           'ShellExecuteEx'
           'ShellExecute via IShellDispatch'
           'IDesktopAppXActivator'
+          'IBackgroundCopyJob2::SetNotifyCmdLine'
           'WdcRunTaskAsInteractiveUser'
           'WMI')
       end

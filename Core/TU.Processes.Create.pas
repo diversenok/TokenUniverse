@@ -29,6 +29,7 @@ type
     cmShellExecuteEx,
     cmIShellDispatch,
     cmIDesktopAppxActivator,
+    cmBITS,
     cmWDC,
     cmWMI
   );
@@ -98,6 +99,7 @@ begin
     cmShellExecuteEx:            Result := ShlxExecute;
     cmIShellDispatch:            Result := ComxShellDispatchExecute;
     cmIDesktopAppxActivator:     Result := PkgxCreateProcessInPackage;
+    cmBITS:                      Result := ComxCreateProcessBITS;
     cmWDC:                       Result := SchxRunAsInteractive;
     cmWMI:                       Result := WmixCreateProcess;
   else
@@ -162,6 +164,9 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // IDesktopAppXActivator (excluding OS version-dependent parameters)
   [spoRequireElevation, spoToken, spoAppUserModeId, spoPackageBreakaway],
+
+  // BITS
+  [],
 
   // WDC
   [spoCurrentDirectory, spoRequireElevation, spoSessionID],
