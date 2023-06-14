@@ -56,9 +56,25 @@ implementation
 uses
   Ntapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Ntapi.ntlsa,
   Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa, Ntapi.ntdef,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection.Numeric;
+  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, System.Rtti;
 
 {$R *.dfm}
+
+function EnumerateFlagAttributes(
+  AType: Pointer
+): TArray<TFlagName>;
+var
+  i: Integer;
+  Flags: TArray<FlagNameAttribute>;
+begin
+  RttixFilterAttributes(TRttiContext.Create.GetType(AType).GetAttributes,
+    FlagNameAttribute, TCustomAttributeArray(Flags));
+
+  SetLength(Result, Length(Flags));
+
+  for i := 0 to High(Result) do
+    Result[i] := Flags[i].Flag;
+end;
 
 { TDialogSidView }
 

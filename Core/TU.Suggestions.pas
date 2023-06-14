@@ -21,7 +21,7 @@ uses
   Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntpsapi, Ntapi.ntpebteb,
   System.TypInfo, NtUtils, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
   TU.Tokens.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils,
-  DelphiUiLib.Reflection.Numeric;
+  DelphiUiLib.Reflection;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +
@@ -140,7 +140,7 @@ begin
       not BitTest(Privileges[i].Attributes and SE_PRIVILEGE_ENABLED) then
     begin
       case UsrxShowTaskDialog(Parent, SUGGESTION_TITLE, TOKEN_NO_PRIVILEGE,
-        Format(TOKEN_NO_PRIVILEGE_TEXT, [TNumeric.Represent(Privilege).Text]),
+        Format(TOKEN_NO_PRIVILEGE_TEXT, [TType.Represent(Privilege).Text]),
         diWarning, dbYesAbortIgnore) of
 
         IDYES:

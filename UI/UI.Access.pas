@@ -58,7 +58,7 @@ implementation
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
   NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, NtUiLib.AutoCompletion,
-  DelphiUiLib.Reflection.Numeric, TU.Access, UI.ProcessList;
+  DelphiUiLib.Reflection, TU.Access, UI.ProcessList;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var
@@ -146,7 +146,7 @@ var
   EntryType: TObjectTypeInfo;
 begin
   Entry := RtlxQueryNamespaceEntry(tbxName.Text);
-  tbxNameType.Text := TNumeric.Represent(Entry.KnownType).Text;
+  tbxNameType.Text := TType.Represent(Entry.KnownType).Text;
 
   if not RtlxFindKernelType(Entry.TypeName, EntryType).IsSuccess then
     EntryType := Default(TObjectTypeInfo);
@@ -172,7 +172,7 @@ begin
 
   SidType := stInvalid;
   LsaxLookupSid(Sid, Lookup);
-  tbxSidLookupType.Text := TNumeric.Represent(Lookup.SidType).Text;
+  tbxSidLookupType.Text := TType.Represent(Lookup.SidType).Text;
 
   if cbxSidType.ItemIndex = 0 then
     SidType := stLsaAccount

@@ -318,10 +318,9 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.ntpsapi, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
-  NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Reflection.Numeric,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings,
-  NtUiLib.Reflection.Types, NtUiLib.Reflection.AccessMasks, System.SysUtils,
-  TU.Tokens.Events, TU.Events;
+  NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings,
+  NtUiLib.Reflection.Types, System.SysUtils, TU.Tokens.Events, TU.Events;
 
 { Helper functions }
 
@@ -338,8 +337,8 @@ begin
     or (Length(SubAuthorities) <> SECURITY_PROCESS_TRUST_AUTHORITY_RID_COUNT) then
     Exit('Invalid');
 
-  Result := TNumeric.Represent<TSecurityTrustType>(SubAuthorities[0]).Text +
-    ' (' + TNumeric.Represent<TSecurityTrustLevel>(SubAuthorities[1]).Text + ')';
+  Result := TType.Represent<TSecurityTrustType>(SubAuthorities[0]).Text +
+    ' (' + TType.Represent<TSecurityTrustLevel>(SubAuthorities[1]).Text + ')';
 end;
 
 function SessionInfoToString(const Info: TWinStationInformation): String;
@@ -354,7 +353,7 @@ end;
 
 function TTokenElevationInfo.ToString;
 begin
-  Result  := YesNoToString(Elevated) + ' (' + TNumeric.Represent(
+  Result  := YesNoToString(Elevated) + ' (' + TType.Represent(
     ElevationType).Text + ')';
 end;
 
@@ -1236,7 +1235,7 @@ begin
 
   if Result.IsSuccess then
   begin
-    PerHandleString[tsAccess] := Info.GrantedAccess.Format<TTokenAccessMask>;
+    PerHandleString[tsAccess] := TType.Represent<TTokenAccessMask>(Info.GrantedAccess).Text;
     PerHandleString[tsAccessNumeric] := IntToHexEx(Info.GrantedAccess, 6);
     Events.StringCache[tsHandleCount] := IntToStrEx(Info.HandleCount);
     Events.StringCache[tsPagedPoolCharge] := BytesToString(Info.PagedPoolCharge);
@@ -1344,7 +1343,7 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsFlags] := TNumeric.Represent(Flags).Text;
+    Events.StringCache[tsFlags] := TType.Represent(Flags).Text;
 
     if BitTest(Flags and TOKEN_WRITE_RESTRICTED) then
       Events.StringCache[tsRestricted] := 'Write-only'
@@ -1454,7 +1453,7 @@ begin
   Result := NtxQueryGroupToken(hxToken, TokenIntegrityLevel, Integrity);
 
   if Result.IsSuccess then
-    Events.StringCache[tsIntegrity] := TNumeric.Represent<TIntegrityRid>(
+    Events.StringCache[tsIntegrity] := TType.Represent<TIntegrityRid>(
       RtlxRidSid(Integrity.Sid, SECURITY_MANDATORY_UNTRUSTED_RID)).Text;
 
   Events.OnIntegrity.Notify(Result, Integrity);
@@ -1548,7 +1547,7 @@ begin
   begin
     Events.StringCache[tsLogonAuthPackage] := RtlxStringOrDefault(
       Info.Data.AuthenticationPackage.ToString, '(None)');
-    Events.StringCache[tsLogonType] := TNumeric.Represent(Info.Data.LogonType).Text;
+    Events.StringCache[tsLogonType] := TType.Represent(Info.Data.LogonType).Text;
     Events.StringCache[tsLogonTime] := TType.Represent(Info.Data.LogonTime).Text;
   end;
 
@@ -1577,7 +1576,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenMandatoryPolicy, Policy);
 
   if Result.IsSuccess then
-    Events.StringCache[tsMandatoryPolicy] := TNumeric.Represent(Policy).Text;
+    Events.StringCache[tsMandatoryPolicy] := TType.Represent(Policy).Text;
 
   Events.OnMandatoryPolicy.Notify(Result, Policy);
 end;
@@ -1619,8 +1618,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsPackageFlags] := TNumeric.Represent(PkgClaim.Flags).Text;
-    Events.StringCache[tsPackageOrigin] := TNumeric.Represent(PkgClaim.Origin).Text;
+    Events.StringCache[tsPackageFlags] := TType.Represent(PkgClaim.Flags).Text;
+    Events.StringCache[tsPackageOrigin] := TType.Represent(PkgClaim.Origin).Text;
   end
   else if Result.Status = STATUS_NOT_FOUND then
   begin
@@ -1816,7 +1815,7 @@ begin
     if Statistics.TokenType = TokenPrimary then
       Events.StringCache[tsType] := 'Primary'
     else
-      Events.StringCache[tsType] := TNumeric.Represent(
+      Events.StringCache[tsType] := TType.Represent(
         Statistics.ImpersonationLevel).Text;
 
     Events.StringCache[tsDynamicCharged] := BytesToString(

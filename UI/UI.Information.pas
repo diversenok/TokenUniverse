@@ -147,11 +147,10 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
   UI.Information.Access, UI.Sid.View, NtUtils.Objects.Snapshots,
   NtUiLib.Errors, DelphiUiLib.Strings, NtUtils.Security.AppContainer,
-  DelphiUiLib.Reflection.Strings, NtUiLib.Reflection.AccessMasks,
+  DelphiUiLib.Reflection.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
-  NtUtils.Lsa.Sid, DelphiUtils.Arrays, DelphiUiLib.Reflection.Numeric,
-  UI.ProcessIcons, Ntapi.Versions, UI.AppContainer.View, NtUiLib.Exceptions,
-  Ntapi.ntobapi;
+  NtUtils.Lsa.Sid, DelphiUtils.Arrays, UI.ProcessIcons, Ntapi.Versions,
+  UI.AppContainer.View, NtUiLib.Exceptions, Ntapi.ntobapi;
 
 const
   TAB_INVALIDATED = 0;
@@ -803,7 +802,7 @@ begin
   if Token.QueryBasicInfo(BasicInfo).IsSuccess then
     with ListViewObject do
     begin
-      Items[1].SubItems[0] := TNumeric.Represent(BasicInfo.Attributes).Text;
+      Items[1].SubItems[0] := TType.Represent(BasicInfo.Attributes).Text;
       Items[2].SubItems[0] := BytesToString(BasicInfo.PagedPoolCharge);
       Items[3].SubItems[0] := BytesToString(BasicInfo.NonPagedPoolCharge);
       Items[4].SubItems[0] := IntToStr(BasicInfo.PointerCount);
@@ -833,7 +832,7 @@ begin
 
         SubItems.Add(IntToStr(Handles[i].UniqueProcessId));
         SubItems.Add(IntToHexEx(Handles[i].HandleValue));
-        SubItems.Add(Handles[i].GrantedAccess.Format<TTokenAccessMask>);
+        SubItems.Add(TType.Represent<TTokenAccessMask>(Handles[i].GrantedAccess).Text);
       end;
   end;
 
