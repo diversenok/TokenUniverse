@@ -7,7 +7,7 @@ uses
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
-  TU.Processes.Create, Ntapi.WinNt;
+  TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit;
 
 type
   TDialogRun = class(TChildForm)
@@ -41,11 +41,7 @@ type
     MenuClearParent: TMenuItem;
     CheckBoxInheritConsole: TCheckBox;
     CheckBoxRunAsInvoker: TCheckBox;
-    EditAppContainer: TEdit;
     LabelAppContainer: TLabel;
-    ButtonAC: TButton;
-    PopupClearAC: TPopupMenu;
-    MenuClearAC: TMenuItem;
     cbxOpenToken: TCheckBox;
     ComboMethod: TComboBox;
     LabelMethod: TLabel;
@@ -75,6 +71,7 @@ type
     ComboBoxProtection: TComboBox;
     EditAppId: TEdit;
     LabelAppId: TLabel;
+    AppContainerField: TAppContainerFieldFrame;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -88,8 +85,6 @@ type
     procedure ButtonChooseParentClick(Sender: TObject);
     procedure MenuClearParentClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ButtonACClick(Sender: TObject);
-    procedure MenuClearACClick(Sender: TObject);
     procedure EditManifestExecutableEnter(Sender: TObject);
     procedure EditManifestFileEnter(Sender: TObject);
     procedure CheckBoxManifestThemesEnter(Sender: TObject);
@@ -99,7 +94,6 @@ type
     ParentAccessMask: TProcessAccessMask;
     ParentProcessId: TProcessId;
     hxParentProcess: IHandle;
-    AppContainerSid: ISid;
     CaptionSubscription: IAutoReleasable;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(const InfoClass: TTokenStringClass; const NewCaption: String);
@@ -120,26 +114,10 @@ uses
   NtUtils.Processes, NtUtils.Processes.Create.Remote, NtUtils.Objects,
   NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Profiles,
   NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
-  UI.Information, UI.ProcessList, UI.AppContainer.List, UI.MainForm,
+  UI.Information, UI.ProcessList, UI.MainForm,
   TU.Tokens.Open, UI.Settings, System.UITypes, NtUtils.Security.Sid;
 
 {$R *.dfm}
-
-procedure TDialogRun.ButtonACClick;
-var
-  hxToken: IHandle;
-  User: ISid;
-begin
-  if Assigned(FToken) then
-    hxToken := FToken.Handle
-  else
-    hxToken := NtxCurrentEffectiveToken;
-
-  NtxQuerySidToken(hxToken, TokenUser, User).RaiseOnError;
-
-  AppContainerSid := TDialogACProfiles.ExecuteSelect(FormMain, User);
-  EditAppContainer.Text := RtlxSidToString(AppContainerSid);
-end;
 
 procedure TDialogRun.ButtonBrowseClick;
 begin
@@ -200,7 +178,7 @@ begin
   Options.Desktop := ComboBoxDesktop.Text;
   Options.ParentProcessId := ParentProcessId;
   Options.hxParentProcess := hxParentProcess;
-  Options.AppContainer := AppContainerSid;
+  Options.AppContainer := AppContainerField.Sid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
   Options.AppUserModeId := EditAppId.Text;
@@ -416,12 +394,6 @@ begin
     TInfoDialog.CreateFromToken(Self, FToken);
 end;
 
-procedure TDialogRun.MenuClearACClick;
-begin
-  AppContainerSid := nil;
-  EditAppContainer.Text := 'No';
-end;
-
 procedure TDialogRun.MenuClearParentClick;
 begin
   ParentProcessId := 0;
@@ -453,7 +425,10 @@ begin
   if not Assigned(Value) then
     LinkLabelToken.Caption := 'Using token: <not specified>'
   else
+  begin
     CaptionSubscription := Value.ObserveString(tsCaption, OnCaptionChange);
+    AppContainerField.TrySetUserFromToken(Value.Handle);
+  end;
 end;
 
 function TDialogRun.TryOpenToken;
@@ -537,8 +512,7 @@ begin
   CheckBoxRunAsInvoker.Enabled := spoRunAsInvoker in SupportedOptions;
   EditParent.Enabled := [spoParentProcess, spoParentProcessId] * SupportedOptions <> [];
   ButtonChooseParent.Enabled := [spoParentProcess, spoParentProcessId] * SupportedOptions <> [];
-  EditAppContainer.Enabled := spoAppContainer in SupportedOptions;
-  ButtonAC.Enabled := spoAppContainer in SupportedOptions;
+  AppContainerField.Enabled := spoAppContainer in SupportedOptions;
   CheckBoxLPAC.Enabled := spoLPAC in SupportedOptions;
   CheckBoxChildRestricted.Enabled := spoChildPolicy in SupportedOptions;
   CheckBoxChildUnlessSecure.Enabled := spoChildPolicy in SupportedOptions;

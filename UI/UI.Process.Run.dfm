@@ -305,28 +305,6 @@ object DialogRun: TDialogRun
         Height = 13
         Caption = 'AppUserModeId:'
       end
-      object ButtonAC: TButton
-        Left = 227
-        Top = 76
-        Width = 83
-        Height = 25
-        Anchors = [akTop, akRight]
-        Caption = 'Choose'
-        DropDownMenu = PopupClearAC
-        Style = bsSplitButton
-        TabOrder = 0
-        OnClick = ButtonACClick
-      end
-      object EditAppContainer: TEdit
-        Left = 3
-        Top = 78
-        Width = 217
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        ReadOnly = True
-        TabOrder = 1
-        Text = 'No'
-      end
       object CheckBoxLPAC: TCheckBox
         Left = 3
         Top = 104
@@ -335,7 +313,7 @@ object DialogRun: TDialogRun
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Low Privileged AppContainer'
         Enabled = False
-        TabOrder = 2
+        TabOrder = 0
       end
       object GroupBoxChildFlags: TGroupBox
         Left = 3
@@ -344,7 +322,7 @@ object DialogRun: TDialogRun
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Child Process Policy: '
-        TabOrder = 3
+        TabOrder = 1
         object CheckBoxChildRestricted: TCheckBox
           Left = 16
           Top = 24
@@ -381,7 +359,7 @@ object DialogRun: TDialogRun
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 4
+        TabOrder = 2
         Text = 'Not specified'
         Items.Strings = (
           'Not specified'
@@ -402,8 +380,26 @@ object DialogRun: TDialogRun
         Height = 21
         Hint = '{PackageFamilyName}!{AppId}'
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 5
+        TabOrder = 3
         TextHint = '{PackageFamilyName}!{AppId}'
+      end
+      inline AppContainerField: TAppContainerFieldFrame
+        Left = 3
+        Top = 76
+        Width = 306
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Constraints.MinHeight = 25
+        Constraints.MinWidth = 180
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 4
+        inherited tbxMoniker: TEdit
+          Width = 220
+        end
+        inherited btnSelect: TButton
+          Left = 226
+        end
       end
     end
     object Manifest: TTabSheet
@@ -625,19 +621,11 @@ object DialogRun: TDialogRun
     Top = 195
   end
   object PopupClearParent: TPopupMenu
-    Left = 271
-    Top = 147
+    Left = 191
+    Top = 251
     object MenuClearParent: TMenuItem
       Caption = 'Clear'
       OnClick = MenuClearParentClick
-    end
-  end
-  object PopupClearAC: TPopupMenu
-    Left = 263
-    Top = 251
-    object MenuClearAC: TMenuItem
-      Caption = 'Clear'
-      OnClick = MenuClearACClick
     end
   end
 end

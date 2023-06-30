@@ -226,13 +226,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <Form>AccessMaskFrame</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="UI\UI.AppContainer.View.pas">
-            <Form>DialogAppContainer</Form>
-        </DCCReference>
         <DCCReference Include="Core\TU.Processes.Create.pas"/>
-        <DCCReference Include="UI\UI.AppContainer.List.pas">
-            <Form>DialogACProfiles</Form>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas">
             <Form>BitMaskFrame</Form>
             <DesignClass>TFrame</DesignClass>
@@ -290,6 +284,39 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="Core\TU.Access.pas"/>
         <DCCReference Include="Core\TU.DesktopAccess.pas"/>
         <DCCReference Include="Core\TU.Startup.pas"/>
+        <DCCReference Include="NtUtilsUI\Common\NtUiBackend.AppContainers.pas"/>
+        <DCCReference Include="NtUtilsUI\Common\NtUiBackend.UserProfiles.pas"/>
+        <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Interfaces.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Search.pas">
+            <Form>SearchFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.UserProfiles.pas">
+            <Form>UserProfilesFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.List.pas">
+            <Form>AppContainerListFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.ListAllUsers.pas">
+            <Form>AppContainerListAllUsersFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.Edit.pas">
+            <Form>AppContainerFieldFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Prototypes.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiDialog.FrameHost.pas">
+            <Form>FrameHostDialog</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

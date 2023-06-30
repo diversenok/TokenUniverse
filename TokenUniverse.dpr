@@ -41,9 +41,7 @@ uses
   UI.Colors in 'NtUtilsUI\Common\UI.Colors.pas',
   UI.ProcessIcons in 'NtUtilsUI\Common\UI.ProcessIcons.pas',
   UI.Prototypes.AccessMask in 'NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas' {AccessMaskFrame: TFrame},
-  UI.AppContainer.View in 'UI\UI.AppContainer.View.pas' {DialogAppContainer},
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
-  UI.AppContainer.List in 'UI\UI.AppContainer.List.pas' {DialogACProfiles},
   UI.Prototypes.BitMask in 'NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas' {BitMaskFrame: TFrame},
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
@@ -68,7 +66,17 @@ uses
   UI.Access in 'UI\UI.Access.pas' {AccessCheckForm},
   TU.Access in 'Core\TU.Access.pas',
   TU.DesktopAccess in 'Core\TU.DesktopAccess.pas',
-  TU.Startup in 'Core\TU.Startup.pas';
+  TU.Startup in 'Core\TU.Startup.pas',
+  NtUiBackend.AppContainers in 'NtUtilsUI\Common\NtUiBackend.AppContainers.pas',
+  NtUiBackend.UserProfiles in 'NtUtilsUI\Common\NtUiBackend.UserProfiles.pas',
+  NtUiCommon.Interfaces in 'NtUtilsUI\Common\NtUiCommon.Interfaces.pas',
+  NtUiFrame.Search in 'NtUtilsUI\Prototypes\NtUiFrame.Search.pas' {SearchFrame: TFrame},
+  NtUiFrame.UserProfiles in 'NtUtilsUI\Prototypes\NtUiFrame.UserProfiles.pas' {UserProfilesFrame: TFrame},
+  NtUiFrame.AppContainer.List in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.List.pas' {AppContainerListFrame: TFrame},
+  NtUiFrame.AppContainer.ListAllUsers in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.ListAllUsers.pas' {AppContainerListAllUsersFrame: TFrame},
+  NtUiFrame.AppContainer.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.Edit.pas' {AppContainerFieldFrame: TFrame},
+  NtUiCommon.Prototypes in 'NtUtilsUI\Common\NtUiCommon.Prototypes.pas',
+  NtUiDialog.FrameHost in 'NtUtilsUI\Prototypes\NtUiDialog.FrameHost.pas' {FrameHostDialog};
 
 {$R *.res}
 

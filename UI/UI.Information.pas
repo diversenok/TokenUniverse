@@ -98,7 +98,6 @@ type
     procedure PageControlChange(Sender: TObject);
     procedure ListViewGeneralDblClick(Sender: TObject);
     procedure EditUserDblClick(Sender: TObject);
-    procedure EditAppContainerDblClick(Sender: TObject);
   private
     Token: IToken;
     SessionSource: TSessionSource;
@@ -150,7 +149,7 @@ uses
   DelphiUiLib.Reflection.Strings,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, UI.ProcessIcons, Ntapi.Versions,
-  UI.AppContainer.View, NtUiLib.Exceptions, Ntapi.ntobapi;
+  NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi;
 
 const
   TAB_INVALIDATED = 0;
@@ -579,16 +578,6 @@ begin
   Close;
 end;
 
-procedure TInfoDialog.EditAppContainerDblClick;
-var
-  Info: TAppContainerInfo;
-  User: TGroup;
-begin
-  if Token.QueryAppContainerInfo(Info).IsSuccess and
-    Token.QueryUser(User).IsSuccess then
-    TDialogAppContainer.Execute(FormMain, User.Sid, Info.Sid);
-end;
-
 procedure TInfoDialog.EditUserDblClick;
 var
   User: TGroup;
@@ -676,6 +665,7 @@ var
   User: TGroup;
   Package: ISid;
   RestrictedSids: TArray<TGroup>;
+  AppContainerInfo: TAppContainerInfo;
 begin
   Token.SmartRefresh;
 
@@ -721,15 +711,17 @@ begin
     // AppContainer is user-specific
     if not RtlOsVersionAtLeast(OsWin8) then
       EditAppContainer.Text := 'Not supported'
+    else if Token.QueryAppContainerInfo(AppContainerInfo).IsSuccess then
+    begin
+      EditAppContainer.Text := AppContainerInfo.FriendlyName;
+      EditAppContainer.Hint := AppContainerInfo.Hint;
+    end
     else if Token.QueryAppContainerSid(Package).IsSuccess then
     begin
       if not Assigned(Package) then
-        EditAppContainer.Text := 'No'
+        EditAppContainer.Text := 'N/A'
       else
-      begin
         EditAppContainer.Text := RtlxSidToString(Package);
-        EditAppContainer.Enabled := True;
-      end;
     end;
   end;
 
