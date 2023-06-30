@@ -11,7 +11,6 @@ uses
 
 type
   TEqualityCheck<T> = function (const A, B: T): Boolean;
-  TValueSupplier<T> = reference to function (out Value: T): TNtxStatus;
 
   TAutoObservers<T> = record
   private
@@ -20,12 +19,12 @@ type
     FHasLastValue: Boolean;
     FLastValue: T;
     class procedure SafeInvoker(
-      const Callback: TEventCallback<TNtxStatus, T>;
+      Callback: TEventCallback<TNtxStatus, T>;
       const Status: TNtxStatus;
       const Value: T
     ); static;
   public
-    procedure Initialize(const EqualityCheck: TEqualityCheck<T>);
+    procedure Initialize(EqualityCheck: TEqualityCheck<T>);
     function HasObservers: Boolean;
     procedure Notify(const Status: TNtxStatus; const Value: T);
     function Subscribe(const Callback: TEventCallback<TNtxStatus, T>): IAutoReleasable;

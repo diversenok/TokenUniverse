@@ -327,6 +327,9 @@ begin
     // Determine required access to the parent process
     if Method = cmCreateProcessViaInjection then
       ParentAccessMask := PROCESS_CREATE_PROCESS_REMOTE
+    else if (Method = cmCreateProcessWithToken) or
+      (Method = cmCreateProcessWithLogon) then
+      ParentAccessMask := PROCESS_QUERY_LIMITED_INFORMATION or PROCESS_DUP_HANDLE
     else
       ParentAccessMask := PROCESS_CREATE_PROCESS;
 

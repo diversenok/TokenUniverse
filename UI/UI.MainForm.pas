@@ -369,7 +369,7 @@ var
   Linked: IToken;
   i: integer;
 begin
-  TokenView.VST.OnInspectNode := ActionOpen;
+  TokenView.VST.OnMainAction := ActionOpen;
   CurrentUserChanged(Self);
 
   // Search for inherited handles

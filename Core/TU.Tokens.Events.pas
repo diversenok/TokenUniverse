@@ -84,7 +84,7 @@ function RetrieveTokenEvents(const Identity: TLuid): IAutoTokenEvents;
 
 // Exception-safe string invoker
 procedure SafeStringInvoker(
-  const Callback: TEventCallback<TTokenStringClass, String>;
+  Callback: TEventCallback<TTokenStringClass, String>;
   const InfoClass: TTokenStringClass;
   const Value: String
 );

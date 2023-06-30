@@ -22,8 +22,8 @@ type
     class function QueryObjects(out KernelObjects: TArray<TObjectTypeEntry>): TNtxStatus; static;
 
     // Subscribing for future events (without invoking)
-    class function SubscribeHandles(const Callback: TEventCallback<TArray<TSystemHandleEntry>>): IAutoReleasable; static;
-    class function SubscribeObjects(const Callback: TEventCallback<TArray<TObjectTypeEntry>>): IAutoReleasable; static;
+    class function SubscribeHandles(Callback: TEventCallback<TArray<TSystemHandleEntry>>): IAutoReleasable; static;
+    class function SubscribeObjects(Callback: TEventCallback<TArray<TObjectTypeEntry>>): IAutoReleasable; static;
 
     // Refreshing
     class function RefreshHandles: TNtxStatus; static;
@@ -41,7 +41,7 @@ uses
 // Workaround internal compiler error by re-declaring exception-safe invokers
 // instead of using generic methods of TExceptionSafeInvoker
 procedure SafeHandleInvoker(
-  const Callback: TEventCallback<TArray<TSystemHandleEntry>>;
+  Callback: TEventCallback<TArray<TSystemHandleEntry>>;
   const Parmeter: TArray<TSystemHandleEntry>
 );
 begin
@@ -54,7 +54,7 @@ begin
 end;
 
 procedure SafeObjectInvoker(
-  const Callback: TEventCallback<TArray<TObjectTypeEntry>>;
+  Callback: TEventCallback<TArray<TObjectTypeEntry>>;
   const Parmeter: TArray<TObjectTypeEntry>
 );
 begin
