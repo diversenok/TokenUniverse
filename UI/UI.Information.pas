@@ -98,6 +98,7 @@ type
     procedure PageControlChange(Sender: TObject);
     procedure ListViewGeneralDblClick(Sender: TObject);
     procedure EditUserDblClick(Sender: TObject);
+    procedure EditAppContainerDblClick(Sender: TObject);
   private
     Token: IToken;
     SessionSource: TSessionSource;
@@ -146,7 +147,7 @@ uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
   UI.Information.Access, UI.Sid.View, NtUtils.Objects.Snapshots,
   NtUiLib.Errors, DelphiUiLib.Strings, NtUtils.Security.AppContainer,
-  DelphiUiLib.Reflection.Strings,
+  DelphiUiLib.Reflection.Strings, NtUiCommon.Prototypes,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, UI.ProcessIcons, Ntapi.Versions,
   NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi;
@@ -576,6 +577,15 @@ end;
 procedure TInfoDialog.DoCloseForm;
 begin
   Close;
+end;
+
+procedure TInfoDialog.EditAppContainerDblClick;
+var
+  Info: TAppContainerInfo;
+begin
+  if Assigned(NtUiLibShowAppContainer) and
+    Token.QueryAppContainerInfo(Info).IsSuccess then
+    NtUiLibShowAppContainer(Info);
 end;
 
 procedure TInfoDialog.EditUserDblClick;

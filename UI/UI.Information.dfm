@@ -341,6 +341,7 @@ object InfoDialog: TInfoDialog
         ReadOnly = True
         TabOrder = 27
         Text = 'Unknown AppContainer'
+        OnDblClick = EditAppContainerDblClick
       end
       object PanelGeneral: TPanel
         Left = 0

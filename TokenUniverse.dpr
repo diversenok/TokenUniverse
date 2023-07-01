@@ -76,7 +76,8 @@ uses
   NtUiFrame.AppContainer.ListAllUsers in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.ListAllUsers.pas' {AppContainerListAllUsersFrame: TFrame},
   NtUiFrame.AppContainer.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.Edit.pas' {AppContainerFieldFrame: TFrame},
   NtUiCommon.Prototypes in 'NtUtilsUI\Common\NtUiCommon.Prototypes.pas',
-  NtUiDialog.FrameHost in 'NtUtilsUI\Prototypes\NtUiDialog.FrameHost.pas' {FrameHostDialog};
+  NtUiDialog.FrameHost in 'NtUtilsUI\Prototypes\NtUiDialog.FrameHost.pas' {FrameHostDialog},
+  NtUiFrame.AppContainer.View in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.View.pas' {AppContainerViewFrame: TFrame};
 
 {$R *.res}
 

@@ -22,7 +22,7 @@ type
     procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
     procedure ColumnUpdated(const Column: TTokenStringClass; const NewValue: String);
     function GetToken: IToken;
-    function GetColumnText(Index: Integer): String; override;
+    function GetColumnText(Index: TColumnIndex): String; override;
     constructor Create(const Source: IToken; Columns: TVirtualTreeColumns);
   end;
 
