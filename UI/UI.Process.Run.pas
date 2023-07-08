@@ -176,7 +176,6 @@ begin
   Options.Parameters := EditParams.Text;
   Options.CurrentDirectory := EditDir.Text;
   Options.Desktop := ComboBoxDesktop.Text;
-  Options.ParentProcessId := ParentProcessId;
   Options.hxParentProcess := hxParentProcess;
   Options.AppContainer := AppContainerField.Sid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
@@ -308,6 +307,8 @@ begin
     else if (Method = cmCreateProcessWithToken) or
       (Method = cmCreateProcessWithLogon) then
       ParentAccessMask := PROCESS_QUERY_LIMITED_INFORMATION or PROCESS_DUP_HANDLE
+    else if (Method = cmIDesktopAppxActivator) then
+      ParentAccessMask := PROCESS_QUERY_LIMITED_INFORMATION or PROCESS_CREATE_PROCESS
     else
       ParentAccessMask := PROCESS_CREATE_PROCESS;
 
@@ -510,8 +511,8 @@ begin
   CheckBoxIgnoreElevation.Enabled := spoIgnoreElevation in SupportedOptions;
   ComboBoxShowMode.Enabled := spoWindowMode in SupportedOptions;
   CheckBoxRunAsInvoker.Enabled := spoRunAsInvoker in SupportedOptions;
-  EditParent.Enabled := [spoParentProcess, spoParentProcessId] * SupportedOptions <> [];
-  ButtonChooseParent.Enabled := [spoParentProcess, spoParentProcessId] * SupportedOptions <> [];
+  EditParent.Enabled := spoParentProcess in SupportedOptions;
+  ButtonChooseParent.Enabled := spoParentProcess in SupportedOptions;
   AppContainerField.Enabled := spoAppContainer in SupportedOptions;
   CheckBoxLPAC.Enabled := spoLPAC in SupportedOptions;
   CheckBoxChildRestricted.Enabled := spoChildPolicy in SupportedOptions;
