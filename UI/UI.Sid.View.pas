@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, UI.Prototypes.Forms,
   NtUtils.Security.Sid, UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame,
-  NtUtils.Lsa.Audit, NtUtils, UI.Prototypes.BitMask;
+  NtUtils.Lsa.Audit, NtUtils, NtUiFrame.Bits;
 
 type
   TDialogSidView = class(TChildForm)
@@ -36,7 +36,7 @@ type
     FrameLsaAudit: TFrameAudit;
     LabelStatus: TLabel;
     ButtonApply: TButton;
-    LogonMaskFrame: TBitMaskFrame;
+    LogonMaskFrame: TBitsFrame;
     procedure LinkLabelDomainLinkClick(Sender: TObject; const Link: string;
       LinkType: TSysLinkType);
     procedure ButtonCloseClick(Sender: TObject);
@@ -92,7 +92,6 @@ end;
 class procedure TDialogSidView.CreateView(AOwner: TComponent; SrcSid: ISid);
 var
   Lookup: TTranslatedName;
-  LogonGroups: TArray<TFlagName>;
 begin
   if not Assigned(SrcSid) then
     Exit;
@@ -140,13 +139,7 @@ begin
     Pages.ActivePage := TabSid;
 
     // Initialize logon bitmask frame
-    SetLength(LogonGroups, 2);
-    LogonGroups[0].Value := SECURITY_ACCESS_ALLOWED_MASK;
-    LogonGroups[0].Name := 'Allowing';
-    LogonGroups[1].Value := SECURITY_ACCESS_DENIED_MASK;
-    LogonGroups[1].Name := 'Denying';
-    LogonMaskFrame.Initialize(EnumerateFlagAttributes(TypeInfo(TSystemAccess)),
-      LogonGroups);
+    LogonMaskFrame.LoadType(TypeInfo(TSystemAccess));
     LoadLogonRights;
 
     FrameLsaPrivileges.DeleyedCreate;

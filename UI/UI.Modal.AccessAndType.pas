@@ -5,8 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls, TU.Tokens,
-  UI.Prototypes.Forms, VclEx.ListView, TU.Tokens.Old.Types,
-  UI.Prototypes.AccessMask;
+  UI.Prototypes.Forms, VclEx.ListView, TU.Tokens.Old.Types, NtUiFrame.Bits;
 
 type
   TDialogAccessAndType = class(TChildForm)
@@ -20,7 +19,7 @@ type
     ButtonCancel: TButton;
     CheckBoxEffective: TCheckBox;
     GroupBoxAccess: TGroupBox;
-    AccessMaskFrame: TAccessMaskFrame;
+    AccessMaskFrame: TBitsFrame;
     procedure RadioButtonClick(Sender: TObject);
   private
     FSelectedType: TTokenTypeEx;
@@ -45,8 +44,9 @@ procedure TDialogAccessAndType.DoCreate;
 begin
   inherited;
 
-  AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
-  AccessMaskFrame.AccessMask := TOKEN_ALL_ACCESS;
+  AccessMaskFrame.LoadAccessMaskType(TypeInfo(TTokenAccessMask),
+    TokenGenericMapping, True);
+  AccessMaskFrame.Value := TOKEN_ALL_ACCESS;
 
   FSelectedType := ttPrimary;
 end;
@@ -68,7 +68,7 @@ begin
     ShowModal;
 
     MakeDuplicateToken(Result, Source, SelectedTokenType,
-      AccessMaskFrame.AccessMask, CheckBoxEffective.Checked).RaiseOnError;
+      AccessMaskFrame.Value, CheckBoxEffective.Checked).RaiseOnError;
   end;
 end;
 

@@ -145,7 +145,7 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
-  UI.Information.Access, UI.Sid.View, NtUtils.Objects.Snapshots,
+  UI.Sid.View, NtUtils.Objects.Snapshots,
   NtUiLib.Errors, DelphiUiLib.Strings, NtUtils.Security.AppContainer,
   DelphiUiLib.Reflection.Strings, NtUiCommon.Prototypes,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
@@ -652,10 +652,11 @@ procedure TInfoDialog.ListViewGeneralDblClick;
 var
   BasicInfo: TObjectBasicInformation;
 begin
-  if Assigned(ListViewGeneral.Selected) and
+  if Assigned(NtUiLibShowAccessMask) and Assigned(ListViewGeneral.Selected) and
     (ListViewGeneral.Selected.Index = 2) and
     Token.QueryBasicInfo(BasicInfo).IsSuccess then
-    TDialogGrantedAccess.Execute(Owner, BasicInfo.GrantedAccess);
+    NtUiLibShowAccessMask(BasicInfo.GrantedAccess, TypeInfo(TTokenAccessMask),
+      TokenGenericMapping);
 end;
 
 procedure TInfoDialog.PageControlChange;

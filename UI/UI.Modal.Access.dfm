@@ -3,7 +3,7 @@ object DialogAccess: TDialogAccess
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'Select desired access'
-  ClientHeight = 248
+  ClientHeight = 307
   ClientWidth = 409
   Color = clBtnFace
   Constraints.MinHeight = 180
@@ -23,7 +23,7 @@ object DialogAccess: TDialogAccess
     Left = 262
     Top = 3
     Width = 140
-    Height = 208
+    Height = 267
     Anchors = [akTop, akRight, akBottom]
     Caption = 'Access Mode '
     TabOrder = 0
@@ -49,7 +49,7 @@ object DialogAccess: TDialogAccess
   end
   object ButtonOK: TButton
     Left = 262
-    Top = 216
+    Top = 275
     Width = 66
     Height = 24
     Anchors = [akRight, akBottom]
@@ -60,7 +60,7 @@ object DialogAccess: TDialogAccess
   end
   object ButtonCancel: TButton
     Left = 335
-    Top = 216
+    Top = 275
     Width = 66
     Height = 24
     Anchors = [akRight, akBottom]
@@ -73,37 +73,42 @@ object DialogAccess: TDialogAccess
     Left = 4
     Top = 3
     Width = 252
-    Height = 242
+    Height = 301
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'Access Mask '
     TabOrder = 3
-    inline AccessMaskFrame: TAccessMaskFrame
+    inline AccessMaskFrame: TBitsFrame
       AlignWithMargins = True
-      Left = 5
+      Left = 2
       Top = 18
-      Width = 242
-      Height = 219
+      Width = 248
+      Height = 281
+      Margins.Left = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
       Align = alClient
-      Constraints.MinHeight = 200
-      Constraints.MinWidth = 180
-      DoubleBuffered = True
-      ParentDoubleBuffered = False
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited ListViewEx: TListViewEx
-        Width = 242
-        Height = 190
+      inherited Tree: TDevirtualizedTree
+        Width = 248
+        Height = 253
+        Columns = <
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 0
+            Text = 'Name'
+            Width = 244
+          end>
       end
-      inherited Panel: TPanel
-        Top = 190
-        Width = 242
-        inherited ButtonFull: TButton
-          Left = 172
+      inherited BottomPanel: TPanel
+        Top = 253
+        Width = 248
+        inherited tbxValue: TEdit
+          Width = 102
         end
-        inherited EditMask: TEdit
-          Width = 94
-          Constraints.MinWidth = 32
+        inherited btnAll: TButton
+          Left = 178
         end
       end
     end

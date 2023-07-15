@@ -121,33 +121,38 @@ object DialogAccessAndType: TDialogAccessAndType
     Anchors = [akLeft, akTop, akRight, akBottom]
     Caption = 'Access Mask '
     TabOrder = 4
-    inline AccessMaskFrame: TAccessMaskFrame
+    inline AccessMaskFrame: TBitsFrame
       AlignWithMargins = True
-      Left = 5
+      Left = 2
       Top = 18
-      Width = 229
-      Height = 286
+      Width = 235
+      Height = 289
+      Margins.Left = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
       Align = alClient
-      Constraints.MinHeight = 200
-      Constraints.MinWidth = 180
-      DoubleBuffered = True
-      ParentDoubleBuffered = False
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited ListViewEx: TListViewEx
-        Width = 229
-        Height = 257
+      inherited Tree: TDevirtualizedTree
+        Width = 235
+        Height = 261
+        Columns = <
+          item
+            Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+            Position = 0
+            Text = 'Name'
+            Width = 231
+          end>
       end
-      inherited Panel: TPanel
-        Top = 257
-        Width = 229
-        inherited ButtonFull: TButton
-          Left = 159
+      inherited BottomPanel: TPanel
+        Top = 261
+        Width = 235
+        inherited tbxValue: TEdit
+          Width = 89
         end
-        inherited EditMask: TEdit
-          Width = 81
-          Constraints.MinWidth = 32
+        inherited btnAll: TButton
+          Left = 165
         end
       end
     end

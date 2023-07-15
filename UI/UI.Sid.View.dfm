@@ -203,7 +203,7 @@ object DialogSidView: TDialogSidView
         TabOrder = 0
         OnClick = ButtonApplyClick
       end
-      inline LogonMaskFrame: TBitMaskFrame
+      inline LogonMaskFrame: TBitsFrame
         AlignWithMargins = True
         Left = 3
         Top = 3
@@ -211,14 +211,29 @@ object DialogSidView: TDialogSidView
         Height = 253
         Margins.Bottom = 33
         Align = alClient
-        DoubleBuffered = True
-        ParentDoubleBuffered = False
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited ListViewEx: TListViewEx
+        inherited Tree: TDevirtualizedTree
           Width = 367
-          Height = 253
+          Height = 225
+          Columns = <
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+              Position = 0
+              Text = 'Name'
+              Width = 363
+            end>
+        end
+        inherited BottomPanel: TPanel
+          Top = 225
+          Width = 367
+          inherited tbxValue: TEdit
+            Width = 221
+          end
+          inherited btnAll: TButton
+            Left = 297
+          end
         end
       end
     end

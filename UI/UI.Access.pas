@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, NtUtils, Ntapi.WinNt, UI.Prototypes.Forms,
-  UI.Prototypes.AccessMask, UI.Prototypes.Sid.Edit;
+  UI.Prototypes.Sid.Edit, NtUiFrame.Bits;
 
 type
   TAccessCheckForm = class(TChildForm)
@@ -18,7 +18,6 @@ type
     lblName: TLabel;
     tbxNameType: TEdit;
     TabBySid: TTabSheet;
-    AccessMaskFrame: TAccessMaskFrame;
     ButtonClose: TButton;
     lblCidtType: TLabel;
     lblCid: TLabel;
@@ -33,6 +32,7 @@ type
     SidEditor: TSidEditor;
     lblSidLookupType: TLabel;
     tbxSidLookupType: TEdit;
+    AccessMaskFrame: TBitsFrame;
     procedure FormCreate(Sender: TObject);
     procedure tbxNameChange(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -100,8 +100,11 @@ end;
 
 procedure TAccessCheckForm.ShowAccessMask;
 begin
-  AccessMaskFrame.LoadType(MaskType, GenericMapping, True);
-  AccessMaskFrame.AccessMask := Value;
+  if not Assigned(MaskType) then
+    MaskType := TypeInfo(TAccessMask);
+
+  AccessMaskFrame.LoadAccessMaskType(MaskType, GenericMapping, False);
+  AccessMaskFrame.Value := Value;
 end;
 
 procedure TAccessCheckForm.tbxCidChange;

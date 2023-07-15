@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens,
-  UI.Prototypes.Forms, VclEx.ListView, UI.Prototypes.AccessMask;
+  UI.Prototypes.Forms, VclEx.ListView, NtUiFrame.Bits;
 
 type
   TDialogAccess = class(TChildForm)
@@ -15,7 +15,7 @@ type
     ButtonOK: TButton;
     ButtonCancel: TButton;
     GroupBoxAccess: TGroupBox;
-    AccessMaskFrame: TAccessMaskFrame;
+    AccessMaskFrame: TBitsFrame;
   public
     class function ExecuteDuplication(AOwner: TComponent; const Source: IToken):
       IToken;
@@ -35,14 +35,15 @@ var
 begin
   with TDialogAccess.CreateChild(AOwner, cfmApplication) do
   begin
-    AccessMaskFrame.LoadType(TypeInfo(TTokenAccessMask), TokenGenericMapping);
+    AccessMaskFrame.LoadAccessMaskType(TypeInfo(TTokenAccessMask),
+      TokenGenericMapping, True);
 
     if Source.QueryBasicInfo(BasicInfo).IsSuccess then
-      AccessMaskFrame.AccessMask := BasicInfo.GrantedAccess;
+      AccessMaskFrame.Value := BasicInfo.GrantedAccess;
 
     ShowModal;
 
-    MakeDuplicateHandle(Result, Source, AccessMaskFrame.AccessMask,
+    MakeDuplicateHandle(Result, Source, AccessMaskFrame.Value,
       RadioButtonSame.Checked).RaiseOnError;
   end;
 end;

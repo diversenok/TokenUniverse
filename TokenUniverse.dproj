@@ -187,9 +187,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.Modal.ThreadList.pas">
             <Form>ThreadListDialog</Form>
         </DCCReference>
-        <DCCReference Include="UI\UI.Information.Access.pas">
-            <Form>DialogGrantedAccess</Form>
-        </DCCReference>
         <DCCReference Include="UI\UI.Modal.PickToken.pas">
             <Form>DialogPickToken</Form>
         </DCCReference>
@@ -222,15 +219,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\VclEx\VclEx.Form.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.Colors.pas"/>
         <DCCReference Include="NtUtilsUI\Common\UI.ProcessIcons.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.AccessMask.pas">
-            <Form>AccessMaskFrame</Form>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="Core\TU.Processes.Create.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.BitMask.pas">
-            <Form>BitMaskFrame</Form>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas">
             <Form>FrameGroups</Form>
             <FormType>dfm</FormType>
@@ -319,6 +308,12 @@ $(PostBuildEvent)]]></PostBuildEvent>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.View.pas">
             <Form>AppContainerViewFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Bits.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Bits.pas">
+            <Form>BitsFrame</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>

@@ -210,40 +210,6 @@ object AccessCheckForm: TAccessCheckForm
       end
     end
   end
-  inline AccessMaskFrame: TAccessMaskFrame
-    AlignWithMargins = True
-    Left = 3
-    Top = 111
-    Width = 629
-    Height = 383
-    Margins.Bottom = 33
-    Align = alClient
-    Constraints.MinHeight = 200
-    Constraints.MinWidth = 180
-    DoubleBuffered = True
-    ParentDoubleBuffered = False
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 1
-    inherited ListViewEx: TListViewEx
-      Width = 629
-      Height = 354
-      Columns = <
-        item
-          AutoSize = True
-        end>
-    end
-    inherited Panel: TPanel
-      Top = 354
-      Width = 629
-      inherited ButtonFull: TButton
-        Left = 559
-      end
-      inherited EditMask: TEdit
-        Width = 481
-      end
-    end
-  end
   object ButtonClose: TButton
     Left = 557
     Top = 497
@@ -253,7 +219,40 @@ object AccessCheckForm: TAccessCheckForm
     Cancel = True
     Caption = 'Close'
     ModalResult = 8
-    TabOrder = 2
+    TabOrder = 1
     OnClick = ButtonCloseClick
+  end
+  inline AccessMaskFrame: TBitsFrame
+    AlignWithMargins = True
+    Left = 3
+    Top = 111
+    Width = 629
+    Height = 383
+    Margins.Bottom = 33
+    Align = alClient
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 2
+    inherited Tree: TDevirtualizedTree
+      Width = 629
+      Height = 355
+      Columns = <
+        item
+          Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+          Position = 0
+          Text = 'Name'
+          Width = 625
+        end>
+    end
+    inherited BottomPanel: TPanel
+      Top = 355
+      Width = 629
+      inherited tbxValue: TEdit
+        Width = 483
+      end
+      inherited btnAll: TButton
+        Left = 559
+      end
+    end
   end
 end
