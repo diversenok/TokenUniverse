@@ -70,6 +70,7 @@ type
     MenuSecurePrompt: TMenuItem;
     cmClipboardToken: TMenuItem;
     cmPipeLoopbackToken: TMenuItem;
+    cmImpersonate: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -116,6 +117,7 @@ type
     procedure MenuSecurePromptClick(Sender: TObject);
     procedure cmClipboardTokenClick(Sender: TObject);
     procedure cmPipeLoopbackTokenClick(Sender: TObject);
+    procedure cmImpersonateClick(Sender: TObject);
   end;
 
 var
@@ -355,6 +357,24 @@ var
 begin
   MakeClipboardToken(Token).RaiseOnError;
   TokenView.Add(Token);
+end;
+
+procedure TFormMain.cmImpersonateClick;
+var
+  Token: IToken;
+begin
+  Token := TokenView.Selected;
+
+  if AskConvertToImpersonation(Handle, Token) then
+    TokenView.Add(Token);
+
+  if TSettings.UseSafeImpersonation then
+    Token.AssignToThreadSafeById(NtCurrentThreadId).RaiseOnError
+  else
+    Token.AssignToThreadById(NtCurrentThreadId).RaiseOnError;
+
+  CurrentUserChanged(Self);
+  ShowSuccessMessage(Handle, 'The token was successfully assigned to the current thread.');
 end;
 
 procedure TFormMain.cmPipeLoopbackTokenClick(Sender: TObject);

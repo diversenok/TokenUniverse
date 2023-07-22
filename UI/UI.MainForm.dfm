@@ -144,7 +144,7 @@ object FormMain: TFormMain
       end
       object cmRevokeCurrent: TMenuItem
         Caption = 'Revoke token from current thread'
-        ShortCut = 49234
+        ShortCut = 24658
         OnClick = ActionRevertCurrentThread
       end
       object cmRevokeToken: TMenuItem
@@ -242,7 +242,6 @@ object FormMain: TFormMain
     end
     object TokenRestrictSafer: TMenuItem
       Caption = 'Create restricted token via WinSafer API...'
-      ShortCut = 24658
       OnClick = TokenRestrictSaferClick
     end
     object TokenOpenLinked: TMenuItem
@@ -258,13 +257,18 @@ object FormMain: TFormMain
       OnClick = ActionSendHandle
     end
     object AssignToProcess: TMenuItem
-      Caption = 'Assign token to process (Primary)...'
+      Caption = 'Assign to process (Primary)...'
       ShortCut = 24641
       OnClick = ActionAssignToProcess
     end
-    object AssignToThread: TMenuItem
-      Caption = 'Assign token to thread (Impersonation)...'
+    object cmImpersonate: TMenuItem
+      Caption = 'Impersonate'
       ShortCut = 24649
+      OnClick = cmImpersonateClick
+    end
+    object AssignToThread: TMenuItem
+      Caption = 'Assign to thread (Impersonation)...'
+      ShortCut = 57417
       OnClick = ActionAssignToThread
     end
     object N3: TMenuItem
