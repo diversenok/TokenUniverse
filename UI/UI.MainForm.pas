@@ -68,6 +68,8 @@ type
     N7: TMenuItem;
     cmAccess: TMenuItem;
     MenuSecurePrompt: TMenuItem;
+    cmClipboardToken: TMenuItem;
+    cmPipeLoopbackToken: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -112,6 +114,8 @@ type
     procedure cmAllocConsoleClick(Sender: TObject);
     procedure cmAccessClick(Sender: TObject);
     procedure MenuSecurePromptClick(Sender: TObject);
+    procedure cmClipboardTokenClick(Sender: TObject);
+    procedure cmPipeLoopbackTokenClick(Sender: TObject);
   end;
 
 var
@@ -343,6 +347,22 @@ begin
 
   Result.RaiseOnError;
   cmAllocConsole.Checked := not cmAllocConsole.Checked;
+end;
+
+procedure TFormMain.cmClipboardTokenClick;
+var
+  Token: IToken;
+begin
+  MakeClipboardToken(Token).RaiseOnError;
+  TokenView.Add(Token);
+end;
+
+procedure TFormMain.cmPipeLoopbackTokenClick(Sender: TObject);
+var
+  Token: IToken;
+begin
+  MakePipeLoopbackToken(Token).RaiseOnError;
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.CurrentUserChanged;

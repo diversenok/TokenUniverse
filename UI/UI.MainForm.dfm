@@ -72,26 +72,46 @@ object FormMain: TFormMain
       end
     end
     object cmToken: TMenuItem
-      Caption = 'Token'
+      Caption = 'Tokens'
       object cmOpenCurrent: TMenuItem
-        Caption = 'Open current process'
+        Caption = 'Current process token'
         ShortCut = 24655
         OnClick = ActionOpenSelf
       end
       object cmOpenProcess: TMenuItem
-        Caption = 'Open process...'
+        Caption = 'Process token...'
         ShortCut = 16463
         OnClick = ActionOpenProcess
       end
       object cmOpenThread: TMenuItem
-        Caption = 'Open thread...'
+        Caption = 'Thread token...'
         ShortCut = 49231
         OnClick = ActionOpenThread
       end
       object cmOpenEffective: TMenuItem
-        Caption = 'Open effective token...'
+        Caption = 'Thread effective token...'
         ShortCut = 57423
         OnClick = ActionOpenEffective
+      end
+      object cmQuerySession: TMenuItem
+        Caption = 'Session token...'
+        ShortCut = 16469
+        OnClick = ActionWTSQuery
+      end
+      object cmAnonymousToken: TMenuItem
+        Caption = 'Anonymous token'
+        ShortCut = 49217
+        OnClick = NewAnonymousClick
+      end
+      object cmClipboardToken: TMenuItem
+        Caption = 'Clipboard token'
+        ShortCut = 32835
+        OnClick = cmClipboardTokenClick
+      end
+      object cmPipeLoopbackToken: TMenuItem
+        Caption = 'Pipe loopback token'
+        ShortCut = 24656
+        OnClick = cmPipeLoopbackTokenClick
       end
       object N4: TMenuItem
         Caption = '-'
@@ -101,20 +121,10 @@ object FormMain: TFormMain
         ShortCut = 16460
         OnClick = ActionLogon
       end
-      object cmQuerySession: TMenuItem
-        Caption = 'Query session token...'
-        ShortCut = 16469
-        OnClick = ActionWTSQuery
-      end
       object cmCreateToken: TMenuItem
         Caption = 'Create using NtCreateToken...'
         ShortCut = 16462
         OnClick = NewNtCreateTokenClick
-      end
-      object cmAnonymousToken: TMenuItem
-        Caption = 'Anonymous token'
-        ShortCut = 49217
-        OnClick = NewAnonymousClick
       end
       object N5: TMenuItem
         Caption = '-'

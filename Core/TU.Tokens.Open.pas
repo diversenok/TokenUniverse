@@ -109,13 +109,27 @@ function MakeNewToken(
   Expires: TLargeInteger = INFINITE_FUTURE
 ): TNtxStatus;
 
+// Open a token of the last clipboard user
+function MakeClipboardToken(
+  out Token: IToken;
+  DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
+): TNtxStatus;
+
+// Open a logon token via pipe impersonation via the loopback interface
+function MakePipeLoopbackToken(
+  out Token: IToken;
+  DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
+): TNtxStatus;
+
 implementation
 
 uses
-  Ntapi.ntpsapi, Ntapi.ntstatus, NtUtils.Tokens.Impersonate, NtUtils.Tokens,
-  NtUtils.WinStation, NtUtils.Processes, NtUtils.Processes.Info,
-  NtUtils.Threads, NtUtils.Objects, NtUtils.Lsa.Sid, DelphiUiLib.Reflection,
-  System.SysUtils;
+  Ntapi.ntpsapi, Ntapi.ntstatus, Ntapi.ntioapi, Ntapi.ntioapi.fsctl,
+  NtUtils.Tokens.Impersonate, NtUtils.Tokens, NtUtils.WinStation,
+  NtUtils.Processes, NtUtils.Processes.Info, NtUtils.Threads, NtUtils.Objects,
+  NtUtils.Lsa.Sid, DelphiUiLib.Reflection, System.SysUtils, NtUtils.WinUser,
+  NtUtils.Files.Open, NtUtils.Files.Control, NtUtils.Files.Operations,
+  NtUtils.SysUtils;
 
 function MakeAnonymousToken;
 var
@@ -367,6 +381,65 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'New ' + LsaxSidToString(User));
+end;
+
+function MakeClipboardToken;
+var
+  hxToken: IHandle;
+begin
+  Result := UsrxGetClipboardToken(hxToken, DesiredAccess);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'Clipboard token');
+end;
+
+function MakePipeLoopbackToken;
+var
+  hxPipeServer, hxPipeClient, hxToken: IHandle;
+  PipeName: String;
+  StateBackup: IAutoReleasable;
+begin
+  // Create a pipe with the local prefix to make it work in AppContainer
+  Result := NtxCreatePipe(hxPipeServer, FileParameters
+    .UseFileName('\Device\NamedPipe\Local\TokenUniverse' +
+      RtlxUIntToStr(RtlxRandom))
+    .UseAccess(FILE_READ_DATA)
+    .UseShareMode(FILE_SHARE_WRITE)
+  );
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Determine its actual name
+  Result := NtxQueryNameFile(hxPipeServer.Handle, PipeName);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Open it via the SMB redirector
+  Result := NtxOpenFile(hxPipeClient, FileParameters
+    .UseFileName('\Device\Mup\localhost\PIPE' + PipeName)
+    .UseOptions(FILE_NON_DIRECTORY_FILE)
+    .UseAccess(FILE_WRITE_DATA)
+  );
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Restore the previous impersonation on exit
+  StateBackup := NtxBackupThreadToken(NtxCurrentThread);
+
+  // Impersonate the client
+  Result := NtxFsControlFile(hxPipeServer.Handle, FSCTL_PIPE_IMPERSONATE);
+
+  if not Result.IsSuccess then
+    Exit;
+
+  // Read the impersonated token
+  Result := NtxOpenThreadToken(hxToken, NtCurrentThread, DesiredAccess);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'Pipe loopback token');
 end;
 
 end.
