@@ -4,7 +4,7 @@ interface
 
 uses
   Ntapi.WinNt, NtUtils, NtUiLib.AutoCompletion.Namespace,
-  DelphiApi.Reflection;
+  DelphiApi.Reflection, NtUiCommon.Prototypes;
 
 type
   TCidType = (
@@ -25,45 +25,27 @@ type
     stSamGroup
   );
 
+  TAccessContext = record
+    Security: TNtUiLibSecurityContext;
+    MaximumAccess: TAccessMask;
+  end;
+
 // Determine maximum access we can get to a named (namespace) object
-function TuGetMaximumAccessNamedObject(
+function TuGetAccessNamedObject(
   const Entry: TNamespaceEntry
-): TAccessMask;
+): TAccessContext;
 
 // Determine maximum access we can get to a client ID-defined object
-function TuGetMaximumAccessCidObject(
+function TuGetAccessCidObject(
   Cid: NativeUInt;
   CidType: TCidType
-): TAccessMask;
-
-// Get TypeInfo of an access mask corresponding to a CID type
-[Result: MayReturnNil]
-function TuCidAccessMaskType(
-  CidType: TCidType
-): Pointer;
-
-// Get kerenel type name of corresponding to a CID type
-[Result: MayReturnNil]
-function TuCidTypeName(
-  CidType: TCidType
-): String;
+): TAccessContext;
 
 // Determine maximum access we can get to a SID-defined object
-function TuGetMaximumAccessSidObject(
+function TuGetAccessSidObject(
   const Sid: ISid;
   SidType: TSidType
-): TAccessMask;
-
-// Get generic access mapping for a SID-defined objects
-function TuGetGenericMappingSid(
-  SidType: TSidType
-): TGenericMapping;
-
-// Get TypeInfo of an access mask corresponding to a CID type
-[Result: MayReturnNil]
-function TuSidAccessMaskType(
-  SidType: TSidType
-): Pointer;
+): TAccessContext;
 
 implementation
 
@@ -191,26 +173,29 @@ begin
     end;
 end;
 
-function TuGetMaximumAccessNamedObject;
+function TuGetAccessNamedObject;
 var
   ObjectInfo: TObjectTypeInfo;
-  Status: TNtxStatus;
 begin
-  Status := RtlxFindKernelType(Entry.TypeName, ObjectInfo);
+  Result := Default(TAccessContext);
+  Result.Security.AccessMaskType := RtlxGetNamespaceAccessMaskType(Entry.KnownType);
+  Result.Security.QueryFunction := NtxQuerySecurityObject;
+  Result.Security.SetFunction := NtxSetSecurityObject;
+  Result.Security.HandleProvider := TuMakeNamespaceOpener(Entry.FullPath,
+    Entry.KnownType);
 
-  if not Status.IsSuccess then
-    Exit(0);
+  if RtlxFindKernelType(Entry.TypeName, ObjectInfo).IsSuccess then
+    Result.Security.GenericMapping := ObjectInfo.Other.GenericMapping
+  else
+    ObjectInfo.Other.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
 
-  Status := RtlxComputeMaximumAccess(
-    Result,
-    TuMakeNamespaceOpener(Entry.FullPath, Entry.KnownType),
+  RtlxComputeMaximumAccess(
+    Result.MaximumAccess,
+    Result.Security.HandleProvider,
     True,
     ObjectInfo.Other.ValidAccessMask,
     ObjectInfo.Other.GenericMapping.GenericRead
   );
-
-  if not Status.IsSuccess then
-    Exit(0);
 end;
 
 function TuMakeCidOpener(
@@ -222,6 +207,8 @@ begin
       out hxObject: IHandle;
       AccessMask: TAccessMask
     ): TNtxStatus
+    var
+      hxProcess: IHandle;
     begin
       case KnownType of
         ctProcess:
@@ -235,6 +222,16 @@ begin
 
         ctThreadToken:
           Result := NtxOpenThreadTokenById(hxObject, Cid, AccessMask);
+
+        ctProcessDebugObject:
+        begin
+          Result := NtxOpenProcess(hxProcess, Cid, PROCESS_QUERY_INFORMATION);
+
+          if not Result.IsSuccess then
+            Exit;
+
+          Result := NtxOpenDebugObjectProcess(hxObject, hxProcess.Handle);
+        end
       else
         Result.Location := 'TuMakeCidOpener';
         Result.Status := STATUS_INVALID_PARAMETER;
@@ -268,46 +265,10 @@ begin
   MaximumAccess := Info.GrantedAccess;
 end;
 
-function TuGetMaximumAccessCidObject;
-var
-  Status: TNtxStatus;
-  TypeName: String;
-  ObjectInfo: TObjectTypeInfo;
-begin
-  case CidType of
-    ctProcessDebugObject:
-    begin
-      // Opening debug object doesn't allow specifiying access
-      if not TuGetMaximumAccessDebugObject(Result, Cid).IsSuccess then
-        Result := 0;
-
-      Exit;
-    end;
-
-    ctProcess:      TypeName := 'Process';
-    ctThread:       TypeName := 'Thread';
-    ctThreadToken,
-    ctProcessToken: TypeName := 'Token';
-  end;
-
-  Status := RtlxFindKernelType(TypeName, ObjectInfo);
-
-  if not Status.IsSuccess then
-    Exit(0);
-
-  Status := RtlxComputeMaximumAccess(
-    Result,
-    TuMakeCidOpener(Cid, CidType),
-    True,
-    ObjectInfo.Other.ValidAccessMask,
-    ObjectInfo.Other.GenericMapping.GenericRead
-  );
-
-  if not Status.IsSuccess then
-    Exit(0);
-end;
-
-function TuCidAccessMaskType;
+[Result: MayReturnNil]
+function TuCidAccessMaskType(
+  CidType: TCidType
+): Pointer;
 begin
   case CidType of
     ctProcess:            Result := TypeInfo(TProcessAccessMask);
@@ -320,17 +281,41 @@ begin
   end;
 end;
 
-function TuCidTypeName;
+function TuGetAccessCidObject;
+var
+  TypeName: String;
+  ObjectInfo: TObjectTypeInfo;
 begin
+  Result := Default(TAccessContext);
+  Result.Security.AccessMaskType := TuCidAccessMaskType(CidType);
+  Result.Security.QueryFunction := NtxQuerySecurityObject;
+  Result.Security.SetFunction := NtxSetSecurityObject;
+  Result.Security.HandleProvider := TuMakeCidOpener(Cid, CidType);
+
   case CidType of
-    ctProcess:            Result := 'Process';
-    ctThread:             Result := 'Thread';
-    ctProcessDebugObject: Result := 'DebugObject';
+    ctProcess:            TypeName := 'Process';
+    ctThread:             TypeName := 'Thread';
+    ctProcessDebugObject: TypeName := 'DebugObject';
     ctProcessToken,
-    ctThreadToken:        Result := 'Token';
-  else
-    Result := '';
+    ctThreadToken:        TypeName := 'Token';
   end;
+
+  if RtlxFindKernelType(TypeName, ObjectInfo).IsSuccess then
+    Result.Security.GenericMapping := ObjectInfo.Other.GenericMapping
+  else
+    ObjectInfo.Other.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
+
+  if CidType = ctProcessDebugObject then
+    // Opening debug object doesn't allow specifiying access
+    TuGetMaximumAccessDebugObject(Result.MaximumAccess, Cid)
+  else
+    RtlxComputeMaximumAccess(
+      Result.MaximumAccess,
+      Result.Security.HandleProvider,
+      True,
+      ObjectInfo.Other.ValidAccessMask,
+      ObjectInfo.Other.GenericMapping.GenericRead
+    );
 end;
 
 function TuMakeSidOpener(
@@ -429,7 +414,10 @@ begin
   end;
 end;
 
-function TuSidAccessMaskType;
+[Result: MayReturnNil]
+function TuSidAccessMaskType(
+  SidType: TSidType
+): Pointer;
 begin
   case SidType of
     stLsaAccount: Result := TypeInfo(TLsaAccountAccessMask);
@@ -442,16 +430,32 @@ begin
   end;
 end;
 
-function TuGetMaximumAccessSidObject;
+function TuGetAccessSidObject;
 var
   Status: TNtxStatus;
 begin
+  Result := Default(TAccessContext);
+  Result.Security.AccessMaskType := TuSidAccessMaskType(SidType);;
+  Result.Security.GenericMapping := TuGetGenericMappingSid(SidType);
+  Result.Security.HandleProvider := TuMakeSidOpener(Sid, SidType);
+
+  if SidType = stLsaAccount then
+  begin
+    Result.Security.QueryFunction := LsaxQuerySecurityObject;
+    Result.Security.SetFunction := LsaxSetSecurityObject;
+  end
+  else
+  begin
+    Result.Security.QueryFunction := SamxQuerySecurityObject;
+    Result.Security.SetFunction := SamxSetSecurityObject;
+  end;
+
   Status := RtlxComputeMaximumAccess(
-    Result,
-    TuMakeSidOpener(Sid, SidType),
+    Result.MaximumAccess,
+    Result.Security.HandleProvider,
     False,
     TuGetValidAccessMaskSid(SidType),
-    TuGetGenericMappingSid(SidType).GenericRead
+    Result.Security.GenericMapping.GenericRead
   );
 end;
 

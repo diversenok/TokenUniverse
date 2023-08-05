@@ -36,7 +36,7 @@ begin
   with TDialogAccess.CreateChild(AOwner, cfmApplication) do
   begin
     AccessMaskFrame.LoadAccessMaskType(TypeInfo(TTokenAccessMask),
-      TokenGenericMapping, True);
+      TokenGenericMapping, True, True);
 
     if Source.QueryBasicInfo(BasicInfo).IsSuccess then
       AccessMaskFrame.Value := BasicInfo.GrantedAccess;

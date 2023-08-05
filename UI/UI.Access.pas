@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, NtUtils, Ntapi.WinNt, UI.Prototypes.Forms,
-  UI.Prototypes.Sid.Edit, NtUiFrame.Bits;
+  UI.Prototypes.Sid.Edit, NtUiFrame.Bits, NtUiFrame, TU.Access;
 
 type
   TAccessCheckForm = class(TChildForm)
@@ -33,6 +33,7 @@ type
     lblSidLookupType: TLabel;
     tbxSidLookupType: TEdit;
     AccessMaskFrame: TBitsFrame;
+    ButtonSecurity: TButton;
     procedure FormCreate(Sender: TObject);
     procedure tbxNameChange(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -40,12 +41,10 @@ type
     procedure tbxSidChange(Sender: TObject);
     procedure btnSelectCidClick(Sender: TObject);
     procedure PageControlModesChange(Sender: TObject);
+    procedure ButtonSecurityClick(Sender: TObject);
   private
-    procedure ShowAccessMask(
-      Value: TAccessMask;
-      MaskType: Pointer;
-      const GenericMapping: TGenericMapping
-    );
+    FContext: TAccessContext;
+    procedure ShowAccessMask(const Context: TAccessContext);
     procedure ResetAccessMask;
   public
     { Public declarations }
@@ -58,7 +57,7 @@ implementation
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
   NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, NtUiLib.AutoCompletion,
-  DelphiUiLib.Reflection, TU.Access, UI.ProcessList;
+  DelphiUiLib.Reflection, UI.ProcessList, NtUiCommon.Prototypes;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var
@@ -79,6 +78,17 @@ begin
   Close;
 end;
 
+procedure TAccessCheckForm.ButtonSecurityClick;
+begin
+  if not Assigned(NtUiLibShowSecurity) or
+    not Assigned(FContext.Security.HandleProvider) or
+    not Assigned(FContext.Security.QueryFunction) or
+    not Assigned(FContext.Security.SetFunction) then
+    Exit;
+
+  NtUiLibShowSecurity(FContext.Security);
+end;
+
 procedure TAccessCheckForm.FormCreate;
 begin
   AccessMaskFrame.IsReadOnly := True;
@@ -95,23 +105,34 @@ end;
 
 procedure TAccessCheckForm.ResetAccessMask;
 begin
-  ShowAccessMask(0, nil, Default(TGenericMapping));
+  ShowAccessMask(Default(TAccessContext));
 end;
 
 procedure TAccessCheckForm.ShowAccessMask;
+var
+  MaskType: Pointer;
 begin
-  if not Assigned(MaskType) then
+  FContext := Context;
+
+  if Assigned(Context.Security.AccessMaskType) then
+    MaskType := Context.Security.AccessMaskType
+  else
     MaskType := TypeInfo(TAccessMask);
 
-  AccessMaskFrame.LoadAccessMaskType(MaskType, GenericMapping, False);
-  AccessMaskFrame.Value := Value;
+  ButtonSecurity.Enabled := Assigned(NtUiLibShowSecurity) and
+    Assigned(Context.Security.HandleProvider) and
+    Assigned(Context.Security.QueryFunction) and
+    Assigned(Context.Security.SetFunction);
+
+  AccessMaskFrame.LoadAccessMaskType(MaskType, Context.Security.GenericMapping,
+    False, False);
+  AccessMaskFrame.Value := Context.MaximumAccess;
 end;
 
 procedure TAccessCheckForm.tbxCidChange;
 var
   CidType: TCidType;
   Cid: Cardinal;
-  ObjectInfo: TObjectTypeInfo;
 begin
   if (cbxCidType.ItemIndex = 0) and (cbxCidSubType.ItemIndex = 0) then
     CidType := ctProcess
@@ -133,14 +154,7 @@ begin
     Exit;
   end;
 
-  if not RtlxFindKernelType(TuCidTypeName(CidType), ObjectInfo).IsSuccess then
-    ObjectInfo := Default(TObjectTypeInfo);
-
-  ShowAccessMask(
-    TuGetMaximumAccessCidObject(Cid, CidType),
-    TuCidAccessMaskType(CidType),
-    ObjectInfo.Other.GenericMapping
-  );
+  ShowAccessMask(TuGetAccessCidObject(Cid, CidType));
 end;
 
 procedure TAccessCheckForm.tbxNameChange;
@@ -151,14 +165,10 @@ begin
   Entry := RtlxQueryNamespaceEntry(tbxName.Text);
   tbxNameType.Text := TType.Represent(Entry.KnownType).Text;
 
-  if not RtlxFindKernelType(Entry.TypeName, EntryType).IsSuccess then
-    EntryType := Default(TObjectTypeInfo);
-
-  ShowAccessMask(
-    TuGetMaximumAccessNamedObject(Entry),
-    RtlxGetNamespaceAccessMaskType(Entry.KnownType),
-    EntryType.Other.GenericMapping
-  );
+  if RtlxFindKernelType(Entry.TypeName, EntryType).IsSuccess then
+    ShowAccessMask(TuGetAccessNamedObject(Entry))
+  else
+    ResetAccessMask;
 end;
 
 procedure TAccessCheckForm.tbxSidChange;
@@ -193,11 +203,7 @@ begin
     Exit;
   end;
 
-  ShowAccessMask(
-    TuGetMaximumAccessSidObject(Sid, SidType),
-    TuSidAccessMaskType(SidType),
-    TuGetGenericMappingSid(SidType)
-  );
+  ShowAccessMask(TuGetAccessSidObject(Sid, SidType));
 end;
 
 end.

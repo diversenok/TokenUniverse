@@ -76,7 +76,19 @@ uses
   NtUiDialog.FrameHost in 'NtUtilsUI\Prototypes\NtUiDialog.FrameHost.pas' {FrameHostDialog},
   NtUiFrame.AppContainer.View in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.View.pas' {AppContainerViewFrame: TFrame},
   NtUiBackend.Bits in 'NtUtilsUI\Common\NtUiBackend.Bits.pas',
-  NtUiFrame.Bits in 'NtUtilsUI\Prototypes\NtUiFrame.Bits.pas' {BitsFrame: TFrame};
+  NtUiFrame.Bits in 'NtUtilsUI\Prototypes\NtUiFrame.Bits.pas' {BitsFrame: TFrame},
+  NtUiFrame in 'NtUtilsUI\Prototypes\NtUiFrame.pas' {BaseFrame: TFrame},
+  NtUiBackend.Acl in 'NtUtilsUI\Common\NtUiBackend.Acl.pas',
+  NtUiCommon.PageHost in 'NtUtilsUI\Prototypes\NtUiCommon.PageHost.pas' {FramePages: TFrame},
+  NtUiFrame.Ace in 'NtUtilsUI\Prototypes\NtUiFrame.Ace.pas',
+  NtUiFrame.Acl in 'NtUtilsUI\Prototypes\NtUiFrame.Acl.pas' {AclFrame: TFrame},
+  NtUiFrame.Security.Acl in 'NtUtilsUI\Prototypes\NtUiFrame.Security.Acl.pas' {AclSecurityFrame: TFrame},
+  NtUiFrame.Security.OwnerGroup in 'NtUtilsUI\Prototypes\NtUiFrame.Security.OwnerGroup.pas' {OwnerGroupSecurityFrame: TFrame},
+  NtUiFrame.Security in 'NtUtilsUI\Prototypes\NtUiFrame.Security.pas',
+  NtUiFrame.Ace.Condition in 'NtUtilsUI\Prototypes\NtUiFrame.Ace.Condition.pas' {AceConditionFrame: TFrame},
+  NtUiFrame.Hex.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.Hex.Edit.pas' {HexEditFrame: TFrame},
+  NtUiBackend.HexView in 'NtUtilsUI\Common\NtUiBackend.HexView.pas',
+  NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame};
 
 {$R *.res}
 

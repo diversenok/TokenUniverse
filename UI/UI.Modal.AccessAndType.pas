@@ -45,7 +45,7 @@ begin
   inherited;
 
   AccessMaskFrame.LoadAccessMaskType(TypeInfo(TTokenAccessMask),
-    TokenGenericMapping, True);
+    TokenGenericMapping, True, True);
   AccessMaskFrame.Value := TOKEN_ALL_ACCESS;
 
   FSelectedType := ttPrimary;

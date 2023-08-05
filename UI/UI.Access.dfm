@@ -219,7 +219,7 @@ object AccessCheckForm: TAccessCheckForm
     Cancel = True
     Caption = 'Close'
     ModalResult = 8
-    TabOrder = 1
+    TabOrder = 3
     OnClick = ButtonCloseClick
   end
   inline AccessMaskFrame: TBitsFrame
@@ -230,9 +230,11 @@ object AccessCheckForm: TAccessCheckForm
     Height = 383
     Margins.Bottom = 33
     Align = alClient
+    Constraints.MinHeight = 100
+    Constraints.MinWidth = 200
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 2
+    TabOrder = 1
     inherited Tree: TDevirtualizedTree
       Width = 629
       Height = 355
@@ -254,5 +256,15 @@ object AccessCheckForm: TAccessCheckForm
         Left = 559
       end
     end
+  end
+  object ButtonSecurity: TButton
+    Left = 3
+    Top = 497
+    Width = 75
+    Height = 25
+    Caption = 'Security...'
+    Enabled = False
+    TabOrder = 2
+    OnClick = ButtonSecurityClick
   end
 end
