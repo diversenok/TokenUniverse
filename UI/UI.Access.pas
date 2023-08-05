@@ -34,6 +34,11 @@ type
     tbxSidLookupType: TEdit;
     AccessMaskFrame: TBitsFrame;
     ButtonSecurity: TButton;
+    TabByService: TTabSheet;
+    lblServiceName: TLabel;
+    tbxServiceName: TEdit;
+    lblServiceType: TLabel;
+    tbxServiceType: TEdit;
     procedure FormCreate(Sender: TObject);
     procedure tbxNameChange(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -42,8 +47,11 @@ type
     procedure btnSelectCidClick(Sender: TObject);
     procedure PageControlModesChange(Sender: TObject);
     procedure ButtonSecurityClick(Sender: TObject);
+    procedure tbxServiceNameChange(Sender: TObject);
+    procedure tbxServiceNameEnter(Sender: TObject);
   private
     FContext: TAccessContext;
+    FServicesSuggestionInitialized: Boolean;
     procedure ShowAccessMask(const Context: TAccessContext);
     procedure ResetAccessMask;
   public
@@ -169,6 +177,23 @@ begin
     ShowAccessMask(TuGetAccessNamedObject(Entry))
   else
     ResetAccessMask;
+end;
+
+procedure TAccessCheckForm.tbxServiceNameChange;
+begin
+  if tbxServiceName.Text <> '' then
+    ShowAccessMask(TuGetAccessServiceObject(tbxServiceName.Text))
+  else
+    ResetAccessMask;
+end;
+
+procedure TAccessCheckForm.tbxServiceNameEnter;
+begin
+  if FServicesSuggestionInitialized then
+    Exit;
+
+  FServicesSuggestionInitialized := True;
+  ShlxEnableStaticSuggestions(tbxServiceName.Handle, TuCollectServiceNames);
 end;
 
 procedure TAccessCheckForm.tbxSidChange;

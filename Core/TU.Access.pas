@@ -47,18 +47,26 @@ function TuGetAccessSidObject(
   SidType: TSidType
 ): TAccessContext;
 
+// Determine maximum access we can get to an SCM service object
+function TuGetAccessServiceObject(
+  const Name: String
+): TAccessContext;
+
+// Enumerate all service names for suggestions
+function TuCollectServiceNames: TArray<String>;
+
 implementation
 
 uses
   Ntapi.ntstatus, Ntapi.ntioapi, Ntapi.ntregapi, Ntapi.ntobapi, Ntapi.nttmapi,
   Ntapi.ntmmapi, Ntapi.ntexapi, Ntapi.ntpsapi, Ntapi.ntdbg, Ntapi.ntseapi,
-  Ntapi.ntlsa, Ntapi.ntsam, Ntapi.Versions,
+  Ntapi.ntlsa, Ntapi.ntsam, Ntapi.Versions, Ntapi.WinSvc,
   NtUtils.Objects, NtUtils.Objects.Namespace, NtUtils.Registry,
   NtUtils.Objects.Snapshots, NtUtils.Files, NtUtils.Files.Open,
   NtUtils.Files.Operations, NtUtils.Sections, NtUtils.Processes,
   NtUtils.Jobs, NtUtils.Synchronization, NtUtils.Memory, NtUtils.Transactions,
   NtUtils.Threads, NtUtils.Tokens, NtUtils.Debug, NtUtils.Lsa, NtUtils.Sam,
-  NtUtils.Security.Sid;
+  NtUtils.Security.Sid, NtUtils.Svc;
 
 function TrimLastBackslash(
   const Path: String
@@ -431,8 +439,6 @@ begin
 end;
 
 function TuGetAccessSidObject;
-var
-  Status: TNtxStatus;
 begin
   Result := Default(TAccessContext);
   Result.Security.AccessMaskType := TuSidAccessMaskType(SidType);;
@@ -450,13 +456,61 @@ begin
     Result.Security.SetFunction := SamxSetSecurityObject;
   end;
 
-  Status := RtlxComputeMaximumAccess(
+  RtlxComputeMaximumAccess(
     Result.MaximumAccess,
     Result.Security.HandleProvider,
     False,
     TuGetValidAccessMaskSid(SidType),
     Result.Security.GenericMapping.GenericRead
   );
+end;
+
+function TuMakeServiceOpener(
+  const Name: String
+): TObjectOpener;
+begin
+  Result := function (
+    out hxObject: IHandle;
+    DesiredAccess: TAccessMask
+    ): TNtxStatus
+    begin
+      Result := ScmxOpenService(hxObject, Name, DesiredAccess);
+    end;
+end;
+
+function TuGetAccessServiceObject;
+begin
+  Result := Default(TAccessContext);
+  Result.Security.HandleProvider := TuMakeServiceOpener(Name);
+  Result.Security.AccessMaskType := TypeInfo(TServiceAccessMask);
+  Result.Security.QueryFunction := ScmxQuerySecurityObject;
+  Result.Security.SetFunction := ScmxSetSecurityObject;
+  Result.Security.GenericMapping.GenericRead := SERVICE_READ;
+  Result.Security.GenericMapping.GenericWrite := SERVICE_WRITE;
+  Result.Security.GenericMapping.GenericExecute := SERVICE_EXECUTE;
+  Result.Security.GenericMapping.GenericAll := SERVICE_ALL_ACCESS;
+
+  RtlxComputeMaximumAccess(
+    Result.MaximumAccess,
+    Result.Security.HandleProvider,
+    False,
+    SERVICE_ALL_ACCESS,
+    Result.Security.GenericMapping.GenericRead
+  );
+end;
+
+function TuCollectServiceNames;
+var
+  Services: TArray<TServiceEntry>;
+  i: Integer;
+begin
+  if not ScmxEnumerateServices(Services).IsSuccess then
+    Services := nil;
+
+  SetLength(Result, Length(Services));
+
+  for i := 0 to High(Services) do
+    Result[i] := Services[i].ServiceName;
 end;
 
 end.

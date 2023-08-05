@@ -25,7 +25,7 @@ object AccessCheckForm: TAccessCheckForm
     TabOrder = 0
     OnChange = PageControlModesChange
     object TabByName: TTabSheet
-      Caption = 'By NT Name'
+      Caption = 'NT Namespace'
       object lblNameType: TLabel
         Left = 3
         Top = 16
@@ -63,7 +63,7 @@ object AccessCheckForm: TAccessCheckForm
       end
     end
     object TabByCID: TTabSheet
-      Caption = 'By CID'
+      Caption = 'Client IDs'
       ImageIndex = 1
       object lblCidtType: TLabel
         Left = 3
@@ -139,7 +139,7 @@ object AccessCheckForm: TAccessCheckForm
       end
     end
     object TabBySid: TTabSheet
-      Caption = 'By SID'
+      Caption = 'SIDs'
       ImageIndex = 4
       object lblSidType: TLabel
         Left = 3
@@ -207,6 +207,46 @@ object AccessCheckForm: TAccessCheckForm
         NumbersOnly = True
         TabOrder = 2
         Text = 'Unknown'
+      end
+    end
+    object TabByService: TTabSheet
+      Caption = 'Services'
+      ImageIndex = 3
+      object lblServiceName: TLabel
+        Left = 3
+        Top = 43
+        Width = 31
+        Height = 13
+        Caption = 'Name:'
+      end
+      object lblServiceType: TLabel
+        Left = 3
+        Top = 16
+        Width = 63
+        Height = 13
+        Caption = 'Object Type:'
+      end
+      object tbxServiceName: TEdit
+        Left = 72
+        Top = 40
+        Width = 537
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        TextHint = 'Start typing service name or press DOWN for suggestions'
+        OnChange = tbxServiceNameChange
+        OnEnter = tbxServiceNameEnter
+      end
+      object tbxServiceType: TEdit
+        Left = 72
+        Top = 13
+        Width = 537
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        Enabled = False
+        ReadOnly = True
+        TabOrder = 1
+        Text = 'SCM Service'
       end
     end
   end
