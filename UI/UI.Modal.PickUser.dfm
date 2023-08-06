@@ -163,7 +163,7 @@ object DialogPickUser: TDialogPickUser
       Width = 105
       Height = 25
       Anchors = [akTop]
-      Caption = 'Choose &Intrgirty'
+      Caption = 'Choose &Integrity'
       TabOrder = 2
       OnClick = ButtonIntegrityClick
     end

@@ -229,10 +229,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\UI.Helper.pas"/>
-        <DCCReference Include="UI\UI.Modal.Integrity.pas">
-            <Form>IntegrityPicker</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
             <Form>FramePrivileges</Form>
@@ -361,6 +357,11 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.HexView.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Guid.pas">
             <Form>GuidFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas">
+            <Form>FrameIntegrity</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>

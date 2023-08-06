@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, UI.Prototypes.Forms,
-  Ntapi.ntseapi, UI.Prototypes.Sid.Edit;
+  Ntapi.ntseapi, UI.Prototypes.Sid.Edit, NtUiFrame;
 
 type
   TCheckBoxMapping = record
@@ -58,7 +58,7 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.ntpsapi, NtUtils.Security.Sid, NtUtils.WinUser, UI.Helper,
-  UI.Modal.Integrity, NtUiLib.Errors;
+  NtUiLib.Errors, NtUiCommon.Prototypes, NtUiFrame.Sid.Integrity;
 
 {$R *.dfm}
 
@@ -74,7 +74,7 @@ end;
 
 procedure TDialogPickUser.ButtonIntegrityClick;
 var
-  CurrentRID: Cardinal;
+  CurrentRID: TIntegrityRid;
   Sid: ISid;
 begin
   CurrentRID := SECURITY_MANDATORY_MEDIUM_RID;
@@ -86,7 +86,7 @@ begin
     CurrentRID := RtlxRidSid(Sid);
 
   RtlxCreateSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
-    [TIntegrityPicker.Choose(Self, CurrentRID)]).RaiseOnError;
+    [NtUiLibSelectIntegrity(Self, CurrentRID)]).RaiseOnError;
 
   SidEditor.Sid := Sid;
   Attributes := SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED;

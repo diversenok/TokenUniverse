@@ -42,7 +42,6 @@ uses
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
-  UI.Modal.Integrity in 'UI\UI.Modal.Integrity.pas' {IntegrityPicker},
   VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
   UI.Builtin.DsObjectPicker in 'NtUtilsUI\Prototypes\UI.Builtin.DsObjectPicker.pas',
@@ -88,7 +87,8 @@ uses
   NtUiFrame.Ace.Condition in 'NtUtilsUI\Prototypes\NtUiFrame.Ace.Condition.pas' {AceConditionFrame: TFrame},
   NtUiFrame.Hex.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.Hex.Edit.pas' {HexEditFrame: TFrame},
   NtUiBackend.HexView in 'NtUtilsUI\Common\NtUiBackend.HexView.pas',
-  NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame};
+  NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame},
+  NtUiFrame.Sid.Integrity in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas' {FrameIntegrity: TFrame};
 
 {$R *.res}
 
