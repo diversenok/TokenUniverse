@@ -39,6 +39,9 @@ type
     tbxServiceName: TEdit;
     lblServiceType: TLabel;
     tbxServiceType: TEdit;
+    TabSingleton: TTabSheet;
+    lblSingleton: TLabel;
+    cbxSingleton: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure tbxNameChange(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -49,6 +52,7 @@ type
     procedure ButtonSecurityClick(Sender: TObject);
     procedure tbxServiceNameChange(Sender: TObject);
     procedure tbxServiceNameEnter(Sender: TObject);
+    procedure cbxSingletonChange(Sender: TObject);
   private
     FContext: TAccessContext;
     FServicesSuggestionInitialized: Boolean;
@@ -95,6 +99,16 @@ begin
     Exit;
 
   NtUiLibShowSecurity(FContext.Security);
+end;
+
+procedure TAccessCheckForm.cbxSingletonChange;
+begin
+  if (cbxSingleton.ItemIndex > Ord(ltInvalid)) and (cbxSingleton.ItemIndex <=
+    Ord(High(TSingletonType))) then
+    ShowAccessMask(TuGetAccessSingletonObject(TSingletonType(
+      cbxSingleton.ItemIndex)))
+  else
+    ResetAccessMask;
 end;
 
 procedure TAccessCheckForm.FormCreate;

@@ -25,6 +25,13 @@ type
     stSamGroup
   );
 
+  TSingletonType = (
+    ltInvalid,
+    ltLsaPolicy,
+    ltSamServer,
+    ltScmDatabase
+  );
+
   TAccessContext = record
     Security: TNtUiLibSecurityContext;
     MaximumAccess: TAccessMask;
@@ -54,6 +61,11 @@ function TuGetAccessServiceObject(
 
 // Enumerate all service names for suggestions
 function TuCollectServiceNames: TArray<String>;
+
+// Determine maximum access to a singleton object
+function TuGetAccessSingletonObject(
+  const ObjectType: TSingletonType
+): TAccessContext;
 
 implementation
 
@@ -511,6 +523,77 @@ begin
 
   for i := 0 to High(Services) do
     Result[i] := Services[i].ServiceName;
+end;
+
+function TuMakeSingletonOpener(
+  const ObjectType: TSingletonType
+): TObjectOpener;
+begin
+  Result := function (
+    out hxObject: IHandle;
+    DesiredAccess: TAccessMask
+    ): TNtxStatus
+    begin
+      case ObjectType of
+        ltLsaPolicy:   Result := LsaxOpenPolicy(hxObject, DesiredAccess);
+        ltSamServer:   Result := SamxConnect(hxObject, DesiredAccess);
+        ltScmDatabase: Result := ScmxConnect(hxObject, DesiredAccess);
+      else
+        Result.Location := 'TuMakeSingletonOpener';
+        Result.Status := STATUS_INVALID_PARAMETER;
+      end;
+    end;
+end;
+
+function TuGetAccessSingletonObject;
+begin
+  Result := Default(TAccessContext);
+  Result.Security.HandleProvider := TuMakeSingletonOpener(ObjectType);
+
+  case ObjectType of
+    ltLsaPolicy:
+    begin
+      Result.Security.AccessMaskType := TypeInfo(TLsaPolicyAccessMask);
+      Result.Security.QueryFunction := LsaxQuerySecurityObject;
+      Result.Security.SetFunction := LsaxSetSecurityObject;
+      Result.Security.GenericMapping.GenericRead := POLICY_READ;
+      Result.Security.GenericMapping.GenericWrite := POLICY_WRITE;
+      Result.Security.GenericMapping.GenericExecute := POLICY_EXECUTE;
+      Result.Security.GenericMapping.GenericAll := POLICY_ALL_ACCESS;
+    end;
+
+    ltSamServer:
+    begin
+      Result.Security.AccessMaskType := TypeInfo(TSamAccessMask);
+      Result.Security.QueryFunction := SamxQuerySecurityObject;
+      Result.Security.SetFunction := SamxSetSecurityObject;
+      Result.Security.GenericMapping.GenericRead := SAM_SERVER_READ;
+      Result.Security.GenericMapping.GenericWrite := SAM_SERVER_WRITE;
+      Result.Security.GenericMapping.GenericExecute := SAM_SERVER_EXECUTE;
+      Result.Security.GenericMapping.GenericAll := SAM_SERVER_ALL_ACCESS;
+    end;
+
+    ltScmDatabase:
+    begin
+      Result.Security.AccessMaskType := TypeInfo(TScmAccessMask);
+      Result.Security.QueryFunction := ScmxQuerySecurityObject;
+      Result.Security.SetFunction := ScmxSetSecurityObject;
+      Result.Security.GenericMapping.GenericRead := SC_MANAGER_READ;
+      Result.Security.GenericMapping.GenericWrite := SC_MANAGER_WRITE;
+      Result.Security.GenericMapping.GenericExecute := SC_MANAGER_EXECUTE;
+      Result.Security.GenericMapping.GenericAll := SC_MANAGER_ALL_ACCESS;
+    end;
+  else
+    Exit;
+  end;
+
+  RtlxComputeMaximumAccess(
+    Result.MaximumAccess,
+    Result.Security.HandleProvider,
+    False,
+    Result.Security.GenericMapping.GenericAll,
+    Result.Security.GenericMapping.GenericRead
+  );
 end;
 
 end.

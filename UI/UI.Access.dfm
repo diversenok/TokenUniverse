@@ -249,6 +249,34 @@ object AccessCheckForm: TAccessCheckForm
         Text = 'SCM Service'
       end
     end
+    object TabSingleton: TTabSheet
+      Caption = 'Other'
+      ImageIndex = 4
+      object lblSingleton: TLabel
+        Left = 3
+        Top = 16
+        Width = 36
+        Height = 13
+        Caption = 'Object:'
+      end
+      object cbxSingleton: TComboBox
+        Left = 72
+        Top = 13
+        Width = 537
+        Height = 21
+        Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
+        ItemIndex = 0
+        TabOrder = 0
+        Text = 'Select object...'
+        OnChange = cbxSingletonChange
+        Items.Strings = (
+          'Select object...'
+          'LSA Policy'
+          'SAM Server'
+          'SCM Database')
+      end
+    end
   end
   object ButtonClose: TButton
     Left = 557
