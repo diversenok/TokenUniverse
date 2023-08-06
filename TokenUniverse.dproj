@@ -235,7 +235,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Builtin.DsObjectPicker.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Sid.Cheatsheet.pas">
             <Form>SidCheatsheet</Form>
             <FormType>dfm</FormType>
@@ -362,6 +361,12 @@ $(PostBuildEvent)]]></PostBuildEvent>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas">
             <Form>FrameIntegrity</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas">
+            <Form>FrameTrustSid</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>

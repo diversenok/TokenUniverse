@@ -44,7 +44,6 @@ uses
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
   VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
-  UI.Builtin.DsObjectPicker in 'NtUtilsUI\Prototypes\UI.Builtin.DsObjectPicker.pas',
   UI.Prototypes.Sid.Cheatsheet in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Cheatsheet.pas' {SidCheatsheet},
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
   UI.Prototypes.Acl in 'NtUtilsUI\Prototypes\UI.Prototypes.Acl.pas' {FrameAcl: TFrame},
@@ -88,7 +87,9 @@ uses
   NtUiFrame.Hex.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.Hex.Edit.pas' {HexEditFrame: TFrame},
   NtUiBackend.HexView in 'NtUtilsUI\Common\NtUiBackend.HexView.pas',
   NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame},
-  NtUiFrame.Sid.Integrity in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas' {FrameIntegrity: TFrame};
+  NtUiFrame.Sid.Integrity in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas' {FrameIntegrity: TFrame},
+  NtUiBuiltin.DsObjectPicker in 'NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas',
+  NtUiFrame.Sid.Trust in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas' {FrameTrustSid: TFrame};
 
 {$R *.res}
 

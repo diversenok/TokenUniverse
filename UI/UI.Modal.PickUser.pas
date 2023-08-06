@@ -74,21 +74,12 @@ end;
 
 procedure TDialogPickUser.ButtonIntegrityClick;
 var
-  CurrentRID: TIntegrityRid;
-  Sid: ISid;
+  CurrentSID: ISid;
 begin
-  CurrentRID := SECURITY_MANDATORY_MEDIUM_RID;
+  if SidEditor.TryGetSid(CurrentSID).IsSuccess then
+    CurrentSID := nil;
 
-  // Set the slider to the current integrity when selected
-  if SidEditor.TryGetSid(Sid).IsSuccess and
-    (RtlxIdentifierAuthoritySid(Sid) =
-    SECURITY_MANDATORY_LABEL_AUTHORITY) then
-    CurrentRID := RtlxRidSid(Sid);
-
-  RtlxCreateSid(Sid, SECURITY_MANDATORY_LABEL_AUTHORITY,
-    [NtUiLibSelectIntegrity(Self, CurrentRID)]).RaiseOnError;
-
-  SidEditor.Sid := Sid;
+  SidEditor.Sid := NtUiLibSelectIntegrity(Self, CurrentSID);
   Attributes := SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED;
   ButtonOK.SetFocus;
 end;
