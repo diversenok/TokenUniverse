@@ -244,11 +244,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Acl.pas">
-            <Form>FrameAcl</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="Core\TU.Observers.pas"/>
         <DCCReference Include="Core\TU.Tokens.Events.pas"/>
         <DCCReference Include="Core\TU.Tokens.pas"/>

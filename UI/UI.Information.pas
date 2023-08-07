@@ -9,7 +9,7 @@ uses
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
   TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
-  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, UI.Prototypes.Acl, TU.Tokens;
+  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame, NtUiFrame.Acl;
 
 type
   TInfoDialog = class(TChildForm)
@@ -71,9 +71,10 @@ type
     GroupsRestrictedFrame: TFrameGroups;
     GroupsMemberFrame: TFrameGroups;
     PrivilegesFrame: TFramePrivileges;
-    FrameDefaultDacl: TFrameAcl;
     PanelGeneral: TPanel;
     PanelObject: TPanel;
+    DefaultDaclFrame: TAclFrame;
+    btnDaclApply: TButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -99,6 +100,7 @@ type
     procedure ListViewGeneralDblClick(Sender: TObject);
     procedure EditUserDblClick(Sender: TObject);
     procedure EditAppContainerDblClick(Sender: TObject);
+    procedure btnDaclApplyClick(Sender: TObject);
   private
     Token: IToken;
     SessionSource: TSessionSource;
@@ -116,6 +118,7 @@ type
     VAllowedSubscription: IAutoReleasable;
     VEnabledSubscription: IAutoReleasable;
     ElevationSubscription: IAutoReleasable;
+    DefaultDaclSubscription: IAutoReleasable;
     FlagsSubscription: IAutoReleasable;
     procedure ChangedCaption(const InfoClass: TTokenStringClass; const NewCaption: String);
     procedure ChangedIntegrity(const Status: TNtxStatus; const NewIntegrity: TGroup);
@@ -131,6 +134,7 @@ type
     procedure ChangedVEnabled(const Status: TNtxStatus; const NewVEnabled: LongBool);
     procedure ChangedElevation(const Status: TNtxStatus; const NewElevation: TTokenElevationInfo);
     procedure ChangedFlags(const Status: TNtxStatus; const NewFlags: TTokenFlags);
+    procedure ChangedDefaultDacl(const Status: TNtxStatus; const NewDacl: IAcl);
     procedure SetAuditPolicy(const Audit: TArray<TAuditPolicyEntry>);
     procedure InspectGroup(const Group: TGroup);
     procedure Refresh;
@@ -150,7 +154,8 @@ uses
   DelphiUiLib.Reflection.Strings, NtUiCommon.Prototypes,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, UI.ProcessIcons, Ntapi.Versions,
-  NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi;
+  NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi,
+  NtUtils.Security.Acl;
 
 const
   TAB_INVALIDATED = 0;
@@ -236,6 +241,14 @@ begin
   RaiseOnWarningOrError(Token.AdjustPrivileges(
     PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_REMOVED,
     True));
+end;
+
+procedure TInfoDialog.btnDaclApplyClick;
+var
+  DefaultDacl: IAcl;
+begin
+  RtlxBuildAcl(DefaultDacl, DefaultDaclFrame.Aces).RaiseOnError;
+  Token.SetDefaultDacl(DefaultDacl).RaiseOnError;
 end;
 
 procedure TInfoDialog.BtnSetIntegrityClick;
@@ -389,6 +402,27 @@ end;
 procedure TInfoDialog.ChangedCaption;
 begin
   Caption := Format('Token Information for "%s"', [NewCaption]);
+end;
+
+procedure TInfoDialog.ChangedDefaultDacl;
+var
+  Result: TNtxStatus;
+  Aces: TArray<TAceData>;
+begin
+  if Status.IsSuccess then
+    Result := RtlxDumpAcl(NewDacl, Aces)
+  else
+    Result := Status;
+
+  if Result.IsSuccess then
+  begin
+    DefaultDaclFrame.SetEmptyMessage('No items to display');
+    DefaultDaclFrame.LoadAces(Aces, TypeInfo(TAccessMask),
+      Default(TGenericMapping));
+  end
+  else
+    DefaultDaclFrame.SetEmptyMessage('Unable to query'#$D#$A +
+      Result.ToString);
 end;
 
 procedure TInfoDialog.ChangedElevation;
@@ -626,6 +660,7 @@ begin
   ElevationSubscription := Token.ObserveElevation(ChangedElevation);
   FlagsSubscription := Token.ObserveFlags(ChangedFlags);
   CaptionSubscription := Token.ObserveString(tsCaption, ChangedCaption);
+  DefaultDaclSubscription := Token.ObserveDefaultDacl(ChangedDefaultDacl);
 
   TabRestricted.Caption := Format('Restricting SIDs (%d)',
     [GroupsRestrictedFrame.VST.RootNodeCount]);
@@ -672,7 +707,6 @@ end;
 procedure TInfoDialog.Refresh;
 var
   Repr: TRepresentation;
-  DefaultDacl: IAcl;
   User: TGroup;
   Package: ISid;
   RestrictedSids: TArray<TGroup>;
@@ -698,9 +732,6 @@ begin
     Items[1].SubItems[0] := Token.QueryString(tsSourceId);
   end;
   ListViewAdvanced.Items.EndUpdate;
-
-  if Token.QueryDefaultDacl(DefaultDacl).IsSuccess then
-    FrameDefaultDacl.Load(DefaultDacl, nil);
 
   if Token.QueryUser(User).IsSuccess then
   begin

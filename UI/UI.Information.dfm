@@ -665,17 +665,64 @@ object InfoDialog: TInfoDialog
     object TabDefaultDacl: TTabSheet
       Caption = 'Default DACL'
       ImageIndex = 7
-      inline FrameDefaultDacl: TFrameAcl
+      inline DefaultDaclFrame: TAclFrame
+        AlignWithMargins = True
         Left = 0
         Top = 0
         Width = 388
-        Height = 369
+        Height = 336
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 33
         Align = alClient
+        Constraints.MinHeight = 165
+        Constraints.MinWidth = 320
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
-          Width = 388
-          Height = 369
+        inherited Tree: TDevirtualizedTree
+          Width = 360
+          Height = 311
         end
+        inherited RightPanel: TPanel
+          Left = 363
+          Height = 311
+          inherited btnAdd: TButton
+            Top = 79
+          end
+          inherited btnCanonicalize: TButton
+            Top = 143
+          end
+          inherited btnDelete: TButton
+            Top = 206
+          end
+          inherited btnDown: TButton
+            Top = 286
+          end
+        end
+        inherited Search: TSearchFrame
+          Width = 388
+          inherited Splitter: TSplitter
+            Left = 222
+          end
+          inherited tbxSearchBox: TButtonedEdit
+            Width = 222
+          end
+          inherited cbxColumn: TComboBox
+            Left = 228
+          end
+        end
+      end
+      object btnDaclApply: TButton
+        Left = 310
+        Top = 341
+        Width = 75
+        Height = 25
+        Anchors = [akRight, akBottom]
+        Caption = 'Apply'
+        TabOrder = 1
+        OnClick = btnDaclApplyClick
       end
     end
     object TabAudit: TTabSheet
