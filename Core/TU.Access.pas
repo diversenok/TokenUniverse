@@ -29,7 +29,9 @@ type
     ltInvalid,
     ltLsaPolicy,
     ltSamServer,
-    ltScmDatabase
+    ltScmDatabase,
+    ltCurrentWinSta,
+    ltCurrentDesktop
   );
 
   TAccessContext = record
@@ -72,13 +74,13 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.ntioapi, Ntapi.ntregapi, Ntapi.ntobapi, Ntapi.nttmapi,
   Ntapi.ntmmapi, Ntapi.ntexapi, Ntapi.ntpsapi, Ntapi.ntdbg, Ntapi.ntseapi,
-  Ntapi.ntlsa, Ntapi.ntsam, Ntapi.Versions, Ntapi.WinSvc,
+  Ntapi.ntlsa, Ntapi.ntsam, Ntapi.Versions, Ntapi.WinSvc, Ntapi.WinUser,
   NtUtils.Objects, NtUtils.Objects.Namespace, NtUtils.Registry,
   NtUtils.Objects.Snapshots, NtUtils.Files, NtUtils.Files.Open,
   NtUtils.Files.Operations, NtUtils.Sections, NtUtils.Processes,
   NtUtils.Jobs, NtUtils.Synchronization, NtUtils.Memory, NtUtils.Transactions,
   NtUtils.Threads, NtUtils.Tokens, NtUtils.Debug, NtUtils.Lsa, NtUtils.Sam,
-  NtUtils.Security.Sid, NtUtils.Svc;
+  NtUtils.Security.Sid, NtUtils.Svc, NtUtils.WinUser;
 
 function TrimLastBackslash(
   const Path: String
@@ -538,6 +540,20 @@ begin
         ltLsaPolicy:   Result := LsaxOpenPolicy(hxObject, DesiredAccess);
         ltSamServer:   Result := SamxConnect(hxObject, DesiredAccess);
         ltScmDatabase: Result := ScmxConnect(hxObject, DesiredAccess);
+
+        ltCurrentWinSta:
+        begin
+          hxObject := Auto.CaptureHandle(UsrxCurrentWindowStation);
+          hxObject.AutoRelease := False;
+          Result.Status := STATUS_SUCCESS;
+        end;
+
+        ltCurrentDesktop:
+        begin
+          hxObject := Auto.CaptureHandle(UsrxCurrentDesktop);
+          hxObject.AutoRelease := False;
+          Result.Status := STATUS_SUCCESS;
+        end
       else
         Result.Location := 'TuMakeSingletonOpener';
         Result.Status := STATUS_INVALID_PARAMETER;
@@ -546,6 +562,8 @@ begin
 end;
 
 function TuGetAccessSingletonObject;
+var
+  Info: TObjectTypeInfo;
 begin
   Result := Default(TAccessContext);
   Result.Security.HandleProvider := TuMakeSingletonOpener(ObjectType);
@@ -582,6 +600,26 @@ begin
       Result.Security.GenericMapping.GenericWrite := SC_MANAGER_WRITE;
       Result.Security.GenericMapping.GenericExecute := SC_MANAGER_EXECUTE;
       Result.Security.GenericMapping.GenericAll := SC_MANAGER_ALL_ACCESS;
+    end;
+
+    ltCurrentWinSta:
+    begin
+      Result.Security.AccessMaskType := TypeInfo(TWinStaAccessMask);
+      Result.Security.QueryFunction := NtxQuerySecurityObject;
+      Result.Security.SetFunction := NtxSetSecurityObject;
+
+      if RtlxFindKernelType('WindowStation', Info).IsSuccess then
+        Result.Security.GenericMapping := Info.Other.GenericMapping;
+    end;
+
+    ltCurrentDesktop:
+    begin
+      Result.Security.AccessMaskType := TypeInfo(TDesktopAccessMask);
+      Result.Security.QueryFunction := NtxQuerySecurityObject;
+      Result.Security.SetFunction := NtxSetSecurityObject;
+
+      if RtlxFindKernelType('Desktop', Info).IsSuccess then
+        Result.Security.GenericMapping := Info.Other.GenericMapping;
     end;
   else
     Exit;

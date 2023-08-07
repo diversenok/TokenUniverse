@@ -281,7 +281,9 @@ object AccessCheckForm: TAccessCheckForm
           'Select object...'
           'LSA Policy'
           'SAM Server'
-          'SCM Database')
+          'SCM Database'
+          'Current Window Station'
+          'Current Desktop')
       end
     end
   end

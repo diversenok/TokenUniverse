@@ -122,6 +122,7 @@ end;
 
 procedure TAccessCheckForm.PageControlModesChange;
 begin
+  cbxSingleton.ItemIndex := 0;
   ResetAccessMask;
 end;
 
