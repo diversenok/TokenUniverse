@@ -559,7 +559,7 @@ begin
       Result.Security.GenericMapping.GenericRead := POLICY_READ;
       Result.Security.GenericMapping.GenericWrite := POLICY_WRITE;
       Result.Security.GenericMapping.GenericExecute := POLICY_EXECUTE;
-      Result.Security.GenericMapping.GenericAll := POLICY_ALL_ACCESS;
+      Result.Security.GenericMapping.GenericAll := POLICY_ALL_ACCESS_EX;
     end;
 
     ltSamServer:

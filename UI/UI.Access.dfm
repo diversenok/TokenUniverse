@@ -188,13 +188,20 @@ object AccessCheckForm: TAccessCheckForm
         ShowHint = True
         TabOrder = 1
         inherited tbxSid: TEdit
-          Width = 481
+          Width = 451
+          Height = 23
         end
         inherited btnDsPicker: TButton
-          Left = 513
+          Left = 484
+          Height = 27
         end
         inherited btnCheatsheet: TButton
-          Left = 485
+          Left = 455
+          Height = 27
+        end
+        inherited btnChoice: TButton
+          Left = 513
+          Height = 27
         end
       end
       object tbxSidLookupType: TEdit
@@ -330,6 +337,7 @@ object AccessCheckForm: TAccessCheckForm
     Top = 497
     Width = 75
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = 'Security...'
     Enabled = False
     TabOrder = 2
