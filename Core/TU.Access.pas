@@ -542,18 +542,12 @@ begin
         ltScmDatabase: Result := ScmxConnect(hxObject, DesiredAccess);
 
         ltCurrentWinSta:
-        begin
-          hxObject := Auto.CaptureHandle(UsrxCurrentWindowStation);
-          hxObject.AutoRelease := False;
-          Result.Status := STATUS_SUCCESS;
-        end;
+          Result := NtxDuplicateHandleLocal(UsrxCurrentWindowStation, hxObject,
+            DesiredAccess);
 
         ltCurrentDesktop:
-        begin
-          hxObject := Auto.CaptureHandle(UsrxCurrentDesktop);
-          hxObject.AutoRelease := False;
-          Result.Status := STATUS_SUCCESS;
-        end
+          Result := NtxDuplicateHandleLocal(UsrxCurrentDesktop, hxObject,
+            DesiredAccess);
       else
         Result.Location := 'TuMakeSingletonOpener';
         Result.Status := STATUS_INVALID_PARAMETER;
