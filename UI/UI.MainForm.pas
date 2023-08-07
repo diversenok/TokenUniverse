@@ -14,7 +14,6 @@ type
     MainMenu: TMainMenu;
     Program1: TMenuItem;
     View1: TMenuItem;
-    Help1: TMenuItem;
     RunAsAdmin: TMenuItem;
     RunAsSystem: TMenuItem;
     RunAsSystemPlus: TMenuItem;
@@ -28,8 +27,6 @@ type
     TokenSendHandle: TMenuItem;
     TokenDuplicateHandle: TMenuItem;
     MenuPromptHandleClose: TMenuItem;
-    Showiconsinprocesslist1: TMenuItem;
-    Displayallsearchresults1: TMenuItem;
     TokenOpenLinked: TMenuItem;
     SmallIcons: TImageList;
     N1: TMenuItem;

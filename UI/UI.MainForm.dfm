@@ -173,7 +173,7 @@ object FormMain: TFormMain
     object View1: TMenuItem
       Caption = 'Settings'
       object SelectColumns: TMenuItem
-        Caption = 'Select columns...'
+        Caption = '(Right-click the header to select columns)'
         Enabled = False
         OnClick = SelectColumnsClick
       end
@@ -195,18 +195,6 @@ object FormMain: TFormMain
         Checked = True
         OnClick = MenuSecurePromptClick
       end
-      object Showiconsinprocesslist1: TMenuItem
-        Caption = 'Show icons in process list'
-        Checked = True
-        Enabled = False
-      end
-      object Displayallsearchresults1: TMenuItem
-        Caption = 'Display all search results'
-        Enabled = False
-      end
-    end
-    object Help1: TMenuItem
-      Caption = 'Help'
     end
   end
   object TokenMenu: TPopupMenu
