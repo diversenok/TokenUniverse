@@ -71,6 +71,7 @@ type
     cmClipboardToken: TMenuItem;
     cmPipeLoopbackToken: TMenuItem;
     cmImpersonate: TMenuItem;
+    TokenSecurity: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -118,6 +119,7 @@ type
     procedure cmClipboardTokenClick(Sender: TObject);
     procedure cmPipeLoopbackTokenClick(Sender: TObject);
     procedure cmImpersonateClick(Sender: TObject);
+    procedure TokenSecurityClick(Sender: TObject);
   end;
 
 var
@@ -134,7 +136,8 @@ uses
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
-  NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects, TU.Startup;
+  NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects, TU.Startup,
+  NtUiCommon.Prototypes;
 
 {$R *.dfm}
 
@@ -470,9 +473,33 @@ begin
   TDialogColumns.CreateChild(Self, cfmApplication).ShowModal;
 end;
 
-procedure TFormMain.TokenRestrictSaferClick(Sender: TObject);
+procedure TFormMain.TokenRestrictSaferClick;
 begin
   TDialogSafer.CreateFromToken(Self, TokenView.Selected);
+end;
+
+procedure TFormMain.TokenSecurityClick;
+var
+  hxToken: IHandle;
+  Context: TNtUiLibSecurityContext;
+begin
+  if not Assigned(NtUiLibShowSecurity) then
+    Exit;
+
+  hxToken := TokenView.Selected.Handle;
+
+  Context := Default(TNtUiLibSecurityContext);
+  Context.HandleProvider :=
+    function (out hxObject: IHandle; DesiredAccess: TAccessMask): TNtxStatus
+    begin
+      hxObject := hxToken;
+      Result.Status := STATUS_SUCCESS;
+    end;
+  Context.AccessMaskType := TypeInfo(TTokenAccessMask);
+  Context.GenericMapping := TokenGenericMapping;
+  Context.QueryFunction := NtxQuerySecurityObject;
+  Context.SetFunction := NtxSetSecurityObject;
+  NtUiLibShowSecurity(Context);
 end;
 
 procedure TFormMain.TokenViewVSTGetPopupMenu;

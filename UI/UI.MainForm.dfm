@@ -212,6 +212,11 @@ object FormMain: TFormMain
   object TokenMenu: TPopupMenu
     Left = 168
     Top = 112
+    object TokenSecurity: TMenuItem
+      Caption = 'Inspect security...'
+      ShortCut = 49235
+      OnClick = TokenSecurityClick
+    end
     object TokenRename: TMenuItem
       Caption = 'Rename'
       ShortCut = 113
