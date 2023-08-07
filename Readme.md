@@ -1,6 +1,6 @@
 # Token Universe
 
-**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, checking available access to many types of objects, and more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
+**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, checking available access and modifiying security of many types of objects, and much more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
 
 ## Downloads
 
@@ -13,8 +13,8 @@ For instructions on how to compile the project, see [a section below](#compiling
 Key           | Value
 ------------- | -----
 Author        | diversenok
-Version       | 0.3
-Date          | March 25th, 2023
+Version       | 0.5
+Date          | August 7th, 2023
 Compiled with | Embarcadero Delphi 10.4
 
 # Features
@@ -42,6 +42,10 @@ Compiled with | Embarcadero Delphi 10.4
 ## Checking Access
 
 ![Access Check Window](https://user-images.githubusercontent.com/30962924/227734301-782086c6-aad0-4e67-ac83-32e574dd3ed1.png)
+
+## Editing Security
+
+![Security Editor](https://github.com/diversenok/TokenUniverse/assets/30962924/78a15e81-22c4-4c60-8851-2047033f4660)
 
 ## Other
 
@@ -72,8 +76,8 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Creating tokens via NtCreareToken
  - [x] Creating anonymous token
  - [x] Creating anonymous token with Everyone membership
- - [ ] Impersonating logon session token via pipes
- - [ ] Opening clipboard token
+ - [x] Impersonating logon session token via pipes
+ - [x] Opening clipboard token
  - [ ] Impersonating BITS
 
 #### Viewing & editing
@@ -85,8 +89,8 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Virtualization (enable/disable & allow/disallow)
  - [x] Owner and primary group
  - [x] Originating logon session
- - [ ] Default DACL
- - [ ] Security descriptor
+ - [x] Default DACL
+ - [x] Security descriptor
  - [ ] Security attributes
  - [x] Audit overrides
  - [ ] Handle flags (inherit, protect)
@@ -137,7 +141,7 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Logon rights assignment
  - [ ] Virtual account creation
  - [ ] SID tree
- - [ ] Security
+ - [x] Viewing/editing security
  - [ ] Enumerating accounts with right/privilege
  - [ ] Source of rights in the token
  - [ ] Quotas
@@ -156,7 +160,7 @@ There are a lot of already implemented features, but there are also many more to
  - [ ] Create aliases
  - [ ] Create users
  - [ ] Sam object tree
- - [ ] Security
+ - [x] Viewing/editing security
 
 ### Process creation
 
@@ -201,7 +205,7 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Suspend/resume support
  - [ ] Customizable columns
  - [ ] Highlighting
- - [ ] Security
+ - [x] Viewing/editing security
 
 ### Attack Surface Analysis
  - [x] Checking access to NT namespace objects
@@ -209,10 +213,11 @@ There are a lot of already implemented features, but there are also many more to
  - [x] Checking access to processes/threads/tokens
  - [x] Checking access to LSA and SAM accounts
  - [ ] Checking access to window stations and desktops
- - [ ] Checking access to services and SCM
+ - [x] Checking access to services and SCM
  - [ ] Checking access to file shares
  - [ ] Checking access to kernel transactions
  - [ ] Checking access to objects in private namespaces
+ - [x] Viewing/editing security descriptors
  - [ ] Enumerating accessible resources
 
 ### Other
