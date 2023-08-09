@@ -155,7 +155,7 @@ uses
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
   NtUtils.Lsa.Sid, DelphiUtils.Arrays, UI.ProcessIcons, Ntapi.Versions,
   NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi,
-  NtUtils.Security.Acl;
+  NtUtils.Security.Acl, NtUiCommon.Interfaces;
 
 const
   TAB_INVALIDATED = 0;
@@ -702,6 +702,9 @@ begin
     UpdateAuditTab
   else if PageControl.ActivePageIndex = TabLogon.TabIndex then
     UpdateLogonTab;
+
+  (DefaultDaclFrame as IObservesActivation).SetActive(
+    PageControl.ActivePageIndex = TabDefaultDacl.TabIndex);
 end;
 
 procedure TInfoDialog.Refresh;
