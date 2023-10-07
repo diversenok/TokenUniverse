@@ -1107,7 +1107,7 @@ begin
   if (InfoClass >= Low(TTokenPerHandleStringClass)) and
     (InfoClass <= High(TTokenPerHandleStringClass)) then
     // Subscribe a per-handle event
-    FPerHandleEvents[InfoClass].Subscribe(Callback)
+    Result := FPerHandleEvents[InfoClass].Subscribe(Callback)
   else
     // Subscribe a per-kernel-object events
     Result := Events.OnStringChange[InfoClass].Subscribe(Callback);
@@ -2576,6 +2576,7 @@ begin
 
   if Events.OnOrigin.HasObservers or
     Events.OnStringChange[tsOrigin].HasSubscribers then
+    RefreshOrigin;
 
   if Events.OnElevation.HasObservers or
     Events.OnStringChange[tsElevation].HasSubscribers then
