@@ -242,6 +242,10 @@ object FormMain: TFormMain
       ShortCut = 24652
       OnClick = ActionOpenLinked
     end
+    object TokenSetLinked: TMenuItem
+      Caption = 'Set linked token...'
+      OnClick = TokenSetLinkedClick
+    end
     object N2: TMenuItem
       Caption = '-'
     end

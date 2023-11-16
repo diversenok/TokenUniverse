@@ -69,6 +69,7 @@ type
     cmPipeLoopbackToken: TMenuItem;
     cmImpersonate: TMenuItem;
     TokenSecurity: TMenuItem;
+    TokenSetLinked: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -117,6 +118,7 @@ type
     procedure cmPipeLoopbackTokenClick(Sender: TObject);
     procedure cmImpersonateClick(Sender: TObject);
     procedure TokenSecurityClick(Sender: TObject);
+    procedure TokenSetLinkedClick(Sender: TObject);
   end;
 
 var
@@ -134,7 +136,7 @@ uses
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
   NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects, TU.Startup,
-  NtUiCommon.Prototypes;
+  NtUiCommon.Prototypes, UI.Modal.PickToken;
 
 {$R *.dfm}
 
@@ -497,6 +499,11 @@ begin
   Context.QueryFunction := NtxQuerySecurityObject;
   Context.SetFunction := NtxSetSecurityObject;
   NtUiLibShowSecurity(Context);
+end;
+
+procedure TFormMain.TokenSetLinkedClick;
+begin
+  TokenView.Selected.SetLinkedToken(TDialogPickToken.Execute(Self)).RaiseOnError;
 end;
 
 procedure TFormMain.TokenViewVSTGetPopupMenu;
