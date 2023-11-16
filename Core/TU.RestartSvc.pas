@@ -9,7 +9,7 @@ const
   RESVC_PARAM = '/service';
   RESVC_SYSPLUS_PARAM = '/plus';
   RESVC_NAME = 'TokenUniverseSvc';
-  RESVC_DIPLAY_NAME = 'Token Universe Run-As-System Service';
+  RESVC_DISPLAY_NAME = 'Token Universe Run-As-System Service';
 
   DELEGATE_PARAM = '/delegate';
   DELEGATE_PARAM_SYSPLUS = DELEGATE_PARAM + ' ' + RESVC_SYSPLUS_PARAM;
@@ -50,7 +50,7 @@ begin
 
   // Create Run-as-system service
   Result := ScmxCreateService(hxSvc, CommandLine, RESVC_NAME,
-    RESVC_DIPLAY_NAME);
+    RESVC_DISPLAY_NAME);
 
   if not Result.IsSuccess then
     Exit;

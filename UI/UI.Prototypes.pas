@@ -257,7 +257,7 @@ begin
         IntermediateIndex := 7;
 
       Items.Insert(IntermediateIndex,
-        Format('Itermediate (0x%0.4x)', [Value]));
+        Format('Intermediate (0x%0.4x)', [Value]));
     end;
 
     // Select appropriate item
@@ -482,9 +482,9 @@ begin
     for tsc in TSettings.SelectedColumns do
       with Add do
       begin
-        Caption := ColumsInfo[tsc].Caption;
-        Width := ColumsInfo[tsc].Width;
-        Alignment := ColumsInfo[tsc].Alignment;
+        Caption := ColumnsInfo[tsc].Caption;
+        Width := ColumnsInfo[tsc].Width;
+        Alignment := ColumnsInfo[tsc].Alignment;
         DataClasses[ColumnCount] := tsc;
         Inc(ColumnCount);
       end;
@@ -495,7 +495,7 @@ end;
 
 procedure TTokenViewSource.Delete;
 begin
-  // This will delete the item, the assiciated row object, unsubscribe
+  // This will delete the item, the associated row object, unsubscribe
   // all column events and close the token
   ListView.Items.Delete(Index);
 end;

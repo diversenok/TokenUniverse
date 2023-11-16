@@ -103,7 +103,7 @@ var
   Source: TTokenSource;
   Token: IToken;
 begin
-  if TSettings.PromtOnSecureDesktop then
+  if TSettings.PromptOnSecureDesktop then
     Flags := CREDUIWIN_SECURE_PROMPT
   else
     Flags := 0;

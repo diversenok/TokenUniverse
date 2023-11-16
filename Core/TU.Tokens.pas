@@ -51,19 +51,19 @@ type
     tsLogonType,               // The type of logon from the logon session
     tsLogonTime,               // The time of logon from the logon session
     tsModifiedId,              // Unique modified ID value
-    tsExprires,                // Token expiration time
+    tsExpires,                 // Token expiration time
     tsDynamicCharged,          // Number of bytes changed for the dynamic part of the object
     tsDynamicAvailable,        // Number of bytes available for the dynamic part of the object
     tsRestrictedSids,          // Number of restricting SIDs
     tsSessionId,               // Terminal session ID
     tsSessionInfo,             // Terminal session information
     tsSandBoxInert,            // Whether bypassing SRP and App Locker is enabled
-    tsOrigin,                  // Oringinating logon session ID
+    tsOrigin,                  // Originating logon session ID
     tsElevation,               // Token and logon session elevation state
     tsFlags,                   // A bit mask of various flags
     tsRestricted,              // Policy for applying restricting SIDs
     tsSessionReference,        // Whether the token references a logon session
-    tsVirtualization,          // Filesyestem/registry virtualization policy
+    tsVirtualization,          // Filesystem/registry virtualization policy
     tsFiltered,                // Whether the token was filtered after creation
     tsUIAccess,                // Whether UIPI bypassing flag is set
     tsLowBox,                  // Whether the token is LowBox (aka. AppContainer)
@@ -76,14 +76,14 @@ type
     tsLogonSid,                // Logon SID for accessing desktop and window station
     tsCapabilities,            // Number of capabilities
     tsAppContainerNumber,      // AppContainer number value
-    tsAppContainerName,        // Moniker of the AppContainer porfile
+    tsAppContainerName,        // Moniker of the AppContainer profile
     tsAppContainerDisplayName, // DisplayName of the AppContainer profile
     tsUserClaims,              // Number of user claim attributes
     tsDeviceClaims,            // Number of device claim attributes
-    tsRestrictedUserClaims,    // Number of resricted user claim attributes
+    tsRestrictedUserClaims,    // Number of restricted user claim attributes
     tsRestrictedDeviceClaims,  // Number of restricted device claim attributes
     tsDeviceGroups,            // Number of device groups
-    tsRestrictedDeviceGroups,  // Number of resrricted device gropus
+    tsRestrictedDeviceGroups,  // Number of restricted device groups
     tsSecAttributes,           // Number of security attributes
     tsSecAttributesNames,      // The names of all security attributes
     tsLPAC,                    // Whether Low Privilege AppContainer attribute set
@@ -95,7 +95,7 @@ type
     tsBnoIsolation,            // Whether Base Named Objects isolation is enabled
     tsBnoPrefix,               // Prefix for Base Named Objects isolation
     tsIsSandboxed,             // Whether RtlIsSandboxedToken is TRUE
-    tsOriginTrustLevel         // Originating process protection level
+    tsIsAppSilo                // Whether the token has an AppSilo capability
   );
 
   // A subset of strings that are unique for each handle rather than shared
@@ -113,7 +113,7 @@ type
     property Caption: String read GetCaption write SetCaption;
     property CachedKernelAddress: Pointer read GetCachedKernelAddress;
 
-    // Quering
+    // Querying
     function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
     function QueryBasicInfo(out Info: TObjectBasicInformation): TNtxStatus;
     function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus;
@@ -166,7 +166,7 @@ type
     function QuerySingletonAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
     function QueryBnoIsolation(out Isolation: TBnoIsolation): TNtxStatus;
     function QueryIsSandboxed(out IsSandboxed: LongBool): TNtxStatus;
-    function QueryOriginatingTrustLevel(out TrustLevel: ISid): TNtxStatus;
+    function QueryIsAppSilo(out IsAppSilo: LongBool): TNtxStatus;
 
     // Observing changes
     function ObserveString(InfoClass: TTokenStringClass; Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
@@ -220,7 +220,7 @@ type
     function ObserveSingletonAttributes(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
     function ObserveBnoIsolation(Callback: TEventCallback<TNtxStatus, TBnoIsolation>): IAutoReleasable;
     function ObserveIsSandboxed(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
-    function ObserveOriginatingTrustLevel(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObserveIsAppSilo(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
 
     // Refreshing
     procedure SmartRefresh;
@@ -275,7 +275,7 @@ type
     function RefreshSingletonAttributes: TNtxStatus;
     function RefreshBnoIsolation: TNtxStatus;
     function RefreshIsSandboxed: TNtxStatus;
-    function RefreshOriginatingTrustLevel: TNtxStatus;
+    function RefreshIsAppSilo: TNtxStatus;
 
     // Setting
     function SetOwner(const Owner: ISid): TNtxStatus;
@@ -303,7 +303,7 @@ type
     function AssignToThreadSafeById(const TID: TThreadId): TNtxStatus;
     function AdjustGroupsReset: TNtxStatus;
     function AdjustGroups(const SIDs: TArray<ISid>; const NewState: TGroupAttributes): TNtxStatus;
-    function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMising: Boolean = False): TNtxStatus;
+    function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMissing: Boolean = False): TNtxStatus;
   end;
 
 // Make an IToken instance from a handle
@@ -435,7 +435,7 @@ type
     function QuerySingletonAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
     function QueryBnoIsolation(out Isolation: TBnoIsolation): TNtxStatus;
     function QueryIsSandboxed(out IsSandboxed: LongBool): TNtxStatus;
-    function QueryOriginatingTrustLevel(out TrustLevel: ISid): TNtxStatus;
+    function QueryIsAppSilo(out IsAppSilo: LongBool): TNtxStatus;
     function ObserveString(InfoClass: TTokenStringClass; Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
     function ObserveBasicInfo(Callback: TEventCallback<TNtxStatus, TObjectBasicInformation>): IAutoReleasable;
     function ObserveHandles(Callback: TEventCallback<TNtxStatus, TArray<TSystemHandleEntry>>): IAutoReleasable;
@@ -487,7 +487,7 @@ type
     function ObserveSingletonAttributes(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
     function ObserveBnoIsolation(Callback: TEventCallback<TNtxStatus, TBnoIsolation>): IAutoReleasable;
     function ObserveIsSandboxed(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
-    function ObserveOriginatingTrustLevel(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
+    function ObserveIsAppSilo(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     procedure SmartRefresh;
     procedure RefreshString(InfoClass: TTokenStringClass);
     function RefreshBasicInfo: TNtxStatus;
@@ -540,7 +540,7 @@ type
     function RefreshSingletonAttributes: TNtxStatus;
     function RefreshBnoIsolation: TNtxStatus;
     function RefreshIsSandboxed: TNtxStatus;
-    function RefreshOriginatingTrustLevel: TNtxStatus;
+    function RefreshIsAppSilo: TNtxStatus;
     function SetOwner(const Owner: ISid): TNtxStatus;
     function SetPrimaryGroup(const PrimaryGroup: ISid): TNtxStatus;
     function SetDefaultDacl(const DefaultDacl: IAcl): TNtxStatus;
@@ -564,7 +564,7 @@ type
     function AssignToThreadSafeById(const TID: TThreadId): TNtxStatus;
     function AdjustGroupsReset: TNtxStatus;
     function AdjustGroups(const SIDs: TArray<ISid>; const NewState: TGroupAttributes): TNtxStatus;
-    function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMising: Boolean): TNtxStatus;
+    function AdjustPrivileges(const Privileges: TArray<TSeWellKnownPrivilege>; const NewState: TPrivilegeAttributes; const IgnoreMissing: Boolean): TNtxStatus;
   end;
 
 function CaptureTokenHandle;
@@ -588,7 +588,7 @@ end;
 
 function TToken.AdjustPrivileges;
 begin
-  Result := NtxAdjustPrivileges(hxToken, Privileges, NewState, IgnoreMising);
+  Result := NtxAdjustPrivileges(hxToken, Privileges, NewState, IgnoreMissing);
   SmartRefresh;
 end;
 
@@ -717,7 +717,7 @@ begin
   if not Assigned(FSharedEvents) then
   begin
     // Establish identity of the token.
-    // NOTE: do not use IToken's method to avoid inifinite recursion
+    // NOTE: do not use IToken's method to avoid infinite recursion
     if not NtxToken.Query(hxToken, TokenStatistics, Statistics).IsSuccess then
       Statistics.TokenId := 0;
 
@@ -900,6 +900,14 @@ begin
   Result := Events.OnIsAppContainer.Subscribe(Callback);
 end;
 
+function TToken.ObserveIsAppSilo;
+var
+  Info: LongBool;
+begin
+  Callback(QueryIsAppSilo(Info), Info);
+  Result := Events.OnIsAppSilo.Subscribe(Callback);
+end;
+
 function TToken.ObserveIsLPAC;
 var
   Info: Boolean;
@@ -962,14 +970,6 @@ var
 begin
   Callback(QueryOrigin(Info), Info);
   Result := Events.OnOrigin.Subscribe(Callback);
-end;
-
-function TToken.ObserveOriginatingTrustLevel;
-var
-  Info: ISid;
-begin
-  Callback(QueryOriginatingTrustLevel(Info), Info);
-  Result := Events.OnOriginatingTrustLevel.Subscribe(Callback);
 end;
 
 function TToken.ObserveOwner;
@@ -1462,9 +1462,17 @@ end;
 function TToken.QueryIsAppContainer;
 begin
   Result := NtxToken.Query(hxToken, TokenIsAppContainer, IsAppContainer);
+  Events.OnIsAppContainer.Notify(Result, IsAppContainer);
+end;
+
+function TToken.QueryIsAppSilo;
+begin
+  Result := NtxToken.Query(hxToken, TokenIsAppSilo, IsAppSilo);
 
   if Result.IsSuccess then
-    Events.OnIsAppContainer.Notify(Result, IsAppContainer);
+    Events.StringCache[tsIsAppSilo] := YesNoToString(IsAppSilo);
+
+  Events.OnIsAppSilo.Notify(Result, IsAppSilo);
 end;
 
 function TToken.QueryIsLPAC;
@@ -1589,17 +1597,6 @@ begin
     Events.StringCache[tsOrigin] := IntToHexEx(Origin, 8);
 
   Events.OnOrigin.Notify(Result, Origin);
-end;
-
-function TToken.QueryOriginatingTrustLevel;
-begin
-  Result := NtxQuerySidToken(hxToken, TokenOriginatingProcessTrustLevel,
-    TrustLevel);
-
-  if Result.IsSuccess then
-    Events.StringCache[tsOriginTrustLevel] := TrustLevelToString(TrustLevel);
-
-  Events.OnOriginatingTrustLevel.Notify(Result, TrustLevel);
 end;
 
 function TToken.QueryOwner;
@@ -1809,7 +1806,7 @@ begin
   begin
     Events.StringCache[tsTokenId] := IntToHexEx(Statistics.TokenId, 8);
     Events.StringCache[tsLogonId] := IntToHexEx(Statistics.AuthenticationId, 8);
-    Events.StringCache[tsExprires] := TType.Represent(
+    Events.StringCache[tsExpires] := TType.Represent(
       Statistics.ExpirationTime).Text;
 
     if Statistics.TokenType = TokenPrimary then
@@ -1888,7 +1885,7 @@ begin
     tsTokenId,
     tsLogonId,
     tsModifiedId,
-    tsExprires,
+    tsExpires,
     tsDynamicCharged,
     tsDynamicAvailable:        Success := RefreshStatistics.IsSuccess;
     tsLogonAuthPackage,
@@ -1935,7 +1932,7 @@ begin
     tsBnoIsolation,
     tsBnoPrefix:               Success := RefreshBnoIsolation.IsSuccess;
     tsIsSandboxed:             Success := RefreshIsSandboxed.IsSuccess;
-    tsOriginTrustLevel:        Success := RefreshOriginatingTrustLevel.IsSuccess;
+    tsIsAppSilo:               Success := RefreshIsAppSilo.IsSuccess;
   end;
 
   if Success then
@@ -2134,6 +2131,13 @@ begin
   Result := QueryIsAppContainer(Info);
 end;
 
+function TToken.RefreshIsAppSilo: TNtxStatus;
+var
+  Info: LongBool;
+begin
+  Result := QueryIsAppSilo(Info);
+end;
+
 function TToken.RefreshIsLPAC;
 var
   Info: Boolean;
@@ -2187,13 +2191,6 @@ var
   Info: TLogonId;
 begin
   Result := QueryOrigin(Info);
-end;
-
-function TToken.RefreshOriginatingTrustLevel;
-var
-  Info: ISid;
-begin
-  Result := QueryOriginatingTrustLevel(Info);
 end;
 
 function TToken.RefreshOwner;
@@ -2546,7 +2543,7 @@ begin
       Events.OnStringChange[tsTokenId].HasSubscribers or
       Events.OnStringChange[tsLogonId].HasSubscribers or
       Events.OnStringChange[tsModifiedId].HasSubscribers or
-      Events.OnStringChange[tsExprires].HasSubscribers or
+      Events.OnStringChange[tsExpires].HasSubscribers or
       Events.OnStringChange[tsDynamicCharged].HasSubscribers or
       Events.OnStringChange[tsDynamicAvailable].HasSubscribers then
       RefreshStatistics;
@@ -2707,9 +2704,9 @@ begin
     Events.OnStringChange[tsIsSandboxed].HasSubscribers then
     RefreshIsSandboxed;
 
-  if Events.OnOriginatingTrustLevel.HasObservers or
-    Events.OnStringChange[tsOriginTrustLevel].HasSubscribers then
-    RefreshOriginatingTrustLevel;
+  if Events.OnIsAppSilo.HasObservers or
+    Events.OnStringChange[tsIsAppSilo].HasSubscribers then
+    RefreshIsAppSilo;
 end;
 
 end.

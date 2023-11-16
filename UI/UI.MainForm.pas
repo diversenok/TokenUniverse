@@ -550,8 +550,8 @@ end;
 
 procedure TFormMain.MenuSecurePromptClick(Sender: TObject);
 begin
-  TSettings.PromtOnSecureDesktop := not TSettings.PromtOnSecureDesktop ;
-  MenuSecurePrompt.Checked := TSettings.PromtOnSecureDesktop;
+  TSettings.PromptOnSecureDesktop := not TSettings.PromptOnSecureDesktop ;
+  MenuSecurePrompt.Checked := TSettings.PromptOnSecureDesktop;
 end;
 
 procedure TFormMain.MenuSystemAuditClick;

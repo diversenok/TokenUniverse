@@ -1,7 +1,7 @@
 unit TU.AccountRights;
 
 {
-  This module retrieves detailed textual desciptions of logon rights and
+  This module retrieves detailed textual descriptions of logon rights and
   privileges.
 }
 

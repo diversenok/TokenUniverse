@@ -14,7 +14,7 @@ type
     PromptOnHandleClose: Boolean;
     NoCloseCreationDialogs: Boolean;
     UseSafeImpersonation: Boolean;
-    PromtOnSecureDesktop: Boolean;
+    PromptOnSecureDesktop: Boolean;
     class constructor Create;
   end;
 
@@ -26,7 +26,7 @@ type
   end;
 
 const
-  ColumsInfo: array [TTokenStringClass] of TColumnInfo = (
+  ColumnsInfo: array [TTokenStringClass] of TColumnInfo = (
     (Caption: 'Caption';                  Width: 180; Alignment: taLeftJustify),
     (Caption: 'Handle';                   Width: 70;  Alignment: taLeftJustify),
     (Caption: 'Handle (detailed)';        Width: 100; Alignment: taLeftJustify),
@@ -53,7 +53,7 @@ const
     (Caption: 'Logon Type';               Width: 80;  Alignment: taCenter),
     (Caption: 'Logon Time';               Width: 130; Alignment: taCenter),
     (Caption: 'Modified ID';              Width: 100; Alignment: taLeftJustify),
-    (Caption: 'Exprires';                 Width: 120; Alignment: taCenter),
+    (Caption: 'Expires';                  Width: 120; Alignment: taCenter),
     (Caption: 'Dynamic Charged';          Width: 100; Alignment: taCenter),
     (Caption: 'Dynamic Available';        Width: 100; Alignment: taCenter),
     (Caption: 'Restricted SIDs';          Width: 100; Alignment: taCenter),
@@ -97,7 +97,7 @@ const
     (Caption: 'BNO Isolation';            Width: 100; Alignment: taCenter),
     (Caption: 'BNO Prefix';               Width: 100; Alignment: taLeftJustify),
     (Caption: 'Sandboxed';                Width: 80;  Alignment: taCenter),
-    (Caption: 'Originating Trust';        Width: 100; Alignment: taCenter)
+    (Caption: 'Is AppSilo';               Width: 80;  Alignment: taCenter)
   );
 
 implementation
@@ -110,7 +110,7 @@ begin
     tsElevation, tsIntegrity];
 
   UseSafeImpersonation := True;
-  PromtOnSecureDesktop := True;
+  PromptOnSecureDesktop := True;
 end;
 
 end.

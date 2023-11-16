@@ -146,14 +146,14 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
     spoForceBreakaway, spoInheritConsole, spoEnvironment, spoObjectInherit,
     spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle,
     spoDesktop, spoToken, spoParentProcess, spoJob, spoHandleList,
-    spoChildPolicy, spoLPAC, spoProtection, spoAdditinalFileAccess,
+    spoChildPolicy, spoLPAC, spoProtection, spoAdditionalFileAccess,
     spoDetectManifest],
 
   // NtCreateProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoEnvironment, spoObjectInherit, spoDesiredAccess,
     spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
-    spoParentProcess, spoSection, spoAdditinalFileAccess, spoDebugPort,
+    spoParentProcess, spoSection, spoAdditionalFileAccess, spoDebugPort,
     spoDetectManifest],
 
   // ShellExecuteEx
@@ -190,7 +190,7 @@ function RequiresSxSRegistration(
   Mode: TManifestMode
 ): Boolean;
 begin
-  // CreateProcessAsUser uses the embedded manifiest on its own
+  // CreateProcessAsUser uses the embedded manifest on its own
   if (Mode = mmUseEmbedded) and (KnownMethod = cmCreateProcessAsUser) then
     Exit(False);
 
@@ -215,7 +215,7 @@ var
   AutoTerminate: IAutoReleasable;
   hxManifestSection: IHandle;
   ManifestRva: TMemory;
-  ManifestBuilfer: IManifestBuilder;
+  ManifestBuilder: IManifestBuilder;
 begin
   Method := TuGetPsMethod(KnownMethod);
 
@@ -230,7 +230,7 @@ begin
   if OptionsEx.ManifestMode = mmUseEmbedded then
     Include(Options.Flags, poDetectManifest);
 
-  // Always suspend the process when donig SxS registration or when to checking
+  // Always suspend the process when doing SxS registration or when to checking
   // logon SID's access to the desktop
   if RequiresSxSRegistration(KnownMethod, OptionsEx.ManifestMode) or
     RequiresPostCreationTokenCheck(KnownMethod, Options) or
@@ -325,7 +325,7 @@ begin
 
       mmCustom:
       begin
-        ManifestBuilfer := NewManifestBuilder
+        ManifestBuilder := NewManifestBuilder
           .UseRuntimeThemes(OptionsEx.UseRuntimeThemes)
           .UseGdiScaling(OptionsEx.UseGdiScaling)
           .UseLongPathAware(OptionsEx.UseLongPathAware)
@@ -333,20 +333,20 @@ begin
 
         case OptionsEx.DpiAwareness of
           dpiUnaware:
-            ManifestBuilfer := ManifestBuilfer.UseDpiAware(dpiAwareFalse);
+            ManifestBuilder := ManifestBuilder.UseDpiAware(dpiAwareFalse);
 
           dpiSystem:
-            ManifestBuilfer := ManifestBuilfer.UseDpiAware(dpiAwareTrue);
+            ManifestBuilder := ManifestBuilder.UseDpiAware(dpiAwareTrue);
 
           dpiPerMonitor, dpiPerMonitorV2:
-            ManifestBuilfer := ManifestBuilfer.UseDpiAware(dpiAwareTruePerMonitor);
+            ManifestBuilder := ManifestBuilder.UseDpiAware(dpiAwareTruePerMonitor);
         end;
 
         Result := CsrxRegisterProcessManifestFromString(
           Info.hxProcess.Handle,
           HandleOrDefault(Info.hxThread),
           Info.ClientId,
-          ManifestBuilfer.Build,
+          ManifestBuilder.Build,
           Options.ApplicationWin32
         );
 

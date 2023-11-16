@@ -42,11 +42,11 @@ uses
 // instead of using generic methods of TExceptionSafeInvoker
 procedure SafeHandleInvoker(
   Callback: TEventCallback<TArray<TSystemHandleEntry>>;
-  const Parmeter: TArray<TSystemHandleEntry>
+  const Parameter: TArray<TSystemHandleEntry>
 );
 begin
   try
-    Callback(Parmeter);
+    Callback(Parameter);
   except
     on E: Exception do
       ReportException(E);
@@ -55,11 +55,11 @@ end;
 
 procedure SafeObjectInvoker(
   Callback: TEventCallback<TArray<TObjectTypeEntry>>;
-  const Parmeter: TArray<TObjectTypeEntry>
+  const Parameter: TArray<TObjectTypeEntry>
 );
 begin
   try
-    Callback(Parmeter);
+    Callback(Parameter);
   except
     on E: Exception do
       ReportException(E);

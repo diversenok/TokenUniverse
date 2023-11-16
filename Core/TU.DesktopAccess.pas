@@ -33,7 +33,7 @@ uses
   Ntapi.WinNt, NtUtils.SysUtils, NtUtils.WinUser, Ntapi.ntpebteb,
   NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Tokens.Impersonate,
   NtUtils.Security, NtUtils.Security.Sid, NtUtils.Security.Acl, NtUtils.Lsa.Sid,
-  NtUtils.Objects, NtUiLib.TaskDialog, NtUiLib.Exceptions.Dialog;
+  NtUtils.Objects, NtUiLib.TaskDialog, NtUiLib.Errors.Dialog;
 
 function IsLogonSidInAcl(
   const Acl: IAcl;

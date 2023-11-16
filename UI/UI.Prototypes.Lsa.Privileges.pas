@@ -23,7 +23,7 @@ type
     Sid: ISid;
     CurrentlyAssigned: TArray<TPrivilege>;
   public
-    procedure DeleyedCreate;
+    procedure DelayedCreate;
     procedure LoadForSid(const Sid: ISid);
   end;
 
@@ -63,7 +63,7 @@ begin
   end;
 end;
 
-procedure TFrameLsaPrivileges.DeleyedCreate;
+procedure TFrameLsaPrivileges.DelayedCreate;
 begin
   PrivilegesFrame.ColoringUnChecked := pcNone;
   PrivilegesFrame.ColoringChecked := pcStateBased;

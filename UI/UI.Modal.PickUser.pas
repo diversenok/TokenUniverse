@@ -19,7 +19,7 @@ type
     ButtonCancel: TButton;
     GroupBoxMain: TGroupBox;
     CheckBoxEnabled: TCheckBox;
-    CheckBoxEnabledByDafault: TCheckBox;
+    CheckBoxEnabledByDefault: TCheckBox;
     CheckBoxMandatory: TCheckBox;
     CheckBoxDenyOnly: TCheckBox;
     CheckBoxOwner: TCheckBox;
@@ -36,7 +36,7 @@ type
     procedure CheckBoxDenyOnlyClick(Sender: TObject);
     procedure CheckBoxMandatoryClick(Sender: TObject);
     procedure CheckBoxEnabledClick(Sender: TObject);
-    procedure CheckBoxEnabledByDafaultClick(Sender: TObject);
+    procedure CheckBoxEnabledByDefaultClick(Sender: TObject);
     procedure ButtonLogonSIDClick(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
   private
@@ -118,13 +118,13 @@ begin
   begin
     CheckBoxMandatory.SetCheckedEx(False);
     CheckBoxEnabled.SetCheckedEx(False);
-    CheckBoxEnabledByDafault.SetCheckedEx(False);
+    CheckBoxEnabledByDefault.SetCheckedEx(False);
   end;
 end;
 
-procedure TDialogPickUser.CheckBoxEnabledByDafaultClick;
+procedure TDialogPickUser.CheckBoxEnabledByDefaultClick;
 begin
-  if CheckBoxEnabledByDafault.Checked then
+  if CheckBoxEnabledByDefault.Checked then
     CheckBoxDenyOnly.SetCheckedEx(False)
   else
     CheckBoxMandatory.SetCheckedEx(False);
@@ -143,7 +143,7 @@ begin
   if CheckBoxMandatory.Checked then
   begin
     CheckBoxEnabled.SetCheckedEx(True);
-    CheckBoxEnabledByDafault.SetCheckedEx(True);
+    CheckBoxEnabledByDefault.SetCheckedEx(True);
     CheckBoxDenyOnly.SetCheckedEx(False);
   end;
 end;
@@ -160,7 +160,7 @@ procedure TDialogPickUser.FormCreate;
 begin
   SetLength(Mapping, 9);
   Mapping[0].Create(CheckBoxMandatory, SE_GROUP_MANDATORY);
-  Mapping[1].Create(CheckBoxEnabledByDafault, SE_GROUP_ENABLED_BY_DEFAULT);
+  Mapping[1].Create(CheckBoxEnabledByDefault, SE_GROUP_ENABLED_BY_DEFAULT);
   Mapping[2].Create(CheckBoxEnabled, SE_GROUP_ENABLED);
   Mapping[3].Create(CheckBoxOwner, SE_GROUP_OWNER);
   Mapping[4].Create(CheckBoxDenyOnly, SE_GROUP_USE_FOR_DENY_ONLY);

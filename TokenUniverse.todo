@@ -4,8 +4,8 @@
 
 {TODO : CreateWellKnownSid (in form of a combobox?)}
 {TODO -cUI : Hints everywhere}
-{TODO -cEnhancement :RpclmpersonateClient
-ColmpersonateClient
+{TODO -cEnhancement :RpcImpersonateClient
+CoImpersonateClient
 ImpersonateNamedPipeClient
 ImpersonateDdeClientWindow
 ImpersonateSecurityContext}

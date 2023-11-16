@@ -263,7 +263,7 @@ begin
   // Prompt for credentials when using logon
   if Method = cmCreateProcessWithLogon then
   begin
-    if TSettings.PromtOnSecureDesktop then
+    if TSettings.PromptOnSecureDesktop then
       PromptFlags := CREDUIWIN_SECURE_PROMPT
     else
       PromptFlags := 0;

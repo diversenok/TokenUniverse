@@ -69,7 +69,7 @@ object DialogRestrictToken: TDialogRestrictToken
         end
       end
     end
-    object TabSheetSidRestict: TTabSheet
+    object TabSheetSidRestrict: TTabSheet
       Caption = 'SIDs to restrict'
       ImageIndex = 1
       object CheckBoxWriteOnly: TCheckBox

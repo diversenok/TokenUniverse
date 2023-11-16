@@ -98,7 +98,7 @@ object DialogSidView: TDialogSidView
         TabOrder = 6
         Text = '-'
       end
-      object LabelSubAuthrities: TStaticText
+      object LabelSubAuthorities: TStaticText
         Left = 11
         Top = 80
         Width = 80

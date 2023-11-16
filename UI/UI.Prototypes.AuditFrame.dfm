@@ -97,7 +97,7 @@ object FrameAudit: TFrameAudit
       OnClick = MenuSuccessClick
     end
     object MenuFailure: TMenuItem
-      Caption = 'Audit faillure'
+      Caption = 'Audit failure'
       OnClick = MenuFailureClick
     end
   end

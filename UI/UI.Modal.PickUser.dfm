@@ -63,7 +63,7 @@ object DialogPickUser: TDialogPickUser
       TabOrder = 0
       OnClick = CheckBoxEnabledClick
     end
-    object CheckBoxEnabledByDafault: TCheckBox
+    object CheckBoxEnabledByDefault: TCheckBox
       Left = 14
       Top = 49
       Width = 130
@@ -74,7 +74,7 @@ object DialogPickUser: TDialogPickUser
       Checked = True
       State = cbChecked
       TabOrder = 1
-      OnClick = CheckBoxEnabledByDafaultClick
+      OnClick = CheckBoxEnabledByDefaultClick
     end
     object CheckBoxMandatory: TCheckBox
       Left = 150

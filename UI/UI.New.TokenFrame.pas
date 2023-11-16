@@ -12,14 +12,14 @@ type
   ITokenNode = interface (INodeProvider)
     ['{756BC6F1-77F9-4BDA-BEB8-0789E418278D}']
     function GetToken: IToken;
-    procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
+    procedure UpdateColumnVisibility(Column: TTokenStringClass; Visible: Boolean);
     property Token: IToken read GetToken;
   end;
 
   TTokenNode = class (TNodeProvider, ITokenNode)
     FToken: IToken;
     FSubscriptions: array [TTokenStringClass] of IAutoReleasable;
-    procedure UpdateColumnVisibiliy(Column: TTokenStringClass; Visible: Boolean);
+    procedure UpdateColumnVisibility(Column: TTokenStringClass; Visible: Boolean);
     procedure ColumnUpdated(const Column: TTokenStringClass; const NewValue: String);
     function GetToken: IToken;
     function GetColumnText(Index: TColumnIndex): String; override;
@@ -80,7 +80,7 @@ begin
 
   while ColumnId <> InvalidColumn do
   begin
-    UpdateColumnVisibiliy(TTokenStringClass(ColumnId), True);
+    UpdateColumnVisibility(TTokenStringClass(ColumnId), True);
     ColumnId := Columns.GetNextVisibleColumn(ColumnId);
   end;
 end;
@@ -101,11 +101,11 @@ begin
   Result := FToken;
 end;
 
-procedure TTokenNode.UpdateColumnVisibiliy;
+procedure TTokenNode.UpdateColumnVisibility;
 begin
   if (Column < Low(TTokenStringClass)) or
     (Column > High(TTokenStringClass)) then
-    raise EArgumentException.Create('Invalid index in TTokenNode.UpdateColumnVisibiliy');
+    raise EArgumentException.Create('Invalid index in TTokenNode.UpdateColumnVisibility');
 
   // Either subscribe for updates or clear the existing subscription
   if Visible then
@@ -143,7 +143,7 @@ begin
   for Token in Tokens do
     Add(Token, Root, False);
 
-  VST.SelectSometing;
+  VST.SelectSomething;
 end;
 
 function TFrameTokens.AddRoot;
@@ -191,9 +191,9 @@ begin
   for InfoClass := Low(TTokenStringClass) to High(TTokenStringClass) do
     with VST.Header.Columns.Add do
     begin
-      Text := ColumsInfo[InfoClass].Caption;
-      Width := ColumsInfo[InfoClass].Width;
-      Alignment := ColumsInfo[InfoClass].Alignment;
+      Text := ColumnsInfo[InfoClass].Caption;
+      Width := ColumnsInfo[InfoClass].Width;
+      Alignment := ColumnsInfo[InfoClass].Alignment;
       Options := DEFAULT_COLUMN_OPTIONS;
       MinWidth := 30;
 
@@ -201,7 +201,7 @@ begin
       if InfoClass in TSettings.SelectedColumns then
         Options := Options + [TVTColumnOption.coVisible];
 
-      // The caption column is specal
+      // The caption column is special
       if InfoClass = tsCaption then
         Options := Options - [TVTColumnOption.coDraggable] +
           [TVTColumnOption.coEditable, TVTColumnOption.coFixed];
@@ -262,7 +262,7 @@ begin
   // Notify each node that it needs to [un]subscribe an info class
   for Node in VST.Nodes do
     if Node.TryGetProvider(ITokenNode, TokenNode) then
-      TokenNode.UpdateColumnVisibiliy(TTokenStringClass(Column), Visible);
+      TokenNode.UpdateColumnVisibility(TTokenStringClass(Column), Visible);
 end;
 
 procedure TFrameTokens.VSTEditing;

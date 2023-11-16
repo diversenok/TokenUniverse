@@ -102,7 +102,7 @@ begin
       Color := ColorSettings.clSuspended
     else
     begin
-      // Check wether the thread owns any GUI objects
+      // Check whether the thread owns any GUI objects
       if UsrxIsGuiThread(Process.Threads[i].Basic.ClientId.UniqueThread) then
         Color := ColorSettings.clGuiThread;
     end;

@@ -38,7 +38,7 @@ const
 
   TOKEN_NO_SANDBOX_INERT = 'Not Sandbox Inert';
   TOKEN_NO_SANDBOX_INERT_TEXT = 'The operation did not enable the Sandbox ' +
-    'Inert flag despite being requested to beacuse doing so requires system ' +
+    'Inert flag despite being requested to because doing so requires system ' +
     'privileges.';
 
   TOKEN_NO_PRIVILEGE = 'Privilege Not Enabled';

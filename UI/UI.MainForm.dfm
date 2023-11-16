@@ -178,7 +178,7 @@ object FormMain: TFormMain
         OnClick = SelectColumnsClick
       end
       object MenuPromptHandleClose: TMenuItem
-        Caption = 'Propmt on handle close'
+        Caption = 'Prompt on handle close'
         OnClick = MenuPromptHandleCloseClick
       end
       object MenuCloseCreationDlg: TMenuItem

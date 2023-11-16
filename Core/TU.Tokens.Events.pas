@@ -69,7 +69,7 @@ type
     OnSingletonAttributes: TAutoObservers<TArray<TSecurityAttribute>>;
     OnBnoIsolation: TAutoObservers<TBnoIsolation>;
     OnIsSandboxed: TAutoObservers<LongBool>;
-    OnOriginatingTrustLevel: TAutoObservers<ISid>;
+    OnIsAppSilo: TAutoObservers<LongBool>;
     FStrings: array [TTokenStringClass] of String;
     OnStringChange: array [TTokenStringClass] of TAutoEvent<TTokenStringClass, String>;
     function GetString(InfoClass: TTokenStringClass): String;
@@ -157,11 +157,11 @@ begin
   end;
 end;
 
-{ Custom exceotion-safe invokers }
+{ Custom exemption-safe invokers }
 
 procedure SafeStringInvoker;
 begin
-  // Workaround internal compiler error by re-implementing the function instread
+  // Workaround internal compiler error by re-implementing the function instead
   // of using TExceptionSafeInvoker.TwoParameters<TTokenStringClass, String>
   try
     Callback(InfoClass, Value);
@@ -404,7 +404,7 @@ begin
   OnSingletonAttributes.Initialize(nil);
   OnBnoIsolation.Initialize(CompareBnoIsolation);
   OnIsSandboxed.Initialize(CompareLongBool);
-  OnOriginatingTrustLevel.Initialize(CompareSid);
+  OnIsAppSilo.Initialize(CompareLongBool);
 
   for i := Low(TTokenStringClass) to High(TTokenStringClass) do
     OnStringChange[i].SetCustomInvoker(SafeStringInvoker);

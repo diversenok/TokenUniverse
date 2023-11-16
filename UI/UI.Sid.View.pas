@@ -25,7 +25,7 @@ type
     EditSID: TEdit;
     EditType: TEdit;
     ButtonClose: TButton;
-    LabelSubAuthrities: TStaticText;
+    LabelSubAuthorities: TStaticText;
     EditSubAuthorities: TEdit;
     LinkLabelMinusOne: TLinkLabel;
     StaticTextDomain: TStaticText;
@@ -120,7 +120,7 @@ begin
       Sid.Data)^);
 
     if RtlSubAuthorityCountSid(Sid.Data)^ = 0 then
-      LinkLabelMinusOne.Visible := False; // Hide parant SID link
+      LinkLabelMinusOne.Visible := False; // Hide parent SID link
 
     if Lookup.DomainName <> '' then
     begin
@@ -142,7 +142,7 @@ begin
     LogonMaskFrame.LoadType(TypeInfo(TSystemAccess));
     LoadLogonRights;
 
-    FrameLsaPrivileges.DeleyedCreate;
+    FrameLsaPrivileges.DelayedCreate;
     FrameLsaPrivileges.LoadForSid(Sid);
 
     FrameLsaAudit.OnApplyClick := SetUserAudit;

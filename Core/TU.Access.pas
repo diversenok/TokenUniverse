@@ -135,7 +135,7 @@ begin
 
           // Don't use backup intent with pipes because it causes the maximum
           // allowed check to fail, forcing us to check bits one by one,
-          // introcuding self-inflicted race conditions that randomly fail some
+          // introducing self-inflicted race conditions that randomly fail some
           // of them with STATUS_PIPE_NOT_AVAILABLE.
           if KnownType <> otNamedPipe then
             Parameters := Parameters.UseOptions(Parameters.Options or
@@ -328,7 +328,7 @@ begin
     ObjectInfo.Other.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
 
   if CidType = ctProcessDebugObject then
-    // Opening debug object doesn't allow specifiying access
+    // Opening debug object doesn't allow specifying access
     TuGetMaximumAccessDebugObject(Result.MaximumAccess, Cid)
   else
     RtlxComputeMaximumAccess(

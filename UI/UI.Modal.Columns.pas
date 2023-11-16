@@ -47,7 +47,7 @@ begin
   for tsc := Low(TTokenStringClass) to High(TTokenStringClass) do
     with ListViewColumns.Items.Add do
     begin
-      Caption := ColumsInfo[tsc].Caption;
+      Caption := ColumnsInfo[tsc].Caption;
       GroupID := 0;
       Checked := tsc in TSettings.SelectedColumns;
     end;

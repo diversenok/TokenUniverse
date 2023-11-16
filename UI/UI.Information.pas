@@ -467,7 +467,7 @@ begin
     ComboPrimary.Items.Add(UserName);
   end;
 
-  // Add all groups for Primary Group and only those with specific attribtes
+  // Add all groups for Primary Group and only those with specific attributes
   // for Owner.
   for i := 0 to High(NewGroups) do
   begin
@@ -550,7 +550,7 @@ begin
     begin
       Items[2].SubItems[0] := Token.QueryString(tsTokenID);
       Items[3].SubItems[0] := Token.QueryString(tsLogonID);
-      Items[4].SubItems[0] := Token.QueryString(tsExprires);
+      Items[4].SubItems[0] := Token.QueryString(tsExpires);
       Items[5].SubItems[0] := Token.QueryString(tsDynamicCharged);
       Items[6].SubItems[0] := Token.QueryString(tsDynamicAvailable);
       Items[7].SubItems[0] := Token.QueryString(tsGroups);
@@ -642,7 +642,7 @@ begin
   IntegritySource := TIntegritySource.Create(ComboIntegrity);
   FrameAudit.OnApplyClick := SetAuditPolicy;
 
-  // "Refresh" queries all the information, stores changeble one in the event
+  // "Refresh" queries all the information, stores changeable one in the event
   // handler, and distributes changed one to every existing event listener
   Refresh;
 

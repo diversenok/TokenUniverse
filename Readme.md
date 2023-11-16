@@ -1,6 +1,6 @@
 # Token Universe
 
-**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, checking available access and modifiying security of many types of objects, and much more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
+**Token Universe** is an advanced tool for experimenting and researching **Windows security mechanisms**. It exposes UI for creating, viewing, impersonating, and modifying access tokens, spawning processes, managing Local Security Authority, checking available access and modifying security of many types of objects, and much more. The program can operate and (at least partially) provide valuable functionality under a wide range of privileges, from *LPAC AppContainer* sandbox to SYSTEM with *SeTcbPrivilege* and *SeCreateTokenPrivilege*.
 
 ## Downloads
 

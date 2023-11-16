@@ -19,7 +19,7 @@ type
     ButtonCancel: TButton;
     PageControl1: TPageControl;
     TabSheetSidDisable: TTabSheet;
-    TabSheetSidRestict: TTabSheet;
+    TabSheetSidRestrict: TTabSheet;
     TabSheetPrivDelete: TTabSheet;
     ButtonAddSID: TButton;
     CheckBoxUsual: TCheckBox;
@@ -171,14 +171,14 @@ end;
 procedure TDialogRestrictToken.FormCreate;
 var
   Group: TGroup;
-  SabdoxInert: LongBool;
+  SandboxInert: LongBool;
 begin
   Assert(Assigned(Token));
 
   CaptionSubscription := Token.ObserveString(tsCaption, ChangedCaption);
 
   CheckBoxSandboxInert.Checked := Token.QuerySandboxInert(
-    SabdoxInert).IsSuccess and SabdoxInert;
+    SandboxInert).IsSuccess and SandboxInert;
 
   // Privileges
   PrivilegesFrame.ColoringUnChecked := pcStateBased;
@@ -199,7 +199,7 @@ begin
     Group.Sid).IsSuccess then
     ManuallyAdded := ManuallyAdded + [Group];
 
-  // Populare groups
+  // Popular groups
   GroupsSubscription := Token.ObserveGroups(ChangedGroups);
 end;
 

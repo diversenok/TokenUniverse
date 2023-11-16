@@ -26,7 +26,7 @@ type
     procedure ComboBoxLevelChange(Sender: TObject);
   private
     Token: IToken;
-    CaptionSubscripion: IAutoReleasable;
+    CaptionSubscription: IAutoReleasable;
     function GetScopeId: TSaferScopeId;
     function GetLevelId: TSaferLevelId;
     procedure ChangedCaption(const InfoClass: TTokenStringClass; const NewCaption: String);
@@ -126,7 +126,7 @@ begin
   if not Assigned(Token) then
     raise EAccessViolation.Create('Token is not set');
 
-  CaptionSubscripion := Token.ObserveString(tsCaption, ChangedCaption);
+  CaptionSubscription := Token.ObserveString(tsCaption, ChangedCaption);
 
   CheckBoxSandboxInert.Checked := Token.QuerySandboxInert(
     SandboxInert).IsSuccess and SandboxInert;

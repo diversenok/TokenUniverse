@@ -6,7 +6,7 @@ interface
 {$WARN SYMBOL_PLATFORM OFF}
 
 { DONE: Staring from some point of complexity the compiler starts to confuse
-  record helpers for the same types even if they are declared as not alises.
+  record helpers for the same types even if they are declared as not aliases.
   So don't use the same names for methods in helpers for types that are based
   on the same simple type. }
 
