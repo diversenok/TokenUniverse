@@ -101,7 +101,7 @@ var
 begin
   // Map wsecedit.dll for extracting embedded strings
   Result := RtlxMapFileByName(ResourceDll, FileParameters
-    .UseFileName(wsecedit));
+    .UseFileName(wsecedit), PAGE_READONLY);
 
   if not Result.IsSuccess then
     Exit;

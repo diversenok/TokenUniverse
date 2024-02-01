@@ -284,7 +284,7 @@ begin
       begin
         Result := RtlxCreateFileSection(hxManifestSection,
           FileParameters.UseFileName(OptionsEx.ManifestFilename, fnWin32),
-          RtlxSecImageNoExecute);
+          PAGE_READONLY, RtlxSecImageNoExecute);
 
         if not Result.IsSuccess then
           Exit;
