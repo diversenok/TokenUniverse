@@ -492,6 +492,17 @@ begin
     end;
 end;
 
+function TuServiceSecurityQueryMaskLookup(
+  Info: TSecurityInformation
+): TAccessMask;
+begin
+  Result := SecurityReadAccess(Info);
+
+  // Workaround SCM requiting more rights to read trust information
+  if BitTest(Info and PROCESS_TRUST_LABEL_SECURITY_INFORMATION) then
+    Result := Result or ACCESS_SYSTEM_SECURITY;
+end;
+
 function TuGetAccessServiceObject;
 begin
   Result := Default(TAccessContext);
@@ -503,6 +514,9 @@ begin
   Result.Security.GenericMapping.GenericWrite := SERVICE_WRITE;
   Result.Security.GenericMapping.GenericExecute := SERVICE_EXECUTE;
   Result.Security.GenericMapping.GenericAll := SERVICE_ALL_ACCESS;
+
+  // SCM requires custom rights for viewing trust labels
+  Result.Security.CustomQueryAccessLookup := TuServiceSecurityQueryMaskLookup;
 
   RtlxComputeMaximumAccess(
     Result.MaximumAccess,
@@ -594,6 +608,10 @@ begin
       Result.Security.GenericMapping.GenericWrite := SC_MANAGER_WRITE;
       Result.Security.GenericMapping.GenericExecute := SC_MANAGER_EXECUTE;
       Result.Security.GenericMapping.GenericAll := SC_MANAGER_ALL_ACCESS;
+
+      // SCM requires custom rights for viewing trust labels
+      Result.Security.CustomQueryAccessLookup :=
+        TuServiceSecurityQueryMaskLookup;
     end;
 
     ltCurrentWinSta:
