@@ -67,6 +67,7 @@ __recovery/
 
 # Debug symbols
 *.dbg
+*.pdb
 
 # Wiki pages
 TokenUniverse.wiki/
