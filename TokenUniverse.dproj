@@ -80,6 +80,7 @@
         <DCC_MapFile>3</DCC_MapFile>
         <PostBuildEventExecuteWhen>TargetOutOfDate</PostBuildEventExecuteWhen>
         <PostBuildEvent><![CDATA[map2dbg.exe $(OUTPUTPATH)
+cv2pdb64.exe -n -s. -p$(OUTPUTNAME).pdb $(OUTPUTPATH)
 $(PostBuildEvent)]]></PostBuildEvent>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
     </PropertyGroup>
@@ -135,7 +136,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <Icon_MainIcon>TokenUniverse.ico</Icon_MainIcon>
     </PropertyGroup>
     <ItemGroup>
@@ -366,6 +366,11 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="UI\UI.New.UserManager.pas">
+            <Form>UserManagerTokens</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="Core\TU.UserManager.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -388,8 +393,8 @@ $(PostBuildEvent)]]></PostBuildEvent>
                     <Source Name="MainSource">TokenUniverse.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
@@ -398,6 +403,12 @@ $(PostBuildEvent)]]></PostBuildEvent>
                 <DeployFile LocalName="Win32\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Debug\TokenUniverse.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Release\TokenUniverse.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win64\Release\TokenUniverse.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>TokenUniverse.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
@@ -1237,7 +1248,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)&amp;cv2pdb64.exe -n -s. -p$(OUTPUTNAME).pdb $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
@@ -1245,7 +1256,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)&amp;cv2pdb64.exe -n -s. -p$(OUTPUTNAME).pdb $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -1253,7 +1264,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)&amp;cv2pdb64.exe -n -s. -p$(OUTPUTNAME).pdb $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
@@ -1261,7 +1272,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)</PostBuildEvent>
+        <PostBuildEvent>map2dbg.exe $(OUTPUTPATH)&amp;cv2pdb64.exe -n -s. -p$(OUTPUTNAME).pdb $(OUTPUTPATH)</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>True</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>

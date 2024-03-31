@@ -88,7 +88,9 @@ uses
   NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame},
   NtUiFrame.Sid.Integrity in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas' {FrameIntegrity: TFrame},
   NtUiBuiltin.DsObjectPicker in 'NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas',
-  NtUiFrame.Sid.Trust in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas' {FrameTrustSid: TFrame};
+  NtUiFrame.Sid.Trust in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas' {FrameTrustSid: TFrame},
+  UI.New.UserManager in 'UI\UI.New.UserManager.pas' {UserManagerTokens},
+  TU.UserManager in 'Core\TU.UserManager.pas';
 
 {$R *.res}
 

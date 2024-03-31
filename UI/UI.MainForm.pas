@@ -70,6 +70,8 @@ type
     cmImpersonate: TMenuItem;
     TokenSecurity: TMenuItem;
     TokenSetLinked: TMenuItem;
+    cmUmgrTokens: TMenuItem;
+    N8: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -119,6 +121,7 @@ type
     procedure cmImpersonateClick(Sender: TObject);
     procedure TokenSecurityClick(Sender: TObject);
     procedure TokenSetLinkedClick(Sender: TObject);
+    procedure cmUmgrTokensClick(Sender: TObject);
   end;
 
 var
@@ -136,7 +139,7 @@ uses
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
   NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects, TU.Startup,
-  NtUiCommon.Prototypes, UI.Modal.PickToken;
+  NtUiCommon.Prototypes, UI.Modal.PickToken, UI.New.UserManager;
 
 {$R *.dfm}
 
@@ -385,6 +388,11 @@ var
 begin
   MakePipeLoopbackToken(Token).RaiseOnError;
   TokenView.Add(Token);
+end;
+
+procedure TFormMain.cmUmgrTokensClick;
+begin
+  TUserManagerTokens.CreateChild(Self, cfmNormal).Show;
 end;
 
 procedure TFormMain.CurrentUserChanged;

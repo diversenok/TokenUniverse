@@ -121,6 +121,41 @@ function MakePipeLoopbackToken(
   DesiredAccess: TTokenAccessMask = MAXIMUM_ALLOWED
 ): TNtxStatus;
 
+// Query the default account token via User Manager service
+function MakeUmgrDefaultAccountToken(
+  out Token: IToken
+): TNtxStatus;
+
+// Query a session token via User Manager service
+function MakeUmgrSessionUserToken(
+  out Token: IToken;
+  SessionId: TSessionId
+): TNtxStatus;
+
+// Query a session's active shell token via User Manager service
+function MakeUmgrActiveShellToken(
+  out Token: IToken;
+  SessionId: TSessionId
+): TNtxStatus;
+
+// Query a User Manager token by context
+function MakeUmgrTokenByContext(
+  out Token: IToken;
+  Context: TLuid
+): TNtxStatus;
+
+// Query a User Manager token by SID
+function MakeUmgrTokenBySid(
+  out Token: IToken;
+  const SID: ISid
+): TNtxStatus;
+
+// Query a User Manager token by user name
+function MakeUmgrTokenByName(
+  out Token: IToken;
+  const Username: String
+): TNtxStatus;
+
 implementation
 
 uses
@@ -129,7 +164,7 @@ uses
   NtUtils.Processes, NtUtils.Processes.Info, NtUtils.Threads, NtUtils.Objects,
   NtUtils.Lsa.Sid, DelphiUiLib.Reflection, System.SysUtils, NtUtils.WinUser,
   NtUtils.Files.Open, NtUtils.Files.Control, NtUtils.Files.Operations,
-  NtUtils.SysUtils;
+  NtUtils.SysUtils, NtUtils.UserManager, DelphiUiLib.Strings;
 
 function MakeAnonymousToken;
 var
@@ -440,6 +475,70 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'Pipe loopback token');
+end;
+
+function MakeUmgrDefaultAccountToken;
+var
+  hxToken: IHandle;
+begin
+  Result := UMgrxQueryDefaultAccountToken(hxToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'User Manager default account');
+end;
+
+function MakeUmgrSessionUserToken;
+var
+  hxToken: IHandle;
+begin
+  Result := UMgrxQuerySessionUserToken(SessionId, hxToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'User Manager session ' +
+      IntToStr(SessionId));
+end;
+
+function MakeUmgrActiveShellToken;
+var
+  hxToken: IHandle;
+begin
+  Result := UMgrxQueryActiveShellUserToken(SessionId, hxToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken,
+      'User Manager active shell for session ' + IntToStr(SessionId));
+end;
+
+function MakeUmgrTokenByContext;
+var
+  hxToken: IHandle;
+begin
+  Result := UMgrxQueryUserToken(Context, hxToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'User Manager token for context ' +
+      IntToHexEx(Context));
+end;
+
+function MakeUmgrTokenBySid;
+var
+  hxToken: IHandle;
+begin
+  Result := UMgrxQueryUserTokenFromSid(Sid, hxToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'User Manager token for ' +
+      TType.Represent(Sid).Text);
+end;
+
+function MakeUmgrTokenByName;
+var
+  hxToken: IHandle;
+begin
+  Result := UMgrxQueryUserTokenFromName(Username, hxToken);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'User Manager token for ' + Username);
 end;
 
 end.

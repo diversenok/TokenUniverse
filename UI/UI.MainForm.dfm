@@ -12,10 +12,8 @@ object FormMain: TFormMain
   Font.Style = []
   KeyPreview = True
   Menu = MainMenu
-  OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   inline TokenView: TFrameTokens
     Left = 0
@@ -93,27 +91,35 @@ object FormMain: TFormMain
         ShortCut = 57423
         OnClick = ActionOpenEffective
       end
-      object cmQuerySession: TMenuItem
-        Caption = 'Session token...'
-        ShortCut = 16469
-        OnClick = ActionWTSQuery
+      object N4: TMenuItem
+        Caption = '-'
       end
       object cmAnonymousToken: TMenuItem
         Caption = 'Anonymous token'
         ShortCut = 49217
         OnClick = NewAnonymousClick
       end
-      object cmClipboardToken: TMenuItem
-        Caption = 'Clipboard token'
-        ShortCut = 32835
-        OnClick = cmClipboardTokenClick
-      end
       object cmPipeLoopbackToken: TMenuItem
         Caption = 'Pipe loopback token'
         ShortCut = 24656
         OnClick = cmPipeLoopbackTokenClick
       end
-      object N4: TMenuItem
+      object cmClipboardToken: TMenuItem
+        Caption = 'Clipboard token'
+        ShortCut = 32835
+        OnClick = cmClipboardTokenClick
+      end
+      object cmQuerySession: TMenuItem
+        Caption = 'Session token...'
+        ShortCut = 16469
+        OnClick = ActionWTSQuery
+      end
+      object cmUmgrTokens: TMenuItem
+        Caption = 'User Manager tokens...'
+        ShortCut = 16461
+        OnClick = cmUmgrTokensClick
+      end
+      object N8: TMenuItem
         Caption = '-'
       end
       object cmLogonUser: TMenuItem
