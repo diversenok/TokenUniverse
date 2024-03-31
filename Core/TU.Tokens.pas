@@ -318,7 +318,7 @@ implementation
 uses
   Ntapi.ntstatus, Ntapi.ntpsapi, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
-  NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Strings,
+  NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUtils.Arrays,
   DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings,
   NtUiLib.Reflection.Types, System.SysUtils, TU.Tokens.Events, TU.Events;
 
@@ -631,24 +631,36 @@ end;
 procedure TToken.ChangedSystemHandles;
 var
   Handles: TArray<TSystemHandleEntry>;
+  Status: TNtxStatus;
   Entry: TSystemHandleEntry;
 begin
-  if Events.OnHandles.HasObservers then
-  begin
-    // Find entries that describe this token and notify subscribers
-    Handles := RtlxFilterHandlesByHandle(AllHandles, hxToken.Handle);
-    Events.OnHandles.Notify(Default(TNtxStatus), Handles);
-  end
-  else
-    Handles := AllHandles;
+  if Assigned(FKernelObjectAddress) and not Events.OnHandles.HasObservers then
+    Exit;
 
-  // Save kernel address
-  if not Assigned(FKernelObjectAddress) and RtlxFindHandleEntry(Handles,
-    NtCurrentProcessId, hxToken.Handle, Entry).IsSuccess then
+  // Find the current handle info
+  Status := RtlxFindHandleEntry(AllHandles, NtCurrentProcessId,
+    hxToken.Handle, Entry);
+
+  if not Status.IsSuccess then
+    Exit;
+
+  // Save kernel address when available
+  if not Assigned(FKernelObjectAddress) and Assigned(Entry.PObject)  then
   begin
     FKernelObjectAddress := Entry.PObject;
     Events.StringCache[tsAddress] := PtrToHexEx(FKernelObjectAddress);
     Events.OnKernelAddress.Notify(Default(TNtxStatus), FKernelObjectAddress);
+  end;
+
+  // Find handles pointing to the same object
+  if Events.OnHandles.HasObservers then
+  begin
+    Status := RtlxFilterHandlesByHandle(Handles, hxToken.Handle);
+
+    if not Status.IsSuccess then
+      Handles := nil;
+
+    Events.OnHandles.Notify(Status, Handles);
   end;
 end;
 
@@ -1427,13 +1439,11 @@ end;
 function TToken.QueryHandles;
 begin
   // Since we are also subscribed to this event, our callback will notify
-  // relevant per-token subscribers on success
+  // relevant per-token subscribers
   Result := TGlobalEvents.QueryHandles(Handles);
 
   if Result.IsSuccess then
-    Handles := RtlxFilterHandlesByHandle(Handles, hxToken.Handle)
-  else
-    Events.OnHandles.Notify(Result, nil);
+    Result := RtlxFilterHandlesByHandle(Handles, hxToken.Handle);
 end;
 
 function TToken.QueryHasRestrictions;
@@ -1521,10 +1531,12 @@ begin
   // our subscribers (including kernel address observers)
   Result := QueryHandles(Handles);
 
+  // Kernel address leak prevention can blocks us
   if Result.IsSuccess and not Assigned(FKernelObjectAddress) then
   begin
     Result.Location := 'TToken.QueryKernelAddress';
-    Result.Status := STATUS_NOT_FOUND;
+    Result.LastCall.ExpectedPrivilege := SE_DEBUG_PRIVILEGE;
+    Result.Status := STATUS_PRIVILEGE_NOT_HELD;
   end;
 
   if Result.IsSuccess then
