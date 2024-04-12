@@ -52,18 +52,18 @@ begin
 end;
 
 function ShouldSuggestAddingLogonSid(
-  hObject: THandle;
+  const hxObject: IHandle;
   const LogonSid: ISid
 ): Boolean;
 var
   Dacl: IAcl;
 begin
-  Result := RtlxQueryDaclObject(hObject, NtxQuerySecurityObject, Dacl).IsSuccess
-    and Assigned(Dacl) and not IsLogonSidInAcl(Dacl, LogonSid);
+  Result := RtlxQueryDaclObject(hxObject, NtxQuerySecurityObject,
+    Dacl).IsSuccess and Assigned(Dacl) and not IsLogonSidInAcl(Dacl, LogonSid);
 end;
 
 function AddLogonSidToObject(
-  hObject: THandle;
+  const hxObject: IHandle;
   const LogonSid: ISid;
   AccessMask: TAccessMask
 ): TNtxStatus;
@@ -72,7 +72,7 @@ var
   Ace: TAceData;
 begin
   // Take existing DACL
-  Result := RtlxQueryDaclObject(hObject, NtxQuerySecurityObject, Dacl);
+  Result := RtlxQueryDaclObject(hxObject, NtxQuerySecurityObject, Dacl);
 
   if not Result.IsSuccess or not Assigned(Dacl) then
     Exit;
@@ -89,7 +89,7 @@ begin
     Exit;
 
   // Apply the modified DACL
-  Result := RtlxSetDaclObject(hObject, NtxSetSecurityObject, Dacl);
+  Result := RtlxSetDaclObject(hxObject, NtxSetSecurityObject, Dacl);
 end;
 
 procedure TuSuggestDesktopAccess;
@@ -137,12 +137,12 @@ begin
 
   // Check the DACLs for the presence of this logon SID
   SuggestForWinSta := UsrxOpenWindowStation(hxWinSta, 'WinSta0',
-    READ_CONTROL).IsSuccess and ShouldSuggestAddingLogonSid(hxWinSta.Handle,
+    READ_CONTROL).IsSuccess and ShouldSuggestAddingLogonSid(hxWinSta,
     LogonSid.Sid);
 
   SuggestForDesktop := UsrxOpenDesktop(hxDesktop,
     RtlxExtractNamePath(FullDesktopName), READ_CONTROL).IsSuccess and
-    ShouldSuggestAddingLogonSid(hxDesktop.Handle, LogonSid.Sid);
+    ShouldSuggestAddingLogonSid(hxDesktop, LogonSid.Sid);
 
   if not SuggestForWinSta and not SuggestForDesktop then
     Exit;
@@ -160,8 +160,7 @@ begin
       WRITE_DAC);
 
     if Status.IsSuccess then
-      Status := AddLogonSidToObject(hxWinSta.Handle, LogonSid.Sid,
-        WINSTA_ALL_ACCESS);
+      Status := AddLogonSidToObject(hxWinSta, LogonSid.Sid, WINSTA_ALL_ACCESS);
 
     if not Status.IsSuccess then
       ShowNtxStatus(ParentHwnd, Status);
@@ -174,8 +173,7 @@ begin
       RtlxExtractNamePath(FullDesktopName), READ_CONTROL or WRITE_DAC);
 
     if Status.IsSuccess then
-      Status := AddLogonSidToObject(hxDesktop.Handle, LogonSid.Sid,
-        DESKTOP_ALL_ACCESS);
+      Status := AddLogonSidToObject(hxDesktop, LogonSid.Sid, DESKTOP_ALL_ACCESS);
 
     if not Status.IsSuccess then
       ShowNtxStatus(ParentHwnd, Status);
