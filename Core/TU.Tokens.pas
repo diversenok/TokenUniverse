@@ -694,8 +694,6 @@ begin
 end;
 
 constructor TToken.Create;
-var
-  i: TTokenStringClass;
 begin
   hxToken := Handle;
   FKernelObjectAddress := KernelObjectAddress;
@@ -703,9 +701,6 @@ begin
   FPerHandleStrings[tsHandle] := IntToHexEx(hxToken.Handle, 4);
   FPerHandleStrings[tsHandleDetailed] := Format('%s (%s)',
     [IntToStrEx(hxToken.Handle), IntToHexEx(hxToken.Handle, 4)]);
-
-  for i := Low(TTokenPerHandleStringClass) to High(TTokenPerHandleStringClass) do
-    FPerHandleEvents[i].SetCustomInvoker(SafeStringInvoker);
 
   SystemHandlesSubscription := TGlobalEvents.SubscribeHandles(ChangedSystemHandles);
   SystemObjectsSubscription := TGlobalEvents.SubscribeObjects(ChangedSystemObjects);

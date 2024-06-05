@@ -82,13 +82,6 @@ type
 // Retrieve shared token events or construct new private ones
 function RetrieveTokenEvents(const Identity: TLuid): IAutoTokenEvents;
 
-// Exception-safe string invoker
-procedure SafeStringInvoker(
-  Callback: TEventCallback<TTokenStringClass, String>;
-  const InfoClass: TTokenStringClass;
-  const Value: String
-);
-
 implementation
 
 uses
@@ -154,20 +147,6 @@ begin
     // The object is already gone, but we have a bucket; recreate it
     Result := Auto.From(TTokenEvents.Create);
     TEventStorage.Storage[Index].Events := Result;
-  end;
-end;
-
-{ Custom exemption-safe invokers }
-
-procedure SafeStringInvoker;
-begin
-  // Workaround internal compiler error by re-implementing the function instead
-  // of using TExceptionSafeInvoker.TwoParameters<TTokenStringClass, String>
-  try
-    Callback(InfoClass, Value);
-  except
-    on E: Exception do
-      ReportException(E);
   end;
 end;
 
@@ -353,8 +332,6 @@ end;
 { TTokenEvents }
 
 constructor TTokenEvents.Create;
-var
-  i: TTokenStringClass;
 begin
   OnBasicInfo.Initialize(CompareBasicInfo);
   OnHandles.Initialize(CompareHandles);
@@ -405,9 +382,6 @@ begin
   OnBnoIsolation.Initialize(CompareBnoIsolation);
   OnIsSandboxed.Initialize(CompareLongBool);
   OnIsAppSilo.Initialize(CompareLongBool);
-
-  for i := Low(TTokenStringClass) to High(TTokenStringClass) do
-    OnStringChange[i].SetCustomInvoker(SafeStringInvoker);
 end;
 
 function TTokenEvents.GetString;

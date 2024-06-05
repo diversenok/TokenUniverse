@@ -15,7 +15,6 @@ type
     class var FOnHandleSnapshot: TAutoEvent<TArray<TSystemHandleEntry>>;
     class var FOnObjectSnapshot: TAutoEvent<TArray<TObjectTypeEntry>>;
     class var FOnLinkLogonSessions: TAutoEvent;
-    class constructor Create;
   public
     // Querying
     class function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus; static;
@@ -38,43 +37,7 @@ implementation
 uses
   System.SysUtils, UI.Exceptions;
 
-// Workaround internal compiler error by re-declaring exception-safe invokers
-// instead of using generic methods of TExceptionSafeInvoker
-procedure SafeHandleInvoker(
-  Callback: TEventCallback<TArray<TSystemHandleEntry>>;
-  const Parameter: TArray<TSystemHandleEntry>
-);
-begin
-  try
-    Callback(Parameter);
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
-end;
-
-procedure SafeObjectInvoker(
-  Callback: TEventCallback<TArray<TObjectTypeEntry>>;
-  const Parameter: TArray<TObjectTypeEntry>
-);
-begin
-  try
-    Callback(Parameter);
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
-end;
-
 { TGlobalEvents }
-
-class constructor TGlobalEvents.Create;
-begin
-  TGlobalEvents.FOnHandleSnapshot.SetCustomInvoker(SafeHandleInvoker);
-  TGlobalEvents.FOnObjectSnapshot.SetCustomInvoker(SafeObjectInvoker);
-  TGlobalEvents.FOnLinkLogonSessions.SetCustomInvoker(
-    TExceptionSafeInvoker.NoParameters);
-end;
 
 class function TGlobalEvents.QueryHandles;
 begin

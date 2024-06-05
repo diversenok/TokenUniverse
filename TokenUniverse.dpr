@@ -44,7 +44,6 @@ uses
   UI.Helper in 'NtUtilsUI\Common\UI.Helper.pas',
   VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
-  UI.Prototypes.Sid.Cheatsheet in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Cheatsheet.pas' {SidCheatsheet},
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
   TU.Observers in 'Core\TU.Observers.pas',
   TU.Tokens.Events in 'Core\TU.Tokens.Events.pas',
@@ -90,7 +89,9 @@ uses
   NtUiBuiltin.DsObjectPicker in 'NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas',
   NtUiFrame.Sid.Trust in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas' {FrameTrustSid: TFrame},
   UI.New.UserManager in 'UI\UI.New.UserManager.pas' {UserManagerTokens},
-  TU.UserManager in 'Core\TU.UserManager.pas';
+  TU.UserManager in 'Core\TU.UserManager.pas',
+  NtUiBackend.Sids.Abbreviations in 'NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas',
+  NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame};
 
 {$R *.res}
 

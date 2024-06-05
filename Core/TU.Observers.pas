@@ -18,11 +18,6 @@ type
     FEqualityCheck: TEqualityCheck<T>;
     FHasLastValue: Boolean;
     FLastValue: T;
-    class procedure SafeInvoker(
-      Callback: TEventCallback<TNtxStatus, T>;
-      const Status: TNtxStatus;
-      const Value: T
-    ); static;
   public
     procedure Initialize(EqualityCheck: TEqualityCheck<T>);
     function HasObservers: Boolean;
@@ -45,12 +40,6 @@ end;
 procedure TAutoObservers<T>.Initialize;
 begin
   FEvents := Default(TAutoEvent<TNtxStatus, T>);
-
-  // Yet again, workaround an internal compiler error by re-introducing the
-  // exception-safe invoker instead of using
-  // TExceptionSafeInvoker.TwoParameters<TNtxStatus, T>
-  FEvents.SetCustomInvoker(SafeInvoker);
-
   FEqualityCheck := EqualityCheck;
   FHasLastValue := False;
   FLastValue := Default(T);
@@ -73,16 +62,6 @@ begin
 
   // Notify all subscribers of the new state
   FEvents.Invoke(Status, FLastValue);
-end;
-
-class procedure TAutoObservers<T>.SafeInvoker;
-begin
-   try
-    Callback(Status, Value);
-  except
-    on E: Exception do
-      ReportException(E);
-  end;
 end;
 
 function TAutoObservers<T>.Subscribe;
