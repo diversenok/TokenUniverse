@@ -6,6 +6,7 @@ uses
   NtUtils,
   NtUtils.Svc.SingleTaskSvc,
   NtUiLib.Errors,
+  NtUtils.Com,
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
   UI.MainForm in 'UI\UI.MainForm.pas' {FormMain},
   UI.Modal.AccessAndType in 'UI\UI.Modal.AccessAndType.pas' {DialogAccessAndType},
@@ -110,12 +111,15 @@ begin
     Exit;
   end;
 
-  if RtlGetCurrentPeb.ImageBaseAddress <> @ImageBase then
-    IsLibrary := True;
-
-  // Normal mode
+  // Enable our excption reporting
   EnableNtUiLibExceptionHandling;
   ReportMemoryLeaksOnShutdown := True;
+
+  // Help COM initialization under LPAC + use at least implicit MTA
+  ComxSuppressCapabilityCheck;
+  ComxInitializeImplicit;
+
+  // Proceed to VCL initialization
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Token Universe';
