@@ -72,11 +72,11 @@ begin
     NtxOpenThread(hxThread, Thread.UniqueThread, Access).RaiseOnError;
 
     if Sender = cmTerminate then
-      NtxTerminateThread(hxThread.Handle, STATUS_CANCELLED).RaiseOnError
+      NtxTerminateThread(hxThread, STATUS_CANCELLED).RaiseOnError
     else if Sender = cmSuspend then
-      NtxSuspendThread(hxThread.Handle).RaiseOnError
+      NtxSuspendThread(hxThread).RaiseOnError
     else
-      NtxResumeThread(hxThread.Handle).RaiseOnError;
+      NtxResumeThread(hxThread).RaiseOnError;
   end;
 end;
 

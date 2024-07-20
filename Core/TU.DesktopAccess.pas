@@ -23,8 +23,8 @@ procedure TuSuggestDesktopAccess(
 procedure TuSuggestDesktopAccessByProcess(
   ParentHwnd: THwnd;
   const FullDesktopName: String;
-  [Access(PROCESS_QUERY_LIMITED_INFORMATION)] hProcess: THandle;
-  [Access(THREAD_DIRECT_IMPERSONATION)] hThread: THandle
+  [Access(PROCESS_QUERY_LIMITED_INFORMATION)] const hxProcess: IHandle;
+  [Access(THREAD_DIRECT_IMPERSONATION)] const hxThread: IHandle
 );
 
 implementation
@@ -186,11 +186,11 @@ var
   hxToken: IHAndle;
 begin
   // Try to open the token
-  Status := NtxOpenProcessToken(hxToken, hProcess, TOKEN_QUERY);
+  Status := NtxOpenProcessToken(hxToken, hxProcess, TOKEN_QUERY);
 
   // If it didn't work, try reading its copy via direct impersonation
   if not Status.IsSuccess then
-    Status := NtxCopyEffectiveToken(hxToken, hThread, SecurityIdentification,
+    Status := NtxCopyEffectiveToken(hxToken, hxThread, SecurityIdentification,
       TOKEN_QUERY);
 
   if Status.IsSuccess then

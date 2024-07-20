@@ -88,7 +88,7 @@ procedure TDialogPickUser.ButtonLogonSIDClick;
 var
   Sid: ISid;
 begin
-  UsrxQuerySid(GetThreadDesktop(NtCurrentThreadId), Sid).RaiseOnError;
+  UsrxQuerySid(UsrxCurrentDesktop, Sid).RaiseOnError;
 
   if Assigned(Sid) then
     SidEditor.Sid := Sid

@@ -312,8 +312,8 @@ begin
   NtxOpenProcess(hxTargetProcess, TProcessListDialog.Execute(Self,
     False).ProcessID, PROCESS_DUP_HANDLE).RaiseOnError;
 
-  NtxDuplicateHandleTo(hxTargetProcess.Handle,
-    TokenView.Selected.Handle.Handle, NewHandle).RaiseOnError;
+  NtxDuplicateHandleTo(hxTargetProcess, TokenView.Selected.Handle.Handle,
+    NewHandle).RaiseOnError;
 
   ShowSuccessMessage(Handle, Format('The handle was successfully sent.'#$D#$A +
     'Its value is %d (0x%X)', [NewHandle, NewHandle]));
@@ -424,7 +424,7 @@ begin
 
   // Search for inherited handles
   if RtlxFindKernelType('Token', TokenType).IsSuccess and
-    NtxEnumerateHandlesProcess(NtCurrentProcess, Handles).IsSuccess then
+    NtxEnumerateHandlesProcess(NtxCurrentProcess, Handles).IsSuccess then
   begin
     TArray.FilterInline<TProcessHandleEntry>(Handles,
       ByType(TokenType.Other.TypeIndex));

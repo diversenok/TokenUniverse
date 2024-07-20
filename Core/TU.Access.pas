@@ -252,7 +252,7 @@ begin
           if not Result.IsSuccess then
             Exit;
 
-          Result := NtxOpenDebugObjectProcess(hxObject, hxProcess.Handle);
+          Result := NtxOpenDebugObjectProcess(hxObject, hxProcess);
         end
       else
         Result.Location := 'TuMakeCidOpener';
@@ -274,12 +274,12 @@ begin
   if not Result.IsSuccess then
     Exit;
 
-  Result := NtxOpenDebugObjectProcess(hxDebugObj, hxProcess.Handle);
+  Result := NtxOpenDebugObjectProcess(hxDebugObj, hxProcess);
 
   if not Result.IsSuccess then
     Exit;
 
-  Result := NtxObject.Query(hxDebugObj.Handle, ObjectBasicInformation, Info);
+  Result := NtxObject.Query(hxDebugObj, ObjectBasicInformation, Info);
 
   if not Result.IsSuccess then
     Exit;
@@ -556,11 +556,11 @@ begin
         ltScmDatabase: Result := ScmxConnect(hxObject, DesiredAccess);
 
         ltCurrentWinSta:
-          Result := NtxDuplicateHandleLocal(UsrxCurrentWindowStation, hxObject,
-            DesiredAccess);
+          Result := NtxDuplicateHandleLocal(UsrxCurrentWindowStation.Handle,
+            hxObject, DesiredAccess);
 
         ltCurrentDesktop:
-          Result := NtxDuplicateHandleLocal(UsrxCurrentDesktop, hxObject,
+          Result := NtxDuplicateHandleLocal(UsrxCurrentDesktop.Handle, hxObject,
             DesiredAccess);
       else
         Result.Location := 'TuMakeSingletonOpener';

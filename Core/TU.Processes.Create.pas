@@ -257,8 +257,8 @@ begin
   // and ask if the user wants to adjust access.
   if (KnownMethod = cmCreateProcessWithLogon) and (Info.ValidFields *
     [piProcessHandle, piThreadHandle] = [piProcessHandle, piThreadHandle]) then
-    TuSuggestDesktopAccessByProcess(ParentHwnd, Options.Desktop,
-      Info.hxProcess.Handle, Info.hxThread.Handle)
+    TuSuggestDesktopAccessByProcess(ParentHwnd, Options.Desktop, Info.hxProcess,
+      Info.hxThread)
 
   // Similar, for existing tokens: check if the logon SID grants desktop access
   else if RequiresPostCreationTokenCheck(KnownMethod, Options) then
@@ -289,17 +289,16 @@ begin
         if not Result.IsSuccess then
           Exit;
 
-        Result := RtlxFindManifestInSection(hxManifestSection.Handle,
-          ManifestRva);
+        Result := RtlxFindManifestInSection(hxManifestSection, ManifestRva);
 
         if not Result.IsSuccess then
           Exit;
 
         Result := CsrxRegisterProcessManifest(
-          Info.hxProcess.Handle,
-          HandleOrDefault(Info.hxThread),
+          Info.hxProcess,
+          Info.hxThread,
           Info.ClientId,
-          hxManifestSection.Handle,
+          hxManifestSection,
           BASE_MSG_HANDLETYPE_SECTION,
           ManifestRva,
           Options.ApplicationWin32
@@ -312,8 +311,8 @@ begin
       mmUseFromXML:
       begin
         Result := CsrxRegisterProcessManifestFromFile(
-          Info.hxProcess.Handle,
-          HandleOrDefault(Info.hxThread),
+          Info.hxProcess,
+          Info.hxThread,
           Info.ClientId,
           OptionsEx.ManifestFilename,
           Options.ApplicationWin32
@@ -343,8 +342,8 @@ begin
         end;
 
         Result := CsrxRegisterProcessManifestFromString(
-          Info.hxProcess.Handle,
-          HandleOrDefault(Info.hxThread),
+          Info.hxProcess,
+          Info.hxThread,
           Info.ClientId,
           ManifestBuilder.Build,
           Options.ApplicationWin32
@@ -361,7 +360,7 @@ begin
   end;
 
   if ResumeLater and (piThreadHandle in Info.ValidFields) then
-    NtxResumeThread(Info.hxThread.Handle);
+    NtxResumeThread(Info.hxThread);
 end;
 
 

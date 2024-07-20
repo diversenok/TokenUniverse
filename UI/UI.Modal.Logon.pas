@@ -241,7 +241,7 @@ begin
     -1) of
     IDYES:
     begin
-      UsrxQuerySid(GetThreadDesktop(NtCurrentThreadId), Group.Sid).RaiseOnError;
+      UsrxQuerySid(UsrxCurrentDesktop, Group.Sid).RaiseOnError;
 
       if not Assigned(Group.Sid) then
         raise Exception.Create('The current desktop does not have a logon SID.');

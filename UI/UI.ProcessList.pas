@@ -132,11 +132,11 @@ begin
       Access).RaiseOnError;
 
     if Sender = cmTerminate then
-      NtxTerminateProcess(hxProcess.Handle, STATUS_CANCELLED).RaiseOnError
+      NtxTerminateProcess(hxProcess, STATUS_CANCELLED).RaiseOnError
     else if Sender = cmSuspend then
-      NtxSuspendProcess(hxProcess.Handle).RaiseOnError
+      NtxSuspendProcess(hxProcess).RaiseOnError
     else
-      NtxResumeProcess(hxProcess.Handle).RaiseOnError;
+      NtxResumeProcess(hxProcess).RaiseOnError;
   end;
 end;
 

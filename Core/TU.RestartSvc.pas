@@ -62,9 +62,9 @@ begin
   Parameters[1] := UsrxCurrentDesktopName;
 
   // Start the service
-  Result := ScmxStartService(hxSvc.Handle, Parameters);
+  Result := ScmxStartService(hxSvc, Parameters);
 
-  ScmxDeleteService(hxSvc.Handle);
+  ScmxDeleteService(hxSvc);
 end;
 
 procedure ReSvcDelegate;
@@ -98,7 +98,7 @@ begin
     PROCESS_QUERY_LIMITED_INFORMATION, [pnAllowAmbiguousMatch, pnCaseSensitive])
     .RaiseOnError;
 
-  NtxOpenProcessToken(Result, hxProcess.Handle, TOKEN_DUPLICATE).RaiseOnError;
+  NtxOpenProcessToken(Result, hxProcess, TOKEN_DUPLICATE).RaiseOnError;
 end;
 
 function PrepareToken(SessionID: Integer): IHandle;

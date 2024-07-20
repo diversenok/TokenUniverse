@@ -594,7 +594,7 @@ end;
 
 function TToken.AssignToProcess;
 begin
-  Result := NtxAssignPrimaryToken(hxProcess.Handle, hxToken);
+  Result := NtxAssignPrimaryToken(hxProcess, hxToken);
   SmartRefresh;
 end;
 
@@ -606,7 +606,7 @@ end;
 
 function TToken.AssignToThread;
 begin
-  Result := NtxSetThreadToken(hxThread.Handle, hxToken);
+  Result := NtxSetThreadToken(hxThread, hxToken);
   SmartRefresh;
 end;
 
@@ -655,7 +655,7 @@ begin
   // Find handles pointing to the same object
   if Events.OnHandles.HasObservers then
   begin
-    Status := RtlxFilterHandlesByHandle(Handles, hxToken.Handle);
+    Status := RtlxFilterHandlesByHandle(Handles, hxToken);
 
     if not Status.IsSuccess then
       Handles := nil;
@@ -1238,7 +1238,7 @@ end;
 
 function TToken.QueryBasicInfo;
 begin
-  Result := NtxObject.Query(hxToken.Handle, ObjectBasicInformation, Info);
+  Result := NtxObject.Query(hxToken, ObjectBasicInformation, Info);
 
   if Result.IsSuccess then
   begin
@@ -1438,7 +1438,7 @@ begin
   Result := TGlobalEvents.QueryHandles(Handles);
 
   if Result.IsSuccess then
-    Result := RtlxFilterHandlesByHandle(Handles, hxToken.Handle);
+    Result := RtlxFilterHandlesByHandle(Handles, hxToken);
 end;
 
 function TToken.QueryHasRestrictions;

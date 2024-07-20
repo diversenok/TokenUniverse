@@ -103,7 +103,7 @@ begin
       for j := 0 to High(PerProcess[i].Values) do
       begin
         // Try to get a copy
-        if Assigned(hxProcess) and NtxDuplicateHandleFrom(hxProcess.Handle,
+        if Assigned(hxProcess) and NtxDuplicateHandleFrom(hxProcess,
           PerProcess[i].Values[j].HandleValue, hxToken).IsSuccess then
           Frame.AddToken(CaptureTokenHandle(hxToken, Format('Handle %d @ %s',
             [PerProcess[i].Values[j].HandleValue, ImageName])), Index);

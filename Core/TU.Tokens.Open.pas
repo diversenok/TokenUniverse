@@ -255,7 +255,7 @@ begin
   end;
 
   // Open the token
-  Result := NtxOpenProcessToken(hxToken, hxProcess.Handle, DesiredAccess);
+  Result := NtxOpenProcessToken(hxToken, hxProcess, DesiredAccess);
 
   if not Result.IsSuccess then
     Exit;
@@ -265,7 +265,7 @@ begin
     // Determine PID to lookup image name
     if hxProcess.Handle = NtCurrentProcess then
       PID := NtCurrentProcessId
-    else if NtxProcess.Query(hxProcess.Handle, ProcessBasicInformation,
+    else if NtxProcess.Query(hxProcess, ProcessBasicInformation,
       Info).IsSuccess then
       PID := Info.UniqueProcessID;
   end;
@@ -296,7 +296,7 @@ begin
   end;
 
   // Open the token
-  Result := NtxOpenThreadToken(hxToken, hxThread.Handle, DesiredAccess);
+  Result := NtxOpenThreadToken(hxToken, hxThread, DesiredAccess);
 
   if not Result.IsSuccess then
     Exit;
@@ -306,7 +306,7 @@ begin
     // Determine TID to lookup thread and process name
     if hxThread.Handle = NtCurrentThread then
       TID := NtCurrentThreadId
-    else if NtxThread.Query(hxThread.Handle, ThreadBasicInformation,
+    else if NtxThread.Query(hxThread, ThreadBasicInformation,
       Info).IsSuccess then
       TID := Info.ClientId.UniqueThread;
   end;
@@ -345,7 +345,7 @@ begin
   end;
 
   // Copy the token
-  Result := NtxCopyEffectiveToken(hxToken, hxThread.Handle, ImpersonationLevel,
+  Result := NtxCopyEffectiveToken(hxToken, hxThread, ImpersonationLevel,
     DesiredAccess, 0, EffectiveOnly);
 
   if not Result.IsSuccess then
@@ -357,7 +357,7 @@ begin
     if hxThread.Handle = NtCurrentThread then
       TID := NtCurrentThreadId
     else if NtxOpenThread(hxThread, TID, THREAD_QUERY_LIMITED_INFORMATION)
-      .IsSuccess and NtxThread.Query(hxThread.Handle, ThreadBasicInformation,
+      .IsSuccess and NtxThread.Query(hxThread, ThreadBasicInformation,
       Info).IsSuccess then
       TID := Info.ClientId.UniqueThread;
   end;
@@ -446,7 +446,7 @@ begin
     Exit;
 
   // Determine its actual name
-  Result := NtxQueryNameFile(hxPipeServer.Handle, PipeName);
+  Result := NtxQueryNameFile(hxPipeServer, PipeName);
 
   if not Result.IsSuccess then
     Exit;
@@ -465,13 +465,13 @@ begin
   StateBackup := NtxBackupThreadToken(NtxCurrentThread);
 
   // Impersonate the client
-  Result := NtxFsControlFile(hxPipeServer.Handle, FSCTL_PIPE_IMPERSONATE);
+  Result := NtxFsControlFile(hxPipeServer, FSCTL_PIPE_IMPERSONATE);
 
   if not Result.IsSuccess then
     Exit;
 
   // Read the impersonated token
-  Result := NtxOpenThreadToken(hxToken, NtCurrentThread, DesiredAccess);
+  Result := NtxOpenThreadToken(hxToken, NtxCurrentThread, DesiredAccess);
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'Pipe loopback token');
