@@ -92,7 +92,8 @@ uses
   UI.New.UserManager in 'UI\UI.New.UserManager.pas' {UserManagerTokens},
   TU.UserManager in 'Core\TU.UserManager.pas',
   NtUiBackend.Sids.Abbreviations in 'NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas',
-  NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame};
+  NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame},
+  NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas';
 
 {$R *.res}
 
@@ -117,7 +118,7 @@ begin
 
   // Help COM initialization under LPAC + use at least implicit MTA
   ComxSuppressCapabilityCheck;
-  ComxInitializeImplicit;
+  ComxInitializeImplicitOnce;
 
   // Proceed to VCL initialization
   Application.Initialize;

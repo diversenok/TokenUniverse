@@ -99,12 +99,12 @@ begin
     SubItems.Add(DateTimeToStr(LargeIntegerToDateTime(
       Process.Threads[i].Basic.CreateTime)));
     if Process.Threads[i].Basic.WaitReason = TWaitReason.Suspended then
-      Color := ColorSettings.clSuspended
+      Color := ColorSettings.clBackgroundInactive
     else
     begin
       // Check whether the thread owns any GUI objects
       if UsrxIsGuiThread(Process.Threads[i].Basic.ClientId.UniqueThread) then
-        Color := ColorSettings.clGuiThread;
+        Color := ColorSettings.clBackgroundGuiThread;
     end;
   end;
 

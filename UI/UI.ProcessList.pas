@@ -291,7 +291,7 @@ begin
         ListItemRef.Data := @ProcessListEx[i];
 
         if IsSuspended then
-          ListItemRef.Color := ColorSettings.clSuspended;
+          ListItemRef.Color := ColorSettings.clBackgroundInactive;
 
         Added := True;
         Inc(LoopAdded);

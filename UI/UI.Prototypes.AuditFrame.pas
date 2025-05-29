@@ -251,7 +251,7 @@ begin
           and not Byte(Flag);
 
       FillRow(i);
-      ListView.Items[i].Color := ColorSettings.clStale;
+      ListView.Items[i].Color := ColorSettings.clBackgroundUnsaved;
     end;
   ListView.Items.EndUpdate;
 end;

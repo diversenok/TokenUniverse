@@ -749,9 +749,9 @@ begin
     EditUser.Hint := Repr.Hint;
 
     if User.Attributes and SE_GROUP_USE_FOR_DENY_ONLY <> 0 then
-      EditUser.Color := ColorSettings.clDisabled
+      EditUser.Color := ColorSettings.clBackgroundDeny
     else
-      EditUser.Color := ColorSettings.clEnabled;
+      EditUser.Color := ColorSettings.clBackgroundAllow;
 
     // AppContainer is user-specific
     if not RtlOsVersionAtLeast(OsWin8) then
@@ -791,7 +791,7 @@ end;
 procedure TInfoDialog.SetStaleColor;
 begin
   Assert(Sender is TComboBox);
-  (Sender as TComboBox).Color := ColorSettings.clStale;
+  (Sender as TComboBox).Color := ColorSettings.clBackgroundUnsaved;
 end;
 
 procedure TInfoDialog.UpdateAuditTab;

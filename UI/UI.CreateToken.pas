@@ -7,7 +7,7 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms,
   UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
-  NtUtils, UI.Prototypes.Sid.Edit;
+  NtUtils, UI.Prototypes.Sid.Edit, NtUiFrame;
 
 type
   TDialogCreateToken = class(TChildForm)
@@ -236,7 +236,10 @@ var
   Lookup: TArray<TTranslatedGroup>;
 begin
   // Save the current state
-  Old := RetrieveGroup(Groups, ComboBox.ItemIndex);
+  if ComboBox.ItemIndex >= 0 then
+    Old := RetrieveGroup(Groups, ComboBox.ItemIndex)
+  else
+    Old := nil;
 
   // Reset the list
   ComboBox.Items.BeginUpdate;
@@ -256,7 +259,8 @@ begin
     ComboBox.Items.Add(Lookup[i].Name.FullName);
 
   // Restore selection
-  ComboBox.ItemIndex := FindGroupIndex(Groups, Old) + 1;
+  if Assigned(Old) then
+    ComboBox.ItemIndex := FindGroupIndex(Groups, Old) + 1
 end;
 
 procedure TDialogCreateToken.ChangedGroups;

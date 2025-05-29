@@ -207,16 +207,16 @@ begin
     Entry.KnownType);
 
   if RtlxFindKernelType(Entry.TypeName, ObjectInfo).IsSuccess then
-    Result.Security.GenericMapping := ObjectInfo.Other.GenericMapping
+    Result.Security.GenericMapping := ObjectInfo.Native.GenericMapping
   else
-    ObjectInfo.Other.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
+    ObjectInfo.Native.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
 
   RtlxComputeMaximumAccess(
     Result.MaximumAccess,
     Result.Security.HandleProvider,
     True,
-    ObjectInfo.Other.ValidAccessMask,
-    ObjectInfo.Other.GenericMapping.GenericRead
+    ObjectInfo.Native.ValidAccessMask,
+    ObjectInfo.Native.GenericMapping.GenericRead
   );
 end;
 
@@ -323,9 +323,9 @@ begin
   end;
 
   if RtlxFindKernelType(TypeName, ObjectInfo).IsSuccess then
-    Result.Security.GenericMapping := ObjectInfo.Other.GenericMapping
+    Result.Security.GenericMapping := ObjectInfo.Native.GenericMapping
   else
-    ObjectInfo.Other.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
+    ObjectInfo.Native.ValidAccessMask := SPECIFIC_RIGHTS_ALL or STANDARD_RIGHTS_ALL;
 
   if CidType = ctProcessDebugObject then
     // Opening debug object doesn't allow specifying access
@@ -335,8 +335,8 @@ begin
       Result.MaximumAccess,
       Result.Security.HandleProvider,
       True,
-      ObjectInfo.Other.ValidAccessMask,
-      ObjectInfo.Other.GenericMapping.GenericRead
+      ObjectInfo.Native.ValidAccessMask,
+      ObjectInfo.Native.GenericMapping.GenericRead
     );
 end;
 
@@ -556,12 +556,12 @@ begin
         ltScmDatabase: Result := ScmxConnect(hxObject, DesiredAccess);
 
         ltCurrentWinSta:
-          Result := NtxDuplicateHandleLocal(UsrxCurrentWindowStation.Handle,
-            hxObject, DesiredAccess);
+          Result := NtxDuplicateHandleLocal(UsrxCurrentWindowStation,
+            hxObject, DesiredAccess, 0, 0);
 
         ltCurrentDesktop:
-          Result := NtxDuplicateHandleLocal(UsrxCurrentDesktop.Handle, hxObject,
-            DesiredAccess);
+          Result := NtxDuplicateHandleLocal(UsrxCurrentDesktop, hxObject,
+            DesiredAccess, 0, 0);
       else
         Result.Location := 'TuMakeSingletonOpener';
         Result.Status := STATUS_INVALID_PARAMETER;
@@ -621,7 +621,7 @@ begin
       Result.Security.SetFunction := NtxSetSecurityObject;
 
       if RtlxFindKernelType('WindowStation', Info).IsSuccess then
-        Result.Security.GenericMapping := Info.Other.GenericMapping;
+        Result.Security.GenericMapping := Info.Native.GenericMapping;
     end;
 
     ltCurrentDesktop:
@@ -631,7 +631,7 @@ begin
       Result.Security.SetFunction := NtxSetSecurityObject;
 
       if RtlxFindKernelType('Desktop', Info).IsSuccess then
-        Result.Security.GenericMapping := Info.Other.GenericMapping;
+        Result.Security.GenericMapping := Info.Native.GenericMapping;
     end;
   else
     Exit;

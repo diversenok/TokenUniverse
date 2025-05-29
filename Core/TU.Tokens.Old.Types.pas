@@ -77,7 +77,7 @@ begin
   // Try to use the type snapshot, but fall back to local definition if needed
 
   if RtlxFindKernelType('Token', TokenType).IsSuccess then
-    Result := TokenType.Other.GenericMapping
+    Result := TokenType.Native.GenericMapping
   else
   begin
     Result.GenericRead := TOKEN_DUPLICATE or TOKEN_QUERY or TOKEN_QUERY_SOURCE;

@@ -144,7 +144,7 @@ begin
 
   {$IFDEF DEBUG}
   // Check that the process didn't crash immediately
-  Status := NtxWaitForSingleObject(ProcessInfo.hxProcess.Handle, 200 * MILLISEC);
+  Status := NtxWaitForSingleObject(ProcessInfo.hxProcess, 200 * MILLISEC);
 
   case Status.Status of
     STATUS_TIMEOUT: ; // Nothing
@@ -153,7 +153,7 @@ begin
         OutputDebugStringW('Abnormal process termination');
 
         Status := NtxProcess.Query<TProcessBasicInformation>(
-          ProcessInfo.hxProcess.Handle, ProcessBasicInformation, BasicInfo);
+          ProcessInfo.hxProcess, ProcessBasicInformation, BasicInfo);
 
         if Status.IsSuccess then
           OutputDebugStringW(PWideChar('Exit code: 0x' +

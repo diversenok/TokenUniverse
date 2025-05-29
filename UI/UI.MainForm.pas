@@ -312,7 +312,7 @@ begin
   NtxOpenProcess(hxTargetProcess, TProcessListDialog.Execute(Self,
     False).ProcessID, PROCESS_DUP_HANDLE).RaiseOnError;
 
-  NtxDuplicateHandleTo(hxTargetProcess, TokenView.Selected.Handle.Handle,
+  NtxDuplicateHandleTo(hxTargetProcess, TokenView.Selected.Handle,
     NewHandle).RaiseOnError;
 
   ShowSuccessMessage(Handle, Format('The handle was successfully sent.'#$D#$A +
@@ -427,7 +427,7 @@ begin
     NtxEnumerateHandlesProcess(NtxCurrentProcess, Handles).IsSuccess then
   begin
     TArray.FilterInline<TProcessHandleEntry>(Handles,
-      ByType(TokenType.Other.TypeIndex));
+      ByType(TokenType.Native.TypeIndex));
 
     for i := 0 to High(Handles) do
       TokenView.Add(CaptureTokenHandle(Auto.CaptureHandle(

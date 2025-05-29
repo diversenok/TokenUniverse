@@ -81,7 +81,7 @@ end;
 
 procedure TFrameLogon.ComboOriginChange;
 begin
-  ComboOrigin.Color := ColorSettings.clStale;
+  ComboOrigin.Color := ColorSettings.clBackgroundUnsaved;
 end;
 
 constructor TFrameLogon.Create;

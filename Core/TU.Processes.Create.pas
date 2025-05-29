@@ -115,7 +115,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
     spoForceBreakaway, spoInheritConsole, spoRunAsInvoker, spoIgnoreElevation,
     spoEnvironment, spoObjectInherit, spoSecurity, spoWindowMode,
     spoWindowTitle, spoDesktop, spoToken, spoParentProcess, spoJob,
-    spoDebugPort, spoHandleList, spoMitigationPolicies, spoChildPolicy, spoLPAC,
+    spoDebugPort, spoHandleList, spoMitigations, spoChildPolicy, spoLPAC,
     spoAppContainer, spoProtection, spoDetectManifest],
 
   // CreateProcessWithToken
@@ -146,8 +146,8 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
     spoForceBreakaway, spoInheritConsole, spoEnvironment, spoObjectInherit,
     spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle,
     spoDesktop, spoToken, spoParentProcess, spoJob, spoHandleList,
-    spoChildPolicy, spoLPAC, spoProtection, spoAdditionalFileAccess,
-    spoDetectManifest],
+    spoMitigations, spoChildPolicy, spoLPAC, spoProtection,
+    spoAdditionalFileAccess, spoDetectManifest],
 
   // NtCreateProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,

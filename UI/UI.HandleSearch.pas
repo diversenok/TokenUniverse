@@ -56,7 +56,7 @@ begin
   TArray.FilterInline<TSystemHandleEntry>(Handles,
     function (const Entry: TSystemHandleEntry): Boolean
     begin
-      Result := (Entry.ObjectTypeIndex = TokenType.Other.TypeIndex) and
+      Result := (Entry.ObjectTypeIndex = TokenType.Native.TypeIndex) and
         (Entry.UniqueProcessId <> NtCurrentTeb.ClientID.UniqueProcess);
     end
   );

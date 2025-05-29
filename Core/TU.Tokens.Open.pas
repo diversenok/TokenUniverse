@@ -160,7 +160,7 @@ implementation
 
 uses
   Ntapi.ntpsapi, Ntapi.ntstatus, Ntapi.ntioapi, Ntapi.ntioapi.fsctl,
-  NtUtils.Tokens.Impersonate, NtUtils.Tokens, NtUtils.WinStation,
+  Ntapi.ntobapi, NtUtils.Tokens.Impersonate, NtUtils.Tokens, NtUtils.WinStation,
   NtUtils.Processes, NtUtils.Processes.Info, NtUtils.Threads, NtUtils.Objects,
   NtUtils.Lsa.Sid, DelphiUiLib.Reflection, System.SysUtils, NtUtils.WinUser,
   NtUtils.Files.Open, NtUtils.Files.Control, NtUtils.Files.Operations,
@@ -177,11 +177,13 @@ begin
 end;
 
 function MakeDuplicateHandle;
+const
+  OPTIONS: array [Boolean] of TDuplicateOptions = (0, DUPLICATE_SAME_ACCESS);
 var
   hxToken: IHandle;
 begin
-  Result := NtxDuplicateHandleLocal(Source.Handle.Handle, hxToken,
-    DesiredAccess);
+  Result := NtxDuplicateHandleLocal(Source.Handle, hxToken, DesiredAccess, 0,
+    OPTIONS[SameAccess <> False]);
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, Source.Caption + ' (ref)',
