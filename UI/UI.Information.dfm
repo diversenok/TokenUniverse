@@ -658,10 +658,6 @@ object InfoDialog: TInfoDialog
         end
       end
     end
-    object TabSecurity: TTabSheet
-      Caption = 'Security'
-      ImageIndex = 6
-    end
     object TabDefaultDacl: TTabSheet
       Caption = 'Default DACL'
       ImageIndex = 7

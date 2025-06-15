@@ -60,7 +60,6 @@ type
     TabObject: TTabSheet;
     ListViewProcesses: TListViewEx;
     ListViewObject: TListViewEx;
-    TabSecurity: TTabSheet;
     TabDefaultDacl: TTabSheet;
     TabAudit: TTabSheet;
     FrameAudit: TFrameAudit;
