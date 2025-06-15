@@ -6,7 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, NtUtils, Ntapi.WinNt, UI.Prototypes.Forms,
-  UI.Prototypes.Sid.Edit, NtUiFrame.Bits, NtUiFrame, TU.Access;
+  UI.Prototypes.Sid.Edit, NtUiFrame.Bits, NtUiFrame, TU.Access,
+  NtUiLib.AutoCompletion;
 
 type
   TAccessCheckForm = class(TChildForm)
@@ -53,9 +54,11 @@ type
     procedure tbxServiceNameChange(Sender: TObject);
     procedure tbxServiceNameEnter(Sender: TObject);
     procedure cbxSingletonChange(Sender: TObject);
+    procedure tbxNameEnter(Sender: TObject);
   private
     FContext: TAccessContext;
-    FServicesSuggestionInitialized: Boolean;
+    FNamespaceSuggestions: IAutoCompletionSuggestions;
+    FServicesSuggestions: IAutoCompletionSuggestions;
     procedure ShowAccessMask(const Context: TAccessContext);
     procedure ResetAccessMask;
   public
@@ -68,8 +71,8 @@ implementation
 
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
-  NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, NtUiLib.AutoCompletion,
-  DelphiUiLib.Reflection, UI.ProcessList, NtUiCommon.Prototypes;
+  NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, DelphiUiLib.Reflection,
+  UI.ProcessList, NtUiCommon.Prototypes;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var
@@ -117,7 +120,6 @@ begin
   ResetAccessMask;
 
   SidEditor.OnSidChanged := tbxSidChange;
-  ShlxEnableNamespaceSuggestions(tbxName.Handle, NT_NAMESPACE_KNOWN_TYPES);
 end;
 
 procedure TAccessCheckForm.PageControlModesChange;
@@ -194,6 +196,16 @@ begin
     ResetAccessMask;
 end;
 
+procedure TAccessCheckForm.tbxNameEnter;
+begin
+  if not Assigned(FNamespaceSuggestions) then
+  begin
+    FNamespaceSuggestions := ShlxPrepareNamespaceSuggestions(
+      NT_NAMESPACE_KNOWN_TYPES);
+    ShlxEnableSuggestions(tbxName.Handle, FNamespaceSuggestions);
+  end;
+end;
+
 procedure TAccessCheckForm.tbxServiceNameChange;
 begin
   if tbxServiceName.Text <> '' then
@@ -204,11 +216,11 @@ end;
 
 procedure TAccessCheckForm.tbxServiceNameEnter;
 begin
-  if FServicesSuggestionInitialized then
-    Exit;
-
-  FServicesSuggestionInitialized := True;
-  ShlxEnableStaticSuggestions(tbxServiceName.Handle, TuCollectServiceNames);
+  if not Assigned(FServicesSuggestions) then
+  begin
+    FServicesSuggestions := ShlxPrepareStatisSuggestions(TuCollectServiceNames);
+    ShlxEnableSuggestions(tbxServiceName.Handle, FServicesSuggestions);
+  end;
 end;
 
 procedure TAccessCheckForm.tbxSidChange;

@@ -49,6 +49,7 @@ object AccessCheckForm: TAccessCheckForm
         TabOrder = 0
         TextHint = 'e.g.: \Registry\Machine\Software or \DosDevices\C:\Windows'
         OnChange = tbxNameChange
+        OnEnter = tbxNameEnter
       end
       object tbxNameType: TEdit
         Left = 72
