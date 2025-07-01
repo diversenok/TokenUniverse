@@ -166,7 +166,7 @@ begin
         SidReflection: TRepresentation;
       begin
         // Skip the logon ID, we already processed it
-        if Field.Offset = UIntPtr(@PSecurityLogonSessionData(nil).LogonID) then
+        if Field.Offset = IntPtr(@PSecurityLogonSessionData(nil).LogonID) then
           Exit;
 
         with ListView.Items.Add do
@@ -174,7 +174,7 @@ begin
           Cell[0] := PrettifyCamelCase(Field.FieldName);
           GroupId := GROUP_IND_LOGON;
 
-          if (Field.Offset = UIntPtr(@PSecurityLogonSessionData(nil).SID)) and
+          if (Field.Offset = IntPtr(@PSecurityLogonSessionData(nil).SID)) and
             not Assigned(Detailed) and Assigned(WellKnownSid) then
           begin
             // Fallback to well-known SIDs if necessary
