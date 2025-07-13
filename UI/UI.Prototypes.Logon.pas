@@ -160,7 +160,7 @@ begin
     if not LsaxQueryLogonSession(Statistics.AuthenticationId, Detailed).IsSuccess then
       Detailed := nil;
 
-    TRecord.Traverse(Auto.RefOrNil<PSecurityLogonSessionData>(Detailed),
+    TRecord.Traverse(Auto.DataOrNil<PSecurityLogonSessionData>(Detailed),
       procedure (const Field: TFieldReflection)
       var
         SidReflection: TRepresentation;

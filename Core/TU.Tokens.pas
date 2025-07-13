@@ -149,7 +149,7 @@ type
     function QueryIsAppContainer(out IsAppContainer: LongBool): TNtxStatus;
     function QueryCapabilities(out Capabilities: TArray<TGroup>): TNtxStatus;
     function QueryAppContainerSid(out Package: ISid): TNtxStatus;
-    function QueryAppContainerInfo(out AppContainer: TAppContainerInfo): TNtxStatus;
+    function QueryAppContainerInfo(out AppContainer: TRtlxAppContainerInfo): TNtxStatus;
     function QueryAppContainerNumber(out Number: Cardinal): TNtxStatus;
     function QueryUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
     function QueryDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
@@ -203,7 +203,7 @@ type
     function ObserveIsAppContainer(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveCapabilities(Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveAppContainerSid(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
-    function ObserveAppContainerInfo(Callback: TEventCallback<TNtxStatus, TAppContainerInfo>): IAutoReleasable;
+    function ObserveAppContainerInfo(Callback: TEventCallback<TNtxStatus, TRtlxAppContainerInfo>): IAutoReleasable;
     function ObserveAppContainerNumber(Callback: TEventCallback<TNtxStatus, Cardinal>): IAutoReleasable;
     function ObserveUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
     function ObserveDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
@@ -418,7 +418,7 @@ type
     function QueryIsAppContainer(out IsAppContainer: LongBool): TNtxStatus;
     function QueryCapabilities(out Capabilities: TArray<TGroup>): TNtxStatus;
     function QueryAppContainerSid(out Package: ISid): TNtxStatus;
-    function QueryAppContainerInfo(out AppContainer: TAppContainerInfo): TNtxStatus;
+    function QueryAppContainerInfo(out AppContainer: TRtlxAppContainerInfo): TNtxStatus;
     function QueryAppContainerNumber(out Number: Cardinal): TNtxStatus;
     function QueryUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
     function QueryDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
@@ -470,7 +470,7 @@ type
     function ObserveIsAppContainer(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveCapabilities(Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveAppContainerSid(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
-    function ObserveAppContainerInfo(Callback: TEventCallback<TNtxStatus, TAppContainerInfo>): IAutoReleasable;
+    function ObserveAppContainerInfo(Callback: TEventCallback<TNtxStatus, TRtlxAppContainerInfo>): IAutoReleasable;
     function ObserveAppContainerNumber(Callback: TEventCallback<TNtxStatus, Cardinal>): IAutoReleasable;
     function ObserveUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
     function ObserveDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
@@ -757,7 +757,7 @@ end;
 
 function TToken.ObserveAppContainerInfo;
 var
-  Info: TAppContainerInfo;
+  Info: TRtlxAppContainerInfo;
 begin
   Callback(QueryAppContainerInfo(Info), Info);
   Result := Events.OnAppContainerInfo.Subscribe(Callback);
@@ -2008,7 +2008,7 @@ end;
 
 function TToken.RefreshAppContainerInfo;
 var
-  Info: TAppContainerInfo;
+  Info: TRtlxAppContainerInfo;
 begin
   Result := QueryAppContainerInfo(Info);
 end;

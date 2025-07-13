@@ -212,7 +212,7 @@ function TuCreateProcess;
 var
   Method: TCreateProcessMethod;
   ResumeLater: Boolean;
-  AutoTerminate: IAutoReleasable;
+  AutoTerminate: IDeferredOperation;
   hxManifestSection: IHandle;
   ManifestRva: TMemory;
   ManifestBuilder: IManifestBuilder;
@@ -269,7 +269,7 @@ begin
     (piProcessHandle in Info.ValidFields) then
   begin
     // Automatically terminate on failure
-    AutoTerminate := NtxDelayedTerminateProcess(Info.hxProcess, STATUS_CANCELLED);
+    AutoTerminate := NtxDeferTerminateProcess(Info.hxProcess, STATUS_CANCELLED);
 
     case OptionsEx.ManifestMode of
       mmUseEmbedded:
@@ -355,7 +355,7 @@ begin
     end;
 
     // Cancel auto-termination since the registration succeeded
-    AutoTerminate.AutoRelease := False;
+    AutoTerminate.Cancel;
     AutoTerminate := nil;
   end;
 

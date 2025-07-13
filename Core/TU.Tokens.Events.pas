@@ -52,7 +52,7 @@ type
     OnIsAppContainer: TAutoObservers<LongBool>;
     OnCapabilities: TAutoObservers<TArray<TGroup>>;
     OnAppContainerSid: TAutoObservers<ISid>;
-    OnAppContainerInfo: TAutoObservers<TAppContainerInfo>;
+    OnAppContainerInfo: TAutoObservers<TRtlxAppContainerInfo>;
     OnAppContainerNumber: TAutoObservers<Cardinal>;
     OnUserClaims: TAutoObservers<TArray<TSecurityAttribute>>;
     OnDeviceClaims: TAutoObservers<TArray<TSecurityAttribute>>;
@@ -77,7 +77,7 @@ type
     property StringCache[InfoClass: TTokenStringClass]: String read GetString write SetString;
     constructor Create;
   end;
-  IAutoTokenEvents = IAutoObject<TTokenEvents>;
+  IAutoTokenEvents = IObject<TTokenEvents>;
 
 // Retrieve shared token events or construct new private ones
 function RetrieveTokenEvents(const Identity: TLuid): IAutoTokenEvents;
@@ -106,7 +106,7 @@ var
 begin
   // Do not store events without an identity in the global list
   if Identity = 0 then
-    Exit(Auto.From(TTokenEvents.Create));
+    Exit(Auto.CaptureObject(TTokenEvents.Create));
 
   // Remove already deleted entries
   j := 0;
@@ -134,7 +134,7 @@ begin
   if Index < 0 then
   begin
     // Create and insert the new events
-    Result := Auto.From(TTokenEvents.Create);
+    Result := Auto.CaptureObject(TTokenEvents.Create);
     NewEntry.Identity := Identity;
     NewEntry.Events := Result;
     Insert(NewEntry, TEventStorage.Storage, -(Index + 1));
@@ -145,7 +145,7 @@ begin
   if not TEventStorage.Storage[Index].Events.Upgrade(Result) then
   begin
     // The object is already gone, but we have a bucket; recreate it
-    Result := Auto.From(TTokenEvents.Create);
+    Result := Auto.CaptureObject(TTokenEvents.Create);
     TEventStorage.Storage[Index].Events := Result;
   end;
 end;
@@ -308,7 +308,7 @@ begin
   Result := A = B;
 end;
 
-function CompareAppContainerInfo(const A, B: TAppContainerInfo): Boolean;
+function CompareAppContainerInfo(const A, B: TRtlxAppContainerInfo): Boolean;
 begin
   Result := CompareSid(A.Sid, B.Sid) and (A.Moniker = B.Moniker) and
     (A.DisplayName = B.DisplayName) and (A.ParentMoniker = B.ParentMoniker);

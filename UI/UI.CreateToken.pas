@@ -234,6 +234,7 @@ var
   Old: ISid;
   i: Integer;
   Lookup: TArray<TTranslatedGroup>;
+  AutoUpdateEnd: IDeferredOperation;
 begin
   // Save the current state
   if ComboBox.ItemIndex >= 0 then
@@ -243,7 +244,7 @@ begin
 
   // Reset the list
   ComboBox.Items.BeginUpdate;
-  Auto.Delay(
+  AutoUpdateEnd := Auto.Defer(
     procedure
     begin
       ComboBox.Items.EndUpdate;

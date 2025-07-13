@@ -614,7 +614,7 @@ end;
 
 procedure TInfoDialog.EditAppContainerDblClick;
 var
-  Info: TAppContainerInfo;
+  Info: TRtlxAppContainerInfo;
 begin
   if Assigned(NtUiLibShowAppContainer) and
     Token.QueryAppContainerInfo(Info).IsSuccess then
@@ -712,7 +712,7 @@ var
   User: TGroup;
   Package: ISid;
   RestrictedSids: TArray<TGroup>;
-  AppContainerInfo: TAppContainerInfo;
+  AppContainerInfo: TRtlxAppContainerInfo;
 begin
   Token.SmartRefresh;
 
