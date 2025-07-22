@@ -702,7 +702,7 @@ object InfoDialog: TInfoDialog
           inherited Splitter: TSplitter
             Left = 222
           end
-          inherited tbxSearchBox: TButtonedEdit
+          inherited tbxSearchBox: TButtonedEditEx
             Width = 222
           end
           inherited cbxColumn: TComboBox

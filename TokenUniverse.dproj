@@ -372,6 +372,7 @@
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.pas"/>
+        <DCCReference Include="NtUtilsUI\VclEx\VclEx.Edit.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

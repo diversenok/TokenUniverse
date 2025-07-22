@@ -93,7 +93,8 @@ uses
   TU.UserManager in 'Core\TU.UserManager.pas',
   NtUiBackend.Sids.Abbreviations in 'NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas',
   NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame},
-  NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas';
+  NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas',
+  VclEx.Edit in 'NtUtilsUI\VclEx\VclEx.Edit.pas';
 
 {$R *.res}
 
