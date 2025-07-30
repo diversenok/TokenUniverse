@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls, TU.Tokens,
-  UI.Prototypes.Forms, VclEx.ListView, NtUiFrame.Bits;
+  NtUiCommon.Forms, VclEx.ListView, NtUiFrame.Bits;
 
 type
   TDialogAccess = class(TChildForm)
@@ -33,7 +33,7 @@ class function TDialogAccess.ExecuteDuplication;
 var
   BasicInfo: TObjectBasicInformation;
 begin
-  with TDialogAccess.CreateChild(AOwner, cfmApplication) do
+  with TDialogAccess.Create(AOwner, cfmApplication) do
   begin
     AccessMaskFrame.LoadAccessMaskType(TypeInfo(TTokenAccessMask),
       TokenGenericMapping, True, True);

@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms, Vcl.ComCtrls,
+  Vcl.StdCtrls, Vcl.Menus, NtUiCommon.Forms, Vcl.ComCtrls,
   VclEx.ListView, UI.Prototypes, UI.Prototypes.Groups, Ntapi.NtSecApi,
   Vcl.ExtCtrls, NtUtils;
 
@@ -44,8 +44,6 @@ type
     function GetLogonType: TSecurityLogonType;
     procedure EditSingleGroup(const Value: TGroup);
     procedure SuggestCurrentLogonGroup;
-  public
-    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
@@ -55,7 +53,7 @@ uses
   Ntapi.wincred, NtUiLib.WinCred, Ntapi.WinError, UI.MainForm,
   UI.Modal.PickUser, NtUtils.Security.Sid, Ntapi.WinUser,
   NtUtils.WinUser, NtUtils.Errors, System.UITypes, NtUiLib.Errors,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, UI.Exceptions,
+  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, NtUiCommon.Exceptions,
   TU.Tokens, TU.Tokens.Open, UI.Settings;
 
 {$R *.dfm}
@@ -136,11 +134,6 @@ begin
   // TODO: no-close setting
   ModalResult := mrOk;
   Close;
-end;
-
-constructor TLogonDialog.Create;
-begin
-  inherited CreateChild(AOwner, cfmDesktop);
 end;
 
 procedure TLogonDialog.EditSingleGroup;

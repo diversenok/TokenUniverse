@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,  Vcl.Menus,
   Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView,
-  UI.Prototypes.Forms, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
+  NtUiCommon.Forms, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
 
 type
   TDialogSystemAudit = class(TChildForm)
@@ -14,8 +14,6 @@ type
     procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
     procedure SetSystemAudit(const NewAudit: TArray<TAuditPolicyEntry>);
-  public
-    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
@@ -26,11 +24,6 @@ uses
 {$R *.dfm}
 
 { TDialogSystemAudit }
-
-constructor TDialogSystemAudit.Create;
-begin
-  inherited CreateChild(AOwner, cfmDesktop);
-end;
 
 procedure TDialogSystemAudit.FormCreate;
 begin

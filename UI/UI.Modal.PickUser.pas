@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, UI.Prototypes.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, NtUiCommon.Forms,
   Ntapi.ntseapi, UI.Prototypes.Sid.Edit, NtUiFrame;
 
 type
@@ -57,8 +57,9 @@ type
 implementation
 
 uses
-  Ntapi.WinNt, Ntapi.ntpsapi, NtUtils.Security.Sid, NtUtils.WinUser, UI.Helper,
-  NtUiLib.Errors, NtUiCommon.Prototypes, NtUiFrame.Sid.Integrity;
+  Ntapi.WinNt, Ntapi.ntpsapi, NtUtils.Security.Sid, NtUtils.WinUser,
+  NtUiCommon.Helpers, NtUiLib.Errors, NtUiCommon.Prototypes,
+  NtUiFrame.Sid.Integrity;
 
 {$R *.dfm}
 
@@ -186,7 +187,7 @@ var
   BitwiseAnd, BitwiseOr: Cardinal;
   i: Integer;
 begin
-  with TDialogPickUser.Create(AOwner) do
+  with TDialogPickUser.Create(AOwner, cfmApplication) do
   begin
     SidEditor.Enabled := False;
     SidEditor.tbxSid.Enabled := False;
@@ -238,7 +239,7 @@ end;
 
 class function TDialogPickUser.PickEditOne;
 begin
-  with TDialogPickUser.Create(AOwner) do
+  with TDialogPickUser.Create(AOwner, cfmApplication) do
   begin
     SidEditor.Sid := Group.Sid;
     Attributes := Group.Attributes;
@@ -254,7 +255,7 @@ end;
 
 class function TDialogPickUser.PickNew;
 begin
-  with TDialogPickUser.CreateChild(AOwner, cfmApplication) do
+  with TDialogPickUser.Create(AOwner, cfmApplication) do
   begin
     if DisableAttributes then
     begin

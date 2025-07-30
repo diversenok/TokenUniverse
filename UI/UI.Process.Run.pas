@@ -4,10 +4,10 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, UI.Prototypes.Forms,
+  Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, NtUiCommon.Forms,
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
-  TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit;
+  TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit, Vcl.Mask;
 
 type
   TDialogRun = class(TChildForm)
@@ -103,7 +103,7 @@ type
     function GetProtection(out Value: TProtectionLevel): Boolean;
   public
     property UseToken: IToken read FToken write SetToken;
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner: TComponent); reintroduce;
   end;
 
 implementation
@@ -328,7 +328,7 @@ end;
 
 constructor TDialogRun.Create;
 begin
-  inherited CreateChild(AOwner, cfmDesktop);
+  inherited Create(AOwner, cfmDesktop);
   ParentAccessMask := PROCESS_CREATE_PROCESS;
 end;
 

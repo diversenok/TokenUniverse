@@ -6,11 +6,11 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
-  VclEx.ListView, UI.Prototypes, VclEx.Form, UI.New.TokenFrame,
+  VclEx.ListView, UI.Prototypes, NtUiCommon.Forms, UI.New.TokenFrame,
   VirtualTrees;
 
 type
-  TFormMain = class(TFormEx)
+  TFormMain = class(TMainForm)
     MainMenu: TMainMenu;
     Program1: TMenuItem;
     View1: TMenuItem;
@@ -137,9 +137,9 @@ uses
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
-  NtUiLib.Exceptions.Dialog, UI.Prototypes.Forms, TU.Tokens.Open,
-  NtUtils.Tokens.Impersonate, NtUtils.Processes, NtUtils.Objects, TU.Startup,
-  NtUiCommon.Prototypes, UI.Modal.PickToken, UI.New.UserManager;
+  NtUiLib.Exceptions.Dialog, TU.Tokens.Open, NtUtils.Tokens.Impersonate,
+  NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
+  UI.Modal.PickToken, UI.New.UserManager;
 
 {$R *.dfm}
 
@@ -204,7 +204,7 @@ end;
 
 procedure TFormMain.ActionLogon;
 begin
-  TLogonDialog.Create(Self).Show;
+  TLogonDialog.Create(Self, cfmDesktop).Show;
 end;
 
 procedure TFormMain.ActionOpen;
@@ -301,7 +301,7 @@ end;
 
 procedure TFormMain.ActionSearch;
 begin
-  TFormHandleSearch.Create(Self).Show;
+  TFormHandleSearch.Create(Self, cfmDesktop).Show;
 end;
 
 procedure TFormMain.ActionSendHandle;
@@ -334,7 +334,7 @@ end;
 
 procedure TFormMain.cmAccessClick(Sender: TObject);
 begin
-  TAccessCheckForm.CreateChild(Self, cfmDesktop).Show;
+  TAccessCheckForm.Create(Self, cfmDesktop).Show;
 end;
 
 procedure TFormMain.cmAllocConsoleClick(Sender: TObject);
@@ -392,7 +392,7 @@ end;
 
 procedure TFormMain.cmUmgrTokensClick;
 begin
-  TUserManagerTokens.CreateChild(Self, cfmNormal).Show;
+  TUserManagerTokens.Create(Self, cfmDesktop).Show;
 end;
 
 procedure TFormMain.CurrentUserChanged;
@@ -403,7 +403,7 @@ end;
 
 procedure TFormMain.FormClose;
 begin
-  TFormEvents.OnMainFormClose.Invoke;
+  OnMainFormClose.Invoke;
   TokenView.Free;
 
   if cmAllocConsole.Checked then
@@ -477,7 +477,7 @@ end;
 
 procedure TFormMain.SelectColumnsClick;
 begin
-  TDialogColumns.CreateChild(Self, cfmApplication).ShowModal;
+  TDialogColumns.Create(Self, cfmApplication).ShowModal;
 end;
 
 procedure TFormMain.TokenRestrictSaferClick;
@@ -564,7 +564,7 @@ end;
 
 procedure TFormMain.MenuSystemAuditClick;
 begin
-  TDialogSystemAudit.Create(Self).Show;
+  TDialogSystemAudit.Create(Self, cfmDesktop).Show;
 end;
 
 procedure TFormMain.NewAnonymousClick;
@@ -577,7 +577,7 @@ end;
 
 procedure TFormMain.NewNtCreateTokenClick;
 begin
-  TDialogCreateToken.Create(Self).Show;
+  TDialogCreateToken.Create(Self, cfmDesktop).Show;
 end;
 
 end.

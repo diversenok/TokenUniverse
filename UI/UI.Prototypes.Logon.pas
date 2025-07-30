@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  Vcl.Graphics, UI.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
+  Vcl.Graphics, NtUiCommon.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
   Ntapi.NtSecApi, DelphiUiLib.Reflection.Records, DelphiUiLib.Reflection,
   NtUiLib.Errors;
 

@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls,
   Vcl.ExtCtrls, Vcl.ImgList, System.Generics.Collections,
-  VclEx.ListView, UI.Prototypes.Forms, NtUtils.Processes.Snapshots, Vcl.Menus;
+  VclEx.ListView, NtUiCommon.Forms, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
   TProcessItemEx = class
@@ -61,7 +61,7 @@ implementation
 
 uses
   Ntapi.WinUser, Ntapi.ShellApi, UI.Modal.ThreadList, NtUtils.Processes,
-  UI.ProcessIcons, NtUtils, Ntapi.ntexapi, UI.Colors, Vcl.Dialogs,
+  NtUiCommon.Icons, NtUtils, Ntapi.ntexapi, NtUiCommon.Colors, Vcl.Dialogs,
   NtUILib.Errors, Ntapi.ntstatus, Ntapi.WinNt, Ntapi.ntpsapi,
   System.UITypes;
 
@@ -154,7 +154,7 @@ class function TProcessListDialog.Execute;
 var
   Process: PProcessEntry;
 begin
-  with TProcessListDialog.CreateChild(AOwner, cfmApplication) do
+  with TProcessListDialog.Create(AOwner, cfmApplication) do
   begin
     PickThread := AllowSelectThread;
 

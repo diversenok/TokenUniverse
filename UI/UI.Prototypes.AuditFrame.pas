@@ -48,8 +48,8 @@ type
 implementation
 
 uses
-  Ntapi.NtSecApi, Ntapi.ntstatus, UI.Colors, DelphiUiLib.Reflection.Strings,
-  NtUiLib.Errors, Ntapi.ntdef;
+  Ntapi.NtSecApi, Ntapi.ntstatus, NtUiCommon.Colors,
+  DelphiUiLib.Reflection.Strings, NtUiLib.Errors, Ntapi.ntdef;
 
 {$R *.dfm}
 

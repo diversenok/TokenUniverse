@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList,
-  VclEx.ListView, UI.Prototypes, UI.Prototypes.Forms, NtUtils.Security.Sid,
+  VclEx.ListView, UI.Prototypes, NtUiCommon.Forms, NtUtils.Security.Sid,
   TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
   Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame, NtUiFrame.Acl;
@@ -147,12 +147,12 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, UI.Colors, UI.ProcessList, Ntapi.ntstatus,
+  System.UITypes, UI.MainForm, NtUiCommon.Colors, UI.ProcessList, Ntapi.ntstatus,
   UI.Sid.View, NtUtils.Objects.Snapshots,
   NtUiLib.Errors, DelphiUiLib.Strings, NtUtils.Security.AppContainer,
   DelphiUiLib.Reflection.Strings, NtUiCommon.Prototypes,
   Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
-  NtUtils.Lsa.Sid, DelphiUtils.Arrays, UI.ProcessIcons, Ntapi.Versions,
+  NtUtils.Lsa.Sid, DelphiUtils.Arrays, NtUiCommon.Icons, Ntapi.Versions,
   NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi,
   NtUtils.Security.Acl, NtUiCommon.Interfaces;
 
@@ -600,7 +600,7 @@ constructor TInfoDialog.CreateFromToken;
 begin
   Assert(Assigned(SrcToken));
   Token := SrcToken;
-  inherited CreateChild(AOwner, cfmDesktop);
+  inherited Create(AOwner, cfmDesktop);
 
   GroupsRestrictedFrame.OnDefaultAction := InspectGroup;
   GroupsMemberFrame.OnDefaultAction := InspectGroup;

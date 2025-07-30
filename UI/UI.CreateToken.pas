@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, UI.Prototypes.Forms,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, NtUiCommon.Forms,
   UI.Prototypes, VclEx.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
   NtUtils, UI.Prototypes.Sid.Edit, NtUiFrame;
@@ -81,8 +81,6 @@ type
     );
     procedure AddGroup(const NewGroup: TGroup);
     procedure EditSingleGroup(const Value: TGroup);
-  public
-    constructor Create(AOwner: TComponent); override;
   end;
 
 implementation
@@ -279,11 +277,6 @@ procedure TDialogCreateToken.CheckBoxInfiniteClick;
 begin
   DateExpires.Enabled := not CheckBoxInfinite.Checked;
   TimeExpires.Enabled := not CheckBoxInfinite.Checked;
-end;
-
-constructor TDialogCreateToken.Create;
-begin
-  inherited CreateChild(AOwner, cfmDesktop);
 end;
 
 procedure TDialogCreateToken.EditSingleGroup;

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Messages, System.SysUtils,  System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  VclEx.ListView, UI.Prototypes.Forms, TU.Tokens;
+  VclEx.ListView, NtUiCommon.Forms, TU.Tokens;
 
 type
   TDialogPickToken = class(TChildForm)
@@ -32,7 +32,7 @@ var
   Tokens: TArray<IToken>;
   i: Integer;
 begin
-  with TDialogPickToken.Create(AOwner) do
+  with TDialogPickToken.Create(AOwner, cfmApplication) do
   begin
     Tokens := FormMain.TokenView.Tokens;
 

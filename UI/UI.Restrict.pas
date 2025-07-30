@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls,
-  VclEx.ListView, UI.Prototypes.Forms, UI.Prototypes.Privileges,
+  VclEx.ListView, NtUiCommon.Forms, UI.Prototypes.Privileges,
   UI.Prototypes.Groups, NtUtils.Security.Sid, Ntapi.WinNt, Ntapi.ntseapi,
   NtUtils, TU.Tokens;
 
@@ -157,7 +157,7 @@ end;
 constructor TDialogRestrictToken.CreateFromToken;
 begin
   Token := SrcToken;
-  inherited CreateChild(AOwner, cfmDesktop);
+  inherited Create(AOwner, cfmDesktop);
   GroupsDisableFrame.OnDefaultAction := InspectGroup;
   GroupsRestrictFrame.OnDefaultAction := InspectGroup;
   Show;

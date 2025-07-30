@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  UI.Prototypes.Forms, VclEx.ListView, NtUtils.Processes.Snapshots, Vcl.Menus;
+  NtUiCommon.Forms, VclEx.ListView, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
   TThreadListDialog = class(TChildForm)
@@ -31,7 +31,7 @@ type
 implementation
 
 uses
-  Ntapi.ntexapi, UI.Colors, NtUtils.WinUser, Ntapi.WinNt, Ntapi.ntpsapi,
+  Ntapi.ntexapi, NtUiCommon.Colors, NtUtils.WinUser, Ntapi.WinNt, Ntapi.ntpsapi,
   Ntapi.ntdef, NtUtils, NtUtils.Threads, NtUiLib.Errors, Ntapi.ntstatus,
   Ntapi.ntpebteb, System.UITypes;
 
@@ -84,7 +84,7 @@ constructor TThreadListDialog.CreateFrom;
 var
   i: Integer;
 begin
-  inherited CreateChild(AOwner, cfmApplication);
+  inherited Create(AOwner, cfmApplication);
 
   Caption := Format('Threads of %s [%d]', [Process.ImageName,
     Process.Basic.ProcessId]);

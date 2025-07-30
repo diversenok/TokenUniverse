@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, UI.Prototypes.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, NtUiCommon.Forms,
   NtUtils.Security.Sid, UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame,
   NtUtils.Lsa.Audit, NtUtils, NtUiFrame.Bits;
 
@@ -96,7 +96,7 @@ begin
   if not Assigned(SrcSid) then
     Exit;
 
-  with TDialogSidView.CreateChild(AOwner, cfmDesktop) do
+  with TDialogSidView.Create(AOwner, cfmApplication) do
   begin
     Sid := SrcSid;
 

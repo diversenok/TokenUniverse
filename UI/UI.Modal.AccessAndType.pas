@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls, TU.Tokens,
-  UI.Prototypes.Forms, VclEx.ListView, TU.Tokens.Old.Types, NtUiFrame.Bits;
+  NtUiCommon.Forms, VclEx.ListView, TU.Tokens.Old.Types, NtUiFrame.Bits;
 
 type
   TDialogAccessAndType = class(TChildForm)
@@ -55,7 +55,7 @@ class function TDialogAccessAndType.ExecuteDuplication;
 var
   Statistics: TTokenStatistics;
 begin
-  with TDialogAccessAndType.CreateChild(AOwner, cfmApplication) do
+  with TDialogAccessAndType.Create(AOwner, cfmApplication) do
   begin
     if Source.QueryStatistics(Statistics).IsSuccess then
     begin

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, UI.Prototypes, UI.Prototypes.Forms, TU.Tokens.Old.Types;
+  Vcl.StdCtrls, UI.Prototypes, NtUiCommon.Forms, TU.Tokens.Old.Types;
 
 type
   TComboDialog = class(TChildForm)
@@ -29,7 +29,7 @@ class function TComboDialog.PickSession;
 var
   SessionSource: TSessionSource;
 begin
-  with TComboDialog.CreateChild(AOwner, cfmApplication) do
+  with TComboDialog.Create(AOwner, cfmApplication) do
   begin
     Caption := 'Choose session';
     ComboBox.Text := 'Unable to query. Insert it manually.';
