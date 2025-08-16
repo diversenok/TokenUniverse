@@ -97,6 +97,7 @@ uses
   VclEx.Edit in 'NtUtilsUI\VclEx\VclEx.Edit.pas';
 
 {$R *.res}
+{$WEAKLINKRTTI ON}
 
 begin
   // Running as a service
