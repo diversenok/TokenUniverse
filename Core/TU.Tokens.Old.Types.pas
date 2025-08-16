@@ -31,7 +31,7 @@ implementation
 
 uses
   System.SysUtils, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Sid,
-  NtUtils.Objects.Snapshots, NtUtils.Objects;
+  NtUtils.Objects.Snapshots, NtUtils.Objects, DelphiUiLib.Strings;
 
 { TTokenTypeExHelper }
 
@@ -67,7 +67,7 @@ begin
   if not LsaxGetFullUserName(Result).IsSuccess then
     Result := 'Unknown user';
 
-  Result := Result + ' @ ' + IntToStr(RtlGetCurrentPeb.SessionId);
+  Result := Result + ' @ ' + UIntToStrEx(RtlGetCurrentPeb.SessionId);
 end;
 
 function TokenGenericMapping;

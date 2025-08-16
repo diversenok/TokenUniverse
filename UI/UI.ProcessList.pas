@@ -63,7 +63,7 @@ uses
   Ntapi.WinUser, Ntapi.ShellApi, UI.Modal.ThreadList, NtUtils.Processes,
   NtUiCommon.Icons, NtUtils, Ntapi.ntexapi, NtUiCommon.Colors, Vcl.Dialogs,
   NtUILib.Errors, Ntapi.ntstatus, Ntapi.WinNt, Ntapi.ntpsapi,
-  System.UITypes;
+  System.UITypes, DelphiUiLib.Strings;
 
 {$R *.dfm}
 
@@ -271,7 +271,7 @@ begin
       begin
         ListItemRef := ListView.Items.Add;
         ListItemRef.Caption := ' ' + Process.ImageName;
-        ListItemRef.SubItems.Add(IntToStr(Process.Basic.ProcessId));
+        ListItemRef.SubItems.Add(UIntToStrEx(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
         Added := True;
@@ -286,7 +286,7 @@ begin
       begin
         ListItemRef := AddChild(Parent.ListItemRef.Index);
         ListItemRef.Caption := ' ' + Process.ImageName;
-        ListItemRef.SubItems.Add(IntToStr(Process.Basic.ProcessId));
+        ListItemRef.SubItems.Add(UIntToStrEx(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
 

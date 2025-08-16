@@ -30,7 +30,7 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.WinBase, Ntapi.ntstatus, Ntapi.ntseapi, Ntapi.ntpsapi,
-  Ntapi.ntpebteb, NtUtils.Objects, System.SysUtils, NtUtils.WinUser,
+  Ntapi.ntpebteb, NtUtils.Objects, NtUtils.SysUtils, NtUtils.WinUser,
   NtUtils.Processes.Snapshots, NtUtils.Tokens, NtUtils.Processes.Info,
   NtUtils.Tokens.Info, NtUtils.Processes.Create, NtUtils.Synchronization,
   NtUtils.Processes.Create.Shell, NtUtils.Processes.Create.Win32,
@@ -58,7 +58,7 @@ begin
   // Prepare the service parameters (session and desktop) so it would know who
   // requested the restart action
   SetLength(Parameters, 2);
-  Parameters[0] := IntToStr(RtlGetCurrentPeb.SessionId);
+  Parameters[0] := RtlxUIntToStr(RtlGetCurrentPeb.SessionId);
   Parameters[1] := UsrxCurrentDesktopName;
 
   // Start the service
@@ -119,7 +119,7 @@ procedure ReSvcRunInSession;
 var
   Options: TCreateProcessOptions;
   ProcessInfo: TProcessInfo;
-  Session: Integer;
+  Session: Cardinal;
   {$IFDEF DEBUG}
   BasicInfo: TProcessBasicInformation;
   Status: TNtxStatus;
@@ -128,7 +128,7 @@ begin
   Options := Default(TCreateProcessOptions);
   Options.Application := ParamStr(0);
 
-  if (Length(ScvParams) >= 2) and TryStrToInt(ScvParams[1], Session) then
+  if (Length(ScvParams) >= 2) and RtlxStrToUInt(ScvParams[1], Session) then
     Options.hxToken := PrepareToken(Session)
   else
     Options.hxToken := PrepareToken(USER_SHARED_DATA.ActiveConsoleId);

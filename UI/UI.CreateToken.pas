@@ -110,7 +110,7 @@ var
   NewLuid: TLuid;
 begin
   if NtAllocateLocallyUniqueId(NewLuid).IsSuccess then
-    EditSourceLuid.Text := IntToHexEx(NewLuid);
+    EditSourceLuid.Text := UIntToHexEx(NewLuid);
 end;
 
 procedure TDialogCreateToken.ButtonCancelClick;
@@ -168,7 +168,7 @@ begin
   // Source
   Source.QuerySource(TokenSource).RaiseOnError;
   EditSourceName.Text := TokenSource.Name;
-  EditSourceLuid.Text := IntToHexEx(TokenSource.SourceIdentifier);
+  EditSourceLuid.Text := UIntToHexEx(TokenSource.SourceIdentifier);
 end;
 
 procedure TDialogCreateToken.ButtonOKClick;

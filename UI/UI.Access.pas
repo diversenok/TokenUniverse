@@ -72,7 +72,8 @@ implementation
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
   NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, DelphiUiLib.Reflection,
-  UI.ProcessList, NtUiCommon.Prototypes;
+  UI.ProcessList, NtUiCommon.Prototypes, DelphiUiLib.Strings,
+  DelphiUiLib.Reflection.Strings;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var
@@ -83,9 +84,9 @@ begin
   ClientIdEx := TProcessListDialog.Execute(Self, IsThread);
 
   if IsThread then
-    tbxCid.Text := RtlxUIntToStr(ClientIdEx.ThreadID)
+    tbxCid.Text := UIntToStrEx(ClientIdEx.ThreadID)
   else
-    tbxCid.Text := RtlxUIntToStr(ClientIdEx.ProcessID);
+    tbxCid.Text := UIntToStrEx(ClientIdEx.ProcessID);
 end;
 
 procedure TAccessCheckForm.ButtonCloseClick;
@@ -173,7 +174,7 @@ begin
     CidType := ctInvalid;
 
   if not (CidType in [ctProcess..ctThreadToken]) or
-    not RtlxStrToUInt(tbxCid.Text, Cid) then
+    not TryStrToUIntEx(tbxCid.Text, Cid) then
   begin
     ResetAccessMask;
     Exit;

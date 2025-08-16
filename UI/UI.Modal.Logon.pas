@@ -84,7 +84,7 @@ var
   NewLuid: TLuid;
 begin
   if NtAllocateLocallyUniqueId(NewLuid).IsSuccess then
-    EditSourceLuid.Text := IntToHexEx(NewLuid);
+    EditSourceLuid.Text := UIntToHexEx(NewLuid);
 end;
 
 procedure TLogonDialog.ButtonCancelClick;

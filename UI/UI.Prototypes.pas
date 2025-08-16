@@ -174,7 +174,7 @@ begin
     end;
 
   if ComboBox.ItemIndex = -1 then
-    ComboBox.Text := IntToStr(Value);
+    ComboBox.Text := UIntToStrEx(Value);
 end;
 
 { TIntegritySource }
@@ -321,10 +321,10 @@ begin
 
   for i := 0 to High(Contexts) do
   begin
-    S := IntToHexEx(Contexts[i].Context);
+    S := UIntToHexEx(Contexts[i].Context);
 
     if Contexts[i].SessionIdValid then
-      S := S + ' (Session ' + IntToStrEx(Contexts[i].SessionId)+ ')';
+      S := S + ' (Session ' + UIntToStrEx(Contexts[i].SessionId)+ ')';
 
     ComboBox.Items.Add(S);
   end;
@@ -349,7 +349,7 @@ begin
     end;
 
   if ComboBox.ItemIndex = -1 then
-    ComboBox.Text := IntToHexEx(Value);
+    ComboBox.Text := UIntToHexEx(Value);
 end;
 
 { TAccessMaskSource }
@@ -430,7 +430,7 @@ begin
 
   ComboBox.ItemIndex := -1;
   if Value <> 0 then
-    ComboBox.Text := IntToHexEx(Value)
+    ComboBox.Text := UIntToHexEx(Value)
   else
     ComboBox.Text := NO_LOGON;
 end;

@@ -15,7 +15,7 @@ uses
 type
   TSupportedCreateParameters = set of TSupportedCreateProcessOptions;
 
-  [NamingStyle(nsCamelCase, 'cm'), Range(1)]
+  [NamingStyle(nsCamelCase, 'cm'), MinValue(1)]
   TKnownCreateMethod = (
     [Reserved] cmInvalid = 0,
     cmCreateProcessAsUser,

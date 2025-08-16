@@ -497,7 +497,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'User Manager session ' +
-      IntToStr(SessionId));
+      UIntToStrEx(SessionId));
 end;
 
 function MakeUmgrActiveShellToken;
@@ -508,7 +508,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken,
-      'User Manager active shell for session ' + IntToStr(SessionId));
+      'User Manager active shell for session ' + UIntToStrEx(SessionId));
 end;
 
 function MakeUmgrTokenByContext;
@@ -519,7 +519,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'User Manager token for context ' +
-      IntToHexEx(Context));
+      UIntToHexEx(Context));
 end;
 
 function MakeUmgrTokenBySid;

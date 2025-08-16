@@ -56,25 +56,10 @@ implementation
 uses
   Ntapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Ntapi.ntlsa,
   Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa, Ntapi.ntdef,
-  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, System.Rtti;
+  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, System.Rtti,
+  DelphiUiLib.Strings;
 
 {$R *.dfm}
-
-function EnumerateFlagAttributes(
-  AType: Pointer
-): TArray<TFlagName>;
-var
-  i: Integer;
-  Flags: TArray<FlagNameAttribute>;
-begin
-  RttixFilterAttributes(TRttiContext.Create.GetType(AType).GetAttributes,
-    FlagNameAttribute, TCustomAttributeArray(Flags));
-
-  SetLength(Result, Length(Flags));
-
-  for i := 0 to High(Result) do
-    Result[i] := Flags[i].Flag;
-end;
 
 { TDialogSidView }
 
@@ -116,7 +101,7 @@ begin
     EditSID.Text := RtlxSidToString(Sid);
     EditType.Text := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
         Integer(Lookup.SidType), 'SidType');
-    EditSubAuthorities.Text := IntToStr(RtlSubAuthorityCountSid(
+    EditSubAuthorities.Text := UIntToStrEx(RtlSubAuthorityCountSid(
       Sid.Data)^);
 
     if RtlSubAuthorityCountSid(Sid.Data)^ = 0 then
