@@ -84,7 +84,7 @@ var
   NewLuid: TLuid;
 begin
   if NtAllocateLocallyUniqueId(NewLuid).IsSuccess then
-    EditSourceLuid.Text := UIntToHexEx(NewLuid);
+    EditSourceLuid.Text := UiLibUIntToHex(NewLuid);
 end;
 
 procedure TLogonDialog.ButtonCancelClick;
@@ -124,7 +124,8 @@ begin
 
   Status.RaiseOnError;
   Source.Name := EditSourceName.Text;
-  Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
+  Source.SourceIdentifier := UiLibStringToUInt64RaiseOnError(
+    EditSourceLuid.Text, 'Source LUID');
 
   MakeLogonToken(Token, GetMessageType, GetLogonType, Credentials, Source,
   GroupsFrame.All, GetAuthPackage).RaiseOnError;

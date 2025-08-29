@@ -129,7 +129,7 @@ begin
   Assert(Assigned(ComboBox));
 
   if ComboBox.ItemIndex = -1 then
-    Result := StrToUIntEx(ComboBox.Text, 'session')
+    Result := UiLibStringToUIntRaiseOnError(ComboBox.Text, 'session')
   else
     Result := Sessions[ComboBox.ItemIndex].SessionId;
 end;
@@ -174,7 +174,7 @@ begin
     end;
 
   if ComboBox.ItemIndex = -1 then
-    ComboBox.Text := UIntToStrEx(Value);
+    ComboBox.Text := UiLibUIntToDec(Value);
 end;
 
 { TIntegritySource }
@@ -198,7 +198,7 @@ begin
   with ComboBox do
   begin
     if ItemIndex = -1 then
-      Result := Cardinal(StrToUIntEx(Text, 'integrity'))
+      Result := Cardinal(UiLibStringToUIntRaiseOnError(Text, 'integrity'))
     else if not IsIntermediate or (ItemIndex < IntermediateIndex) then
       Result := IndexToIntegrity[ItemIndex]
     else if ItemIndex > IntermediateIndex then
@@ -305,7 +305,7 @@ end;
 function TUmgrContextSource.GetContext;
 begin
   if ComboBox.ItemIndex = -1 then
-    Result := StrToUIntEx(ComboBox.Text, 'context value')
+    Result := UiLibStringToUIntRaiseOnError(ComboBox.Text, 'context value')
   else
     Result := Contexts[ComboBox.ItemIndex].Context;
 end;
@@ -321,10 +321,10 @@ begin
 
   for i := 0 to High(Contexts) do
   begin
-    S := UIntToHexEx(Contexts[i].Context);
+    S := UiLibUIntToHex(Contexts[i].Context);
 
     if Contexts[i].SessionIdValid then
-      S := S + ' (Session ' + UIntToStrEx(Contexts[i].SessionId)+ ')';
+      S := S + ' (Session ' + UiLibUIntToDec(Contexts[i].SessionId)+ ')';
 
     ComboBox.Items.Add(S);
   end;
@@ -349,7 +349,7 @@ begin
     end;
 
   if ComboBox.ItemIndex = -1 then
-    ComboBox.Text := UIntToHexEx(Value);
+    ComboBox.Text := UiLibUIntToHex(Value);
 end;
 
 { TAccessMaskSource }
@@ -408,7 +408,7 @@ begin
       Result := 0
     else
     {$Q-}{$R-}
-      Result := TLuid(StrToUInt64Ex(ComboBox.Text, 'logon ID'));
+      Result := TLuid(UiLibStringToUInt64RaiseOnError(ComboBox.Text, 'logon ID'));
     {$IFDEF R+}{$R+}{$ENDIF}{$IFDEF Q+}{$Q+}{$ENDIF}
   end
   else
@@ -430,7 +430,7 @@ begin
 
   ComboBox.ItemIndex := -1;
   if Value <> 0 then
-    ComboBox.Text := UIntToHexEx(Value)
+    ComboBox.Text := UiLibUIntToHex(Value)
   else
     ComboBox.Text := NO_LOGON;
 end;

@@ -439,7 +439,7 @@ begin
   // Create a pipe with the local prefix to make it work in AppContainer
   Result := NtxCreatePipe(hxPipeServer, FileParameters
     .UseFileName('\Device\NamedPipe\Local\TokenUniverse' +
-      RtlxUIntToStr(RtlxRandom))
+      RtlxIntToHex(RtlxRandom, 8))
     .UseAccess(FILE_READ_DATA)
     .UseShareMode(FILE_SHARE_WRITE)
   );
@@ -497,7 +497,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'User Manager session ' +
-      UIntToStrEx(SessionId));
+      UiLibUIntToDec(SessionId));
 end;
 
 function MakeUmgrActiveShellToken;
@@ -508,7 +508,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken,
-      'User Manager active shell for session ' + UIntToStrEx(SessionId));
+      'User Manager active shell for session ' + UiLibUIntToDec(SessionId));
 end;
 
 function MakeUmgrTokenByContext;
@@ -519,7 +519,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'User Manager token for context ' +
-      UIntToHexEx(Context));
+      UiLibUIntToHex(Context));
 end;
 
 function MakeUmgrTokenBySid;

@@ -130,7 +130,7 @@ begin
       (Statistics.AuthenticationId = NewOrigin) then
       Cell[1] := 'Same as current'
     else
-      Cell[1] := UIntToHexEx(NewOrigin);
+      Cell[1] := UiLibUIntToHex(NewOrigin);
 end;
 
 procedure TFrameLogon.SubscribeToken;
@@ -155,7 +155,7 @@ begin
 
   if Token.QueryStatistics(Statistics).IsSuccess then
   begin
-    ListView.Items[0].Cell[1] := UIntToHexEx(Statistics.AuthenticationId);
+    ListView.Items[0].Cell[1] := UiLibUIntToHex(Statistics.AuthenticationId);
     WellKnownSid := LsaxLookupKnownLogonSessionSid(Statistics.AuthenticationId);
     if not LsaxQueryLogonSession(Statistics.AuthenticationId, Detailed).IsSuccess then
       Detailed := nil;

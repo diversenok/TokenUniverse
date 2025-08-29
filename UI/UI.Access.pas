@@ -71,9 +71,8 @@ implementation
 
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
-  NtUtils.SysUtils, NtUtils.Lsa.Sid, NtUiLib.Errors, DelphiUiLib.Reflection,
-  UI.ProcessList, NtUiCommon.Prototypes, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings;
+  NtUtils.Lsa.Sid, NtUiLib.Errors, DelphiUiLib.Reflection, UI.ProcessList,
+  NtUiCommon.Prototypes, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var
@@ -84,9 +83,9 @@ begin
   ClientIdEx := TProcessListDialog.Execute(Self, IsThread);
 
   if IsThread then
-    tbxCid.Text := UIntToStrEx(ClientIdEx.ThreadID)
+    tbxCid.Text := UiLibUIntToDec(ClientIdEx.ThreadID)
   else
-    tbxCid.Text := UIntToStrEx(ClientIdEx.ProcessID);
+    tbxCid.Text := UiLibUIntToDec(ClientIdEx.ProcessID);
 end;
 
 procedure TAccessCheckForm.ButtonCloseClick;
@@ -158,7 +157,7 @@ end;
 procedure TAccessCheckForm.tbxCidChange;
 var
   CidType: TCidType;
-  Cid: Cardinal;
+  Cid: NativeUInt;
 begin
   if (cbxCidType.ItemIndex = 0) and (cbxCidSubType.ItemIndex = 0) then
     CidType := ctProcess
@@ -174,7 +173,7 @@ begin
     CidType := ctInvalid;
 
   if not (CidType in [ctProcess..ctThreadToken]) or
-    not TryStrToUIntEx(tbxCid.Text, Cid) then
+    not UiLibStringToUIntPtr(tbxCid.Text, Cid) then
   begin
     ResetAccessMask;
     Exit;

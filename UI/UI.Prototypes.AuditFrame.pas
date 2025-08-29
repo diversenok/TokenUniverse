@@ -49,7 +49,7 @@ implementation
 
 uses
   Ntapi.NtSecApi, Ntapi.ntstatus, NtUiCommon.Colors,
-  DelphiUiLib.Reflection.Strings, NtUiLib.Errors, Ntapi.ntdef;
+  DelphiUiLib.Strings, NtUiLib.Errors, Ntapi.ntdef;
 
 {$R *.dfm}
 

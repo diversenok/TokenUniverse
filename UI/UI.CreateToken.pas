@@ -110,7 +110,7 @@ var
   NewLuid: TLuid;
 begin
   if NtAllocateLocallyUniqueId(NewLuid).IsSuccess then
-    EditSourceLuid.Text := UIntToHexEx(NewLuid);
+    EditSourceLuid.Text := UiLibUIntToHex(NewLuid);
 end;
 
 procedure TDialogCreateToken.ButtonCancelClick;
@@ -168,7 +168,7 @@ begin
   // Source
   Source.QuerySource(TokenSource).RaiseOnError;
   EditSourceName.Text := TokenSource.Name;
-  EditSourceLuid.Text := UIntToHexEx(TokenSource.SourceIdentifier);
+  EditSourceLuid.Text := UiLibUIntToHex(TokenSource.SourceIdentifier);
 end;
 
 procedure TDialogCreateToken.ButtonOKClick;
@@ -192,7 +192,8 @@ begin
   Owner := RetrieveGroup(PotentialOwners, ComboOwner.ItemIndex);
   PrimaryGroup := RetrieveGroup(PotentialPrimary, ComboPrimary.ItemIndex);
   Source.Name := EditSourceName.Text;
-  Source.SourceIdentifier := StrToUInt64Ex(EditSourceLuid.Text, 'Source LUID');
+  Source.SourceIdentifier := UiLibStringToUInt64RaiseOnError(EditSourceLuid.Text,
+    'Source LUID');
   LogonSession := LogonIDSource.SelectedLogonSession;
 
   // Check is the user forgot to enable the create token privilege

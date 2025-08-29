@@ -58,7 +58,7 @@ begin
   // Prepare the service parameters (session and desktop) so it would know who
   // requested the restart action
   SetLength(Parameters, 2);
-  Parameters[0] := RtlxUIntToStr(RtlGetCurrentPeb.SessionId);
+  Parameters[0] := RtlxIntToDec(RtlGetCurrentPeb.SessionId);
   Parameters[1] := UsrxCurrentDesktopName;
 
   // Start the service

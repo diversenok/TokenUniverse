@@ -67,7 +67,7 @@ begin
   if not LsaxGetFullUserName(Result).IsSuccess then
     Result := 'Unknown user';
 
-  Result := Result + ' @ ' + UIntToStrEx(RtlGetCurrentPeb.SessionId);
+  Result := Result + ' @ ' + UiLibUIntToDec(RtlGetCurrentPeb.SessionId);
 end;
 
 function TokenGenericMapping;

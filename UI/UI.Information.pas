@@ -350,7 +350,8 @@ var
   Status: TNtxStatus;
 begin
   if ComboUIAccess.ItemIndex = -1 then
-    UIAccess := LongBool(StrToUIntEx(ComboUIAccess.Text, 'UIAccess value'))
+    UIAccess := LongBool(
+      UiLibStringToUIntRaiseOnError(ComboUIAccess.Text, 'UIAccess value'))
   else
     UIAccess := LongBool(ComboUIAccess.ItemIndex);
 
@@ -841,8 +842,8 @@ begin
       Items[1].SubItems[0] := TType.Represent(BasicInfo.Attributes).Text;
       Items[2].SubItems[0] := BytesToString(BasicInfo.PagedPoolCharge);
       Items[3].SubItems[0] := BytesToString(BasicInfo.NonPagedPoolCharge);
-      Items[4].SubItems[0] := UIntToStrEx(BasicInfo.PointerCount);
-      Items[5].SubItems[0] := UIntToStrEx(BasicInfo.HandleCount);
+      Items[4].SubItems[0] := UiLibUIntToDec(BasicInfo.PointerCount);
+      Items[5].SubItems[0] := UiLibUIntToDec(BasicInfo.HandleCount);
     end;
 
   ListViewProcesses.Items.BeginUpdate;
@@ -866,8 +867,9 @@ begin
           ImageIndex := TProcessIcons.GetIconByPid(Handles[i].UniqueProcessId);
         end;
 
-        SubItems.Add(UIntToStrEx(Handles[i].UniqueProcessId));
-        SubItems.Add(UIntToHexEx(Handles[i].HandleValue));
+        SubItems.Add(UiLibUIntToDec(Handles[i].UniqueProcessId));
+        SubItems.Add(UiLibUIntToHex(Handles[i].HandleValue, 4 or
+          NUMERIC_WIDTH_ROUND_TO_BYTE));
         SubItems.Add(TType.Represent<TTokenAccessMask>(Handles[i].GrantedAccess).Text);
       end;
   end;

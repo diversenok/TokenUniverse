@@ -271,7 +271,7 @@ begin
       begin
         ListItemRef := ListView.Items.Add;
         ListItemRef.Caption := ' ' + Process.ImageName;
-        ListItemRef.SubItems.Add(UIntToStrEx(Process.Basic.ProcessId));
+        ListItemRef.SubItems.Add(UiLibUIntToDec(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
         Added := True;
@@ -286,7 +286,7 @@ begin
       begin
         ListItemRef := AddChild(Parent.ListItemRef.Index);
         ListItemRef.Caption := ' ' + Process.ImageName;
-        ListItemRef.SubItems.Add(UIntToStrEx(Process.Basic.ProcessId));
+        ListItemRef.SubItems.Add(UiLibUIntToDec(Process.Basic.ProcessId));
         ListItemRef.ImageIndex := ImageIndex;
         ListItemRef.Data := @ProcessListEx[i];
 

@@ -101,7 +101,7 @@ begin
     EditSID.Text := RtlxSidToString(Sid);
     EditType.Text := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
         Integer(Lookup.SidType), 'SidType');
-    EditSubAuthorities.Text := UIntToStrEx(RtlSubAuthorityCountSid(
+    EditSubAuthorities.Text := UiLibUIntToDec(RtlSubAuthorityCountSid(
       Sid.Data)^);
 
     if RtlSubAuthorityCountSid(Sid.Data)^ = 0 then

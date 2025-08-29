@@ -343,7 +343,7 @@ end;
 
 function SessionInfoToString(const Info: TWinStationInformation): String;
 begin
-  Result := UIntToStrEx(Info.LogonID);
+  Result := UiLibUIntToDec(Info.LogonID);
 
   if Info.WinStationName <> '' then
     Result := Format('%s: %s', [Result, Info.WinStationName]);
@@ -353,7 +353,7 @@ end;
 
 function TTokenElevationInfo.ToString;
 begin
-  Result  := YesNoToString(Elevated) + ' (' + TType.Represent(
+  Result  := BooleanToString(Elevated, bkYesNo) + ' (' + TType.Represent(
     ElevationType).Text + ')';
 end;
 
@@ -648,7 +648,8 @@ begin
   if not Assigned(FKernelObjectAddress) and Assigned(Entry.PObject)  then
   begin
     FKernelObjectAddress := Entry.PObject;
-    Events.StringCache[tsAddress] := PtrToHexEx(FKernelObjectAddress);
+    Events.StringCache[tsAddress] := UiLibUIntToHex(
+      UIntPtr(FKernelObjectAddress));
     Events.OnKernelAddress.Notify(Default(TNtxStatus), FKernelObjectAddress);
   end;
 
@@ -698,9 +699,10 @@ begin
   hxToken := Handle;
   FKernelObjectAddress := KernelObjectAddress;
   FPerHandleStrings[tsCaption] := Caption;
-  FPerHandleStrings[tsHandle] := UIntToHexEx(hxToken.Handle, 4);
+  FPerHandleStrings[tsHandle] := UiLibUIntToHex(hxToken.Handle, 4 or
+    NUMERIC_WIDTH_ROUND_TO_BYTE);
   FPerHandleStrings[tsHandleDetailed] := Format('%s (%s)',
-    [UIntToStrEx(hxToken.Handle), UIntToHexEx(hxToken.Handle, 4)]);
+    [UiLibUIntToDec(hxToken.Handle), FPerHandleStrings[tsHandle]]);
 
   SystemHandlesSubscription := TGlobalEvents.SubscribeHandles(ChangedSystemHandles);
   SystemObjectsSubscription := TGlobalEvents.SubscribeObjects(ChangedSystemObjects);
@@ -1212,7 +1214,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenAppContainerNumber, Number);
 
   if Result.IsSuccess then
-    Events.StringCache[tsAppContainerNumber] := UIntToStrEx(Number);
+    Events.StringCache[tsAppContainerNumber] := UiLibUIntToDec(Number);
 
   Events.OnAppContainerNumber.Notify(Result, Number);
 end;
@@ -1242,11 +1244,16 @@ begin
 
   if Result.IsSuccess then
   begin
-    PerHandleString[tsAccess] := TType.Represent<TTokenAccessMask>(Info.GrantedAccess).Text;
-    PerHandleString[tsAccessNumeric] := UIntToHexEx(Info.GrantedAccess, 6);
-    Events.StringCache[tsHandleCount] := UIntToStrEx(Info.HandleCount);
-    Events.StringCache[tsPagedPoolCharge] := BytesToString(Info.PagedPoolCharge);
-    Events.StringCache[tsNonPagedPoolCharge] := BytesToString(Info.NonPagedPoolCharge);
+    PerHandleString[tsAccess] := TType.Represent<TTokenAccessMask>(
+      Info.GrantedAccess).Text;
+    PerHandleString[tsAccessNumeric] := UiLibUIntToHex(Info.GrantedAccess,
+      NUMERIC_WIDTH_ROUND_TO_BYTE);
+    Events.StringCache[tsHandleCount] := UiLibUIntToDec(
+      Info.HandleCount);
+    Events.StringCache[tsPagedPoolCharge] := BytesToString(
+      Info.PagedPoolCharge);
+    Events.StringCache[tsNonPagedPoolCharge] := BytesToString(
+      Info.NonPagedPoolCharge);
   end;
 
   Events.OnBasicInfo.Notify(Result, Info);
@@ -1258,8 +1265,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsBnoIsolation] := EnabledDisabledToString(
-      Isolation.Enabled);
+    Events.StringCache[tsBnoIsolation] := BooleanToString(
+      Isolation.Enabled, bkEnabledDisabled);
 
     if Isolation.Enabled then
       Events.StringCache[tsBnoPrefix] := Isolation.Prefix
@@ -1275,7 +1282,7 @@ begin
   Result := NtxQueryGroupsToken(hxToken, TokenCapabilities, Capabilities);
 
   if Result.IsSuccess then
-    Events.StringCache[tsCapabilities] := UIntToStrEx(Length(Capabilities));
+    Events.StringCache[tsCapabilities] := UiLibUIntToDec(Length(Capabilities));
 
   Events.OnCapabilities.Notify(Result, Capabilities);
 end;
@@ -1315,7 +1322,7 @@ begin
   Result := NtxQueryClaimsToken(hxToken, TokenDeviceClaimAttributes, Claims);
 
   if Result.IsSuccess then
-    Events.StringCache[tsDeviceClaims] := UIntToStrEx(Length(Claims));
+    Events.StringCache[tsDeviceClaims] := UiLibUIntToDec(Length(Claims));
 
   Events.OnDeviceClaims.Notify(Result, Claims);
 end;
@@ -1325,7 +1332,7 @@ begin
   Result := NtxQueryGroupsToken(hxToken, TokenDeviceGroups, Groups);
 
   if Result.IsSuccess then
-    Events.StringCache[tsDeviceGroups] := UIntToStrEx(Length(Groups));
+    Events.StringCache[tsDeviceGroups] := UiLibUIntToDec(Length(Groups));
 
   Events.OnDeviceGroups.Notify(Result, Groups);
 end;
@@ -1359,31 +1366,31 @@ begin
     else
       Events.StringCache[tsRestricted] := 'No';
 
-    Events.StringCache[tsSessionReference] := YesNoToString(
-      not BitTest(Flags and TOKEN_SESSION_NOT_REFERENCED));
+    Events.StringCache[tsSessionReference] := BooleanToString(
+      not BitTest(Flags and TOKEN_SESSION_NOT_REFERENCED), bkYesNo);
 
-    Events.StringCache[tsSandBoxInert] := EnabledDisabledToString(
-      BitTest(Flags and TOKEN_SANDBOX_INERT));
+    Events.StringCache[tsSandBoxInert] := BooleanToString(
+      BitTest(Flags and TOKEN_SANDBOX_INERT), bkEnabledDisabled);
 
     if BitTest(Flags and TOKEN_VIRTUALIZE_ALLOWED) then
-      Events.StringCache[tsVirtualization] := EnabledDisabledToString(
-        BitTest(Flags and TOKEN_VIRTUALIZE_ENABLED))
+      Events.StringCache[tsVirtualization] := BooleanToString(
+        BitTest(Flags and TOKEN_VIRTUALIZE_ENABLED), bkEnabledDisabled)
     else if not BitTest(Flags and TOKEN_VIRTUALIZE_ENABLED) then
       Events.StringCache[tsVirtualization] := 'Not allowed'
     else
       Events.StringCache[tsVirtualization] := 'Disallowed & Enabled';
 
-    Events.StringCache[tsFiltered] := YesNoToString(
-      BitTest(Flags and TOKEN_IS_FILTERED));
+    Events.StringCache[tsFiltered] := BooleanToString(
+      BitTest(Flags and TOKEN_IS_FILTERED), bkYesNo);
 
-    Events.StringCache[tsUIAccess] := EnabledDisabledToString(
-      BitTest(Flags and TOKEN_UIACCESS));
+    Events.StringCache[tsUIAccess] := BooleanToString(
+      BitTest(Flags and TOKEN_UIACCESS), bkEnabledDisabled);
 
-    Events.StringCache[tsLowBox] := YesNoToString(
-      BitTest(Flags and TOKEN_LOWBOX));
+    Events.StringCache[tsLowBox] := BooleanToString(
+      BitTest(Flags and TOKEN_LOWBOX), bkYesNo);
 
-    Events.StringCache[tsPrivateNamespace] := YesNoToString(
-      BitTest(Flags and TOKEN_PRIVATE_NAMESPACE));
+    Events.StringCache[tsPrivateNamespace] := BooleanToString(
+      BitTest(Flags and TOKEN_PRIVATE_NAMESPACE), bkYesNo);
 
     if BitTest(Flags and TOKEN_NO_CHILD_PROCESS) then
       Events.StringCache[tsChildFlags] := 'Blocked'
@@ -1394,8 +1401,8 @@ begin
     else
       Events.StringCache[tsChildFlags] := 'Allowed';
 
-    Events.StringCache[tsPermissiveLearning] := EnabledDisabledToString(
-      BitTest(Flags and TOKEN_PERMISSIVE_LEARNING_MODE));
+    Events.StringCache[tsPermissiveLearning] := BooleanToString(
+      BitTest(Flags and TOKEN_PERMISSIVE_LEARNING_MODE), bkEnabledDisabled);
 
     if BitTest(Flags and TOKEN_ENFORCE_REDIRECTION_TRUST) then
       Events.StringCache[tsRedirectionTrust] := 'Enforced'
@@ -1417,7 +1424,7 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsGroups] := UIntToStrEx(Length(Groups));
+    Events.StringCache[tsGroups] := UiLibUIntToDec(Length(Groups));
 
     EnabledCount := 0;
     for i := 0 to High(Groups) do
@@ -1475,7 +1482,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenIsAppSilo, IsAppSilo);
 
   if Result.IsSuccess then
-    Events.StringCache[tsIsAppSilo] := YesNoToString(IsAppSilo);
+    Events.StringCache[tsIsAppSilo] := BooleanToString(IsAppSilo, bkYesNo);
 
   Events.OnIsAppSilo.Notify(Result, IsAppSilo);
 end;
@@ -1485,7 +1492,7 @@ begin
   Result := NtxQueryLpacToken(hxToken, IsLPAC);
 
   if Result.IsSuccess then
-    Events.StringCache[tsLPAC] := YesNoToString(IsLPAC);
+    Events.StringCache[tsLPAC] := BooleanToString(IsLPAC, bkYesNo);
 
   Events.OnIsLPAC.Notify(Result, IsLPAC);
 end;
@@ -1495,7 +1502,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenIsRestricted, IsRestricted);
 
   if Result.IsSuccess then
-    Events.StringCache[tsIsRestricted] := YesNoToString(IsRestricted);
+    Events.StringCache[tsIsRestricted] := BooleanToString(IsRestricted, bkYesNo);
 
   Events.OnIsRestricted.Notify(Result, IsRestricted);
 end;
@@ -1505,7 +1512,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenIsSandboxed, IsSandboxed);
 
   if Result.IsSuccess then
-    Events.StringCache[tsIsSandboxed] := YesNoToString(IsSandboxed);
+    Events.StringCache[tsIsSandboxed] := BooleanToString(IsSandboxed, bkYesNo);
 
   Events.OnIsSandboxed.Notify(Result, IsSandboxed);
 end;
@@ -1601,7 +1608,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenOrigin, Origin);
 
   if Result.IsSuccess then
-    Events.StringCache[tsOrigin] := UIntToHexEx(Origin, 8);
+    Events.StringCache[tsOrigin] := UiLibUIntToHex(Origin);
 
   Events.OnOrigin.Notify(Result, Origin);
 end;
@@ -1649,7 +1656,8 @@ begin
   Result := NtxToken.Query(hxToken, TokenPrivateNameSpace, PrivateNamespace);
 
   if Result.IsSuccess then
-    Events.StringCache[tsPrivateNamespace] := YesNoToString(PrivateNamespace);
+    Events.StringCache[tsPrivateNamespace] := BooleanToString(PrivateNamespace,
+      bkYesNo);
 
   Events.OnPrivateNamespace.Notify(Result, PrivateNamespace);
 end;
@@ -1663,7 +1671,7 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsPrivileges] := UIntToStrEx(Length(Privileges));
+    Events.StringCache[tsPrivileges] := UiLibUIntToDec(Length(Privileges));
 
     EnabledCount := 0;
     for i := 0 to High(Privileges) do
@@ -1683,7 +1691,8 @@ begin
     Claims);
 
   if Result.IsSuccess then
-    Events.StringCache[tsRestrictedDeviceClaims] := UIntToStrEx(Length(Claims));
+    Events.StringCache[tsRestrictedDeviceClaims] := UiLibUIntToDec(
+      Length(Claims));
 
   Events.OnRestrictedDeviceClaims.Notify(Result, Claims);
 end;
@@ -1693,7 +1702,8 @@ begin
   Result := NtxQueryGroupsToken(hxToken, TokenRestrictedDeviceGroups, Groups);
 
   if Result.IsSuccess then
-    Events.StringCache[tsRestrictedDeviceGroups] := UIntToStrEx(Length(Groups));
+    Events.StringCache[tsRestrictedDeviceGroups] := UiLibUIntToDec(
+      Length(Groups));
 
   Events.OnRestrictedDeviceGroups.Notify(Result, Groups);
 end;
@@ -1703,7 +1713,7 @@ begin
   Result := NtxQueryGroupsToken(hxToken, TokenRestrictedSids, Sids);
 
   if Result.IsSuccess then
-    Events.StringCache[tsRestrictedSids] := UIntToStrEx(Length(Sids));
+    Events.StringCache[tsRestrictedSids] := UiLibUIntToDec(Length(Sids));
 
   Events.OnRestrictedSids.Notify(Result, Sids);
 end;
@@ -1714,7 +1724,7 @@ begin
     Claims);
 
   if Result.IsSuccess then
-    Events.StringCache[tsRestrictedUserClaims] := UIntToStrEx(Length(Claims));
+    Events.StringCache[tsRestrictedUserClaims] := UiLibUIntToDec(Length(Claims));
 
   Events.OnRestrictedUserClaims.Notify(Result, Claims);
 end;
@@ -1724,7 +1734,8 @@ begin
   Result := NtxToken.Query(hxToken, TokenSandBoxInert, SandboxInert);
 
   if Result.IsSuccess then
-    Events.StringCache[tsSandBoxInert] := EnabledDisabledToString(SandboxInert);
+    Events.StringCache[tsSandBoxInert] := BooleanToString(SandboxInert,
+      bkEnabledDisabled);
 
   Events.OnSandboxInert.Notify(Result, SandboxInert);
 end;
@@ -1738,7 +1749,7 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsSecAttributes] := UIntToStrEx(Length(Attributes));
+    Events.StringCache[tsSecAttributes] := UiLibUIntToDec(Length(Attributes));
 
     if Length(Attributes) > 0 then
     begin
@@ -1761,7 +1772,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenSessionId, SessionId);
 
   if Result.IsSuccess then
-    Events.StringCache[tsSessionId] := UIntToStrEx(SessionId);
+    Events.StringCache[tsSessionId] := UiLibUIntToDec(SessionId);
 
   Events.OnSessionId.Notify(Result, SessionId);
 end;
@@ -1787,7 +1798,8 @@ begin
     Attributes);
 
   if Result.IsSuccess then
-    Events.StringCache[tsSingletonAttributes] := UIntToStrEx(Length(Attributes));
+    Events.StringCache[tsSingletonAttributes] := UiLibUIntToDec(
+      Length(Attributes));
 
   Events.OnSingletonAttributes.Notify(Result, Attributes);
 end;
@@ -1799,7 +1811,7 @@ begin
   if Result.IsSuccess then
   begin
     Events.StringCache[tsSourceName] := Source.Name;
-    Events.StringCache[tsSourceId] := UIntToHexEx(Source.SourceIdentifier, 8);
+    Events.StringCache[tsSourceId] := UiLibUIntToHex(Source.SourceIdentifier);
   end;
 
   Events.OnSource.Notify(Result, Source);
@@ -1811,8 +1823,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsTokenId] := UIntToHexEx(Statistics.TokenId, 8);
-    Events.StringCache[tsLogonId] := UIntToHexEx(Statistics.AuthenticationId, 8);
+    Events.StringCache[tsTokenId] := UiLibUIntToHex(Statistics.TokenId);
+    Events.StringCache[tsLogonId] := UiLibUIntToHex(Statistics.AuthenticationId);
     Events.StringCache[tsExpires] := TType.Represent(
       Statistics.ExpirationTime).Text;
 
@@ -1826,9 +1838,9 @@ begin
       Statistics.DynamicCharged);
     Events.StringCache[tsDynamicAvailable] := BytesToString(
       Statistics.DynamicAvailable);
-    Events.StringCache[tsGroups] := UIntToStrEx(Statistics.GroupCount);
-    Events.StringCache[tsPrivileges] := UIntToStrEx(Statistics.PrivilegeCount);
-    Events.StringCache[tsModifiedId] := UIntToHexEx(Statistics.ModifiedId, 8);
+    Events.StringCache[tsGroups] := UiLibUIntToDec(Statistics.GroupCount);
+    Events.StringCache[tsPrivileges] := UiLibUIntToDec(Statistics.PrivilegeCount);
+    Events.StringCache[tsModifiedId] := UiLibUIntToHex(Statistics.ModifiedId);
   end;
 
   Events.OnStatistics.Notify(Result, Statistics);
@@ -1969,7 +1981,8 @@ begin
   Result := NtxToken.Query(hxToken, TokenUIAccess, UIAccess);
 
   if Result.IsSuccess then
-    Events.StringCache[tsUIAccess] := EnabledDisabledToString(UIAccess);
+    Events.StringCache[tsUIAccess] := BooleanToString(UIAccess,
+      bkEnabledDisabled);
 
   Events.OnUIAccess.Notify(Result, UIAccess);
 end;
@@ -1989,7 +2002,7 @@ begin
   Result := NtxQueryClaimsToken(hxToken, TokenUserClaimAttributes, Claims);
 
   if Result.IsSuccess then
-    Events.StringCache[tsUserClaims] := UIntToStrEx(Length(Claims));
+    Events.StringCache[tsUserClaims] := UiLibUIntToDec(Length(Claims));
 
   Events.OnUserClaims.Notify(Result, Claims);
 end;
