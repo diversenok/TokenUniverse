@@ -179,6 +179,7 @@ begin
   Options.hxParentProcess := hxParentProcess;
   Options.AppContainer := AppContainerField.Sid;
   Options.LogonFlags := TProcessLogonFlags(ComboBoxLogonFlags.ItemIndex);
+  Options.OwnerWindow := Handle;
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
   Options.AppUserModeId := EditAppId.Text;
 
