@@ -31,6 +31,7 @@ type
     cmIShellDispatch,
     cmICMLuaUtil,
     cmIBackgroundCopyJob,
+    cmSbApiPort,
     cmWDC,
     cmWMI
   );
@@ -84,7 +85,8 @@ uses
   NtUtils.Processes.Create.Win32, NtUtils.Processes.Create.Shell,
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
   NtUtils.Processes.Create.Remote, NtUtils.Processes.Create.Manual,
-  NtUtils.Processes.Create.Package, TU.DesktopAccess;
+  NtUtils.Processes.Create.Package, NtUtils.Processes.Create.Csr,
+  TU.DesktopAccess;
 
 function TuGetPsMethod;
 begin
@@ -102,6 +104,7 @@ begin
     cmIShellDispatch:            Result := ComxShellDispatchExecute;
     cmICMLuaUtil:                Result := CmxShellExecute;
     cmIBackgroundCopyJob:        Result := ComxCreateProcessBITS;
+    cmSbApiPort:                 Result := CsrxCreateProcess;
     cmWDC:                       Result := SchxRunAsInteractive;
     cmWMI:                       Result := WmixCreateProcess;
   else
@@ -174,6 +177,9 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // IBackgroundCopyJob2
   [],
+
+  // SbApiPort
+  [spoCurrentDirectory, spoSessionID],
 
   // WDC
   [spoCurrentDirectory, spoRequireElevation, spoSessionID],
