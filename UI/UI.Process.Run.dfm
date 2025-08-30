@@ -14,12 +14,10 @@ object DialogRun: TDialogRun
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
     AlignWithMargins = True
@@ -80,6 +78,7 @@ object DialogRun: TDialogRun
         EditLabel.Height = 13
         EditLabel.Caption = 'Parameters:'
         TabOrder = 0
+        Text = ''
       end
       object GroupBoxFlags: TGroupBox
         Left = 4
@@ -195,6 +194,7 @@ object DialogRun: TDialogRun
         EditLabel.Height = 13
         EditLabel.Caption = 'Current directory:'
         TabOrder = 1
+        Text = ''
       end
       object ComboBoxDesktop: TComboBox
         Left = 4
@@ -224,9 +224,10 @@ object DialogRun: TDialogRun
         Left = 3
         Top = 24
         Width = 306
-        Height = 21
-        Style = csDropDownList
+        Height = 22
+        Style = csOwnerDrawFixed
         Anchors = [akLeft, akTop, akRight]
+        DropDownCount = 15
         ItemIndex = 0
         TabOrder = 6
         Text = 'CreateProcessAsUser'
@@ -241,9 +242,10 @@ object DialogRun: TDialogRun
           'NtCreateUserProcess'
           'NtCreateProcessEx'
           'ShellExecuteEx'
-          'ShellExecute via IShellDispatch'
           'IDesktopAppXActivator'
-          'IBackgroundCopyJob2::SetNotifyCmdLine'
+          'IShellDispatch2'
+          'ICMLuaUtil'
+          'IBackgroundCopyJob2'
           'WdcRunTaskAsInteractiveUser'
           'WMI')
       end
@@ -578,6 +580,7 @@ object DialogRun: TDialogRun
     EditLabel.Height = 13
     EditLabel.Caption = 'Executable:'
     TabOrder = 0
+    Text = ''
   end
   object ButtonBrowse: TButton
     Left = 253

@@ -27,9 +27,10 @@ type
     cmNtCreateUserProcess,
     cmNtCreateProcessEx,
     cmShellExecuteEx,
-    cmIShellDispatch,
     cmIDesktopAppxActivator,
-    cmBITS,
+    cmIShellDispatch,
+    cmICMLuaUtil,
+    cmIBackgroundCopyJob,
     cmWDC,
     cmWMI
   );
@@ -97,9 +98,10 @@ begin
     cmNtCreateUserProcess:       Result := NtxCreateUserProcess;
     cmNtCreateProcessEx:         Result := NtxCreateProcessEx;
     cmShellExecuteEx:            Result := ShlxExecute;
-    cmIShellDispatch:            Result := ComxShellDispatchExecute;
     cmIDesktopAppxActivator:     Result := PkgxCreateProcessInPackage;
-    cmBITS:                      Result := ComxCreateProcessBITS;
+    cmIShellDispatch:            Result := ComxShellDispatchExecute;
+    cmICMLuaUtil:                Result := CmxShellExecute;
+    cmIBackgroundCopyJob:        Result := ComxCreateProcessBITS;
     cmWDC:                       Result := SchxRunAsInteractive;
     cmWMI:                       Result := WmixCreateProcess;
   else
@@ -160,14 +162,17 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [spoCurrentDirectory, spoSuspended, spoBreakawayFromJob, spoInheritConsole,
     spoRequireElevation, spoRunAsInvoker, spoWindowMode],
 
-  // IShellDispatch
-  [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
-
   // IDesktopAppXActivator
   [spoCurrentDirectory, spoSuspended, spoRequireElevation, spoWindowMode,
     spoToken, spoParentProcess, spoPackageBreakaway, spoAppUserModeId],
 
-  // BITS
+  // IShellDispatch
+  [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
+
+  // ICMLuaUtil
+  [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
+
+  // IBackgroundCopyJob2
   [],
 
   // WDC
