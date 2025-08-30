@@ -119,18 +119,20 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoInheritConsole, spoRunAsInvoker, spoIgnoreElevation,
     spoEnvironment, spoObjectInherit, spoSecurity, spoWindowMode,
-    spoWindowTitle, spoDesktop, spoToken, spoParentProcess, spoJob,
-    spoDebugPort, spoHandleList, spoMitigations, spoChildPolicy, spoLPAC,
-    spoAppContainer, spoProtection, spoDetectManifest],
+    spoWindowTitle, spoStdHandles, spoDesktop, spoToken, spoParentProcess,
+    spoJob, spoDebugPort, spoHandleList, spoMitigations, spoChildPolicy,
+    spoLPAC, spoAppContainer, spoPackage, spoPackageBreakaway, spoProtection,
+    spoSafeOpenPromptOriginClaim, spoDetectManifest],
 
   // CreateProcessWithToken
   [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode,
-    spoWindowTitle, spoDesktop, spoToken, spoParentProcess, spoLogonFlags],
+    spoWindowTitle, spoStdHandles, spoDesktop, spoToken, spoParentProcess,
+    spoPriorityClass, spoLogonFlags],
 
   // CreateProcessWithLogon
   [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode,
-    spoWindowTitle, spoDesktop, spoParentProcess, spoLogonFlags,
-    spoCredentials],
+    spoWindowTitle, spoStdHandles, spoDesktop, spoParentProcess,
+    spoPriorityClass, spoLogonFlags, spoCredentials],
 
   // CreateProcess via code injection
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
@@ -138,32 +140,33 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // RtlCreateUserProcess
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
-    spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
-    spoParentProcess, spoDebugPort, spoDetectManifest],
+    spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop,
+    spoToken, spoParentProcess, spoDebugPort, spoDetectManifest],
 
   // RtlCreateUserProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
-    spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
-    spoParentProcess, spoJob, spoDebugPort, spoDetectManifest],
+    spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop,
+    spoToken, spoParentProcess, spoJob, spoDebugPort, spoDetectManifest],
 
   // NtCreateUserProcess
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoInheritConsole, spoEnvironment, spoObjectInherit,
-    spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle,
-    spoDesktop, spoToken, spoParentProcess, spoJob, spoHandleList,
-    spoMitigations, spoChildPolicy, spoLPAC, spoProtection,
+    spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles,
+    spoDesktop, spoToken, spoParentProcess, spoJob, spoDebugPort, spoHandleList,
+    spoMemoryReserve, spoPriorityClass, spoMitigations, spoChildPolicy, spoLPAC,
+    spoPackageBreakaway, spoProtection, spoSafeOpenPromptOriginClaim,
     spoAdditionalFileAccess, spoDetectManifest],
 
   // NtCreateProcessEx
   [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
     spoForceBreakaway, spoEnvironment, spoObjectInherit, spoDesiredAccess,
-    spoSecurity, spoWindowMode, spoWindowTitle, spoDesktop, spoToken,
-    spoParentProcess, spoSection, spoAdditionalFileAccess, spoDebugPort,
-    spoDetectManifest],
+    spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop,
+    spoToken, spoParentProcess, spoSection, spoDebugPort,
+    spoAdditionalFileAccess, spoDetectManifest],
 
   // ShellExecuteEx
   [spoCurrentDirectory, spoSuspended, spoBreakawayFromJob, spoInheritConsole,
-    spoRequireElevation, spoRunAsInvoker, spoWindowMode],
+    spoRequireElevation, spoRunAsInvoker, spoOwnerWindow, spoWindowMode],
 
   // IDesktopAppXActivator
   [spoCurrentDirectory, spoSuspended, spoRequireElevation, spoWindowMode,
@@ -173,7 +176,7 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
 
   // ICMLuaUtil
-  [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
+  [spoCurrentDirectory, spoRequireElevation, spoOwnerWindow, spoWindowMode],
 
   // IBackgroundCopyJob2
   [],
@@ -185,7 +188,8 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [spoCurrentDirectory, spoRequireElevation, spoSessionID],
 
   // WMI
-  [spoCurrentDirectory, spoSuspended, spoWindowMode, spoDesktop, spoToken]
+  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
+    spoToken]
 );
 
 function TuPsMethodSupports;
