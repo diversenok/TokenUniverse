@@ -500,6 +500,7 @@ var
 begin
   SupportedOptions := TuPsMethodSupports(Method);
 
+  EditParams.Enabled := spoParameters in SupportedOptions;
   EditDir.Enabled := spoCurrentDirectory in SupportedOptions;
   ComboBoxDesktop.Enabled := spoDesktop in SupportedOptions;
   ComboBoxLogonFlags.Enabled := spoLogonFlags in SupportedOptions;

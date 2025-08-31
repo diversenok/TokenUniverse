@@ -227,7 +227,7 @@ object DialogRun: TDialogRun
         Height = 22
         Style = csOwnerDrawFixed
         Anchors = [akLeft, akTop, akRight]
-        DropDownCount = 16
+        DropDownCount = 17
         ItemIndex = 0
         TabOrder = 6
         Text = 'CreateProcessAsUser'
@@ -245,6 +245,7 @@ object DialogRun: TDialogRun
           'IDesktopAppXActivator'
           'IShellDispatch2'
           'ICMLuaUtil'
+          'IHxHelpPaneServer'
           'IBackgroundCopyJob2'
           'SbApiPort'
           'WdcRunTaskAsInteractiveUser'

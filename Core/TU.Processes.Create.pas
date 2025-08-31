@@ -30,6 +30,7 @@ type
     cmIDesktopAppxActivator,
     cmIShellDispatch,
     cmICMLuaUtil,
+    cmIHxHelpPaneServer,
     cmIBackgroundCopyJob,
     cmSbApiPort,
     cmWDC,
@@ -103,6 +104,7 @@ begin
     cmIDesktopAppxActivator:     Result := PkgxCreateProcessInPackage;
     cmIShellDispatch:            Result := ComxShellDispatchExecute;
     cmICMLuaUtil:                Result := CmxShellExecute;
+    cmIHxHelpPaneServer:         Result := HlpxShellExecute;
     cmIBackgroundCopyJob:        Result := ComxCreateProcessBITS;
     cmSbApiPort:                 Result := CsrxCreateProcess;
     cmWDC:                       Result := SchxRunAsInteractive;
@@ -116,80 +118,88 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
   [],
 
   // CreateProcessAsUser
-  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoInheritConsole, spoRunAsInvoker, spoIgnoreElevation,
-    spoEnvironment, spoObjectInherit, spoSecurity, spoWindowMode,
-    spoWindowTitle, spoStdHandles, spoDesktop, spoToken, spoParentProcess,
-    spoJob, spoDebugPort, spoHandleList, spoMitigations, spoChildPolicy,
-    spoLPAC, spoAppContainer, spoPackage, spoPackageBreakaway, spoProtection,
-    spoSafeOpenPromptOriginClaim, spoDetectManifest],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoInheritHandles,
+    spoBreakawayFromJob, spoForceBreakaway, spoInheritConsole, spoRunAsInvoker,
+    spoIgnoreElevation, spoEnvironment, spoObjectInherit, spoSecurity,
+    spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop, spoToken,
+    spoParentProcess, spoJob, spoDebugPort, spoHandleList, spoMitigations,
+    spoChildPolicy, spoLPAC, spoAppContainer, spoPackage, spoPackageBreakaway,
+    spoProtection, spoSafeOpenPromptOriginClaim, spoDetectManifest],
 
   // CreateProcessWithToken
-  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode,
-    spoWindowTitle, spoStdHandles, spoDesktop, spoToken, spoParentProcess,
-    spoPriorityClass, spoLogonFlags],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoEnvironment,
+    spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop, spoToken,
+    spoParentProcess, spoPriorityClass, spoLogonFlags],
 
   // CreateProcessWithLogon
-  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode,
-    spoWindowTitle, spoStdHandles, spoDesktop, spoParentProcess,
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoEnvironment,
+    spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop, spoParentProcess,
     spoPriorityClass, spoLogonFlags, spoCredentials],
 
   // CreateProcess via code injection
-  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoInheritConsole, spoDesktop, spoParentProcess, spoTimeout],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoInheritHandles,
+    spoBreakawayFromJob, spoInheritConsole, spoDesktop, spoParentProcess,
+    spoTimeout],
 
   // RtlCreateUserProcess
-  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
-    spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop,
-    spoToken, spoParentProcess, spoDebugPort, spoDetectManifest],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoInheritHandles,
+    spoEnvironment, spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles,
+    spoDesktop, spoToken, spoParentProcess, spoDebugPort, spoDetectManifest],
 
   // RtlCreateUserProcessEx
-  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoEnvironment,
-    spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop,
-    spoToken, spoParentProcess, spoJob, spoDebugPort, spoDetectManifest],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoInheritHandles,
+    spoEnvironment, spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles,
+    spoDesktop, spoToken, spoParentProcess, spoJob, spoDebugPort,
+    spoDetectManifest],
 
   // NtCreateUserProcess
-  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoInheritConsole, spoEnvironment, spoObjectInherit,
-    spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles,
-    spoDesktop, spoToken, spoParentProcess, spoJob, spoDebugPort, spoHandleList,
-    spoMemoryReserve, spoPriorityClass, spoMitigations, spoChildPolicy, spoLPAC,
-    spoPackageBreakaway, spoProtection, spoSafeOpenPromptOriginClaim,
-    spoAdditionalFileAccess, spoDetectManifest],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoInheritHandles,
+    spoBreakawayFromJob, spoForceBreakaway, spoInheritConsole, spoEnvironment,
+    spoObjectInherit, spoDesiredAccess, spoSecurity, spoWindowMode,
+    spoWindowTitle, spoStdHandles, spoDesktop, spoToken, spoParentProcess,
+    spoJob, spoDebugPort, spoHandleList, spoMemoryReserve, spoPriorityClass,
+    spoMitigations, spoChildPolicy, spoLPAC, spoPackageBreakaway, spoProtection,
+    spoSafeOpenPromptOriginClaim, spoAdditionalFileAccess, spoDetectManifest],
 
   // NtCreateProcessEx
-  [spoCurrentDirectory, spoSuspended, spoInheritHandles, spoBreakawayFromJob,
-    spoForceBreakaway, spoEnvironment, spoObjectInherit, spoDesiredAccess,
-    spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles, spoDesktop,
-    spoToken, spoParentProcess, spoSection, spoDebugPort,
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoInheritHandles,
+    spoBreakawayFromJob, spoForceBreakaway, spoEnvironment, spoObjectInherit,
+    spoDesiredAccess, spoSecurity, spoWindowMode, spoWindowTitle, spoStdHandles,
+    spoDesktop, spoToken, spoParentProcess, spoSection, spoDebugPort,
     spoAdditionalFileAccess, spoDetectManifest],
 
   // ShellExecuteEx
-  [spoCurrentDirectory, spoSuspended, spoBreakawayFromJob, spoInheritConsole,
-    spoRequireElevation, spoRunAsInvoker, spoOwnerWindow, spoWindowMode],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoBreakawayFromJob,
+    spoInheritConsole, spoRequireElevation, spoRunAsInvoker, spoOwnerWindow,
+    spoWindowMode],
 
   // IDesktopAppXActivator
-  [spoCurrentDirectory, spoSuspended, spoRequireElevation, spoWindowMode,
-    spoToken, spoParentProcess, spoPackageBreakaway, spoAppUserModeId],
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoRequireElevation,
+    spoWindowMode, spoToken, spoParentProcess, spoPackageBreakaway,
+    spoAppUserModeId],
 
   // IShellDispatch
-  [spoCurrentDirectory, spoRequireElevation, spoWindowMode],
+  [spoParameters, spoCurrentDirectory, spoRequireElevation, spoWindowMode],
 
   // ICMLuaUtil
-  [spoCurrentDirectory, spoRequireElevation, spoOwnerWindow, spoWindowMode],
+  [spoParameters, spoCurrentDirectory, spoRequireElevation, spoOwnerWindow,
+    spoWindowMode],
+
+  // IHxHelpPaneServer
+  [spoSessionId],
 
   // IBackgroundCopyJob2
-  [],
+  [spoParameters],
 
   // SbApiPort
-  [spoCurrentDirectory, spoSessionID],
+  [spoParameters, spoCurrentDirectory, spoSessionID],
 
   // WDC
-  [spoCurrentDirectory, spoRequireElevation, spoSessionID],
+  [spoParameters, spoCurrentDirectory, spoRequireElevation, spoSessionID],
 
   // WMI
-  [spoCurrentDirectory, spoSuspended, spoEnvironment, spoWindowMode, spoDesktop,
-    spoToken]
+  [spoParameters, spoCurrentDirectory, spoSuspended, spoEnvironment,
+    spoWindowMode, spoDesktop, spoToken]
 );
 
 function TuPsMethodSupports;
