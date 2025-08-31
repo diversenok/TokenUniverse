@@ -417,6 +417,7 @@ object DialogRun: TDialogRun
         Top = 295
         Width = 220
         Height = 21
+        Anchors = [akLeft, akTop, akRight]
         TabOrder = 6
         TextHint = '(Not selected)'
         OnChange = EditSessionIdChange
