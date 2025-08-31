@@ -11,12 +11,12 @@ type
   private
     Sessions: TArray<TSessionIdW>;
     ComboBox: TComboBox;
-    function GetSession: Cardinal;
-    procedure SetSession(const Value: Cardinal);
+    function GetSession: TSessionId;
+    procedure SetSession(const Value: TSessionId);
   public
     constructor Create(OwnedComboBox: TComboBox; SelectCurrent: Boolean);
     procedure RefreshSessionList(SelectCurrent: Boolean);
-    property SelectedSession: Cardinal read GetSession write SetSession;
+    property SelectedSession: TSessionId read GetSession write SetSession;
   end;
 
   TIntegritySource = class
@@ -152,7 +152,7 @@ begin
   for i := 0 to High(Sessions) do
     ComboBox.Items.Add(TType.Represent(Sessions[i].SessionId).Text);
 
-  if SelectCurrent and (Length(Sessions) > 0) then
+  if SelectCurrent then
     SetSession(RtlGetCurrentPeb.SessionId);
 
   ComboBox.Items.EndUpdate;

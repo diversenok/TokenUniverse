@@ -263,7 +263,7 @@ object DialogRun: TDialogRun
         TabOrder = 7
         OnClick = ButtonChooseParentClick
       end
-      object EditParent: TEdit
+      object EditParent: TEditEx
         Left = 3
         Top = 104
         Width = 217
@@ -309,6 +309,13 @@ object DialogRun: TDialogRun
         Height = 13
         Caption = 'AppUserModeId:'
       end
+      object LabelSession: TLabel
+        Left = 3
+        Top = 276
+        Width = 40
+        Height = 13
+        Caption = 'Session:'
+      end
       object CheckBoxLPAC: TCheckBox
         Left = 3
         Top = 104
@@ -317,7 +324,7 @@ object DialogRun: TDialogRun
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Low Privileged AppContainer'
         Enabled = False
-        TabOrder = 0
+        TabOrder = 2
       end
       object GroupBoxChildFlags: TGroupBox
         Left = 3
@@ -326,7 +333,7 @@ object DialogRun: TDialogRun
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Child Process Policy: '
-        TabOrder = 1
+        TabOrder = 3
         object CheckBoxChildRestricted: TCheckBox
           Left = 16
           Top = 24
@@ -363,7 +370,7 @@ object DialogRun: TDialogRun
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 2
+        TabOrder = 4
         Text = 'Not specified'
         Items.Strings = (
           'Not specified'
@@ -377,14 +384,14 @@ object DialogRun: TDialogRun
           'Full (Windows)'
           'Full (WinTcb)')
       end
-      object EditAppId: TEdit
+      object EditAppId: TEditEx
         Left = 3
         Top = 26
         Width = 306
         Height = 21
         Hint = '{PackageFamilyName}!{AppId}'
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 3
+        TabOrder = 0
         TextHint = '{PackageFamilyName}!{AppId}'
       end
       inline AppContainerField: TAppContainerFieldFrame
@@ -397,13 +404,35 @@ object DialogRun: TDialogRun
         Constraints.MinWidth = 180
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 4
+        TabOrder = 1
         inherited tbxMoniker: TEdit
           Width = 220
         end
         inherited btnSelect: TButton
           Left = 226
         end
+      end
+      object EditSessionId: TEditEx
+        Left = 3
+        Top = 295
+        Width = 220
+        Height = 21
+        TabOrder = 6
+        TextHint = '(Not selected)'
+        OnChange = EditSessionIdChange
+      end
+      object ButtonSelectSession: TButton
+        Left = 226
+        Top = 293
+        Width = 83
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Select...'
+        DropDownMenu = PopupClearSession
+        PopupMenu = PopupClearSession
+        Style = bsSplitButton
+        TabOrder = 5
+        OnClick = ButtonSelectSessionClick
       end
     end
     object Manifest: TTabSheet
@@ -449,7 +478,7 @@ object DialogRun: TDialogRun
         Enabled = False
         TabOrder = 2
       end
-      object EditManifestExecutable: TEdit
+      object EditManifestExecutable: TEditEx
         Left = 19
         Top = 77
         Width = 286
@@ -470,7 +499,7 @@ object DialogRun: TDialogRun
         Enabled = False
         TabOrder = 4
       end
-      object EditManifestFile: TEdit
+      object EditManifestFile: TEditEx
         Left = 19
         Top = 127
         Width = 286
@@ -631,6 +660,14 @@ object DialogRun: TDialogRun
     object MenuClearParent: TMenuItem
       Caption = 'Clear'
       OnClick = MenuClearParentClick
+    end
+  end
+  object PopupClearSession: TPopupMenu
+    Left = 47
+    Top = 451
+    object MenuClearSession: TMenuItem
+      Caption = 'Clear'
+      OnClick = MenuClearSessionClick
     end
   end
 end

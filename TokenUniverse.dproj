@@ -224,19 +224,16 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="Core\TU.Processes.Create.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas">
             <Form>FrameGroups</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Helpers.pas"/>
         <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
             <Form>FramePrivileges</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas">
             <Form>SidEditor</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="Core\TU.Observers.pas"/>
@@ -250,13 +247,11 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="Core\TU.Tokens.Open.pas"/>
         <DCCReference Include="UI\UI.New.TokenFrame.pas">
             <Form>FrameTokens</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="Core\TU.AccountRights.pas"/>
         <DCCReference Include="UI\UI.Access.pas">
             <Form>AccessCheckForm</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.Access.pas"/>
         <DCCReference Include="Core\TU.DesktopAccess.pas"/>
@@ -266,109 +261,89 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Interfaces.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Search.pas">
             <Form>SearchFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.UserProfiles.pas">
             <Form>UserProfilesFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.List.pas">
             <Form>AppContainerListFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.ListAllUsers.pas">
             <Form>AppContainerListAllUsersFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.Edit.pas">
             <Form>AppContainerFieldFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Prototypes.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiDialog.FrameHost.pas">
             <Form>FrameHostDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.AppContainer.View.pas">
             <Form>AppContainerViewFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Bits.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Bits.pas">
             <Form>BitsFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.pas">
             <Form>BaseFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Acl.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiCommon.PageHost.pas">
             <Form>FramePages</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Ace.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Acl.pas">
             <Form>AclFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Security.Acl.pas">
             <Form>AclSecurityFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Security.OwnerGroup.pas">
             <Form>OwnerGroupSecurityFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Security.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Ace.Condition.pas">
             <Form>AceConditionFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Hex.Edit.pas">
             <Form>HexEditFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.HexView.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Guid.pas">
             <Form>GuidFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas">
             <Form>FrameIntegrity</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas">
             <Form>FrameTrustSid</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="UI\UI.New.UserManager.pas">
             <Form>UserManagerTokens</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\TU.UserManager.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas">
             <Form>SidAbbreviationFrame</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.pas"/>

@@ -7,7 +7,8 @@ uses
   Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, NtUiCommon.Forms,
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
-  TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit, Vcl.Mask;
+  TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit, Vcl.Mask,
+  VclEx.Edit;
 
 type
   TDialogRun = class(TChildForm)
@@ -36,7 +37,7 @@ type
     ComboBoxShowMode: TComboBox;
     LinkLabelToken: TLinkLabel;
     ButtonChooseParent: TButton;
-    EditParent: TEdit;
+    EditParent: TEditEx;
     PopupClearParent: TPopupMenu;
     MenuClearParent: TMenuItem;
     CheckBoxInheritConsole: TCheckBox;
@@ -58,9 +59,9 @@ type
     RadioButtonManifestNone: TRadioButton;
     RadioButtonManifestEmbedded: TRadioButton;
     RadioButtonManifestExternalExe: TRadioButton;
-    EditManifestExecutable: TEdit;
+    EditManifestExecutable: TEditEx;
     RadioButtonManifestExternal: TRadioButton;
-    EditManifestFile: TEdit;
+    EditManifestFile: TEditEx;
     RadioButtonManifestCustom: TRadioButton;
     CheckBoxManifestThemes: TCheckBox;
     LabelManifestDpi: TLabel;
@@ -69,9 +70,14 @@ type
     CheckBoxManifestLongPaths: TCheckBox;
     LabelProtection: TLabel;
     ComboBoxProtection: TComboBox;
-    EditAppId: TEdit;
+    EditAppId: TEditEx;
     LabelAppId: TLabel;
     AppContainerField: TAppContainerFieldFrame;
+    LabelSession: TLabel;
+    EditSessionId: TEditEx;
+    ButtonSelectSession: TButton;
+    PopupClearSession: TPopupMenu;
+    MenuClearSession: TMenuItem;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -88,6 +94,9 @@ type
     procedure EditManifestExecutableEnter(Sender: TObject);
     procedure EditManifestFileEnter(Sender: TObject);
     procedure CheckBoxManifestThemesEnter(Sender: TObject);
+    procedure MenuClearSessionClick(Sender: TObject);
+    procedure ButtonSelectSessionClick(Sender: TObject);
+    procedure EditSessionIdChange(Sender: TObject);
   private
     Method: TKnownCreateMethod;
     FToken: IToken;
@@ -95,6 +104,8 @@ type
     ParentProcessId: TProcessId;
     hxParentProcess: IHandle;
     CaptionSubscription: IAutoReleasable;
+    SessionIdSelected: Boolean;
+    SessionId: TSessionId;
     procedure UpdateEnabledState;
     procedure OnCaptionChange(const InfoClass: TTokenStringClass; const NewCaption: String);
     procedure SetToken(const Value: IToken);
@@ -109,13 +120,14 @@ type
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntseapi, Ntapi.WinUser,
-  Ntapi.wincred, Ntapi.Shlwapi,
-  NtUtils.Processes, NtUtils.Processes.Create.Remote, NtUtils.Objects,
-  NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info, NtUtils.Profiles,
-  NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
-  UI.Information, UI.ProcessList, UI.MainForm,
-  TU.Tokens.Open, UI.Settings, System.UITypes, NtUtils.Security.Sid;
+  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntseapi, Ntapi.WinUser, Ntapi.wincred,
+  Ntapi.Shlwapi, NtUtils.Processes, NtUtils.Processes.Create.Remote,
+  NtUtils.Objects, NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info,
+  NtUtils.Profiles, NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
+  DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
+  UI.Information, UI.ProcessList, UI.MainForm, UI.Modal.ComboDlg,
+  TU.Tokens.Open, UI.Settings, System.UITypes, NtUtils.Security.Sid,
+  NtUiCommon.Colors;
 
 {$R *.dfm}
 
@@ -236,6 +248,17 @@ begin
   if GetProtection(Options.Protection) then
     Include(Options.Flags, poUseProtection);
 
+  if EditSessionId.Enabled and (SessionIdSelected or
+    (EditSessionId.Text <> '')) then
+  begin
+    if not SessionIdSelected then
+      SessionId := UiLibStringToUIntRaiseOnError(EditSessionId.Text,
+        'session ID');
+
+    Options.SessionId := SessionId;
+    Include(Options.Flags, poUseSessionId);
+  end;
+
   OptionsEx := Default(TTuCreateProcessOptions);
 
   if RadioButtonManifestNone.Checked then
@@ -292,6 +315,15 @@ begin
     TryOpenToken(ProcInfo);
 end;
 
+procedure TDialogRun.ButtonSelectSessionClick;
+begin
+  SessionId := TComboDialog.PickSession(Self);
+  EditSessionId.Text := TType.Represent(SessionId).Text;
+  SessionIdSelected := True;
+  EditSessionId.Color := clWindow;
+  ButtonRun.SetFocus;
+end;
+
 procedure TDialogRun.ChangedExecMethod;
 var
   OldParentAccessMask: TProcessAccessMask;
@@ -341,6 +373,17 @@ end;
 procedure TDialogRun.EditManifestFileEnter;
 begin
   RadioButtonManifestExternal.Checked := True;
+end;
+
+procedure TDialogRun.EditSessionIdChange;
+begin
+  SessionIdSelected := (EditSessionId.Text <> '') and
+    UiLibStringToUInt(EditSessionId.Text, Cardinal(SessionId));
+
+  if SessionIdSelected or (EditSessionId.Text = '') then
+    EditSessionId.Color := clWindow
+  else
+    EditSessionId.Color := ColorSettings.clBackgroundError;
 end;
 
 procedure TDialogRun.FormClose;
@@ -401,6 +444,12 @@ begin
   ParentProcessId := 0;
   hxParentProcess := nil;
   EditParent.Text := '<not specified>';
+end;
+
+procedure TDialogRun.MenuClearSessionClick;
+begin
+  SessionIdSelected := False;
+  EditSessionId.Text := '';
 end;
 
 procedure TDialogRun.MenuCmdClick;
@@ -534,6 +583,8 @@ begin
   LabelManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
   ComboBoxManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
   EditAppId.Enabled := spoAppUserModeId in SupportedOptions;
+  EditSessionId.Enabled := spoSessionId in SupportedOptions;
+  ButtonSelectSession.Enabled := spoSessionId in SupportedOptions;
 
   if spoToken in SupportedOptions then
     LinkLabelToken.Font.Style := LinkLabelToken.Font.Style - [fsStrikeOut]
