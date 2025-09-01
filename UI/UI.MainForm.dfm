@@ -200,6 +200,9 @@ object FormMain: TFormMain
         Caption = 'Show logon prompt on secure desktop'
         Checked = True
         OnClick = MenuSecurePromptClick
+      object MenuStackTraces: TMenuItem
+        Caption = 'Display exception stack traces'
+        OnClick = MenuStackTracesClick
       end
     end
   end

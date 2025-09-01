@@ -72,6 +72,7 @@ type
     TokenSetLinked: TMenuItem;
     cmUmgrTokens: TMenuItem;
     N8: TMenuItem;
+    MenuStackTraces: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -122,6 +123,7 @@ type
     procedure TokenSecurityClick(Sender: TObject);
     procedure TokenSetLinkedClick(Sender: TObject);
     procedure cmUmgrTokensClick(Sender: TObject);
+    procedure MenuStackTracesClick(Sender: TObject);
   end;
 
 var
@@ -139,7 +141,7 @@ uses
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, TU.Tokens.Open, NtUtils.Tokens.Impersonate,
   NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
-  UI.Modal.PickToken, UI.New.UserManager;
+  UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog;
 
 {$R *.dfm}
 
@@ -560,6 +562,13 @@ procedure TFormMain.MenuSecurePromptClick(Sender: TObject);
 begin
   TSettings.PromptOnSecureDesktop := not TSettings.PromptOnSecureDesktop ;
   MenuSecurePrompt.Checked := TSettings.PromptOnSecureDesktop;
+end;
+
+procedure TFormMain.MenuStackTracesClick;
+begin
+  DisplayStackTraces := not DisplayStackTraces;
+  CaptureStackTraces := DisplayStackTraces;
+  MenuStackTraces.Checked := DisplayStackTraces;
 end;
 
 procedure TFormMain.MenuSystemAuditClick;
