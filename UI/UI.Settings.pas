@@ -14,7 +14,6 @@ type
     PromptOnHandleClose: Boolean;
     NoCloseCreationDialogs: Boolean;
     UseSafeImpersonation: Boolean;
-    PromptOnSecureDesktop: Boolean;
     class constructor Create;
   end;
 
@@ -110,7 +109,6 @@ begin
     tsElevation, tsIntegrity];
 
   UseSafeImpersonation := True;
-  PromptOnSecureDesktop := True;
 end;
 
 end.

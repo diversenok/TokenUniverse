@@ -93,31 +93,24 @@ begin
 end;
 
 procedure TLogonDialog.ButtonContinueClick;
+const
+  DIALOG_CAPTION = 'Token Universe';
 var
   Status: TNtxStatus;
-  Flags: TCredUiWinFlags;
   MessageStr: String;
   Credentials: TLogonCredentials;
   Source: TTokenSource;
   Token: IToken;
 begin
-  if TSettings.PromptOnSecureDesktop then
-    Flags := CREDUIWIN_SECURE_PROMPT
-  else
-    Flags := 0;
-
   if GetMessageType in [TLogonSubmitType.S4ULogon,
     TLogonSubmitType.VirtualLogon] then
-  begin
     // No need to use the secure desktop just for usernames
-    Flags := Flags and not CREDUIWIN_SECURE_PROMPT;
-    MessageStr := 'Note: password is not required';
-  end
+    Status := CredxPromptForWindowsCredentials(Handle, DIALOG_CAPTION,
+      'Note: password is not required', Credentials, 0, 0, GetAuthPackage)
   else
-    MessageStr := 'Logon a user:';
-
-  Status := CredxPromptForWindowsCredentials(Handle, 'Token Universe',
-    MessageStr, Credentials, Flags, 0, GetAuthPackage);
+    // Prefer the secure desktop but allow fallback
+    Status := CredxPromptForWindowsCredentialsPreferSecure(Handle,
+      DIALOG_CAPTION, 'Logon a user:', Credentials, 0, 0, GetAuthPackage);
 
   if Status.Win32Error = ERROR_CANCELLED then
     Abort;

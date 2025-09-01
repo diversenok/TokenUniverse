@@ -164,7 +164,6 @@ var
   OptionsEx: TTuCreateProcessOptions;
   ProcInfo: TProcessInfo;
   Credentials: TLogonCredentials;
-  PromptFlags: TCredUiWinFlags;
   Status: TNtxStatus;
 begin
   if (Method = cmCreateProcessViaInjection) and not Assigned(hxParentProcess) then
@@ -287,14 +286,8 @@ begin
   // Prompt for credentials when using logon
   if Method = cmCreateProcessWithLogon then
   begin
-    if TSettings.PromptOnSecureDesktop then
-      PromptFlags := CREDUIWIN_SECURE_PROMPT
-    else
-      PromptFlags := 0;
-
-    Status := CredxPromptForWindowsCredentials(Handle, 'Token Universe',
-      'Credentials for the new process:', Credentials,
-      PromptFlags);
+    Status := CredxPromptForWindowsCredentialsPreferSecure(Handle,
+      'Token Universe', 'Credentials for the new process:', Credentials);
 
     if Status.Win32Error = ERROR_CANCELLED then
       Abort;

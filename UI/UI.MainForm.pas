@@ -64,7 +64,6 @@ type
     cmAllocConsole: TMenuItem;
     N7: TMenuItem;
     cmAccess: TMenuItem;
-    MenuSecurePrompt: TMenuItem;
     cmClipboardToken: TMenuItem;
     cmPipeLoopbackToken: TMenuItem;
     cmImpersonate: TMenuItem;
@@ -116,7 +115,6 @@ type
       var AskParent: Boolean; var PopupMenu: TPopupMenu);
     procedure cmAllocConsoleClick(Sender: TObject);
     procedure cmAccessClick(Sender: TObject);
-    procedure MenuSecurePromptClick(Sender: TObject);
     procedure cmClipboardTokenClick(Sender: TObject);
     procedure cmPipeLoopbackTokenClick(Sender: TObject);
     procedure cmImpersonateClick(Sender: TObject);
@@ -556,12 +554,6 @@ procedure TFormMain.MenuSafeImpersonationClick;
 begin
   TSettings.UseSafeImpersonation := not TSettings.UseSafeImpersonation;
   MenuSafeImpersonation.Checked := TSettings.UseSafeImpersonation;
-end;
-
-procedure TFormMain.MenuSecurePromptClick(Sender: TObject);
-begin
-  TSettings.PromptOnSecureDesktop := not TSettings.PromptOnSecureDesktop ;
-  MenuSecurePrompt.Checked := TSettings.PromptOnSecureDesktop;
 end;
 
 procedure TFormMain.MenuStackTracesClick;
