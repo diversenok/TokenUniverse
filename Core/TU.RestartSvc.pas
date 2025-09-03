@@ -157,7 +157,7 @@ begin
 
         if Status.IsSuccess then
           OutputDebugStringW(PWideChar('Exit code: 0x' +
-            IntToHex(BasicInfo.ExitStatus, 8)));
+            RtlxIntToHex(BasicInfo.ExitStatus, 8)));
       end;
   end;
 

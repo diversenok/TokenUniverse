@@ -97,7 +97,6 @@ const
   DIALOG_CAPTION = 'Token Universe';
 var
   Status: TNtxStatus;
-  MessageStr: String;
   Credentials: TLogonCredentials;
   Source: TTokenSource;
   Token: IToken;
