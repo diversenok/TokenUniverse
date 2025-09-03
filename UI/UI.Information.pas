@@ -840,8 +840,8 @@ begin
     with ListViewObject do
     begin
       Items[1].SubItems[0] := TType.Represent(BasicInfo.Attributes).Text;
-      Items[2].SubItems[0] := BytesToString(BasicInfo.PagedPoolCharge);
-      Items[3].SubItems[0] := BytesToString(BasicInfo.NonPagedPoolCharge);
+      Items[2].SubItems[0] := UiLibBytesToString(BasicInfo.PagedPoolCharge);
+      Items[3].SubItems[0] := UiLibBytesToString(BasicInfo.NonPagedPoolCharge);
       Items[4].SubItems[0] := UiLibUIntToDec(BasicInfo.PointerCount);
       Items[5].SubItems[0] := UiLibUIntToDec(BasicInfo.HandleCount);
     end;

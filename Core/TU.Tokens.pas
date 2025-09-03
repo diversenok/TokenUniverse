@@ -1250,9 +1250,9 @@ begin
       NUMERIC_WIDTH_ROUND_TO_BYTE);
     Events.StringCache[tsHandleCount] := UiLibUIntToDec(
       Info.HandleCount);
-    Events.StringCache[tsPagedPoolCharge] := BytesToString(
+    Events.StringCache[tsPagedPoolCharge] := UiLibBytesToString(
       Info.PagedPoolCharge);
-    Events.StringCache[tsNonPagedPoolCharge] := BytesToString(
+    Events.StringCache[tsNonPagedPoolCharge] := UiLibBytesToString(
       Info.NonPagedPoolCharge);
   end;
 
@@ -1834,9 +1834,9 @@ begin
       Events.StringCache[tsType] := TType.Represent(
         Statistics.ImpersonationLevel).Text;
 
-    Events.StringCache[tsDynamicCharged] := BytesToString(
+    Events.StringCache[tsDynamicCharged] := UiLibBytesToString(
       Statistics.DynamicCharged);
-    Events.StringCache[tsDynamicAvailable] := BytesToString(
+    Events.StringCache[tsDynamicAvailable] := UiLibBytesToString(
       Statistics.DynamicAvailable);
     Events.StringCache[tsGroups] := UiLibUIntToDec(Statistics.GroupCount);
     Events.StringCache[tsPrivileges] := UiLibUIntToDec(Statistics.PrivilegeCount);
