@@ -72,7 +72,7 @@ implementation
 uses
   NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
   NtUtils.Lsa.Sid, NtUiLib.Errors, DelphiUiLib.Reflection, UI.ProcessList,
-  NtUiCommon.Prototypes, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings;
+  NtUiCommon.Prototypes, DelphiUiLib.Strings;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var

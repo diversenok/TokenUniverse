@@ -55,9 +55,8 @@ implementation
 
 uses
   Ntapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Ntapi.ntlsa,
-  Ntapi.ntstatus, DelphiApi.Reflection, NtUtils.Lsa, Ntapi.ntdef,
-  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings, System.Rtti,
-  DelphiUiLib.Strings;
+  Ntapi.ntstatus, NtUtils.Lsa, Ntapi.ntdef, DelphiUiLib.Strings,
+  DelphiUtils.LiteRTTI.Extension, DelphiUiLib.LiteReflection;
 
 {$R *.dfm}
 
@@ -99,8 +98,8 @@ begin
       EditFullName.Text := Lookup.FullName;
 
     EditSID.Text := RtlxSidToString(Sid);
-    EditType.Text := PrettifyCamelCaseEnum(TypeInfo(TSidNameUse),
-        Integer(Lookup.SidType), 'SidType');
+    EditType.Text := RttixFormat(RttixTypeInfo(TypeInfo(TSidNameUse)),
+      Lookup.SidType);
     EditSubAuthorities.Text := UiLibUIntToDec(RtlSubAuthorityCountSid(
       Sid.Data)^);
 

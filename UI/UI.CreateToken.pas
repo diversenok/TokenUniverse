@@ -89,8 +89,7 @@ uses
   UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntexapi, Ntapi.ntseapi,
   Ntapi.ntpebteb, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, DelphiUtils.Arrays, TU.Tokens.Open,
-  NtUtils.Tokens.Info, TU.Suggestions;
+  DelphiUtils.Arrays, TU.Tokens.Open, NtUtils.Tokens.Info, TU.Suggestions;
 
 {$R *.dfm}
 

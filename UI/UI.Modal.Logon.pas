@@ -51,10 +51,9 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntseapi, Ntapi.ntrtl, Ntapi.ntexapi, Ntapi.ntpsapi,
   Ntapi.wincred, NtUiLib.WinCred, Ntapi.WinError, UI.MainForm,
-  UI.Modal.PickUser, NtUtils.Security.Sid, Ntapi.WinUser,
-  NtUtils.WinUser, NtUtils.Errors, System.UITypes, NtUiLib.Errors,
-  DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings, NtUiCommon.Exceptions,
-  TU.Tokens, TU.Tokens.Open, UI.Settings;
+  UI.Modal.PickUser, NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser,
+  NtUtils.Errors, System.UITypes, NtUiLib.Errors, DelphiUiLib.Strings,
+  NtUiCommon.Exceptions, TU.Tokens, TU.Tokens.Open, UI.Settings;
 
 {$R *.dfm}
 

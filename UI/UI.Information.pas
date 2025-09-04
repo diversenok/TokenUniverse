@@ -148,13 +148,12 @@ implementation
 
 uses
   System.UITypes, UI.MainForm, NtUiCommon.Colors, UI.ProcessList, Ntapi.ntstatus,
-  UI.Sid.View, NtUtils.Objects.Snapshots,
-  NtUiLib.Errors, DelphiUiLib.Strings, NtUtils.Security.AppContainer,
-  DelphiUiLib.Reflection.Strings, NtUiCommon.Prototypes,
-  Ntapi.ntpsapi, NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles,
-  NtUtils.Lsa.Sid, DelphiUtils.Arrays, NtUiCommon.Icons, Ntapi.Versions,
-  NtUiBackend.AppContainers, NtUiLib.Exceptions, Ntapi.ntobapi,
-  NtUtils.Security.Acl, NtUiCommon.Interfaces;
+  UI.Sid.View, NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.Strings,
+  NtUtils.Security.AppContainer, NtUiCommon.Prototypes, Ntapi.ntpsapi,
+  NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles, NtUtils.Lsa.Sid,
+  DelphiUtils.Arrays, NtUiCommon.Icons, Ntapi.Versions, Ntapi.ntobapi,
+  NtUiBackend.AppContainers, NtUiLib.Exceptions, NtUtils.Security.Acl,
+  NtUiCommon.Interfaces;
 
 const
   TAB_INVALIDATED = 0;

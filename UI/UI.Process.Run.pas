@@ -124,10 +124,9 @@ uses
   Ntapi.Shlwapi, NtUtils.Processes, NtUtils.Processes.Create.Remote,
   NtUtils.Objects, NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info,
   NtUtils.Profiles, NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
-  DelphiUiLib.Reflection, DelphiUiLib.Strings, DelphiUiLib.Reflection.Strings,
-  UI.Information, UI.ProcessList, UI.MainForm, UI.Modal.ComboDlg,
-  TU.Tokens.Open, UI.Settings, System.UITypes, NtUtils.Security.Sid,
-  NtUiCommon.Colors;
+  DelphiUiLib.Reflection, DelphiUiLib.Strings, UI.Information, UI.ProcessList,
+  UI.MainForm, UI.Modal.ComboDlg, TU.Tokens.Open, UI.Settings, System.UITypes,
+  NtUtils.Security.Sid, NtUiCommon.Colors;
 
 {$R *.dfm}
 

@@ -108,9 +108,8 @@ type
 implementation
 
 uses
-  UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa,
-  NtUtils.Lsa.Logon, NtUtils.Lsa.Sid, DelphiUiLib.Strings,
-  DelphiUiLib.Reflection.Strings, DelphiUiLib.Reflection;
+  UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Logon,
+  NtUtils.Lsa.Sid, DelphiUiLib.Strings, DelphiUiLib.Reflection;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

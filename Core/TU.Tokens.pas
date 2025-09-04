@@ -319,8 +319,8 @@ uses
   Ntapi.ntstatus, Ntapi.ntpsapi, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
   NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUtils.Arrays,
-  DelphiUiLib.Reflection, DelphiUiLib.Reflection.Strings,
-  NtUiLib.Reflection.Types, System.SysUtils, TU.Tokens.Events, TU.Events;
+  DelphiUiLib.Reflection, NtUiLib.Reflection.Types, System.SysUtils,
+  TU.Tokens.Events, TU.Events;
 
 { Helper functions }
 
