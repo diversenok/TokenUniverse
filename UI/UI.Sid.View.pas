@@ -56,7 +56,7 @@ implementation
 uses
   Ntapi.WinNt, NtUiLib.Errors, NtUtils.Lsa.Sid, Ntapi.ntrtl, Ntapi.ntlsa,
   Ntapi.ntstatus, NtUtils.Lsa, Ntapi.ntdef, DelphiUiLib.Strings,
-  DelphiUtils.LiteRTTI.Extension, DelphiUiLib.LiteReflection;
+  DelphiUiLib.LiteReflection;
 
 {$R *.dfm}
 
@@ -98,8 +98,7 @@ begin
       EditFullName.Text := Lookup.FullName;
 
     EditSID.Text := RtlxSidToString(Sid);
-    EditType.Text := RttixFormat(RttixTypeInfo(TypeInfo(TSidNameUse)),
-      Lookup.SidType);
+    EditType.Text := RttixFormat(TypeInfo(TSidNameUse), Lookup.SidType);
     EditSubAuthorities.Text := UiLibUIntToDec(RtlSubAuthorityCountSid(
       Sid.Data)^);
 
