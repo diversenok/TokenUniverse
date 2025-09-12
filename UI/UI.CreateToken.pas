@@ -72,7 +72,7 @@ type
     PotentialOwners: TArray<TGroup>;
     PotentialPrimary: TArray<TGroup>;
     function FindGroupIndex(const Groups: TArray<TGroup>; const Sid: ISid): Integer;
-    function RetrieveGroup(const Groups: TArray<TGroup>; Index: Integer): ISid;
+    function RetrieveGroup(const Groups: TArray<TGroup>; Index: Integer; out Sid: ISid): TNtxStatus;
     procedure ChangedGroups;
     procedure ChangedGroupsInternal(
       var Groups: TArray<TGroup>;
@@ -188,8 +188,8 @@ begin
     Expires := DateTimeToLargeInteger(DateExpires.Date);
 
   User := SidEditor.Sid;
-  Owner := RetrieveGroup(PotentialOwners, ComboOwner.ItemIndex);
-  PrimaryGroup := RetrieveGroup(PotentialPrimary, ComboPrimary.ItemIndex);
+  RetrieveGroup(PotentialOwners, ComboOwner.ItemIndex, Owner).RaiseOnError;
+  RetrieveGroup(PotentialPrimary, ComboPrimary.ItemIndex, PrimaryGroup).RaiseOnError;
   Source.Name := EditSourceName.Text;
   Source.SourceIdentifier := UiLibStringToUInt64RaiseOnError(EditSourceLuid.Text,
     'Source LUID');
@@ -236,7 +236,7 @@ var
 begin
   // Save the current state
   if ComboBox.ItemIndex >= 0 then
-    Old := RetrieveGroup(Groups, ComboBox.ItemIndex)
+    RetrieveGroup(Groups, ComboBox.ItemIndex, Old)
   else
     Old := nil;
 
@@ -370,9 +370,12 @@ end;
 function TDialogCreateToken.RetrieveGroup;
 begin
   if Index > 0 then
-    Result := Groups[Index - 1].Sid
+  begin
+    Sid := Groups[Index - 1].Sid;
+    Result := NtxSuccess;
+  end
   else
-    Result := SidEditor.Sid
+    Result := SidEditor.TryGetSid(Sid);
 end;
 
 end.
