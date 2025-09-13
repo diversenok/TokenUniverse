@@ -123,7 +123,7 @@ begin
   // Locate an existing entry or where to put a new one
   Index := TArray.BinarySearchEx<TEventStorage>(
     TEventStorage.Storage,
-    function (const Entry: TEventStorage): Integer
+    function (const Entry: TEventStorage): NativeInt
     begin
       {$R-}{$Q-}
       Result := Entry.Identity - Identity;
