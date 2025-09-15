@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
   TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit, Vcl.Mask,
-  VclEx.Edit;
+  VclEx.Edit, UI.Prototypes.Groups;
 
 type
   TDialogRun = class(TChildForm)
@@ -49,13 +49,13 @@ type
     Label1: TLabel;
     CheckBoxForceBreakaway: TCheckBox;
     CheckBoxIgnoreElevation: TCheckBox;
-    Isolation: TTabSheet;
+    TabIsolation: TTabSheet;
     CheckBoxLPAC: TCheckBox;
     GroupBoxChildFlags: TGroupBox;
     CheckBoxChildRestricted: TCheckBox;
     CheckBoxChildUnlessSecure: TCheckBox;
     CheckBoxChildOverride: TCheckBox;
-    Manifest: TTabSheet;
+    TabManifest: TTabSheet;
     RadioButtonManifestNone: TRadioButton;
     RadioButtonManifestEmbedded: TRadioButton;
     RadioButtonManifestExternalExe: TRadioButton;
@@ -78,6 +78,17 @@ type
     ButtonSelectSession: TButton;
     PopupClearSession: TPopupMenu;
     MenuClearSession: TMenuItem;
+    TabAppContainer: TTabSheet;
+    CapabilitiesFrame: TFrameGroups;
+    ButtonAddCapability: TButton;
+    LabelCapabilities: TLabel;
+    PopupAddCapabilities: TPopupMenu;
+    MenuAddAppCap: TMenuItem;
+    MenuAddSidCap: TMenuItem;
+    MenuClearCap: TMenuItem;
+    PopupEditCapabilities: TPopupMenu;
+    MenuEditCapability: TMenuItem;
+    MenuRemoveCapability: TMenuItem;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -97,6 +108,12 @@ type
     procedure MenuClearSessionClick(Sender: TObject);
     procedure ButtonSelectSessionClick(Sender: TObject);
     procedure EditSessionIdChange(Sender: TObject);
+    procedure MenuAddAppCapClick(Sender: TObject);
+    procedure MenuAddSidCapClick(Sender: TObject);
+    procedure MenuClearCapClick(Sender: TObject);
+    procedure MenuEditCapabilityClick(Sender: TObject);
+    procedure EditSingleCapability(const Value: TGroup);
+    procedure MenuRemoveCapabilityClick(Sender: TObject);
   private
     Method: TKnownCreateMethod;
     FToken: IToken;
@@ -126,7 +143,8 @@ uses
   NtUtils.Profiles, NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
   DelphiUiLib.LiteReflection, DelphiUiLib.Strings, UI.Information,
   UI.ProcessList, UI.MainForm, UI.Modal.ComboDlg, TU.Tokens.Open, UI.Settings,
-  System.UITypes, NtUtils.Security.Sid, NtUiCommon.Colors;
+  System.UITypes, NtUtils.Security.Sid, NtUiCommon.Colors,
+  NtUiCommon.Prototypes, UI.Modal.PickUser;
 
 {$R *.dfm}
 
@@ -192,6 +210,7 @@ begin
   Options.OwnerWindow := Handle;
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
   Options.AppUserModeId := EditAppId.Text;
+  Options.Capabilities := CapabilitiesFrame.All;
 
   if Assigned(FToken) then
     Options.hxToken := FToken.Handle;
@@ -378,6 +397,16 @@ begin
     EditSessionId.Color := ColorSettings.clBackgroundError;
 end;
 
+procedure TDialogRun.EditSingleCapability;
+begin
+  CapabilitiesFrame.EditSelectedGroup(
+    procedure (var Group: TGroup)
+    begin
+      Group := TDialogPickUser.PickEditOne(Self, Group);
+    end
+  );
+end;
+
 procedure TDialogRun.FormClose;
 begin
   UseToken := nil;
@@ -391,6 +420,7 @@ begin
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
   SHAutoComplete(EditManifestExecutable.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditManifestFile.Handle, SHACF_FILESYS_ONLY);
+  CapabilitiesFrame.ViewingMode := gvCapability;
   ChangedExecMethod(Sender);
   UpdateDesktopList;
 end;
@@ -431,6 +461,37 @@ begin
     TInfoDialog.CreateFromToken(Self, FToken);
 end;
 
+procedure TDialogRun.MenuAddAppCapClick;
+var
+  Capabilities: TArray<TNtUiLibCapability>;
+  Groups: TArray<TGroup>;
+  i: Integer;
+begin
+  if not Assigned(NtUiLibSelectCapabilities) then
+    Exit;
+
+  Capabilities := NtUiLibSelectCapabilities(Self);
+  SetLength(Groups, Length(Capabilities));
+
+  for i := 0 to High(Groups) do
+  begin
+    Groups[i].Sid := Capabilities[i].AppSid;
+    Groups[i].Attributes := SE_GROUP_ENABLED;
+  end;
+
+  CapabilitiesFrame.Add(Groups);
+end;
+
+procedure TDialogRun.MenuAddSidCapClick;
+begin
+  CapabilitiesFrame.Add([TDialogPickUser.PickNew(Self, True)]);
+end;
+
+procedure TDialogRun.MenuClearCapClick;
+begin
+  CapabilitiesFrame.Load(nil, gvCapability);
+end;
+
 procedure TDialogRun.MenuClearParentClick;
 begin
   ParentProcessId := 0;
@@ -448,6 +509,32 @@ procedure TDialogRun.MenuCmdClick;
 begin
   EditExe.Text := GetEnvironmentVariable('ComSpec');
   ButtonRun.SetFocus;
+end;
+
+procedure TDialogRun.MenuEditCapabilityClick;
+begin
+  // Single edit
+  if CapabilitiesFrame.VST.SelectedCount = 1 then
+    EditSingleCapability(Default(TGroup))
+
+  // Multiple edit
+  else if CapabilitiesFrame.VST.SelectedCount > 1 then
+    CapabilitiesFrame.EditSelectedGroups(
+      procedure (
+        const Groups: TArray<TGroup>;
+        var AttributesToClear: TGroupAttributes;
+        var AttributesToSet: TGroupAttributes
+      )
+      begin
+        TDialogPickUser.PickEditMultiple(Self, Groups, AttributesToSet,
+          AttributesToClear);
+      end
+    );
+end;
+
+procedure TDialogRun.MenuRemoveCapabilityClick;
+begin
+  CapabilitiesFrame.VST.DeleteSelectedNodes;
 end;
 
 procedure TDialogRun.MenuSelfClick;
@@ -577,6 +664,8 @@ begin
   EditAppId.Enabled := spoAppUserModeId in SupportedOptions;
   EditSessionId.Enabled := spoSessionId in SupportedOptions;
   ButtonSelectSession.Enabled := spoSessionId in SupportedOptions;
+  ButtonAddCapability.Enabled := spoAppContainer in SupportedOptions;
+  CapabilitiesFrame.Enabled := spoAppContainer in SupportedOptions;
 
   if spoToken in SupportedOptions then
     LinkLabelToken.Font.Style := LinkLabelToken.Font.Style - [fsStrikeOut]

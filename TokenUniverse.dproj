@@ -348,6 +348,12 @@ $(PostBuildEvent)]]></PostBuildEvent>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.pas"/>
         <DCCReference Include="NtUtilsUI\VclEx\VclEx.Edit.pas"/>
+        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sids.Capabilities.pas">
+            <Form>CapabilityListFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

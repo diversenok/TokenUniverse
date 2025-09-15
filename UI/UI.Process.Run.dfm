@@ -3,7 +3,7 @@ object DialogRun: TDialogRun
   Top = 0
   Caption = 'Run program...'
   ClientHeight = 555
-  ClientWidth = 331
+  ClientWidth = 434
   Color = clBtnFace
   Constraints.MinHeight = 594
   Constraints.MinWidth = 347
@@ -23,7 +23,7 @@ object DialogRun: TDialogRun
     AlignWithMargins = True
     Left = 3
     Top = 52
-    Width = 325
+    Width = 428
     Height = 472
     Margins.Top = 52
     Margins.Bottom = 31
@@ -41,7 +41,7 @@ object DialogRun: TDialogRun
         Caption = 'Desktop:'
       end
       object LabelLogonFlags: TLabel
-        Left = 161
+        Left = 162
         Top = 284
         Width = 59
         Height = 13
@@ -71,7 +71,7 @@ object DialogRun: TDialogRun
       object EditParams: TLabeledEdit
         Left = 4
         Top = 156
-        Width = 307
+        Width = 410
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 59
@@ -83,7 +83,7 @@ object DialogRun: TDialogRun
       object GroupBoxFlags: TGroupBox
         Left = 4
         Top = 328
-        Width = 307
+        Width = 410
         Height = 113
         Anchors = [akLeft, akRight, akBottom]
         Caption = 'Flags: '
@@ -98,11 +98,12 @@ object DialogRun: TDialogRun
           TabOrder = 0
         end
         object CheckBoxSuspended: TCheckBox
-          Left = 157
+          Left = 271
           Top = 24
           Width = 134
           Height = 17
           Hint = 'Do not let the process start immediately'
+          Anchors = [akTop, akRight]
           Caption = 'Create suspended'
           TabOrder = 4
         end
@@ -125,17 +126,18 @@ object DialogRun: TDialogRun
           TabOrder = 1
         end
         object CheckBoxRunas: TCheckBox
-          Left = 157
+          Left = 271
           Top = 46
           Width = 134
           Height = 15
           Hint = 'Ask User Account Control for elevation'
+          Anchors = [akTop, akRight]
           Caption = 'Request elevation'
           Enabled = False
           TabOrder = 5
         end
         object CheckBoxRunAsInvoker: TCheckBox
-          Left = 157
+          Left = 271
           Top = 90
           Width = 134
           Height = 17
@@ -143,6 +145,7 @@ object DialogRun: TDialogRun
             'Configure __COMPAT_LAYER environment variable to enable/disable ' +
             'RunAsInvoker compatibility mechanism'
           AllowGrayed = True
+          Anchors = [akTop, akRight]
           Caption = 'Run as invoker'
           State = cbGrayed
           TabOrder = 7
@@ -160,22 +163,24 @@ object DialogRun: TDialogRun
           TabOrder = 3
         end
         object CheckBoxIgnoreElevation: TCheckBox
-          Left = 158
+          Left = 272
           Top = 68
           Width = 133
           Height = 15
           Hint = 'Force starting the process without elevation'
+          Anchors = [akTop, akRight]
           Caption = 'Ignore elevation'
           Enabled = False
           TabOrder = 6
         end
       end
       object ComboBoxLogonFlags: TComboBox
-        Left = 162
-        Top = 300
-        Width = 149
+        Left = 159
+        Top = 301
+        Width = 258
         Height = 21
         Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
         TabOrder = 4
         Text = 'Default'
@@ -187,7 +192,7 @@ object DialogRun: TDialogRun
       object EditDir: TLabeledEdit
         Left = 4
         Top = 204
-        Width = 307
+        Width = 410
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         EditLabel.Width = 87
@@ -199,7 +204,7 @@ object DialogRun: TDialogRun
       object ComboBoxDesktop: TComboBox
         Left = 4
         Top = 254
-        Width = 307
+        Width = 410
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 2
@@ -223,7 +228,7 @@ object DialogRun: TDialogRun
       object ComboMethod: TComboBox
         Left = 3
         Top = 24
-        Width = 306
+        Width = 410
         Height = 22
         Style = csOwnerDrawFixed
         Anchors = [akLeft, akTop, akRight]
@@ -252,7 +257,7 @@ object DialogRun: TDialogRun
           'WMI')
       end
       object ButtonChooseParent: TButton
-        Left = 226
+        Left = 331
         Top = 102
         Width = 83
         Height = 25
@@ -266,7 +271,7 @@ object DialogRun: TDialogRun
       object EditParent: TEditEx
         Left = 3
         Top = 104
-        Width = 217
+        Width = 322
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ReadOnly = True
@@ -276,7 +281,7 @@ object DialogRun: TDialogRun
       object LinkLabelToken: TLinkLabel
         Left = 3
         Top = 59
-        Width = 292
+        Width = 395
         Height = 14
         Anchors = [akLeft, akTop, akRight]
         AutoSize = False
@@ -285,19 +290,12 @@ object DialogRun: TDialogRun
         OnLinkClick = LinkLabelTokenLinkClick
       end
     end
-    object Isolation: TTabSheet
+    object TabIsolation: TTabSheet
       Caption = 'Isolation'
       ImageIndex = 1
-      object LabelAppContainer: TLabel
-        Left = 3
-        Top = 59
-        Width = 70
-        Height = 13
-        Caption = 'AppContainer:'
-      end
       object LabelProtection: TLabel
         Left = 3
-        Top = 252
+        Top = 167
         Width = 53
         Height = 13
         Caption = 'Protection:'
@@ -311,33 +309,23 @@ object DialogRun: TDialogRun
       end
       object LabelSession: TLabel
         Left = 3
-        Top = 276
+        Top = 191
         Width = 40
         Height = 13
         Caption = 'Session:'
       end
-      object CheckBoxLPAC: TCheckBox
-        Left = 3
-        Top = 104
-        Width = 230
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 'Low Privileged AppContainer'
-        Enabled = False
-        TabOrder = 2
-      end
       object GroupBoxChildFlags: TGroupBox
-        Left = 3
-        Top = 138
-        Width = 306
+        Left = 1
+        Top = 53
+        Width = 411
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Child Process Policy: '
-        TabOrder = 3
+        TabOrder = 1
         object CheckBoxChildRestricted: TCheckBox
           Left = 16
           Top = 24
-          Width = 273
+          Width = 378
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Restricted (block child processes)'
@@ -346,7 +334,7 @@ object DialogRun: TDialogRun
         object CheckBoxChildUnlessSecure: TCheckBox
           Left = 16
           Top = 47
-          Width = 273
+          Width = 378
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Restricted unless secure'
@@ -355,7 +343,7 @@ object DialogRun: TDialogRun
         object CheckBoxChildOverride: TCheckBox
           Left = 16
           Top = 70
-          Width = 273
+          Width = 378
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 'Override'
@@ -364,13 +352,13 @@ object DialogRun: TDialogRun
       end
       object ComboBoxProtection: TComboBox
         Left = 62
-        Top = 249
-        Width = 247
+        Top = 164
+        Width = 350
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 4
+        TabOrder = 2
         Text = 'Not specified'
         Items.Strings = (
           'Not specified'
@@ -387,44 +375,26 @@ object DialogRun: TDialogRun
       object EditAppId: TEditEx
         Left = 3
         Top = 26
-        Width = 306
+        Width = 409
         Height = 21
         Hint = '{PackageFamilyName}!{AppId}'
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         TextHint = '{PackageFamilyName}!{AppId}'
       end
-      inline AppContainerField: TAppContainerFieldFrame
-        Left = 3
-        Top = 76
-        Width = 306
-        Height = 25
-        Anchors = [akLeft, akTop, akRight]
-        Constraints.MinHeight = 25
-        Constraints.MinWidth = 180
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        inherited tbxMoniker: TEdit
-          Width = 220
-        end
-        inherited btnSelect: TButton
-          Left = 226
-        end
-      end
       object EditSessionId: TEditEx
         Left = 3
-        Top = 295
-        Width = 220
+        Top = 210
+        Width = 323
         Height = 21
         Anchors = [akLeft, akTop, akRight]
-        TabOrder = 6
+        TabOrder = 4
         TextHint = '(Not selected)'
         OnChange = EditSessionIdChange
       end
       object ButtonSelectSession: TButton
-        Left = 226
-        Top = 293
+        Left = 329
+        Top = 208
         Width = 83
         Height = 25
         Anchors = [akTop, akRight]
@@ -432,11 +402,120 @@ object DialogRun: TDialogRun
         DropDownMenu = PopupClearSession
         PopupMenu = PopupClearSession
         Style = bsSplitButton
-        TabOrder = 5
+        TabOrder = 3
         OnClick = ButtonSelectSessionClick
       end
     end
-    object Manifest: TTabSheet
+    object TabAppContainer: TTabSheet
+      Caption = 'AppContainer'
+      ImageIndex = 3
+      object LabelAppContainer: TLabel
+        Left = 3
+        Top = 7
+        Width = 70
+        Height = 13
+        Caption = 'AppContainer:'
+      end
+      object LabelCapabilities: TLabel
+        Left = 3
+        Top = 81
+        Width = 58
+        Height = 13
+        Caption = 'Capabilities:'
+      end
+      inline AppContainerField: TAppContainerFieldFrame
+        Left = 3
+        Top = 26
+        Width = 414
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Constraints.MinHeight = 25
+        Constraints.MinWidth = 180
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        inherited tbxMoniker: TEdit
+          Width = 328
+        end
+        inherited btnSelect: TButton
+          Left = 334
+        end
+      end
+      object CheckBoxLPAC: TCheckBox
+        Left = 3
+        Top = 57
+        Width = 333
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Low Privileged AppContainer'
+        Enabled = False
+        TabOrder = 1
+      end
+      inline CapabilitiesFrame: TFrameGroups
+        AlignWithMargins = True
+        Left = 3
+        Top = 100
+        Width = 414
+        Height = 341
+        Margins.Top = 100
+        Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 2
+        inherited VST: TDevirtualizedTree
+          Width = 414
+          Height = 341
+          PopupMenuEx = PopupEditCapabilities
+          Columns = <
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+              Position = 0
+              Text = 'Friendly Name'
+              Width = 320
+            end
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+              Position = 1
+              Text = 'SID'
+              Width = 280
+            end
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+              Position = 2
+              Text = 'SID Type'
+              Width = 110
+            end
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+              Position = 3
+              Text = 'State'
+              Width = 60
+            end
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
+              Position = 4
+              Text = 'Flags'
+              Width = 120
+            end>
+        end
+      end
+      object ButtonAddCapability: TButton
+        Left = 337
+        Top = 74
+        Width = 80
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Add...'
+        DropDownMenu = PopupAddCapabilities
+        PopupMenu = PopupAddCapabilities
+        Style = bsSplitButton
+        TabOrder = 3
+        OnClick = MenuAddAppCapClick
+      end
+    end
+    object TabManifest: TTabSheet
       Caption = 'Manifest'
       ImageIndex = 2
       object LabelManifestDpi: TLabel
@@ -450,7 +529,7 @@ object DialogRun: TDialogRun
       object RadioButtonManifestNone: TRadioButton
         Left = 3
         Top = 8
-        Width = 311
+        Width = 414
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'No registration (unless already included by Win32 API)'
@@ -460,7 +539,7 @@ object DialogRun: TDialogRun
       object RadioButtonManifestEmbedded: TRadioButton
         Left = 3
         Top = 31
-        Width = 311
+        Width = 414
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Use embedded manifest'
@@ -472,7 +551,7 @@ object DialogRun: TDialogRun
       object RadioButtonManifestExternalExe: TRadioButton
         Left = 3
         Top = 54
-        Width = 311
+        Width = 414
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Use embedded manifest from another executable:'
@@ -482,7 +561,7 @@ object DialogRun: TDialogRun
       object EditManifestExecutable: TEditEx
         Left = 19
         Top = 77
-        Width = 286
+        Width = 389
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         Enabled = False
@@ -493,7 +572,7 @@ object DialogRun: TDialogRun
       object RadioButtonManifestExternal: TRadioButton
         Left = 3
         Top = 104
-        Width = 311
+        Width = 414
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Use external manifest:'
@@ -503,7 +582,7 @@ object DialogRun: TDialogRun
       object EditManifestFile: TEditEx
         Left = 19
         Top = 127
-        Width = 286
+        Width = 389
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         Enabled = False
@@ -514,7 +593,7 @@ object DialogRun: TDialogRun
       object RadioButtonManifestCustom: TRadioButton
         Left = 3
         Top = 154
-        Width = 311
+        Width = 414
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Use custom manifest:'
@@ -524,7 +603,7 @@ object DialogRun: TDialogRun
       object CheckBoxManifestThemes: TCheckBox
         Left = 19
         Top = 177
-        Width = 286
+        Width = 389
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Runtime themes'
@@ -537,7 +616,7 @@ object DialogRun: TDialogRun
       object ComboBoxManifestDpi: TComboBox
         Left = 19
         Top = 267
-        Width = 286
+        Width = 389
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
@@ -556,7 +635,7 @@ object DialogRun: TDialogRun
       object CheckBoxManifestGdiScaling: TCheckBox
         Left = 19
         Top = 200
-        Width = 295
+        Width = 398
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'GDI Scaling'
@@ -569,7 +648,7 @@ object DialogRun: TDialogRun
       object CheckBoxManifestLongPaths: TCheckBox
         Left = 19
         Top = 223
-        Width = 295
+        Width = 398
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Long Path Aware'
@@ -580,7 +659,7 @@ object DialogRun: TDialogRun
     end
   end
   object ButtonClose: TButton
-    Left = 253
+    Left = 356
     Top = 526
     Width = 75
     Height = 25
@@ -592,7 +671,7 @@ object DialogRun: TDialogRun
     OnClick = ButtonCloseClick
   end
   object ButtonRun: TButton
-    Left = 172
+    Left = 275
     Top = 526
     Width = 75
     Height = 25
@@ -605,7 +684,7 @@ object DialogRun: TDialogRun
   object EditExe: TLabeledEdit
     Left = 8
     Top = 23
-    Width = 239
+    Width = 342
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 57
@@ -615,7 +694,7 @@ object DialogRun: TDialogRun
     Text = ''
   end
   object ButtonBrowse: TButton
-    Left = 253
+    Left = 356
     Top = 21
     Width = 71
     Height = 25
@@ -669,6 +748,36 @@ object DialogRun: TDialogRun
     object MenuClearSession: TMenuItem
       Caption = 'Clear'
       OnClick = MenuClearSessionClick
+    end
+  end
+  object PopupAddCapabilities: TPopupMenu
+    Left = 191
+    Top = 308
+    object MenuAddAppCap: TMenuItem
+      Caption = 'Add APP CAPABILITY...'
+      OnClick = MenuAddAppCapClick
+    end
+    object MenuAddSidCap: TMenuItem
+      Caption = 'Add SID...'
+      OnClick = MenuAddSidCapClick
+    end
+    object MenuClearCap: TMenuItem
+      Caption = 'Clear'
+      OnClick = MenuClearCapClick
+    end
+  end
+  object PopupEditCapabilities: TPopupMenu
+    Left = 191
+    Top = 364
+    object MenuEditCapability: TMenuItem
+      Caption = 'Edit...'
+      ShortCut = 113
+      OnClick = MenuEditCapabilityClick
+    end
+    object MenuRemoveCapability: TMenuItem
+      Caption = 'Remove'
+      ShortCut = 46
+      OnClick = MenuRemoveCapabilityClick
     end
   end
 end

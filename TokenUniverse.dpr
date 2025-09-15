@@ -95,7 +95,9 @@ uses
   NtUiBackend.Sids.Abbreviations in 'NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas',
   NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame},
   NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas',
-  VclEx.Edit in 'NtUtilsUI\VclEx\VclEx.Edit.pas';
+  VclEx.Edit in 'NtUtilsUI\VclEx\VclEx.Edit.pas',
+  NtUiFrame.Sids.Capabilities in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Capabilities.pas' {CapabilityListFrame: TFrame},
+  NtUiBackend.Sids.Capabilities in 'NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}
