@@ -415,12 +415,23 @@ end;
 
 procedure TDialogRun.FormCreate;
 begin
+  // Don't use split button style without manifests; note that the user should
+  // still be able to trigger the menu via a right mouse click
+  if GetComCtlVersion < ComCtlVersionIE6 then
+  begin
+    ButtonBrowse.Style := bsPushButton;
+    ButtonChooseParent.Style := bsPushButton;
+    ButtonAddCapability.Style := bsPushButton;
+    ButtonSelectSession.Style := bsPushButton;
+  end;
+
   EditExe.Text := GetEnvironmentVariable('ComSpec');
   SHAutoComplete(EditExe.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditDir.Handle, SHACF_FILESYS_DIRS);
   SHAutoComplete(EditManifestExecutable.Handle, SHACF_FILESYS_ONLY);
   SHAutoComplete(EditManifestFile.Handle, SHACF_FILESYS_ONLY);
   CapabilitiesFrame.ViewingMode := gvCapability;
+  CapabilitiesFrame.OnDefaultAction := EditSingleCapability;
   ChangedExecMethod(Sender);
   UpdateDesktopList;
 end;

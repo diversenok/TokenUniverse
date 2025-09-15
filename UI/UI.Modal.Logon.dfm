@@ -57,6 +57,7 @@ object LogonDialog: TLogonDialog
     Height = 21
     Style = csDropDownList
     Anchors = [akLeft, akTop, akRight]
+    DropDownCount = 12
     ItemIndex = 1
     TabOrder = 2
     Text = 'Network'
@@ -263,7 +264,7 @@ object LogonDialog: TLogonDialog
     Left = 208
     Top = 64
     object MenuEdit: TMenuItem
-      Caption = 'Edit'
+      Caption = 'Edit...'
       ShortCut = 113
       OnClick = MenuEditClick
     end
