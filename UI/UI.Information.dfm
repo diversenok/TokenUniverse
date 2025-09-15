@@ -13,12 +13,10 @@ object InfoDialog: TInfoDialog
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
     AlignWithMargins = True
@@ -488,6 +486,13 @@ object InfoDialog: TInfoDialog
         Height = 369
         Align = alClient
         TabOrder = 0
+        inherited ComboOrigin: TComboBox
+          Height = 21
+        end
+        inherited StaticOrigin: TStaticText
+          Width = 92
+          Height = 17
+        end
       end
     end
     object TabObject: TTabSheet
@@ -638,6 +643,26 @@ object InfoDialog: TInfoDialog
         end
       end
     end
+    object TabCapabilities: TTabSheet
+      Caption = 'Capabilities'
+      ImageIndex = 9
+      inline CapabilitiesFrame: TFrameGroups
+        Left = 0
+        Top = 0
+        Width = 388
+        Height = 369
+        Align = alClient
+        DoubleBuffered = True
+        ParentDoubleBuffered = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        inherited VST: TDevirtualizedTree
+          Width = 388
+          Height = 369
+        end
+      end
+    end
     object TabRestricted: TTabSheet
       Caption = 'Restricting SIDs'
       ImageIndex = 3
@@ -707,6 +732,7 @@ object InfoDialog: TInfoDialog
           end
           inherited cbxColumn: TComboBox
             Left = 228
+            Height = 21
           end
         end
       end

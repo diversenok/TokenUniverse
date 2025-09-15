@@ -74,6 +74,8 @@ type
     PanelObject: TPanel;
     DefaultDaclFrame: TAclFrame;
     btnDaclApply: TButton;
+    TabCapabilities: TTabSheet;
+    CapabilitiesFrame: TFrameGroups;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -603,6 +605,7 @@ begin
   inherited Create(AOwner, cfmDesktop);
 
   GroupsRestrictedFrame.OnDefaultAction := InspectGroup;
+  CapabilitiesFrame.OnDefaultAction := InspectGroup;
   GroupsMemberFrame.OnDefaultAction := InspectGroup;
   Show;
 end;
@@ -663,6 +666,9 @@ begin
 
   TabRestricted.Caption := Format('Restricting SIDs (%d)',
     [GroupsRestrictedFrame.VST.RootNodeCount]);
+
+  TabCapabilities.Caption := Format('Capabilities (%d)',
+    [CapabilitiesFrame.VST.RootNodeCount]);
 end;
 
 procedure TInfoDialog.FormKeyDown;
@@ -711,7 +717,7 @@ var
   Repr: TRttixFullReflection;
   User: TGroup;
   Package: ISid;
-  RestrictedSids: TArray<TGroup>;
+  RestrictedSids, Capabilities: TArray<TGroup>;
   AppContainerInfo: TRtlxAppContainerInfo;
 begin
   Token.SmartRefresh;
@@ -771,6 +777,9 @@ begin
 
   if Token.QueryRestrictedSids(RestrictedSids).IsSuccess then
     GroupsRestrictedFrame.Load(RestrictedSids);
+
+  if Token.QueryCapabilities(Capabilities).IsSuccess then
+    CapabilitiesFrame.Load(Capabilities, gvCapability);
 
   TabObject.Tag := TAB_INVALIDATED;
   TabAudit.Tag := TAB_INVALIDATED;
