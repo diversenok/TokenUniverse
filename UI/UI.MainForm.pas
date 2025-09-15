@@ -139,7 +139,8 @@ uses
   DelphiUtils.Arrays, NtUiLib.Errors, Ntapi.ntseapi, NtUtils, UI.Access,
   NtUiLib.Exceptions.Dialog, TU.Tokens.Open, NtUtils.Tokens.Impersonate,
   NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
-  UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog;
+  UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog,
+  DelphiUiLib.LiteReflection.Types;
 
 {$R *.dfm}
 

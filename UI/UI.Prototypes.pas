@@ -109,7 +109,7 @@ implementation
 
 uses
   UI.Settings, TU.Winapi, Ntapi.ntpebteb, NtUtils.Lsa, NtUtils.Lsa.Logon,
-  NtUtils.Lsa.Sid, DelphiUiLib.Strings, DelphiUiLib.Reflection;
+  NtUtils.Lsa.Sid, DelphiUiLib.Strings, DelphiUiLib.LiteReflection;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}
@@ -149,7 +149,7 @@ begin
   ComboBox.Items.Clear;
 
   for i := 0 to High(Sessions) do
-    ComboBox.Items.Add(TType.Represent(Sessions[i].SessionId).Text);
+    ComboBox.Items.Add(Rttix.Format(Sessions[i].SessionId));
 
   if SelectCurrent then
     SetSession(RtlGetCurrentPeb.SessionId);
@@ -445,7 +445,7 @@ begin
   ComboBox.Items.Clear;
 
   for i := 0 to High(FLogonSessions) do
-    ComboBox.Items.Add(TType.Represent(FLogonSessions[i]).Text);
+    ComboBox.Items.Add(Rttix.Format(FLogonSessions[i]));
 
   ComboBox.Items.EndUpdate;
 end;

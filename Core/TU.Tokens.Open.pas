@@ -162,7 +162,7 @@ uses
   Ntapi.ntpsapi, Ntapi.ntstatus, Ntapi.ntioapi, Ntapi.ntioapi.fsctl,
   Ntapi.ntobapi, NtUtils.Tokens.Impersonate, NtUtils.Tokens, NtUtils.WinStation,
   NtUtils.Processes, NtUtils.Processes.Info, NtUtils.Threads, NtUtils.Objects,
-  NtUtils.Lsa.Sid, DelphiUiLib.Reflection, System.SysUtils, NtUtils.WinUser,
+  NtUtils.Lsa.Sid, DelphiUiLib.LiteReflection, System.SysUtils, NtUtils.WinUser,
   NtUtils.Files.Open, NtUtils.Files.Control, NtUtils.Files.Operations,
   NtUtils.SysUtils, NtUtils.UserManager, DelphiUiLib.Strings;
 
@@ -277,7 +277,7 @@ begin
   else if PID = NtCurrentProcessId then
     Caption := Format('Current Process [%d]', [PID])
   else
-    Caption := TType.Represent(PID).Text;
+    Caption := Rttix.Format(PID);
 
   Token := CaptureTokenHandle(hxToken, Caption);
 end;
@@ -318,7 +318,7 @@ begin
   else if TID = NtCurrentThreadId then
     Caption := Format('Current Thread [%d]', [TID])
   else
-    Caption := TType.Represent(TID).Text;
+    Caption := Rttix.Format(TID);
 
   Token := CaptureTokenHandle(hxToken, Caption);
 end;
@@ -367,7 +367,7 @@ begin
   if TID = 0 then
     Caption := 'Unknown Thread'
   else
-    Caption := TType.Represent(TID).Text;
+    Caption := Rttix.Format(TID);
 
   if EffectiveOnly then
     Caption := Caption + ' (eff.)';
@@ -530,7 +530,7 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, 'User Manager token for ' +
-      TType.Represent(Sid).Text);
+      Rttix.Format(Sid));
 end;
 
 function MakeUmgrTokenByName;

@@ -319,8 +319,7 @@ uses
   Ntapi.ntstatus, Ntapi.ntpsapi, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
   NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUtils.Arrays,
-  DelphiUiLib.Reflection, NtUiLib.Reflection.Types, System.SysUtils,
-  TU.Tokens.Events, TU.Events;
+  DelphiUiLib.LiteReflection, System.SysUtils, TU.Tokens.Events, TU.Events;
 
 { Helper functions }
 
@@ -337,8 +336,8 @@ begin
     or (Length(SubAuthorities) <> SECURITY_PROCESS_TRUST_AUTHORITY_RID_COUNT) then
     Exit('Invalid');
 
-  Result := TType.Represent<TSecurityTrustType>(SubAuthorities[0]).Text +
-    ' (' + TType.Represent<TSecurityTrustLevel>(SubAuthorities[1]).Text + ')';
+  Result := Rttix.Format<TSecurityTrustType>(SubAuthorities[0]) +
+    ' (' + Rttix.Format<TSecurityTrustLevel>(SubAuthorities[1]) + ')';
 end;
 
 function SessionInfoToString(const Info: TWinStationInformation): String;
@@ -348,13 +347,14 @@ begin
   if Info.WinStationName <> '' then
     Result := Format('%s: %s', [Result, Info.WinStationName]);
 
-  Result := Format('%s (%s)', [Result, Info.FullUserName]);
+  Result := Format('%s (%s)', [Result, RtlxStringOrDefault(Info.FullUserName,
+    'No User')]);
 end;
 
 function TTokenElevationInfo.ToString;
 begin
-  Result  := BooleanToString(Elevated, bkYesNo) + ' (' + TType.Represent(
-    ElevationType).Text + ')';
+  Result  := BooleanToString(Elevated, bkYesNo) + ' (' + Rttix.Format(
+    ElevationType) + ')';
 end;
 
 type
@@ -681,8 +681,8 @@ begin
     if Events.CreatorPID = NtCurrentProcessId then
       Events.StringCache[tsCreator] := 'Current Process'
     else
-      Events.StringCache[tsCreator] := TType.Represent(
-        Events.CreatorPID).Text;
+      Events.StringCache[tsCreator] := Rttix.Format(
+        Events.CreatorPID);
   end
   else
   begin
@@ -1244,8 +1244,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    PerHandleString[tsAccess] := TType.Represent<TTokenAccessMask>(
-      Info.GrantedAccess).Text;
+    PerHandleString[tsAccess] := Rttix.Format<TTokenAccessMask>(
+      Info.GrantedAccess);
     PerHandleString[tsAccessNumeric] := UiLibUIntToHex(Info.GrantedAccess,
       NUMERIC_WIDTH_ROUND_TO_BYTE);
     Events.StringCache[tsHandleCount] := UiLibUIntToDec(
@@ -1357,7 +1357,7 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsFlags] := TType.Represent(Flags).Text;
+    Events.StringCache[tsFlags] := Rttix.Format(Flags);
 
     if BitTest(Flags and TOKEN_WRITE_RESTRICTED) then
       Events.StringCache[tsRestricted] := 'Write-only'
@@ -1465,8 +1465,8 @@ begin
   Result := NtxQueryGroupToken(hxToken, TokenIntegrityLevel, Integrity);
 
   if Result.IsSuccess then
-    Events.StringCache[tsIntegrity] := TType.Represent<TIntegrityRid>(
-      RtlxRidSid(Integrity.Sid, SECURITY_MANDATORY_UNTRUSTED_RID)).Text;
+    Events.StringCache[tsIntegrity] := Rttix.Format<TIntegrityRid>(
+      RtlxRidSid(Integrity.Sid, SECURITY_MANDATORY_UNTRUSTED_RID));
 
   Events.OnIntegrity.Notify(Result, Integrity);
 end;
@@ -1569,8 +1569,8 @@ begin
   begin
     Events.StringCache[tsLogonAuthPackage] := RtlxStringOrDefault(
       Info.Data.AuthenticationPackage.ToString, '(None)');
-    Events.StringCache[tsLogonType] := TType.Represent(Info.Data.LogonType).Text;
-    Events.StringCache[tsLogonTime] := TType.Represent(Info.Data.LogonTime).Text;
+    Events.StringCache[tsLogonType] := Rttix.Format(Info.Data.LogonType);
+    Events.StringCache[tsLogonTime] := Rttix.Format(Info.Data.LogonTime);
   end;
 
   Events.OnLogonInfo.Notify(Result, Info);
@@ -1598,7 +1598,7 @@ begin
   Result := NtxToken.Query(hxToken, TokenMandatoryPolicy, Policy);
 
   if Result.IsSuccess then
-    Events.StringCache[tsMandatoryPolicy] := TType.Represent(Policy).Text;
+    Events.StringCache[tsMandatoryPolicy] := Rttix.Format(Policy);
 
   Events.OnMandatoryPolicy.Notify(Result, Policy);
 end;
@@ -1629,8 +1629,8 @@ begin
 
   if Result.IsSuccess then
   begin
-    Events.StringCache[tsPackageFlags] := TType.Represent(PkgClaim.Flags).Text;
-    Events.StringCache[tsPackageOrigin] := TType.Represent(PkgClaim.Origin).Text;
+    Events.StringCache[tsPackageFlags] := Rttix.Format(PkgClaim.Flags);
+    Events.StringCache[tsPackageOrigin] := Rttix.Format(PkgClaim.Origin);
   end
   else if Result.Status = STATUS_NOT_FOUND then
   begin
@@ -1825,14 +1825,14 @@ begin
   begin
     Events.StringCache[tsTokenId] := UiLibUIntToHex(Statistics.TokenId);
     Events.StringCache[tsLogonId] := UiLibUIntToHex(Statistics.AuthenticationId);
-    Events.StringCache[tsExpires] := TType.Represent(
-      Statistics.ExpirationTime).Text;
+    Events.StringCache[tsExpires] := Rttix.Format(
+      Statistics.ExpirationTime);
 
     if Statistics.TokenType = TokenPrimary then
       Events.StringCache[tsType] := 'Primary'
     else
-      Events.StringCache[tsType] := TType.Represent(
-        Statistics.ImpersonationLevel).Text;
+      Events.StringCache[tsType] := Rttix.Format(
+        Statistics.ImpersonationLevel);
 
     Events.StringCache[tsDynamicCharged] := UiLibBytesToString(
       Statistics.DynamicCharged);

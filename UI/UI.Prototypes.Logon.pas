@@ -40,7 +40,7 @@ implementation
 
 uses
   Vcl.Graphics, NtUiCommon.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
-  Ntapi.NtSecApi, DelphiUiLib.Reflection.Records, DelphiUiLib.Reflection,
+  Ntapi.NtSecApi, DelphiUiLib.Reflection.Records, DelphiUiLib.LiteReflection,
   NtUiLib.Errors;
 
 {$R *.dfm}
@@ -163,7 +163,7 @@ begin
     TRecord.Traverse(Auto.DataOrNil<PSecurityLogonSessionData>(Detailed),
       procedure (const Field: TFieldReflection)
       var
-        SidReflection: TRepresentation;
+        SidReflection: TRttixFullReflection;
       begin
         // Skip the logon ID, we already processed it
         if Field.Offset = IntPtr(@PSecurityLogonSessionData(nil).LogonID) then
@@ -178,7 +178,7 @@ begin
             not Assigned(Detailed) and Assigned(WellKnownSid) then
           begin
             // Fallback to well-known SIDs if necessary
-            SidReflection := TType.Represent(WellKnownSid);
+            SidReflection := Rttix.FormatFull(WellKnownSid);
             Cell[1] := SidReflection.Text;
             Hint := SidReflection.Hint;
           end

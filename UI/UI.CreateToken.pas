@@ -89,7 +89,8 @@ uses
   UI.Modal.PickUser, TU.Winapi, VirtualTrees, UI.Settings, UI.Modal.PickToken,
   System.UITypes, NtUtils.Lsa.Sid, Ntapi.WinNt, Ntapi.ntexapi, Ntapi.ntseapi,
   Ntapi.ntpebteb, NtUtils.Errors, NtUiLib.Errors, DelphiUiLib.Strings,
-  DelphiUtils.Arrays, TU.Tokens.Open, NtUtils.Tokens.Info, TU.Suggestions;
+  DelphiUtils.Arrays, TU.Tokens.Open, NtUtils.Tokens.Info, TU.Suggestions,
+  NtUtils.SysUtils;
 
 {$R *.dfm}
 
@@ -142,7 +143,7 @@ begin
   CheckBoxInfinite.Checked := (Statistics.ExpirationTime = Int64.MaxValue);
   if not CheckBoxInfinite.Checked then
   begin
-    Expiration := LargeIntegerToDateTime(Statistics.ExpirationTime);
+    Expiration := RtlxLargeIntegerToDateTime(Statistics.ExpirationTime);
     DateExpires.DateTime := Trunc(Expiration);
     TimeExpires.DateTime := Expiration - Trunc(Expiration);
   end;
@@ -183,9 +184,9 @@ begin
   if CheckBoxInfinite.Checked then
     Expires := Int64.MaxValue
   else if TimeExpires.Checked then
-    Expires := DateTimeToLargeInteger(DateExpires.Date + TimeExpires.Time)
+    Expires := RtlxDateTimeToLargeInteger(DateExpires.Date + TimeExpires.Time)
   else
-    Expires := DateTimeToLargeInteger(DateExpires.Date);
+    Expires := RtlxDateTimeToLargeInteger(DateExpires.Date);
 
   User := SidEditor.Sid;
   RetrieveGroup(PotentialOwners, ComboOwner.ItemIndex, Owner).RaiseOnError;

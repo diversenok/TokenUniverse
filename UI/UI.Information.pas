@@ -150,7 +150,7 @@ uses
   System.UITypes, UI.MainForm, NtUiCommon.Colors, UI.ProcessList, Ntapi.ntstatus,
   UI.Sid.View, NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.Strings,
   NtUtils.Security.AppContainer, NtUiCommon.Prototypes, Ntapi.ntpsapi,
-  NtUtils.Processes, DelphiUiLib.Reflection, NtUtils.Profiles, NtUtils.Lsa.Sid,
+  NtUtils.Processes, DelphiUiLib.LiteReflection, NtUtils.Profiles, NtUtils.Lsa.Sid,
   DelphiUtils.Arrays, NtUiCommon.Icons, Ntapi.Versions, Ntapi.ntobapi,
   NtUiBackend.AppContainers, NtUiLib.Exceptions, NtUtils.Security.Acl,
   NtUiCommon.Interfaces;
@@ -487,7 +487,7 @@ begin
   begin
     ComboIntegrity.Color := clWindow;
     IntegritySource.SelectedIntegrity := RtlxRidSid(NewIntegrity.Sid);
-    ComboIntegrity.Hint := TType.Represent(NewIntegrity).Hint;
+    ComboIntegrity.Hint := Rttix.FormatFull(NewIntegrity).Hint;
   end;
 end;
 
@@ -708,7 +708,7 @@ end;
 
 procedure TInfoDialog.Refresh;
 var
-  Repr: TRepresentation;
+  Repr: TRttixFullReflection;
   User: TGroup;
   Package: ISid;
   RestrictedSids: TArray<TGroup>;
@@ -742,7 +742,7 @@ begin
     if User.Attributes = 0 then
       User.Attributes := SE_GROUP_ENABLED or SE_GROUP_ENABLED_BY_DEFAULT;
 
-    Repr := TType.Represent(User);
+    Repr := Rttix.FormatFull(User);
 
     EditUser.Text := Repr.Text;
     EditUser.Hint := Repr.Hint;
@@ -838,7 +838,7 @@ begin
   if Token.QueryBasicInfo(BasicInfo).IsSuccess then
     with ListViewObject do
     begin
-      Items[1].SubItems[0] := TType.Represent(BasicInfo.Attributes).Text;
+      Items[1].SubItems[0] := Rttix.Format(BasicInfo.Attributes);
       Items[2].SubItems[0] := UiLibBytesToString(BasicInfo.PagedPoolCharge);
       Items[3].SubItems[0] := UiLibBytesToString(BasicInfo.NonPagedPoolCharge);
       Items[4].SubItems[0] := UiLibUIntToDec(BasicInfo.PointerCount);
@@ -862,14 +862,14 @@ begin
         end
         else
         begin
-          Caption := TType.Represent(Handles[i].UniqueProcessId).Text;
+          Caption := Rttix.Format(Handles[i].UniqueProcessId);
           ImageIndex := TProcessIcons.GetIconByPid(Handles[i].UniqueProcessId);
         end;
 
         SubItems.Add(UiLibUIntToDec(Handles[i].UniqueProcessId));
         SubItems.Add(UiLibUIntToHex(Handles[i].HandleValue, 4 or
           NUMERIC_WIDTH_ROUND_TO_BYTE));
-        SubItems.Add(TType.Represent<TTokenAccessMask>(Handles[i].GrantedAccess).Text);
+        SubItems.Add(Rttix.Format<TTokenAccessMask>(Handles[i].GrantedAccess));
       end;
   end;
 
