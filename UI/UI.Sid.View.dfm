@@ -11,10 +11,8 @@ object DialogSidView: TDialogSidView
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
-  PixelsPerInch = 96
   TextHeight = 13
   object Pages: TPageControl
     AlignWithMargins = True
@@ -284,10 +282,6 @@ object DialogSidView: TDialogSidView
           Top = 262
         end
       end
-    end
-    object TabLsaQuotas: TTabSheet
-      Caption = 'Quotas'
-      ImageIndex = 8
     end
   end
   object ButtonClose: TButton

@@ -31,7 +31,6 @@ type
     StaticTextDomain: TStaticText;
     TabLsaRights: TTabSheet;
     TabLsaAudit: TTabSheet;
-    TabLsaQuotas: TTabSheet;
     FrameLsaPrivileges: TFrameLsaPrivileges;
     FrameLsaAudit: TFrameAudit;
     LabelStatus: TLabel;
@@ -168,6 +167,7 @@ begin
   begin
     LabelStatus.Caption := 'No policies are assigned to the account';
     LabelStatus.Hint := '';
+    Exit;
   end
   else if not xStatus.IsSuccess then
   begin
