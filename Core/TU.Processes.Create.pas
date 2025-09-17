@@ -29,6 +29,7 @@ type
     cmShellExecuteEx,
     cmIDesktopAppxActivator,
     cmIShellDispatch,
+    cmMMC20Application,
     cmICMLuaUtil,
     cmIHxHelpPaneServer,
     cmIBackgroundCopyJob,
@@ -103,6 +104,7 @@ begin
     cmShellExecuteEx:            Result := ShlxExecute;
     cmIDesktopAppxActivator:     Result := PkgxCreateProcessInPackage;
     cmIShellDispatch:            Result := ComxShellDispatchExecute;
+    cmMMC20Application:          Result := MmcxExecuteShellCommand;
     cmICMLuaUtil:                Result := CmxShellExecute;
     cmIHxHelpPaneServer:         Result := HlpxShellExecute;
     cmIBackgroundCopyJob:        Result := ComxCreateProcessBITS;
@@ -180,6 +182,9 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // IShellDispatch
   [spoParameters, spoCurrentDirectory, spoRequireElevation, spoWindowMode],
+
+  // MMC20.Application
+  [spoParameters, spoCurrentDirectory, spoWindowMode],
 
   // ICMLuaUtil
   [spoParameters, spoCurrentDirectory, spoRequireElevation, spoOwnerWindow,

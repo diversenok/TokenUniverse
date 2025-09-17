@@ -439,7 +439,7 @@ end;
 procedure TDialogRun.FormKeyDown;
 begin
   // Ctrl+N to switch between tabs
-  if (Shift = [ssCtrl]) and (Key >= Ord('1')) and (Key <= Ord('3')) then
+  if (Shift = [ssCtrl]) and (Key >= Ord('1')) and (Key <= Ord('4')) then
     PageControl.ActivePageIndex := Key - Ord('1');
 
   // Ctrl+O to choose a file
