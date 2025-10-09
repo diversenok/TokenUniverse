@@ -123,11 +123,20 @@ begin
   // Locate an existing entry or where to put a new one
   Index := TArray.BinarySearchEx<TEventStorage>(
     TEventStorage.Storage,
-    function (const Entry: TEventStorage): NativeInt
+    function (const Entry: TEventStorage): Integer
+    var
+      Difference: IntPtr;
     begin
       {$R-}{$Q-}
-      Result := Entry.Identity - Identity;
+      Difference := Entry.Identity - Identity;
       {$IFDEF R+}{$R+}{$ENDIF}{$IFDEF Q+}{$Q+}{$ENDIF}
+
+      if Difference > 0 then
+        Result := 1
+      else if Difference < 0 then
+        Result := -1
+      else
+        Result := 0;
     end
   );
 
