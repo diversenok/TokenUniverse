@@ -40,8 +40,7 @@ implementation
 
 uses
   Vcl.Graphics, NtUiCommon.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
-  Ntapi.NtSecApi, DelphiUiLib.Reflection.Records, DelphiUiLib.LiteReflection,
-  NtUiLib.Errors;
+  Ntapi.NtSecApi, DelphiUiLib.LiteReflection, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -138,6 +137,9 @@ var
   Statistics: TTokenStatistics;
   WellKnownSid: ISid;
   Detailed: ILogonSession;
+  LogonData: PSecurityLogonSessionData;
+  FieldFormatter: IRttixFieldFormatter;
+  Reflection: TRttixFullReflection;
 begin
   UnsubscribeToken;
 
@@ -157,39 +159,41 @@ begin
   begin
     ListView.Items[0].Cell[1] := UiLibUIntToHex(Statistics.AuthenticationId);
     WellKnownSid := LsaxLookupKnownLogonSessionSid(Statistics.AuthenticationId);
-    if not LsaxQueryLogonSession(Statistics.AuthenticationId, Detailed).IsSuccess then
-      Detailed := nil;
 
-    TRecord.Traverse(Auto.DataOrNil<PSecurityLogonSessionData>(Detailed),
-      procedure (const Field: TFieldReflection)
-      var
-        SidReflection: TRttixFullReflection;
-      begin
-        // Skip the logon ID, we already processed it
-        if Field.Offset = IntPtr(@PSecurityLogonSessionData(nil).LogonID) then
-          Exit;
+    if LsaxQueryLogonSession(Statistics.AuthenticationId, Detailed).IsSuccess then
+      LogonData := Detailed.Data
+    else
+      LogonData := nil;
 
-        with ListView.Items.Add do
+    for FieldFormatter in RttixMakeFieldFormatters(TypeInfo(PSecurityLogonSessionData)) do
+    begin
+      // Skip the logon ID, we already processed it
+      if FieldFormatter.Field.Offset =
+        IntPtr(@PSecurityLogonSessionData(nil).LogonID) then
+        Continue;
+
+      with ListView.Items.Add do
         begin
-          Cell[0] := PrettifyCamelCase(Field.FieldName);
+          Cell[0] := PrettifyCamelCase(FieldFormatter.Field.Name);
           GroupId := GROUP_IND_LOGON;
 
-          if (Field.Offset = IntPtr(@PSecurityLogonSessionData(nil).SID)) and
-            not Assigned(Detailed) and Assigned(WellKnownSid) then
-          begin
-            // Fallback to well-known SIDs if necessary
-            SidReflection := Rttix.FormatFull(WellKnownSid);
-            Cell[1] := SidReflection.Text;
-            Hint := SidReflection.Hint;
-          end
+          if Assigned(LogonData) then
+            // Format the field
+            Reflection := FieldFormatter.Format(LogonData, [rfText, rfHint])
+          else if Assigned(WellKnownSid) and (FieldFormatter.Field.Offset =
+            IntPtr(@PSecurityLogonSessionData(nil).SID)) then
+            // Fall back to well-known SIDs when available
+            Reflection := Rttix.FormatFull(WellKnownSid)
           else
           begin
-            Cell[1] := Field.Reflection.Text;
-            Hint := Field.Reflection.Hint;
+            Cell[1] := 'Unknown';
+            Continue;
           end;
+
+          Cell[1] := Reflection.Text;
+          Hint := Reflection.Hint;
         end;
-      end
-    );
+    end;
   end;
 
   // Add an item for the originating logon ID
