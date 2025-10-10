@@ -232,7 +232,7 @@ object DialogRun: TDialogRun
         Height = 22
         Style = csOwnerDrawFixed
         Anchors = [akLeft, akTop, akRight]
-        DropDownCount = 18
+        DropDownCount = 20
         ItemIndex = 0
         TabOrder = 6
         Text = 'CreateProcessAsUser'
@@ -254,8 +254,10 @@ object DialogRun: TDialogRun
           'IHxHelpPaneServer'
           'IBackgroundCopyJob2'
           'SbApiPort'
+          'WER.NonElevatedProcessStart'
+          'WER.SilentProcessExitReport'
           'WdcRunTaskAsInteractiveUser'
-          'WMI')
+          'WMI.Win32_Process')
       end
       object ButtonChooseParent: TButton
         Left = 331

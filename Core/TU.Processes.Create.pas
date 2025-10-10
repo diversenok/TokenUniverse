@@ -34,6 +34,8 @@ type
     cmIHxHelpPaneServer,
     cmIBackgroundCopyJob,
     cmSbApiPort,
+    cmWerNonElevatedStart,
+    cmWerSilentProcessExit,
     cmWDC,
     cmWMI
   );
@@ -88,7 +90,7 @@ uses
   NtUtils.Processes.Create.Native, NtUtils.Processes.Create.Com,
   NtUtils.Processes.Create.Remote, NtUtils.Processes.Create.Manual,
   NtUtils.Processes.Create.Package, NtUtils.Processes.Create.Csr,
-  TU.DesktopAccess;
+  NtUtils.Processes.Create.Wer, TU.DesktopAccess;
 
 function TuGetPsMethod;
 begin
@@ -109,6 +111,8 @@ begin
     cmIHxHelpPaneServer:         Result := HlpxShellExecute;
     cmIBackgroundCopyJob:        Result := ComxCreateProcessBITS;
     cmSbApiPort:                 Result := CsrxCreateProcess;
+    cmWerNonElevatedStart:       Result := WerxExecuteNonElevated;
+    cmWerSilentProcessExit:      Result := WerxExecuteSilentProcessExit;
     cmWDC:                       Result := SchxRunAsInteractive;
     cmWMI:                       Result := WmixCreateProcess;
   else
@@ -198,6 +202,12 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
 
   // SbApiPort
   [spoParameters, spoCurrentDirectory, spoSessionID],
+
+  // WER::NonElevatedProcessStart
+  [spoParameters],
+
+  // WER::SilentProcessExitReport
+  [spoParameters, spoRequireElevation],
 
   // WDC
   [spoParameters, spoCurrentDirectory, spoRequireElevation, spoSessionID],
