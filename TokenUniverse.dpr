@@ -8,6 +8,7 @@ uses
   NtUiLib.Errors,
   NtUtils.Com,
   NtUtils.Threads,
+  DelphiUiLib.LiteReflection.Types,
   UI.TokenListFrame in 'UI\UI.TokenListFrame.pas' {FrameTokenList: TFrame},
   UI.MainForm in 'UI\UI.MainForm.pas' {FormMain},
   UI.Modal.AccessAndType in 'UI\UI.Modal.AccessAndType.pas' {DialogAccessAndType},
@@ -121,11 +122,16 @@ begin
 
   // Enable our excption reporting
   EnableNtUiLibExceptionHandling;
+  {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
+  {$ENDIF}
 
   // Help COM initialization under LPAC + use at least implicit MTA
   ComxSuppressCapabilityCheck;
   ComxInitializeImplicitOnce;
+
+  // Enable lite reflection for custom types
+  RttixRegisterAllFormatter;
 
   // Proceed to VCL initialization
   Application.Initialize;

@@ -80,7 +80,7 @@ uses
   NtUtils.Files.Operations, NtUtils.Sections, NtUtils.Processes,
   NtUtils.Jobs, NtUtils.Synchronization, NtUtils.Memory, NtUtils.Transactions,
   NtUtils.Threads, NtUtils.Tokens, NtUtils.Debug, NtUtils.Lsa, NtUtils.Sam,
-  NtUtils.Security.Sid, NtUtils.Svc, NtUtils.WinUser;
+  NtUtils.Security.Sid, NtUtils.Svc, NtUtils.WinUser, NtUtils.NtUser;
 
 function TrimLastBackslash(
   const Path: String
@@ -188,6 +188,12 @@ begin
         otRegistryTransaction:
           Result := NtxOpenRegistryTransaction(hxObject, AccessMask,
             TrimmedPath);
+
+        otWindowStation:
+          Result := NtxOpenWindowStation(hxObject, AccessMask, TrimmedPath);
+
+        otDesktop:
+          Result := NtxOpenDesktop(hxObject, AccessMask, TrimmedPath);
       else
         Result.Location := 'TuMakeNamespaceOpener';
         Result.Status := STATUS_INVALID_PARAMETER;

@@ -771,7 +771,7 @@ begin
       if not Assigned(Package) then
         EditAppContainer.Text := 'N/A'
       else
-        EditAppContainer.Text := RtlxSidToString(Package);
+        EditAppContainer.Text := RtlxSidToStringNoError(Package);
     end;
   end;
 

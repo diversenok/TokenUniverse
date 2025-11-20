@@ -96,7 +96,7 @@ begin
       SidTypeUnknown]) then
       EditFullName.Text := Lookup.FullName;
 
-    EditSID.Text := RtlxSidToString(Sid);
+    EditSID.Text := RtlxSidToStringNoError(Sid);
     EditType.Text := RttixFormat(TypeInfo(TSidNameUse), Lookup.SidType);
     EditSubAuthorities.Text := UiLibUIntToDec(RtlSubAuthorityCountSid(
       Sid.Data)^);
