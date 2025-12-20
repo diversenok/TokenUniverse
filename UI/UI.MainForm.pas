@@ -140,7 +140,7 @@ uses
   NtUiLib.Exceptions.Dialog, TU.Tokens.Open, NtUtils.Tokens.Impersonate,
   NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
   UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog,
-  DelphiUiLib.LiteReflection.Types;
+  DelphiUiLib.LiteReflection.Types, NtUtils.Processes.Info;
 
 {$R *.dfm}
 
@@ -340,21 +340,43 @@ end;
 
 procedure TFormMain.cmAllocConsoleClick(Sender: TObject);
 var
-  Result: TNtxStatus;
+  PreviousOwnerId: TProcessId;
+  PreviousOwnerIdResult, Result: TNtxStatus;
 begin
   if not cmAllocConsole.Checked then
   begin
+    // Identify the previous owner PID but don't fail yet if we cannot query it
+    PreviousOwnerIdResult := NtxProcess.Query(NtxCurrentProcess,
+      ProcessConsoleHostProcess, PreviousOwnerId);
+
+    // Create a console. This will change our owner PID
     Result.Location := 'AllocConsole';
     Result.Win32Result := AllocConsole;
+    Result.RaiseOnError;
+    cmAllocConsole.Checked := True;
+
+    // Now that we are attached to a console window, if the user decides to
+    // close it, CSRSS will send us a CTRL_CLOSE_EVENT and terminate our process
+    // within 5 seconds, regardless of how we handle the event. Restore the
+    // previous owner PID to prevent this behavior altogether.
+    if PreviousOwnerIdResult.IsSuccess then
+    begin
+      // Make sure to set the correct flags in the lower bits
+      PreviousOwnerId := (PreviousOwnerId and not 3) or 1;
+
+      PreviousOwnerIdResult := NtxProcess.Set(NtxCurrentProcess,
+        ProcessConsoleHostProcess, PreviousOwnerId);
+    end;
+
+    PreviousOwnerIdResult.RaiseOnError;
   end
   else
   begin
     Result.Location := 'FreeConsole';
     Result.Win32Result := FreeConsole;
+    Result.RaiseOnError;
+    cmAllocConsole.Checked := False;
   end;
-
-  Result.RaiseOnError;
-  cmAllocConsole.Checked := not cmAllocConsole.Checked;
 end;
 
 procedure TFormMain.cmClipboardTokenClick;
