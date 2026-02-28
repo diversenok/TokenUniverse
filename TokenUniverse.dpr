@@ -45,7 +45,6 @@ uses
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
   NtUiCommon.Helpers in 'NtUtilsUI\Common\NtUiCommon.Helpers.pas',
-  VirtualTreesEx in 'NtUtilsUI\Components\VirtualTreesEx.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
   TU.Observers in 'Core\TU.Observers.pas',
@@ -53,9 +52,6 @@ uses
   TU.Tokens in 'Core\TU.Tokens.pas',
   NtUiCommon.Exceptions in 'NtUtilsUI\Common\NtUiCommon.Exceptions.pas',
   TU.Events in 'Core\TU.Events.pas',
-  VirtualTreesEx.DefaultMenu in 'NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas',
-  DevirtualizedTree.Provider in 'NtUtilsUI\Components\DevirtualizedTree.Provider.pas',
-  DevirtualizedTree in 'NtUtilsUI\Components\DevirtualizedTree.pas',
   TU.Tokens.Open in 'Core\TU.Tokens.Open.pas',
   UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame},
   TU.AccountRights in 'Core\TU.AccountRights.pas',
@@ -98,7 +94,11 @@ uses
   NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas',
   VclEx.Edit in 'NtUtilsUI\VclEx\VclEx.Edit.pas',
   NtUiFrame.Sids.Capabilities in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Capabilities.pas' {CapabilityListFrame: TFrame},
-  NtUiBackend.Sids.Capabilities in 'NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas';
+  NtUiBackend.Sids.Capabilities in 'NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas',
+  NtUtilsUI.DevirtualizedTree in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas',
+  NtUtilsUI.DevirtualizedTree.Provider in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Provider.pas',
+  NtUtilsUI.VirtualTreeEx.DefaultMenu in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.DefaultMenu.pas',
+  NtUtilsUI.VirtualTreeEx in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

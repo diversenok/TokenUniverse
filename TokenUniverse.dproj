@@ -227,7 +227,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Helpers.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
             <Form>FramePrivileges</Form>
             <FormType>dfm</FormType>
@@ -243,9 +242,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="Core\TU.Tokens.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Exceptions.pas"/>
         <DCCReference Include="Core\TU.Events.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\VirtualTreesEx.DefaultMenu.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.Provider.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\DevirtualizedTree.pas"/>
         <DCCReference Include="Core\TU.Tokens.Open.pas"/>
         <DCCReference Include="UI\UI.New.TokenFrame.pas">
             <Form>FrameTokens</Form>
@@ -375,6 +371,10 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Provider.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.DefaultMenu.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -1386,7 +1386,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
@@ -1394,7 +1394,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -1402,7 +1402,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
@@ -1410,7 +1410,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>
