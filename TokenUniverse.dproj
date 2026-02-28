@@ -80,7 +80,7 @@
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <DCC_MapFile>3</DCC_MapFile>
         <PostBuildEvent><![CDATA[cd $(OUTPUTDIR)
-map2pdb.exe -bind $(OUTPUTNAME).map
+map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map
 $(PostBuildEvent)]]></PostBuildEvent>
         <PostBuildEventExecuteWhen>TargetOutOfDate</PostBuildEventExecuteWhen>
     </PropertyGroup>
@@ -1386,7 +1386,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
@@ -1394,7 +1394,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win32'">
@@ -1402,7 +1402,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
@@ -1410,7 +1410,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind $(OUTPUTNAME).map</PostBuildEvent>
+        <PostBuildEvent>cd $(OUTPUTDIR)&amp;&amp;map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
 </Project>
