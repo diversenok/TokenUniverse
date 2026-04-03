@@ -6,7 +6,7 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
-  NtUtilsUI.ListView, UI.Prototypes, NtUiCommon.Forms, UI.New.TokenFrame,
+  NtUtilsUI.ListView, UI.Prototypes, NtUtilsUI, UI.New.TokenFrame,
   VirtualTrees;
 
 type

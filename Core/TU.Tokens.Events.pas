@@ -86,7 +86,7 @@ implementation
 
 uses
   Ntapi.crt, Ntapi.ntrtl, NtUtils.Security.Sid,
-  DelphiUtils.Arrays, System.SysUtils, NtUiCommon.Exceptions;
+  DelphiUtils.Arrays, System.SysUtils;
 
 {$BOOLEVAL OFF}
 {$IFOPT R+}{$DEFINE R+}{$ENDIF}

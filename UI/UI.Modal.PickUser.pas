@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, NtUiCommon.Forms,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, NtUtilsUI,
   Ntapi.ntseapi, UI.Prototypes.Sid.Edit, NtUiFrame;
 
 type

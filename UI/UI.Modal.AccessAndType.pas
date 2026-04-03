@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls, TU.Tokens,
-  NtUiCommon.Forms, NtUtilsUI.ListView, TU.Tokens.Old.Types, NtUiFrame.Bits;
+  NtUtilsUI, NtUtilsUI.ListView, TU.Tokens.Old.Types, NtUiFrame.Bits;
 
 type
   TDialogAccessAndType = class(TChildForm)

@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Menus, NtUiCommon.Forms, Vcl.ComCtrls,
+  Vcl.StdCtrls, Vcl.Menus, NtUtilsUI, Vcl.ComCtrls,
   NtUtilsUI.ListView, UI.Prototypes, UI.Prototypes.Groups, Ntapi.NtSecApi,
   Vcl.ExtCtrls, NtUtils;
 
@@ -53,7 +53,7 @@ uses
   Ntapi.wincred, NtUiLib.WinCred, Ntapi.WinError, UI.MainForm,
   UI.Modal.PickUser, NtUtils.Security.Sid, Ntapi.WinUser, NtUtils.WinUser,
   NtUtils.Errors, System.UITypes, NtUiLib.Errors, DelphiUiLib.Strings,
-  NtUiCommon.Exceptions, TU.Tokens, TU.Tokens.Open, UI.Settings;
+  NtUtilsUI.Exceptions, TU.Tokens, TU.Tokens.Open, UI.Settings;
 
 {$R *.dfm}
 

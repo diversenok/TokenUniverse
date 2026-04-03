@@ -28,7 +28,7 @@ type
 implementation
 
 uses
-  System.SysUtils, NtUiCommon.Exceptions;
+  System.SysUtils;
 
 { TAutoObservers<T> }
 

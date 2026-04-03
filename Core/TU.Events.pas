@@ -35,7 +35,7 @@ type
 implementation
 
 uses
-  System.SysUtils, NtUiCommon.Exceptions;
+  System.SysUtils;
 
 { TGlobalEvents }
 

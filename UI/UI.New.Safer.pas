@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, NtUiCommon.Forms, Ntapi.WinSafer, NtUtils,
+  Vcl.StdCtrls, NtUtilsUI, Ntapi.WinSafer, NtUtils,
   TU.Tokens;
 
 type

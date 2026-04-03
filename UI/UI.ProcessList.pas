@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ComCtrls,
   Vcl.ExtCtrls, Vcl.ImgList, System.Generics.Collections,
-  NtUtilsUI.ListView, NtUiCommon.Forms, NtUtils.Processes.Snapshots, Vcl.Menus;
+  NtUtilsUI.ListView, NtUtilsUI, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
   TProcessItemEx = class

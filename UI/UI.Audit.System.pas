@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,  Vcl.Menus,
   Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, NtUtilsUI.ListView,
-  NtUiCommon.Forms, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
+  NtUtilsUI, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
 
 type
   TDialogSystemAudit = class(TChildForm)

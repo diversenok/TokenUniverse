@@ -37,7 +37,6 @@ uses
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
   UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit},
   UI.Process.Run in 'UI\UI.Process.Run.pas' {DialogRun},
-  NtUiCommon.Forms in 'NtUtilsUI\Common\NtUiCommon.Forms.pas',
   NtUiCommon.Colors in 'NtUtilsUI\Common\NtUiCommon.Colors.pas',
   NtUiCommon.Icons in 'NtUtilsUI\Common\NtUiCommon.Icons.pas',
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
@@ -48,7 +47,7 @@ uses
   TU.Observers in 'Core\TU.Observers.pas',
   TU.Tokens.Events in 'Core\TU.Tokens.Events.pas',
   TU.Tokens in 'Core\TU.Tokens.pas',
-  NtUiCommon.Exceptions in 'NtUtilsUI\Common\NtUiCommon.Exceptions.pas',
+  NtUtilsUI.Exceptions in 'NtUtilsUI\Components\NtUtilsUI.Exceptions.pas',
   TU.Events in 'Core\TU.Events.pas',
   TU.Tokens.Open in 'Core\TU.Tokens.Open.pas',
   UI.New.TokenFrame in 'UI\UI.New.TokenFrame.pas' {FrameTokens: TFrame},
@@ -95,8 +94,9 @@ uses
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas',
   NtUtilsUI.VirtualTreeEx in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas',
   NtUtilsUI.Edit in 'NtUtilsUI\Components\NtUtilsUI.Edit.pas',
-  NtUtilsUI.Form in 'NtUtilsUI\Components\NtUtilsUI.Form.pas',
-  NtUtilsUI.ListView in 'NtUtilsUI\Components\NtUtilsUI.ListView.pas';
+  NtUtilsUI.Forms in 'NtUtilsUI\Components\NtUtilsUI.Forms.pas',
+  NtUtilsUI.ListView in 'NtUtilsUI\Components\NtUtilsUI.ListView.pas',
+  NtUtilsUI in 'NtUtilsUI\Components\NtUtilsUI.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}
