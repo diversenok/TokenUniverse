@@ -215,9 +215,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.Process.Run.pas">
             <Form>DialogRun</Form>
         </DCCReference>
-        <DCCReference Include="NtUtilsUI\VclEx\VclEx.ListView.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Forms.pas"/>
-        <DCCReference Include="NtUtilsUI\VclEx\VclEx.Form.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Colors.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Icons.pas"/>
         <DCCReference Include="Core\TU.Processes.Create.pas"/>
@@ -364,7 +362,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.pas"/>
-        <DCCReference Include="NtUtilsUI\VclEx\VclEx.Edit.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sids.Capabilities.pas">
             <Form>CapabilityListFrame</Form>
             <FormType>dfm</FormType>
@@ -372,9 +369,10 @@ $(PostBuildEvent)]]></PostBuildEvent>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Provider.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.DefaultMenu.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Edit.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Form.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.ListView.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList,
-  VclEx.ListView, UI.Prototypes, NtUiCommon.Forms, NtUtils.Security.Sid,
+  NtUtilsUI.ListView, UI.Prototypes, NtUiCommon.Forms, NtUtils.Security.Sid,
   TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
   Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame, NtUiFrame.Acl;

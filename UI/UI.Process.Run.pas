@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
   TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit, Vcl.Mask,
-  VclEx.Edit, UI.Prototypes.Groups;
+  NtUtilsUI.Edit, UI.Prototypes.Groups;
 
 type
   TDialogRun = class(TChildForm)

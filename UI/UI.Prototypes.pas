@@ -3,7 +3,7 @@ unit UI.Prototypes;
 interface
 
 uses
-  System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, VclEx.ListView, TU.Tokens,
+  System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, NtUtilsUI.ListView, TU.Tokens,
   TU.Tokens.Old.Types, Ntapi.WinNt, NtUtils.WinStation, NtUtils, TU.UserManager;
 
 type

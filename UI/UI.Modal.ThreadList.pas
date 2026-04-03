@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls,
-  NtUiCommon.Forms, VclEx.ListView, NtUtils.Processes.Snapshots, Vcl.Menus;
+  NtUiCommon.Forms, NtUtilsUI.ListView, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
   TThreadListDialog = class(TChildForm)

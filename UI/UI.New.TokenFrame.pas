@@ -5,8 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree,
-  NtUtilsUI.DevirtualizedTree.Provider, NtUtils, TU.Tokens;
+  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, TU.Tokens;
 
 type
   ITokenNode = interface (INodeProvider)

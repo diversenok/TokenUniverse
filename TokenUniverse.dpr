@@ -37,9 +37,7 @@ uses
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
   UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit},
   UI.Process.Run in 'UI\UI.Process.Run.pas' {DialogRun},
-  VclEx.ListView in 'NtUtilsUI\VclEx\VclEx.ListView.pas',
   NtUiCommon.Forms in 'NtUtilsUI\Common\NtUiCommon.Forms.pas',
-  VclEx.Form in 'NtUtilsUI\VclEx\VclEx.Form.pas',
   NtUiCommon.Colors in 'NtUtilsUI\Common\NtUiCommon.Colors.pas',
   NtUiCommon.Icons in 'NtUtilsUI\Common\NtUiCommon.Icons.pas',
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
@@ -92,13 +90,13 @@ uses
   NtUiBackend.Sids.Abbreviations in 'NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas',
   NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame},
   NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas',
-  VclEx.Edit in 'NtUtilsUI\VclEx\VclEx.Edit.pas',
   NtUiFrame.Sids.Capabilities in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Capabilities.pas' {CapabilityListFrame: TFrame},
   NtUiBackend.Sids.Capabilities in 'NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas',
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas',
-  NtUtilsUI.DevirtualizedTree.Provider in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Provider.pas',
-  NtUtilsUI.VirtualTreeEx.DefaultMenu in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.DefaultMenu.pas',
-  NtUtilsUI.VirtualTreeEx in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas';
+  NtUtilsUI.VirtualTreeEx in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas',
+  NtUtilsUI.Edit in 'NtUtilsUI\Components\NtUtilsUI.Edit.pas',
+  NtUtilsUI.Form in 'NtUtilsUI\Components\NtUtilsUI.Form.pas',
+  NtUtilsUI.ListView in 'NtUtilsUI\Components\NtUtilsUI.ListView.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}
