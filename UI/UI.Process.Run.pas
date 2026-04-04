@@ -11,7 +11,7 @@ uses
   NtUtilsUI.Edit, UI.Prototypes.Groups;
 
 type
-  TDialogRun = class(TChildForm)
+  TDialogRun = class(TUiLibChildForm)
     PageControl: TPageControl;
     TabParams: TTabSheet;
     EditExe: TLabeledEdit;
@@ -37,7 +37,7 @@ type
     ComboBoxShowMode: TComboBox;
     LinkLabelToken: TLinkLabel;
     ButtonChooseParent: TButton;
-    EditParent: TEditEx;
+    EditParent: TUiLibEdit;
     PopupClearParent: TPopupMenu;
     MenuClearParent: TMenuItem;
     CheckBoxInheritConsole: TCheckBox;
@@ -59,9 +59,9 @@ type
     RadioButtonManifestNone: TRadioButton;
     RadioButtonManifestEmbedded: TRadioButton;
     RadioButtonManifestExternalExe: TRadioButton;
-    EditManifestExecutable: TEditEx;
+    EditManifestExecutable: TUiLibEdit;
     RadioButtonManifestExternal: TRadioButton;
-    EditManifestFile: TEditEx;
+    EditManifestFile: TUiLibEdit;
     RadioButtonManifestCustom: TRadioButton;
     CheckBoxManifestThemes: TCheckBox;
     LabelManifestDpi: TLabel;
@@ -70,11 +70,11 @@ type
     CheckBoxManifestLongPaths: TCheckBox;
     LabelProtection: TLabel;
     ComboBoxProtection: TComboBox;
-    EditAppId: TEditEx;
+    EditAppId: TUiLibEdit;
     LabelAppId: TLabel;
     AppContainerField: TAppContainerFieldFrame;
     LabelSession: TLabel;
-    EditSessionId: TEditEx;
+    EditSessionId: TUiLibEdit;
     ButtonSelectSession: TButton;
     PopupClearSession: TPopupMenu;
     MenuClearSession: TMenuItem;

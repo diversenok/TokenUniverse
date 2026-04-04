@@ -8,7 +8,7 @@ uses
   NtUtilsUI, NtUtilsUI.ListView, TU.Tokens.Old.Types, NtUiFrame.Bits;
 
 type
-  TDialogAccessAndType = class(TChildForm)
+  TDialogAccessAndType = class(TUiLibChildForm)
     RadioButtonPrimary: TRadioButton;
     GroupBoxType: TGroupBox;
     RadioButtonAnonymous: TRadioButton;

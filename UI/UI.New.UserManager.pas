@@ -8,7 +8,7 @@ uses
   UI.Prototypes.Sid.Edit, UI.Prototypes, Ntapi.WinNt;
 
 type
-  TUserManagerTokens = class(TChildForm)
+  TUserManagerTokens = class(TUiLibChildForm)
     rbxDefault: TRadioButton;
     rbxSession: TRadioButton;
     rbxShell: TRadioButton;

@@ -8,7 +8,7 @@ uses
   TU.Tokens;
 
 type
-  TDialogSafer = class(TChildForm)
+  TDialogSafer = class(TUiLibChildForm)
     ComboBoxScope: TComboBox;
     ComboBoxLevel: TComboBox;
     LabelScope: TLabel;

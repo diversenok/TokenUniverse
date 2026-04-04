@@ -10,7 +10,7 @@ uses
   NtUiLib.AutoCompletion;
 
 type
-  TAccessCheckForm = class(TChildForm)
+  TAccessCheckForm = class(TUiLibChildForm)
     PageControlModes: TPageControl;
     TabByName: TTabSheet;
     TabByCID: TTabSheet;

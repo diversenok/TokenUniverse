@@ -271,7 +271,7 @@ object DialogRun: TDialogRun
         TabOrder = 7
         OnClick = ButtonChooseParentClick
       end
-      object EditParent: TEditEx
+      object EditParent: TUiLibEdit
         Left = 3
         Top = 104
         Width = 322
@@ -375,7 +375,7 @@ object DialogRun: TDialogRun
           'Full (Windows)'
           'Full (WinTcb)')
       end
-      object EditAppId: TEditEx
+      object EditAppId: TUiLibEdit
         Left = 3
         Top = 26
         Width = 409
@@ -385,7 +385,7 @@ object DialogRun: TDialogRun
         TabOrder = 0
         TextHint = '{PackageFamilyName}!{AppId}'
       end
-      object EditSessionId: TEditEx
+      object EditSessionId: TUiLibEdit
         Left = 3
         Top = 210
         Width = 323
@@ -561,7 +561,7 @@ object DialogRun: TDialogRun
         Enabled = False
         TabOrder = 2
       end
-      object EditManifestExecutable: TEditEx
+      object EditManifestExecutable: TUiLibEdit
         Left = 19
         Top = 77
         Width = 389
@@ -582,7 +582,7 @@ object DialogRun: TDialogRun
         Enabled = False
         TabOrder = 4
       end
-      object EditManifestFile: TEditEx
+      object EditManifestFile: TUiLibEdit
         Left = 19
         Top = 127
         Width = 389

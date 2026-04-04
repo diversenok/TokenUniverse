@@ -8,7 +8,7 @@ uses
   NtUtilsUI, UI.Prototypes.AuditFrame, NtUtils.Lsa.Audit;
 
 type
-  TDialogSystemAudit = class(TChildForm)
+  TDialogSystemAudit = class(TUiLibChildForm)
     FrameAudit: TFrameAudit;
     procedure FormCreate(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);

@@ -14,7 +14,7 @@ type
     procedure Create(CheckBox: TCheckBox; Attribute: Cardinal);
   end;
 
-  TDialogPickUser = class(TChildForm)
+  TDialogPickUser = class(TUiLibChildForm)
     ButtonOK: TButton;
     ButtonCancel: TButton;
     GroupBoxMain: TGroupBox;

@@ -10,7 +10,7 @@ uses
   NtUtils, UI.Prototypes.Sid.Edit, NtUiFrame;
 
 type
-  TDialogCreateToken = class(TChildForm)
+  TDialogCreateToken = class(TUiLibChildForm)
     ButtonOK: TButton;
     ButtonCancel: TButton;
     PageControl: TPageControl;

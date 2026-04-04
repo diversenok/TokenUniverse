@@ -27,7 +27,7 @@ type
     ImageName: String;
   end;
 
-  TProcessListDialog = class(TChildForm)
+  TProcessListDialog = class(TUiLibChildForm)
     ButtonOk: TButton;
     ButtonCancel: TButton;
     ButtonRefresh: TButton;

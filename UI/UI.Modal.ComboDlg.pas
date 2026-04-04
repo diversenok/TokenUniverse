@@ -9,7 +9,7 @@ uses
   Ntapi.WinNt;
 
 type
-  TComboDialog = class(TChildForm)
+  TComboDialog = class(TUiLibChildForm)
     ComboBox: TComboBox;
     ButtonCancel: TButton;
     ButtonOK: TButton;

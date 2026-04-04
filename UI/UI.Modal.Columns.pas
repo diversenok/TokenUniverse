@@ -8,7 +8,7 @@ uses
   Vcl.ComCtrls, NtUtilsUI.ListView, NtUtilsUI;
 
 type
-  TDialogColumns = class(TChildForm)
+  TDialogColumns = class(TUiLibChildForm)
     ListViewColumns: TListViewEx;
     ButtonCancel: TButton;
     ButtonOK: TButton;

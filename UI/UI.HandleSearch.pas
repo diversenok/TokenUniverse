@@ -8,7 +8,7 @@ uses
   UI.TokenListFrame, NtUtilsUI.ListView, NtUtilsUI, TU.Tokens;
 
 type
-  TFormHandleSearch = class(TChildForm)
+  TFormHandleSearch = class(TUiLibChildForm)
     Frame: TFrameTokenList;
     ButtonClose: TButton;
     LabelStatistics: TLabel;

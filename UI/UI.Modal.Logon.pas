@@ -9,7 +9,7 @@ uses
   Vcl.ExtCtrls, NtUtils;
 
 type
-  TLogonDialog = class(TChildForm)
+  TLogonDialog = class(TUiLibChildForm)
     cbxLogonType: TComboBox;
     lblLogonType: TLabel;
     ButtonCancel: TButton;

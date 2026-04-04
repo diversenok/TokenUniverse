@@ -10,7 +10,7 @@ uses
   NtUtils, TU.Tokens;
 
 type
-  TDialogRestrictToken = class(TChildForm)
+  TDialogRestrictToken = class(TUiLibChildForm)
     CheckBoxDisableMaxPriv: TCheckBox;
     CheckBoxSandboxInert: TCheckBox;
     CheckBoxLUA: TCheckBox;

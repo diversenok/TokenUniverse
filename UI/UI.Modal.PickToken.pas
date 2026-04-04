@@ -8,7 +8,7 @@ uses
   NtUtilsUI.ListView, NtUtilsUI, TU.Tokens;
 
 type
-  TDialogPickToken = class(TChildForm)
+  TDialogPickToken = class(TUiLibChildForm)
     ListViewTokens: TListViewEx;
     ButtonCancel: TButton;
     ButtonOK: TButton;

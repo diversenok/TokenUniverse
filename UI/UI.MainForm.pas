@@ -10,7 +10,7 @@ uses
   VirtualTrees;
 
 type
-  TFormMain = class(TMainForm)
+  TFormMain = class(TUiLibMainForm)
     MainMenu: TMainMenu;
     Program1: TMenuItem;
     View1: TMenuItem;

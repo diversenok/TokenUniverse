@@ -12,7 +12,7 @@ uses
   Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame, NtUiFrame.Acl;
 
 type
-  TInfoDialog = class(TChildForm)
+  TInfoDialog = class(TUiLibChildForm)
     PageControl: TPageControl;
     TabGeneral: TTabSheet;
     TabGroups: TTabSheet;

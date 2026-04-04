@@ -8,7 +8,7 @@ uses
   NtUtilsUI, NtUtilsUI.ListView, NtUtils.Processes.Snapshots, Vcl.Menus;
 
 type
-  TThreadListDialog = class(TChildForm)
+  TThreadListDialog = class(TUiLibChildForm)
     ListViewThreads: TListViewEx;
     ButtonOk: TButton;
     ButtonCancel: TButton;

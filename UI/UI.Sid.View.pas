@@ -9,7 +9,7 @@ uses
   NtUtils.Lsa.Audit, NtUtils, NtUiFrame.Bits;
 
 type
-  TDialogSidView = class(TChildForm)
+  TDialogSidView = class(TUiLibChildForm)
     Pages: TPageControl;
     TabSid: TTabSheet;
     TabDomain: TTabSheet;
