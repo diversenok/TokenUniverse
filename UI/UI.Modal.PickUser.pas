@@ -59,7 +59,7 @@ implementation
 uses
   Ntapi.WinNt, Ntapi.ntpsapi, NtUtils.Security.Sid, NtUtils.WinUser,
   NtUiCommon.Helpers, NtUiLib.Errors, NtUiCommon.Prototypes,
-  NtUiFrame.Sid.Integrity;
+  NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -80,7 +80,7 @@ begin
   if SidEditor.TryGetSid(CurrentSID).IsSuccess then
     CurrentSID := nil;
 
-  SidEditor.Sid := NtUiLibSelectIntegrity(Self, CurrentSID);
+  SidEditor.Sid := UiLibPickIntegritySid(Self, CurrentSID);
   Attributes := SE_GROUP_INTEGRITY or SE_GROUP_INTEGRITY_ENABLED;
   ButtonOK.SetFocus;
 end;

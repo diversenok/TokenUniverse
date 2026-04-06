@@ -149,7 +149,7 @@ type
 implementation
 
 uses
-  System.UITypes, UI.MainForm, NtUiCommon.Colors, UI.ProcessList, Ntapi.ntstatus,
+  System.UITypes, UI.MainForm, UI.ProcessList, Ntapi.ntstatus,
   UI.Sid.View, NtUtils.Objects.Snapshots, NtUiLib.Errors, DelphiUiLib.Strings,
   NtUtils.Security.AppContainer, NtUiCommon.Prototypes, Ntapi.ntpsapi,
   NtUtils.Processes, DelphiUiLib.LiteReflection, NtUtils.Profiles, NtUtils.Lsa.Sid,

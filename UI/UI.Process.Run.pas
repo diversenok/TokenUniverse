@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.Menus, TU.Tokens, NtUtils.Environment, NtUtils,
   Ntapi.ProcessThreadsApi, NtUtils.Processes.Create, Ntapi.ntpsapi,
   TU.Processes.Create, Ntapi.WinNt, NtUiFrame.AppContainer.Edit, Vcl.Mask,
-  NtUtilsUI.Edit, UI.Prototypes.Groups;
+  NtUtilsUI.StdCtrls, UI.Prototypes.Groups;
 
 type
   TDialogRun = class(TUiLibChildForm)
@@ -143,7 +143,7 @@ uses
   NtUtils.Profiles, NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
   DelphiUiLib.LiteReflection, DelphiUiLib.Strings, UI.Information,
   UI.ProcessList, UI.MainForm, UI.Modal.ComboDlg, TU.Tokens.Open, UI.Settings,
-  System.UITypes, NtUtils.Security.Sid, NtUiCommon.Colors,
+  System.UITypes, NtUtils.Security.Sid, 
   NtUiCommon.Prototypes, UI.Modal.PickUser;
 
 {$R *.dfm}

@@ -37,7 +37,6 @@ uses
   UI.Prototypes.Lsa.Privileges in 'UI\UI.Prototypes.Lsa.Privileges.pas' {FrameLsaPrivileges: TFrame},
   UI.Audit.System in 'UI\UI.Audit.System.pas' {DialogSystemAudit},
   UI.Process.Run in 'UI\UI.Process.Run.pas' {DialogRun},
-  NtUiCommon.Colors in 'NtUtilsUI\Common\NtUiCommon.Colors.pas',
   NtUiCommon.Icons in 'NtUtilsUI\Common\NtUiCommon.Icons.pas',
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
@@ -81,7 +80,6 @@ uses
   NtUiFrame.Hex.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.Hex.Edit.pas' {HexEditFrame: TFrame},
   NtUiBackend.HexView in 'NtUtilsUI\Common\NtUiBackend.HexView.pas',
   NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame},
-  NtUiFrame.Sid.Integrity in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Integrity.pas' {FrameIntegrity: TFrame},
   NtUiBuiltin.DsObjectPicker in 'NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas',
   NtUiFrame.Sid.Trust in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas' {FrameTrustSid: TFrame},
   UI.New.UserManager in 'UI\UI.New.UserManager.pas' {UserManagerTokens},
@@ -93,10 +91,14 @@ uses
   NtUiBackend.Sids.Capabilities in 'NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas',
   NtUtilsUI.DevirtualizedTree in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas',
   NtUtilsUI.VirtualTreeEx in 'NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas',
-  NtUtilsUI.Edit in 'NtUtilsUI\Components\NtUtilsUI.Edit.pas',
+  NtUtilsUI.StdCtrls in 'NtUtilsUI\Components\NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.Forms in 'NtUtilsUI\Components\NtUtilsUI.Forms.pas',
   NtUtilsUI.ListView in 'NtUtilsUI\Components\NtUtilsUI.ListView.pas',
-  NtUtilsUI in 'NtUtilsUI\Components\NtUtilsUI.pas';
+  NtUtilsUI in 'NtUtilsUI\Components\NtUtilsUI.pas',
+  NtUtilsUI.Colors in 'NtUtilsUI\Components\NtUtilsUI.Colors.pas',
+  NtUtilsUI.Components in 'NtUtilsUI\Components\NtUtilsUI.Components.pas',
+  NtUtilsUI.Interfaces in 'NtUtilsUI\Components\NtUtilsUI.Interfaces.pas',
+  NtUtilsUI.Sid.Integrity in 'NtUtilsUI\Components\NtUtilsUI.Sid.Integrity.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

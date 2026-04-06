@@ -61,7 +61,7 @@ implementation
 
 uses
   Ntapi.WinUser, Ntapi.ShellApi, UI.Modal.ThreadList, NtUtils.Processes,
-  NtUiCommon.Icons, NtUtils, Ntapi.ntexapi, NtUiCommon.Colors, Vcl.Dialogs,
+  NtUiCommon.Icons, NtUtils, Ntapi.ntexapi, Vcl.Dialogs,
   NtUILib.Errors, Ntapi.ntstatus, Ntapi.WinNt, Ntapi.ntpsapi,
   System.UITypes, DelphiUiLib.Strings;
 

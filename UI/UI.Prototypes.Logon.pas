@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  Vcl.Graphics, NtUiCommon.Colors, DelphiUiLib.Strings, NtUtils.Security.Sid,
+  Vcl.Graphics, DelphiUiLib.Strings, NtUtils.Security.Sid, NtUtilsUI,
   Ntapi.NtSecApi, DelphiUiLib.LiteReflection, NtUiLib.Errors;
 
 {$R *.dfm}

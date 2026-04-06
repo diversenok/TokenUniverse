@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  Ntapi.NtSecApi, Ntapi.ntstatus, NtUiCommon.Colors,
+  Ntapi.NtSecApi, Ntapi.ntstatus, NtUtilsUI,
   DelphiUiLib.Strings, NtUiLib.Errors, Ntapi.ntdef;
 
 {$R *.dfm}
