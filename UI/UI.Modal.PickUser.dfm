@@ -114,7 +114,6 @@ object DialogPickUser: TDialogPickUser
     Top = 37
     Width = 267
     Height = 106
-    Hint = 'The system will consider this group only for denying access'
     Caption = 'Additional attributes '
     TabOrder = 2
     object CheckBoxIntegrityEnabled: TCheckBox
