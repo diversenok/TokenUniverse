@@ -77,7 +77,7 @@ procedure TDialogPickUser.ButtonIntegrityClick;
 var
   CurrentSID: ISid;
 begin
-  if SidEditor.TryGetSid(CurrentSID).IsSuccess then
+  if not SidEditor.TryGetSid(CurrentSID).IsSuccess then
     CurrentSID := nil;
 
   SidEditor.Sid := UiLibPickIntegritySid(Self, CurrentSID);
