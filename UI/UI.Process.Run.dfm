@@ -174,7 +174,7 @@ object DialogRun: TDialogRun
           TabOrder = 6
         end
       end
-      object ComboBoxLogonFlags: TComboBox
+      object ComboBoxLogonFlags: TUiLibComboBox
         Left = 159
         Top = 301
         Width = 258
@@ -201,7 +201,7 @@ object DialogRun: TDialogRun
         TabOrder = 1
         Text = ''
       end
-      object ComboBoxDesktop: TComboBox
+      object ComboBoxDesktop: TUiLibComboBox
         Left = 4
         Top = 254
         Width = 410
@@ -210,7 +210,7 @@ object DialogRun: TDialogRun
         TabOrder = 2
         Text = 'WinSta0\Default'
       end
-      object ComboBoxShowMode: TComboBox
+      object ComboBoxShowMode: TUiLibComboBox
         Left = 4
         Top = 300
         Width = 149
@@ -225,7 +225,7 @@ object DialogRun: TDialogRun
           'Show minimized'
           'Show maximized')
       end
-      object ComboMethod: TComboBox
+      object ComboMethod: TUiLibComboBox
         Left = 3
         Top = 24
         Width = 410
@@ -353,7 +353,7 @@ object DialogRun: TDialogRun
           TabOrder = 2
         end
       end
-      object ComboBoxProtection: TComboBox
+      object ComboBoxProtection: TUiLibComboBox
         Left = 62
         Top = 164
         Width = 350
@@ -437,7 +437,7 @@ object DialogRun: TDialogRun
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited tbxMoniker: TEdit
+        inherited tbxMoniker: TUiLibEdit
           Width = 328
         end
         inherited btnSelect: TButton
@@ -616,7 +616,7 @@ object DialogRun: TDialogRun
         TabOrder = 7
         OnEnter = CheckBoxManifestThemesEnter
       end
-      object ComboBoxManifestDpi: TComboBox
+      object ComboBoxManifestDpi: TUiLibComboBox
         Left = 19
         Top = 267
         Width = 389

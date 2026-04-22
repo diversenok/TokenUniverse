@@ -4,13 +4,13 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.Menus, NtUtilsUI, Vcl.ComCtrls,
+  Vcl.StdCtrls, Vcl.Menus, NtUtilsUI, Vcl.ComCtrls, NtUtilsUI.StdCtrls,
   NtUtilsUI.ListView, UI.Prototypes, UI.Prototypes.Groups, Ntapi.NtSecApi,
   Vcl.ExtCtrls, NtUtils;
 
 type
   TLogonDialog = class(TUiLibChildForm)
-    cbxLogonType: TComboBox;
+    cbxLogonType: TUiLibComboBox;
     lblLogonType: TLabel;
     ButtonCancel: TButton;
     ButtonContinue: TButton;
@@ -20,17 +20,17 @@ type
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
     GroupBoxSource: TGroupBox;
-    EditSourceName: TEdit;
+    EditSourceName: TUiLibEdit;
     StaticSourceName: TStaticText;
     StaticSourceLuid: TStaticText;
-    EditSourceLuid: TEdit;
+    EditSourceLuid: TUiLibEdit;
     ButtonAllocLuid: TButton;
     GroupsPanel: TPanel;
     GroupsFrame: TFrameGroups;
     lblAuthPackage: TLabel;
-    cbxAuthPackage: TComboBox;
+    cbxAuthPackage: TUiLibComboBox;
     lblMessageType: TLabel;
-    cbxMessageType: TComboBox;
+    cbxMessageType: TUiLibComboBox;
     procedure ButtonContinueClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
     procedure MenuRemoveClick(Sender: TObject);

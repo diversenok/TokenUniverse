@@ -21,9 +21,9 @@ type
     CheckBoxInherit: TCheckBox;
     CheckBoxSuspended: TCheckBox;
     CheckBoxBreakaway: TCheckBox;
-    ComboBoxLogonFlags: TComboBox;
+    ComboBoxLogonFlags: TUiLibComboBox;
     EditDir: TLabeledEdit;
-    ComboBoxDesktop: TComboBox;
+    ComboBoxDesktop: TUiLibComboBox;
     ButtonClose: TButton;
     ButtonRun: TButton;
     LabelDesktop: TLabel;
@@ -34,7 +34,7 @@ type
     CheckBoxRunas: TCheckBox;
     OpenDlg: TOpenDialog;
     LabelShowMode: TLabel;
-    ComboBoxShowMode: TComboBox;
+    ComboBoxShowMode: TUiLibComboBox;
     LinkLabelToken: TLinkLabel;
     ButtonChooseParent: TButton;
     EditParent: TUiLibEdit;
@@ -44,7 +44,7 @@ type
     CheckBoxRunAsInvoker: TCheckBox;
     LabelAppContainer: TLabel;
     cbxOpenToken: TCheckBox;
-    ComboMethod: TComboBox;
+    ComboMethod: TUiLibComboBox;
     LabelMethod: TLabel;
     Label1: TLabel;
     CheckBoxForceBreakaway: TCheckBox;
@@ -65,11 +65,11 @@ type
     RadioButtonManifestCustom: TRadioButton;
     CheckBoxManifestThemes: TCheckBox;
     LabelManifestDpi: TLabel;
-    ComboBoxManifestDpi: TComboBox;
+    ComboBoxManifestDpi: TUiLibComboBox;
     CheckBoxManifestGdiScaling: TCheckBox;
     CheckBoxManifestLongPaths: TCheckBox;
     LabelProtection: TLabel;
-    ComboBoxProtection: TComboBox;
+    ComboBoxProtection: TUiLibComboBox;
     EditAppId: TUiLibEdit;
     LabelAppId: TLabel;
     AppContainerField: TAppContainerFieldFrame;

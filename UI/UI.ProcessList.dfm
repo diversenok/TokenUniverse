@@ -56,7 +56,7 @@ object ProcessListDialog: TProcessListDialog
     TabOrder = 4
     OnClick = ReloadProcessList
   end
-  object SearchBox: TButtonedEdit
+  object SearchBox: TUiLibButtonedEdit
     Left = 3
     Top = 8
     Width = 327

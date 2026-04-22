@@ -4,14 +4,14 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, NtUtilsUI.StdCtrls,
   NtUtilsUI.ListView, UI.Prototypes, NtUtils.Lsa.Logon,
   TU.Tokens, Ntapi.WinNt, Vcl.StdCtrls, Ntapi.ntseapi, NtUtils;
 
 type
   TFrameLogon = class(TFrame)
     ListView: TListViewEx;
-    ComboOrigin: TComboBox;
+    ComboOrigin: TUiLibComboBox;
     StaticOrigin: TStaticText;
     BtnSetOrigin: TButton;
     CheckBoxReference: TCheckBox;

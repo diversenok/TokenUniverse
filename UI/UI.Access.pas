@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  Vcl.ComCtrls, NtUtils, Ntapi.WinNt, NtUtilsUI,
+  Vcl.ComCtrls, NtUtils, Ntapi.WinNt, NtUtilsUI, NtUtilsUI.StdCtrls,
   UI.Prototypes.Sid.Edit, NtUiFrame.Bits, TU.Access,
   NtUiLib.AutoCompletion;
 
@@ -15,34 +15,34 @@ type
     TabByName: TTabSheet;
     TabByCID: TTabSheet;
     lblNameType: TLabel;
-    tbxName: TEdit;
+    tbxName: TUiLibEdit;
     lblName: TLabel;
-    tbxNameType: TEdit;
+    tbxNameType: TUiLibEdit;
     TabBySid: TTabSheet;
     ButtonClose: TButton;
     lblCidtType: TLabel;
     lblCid: TLabel;
-    tbxCid: TEdit;
-    cbxCidType: TComboBox;
+    tbxCid: TUiLibEdit;
+    cbxCidType: TUiLibComboBox;
     btnSelectCid: TButton;
     lblSidType: TLabel;
-    cbxSidType: TComboBox;
+    cbxSidType: TUiLibComboBox;
     lblSid: TLabel;
     lblCidSubType: TLabel;
-    cbxCidSubType: TComboBox;
+    cbxCidSubType: TUiLibComboBox;
     SidEditor: TSidEditor;
     lblSidLookupType: TLabel;
-    tbxSidLookupType: TEdit;
+    tbxSidLookupType: TUiLibEdit;
     AccessMaskFrame: TBitsFrame;
     ButtonSecurity: TButton;
     TabByService: TTabSheet;
     lblServiceName: TLabel;
-    tbxServiceName: TEdit;
+    tbxServiceName: TUiLibEdit;
     lblServiceType: TLabel;
-    tbxServiceType: TEdit;
+    tbxServiceType: TUiLibEdit;
     TabSingleton: TTabSheet;
     lblSingleton: TLabel;
-    cbxSingleton: TComboBox;
+    cbxSingleton: TUiLibComboBox;
     procedure FormCreate(Sender: TObject);
     procedure tbxNameChange(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);

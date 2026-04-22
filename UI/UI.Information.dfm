@@ -42,7 +42,7 @@ object InfoDialog: TInfoDialog
         Caption = 'User:'
         TabOrder = 18
       end
-      object EditUser: TEdit
+      object EditUser: TUiLibEdit
         Left = 112
         Top = 124
         Width = 270
@@ -72,7 +72,7 @@ object InfoDialog: TInfoDialog
         Caption = 'Integrity level:'
         TabOrder = 20
       end
-      object ComboSession: TComboBox
+      object ComboSession: TUiLibComboBox
         Left = 112
         Top = 178
         Width = 244
@@ -83,7 +83,7 @@ object InfoDialog: TInfoDialog
         Text = 'Unknown Session'
         OnChange = SetStaleColor
       end
-      object ComboIntegrity: TComboBox
+      object ComboIntegrity: TUiLibComboBox
         Left = 112
         Top = 205
         Width = 244
@@ -102,7 +102,7 @@ object InfoDialog: TInfoDialog
         Caption = 'Owner:'
         TabOrder = 21
       end
-      object ComboOwner: TComboBox
+      object ComboOwner: TUiLibComboBox
         Left = 112
         Top = 313
         Width = 244
@@ -113,7 +113,7 @@ object InfoDialog: TInfoDialog
         Text = 'Unknown Owner'
         OnChange = SetStaleColor
       end
-      object ComboPrimary: TComboBox
+      object ComboPrimary: TUiLibComboBox
         Left = 112
         Top = 340
         Width = 244
@@ -140,7 +140,7 @@ object InfoDialog: TInfoDialog
         Caption = 'UIAccess:'
         TabOrder = 23
       end
-      object ComboUIAccess: TComboBox
+      object ComboUIAccess: TUiLibComboBox
         Left = 112
         Top = 232
         Width = 244
@@ -327,7 +327,7 @@ object InfoDialog: TInfoDialog
         Caption = 'AppContainer:'
         TabOrder = 26
       end
-      object EditAppContainer: TEdit
+      object EditAppContainer: TUiLibEdit
         Left = 112
         Top = 150
         Width = 270
@@ -486,7 +486,7 @@ object InfoDialog: TInfoDialog
         Height = 369
         Align = alClient
         TabOrder = 0
-        inherited ComboOrigin: TComboBox
+        inherited ComboOrigin: TUiLibComboBox
           Height = 21
         end
         inherited StaticOrigin: TStaticText

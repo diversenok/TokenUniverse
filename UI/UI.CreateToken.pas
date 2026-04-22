@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, NtUtilsUI,
+  Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, NtUtilsUI, NtUtilsUI.StdCtrls,
   UI.Prototypes, NtUtilsUI.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
   NtUtils, UI.Prototypes.Sid.Edit;
@@ -21,12 +21,12 @@ type
     StaticLogonID: TStaticText;
     StaticOwner: TStaticText;
     StaticPrimaryGroup: TStaticText;
-    ComboLogonSession: TComboBox;
+    ComboLogonSession: TUiLibComboBox;
     PopupMenuGroups: TPopupMenu;
     MenuEdit: TMenuItem;
     MenuRemove: TMenuItem;
-    ComboOwner: TComboBox;
-    ComboPrimary: TComboBox;
+    ComboOwner: TUiLibComboBox;
+    ComboPrimary: TUiLibComboBox;
     CheckBoxUserState: TCheckBox;
     GroupBoxUser: TGroupBox;
     PopupMenuPrivileges: TPopupMenu;
@@ -44,10 +44,10 @@ type
     ButtonPickUser: TButton;
     SidEditor: TSidEditor;
     GroupBoxSource: TGroupBox;
-    EditSourceName: TEdit;
+    EditSourceName: TUiLibEdit;
     StaticSourceName: TStaticText;
     StaticSourceLuid: TStaticText;
-    EditSourceLuid: TEdit;
+    EditSourceLuid: TUiLibEdit;
     ButtonAllocLuid: TButton;
     GroupBoxExpires: TGroupBox;
     CheckBoxInfinite: TCheckBox;
@@ -77,7 +77,7 @@ type
     procedure ChangedGroupsInternal(
       var Groups: TArray<TGroup>;
       const NewGroups: TArray<TGroup>;
-      ComboBox: TComboBox
+      ComboBox: TUiLibComboBox
     );
     procedure AddGroup(const NewGroup: TGroup);
     procedure EditSingleGroup(const Value: TGroup);

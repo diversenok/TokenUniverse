@@ -79,7 +79,7 @@ object UserManagerTokens: TUserManagerTokens
     Caption = 'User Token by Name'
     TabOrder = 8
   end
-  object cbxSessionId: TComboBox
+  object cbxSessionId: TUiLibComboBox
     Left = 179
     Top = 52
     Width = 342
@@ -88,7 +88,7 @@ object UserManagerTokens: TUserManagerTokens
     TabOrder = 3
     OnEnter = cbxSessionIdEnter
   end
-  object cbxContext: TComboBox
+  object cbxContext: TUiLibComboBox
     Left = 179
     Top = 98
     Width = 342
@@ -97,7 +97,7 @@ object UserManagerTokens: TUserManagerTokens
     TabOrder = 5
     OnEnter = cbxContextEnter
   end
-  object cbxName: TEdit
+  object cbxName: TUiLibEdit
     Left = 179
     Top = 156
     Width = 342
@@ -140,7 +140,7 @@ object UserManagerTokens: TUserManagerTokens
     ShowHint = True
     TabOrder = 7
     OnEnter = SidEditorEnter
-    inherited tbxSid: TEdit
+    inherited tbxSid: TUiLibEdit
       Width = 255
     end
     inherited btnDsPicker: TButton

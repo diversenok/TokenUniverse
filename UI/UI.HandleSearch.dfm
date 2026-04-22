@@ -69,10 +69,10 @@ object FormHandleSearch: TFormHandleSearch
       OnDblClick = cmInspectClick
       PopupOnItemsOnly = True
     end
-    inherited SearchBox: TButtonedEdit
+    inherited SearchBox: TUiLibButtonedEdit
       Width = 520
     end
-    inherited ComboBoxColumn: TComboBox
+    inherited ComboBoxColumn: TUiLibComboBox
       Left = 527
     end
   end

@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
-  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList,
+  Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, NtUtilsUI.StdCtrls,
   NtUtilsUI.ListView, UI.Prototypes, NtUtilsUI, NtUtils.Security.Sid,
   TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
@@ -18,13 +18,13 @@ type
     TabGroups: TTabSheet;
     TabPrivileges: TTabSheet;
     StaticUser: TStaticText;
-    EditUser: TEdit;
+    EditUser: TUiLibEdit;
     ButtonClose: TButton;
     TabRestricted: TTabSheet;
     StaticSession: TStaticText;
     StaticIntegrity: TStaticText;
-    ComboSession: TComboBox;
-    ComboIntegrity: TComboBox;
+    ComboSession: TUiLibComboBox;
+    ComboIntegrity: TUiLibComboBox;
     ImageList: TImageList;
     PrivilegePopup: TPopupMenu;
     MenuPrivEnable: TMenuItem;
@@ -37,11 +37,11 @@ type
     TabAdvanced: TTabSheet;
     ListViewAdvanced: TListViewEx;
     StaticOwner: TStaticText;
-    ComboOwner: TComboBox;
-    ComboPrimary: TComboBox;
+    ComboOwner: TUiLibComboBox;
+    ComboPrimary: TUiLibComboBox;
     StaticPrimary: TStaticText;
     StaticUIAccess: TStaticText;
-    ComboUIAccess: TComboBox;
+    ComboUIAccess: TUiLibComboBox;
     StaticText1: TStaticText;
     ListViewGeneral: TListViewEx;
     CheckBoxNoWriteUp: TCheckBox;
@@ -66,7 +66,7 @@ type
     TabLogon: TTabSheet;
     FrameLogon: TFrameLogon;
     StaticAppContainer: TStaticText;
-    EditAppContainer: TEdit;
+    EditAppContainer: TUiLibEdit;
     GroupsRestrictedFrame: TFrameGroups;
     GroupsMemberFrame: TFrameGroups;
     PrivilegesFrame: TFramePrivileges;
@@ -795,8 +795,8 @@ end;
 
 procedure TInfoDialog.SetStaleColor;
 begin
-  Assert(Sender is TComboBox);
-  (Sender as TComboBox).Color := ColorSettings.clBackgroundUnsaved;
+  Assert(Sender is TUiLibComboBox);
+  (Sender as TUiLibComboBox).Color := ColorSettings.clBackgroundUnsaved;
 end;
 
 procedure TInfoDialog.UpdateAuditTab;

@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, NtUtilsUI,
   NtUtils.Security.Sid, UI.Prototypes.Lsa.Privileges, UI.Prototypes.AuditFrame,
-  NtUtils.Lsa.Audit, NtUtils, NtUiFrame.Bits;
+  NtUtils.Lsa.Audit, NtUtils, NtUiFrame.Bits, NtUtilsUI.StdCtrls;
 
 type
   TDialogSidView = class(TUiLibChildForm)
@@ -21,12 +21,12 @@ type
     LabelSid: TStaticText;
     LabelType: TStaticText;
     LabelFullName: TStaticText;
-    EditFullName: TEdit;
-    EditSID: TEdit;
-    EditType: TEdit;
+    EditFullName: TUiLibEdit;
+    EditSID: TUiLibEdit;
+    EditType: TUiLibEdit;
     ButtonClose: TButton;
     LabelSubAuthorities: TStaticText;
-    EditSubAuthorities: TEdit;
+    EditSubAuthorities: TUiLibEdit;
     LinkLabelMinusOne: TLinkLabel;
     StaticTextDomain: TStaticText;
     TabLsaRights: TTabSheet;

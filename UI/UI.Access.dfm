@@ -40,7 +40,7 @@ object AccessCheckForm: TAccessCheckForm
         Height = 13
         Caption = 'Name:'
       end
-      object tbxName: TEdit
+      object tbxName: TUiLibEdit
         Left = 72
         Top = 40
         Width = 537
@@ -51,7 +51,7 @@ object AccessCheckForm: TAccessCheckForm
         OnChange = tbxNameChange
         OnEnter = tbxNameEnter
       end
-      object tbxNameType: TEdit
+      object tbxNameType: TUiLibEdit
         Left = 72
         Top = 13
         Width = 537
@@ -88,7 +88,7 @@ object AccessCheckForm: TAccessCheckForm
         Anchors = [akTop, akRight]
         Caption = 'Child Type:'
       end
-      object tbxCid: TEdit
+      object tbxCid: TUiLibEdit
         Left = 72
         Top = 40
         Width = 457
@@ -98,7 +98,7 @@ object AccessCheckForm: TAccessCheckForm
         TextHint = 'PID or TID value'
         OnChange = tbxCidChange
       end
-      object cbxCidType: TComboBox
+      object cbxCidType: TUiLibComboBox
         Left = 72
         Top = 13
         Width = 225
@@ -122,7 +122,7 @@ object AccessCheckForm: TAccessCheckForm
         TabOrder = 2
         OnClick = btnSelectCidClick
       end
-      object cbxCidSubType: TComboBox
+      object cbxCidSubType: TUiLibComboBox
         Left = 384
         Top = 13
         Width = 225
@@ -164,7 +164,7 @@ object AccessCheckForm: TAccessCheckForm
         Anchors = [akTop, akRight]
         Caption = 'SID Type:'
       end
-      object cbxSidType: TComboBox
+      object cbxSidType: TUiLibComboBox
         Left = 72
         Top = 13
         Width = 337
@@ -188,7 +188,7 @@ object AccessCheckForm: TAccessCheckForm
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited tbxSid: TEdit
+        inherited tbxSid: TUiLibEdit
           Width = 451
           Height = 23
         end
@@ -205,7 +205,7 @@ object AccessCheckForm: TAccessCheckForm
           Height = 27
         end
       end
-      object tbxSidLookupType: TEdit
+      object tbxSidLookupType: TUiLibEdit
         Left = 480
         Top = 13
         Width = 130
@@ -234,7 +234,7 @@ object AccessCheckForm: TAccessCheckForm
         Height = 13
         Caption = 'Object Type:'
       end
-      object tbxServiceName: TEdit
+      object tbxServiceName: TUiLibEdit
         Left = 72
         Top = 40
         Width = 537
@@ -245,7 +245,7 @@ object AccessCheckForm: TAccessCheckForm
         OnChange = tbxServiceNameChange
         OnEnter = tbxServiceNameEnter
       end
-      object tbxServiceType: TEdit
+      object tbxServiceType: TUiLibEdit
         Left = 72
         Top = 13
         Width = 537
@@ -267,7 +267,7 @@ object AccessCheckForm: TAccessCheckForm
         Height = 13
         Caption = 'Object:'
       end
-      object cbxSingleton: TComboBox
+      object cbxSingleton: TUiLibComboBox
         Left = 72
         Top = 13
         Width = 537
@@ -327,7 +327,7 @@ object AccessCheckForm: TAccessCheckForm
     inherited BottomPanel: TPanel
       Top = 355
       Width = 629
-      inherited tbxValue: TEdit
+      inherited tbxValue: TUiLibEdit
         Width = 483
       end
       inherited btnAll: TButton

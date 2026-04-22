@@ -64,7 +64,7 @@ object DialogSafer: TDialogSafer
     AutoSize = False
     EllipsisPosition = epEndEllipsis
   end
-  object ComboBoxScope: TComboBox
+  object ComboBoxScope: TUiLibComboBox
     Left = 81
     Top = 8
     Width = 188
@@ -79,7 +79,7 @@ object DialogSafer: TDialogSafer
       'Machine'
       'User')
   end
-  object ComboBoxLevel: TComboBox
+  object ComboBoxLevel: TUiLibComboBox
     Left = 81
     Top = 35
     Width = 188

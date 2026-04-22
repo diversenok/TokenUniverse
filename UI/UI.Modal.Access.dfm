@@ -104,7 +104,7 @@ object DialogAccess: TDialogAccess
       inherited BottomPanel: TPanel
         Top = 253
         Width = 248
-        inherited tbxValue: TEdit
+        inherited tbxValue: TUiLibEdit
           Width = 102
         end
         inherited btnAll: TButton

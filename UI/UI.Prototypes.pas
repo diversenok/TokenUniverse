@@ -4,17 +4,18 @@ interface
 
 uses
   System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, NtUtilsUI.ListView, TU.Tokens,
-  TU.Tokens.Old.Types, Ntapi.WinNt, NtUtils.WinStation, NtUtils, TU.UserManager;
+  TU.Tokens.Old.Types, Ntapi.WinNt, NtUtils.WinStation, NtUtils, TU.UserManager,
+  NtUtilsUI.StdCtrls;
 
 type
   TSessionSource = class
   private
     Sessions: TArray<TSessionIdW>;
-    ComboBox: TComboBox;
+    ComboBox: TUiLibComboBox;
     function GetSession: TSessionId;
     procedure SetSession(const Value: TSessionId);
   public
-    constructor Create(OwnedComboBox: TComboBox; SelectCurrent: Boolean);
+    constructor Create(OwnedComboBox: TUiLibComboBox; SelectCurrent: Boolean);
     procedure RefreshSessionList(SelectCurrent: Boolean);
     property SelectedSession: TSessionId read GetSession write SetSession;
   end;
@@ -24,23 +25,23 @@ type
     IsIntermediate: Boolean;
     IntermediateValue: Cardinal;
     IntermediateIndex: Integer;
-    ComboBox: TComboBox;
+    ComboBox: TUiLibComboBox;
     function GetIntegrity: Cardinal;
     procedure SetIntegrity(Value: Cardinal);
     procedure RefreshList;
   public
-    constructor Create(OwnedComboBox: TComboBox);
+    constructor Create(OwnedComboBox: TUiLibComboBox);
     property SelectedIntegrity: Cardinal read GetIntegrity write SetIntegrity;
   end;
 
   TUmgrContextSource = class
   private
     Contexts: TArray<TUmgrContextEntry>;
-    ComboBox: TComboBox;
+    ComboBox: TUiLibComboBox;
     function GetContext: TLuid;
     procedure SetContext(const Value: TLuid);
   public
-    constructor Create(OwnedComboBox: TComboBox);
+    constructor Create(OwnedComboBox: TUiLibComboBox);
     procedure RefreshList;
     property SelectedContext: TLuid read GetContext write SetContext;
   end;
@@ -53,12 +54,12 @@ type
   TLogonSessionSource = class
   private
     FLogonSessions: TArray<TLogonId>;
-    ComboBox: TComboBox;
+    ComboBox: TUiLibComboBox;
     function GetSelected: TLuid;
     procedure SetSelected(const Value: TLuid);
   public
     const NO_LOGON = '0 (value not set)';
-    constructor Create(OwnedComboBox: TComboBox);
+    constructor Create(OwnedComboBox: TUiLibComboBox);
     procedure UpdateLogonSessions;
     property SelectedLogonSession: TLuid read GetSelected write SetSelected;
   end;

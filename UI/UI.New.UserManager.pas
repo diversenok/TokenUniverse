@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, NtUtilsUI,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, NtUtilsUI, NtUtilsUI.StdCtrls,
   UI.Prototypes.Sid.Edit, UI.Prototypes, Ntapi.WinNt;
 
 type
@@ -15,10 +15,10 @@ type
     rbxContext: TRadioButton;
     rbxSid: TRadioButton;
     rbxName: TRadioButton;
-    cbxSessionId: TComboBox;
+    cbxSessionId: TUiLibComboBox;
     BevelSession: TBevel;
-    cbxContext: TComboBox;
-    cbxName: TEdit;
+    cbxContext: TUiLibComboBox;
+    cbxName: TUiLibEdit;
     btnOpen: TButton;
     btnClose: TButton;
     SidEditor: TSidEditor;

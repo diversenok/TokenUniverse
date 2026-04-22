@@ -19,7 +19,7 @@ object ComboDialog: TComboDialog
     66)
   PixelsPerInch = 96
   TextHeight = 13
-  object ComboBox: TComboBox
+  object ComboBox: TUiLibComboBox
     Left = 8
     Top = 7
     Width = 239

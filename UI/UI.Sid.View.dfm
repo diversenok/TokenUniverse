@@ -63,7 +63,7 @@ object DialogSidView: TDialogSidView
         Caption = 'Full name: '
         TabOrder = 3
       end
-      object EditFullName: TEdit
+      object EditFullName: TUiLibEdit
         Left = 97
         Top = 11
         Width = 266
@@ -74,7 +74,7 @@ object DialogSidView: TDialogSidView
         TabOrder = 4
         Text = '-'
       end
-      object EditSID: TEdit
+      object EditSID: TUiLibEdit
         Left = 97
         Top = 34
         Width = 266
@@ -85,7 +85,7 @@ object DialogSidView: TDialogSidView
         TabOrder = 5
         Text = '-'
       end
-      object EditType: TEdit
+      object EditType: TUiLibEdit
         Left = 97
         Top = 57
         Width = 266
@@ -104,7 +104,7 @@ object DialogSidView: TDialogSidView
         Caption = 'Sub authorities:'
         TabOrder = 7
       end
-      object EditSubAuthorities: TEdit
+      object EditSubAuthorities: TUiLibEdit
         Left = 97
         Top = 80
         Width = 159
@@ -226,7 +226,7 @@ object DialogSidView: TDialogSidView
         inherited BottomPanel: TPanel
           Top = 225
           Width = 367
-          inherited tbxValue: TEdit
+          inherited tbxValue: TUiLibEdit
             Width = 221
           end
           inherited btnAll: TButton

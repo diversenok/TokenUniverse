@@ -50,7 +50,7 @@ object LogonDialog: TLogonDialog
     Height = 13
     Caption = 'Message Type:'
   end
-  object cbxLogonType: TComboBox
+  object cbxLogonType: TUiLibComboBox
     Left = 8
     Top = 131
     Width = 370
@@ -120,7 +120,7 @@ object LogonDialog: TLogonDialog
     Anchors = [akLeft, akTop, akRight]
     Caption = 'Token Source : '
     TabOrder = 3
-    object EditSourceName: TEdit
+    object EditSourceName: TUiLibEdit
       Left = 45
       Top = 21
       Width = 83
@@ -146,7 +146,7 @@ object LogonDialog: TLogonDialog
       Caption = 'LUID:'
       TabOrder = 2
     end
-    object EditSourceLuid: TEdit
+    object EditSourceLuid: TUiLibEdit
       Left = 167
       Top = 21
       Width = 163
@@ -229,7 +229,7 @@ object LogonDialog: TLogonDialog
       end
     end
   end
-  object cbxAuthPackage: TComboBox
+  object cbxAuthPackage: TUiLibComboBox
     Left = 8
     Top = 27
     Width = 370
@@ -244,7 +244,7 @@ object LogonDialog: TLogonDialog
       'Microsoft Authentication Package V1.0'
       'Kerberos')
   end
-  object cbxMessageType: TComboBox
+  object cbxMessageType: TUiLibComboBox
     Left = 8
     Top = 77
     Width = 370

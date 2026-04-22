@@ -79,7 +79,7 @@ object DialogCreateToken: TDialogCreateToken
         Caption = 'Primary group:'
         TabOrder = 9
       end
-      object ComboLogonSession: TComboBox
+      object ComboLogonSession: TUiLibComboBox
         Left = 114
         Top = 88
         Width = 439
@@ -88,7 +88,7 @@ object DialogCreateToken: TDialogCreateToken
         TabOrder = 1
         Text = 'Choose a logon session'
       end
-      object ComboOwner: TComboBox
+      object ComboOwner: TUiLibComboBox
         Left = 114
         Top = 115
         Width = 439
@@ -103,7 +103,7 @@ object DialogCreateToken: TDialogCreateToken
         Items.Strings = (
           '< Same as user >')
       end
-      object ComboPrimary: TComboBox
+      object ComboPrimary: TUiLibComboBox
         Left = 114
         Top = 142
         Width = 439
@@ -157,7 +157,7 @@ object DialogCreateToken: TDialogCreateToken
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
-          inherited tbxSid: TEdit
+          inherited tbxSid: TUiLibEdit
             Width = 475
           end
           inherited btnDsPicker: TButton
@@ -218,7 +218,7 @@ object DialogCreateToken: TDialogCreateToken
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Token Source '
         TabOrder = 4
-        object EditSourceName: TEdit
+        object EditSourceName: TUiLibEdit
           Left = 69
           Top = 21
           Width = 147
@@ -244,7 +244,7 @@ object DialogCreateToken: TDialogCreateToken
           Caption = 'LUID:'
           TabOrder = 4
         end
-        object EditSourceLuid: TEdit
+        object EditSourceLuid: TUiLibEdit
           Left = 69
           Top = 48
           Width = 147

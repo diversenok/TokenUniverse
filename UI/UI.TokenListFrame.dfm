@@ -52,7 +52,7 @@ object FrameTokenList: TFrameTokenList
     TabOrder = 0
     ViewStyle = vsReport
   end
-  object SearchBox: TButtonedEdit
+  object SearchBox: TUiLibButtonedEdit
     Left = 3
     Top = 3
     Width = 597
@@ -69,7 +69,7 @@ object FrameTokenList: TFrameTokenList
     OnChange = SearchBoxChange
     OnRightButtonClick = SearchBoxRightButtonClick
   end
-  object ComboBoxColumn: TComboBox
+  object ComboBoxColumn: TUiLibComboBox
     Left = 604
     Top = 3
     Width = 143

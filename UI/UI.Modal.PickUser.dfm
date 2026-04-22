@@ -185,7 +185,7 @@ object DialogPickUser: TDialogPickUser
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    inherited tbxSid: TEdit
+    inherited tbxSid: TUiLibEdit
       Width = 466
       Height = 23
     end

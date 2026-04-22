@@ -3,14 +3,14 @@ unit UI.Modal.ComboDlg;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, NtUtilsUI.StdCtrls,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, UI.Prototypes, NtUtilsUI, TU.Tokens.Old.Types,
   Ntapi.WinNt;
 
 type
   TComboDialog = class(TUiLibChildForm)
-    ComboBox: TComboBox;
+    ComboBox: TUiLibComboBox;
     ButtonCancel: TButton;
     ButtonOK: TButton;
   public

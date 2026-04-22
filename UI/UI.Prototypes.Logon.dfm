@@ -46,7 +46,7 @@ object FrameLogon: TFrameLogon
     ViewStyle = vsReport
     ClipboardSourceColumn = 1
   end
-  object ComboOrigin: TComboBox
+  object ComboOrigin: TUiLibComboBox
     Left = 112
     Top = 312
     Width = 244

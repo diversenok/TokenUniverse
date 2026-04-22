@@ -6,14 +6,14 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ExtCtrls, System.ImageList, Vcl.ImgList, Vcl.ComCtrls,
-  TU.Tokens, NtUtilsUI.ListView;
+  TU.Tokens, NtUtilsUI.ListView, NtUtilsUI.StdCtrls;
 
 type
   TFrameTokenList = class(TFrame)
     ListViewTokens: TListViewEx;
     SearchButtons: TImageList;
-    SearchBox: TButtonedEdit;
-    ComboBoxColumn: TComboBox;
+    SearchBox: TUiLibButtonedEdit;
+    ComboBoxColumn: TUiLibComboBox;
     procedure SearchBoxRightButtonClick(Sender: TObject);
     procedure SearchBoxChange(Sender: TObject);
   public

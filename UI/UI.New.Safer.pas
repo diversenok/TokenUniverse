@@ -4,13 +4,13 @@ interface
 
 uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, NtUtilsUI, Ntapi.WinSafer, NtUtils,
+  Vcl.StdCtrls, NtUtilsUI, Ntapi.WinSafer, NtUtils, NtUtilsUI.StdCtrls,
   TU.Tokens;
 
 type
   TDialogSafer = class(TUiLibChildForm)
-    ComboBoxScope: TComboBox;
-    ComboBoxLevel: TComboBox;
+    ComboBoxScope: TUiLibComboBox;
+    ComboBoxLevel: TUiLibComboBox;
     LabelScope: TLabel;
     LabelLevel: TLabel;
     ButtonOK: TButton;
