@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, NtUtils, NtUtilsUI,
-  Ntapi.ntseapi, UI.Prototypes.Sid.Edit, NtUiFrame;
+  Ntapi.ntseapi, UI.Prototypes.Sid.Edit;
 
 type
   TCheckBoxMapping = record
@@ -58,8 +58,8 @@ implementation
 
 uses
   Ntapi.WinNt, Ntapi.ntpsapi, NtUtils.Security.Sid, NtUtils.WinUser,
-  NtUiCommon.Helpers, NtUiLib.Errors, NtUiCommon.Prototypes,
-  NtUtilsUI.Components;
+  NtUiLib.Errors, NtUiCommon.Prototypes, NtUtilsUI.Components,
+  NtUtilsUI.StdCtrls;
 
 {$R *.dfm}
 
@@ -117,35 +117,35 @@ procedure TDialogPickUser.CheckBoxDenyOnlyClick;
 begin
   if CheckBoxDenyOnly.Checked then
   begin
-    CheckBoxMandatory.SetCheckedEx(False);
-    CheckBoxEnabled.SetCheckedEx(False);
-    CheckBoxEnabledByDefault.SetCheckedEx(False);
+    CheckBoxMandatory.CheckedSuppressClick := False;
+    CheckBoxEnabled.CheckedSuppressClick := False;
+    CheckBoxEnabledByDefault.CheckedSuppressClick := False;
   end;
 end;
 
 procedure TDialogPickUser.CheckBoxEnabledByDefaultClick;
 begin
   if CheckBoxEnabledByDefault.Checked then
-    CheckBoxDenyOnly.SetCheckedEx(False)
+    CheckBoxDenyOnly.CheckedSuppressClick := False
   else
-    CheckBoxMandatory.SetCheckedEx(False);
+    CheckBoxMandatory.CheckedSuppressClick := False;
 end;
 
 procedure TDialogPickUser.CheckBoxEnabledClick;
 begin
   if CheckBoxEnabled.Checked then
-    CheckBoxDenyOnly.SetCheckedEx(False)
+    CheckBoxDenyOnly.CheckedSuppressClick := False
   else
-    CheckBoxMandatory.SetCheckedEx(False);
+    CheckBoxMandatory.CheckedSuppressClick := False;
 end;
 
 procedure TDialogPickUser.CheckBoxMandatoryClick;
 begin
   if CheckBoxMandatory.Checked then
   begin
-    CheckBoxEnabled.SetCheckedEx(True);
-    CheckBoxEnabledByDefault.SetCheckedEx(True);
-    CheckBoxDenyOnly.SetCheckedEx(False);
+    CheckBoxEnabled.CheckedSuppressClick := True;
+    CheckBoxEnabledByDefault.CheckedSuppressClick := True;
+    CheckBoxDenyOnly.CheckedSuppressClick := False;
   end;
 end;
 
@@ -211,14 +211,14 @@ begin
     // Set appropriate checkbox states
     for i := 0 to High(Mapping) do
       if BitwiseAnd and Mapping[i].Attribute <> 0 then
-        Mapping[i].CheckBox.SetStateEx(cbChecked) // All groups contain it
+        Mapping[i].CheckBox.StateSuppressClick := cbChecked // All groups contain it
       else if BitwiseOr and Mapping[i].Attribute <> 0 then
       begin
         Mapping[i].CheckBox.AllowGrayed := True;
-        Mapping[i].CheckBox.SetStateEx(cbGrayed); // Only some of them
+        Mapping[i].CheckBox.StateSuppressClick := cbGrayed; // Only some of them
       end
       else
-        Mapping[i].CheckBox.SetStateEx(cbUnchecked); // None of them
+        Mapping[i].CheckBox.StateSuppressClick := cbUnchecked; // None of them
 
     // Show the dialog and wait
     ShowModal;
@@ -274,7 +274,8 @@ var
   i: Integer;
 begin
   for i := 0 to High(Mapping) do
-    Mapping[i].CheckBox.SetCheckedEx(Value and Mapping[i].Attribute <> 0);
+    Mapping[i].CheckBox.CheckedSuppressClick :=
+      BitTest(Value and Mapping[i].Attribute);
 end;
 
 end.

@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
   Vcl.ComCtrls, NtUtils, Ntapi.WinNt, NtUtilsUI,
-  UI.Prototypes.Sid.Edit, NtUiFrame.Bits, NtUiFrame, TU.Access,
+  UI.Prototypes.Sid.Edit, NtUiFrame.Bits, TU.Access,
   NtUiLib.AutoCompletion;
 
 type

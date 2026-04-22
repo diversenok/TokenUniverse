@@ -55,8 +55,8 @@ type
 implementation
 
 uses
-  NtUiCommon.Helpers, UI.Settings, VirtualTrees.Header, VirtualTrees.Types,
-  DelphiUtils.Arrays, NtUtils.Errors;
+  UI.Settings, VirtualTrees.Header, VirtualTrees.Types, DelphiUtils.Arrays,
+  NtUtils.Errors;
 
 {$R *.dfm}
 

@@ -174,7 +174,7 @@ begin
 
       with ListView.Items.Add do
         begin
-          Cell[0] := PrettifyCamelCase(FieldFormatter.Field.Name);
+          Cell[0] := RtlxPrettifyIdentifier(FieldFormatter.Field.Name);
           GroupId := GROUP_IND_LOGON;
 
           if Assigned(LogonData) then

@@ -407,7 +407,6 @@ end;
 
 procedure TFormMain.FormClose;
 begin
-  OnMainFormClose.Invoke;
   TokenView.Free;
 
   if cmAllocConsole.Checked then

@@ -15,11 +15,9 @@ object DialogPickUser: TDialogPickUser
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   ShowHint = True
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
     Left = 486
@@ -188,13 +186,20 @@ object DialogPickUser: TDialogPickUser
     ShowHint = True
     TabOrder = 0
     inherited tbxSid: TEdit
-      Width = 496
+      Width = 466
+      Height = 23
     end
-    inherited btnDsPicker: TButton
+    inherited btnDsPicker: TUiLibButton
       Left = 528
+      Height = 27
     end
-    inherited btnCheatsheet: TButton
-      Left = 500
+    inherited btnCheatsheet: TUiLibButton
+      Left = 470
+      Height = 27
+    end
+    inherited btnChoice: TUiLibButton
+      Left = 499
+      Height = 27
     end
   end
 end

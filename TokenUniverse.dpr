@@ -40,7 +40,6 @@ uses
   NtUiCommon.Icons in 'NtUtilsUI\Common\NtUiCommon.Icons.pas',
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
-  NtUiCommon.Helpers in 'NtUtilsUI\Common\NtUiCommon.Helpers.pas',
   UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
   TU.Observers in 'Core\TU.Observers.pas',
@@ -58,7 +57,6 @@ uses
   NtUiBackend.AppContainers in 'NtUtilsUI\Common\NtUiBackend.AppContainers.pas',
   NtUiBackend.UserProfiles in 'NtUtilsUI\Common\NtUiBackend.UserProfiles.pas',
   NtUiCommon.Interfaces in 'NtUtilsUI\Common\NtUiCommon.Interfaces.pas',
-  NtUiFrame.Search in 'NtUtilsUI\Prototypes\NtUiFrame.Search.pas' {SearchFrame: TFrame},
   NtUiFrame.UserProfiles in 'NtUtilsUI\Prototypes\NtUiFrame.UserProfiles.pas' {UserProfilesFrame: TFrame},
   NtUiFrame.AppContainer.List in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.List.pas' {AppContainerListFrame: TFrame},
   NtUiFrame.AppContainer.ListAllUsers in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.ListAllUsers.pas' {AppContainerListAllUsersFrame: TFrame},
@@ -68,7 +66,6 @@ uses
   NtUiFrame.AppContainer.View in 'NtUtilsUI\Prototypes\NtUiFrame.AppContainer.View.pas' {AppContainerViewFrame: TFrame},
   NtUiBackend.Bits in 'NtUtilsUI\Common\NtUiBackend.Bits.pas',
   NtUiFrame.Bits in 'NtUtilsUI\Prototypes\NtUiFrame.Bits.pas' {BitsFrame: TFrame},
-  NtUiFrame in 'NtUtilsUI\Prototypes\NtUiFrame.pas' {BaseFrame: TFrame},
   NtUiBackend.Acl in 'NtUtilsUI\Common\NtUiBackend.Acl.pas',
   NtUiCommon.PageHost in 'NtUtilsUI\Prototypes\NtUiCommon.PageHost.pas' {FramePages: TFrame},
   NtUiFrame.Ace in 'NtUtilsUI\Prototypes\NtUiFrame.Ace.pas',
@@ -79,7 +76,7 @@ uses
   NtUiFrame.Ace.Condition in 'NtUtilsUI\Prototypes\NtUiFrame.Ace.Condition.pas' {AceConditionFrame: TFrame},
   NtUiFrame.Hex.Edit in 'NtUtilsUI\Prototypes\NtUiFrame.Hex.Edit.pas' {HexEditFrame: TFrame},
   NtUiBackend.HexView in 'NtUtilsUI\Common\NtUiBackend.HexView.pas',
-  NtUiFrame.Guid in 'NtUtilsUI\Prototypes\NtUiFrame.Guid.pas' {GuidFrame: TFrame},
+  NtUtilsUI.Guid in 'NtUtilsUI\Components\NtUtilsUI.Guid.pas',
   NtUiBuiltin.DsObjectPicker in 'NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas',
   NtUiFrame.Sid.Trust in 'NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas' {FrameTrustSid: TFrame},
   UI.New.UserManager in 'UI\UI.New.UserManager.pas' {UserManagerTokens},
@@ -97,8 +94,11 @@ uses
   NtUtilsUI in 'NtUtilsUI\Components\NtUtilsUI.pas',
   NtUtilsUI.Colors in 'NtUtilsUI\Components\NtUtilsUI.Colors.pas',
   NtUtilsUI.Components in 'NtUtilsUI\Components\NtUtilsUI.Components.pas',
-  NtUtilsUI.Interfaces in 'NtUtilsUI\Components\NtUtilsUI.Interfaces.pas',
-  NtUtilsUI.Sid.Integrity in 'NtUtilsUI\Components\NtUtilsUI.Sid.Integrity.pas';
+  NtUtilsUI.Base in 'NtUtilsUI\Components\NtUtilsUI.Base.pas',
+  NtUtilsUI.Sid.Integrity in 'NtUtilsUI\Components\NtUtilsUI.Sid.Integrity.pas',
+  NtUtilsUI.SearchBox in 'NtUtilsUI\Components\NtUtilsUI.SearchBox.pas',
+  NtUtilsUI.DevirtualizedTree.Search in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Search.pas',
+  NtUtilsUI.Number in 'NtUtilsUI\Components\NtUtilsUI.Number.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

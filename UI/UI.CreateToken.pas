@@ -7,7 +7,7 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, NtUtilsUI,
   UI.Prototypes, NtUtilsUI.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
   NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
-  NtUtils, UI.Prototypes.Sid.Edit, NtUiFrame;
+  NtUtils, UI.Prototypes.Sid.Edit;
 
 type
   TDialogCreateToken = class(TUiLibChildForm)

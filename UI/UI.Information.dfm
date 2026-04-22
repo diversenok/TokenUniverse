@@ -740,31 +740,21 @@ object InfoDialog: TInfoDialog
         inherited RightPanel: TPanel
           Left = 363
           Height = 311
-          inherited btnAdd: TButton
+          inherited btnAdd: TUiLibButton
             Top = 79
           end
-          inherited btnCanonicalize: TButton
+          inherited btnCanonicalize: TUiLibButton
             Top = 143
           end
-          inherited btnDelete: TButton
+          inherited btnDelete: TUiLibButton
             Top = 206
           end
-          inherited btnDown: TButton
+          inherited btnDown: TUiLibButton
             Top = 286
           end
         end
-        inherited Search: TSearchFrame
+        inherited Search: TUiLibTreeSearchBox
           Width = 388
-          inherited Splitter: TSplitter
-            Left = 222
-          end
-          inherited tbxSearchBox: TUiLibButtonedEdit
-            Width = 222
-          end
-          inherited cbxColumn: TComboBox
-            Left = 228
-            Height = 21
-          end
         end
       end
       object btnDaclApply: TButton

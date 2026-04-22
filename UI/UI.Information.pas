@@ -9,7 +9,7 @@ uses
   NtUtilsUI.ListView, UI.Prototypes, NtUtilsUI, NtUtils.Security.Sid,
   TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
   UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
-  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame, NtUiFrame.Acl;
+  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame.Acl;
 
 type
   TInfoDialog = class(TUiLibChildForm)
@@ -707,9 +707,6 @@ begin
     UpdateAuditTab
   else if PageControl.ActivePageIndex = TabLogon.TabIndex then
     UpdateLogonTab;
-
-  (DefaultDaclFrame as IObservesActivation).SetActive(
-    PageControl.ActivePageIndex = TabDefaultDacl.TabIndex);
 end;
 
 procedure TInfoDialog.Refresh;

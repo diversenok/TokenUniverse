@@ -83,6 +83,7 @@
 map2pdb.exe -bind:$(OUTPUTFILENAME) $(OUTPUTNAME).map
 $(PostBuildEvent)]]></PostBuildEvent>
         <PostBuildEventExecuteWhen>TargetOutOfDate</PostBuildEventExecuteWhen>
+        <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
@@ -110,7 +111,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <DCC_RemoteDebug>false</DCC_RemoteDebug>
         <BT_BuildType>Debug</BT_BuildType>
         <Icon_MainIcon>TokenUniverse.ico</Icon_MainIcon>
     </PropertyGroup>
@@ -222,7 +222,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Helpers.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
             <Form>FramePrivileges</Form>
             <FormType>dfm</FormType>
@@ -254,11 +253,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.AppContainers.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.UserProfiles.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiCommon.Interfaces.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Search.pas">
-            <Form>SearchFrame</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.UserProfiles.pas">
             <Form>UserProfilesFrame</Form>
             <FormType>dfm</FormType>
@@ -291,11 +285,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Bits.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Bits.pas">
             <Form>BitsFrame</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
-        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.pas">
-            <Form>BaseFrame</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
@@ -333,11 +322,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.HexView.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Guid.pas">
-            <Form>GuidFrame</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Guid.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas">
             <Form>FrameTrustSid</Form>
@@ -369,8 +354,11 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Colors.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Components.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Interfaces.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Base.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Sid.Integrity.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.SearchBox.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Search.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Number.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
