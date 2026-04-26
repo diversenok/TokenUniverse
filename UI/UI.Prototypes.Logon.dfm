@@ -50,7 +50,7 @@ object FrameLogon: TFrameLogon
     Left = 112
     Top = 312
     Width = 244
-    Height = 21
+    Height = 23
     AutoComplete = False
     Anchors = [akLeft, akRight, akBottom]
     TabOrder = 1
@@ -60,8 +60,8 @@ object FrameLogon: TFrameLogon
   object StaticOrigin: TStaticText
     Left = 3
     Top = 315
-    Width = 92
-    Height = 17
+    Width = 104
+    Height = 19
     Anchors = [akLeft, akBottom]
     Caption = 'Originating Logon:'
     TabOrder = 2

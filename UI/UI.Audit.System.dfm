@@ -12,11 +12,9 @@ object DialogSystemAudit: TDialogSystemAudit
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
-  PixelsPerInch = 96
   TextHeight = 13
   inline FrameAudit: TFrameAudit
     Left = 0

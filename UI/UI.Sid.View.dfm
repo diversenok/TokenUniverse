@@ -174,7 +174,7 @@ object DialogSidView: TDialogSidView
           inherited VST: TDevirtualizedTree
             Width = 367
             Height = 253
-            PopupMenuEx = FrameLsaPrivileges.PopupMenu
+            PopupMenu = FrameLsaPrivileges.PopupMenu
           end
         end
       end
@@ -209,6 +209,8 @@ object DialogSidView: TDialogSidView
         Height = 253
         Margins.Bottom = 33
         Align = alClient
+        Constraints.MinHeight = 100
+        Constraints.MinWidth = 224
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
@@ -220,7 +222,7 @@ object DialogSidView: TDialogSidView
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
               Position = 0
               Text = 'Name'
-              Width = 363
+              Width = 367
             end>
         end
         inherited BottomPanel: TPanel

@@ -324,11 +324,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.HexView.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Guid.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas"/>
-        <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sid.Trust.pas">
-            <Form>FrameTrustSid</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Sid.Trust.pas"/>
         <DCCReference Include="UI\UI.New.UserManager.pas">
             <Form>UserManagerTokens</Form>
         </DCCReference>
@@ -347,7 +343,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.VirtualTreeEx.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Forms.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.ListView.pas"/>

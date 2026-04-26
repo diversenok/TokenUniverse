@@ -15,14 +15,9 @@ object ProcessListDialog: TProcessListDialog
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnCreate = ReloadProcessList
   OnKeyDown = FormKeyDown
-  DesignSize = (
-    334
-    312)
-  PixelsPerInch = 96
   TextHeight = 13
   object ButtonOk: TButton
     Left = 174

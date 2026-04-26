@@ -4,9 +4,6 @@ object FrameTokenList: TFrameTokenList
   Width = 750
   Height = 325
   TabOrder = 0
-  DesignSize = (
-    750
-    325)
   object ListViewTokens: TListViewEx
     Left = 3
     Top = 26
@@ -73,7 +70,7 @@ object FrameTokenList: TFrameTokenList
     Left = 604
     Top = 3
     Width = 143
-    Height = 21
+    Height = 23
     Style = csDropDownList
     Anchors = [akTop, akRight]
     ItemIndex = 0

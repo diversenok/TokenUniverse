@@ -13,11 +13,9 @@ object LogonDialog: TLogonDialog
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
   ShowHint = True
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object lblLogonType: TLabel
     Left = 8
@@ -193,8 +191,8 @@ object LogonDialog: TLogonDialog
         Width = 370
         Height = 271
         AccessibleName = '1'
-        PopupMenuEx = PopupMenu
-        NoItemsText = 'No additional groups'
+        EmptyListMessage = 'No additional groups'
+        PopupMenu = PopupMenu
         Columns = <
           item
             Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]

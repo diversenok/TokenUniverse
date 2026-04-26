@@ -35,8 +35,8 @@ object FrameLsaPrivileges: TFrameLsaPrivileges
     inherited VST: TDevirtualizedTree
       Width = 314
       Height = 204
+      PopupMenu = PopupMenu
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-      PopupMenuEx = PopupMenu
     end
   end
   object PopupMenu: TPopupMenu

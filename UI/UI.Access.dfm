@@ -10,9 +10,7 @@ object AccessCheckForm: TAccessCheckForm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object PageControlModes: TPageControl
     AlignWithMargins = True
@@ -192,15 +190,15 @@ object AccessCheckForm: TAccessCheckForm
           Width = 451
           Height = 23
         end
-        inherited btnDsPicker: TButton
+        inherited btnDsPicker: TUiLibButton
           Left = 484
           Height = 27
         end
-        inherited btnCheatsheet: TButton
+        inherited btnCheatsheet: TUiLibButton
           Left = 455
           Height = 27
         end
-        inherited btnChoice: TButton
+        inherited btnChoice: TUiLibButton
           Left = 513
           Height = 27
         end

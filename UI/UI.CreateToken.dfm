@@ -13,11 +13,9 @@ object DialogCreateToken: TDialogCreateToken
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object ButtonOK: TButton
     Left = 413
@@ -158,13 +156,20 @@ object DialogCreateToken: TDialogCreateToken
           ShowHint = True
           TabOrder = 0
           inherited tbxSid: TUiLibEdit
-            Width = 475
+            Width = 445
+            Height = 23
           end
-          inherited btnDsPicker: TButton
+          inherited btnDsPicker: TUiLibButton
+            Left = 478
+            Height = 27
+          end
+          inherited btnCheatsheet: TUiLibButton
+            Left = 449
+            Height = 27
+          end
+          inherited btnChoice: TUiLibButton
             Left = 507
-          end
-          inherited btnCheatsheet: TButton
-            Left = 479
+            Height = 27
           end
         end
       end
@@ -349,7 +354,7 @@ object DialogCreateToken: TDialogCreateToken
         inherited VST: TDevirtualizedTree
           Width = 558
           Height = 332
-          PopupMenuEx = PopupMenuGroups
+          PopupMenu = PopupMenuGroups
         end
       end
     end
@@ -366,8 +371,8 @@ object DialogCreateToken: TDialogCreateToken
         inherited VST: TDevirtualizedTree
           Width = 558
           Height = 364
+          PopupMenu = PopupMenuPrivileges
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-          PopupMenuEx = PopupMenuPrivileges
         end
       end
     end

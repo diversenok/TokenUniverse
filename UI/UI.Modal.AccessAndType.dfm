@@ -14,10 +14,8 @@ object DialogAccessAndType: TDialogAccessAndType
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
   ShowHint = True
-  PixelsPerInch = 96
   TextHeight = 13
   object GroupBoxType: TGroupBox
     Left = 249
@@ -131,6 +129,8 @@ object DialogAccessAndType: TDialogAccessAndType
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alClient
+      Constraints.MinHeight = 100
+      Constraints.MinWidth = 224
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0

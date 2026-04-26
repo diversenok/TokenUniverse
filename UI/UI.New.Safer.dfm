@@ -12,10 +12,8 @@ object DialogSafer: TDialogSafer
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object LabelScope: TLabel
     Left = 8

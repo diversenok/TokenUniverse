@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.VirtualTreeEx, NtUtilsUI.DevirtualizedTree, NtUtils, TU.Tokens;
+  NtUtilsUI.DevirtualizedTree, NtUtils, TU.Tokens;
 
 type
   ITokenNode = interface (INodeProvider)
@@ -38,13 +38,8 @@ type
     function GetAllTokens: TArray<IToken>;
     function GetHasSelectedToken: Boolean;
   public
-    function AddRoot(const Caption: String; Root: PVirtualNode = nil): PVirtualNode;
-    procedure AddMany(const Tokens: TArray<IToken>; Root: PVirtualNode = nil);
-    function Add(
-      const Token: IToken;
-      Root: PVirtualNode = nil;
-      CaptureFocus: Boolean = True
-    ): PVirtualNode;
+    procedure AddMany(const Tokens: TArray<IToken>);
+    function Add(const Token: IToken; CaptureFocus: Boolean = True): INodeProvider;
     procedure DeleteSelected;
     property HasSelectedToken: Boolean read GetHasSelectedToken;
     property Selected: IToken read GetSelectedToken;
@@ -118,18 +113,14 @@ end;
 
 function TFrameTokens.Add;
 begin
-  if not Assigned(Root) then
-    Root := VST.RootNode;
-
-  VST.BeginUpdateAuto;
-  Result := VST.AddChild(Root);
-  Result.Provider := TTokenNode.Create(Token, VST.Header.Columns);
+  Result := TTokenNode.Create(Token, VST.Header.Columns);
+  VST.AddChild(Result);
 
   if CaptureFocus then
   begin
     VST.ClearSelection;
-    VST.FocusedNode := Result;
-    VST.Selected[Result] := True;
+    VST.FocusedNode := Result.Node;
+    VST.Selected[Result.Node] := True;
   end;
 end;
 
@@ -140,28 +131,9 @@ begin
   VST.BeginUpdateAuto;
 
   for Token in Tokens do
-    Add(Token, Root, False);
+    Add(Token, False);
 
-  VST.SelectSomething;
-end;
-
-function TFrameTokens.AddRoot;
-var
-  Provider: IEditableNodeProvider;
-begin
-  if not Assigned(Root) then
-    Root := VST.RootNode;
-
-  VST.BeginUpdateAuto;
-
-  VST.TreeOptions.PaintOptions := VST.TreeOptions.PaintOptions +
-    [TVTPaintOption.toShowRoot];
-
-  Provider := TEditableNodeProvider.Create;
-  Provider.ColumnText[0] := Caption;
-  Provider.FontStyle := [TFontStyle.fsBold];
-
-  Result := VST.AddChild(Root, Provider);
+  VST.EnsureNodeSelected;
 end;
 
 constructor TFrameTokens.Create;
@@ -209,12 +181,12 @@ end;
 
 procedure TFrameTokens.DeleteSelected;
 begin
-  VST.DeleteSelectedNodesEx;
+  VST.DeleteSelectedNodes;
 end;
 
 function TFrameTokens.GetAllTokens;
 begin
-  Result := TArray.Convert<PVirtualNode, IToken>(VST.Nodes.ToArray,
+  Result := TArray.Convert<PVirtualNode, IToken>(VST.Nodes.Nodes,
     function (const Node: PVirtualNode; out Token: IToken): Boolean
     var
       TokenNode: ITokenNode;

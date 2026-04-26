@@ -11,9 +11,7 @@ object FormHandleSearch: TFormHandleSearch
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object LabelStatistics: TLabel
     Left = 90
@@ -74,6 +72,7 @@ object FormHandleSearch: TFormHandleSearch
     end
     inherited ComboBoxColumn: TUiLibComboBox
       Left = 527
+      Height = 21
     end
   end
   object ButtonClose: TButton

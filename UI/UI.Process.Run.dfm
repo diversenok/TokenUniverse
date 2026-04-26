@@ -470,7 +470,7 @@ object DialogRun: TDialogRun
         inherited VST: TDevirtualizedTree
           Width = 414
           Height = 341
-          PopupMenuEx = PopupEditCapabilities
+          PopupMenu = PopupEditCapabilities
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]

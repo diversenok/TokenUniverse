@@ -7,7 +7,7 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
   NtUtilsUI.ListView, UI.Prototypes, NtUtilsUI, UI.New.TokenFrame,
-  VirtualTrees;
+  VirtualTrees, NtUtilsUI.DevirtualizedTree;
 
 type
   TFormMain = class(TUiLibMainForm)
@@ -84,7 +84,7 @@ type
     procedure ActionDuplicateHandle(Sender: TObject);
     procedure ActionSearch(Sender: TObject);
     procedure ActionOpenLinked(Sender: TObject);
-    procedure ActionOpen(Node: PVirtualNode);
+    procedure ActionOpen(Node: INodeProvider);
     procedure RunAsSystemClick(Sender: TObject);
     procedure ActionSteal(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -445,7 +445,7 @@ begin
   if Token.QueryElevation(Elevation).IsSuccess and
     (Elevation.ElevationType <> TokenElevationTypeDefault) and
     Token.QueryLinkedToken(Linked).IsSuccess then
-      TokenView.Add(Linked, nil, False);
+      TokenView.Add(Linked, False);
 
   // Load useful delay dependencies while we can
   TuPreloadDelayModules;

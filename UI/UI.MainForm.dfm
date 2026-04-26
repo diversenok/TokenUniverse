@@ -27,10 +27,10 @@ object FormMain: TFormMain
     inherited VST: TDevirtualizedTree
       Width = 818
       Height = 290
+      EmptyListMessage = 'No opened tokens'
+      PopupMenu = TokenMenu
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
       OnGetPopupMenu = TokenViewVSTGetPopupMenu
-      PopupMenuEx = TokenMenu
-      NoItemsText = 'No opened tokens'
     end
   end
   object MainMenu: TMainMenu

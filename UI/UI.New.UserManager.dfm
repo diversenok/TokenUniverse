@@ -143,13 +143,13 @@ object UserManagerTokens: TUserManagerTokens
     inherited tbxSid: TUiLibEdit
       Width = 255
     end
-    inherited btnDsPicker: TButton
+    inherited btnDsPicker: TUiLibButton
       Left = 317
     end
-    inherited btnCheatsheet: TButton
+    inherited btnCheatsheet: TUiLibButton
       Left = 288
     end
-    inherited btnChoice: TButton
+    inherited btnChoice: TUiLibButton
       Left = 259
     end
   end
