@@ -619,7 +619,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 388
           Height = 369
           PopupMenu = GroupPopup
@@ -629,18 +629,14 @@ object InfoDialog: TInfoDialog
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      inline PrivilegesFrame: TFramePrivileges
+      object PrivilegeList: TUiLibPrivilegeList
         Left = 0
         Top = 0
         Width = 388
         Height = 369
         Align = alClient
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
-          Width = 388
-          Height = 369
-          PopupMenu = PrivilegePopup
-        end
+        PopupMenu = PrivilegePopup
       end
     end
     object TabCapabilities: TTabSheet
@@ -657,7 +653,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 388
           Height = 369
           Columns = <
@@ -708,7 +704,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 388
           Height = 369
         end
@@ -733,7 +729,7 @@ object InfoDialog: TInfoDialog
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited Tree: TDevirtualizedTree
+        inherited Tree: TUiLibTree
           Width = 360
           Height = 311
         end

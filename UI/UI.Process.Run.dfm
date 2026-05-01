@@ -467,7 +467,7 @@ object DialogRun: TDialogRun
         ParentShowHint = False
         ShowHint = True
         TabOrder = 2
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 414
           Height = 341
           PopupMenu = PopupEditCapabilities

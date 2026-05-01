@@ -8,8 +8,8 @@ uses
   Vcl.ComCtrls, Vcl.Buttons, System.ImageList, Vcl.ImgList, NtUtilsUI.StdCtrls,
   NtUtilsUI.ListView, UI.Prototypes, NtUtilsUI, NtUtils.Security.Sid,
   TU.Tokens.Old.Types, Ntapi.WinNt, UI.Prototypes.AuditFrame, UI.Prototypes.Logon,
-  UI.Prototypes.Privileges, UI.Prototypes.Groups, NtUtils.Lsa.Audit,
-  Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls, TU.Tokens, NtUiFrame.Acl;
+  UI.Prototypes.Groups, NtUtils.Lsa.Audit, Ntapi.ntseapi, NtUtils, Vcl.ExtCtrls,
+  TU.Tokens, NtUiFrame.Acl, NtUtilsUI.Base, NtUtilsUI.Privileges;
 
 type
   TInfoDialog = class(TUiLibChildForm)
@@ -69,13 +69,13 @@ type
     EditAppContainer: TUiLibEdit;
     GroupsRestrictedFrame: TFrameGroups;
     GroupsMemberFrame: TFrameGroups;
-    PrivilegesFrame: TFramePrivileges;
     PanelGeneral: TPanel;
     PanelObject: TPanel;
     DefaultDaclFrame: TAclFrame;
     btnDaclApply: TButton;
     TabCapabilities: TTabSheet;
     CapabilitiesFrame: TFrameGroups;
+    PrivilegeList: TUiLibPrivilegeList;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure BtnSetIntegrityClick(Sender: TObject);
@@ -215,32 +215,24 @@ end;
 
 procedure TInfoDialog.ActionPrivilegeDisable;
 begin
-  if PrivilegesFrame.VST.SelectedCount <> 0 then
-    RaiseOnWarningOrError(Token.AdjustPrivileges(
-      PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_DISABLED,
-      True));
+  RaiseOnWarningOrError(Token.AdjustPrivileges(PrivilegesToWellKnown(
+    PrivilegeList.SelectedPrivileges), SE_PRIVILEGE_DISABLED, True));
 end;
 
 procedure TInfoDialog.ActionPrivilegeEnable;
 begin
-  if PrivilegesFrame.VST.SelectedCount <> 0 then
-    RaiseOnWarningOrError(Token.AdjustPrivileges(
-      PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_ENABLED,
-      True));
+  RaiseOnWarningOrError(Token.AdjustPrivileges(PrivilegesToWellKnown(
+    PrivilegeList.SelectedPrivileges), SE_PRIVILEGE_ENABLED, True));
 end;
 
 procedure TInfoDialog.ActionPrivilegeRemove;
 begin
-  if PrivilegesFrame.VST.SelectedCount = 0 then
-    Exit;
-
   if TaskMessageDlg('Remove these privileges from the token?',
     'This action can''t be undone.', mtWarning, mbYesNo, -1) <> idYes then
     Exit;
 
-  RaiseOnWarningOrError(Token.AdjustPrivileges(
-    PrivilegesToWellKnown(PrivilegesFrame.Selected), SE_PRIVILEGE_REMOVED,
-    True));
+  RaiseOnWarningOrError(Token.AdjustPrivileges(PrivilegesToWellKnown(
+    PrivilegeList.SelectedPrivileges), SE_PRIVILEGE_REMOVED, True));
 end;
 
 procedure TInfoDialog.btnDaclApplyClick;
@@ -531,7 +523,7 @@ begin
   if Status.IsSuccess then
   begin
     TabPrivileges.Caption := Format('Privileges (%d)', [Length(NewPrivileges)]);
-    PrivilegesFrame.Load(NewPrivileges);
+    PrivilegeList.Privileges := NewPrivileges;
   end;
 end;
 

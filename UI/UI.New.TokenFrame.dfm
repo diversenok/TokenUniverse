@@ -6,7 +6,7 @@ object FrameTokens: TFrameTokens
   ParentShowHint = False
   ShowHint = True
   TabOrder = 0
-  object VST: TDevirtualizedTree
+  object VST: TUiLibTree
     Left = 0
     Top = 0
     Width = 669

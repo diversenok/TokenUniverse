@@ -351,7 +351,7 @@ object DialogCreateToken: TDialogCreateToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 558
           Height = 332
           PopupMenu = PopupMenuGroups
@@ -361,19 +361,15 @@ object DialogCreateToken: TDialogCreateToken
     object TabPrivileges: TTabSheet
       Caption = 'Privileges'
       ImageIndex = 2
-      inline PrivilegesFrame: TFramePrivileges
+      object PrivilegeList: TUiLibPrivilegeList
         Left = 0
         Top = 0
         Width = 558
         Height = 364
         Align = alClient
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
-          Width = 558
-          Height = 364
-          PopupMenu = PopupMenuPrivileges
-          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-        end
+        Mode = pmAdding
+        PopupMenu = PopupMenuPrivileges
       end
     end
   end

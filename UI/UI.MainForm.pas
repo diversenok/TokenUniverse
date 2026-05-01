@@ -7,7 +7,7 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ImgList,
   Vcl.ExtCtrls, Vcl.Menus, Vcl.Dialogs, System.ImageList,
   NtUtilsUI.ListView, UI.Prototypes, NtUtilsUI, UI.New.TokenFrame,
-  VirtualTrees, NtUtilsUI.DevirtualizedTree;
+  VirtualTrees, NtUtilsUI.Tree;
 
 type
   TFormMain = class(TUiLibMainForm)

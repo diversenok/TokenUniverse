@@ -60,7 +60,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 376
           Height = 369
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
@@ -140,7 +140,7 @@ object DialogRestrictToken: TDialogRestrictToken
         ParentShowHint = False
         ShowHint = True
         TabOrder = 3
-        inherited VST: TDevirtualizedTree
+        inherited VST: TUiLibTree
           Width = 376
           Height = 331
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
@@ -167,8 +167,9 @@ object DialogRestrictToken: TDialogRestrictToken
         Font.Style = [fsBold]
         ParentFont = False
         TabOrder = 0
+        OnClick = CheckBoxDisableMaxPrivClick
       end
-      inline PrivilegesFrame: TFramePrivileges
+      object PrivilegeList: TUiLibPrivilegeList
         AlignWithMargins = True
         Left = 3
         Top = 26
@@ -177,11 +178,7 @@ object DialogRestrictToken: TDialogRestrictToken
         Margins.Top = 26
         Align = alClient
         TabOrder = 1
-        inherited VST: TDevirtualizedTree
-          Width = 376
-          Height = 346
-          TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
-        end
+        Mode = pmRemoving
       end
     end
   end

@@ -6,8 +6,8 @@ uses
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ComCtrls, Vcl.StdCtrls, Vcl.Menus, NtUtilsUI, NtUtilsUI.StdCtrls,
   UI.Prototypes, NtUtilsUI.ListView, UI.MainForm, TU.Tokens, TU.Tokens.Old.Types,
-  NtUtils.Security.Sid, UI.Prototypes.Privileges, UI.Prototypes.Groups,
-  NtUtils, UI.Prototypes.Sid.Edit;
+  NtUtils.Security.Sid, UI.Prototypes.Groups,
+  NtUtils, UI.Prototypes.Sid.Edit, NtUtilsUI.Base, NtUtilsUI.Privileges;
 
 type
   TDialogCreateToken = class(TUiLibChildForm)
@@ -40,7 +40,6 @@ type
     CheckBoxNewProcMin: TCheckBox;
     CheckBoxSession: TCheckBox;
     GroupsFrame: TFrameGroups;
-    PrivilegesFrame: TFramePrivileges;
     ButtonPickUser: TButton;
     SidEditor: TSidEditor;
     GroupBoxSource: TGroupBox;
@@ -53,6 +52,7 @@ type
     CheckBoxInfinite: TCheckBox;
     DateExpires: TDateTimePicker;
     TimeExpires: TDateTimePicker;
+    PrivilegeList: TUiLibPrivilegeList;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ButtonAddSIDClick(Sender: TObject);
@@ -163,7 +163,7 @@ begin
 
   // Privileges
   Source.QueryPrivileges(Privileges).RaiseOnError;
-  PrivilegesFrame.Checked := Privileges;
+  PrivilegeList.CheckedPrivileges := Privileges;
 
   // Source
   Source.QuerySource(TokenSource).RaiseOnError;
@@ -200,7 +200,7 @@ begin
   CheckPrivilege(Handle, SE_CREATE_TOKEN_PRIVILEGE);
 
   MakeNewToken(Token, ttPrimary, User, CheckBoxUserState.Checked,
-    GroupsFrame.All, PrivilegesFrame.Checked, LogonSession,
+    GroupsFrame.All, PrivilegeList.CheckedPrivileges, LogonSession,
     PrimaryGroup, Source, Owner, nil, Expires).RaiseOnError;
 
   FormMain.TokenView.Add(Token);
@@ -313,19 +313,17 @@ begin
   ButtonAllocLuidClick(Self);
 
   GroupsFrame.OnDefaultAction := EditSingleGroup;
-  PrivilegesFrame.ColoringChecked := pcStateBased;
-  PrivilegesFrame.ColoringUnChecked := pcRemoved;
-  PrivilegesFrame.LoadEvery;
+  PrivilegeList.LoadAllPrivileges;
 end;
 
 procedure TDialogCreateToken.MenuDisabledClick;
 begin
-  PrivilegesFrame.AdjustSelected(0);
+  PrivilegeList.AdjustSelected(SE_PRIVILEGE_DISABLED);
 end;
 
 procedure TDialogCreateToken.MenuDisabledModifClick;
 begin
-  PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT);
+  PrivilegeList.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT);
 end;
 
 procedure TDialogCreateToken.MenuEditClick;
@@ -353,13 +351,13 @@ end;
 
 procedure TDialogCreateToken.MenuEnabledClick;
 begin
- PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT or
+  PrivilegeList.AdjustSelected(SE_PRIVILEGE_ENABLED_BY_DEFAULT or
    SE_PRIVILEGE_ENABLED);
 end;
 
 procedure TDialogCreateToken.MenuEnabledModifClick;
 begin
-  PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED);
+  PrivilegeList.AdjustSelected(SE_PRIVILEGE_ENABLED);
 end;
 
 procedure TDialogCreateToken.MenuRemoveClick;

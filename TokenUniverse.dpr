@@ -40,7 +40,6 @@ uses
   NtUiCommon.Icons in 'NtUtilsUI\Common\NtUiCommon.Icons.pas',
   TU.Processes.Create in 'Core\TU.Processes.Create.pas',
   UI.Prototypes.Groups in 'NtUtilsUI\Prototypes\UI.Prototypes.Groups.pas' {FrameGroups: TFrame},
-  UI.Prototypes.Privileges in 'NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas' {FramePrivileges: TFrame},
   UI.Prototypes.Sid.Edit in 'NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas' {SidEditor: TFrame},
   TU.Observers in 'Core\TU.Observers.pas',
   TU.Tokens.Events in 'Core\TU.Tokens.Events.pas',
@@ -86,7 +85,7 @@ uses
   NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas',
   NtUiFrame.Sids.Capabilities in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Capabilities.pas' {CapabilityListFrame: TFrame},
   NtUiBackend.Sids.Capabilities in 'NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas',
-  NtUtilsUI.DevirtualizedTree in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas',
+  NtUtilsUI.Tree in 'NtUtilsUI\Components\NtUtilsUI.Tree.pas',
   NtUtilsUI.StdCtrls in 'NtUtilsUI\Components\NtUtilsUI.StdCtrls.pas',
   NtUtilsUI.Forms in 'NtUtilsUI\Components\NtUtilsUI.Forms.pas',
   NtUtilsUI.ListView in 'NtUtilsUI\Components\NtUtilsUI.ListView.pas',
@@ -96,8 +95,9 @@ uses
   NtUtilsUI.Base in 'NtUtilsUI\Components\NtUtilsUI.Base.pas',
   NtUtilsUI.Sid.Integrity in 'NtUtilsUI\Components\NtUtilsUI.Sid.Integrity.pas',
   NtUtilsUI.SearchBox in 'NtUtilsUI\Components\NtUtilsUI.SearchBox.pas',
-  NtUtilsUI.DevirtualizedTree.Search in 'NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Search.pas',
-  NtUtilsUI.Number in 'NtUtilsUI\Components\NtUtilsUI.Number.pas';
+  NtUtilsUI.Tree.Search in 'NtUtilsUI\Components\NtUtilsUI.Tree.Search.pas',
+  NtUtilsUI.Number in 'NtUtilsUI\Components\NtUtilsUI.Number.pas',
+  NtUtilsUI.Privileges in 'NtUtilsUI\Components\NtUtilsUI.Privileges.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

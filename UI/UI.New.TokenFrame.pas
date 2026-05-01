@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees,
-  NtUtilsUI.DevirtualizedTree, NtUtils, TU.Tokens;
+  NtUtilsUI.Tree, NtUtils, TU.Tokens;
 
 type
   ITokenNode = interface (INodeProvider)
@@ -26,7 +26,7 @@ type
   end;
 
   TFrameTokens = class(TFrame)
-    VST: TDevirtualizedTree;
+    VST: TUiLibTree;
     procedure VSTNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; NewText: string);
     procedure VSTEditing(Sender: TBaseVirtualTree; Node: PVirtualNode;

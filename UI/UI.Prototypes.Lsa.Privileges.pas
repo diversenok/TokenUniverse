@@ -5,8 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ComCtrls, NtUtilsUI.ListView, Vcl.StdCtrls,
-  NtUtils.Security.Sid, Ntapi.WinNt, NtUtils.Lsa, UI.Prototypes.Privileges,
-  Vcl.Menus, Ntapi.ntseapi, NtUtils;
+  NtUtils.Security.Sid, Ntapi.WinNt, NtUtils.Lsa, Vcl.Menus, Ntapi.ntseapi,
+  NtUtils, NtUtilsUI.Base, NtUtilsUI.Privileges;
 
 type
   TFrameLsaPrivileges = class(TFrame)
@@ -15,7 +15,7 @@ type
     PopupMenu: TPopupMenu;
     MenuEnable: TMenuItem;
     MenuDisable: TMenuItem;
-    PrivilegesFrame: TFramePrivileges;
+    PrivilegeList: TUiLibPrivilegeList;
     procedure MenuEnableClick(Sender: TObject);
     procedure MenuDisableClick(Sender: TObject);
     procedure ButtonApplyClick(Sender: TObject);
@@ -40,7 +40,7 @@ procedure TFrameLsaPrivileges.ButtonApplyClick;
 var
   Added, Removed: TArray<TPrivilege>;
 begin
-  Added := PrivilegesFrame.Checked;
+  Added := PrivilegeList.CheckedPrivileges;
 
   Removed := TArray.Filter<TPrivilege>(CurrentlyAssigned,
     function (const Privilege: TPrivilege): Boolean
@@ -59,15 +59,13 @@ begin
       Removed).RaiseOnError;
   finally
     LoadForSid(Sid);
-    PrivilegesFrame.VST.SetFocus;
+    PrivilegeList.SetFocus;
   end;
 end;
 
 procedure TFrameLsaPrivileges.DelayedCreate;
 begin
-  PrivilegesFrame.ColoringUnChecked := pcNone;
-  PrivilegesFrame.ColoringChecked := pcStateBased;
-  PrivilegesFrame.LoadEvery;
+  PrivilegeList.LoadAllPrivileges;
 end;
 
 procedure TFrameLsaPrivileges.LoadForSid;
@@ -94,17 +92,17 @@ begin
   end;
 
   // Check assigned privileges
-  PrivilegesFrame.Checked := CurrentlyAssigned;
+  PrivilegeList.CheckedPrivileges := CurrentlyAssigned;
 end;
 
 procedure TFrameLsaPrivileges.MenuDisableClick;
 begin
-  PrivilegesFrame.AdjustSelected(0);
+  PrivilegeList.AdjustSelected(SE_PRIVILEGE_DISABLED);
 end;
 
 procedure TFrameLsaPrivileges.MenuEnableClick;
 begin
-  PrivilegesFrame.AdjustSelected(SE_PRIVILEGE_ENABLED or
+  PrivilegeList.AdjustSelected(SE_PRIVILEGE_ENABLED or
     SE_PRIVILEGE_ENABLED_BY_DEFAULT);
 end;
 

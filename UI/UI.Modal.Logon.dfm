@@ -187,7 +187,7 @@ object LogonDialog: TLogonDialog
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited VST: TDevirtualizedTree
+      inherited VST: TUiLibTree
         Width = 370
         Height = 271
         AccessibleName = '1'

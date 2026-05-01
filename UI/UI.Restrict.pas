@@ -5,9 +5,9 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus, Vcl.ComCtrls,
-  NtUtilsUI.ListView, NtUtilsUI, UI.Prototypes.Privileges,
-  UI.Prototypes.Groups, NtUtils.Security.Sid, Ntapi.WinNt, Ntapi.ntseapi,
-  NtUtils, TU.Tokens;
+  NtUtilsUI.ListView, NtUtilsUI, UI.Prototypes.Groups, NtUtils.Security.Sid,
+  Ntapi.WinNt, Ntapi.ntseapi, NtUtils, TU.Tokens, NtUtilsUI.Base,
+  NtUtilsUI.Privileges;
 
 type
   TDialogRestrictToken = class(TUiLibChildForm)
@@ -25,11 +25,12 @@ type
     CheckBoxUsual: TCheckBox;
     GroupsRestrictFrame: TFrameGroups;
     GroupsDisableFrame: TFrameGroups;
-    PrivilegesFrame: TFramePrivileges;
+    PrivilegeList: TUiLibPrivilegeList;
     procedure FormCreate(Sender: TObject);
     procedure DoCloseForm(Sender: TObject);
     procedure ButtonOKClick(Sender: TObject);
     procedure ButtonAddSIDClick(Sender: TObject);
+    procedure CheckBoxDisableMaxPrivClick(Sender: TObject);
   private
     Token: IToken;
     ManuallyAdded: TArray<TGroup>;
@@ -54,6 +55,18 @@ uses
 
 {$R *.dfm}
 
+function PrivilegesToIDs(
+  const Privileges: TArray<TPrivilege>
+): TArray<TPrivilegeId>;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Privileges));
+
+  for i := 0 to High(Privileges) do
+    Result[i] := Privileges[i].Luid;
+end;
+
 { TDialogRestrictToken }
 
 procedure TDialogRestrictToken.ButtonAddSIDClick;
@@ -76,7 +89,7 @@ begin
     Token,
     GetFlags,
     GroupsToSids(GroupsDisableFrame.Checked),
-    PrivilegesToIDs(PrivilegesFrame.Checked),
+    PrivilegesToIDs(PrivilegeList.CheckedPrivileges),
     GroupsToSids(GroupsRestrictFrame.Checked)
   ).RaiseOnError;
 
@@ -151,7 +164,12 @@ end;
 procedure TDialogRestrictToken.ChangedPrivileges;
 begin
   if Status.IsSuccess then
-    PrivilegesFrame.Load(Privileges);
+    PrivilegeList.Privileges := Privileges;
+end;
+
+procedure TDialogRestrictToken.CheckBoxDisableMaxPrivClick;
+begin
+  PrivilegeList.Enabled := not CheckBoxDisableMaxPriv.Checked;
 end;
 
 constructor TDialogRestrictToken.CreateFromToken;
@@ -181,8 +199,6 @@ begin
     SandboxInert).IsSuccess and SandboxInert;
 
   // Privileges
-  PrivilegesFrame.ColoringUnChecked := pcStateBased;
-  PrivilegesFrame.ColoringChecked := pcRemoved;
   PrivilegesSubscription := Token.ObservePrivileges(ChangedPrivileges);
 
   // Craft additional suggestions for restricting list

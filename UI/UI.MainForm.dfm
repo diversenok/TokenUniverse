@@ -24,7 +24,7 @@ object FormMain: TFormMain
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    inherited VST: TDevirtualizedTree
+    inherited VST: TUiLibTree
       Width = 818
       Height = 290
       EmptyListMessage = 'No opened tokens'

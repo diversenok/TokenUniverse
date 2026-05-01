@@ -168,14 +168,9 @@ object DialogSidView: TDialogSidView
         inherited ButtonApply: TButton
           Top = 261
         end
-        inherited PrivilegesFrame: TFramePrivileges
+        inherited PrivilegeList: TUiLibPrivilegeList
           Width = 367
           Height = 253
-          inherited VST: TDevirtualizedTree
-            Width = 367
-            Height = 253
-            PopupMenu = FrameLsaPrivileges.PopupMenu
-          end
         end
       end
     end
@@ -214,7 +209,7 @@ object DialogSidView: TDialogSidView
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
-        inherited Tree: TDevirtualizedTree
+        inherited Tree: TUiLibTree
           Width = 367
           Height = 225
           Columns = <
@@ -222,7 +217,7 @@ object DialogSidView: TDialogSidView
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coVisible, coAutoSpring, coSmartResize, coAllowFocus, coDisableAnimatedResize, coEditable, coStyleColor]
               Position = 0
               Text = 'Name'
-              Width = 367
+              Width = 363
             end>
         end
         inherited BottomPanel: TPanel

@@ -311,7 +311,7 @@ object AccessCheckForm: TAccessCheckForm
     ParentShowHint = False
     ShowHint = True
     TabOrder = 1
-    inherited Tree: TDevirtualizedTree
+    inherited Tree: TUiLibTree
       Width = 629
       Height = 355
       Columns = <

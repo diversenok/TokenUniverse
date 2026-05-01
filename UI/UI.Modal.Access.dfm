@@ -90,7 +90,7 @@ object DialogAccess: TDialogAccess
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
-      inherited Tree: TDevirtualizedTree
+      inherited Tree: TUiLibTree
         Width = 248
         Height = 253
         Columns = <

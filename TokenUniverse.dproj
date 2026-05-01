@@ -222,11 +222,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Privileges.pas">
-            <Form>FramePrivileges</Form>
-            <FormType>dfm</FormType>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
         <DCCReference Include="NtUtilsUI\Prototypes\UI.Prototypes.Sid.Edit.pas">
             <Form>SidEditor</Form>
             <FormType>dfm</FormType>
@@ -342,7 +337,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Capabilities.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Tree.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.StdCtrls.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Forms.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.ListView.pas"/>
@@ -352,8 +347,9 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Base.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Sid.Integrity.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.SearchBox.pas"/>
-        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.DevirtualizedTree.Search.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Tree.Search.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Number.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Privileges.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
