@@ -26,7 +26,6 @@ uses
   UI.Modal.Columns in 'UI\UI.Modal.Columns.pas' {DialogColumns},
   UI.Settings in 'UI\UI.Settings.pas',
   UI.Modal.Access in 'UI\UI.Modal.Access.pas' {DialogAccess},
-  UI.Modal.ComboDlg in 'UI\UI.Modal.ComboDlg.pas' {ComboDialog},
   TU.Winapi in 'Core\TU.Winapi.pas',
   UI.Modal.ThreadList in 'UI\UI.Modal.ThreadList.pas' {ThreadListDialog},
   UI.Modal.PickToken in 'UI\UI.Modal.PickToken.pas' {DialogPickToken},
@@ -97,7 +96,9 @@ uses
   NtUtilsUI.SearchBox in 'NtUtilsUI\Components\NtUtilsUI.SearchBox.pas',
   NtUtilsUI.Tree.Search in 'NtUtilsUI\Components\NtUtilsUI.Tree.Search.pas',
   NtUtilsUI.Number in 'NtUtilsUI\Components\NtUtilsUI.Number.pas',
-  NtUtilsUI.Privileges in 'NtUtilsUI\Components\NtUtilsUI.Privileges.pas';
+  NtUtilsUI.Privileges in 'NtUtilsUI\Components\NtUtilsUI.Privileges.pas',
+  NtUtilsUI.Components.Factories in 'NtUtilsUI\Components\NtUtilsUI.Components.Factories.pas',
+  NtUtilsUI.SessionID in 'NtUtilsUI\Components\NtUtilsUI.SessionID.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

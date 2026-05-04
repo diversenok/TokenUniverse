@@ -132,7 +132,7 @@ implementation
 uses
   System.UITypes, TU.Tokens.Old.Types, Ntapi.WinNt,
   NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens,
-  UI.Information, UI.ProcessList, UI.HandleSearch, UI.Modal.ComboDlg,
+  UI.Information, UI.ProcessList, UI.HandleSearch, NtUtilsUI.Components,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
@@ -329,7 +329,7 @@ procedure TFormMain.ActionWTSQuery;
 var
   Token: IToken;
 begin
-  MakeSessionToken(Token, TComboDialog.PickSession(Self)).RaiseOnError;
+  MakeSessionToken(Token, UiLibPickSessionId(Self)).RaiseOnError;
   TokenView.Add(Token);
 end;
 

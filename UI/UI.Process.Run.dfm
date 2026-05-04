@@ -310,13 +310,6 @@ object DialogRun: TDialogRun
         Height = 13
         Caption = 'AppUserModeId:'
       end
-      object LabelSession: TLabel
-        Left = 3
-        Top = 191
-        Width = 40
-        Height = 13
-        Caption = 'Session:'
-      end
       object GroupBoxChildFlags: TGroupBox
         Left = 1
         Top = 53
@@ -354,9 +347,9 @@ object DialogRun: TDialogRun
         end
       end
       object ComboBoxProtection: TUiLibComboBox
-        Left = 62
-        Top = 164
-        Width = 350
+        Left = 1
+        Top = 186
+        Width = 411
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
@@ -385,28 +378,24 @@ object DialogRun: TDialogRun
         TabOrder = 0
         TextHint = '{PackageFamilyName}!{AppId}'
       end
-      object EditSessionId: TUiLibEdit
+      object CheckBoxSession: TCheckBox
         Left = 3
-        Top = 210
-        Width = 323
+        Top = 215
+        Width = 409
+        Height = 17
+        Anchors = [akLeft, akTop, akRight]
+        Caption = 'Session:'
+        TabOrder = 3
+        OnClick = CheckBoxSessionClick
+      end
+      object SessionIdBox: TUiLibSessionIdBox
+        Left = 0
+        Top = 238
+        Width = 412
         Height = 21
         Anchors = [akLeft, akTop, akRight]
+        Enabled = False
         TabOrder = 4
-        TextHint = '(Not selected)'
-        OnChange = EditSessionIdChange
-      end
-      object ButtonSelectSession: TButton
-        Left = 329
-        Top = 208
-        Width = 83
-        Height = 25
-        Anchors = [akTop, akRight]
-        Caption = 'Select...'
-        DropDownMenu = PopupClearSession
-        PopupMenu = PopupClearSession
-        Style = bsSplitButton
-        TabOrder = 3
-        OnClick = ButtonSelectSessionClick
       end
     end
     object TabAppContainer: TTabSheet
@@ -743,14 +732,6 @@ object DialogRun: TDialogRun
     object MenuClearParent: TMenuItem
       Caption = 'Clear'
       OnClick = MenuClearParentClick
-    end
-  end
-  object PopupClearSession: TPopupMenu
-    Left = 47
-    Top = 451
-    object MenuClearSession: TMenuItem
-      Caption = 'Clear'
-      OnClick = MenuClearSessionClick
     end
   end
   object PopupAddCapabilities: TPopupMenu

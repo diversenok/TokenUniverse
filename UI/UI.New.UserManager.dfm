@@ -18,7 +18,6 @@ object UserManagerTokens: TUserManagerTokens
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
-  OnResize = FormResize
   TextHeight = 15
   object BevelSession: TBevel
     Left = 4
@@ -79,7 +78,7 @@ object UserManagerTokens: TUserManagerTokens
     Caption = 'User Token by Name'
     TabOrder = 8
   end
-  object cbxSessionId: TUiLibComboBox
+  object cbxSessionId: TUiLibSessionIdBox
     Left = 179
     Top = 52
     Width = 342

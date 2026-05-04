@@ -178,9 +178,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.Modal.Access.pas">
             <Form>DialogAccess</Form>
         </DCCReference>
-        <DCCReference Include="UI\UI.Modal.ComboDlg.pas">
-            <Form>ComboDialog</Form>
-        </DCCReference>
         <DCCReference Include="Core\TU.Winapi.pas"/>
         <DCCReference Include="UI\UI.Modal.ThreadList.pas">
             <Form>ThreadListDialog</Form>
@@ -350,6 +347,8 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Tree.Search.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Number.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Privileges.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Components.Factories.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.SessionID.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

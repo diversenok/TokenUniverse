@@ -5,7 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, NtUtilsUI, NtUtilsUI.StdCtrls,
-  UI.Prototypes.Sid.Edit, UI.Prototypes, Ntapi.WinNt;
+  UI.Prototypes.Sid.Edit, UI.Prototypes, Ntapi.WinNt, NtUtilsUI.Base,
+  NtUtilsUI.SessionID;
 
 type
   TUserManagerTokens = class(TUiLibChildForm)
@@ -15,7 +16,7 @@ type
     rbxContext: TRadioButton;
     rbxSid: TRadioButton;
     rbxName: TRadioButton;
-    cbxSessionId: TUiLibComboBox;
+    cbxSessionId: TUiLibSessionIdBox;
     BevelSession: TBevel;
     cbxContext: TUiLibComboBox;
     cbxName: TUiLibEdit;
@@ -30,9 +31,7 @@ type
     procedure cbxNameEnter(Sender: TObject);
     procedure cbxSessionIdEnter(Sender: TObject);
     procedure SidEditorEnter(Sender: TObject);
-    procedure FormResize(Sender: TObject);
   private
-    SessionSource: TSessionSource;
     ContextsSource: TUmgrContextSource;
   public
     { Public declarations }
@@ -57,9 +56,9 @@ begin
   if rbxDefault.Checked then
     MakeUmgrDefaultAccountToken(Token).RaiseOnError
   else if rbxSession.Checked then
-    MakeUmgrSessionUserToken(Token, SessionSource.SelectedSession).RaiseOnError
+    MakeUmgrSessionUserToken(Token, cbxSessionId.SessionID).RaiseOnError
   else if rbxShell.Checked then
-    MakeUmgrActiveShellToken(Token, SessionSource.SelectedSession).RaiseOnError
+    MakeUmgrActiveShellToken(Token, cbxSessionId.SessionID).RaiseOnError
   else if rbxContext.Checked then
     MakeUmgrTokenByContext(Token, ContextsSource.SelectedContext).RaiseOnError
   else if rbxSid.Checked then
@@ -93,21 +92,12 @@ end;
 
 procedure TUserManagerTokens.FormClose;
 begin
-  SessionSource.Free;
   ContextsSource.Free;
 end;
 
 procedure TUserManagerTokens.FormCreate;
 begin
-  SessionSource := TSessionSource.Create(cbxSessionId, True);
   ContextsSource := TUmgrContextSource.Create(cbxContext);
-end;
-
-procedure TUserManagerTokens.FormResize(Sender: TObject);
-begin
-  // Fix selection on resizing
-  cbxSessionId.SelLength := 0;
-  cbxContext.SelLength := 0;
 end;
 
 procedure TUserManagerTokens.SidEditorEnter;
