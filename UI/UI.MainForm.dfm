@@ -150,12 +150,12 @@ object FormMain: TFormMain
       end
       object cmRevokeCurrent: TMenuItem
         Caption = 'Revoke token from current thread'
-        ShortCut = 16466
+        ShortCut = 24658
         OnClick = ActionRevertCurrentThread
       end
       object cmRevokeToken: TMenuItem
         Caption = 'Revoke token from thread...'
-        ShortCut = 24658
+        ShortCut = 49234
         OnClick = ActionRevertThread
       end
     end
