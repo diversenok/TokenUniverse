@@ -94,7 +94,7 @@ function GetCsrssToken: IHandle;
 var
   hxProcess: IHandle;
 begin
-  NtxOpenProcessByName(hxProcess, 'csrss.exe',
+  NtxOpenProcessByName(hxProcess, NtxEnumerateProcesses, 'csrss.exe',
     PROCESS_QUERY_LIMITED_INFORMATION, [pnAllowAmbiguousMatch, pnCaseSensitive])
     .RaiseOnError;
 

@@ -416,9 +416,9 @@ end;
 procedure TFormMain.FormCreate;
 var
   Token: IToken;
-  TokenType: TObjectTypeInfo;
+  TokenType: TNtxObjectTypeInfo;
   Elevation: TTokenElevationInfo;
-  Handles: TArray<TProcessHandleEntry>;
+  Handles: TArray<TNtxProcessHandleEntry>;
   Linked: IToken;
   i: integer;
 begin
@@ -429,7 +429,7 @@ begin
   if RtlxFindKernelType('Token', TokenType).IsSuccess and
     NtxEnumerateHandlesProcess(NtxCurrentProcess, Handles).IsSuccess then
   begin
-    TArray.FilterInline<TProcessHandleEntry>(Handles,
+    TArray.FilterInline<TNtxProcessHandleEntry>(Handles,
       ByType(TokenType.Native.TypeIndex));
 
     for i := 0 to High(Handles) do

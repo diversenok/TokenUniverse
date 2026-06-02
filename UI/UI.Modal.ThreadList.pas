@@ -21,11 +21,11 @@ type
     procedure ListViewThreadsDblClick(Sender: TObject);
     procedure cmActionClick(Sender: TObject);
   private
-    FProcess: TProcessEntry;
+    FProcess: TNtxProcessEntry;
   public
-    constructor CreateFrom(AOwner: TComponent; const Process: TProcessEntry);
+    constructor CreateFrom(AOwner: TComponent; const Process: TNtxProcessEntry);
     class function Execute(AOwner: TComponent;
-      const Process: TProcessEntry): NativeUInt;
+      const Process: TNtxProcessEntry): NativeUInt;
   end;
 
 implementation

@@ -20,7 +20,7 @@ type
     CreatorPIDIsKnown: Boolean;
     CreatorPID: TProcessId;
     OnBasicInfo: TAutoObservers<TObjectBasicInformation>;
-    OnHandles: TAutoObservers<TArray<TSystemHandleEntry>>;
+    OnHandles: TAutoObservers<TArray<TNtxSystemHandleEntry>>;
     OnKernelAddress: TAutoObservers<Pointer>;
     OnCreatorPID: TAutoObservers<TProcessId>;
     OnUser: TAutoObservers<TGroup>;
@@ -166,7 +166,7 @@ begin
   Result := memcmp(@A, @B, SizeOf(A)) = 0;
 end;
 
-function CompareHandles(const A, B: TArray<TSystemHandleEntry>): Boolean;
+function CompareHandles(const A, B: TArray<TNtxSystemHandleEntry>): Boolean;
 var
   i: Integer;
 begin

@@ -10,7 +10,7 @@ uses
 
 type
   TProcessItemEx = class
-    Process: TProcessEntry;
+    Process: TNtxProcessEntry;
     SearchKeyword: string;
     Enabled: Boolean; // by search
     Added: Boolean;
@@ -18,7 +18,7 @@ type
     ListItemRef: TListItemEx;
     ImageIndex: Integer;
     function IsSuspended: Boolean;
-    constructor Create(const Src: TProcessEntry);
+    constructor Create(const Src: TNtxProcessEntry);
   end;
   PProcessItemEx = ^TProcessItemEx;
 
@@ -152,7 +152,7 @@ end;
 
 class function TProcessListDialog.Execute;
 var
-  Process: PProcessEntry;
+  Process: PNtxProcessEntry;
 begin
   with TProcessListDialog.Create(AOwner, cfmApplication) do
   begin
@@ -210,7 +210,7 @@ end;
 procedure TProcessListDialog.ReloadProcessList;
 var
   i, ChildInd, ParentInd: integer;
-  Processes: TArray<TProcessEntry>;
+  Processes: TArray<TNtxProcessEntry>;
 begin
   ListView.SmallImages := TProcessIcons.ImageList;
 
@@ -234,8 +234,9 @@ begin
   // check that the parent was created before the child.
   for ChildInd := 0 to High(ProcessListEx) do
     for ParentInd := 0 to High(ProcessListEx) do
-      if (ChildInd <> ParentInd) and ParentProcessChecker(
-        ProcessListEx[ParentInd].Process, ProcessListEx[ChildInd].Process) then
+      if (ChildInd <> ParentInd) and RtlxIsParentProcess(
+        ProcessListEx[ParentInd].Process, ParentInd,
+        ProcessListEx[ChildInd].Process, ChildInd) then
       begin
         ProcessListEx[ChildInd].Parent := ProcessListEx[ParentInd];
         Break;

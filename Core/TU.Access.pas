@@ -203,7 +203,7 @@ end;
 
 function TuGetAccessNamedObject;
 var
-  ObjectInfo: TObjectTypeInfo;
+  ObjectInfo: TNtxObjectTypeInfo;
 begin
   Result := Default(TAccessContext);
   Result.Security.AccessMaskType := RtlxGetNamespaceAccessMaskType(Entry.KnownType);
@@ -312,7 +312,7 @@ end;
 function TuGetAccessCidObject;
 var
   TypeName: String;
-  ObjectInfo: TObjectTypeInfo;
+  ObjectInfo: TNtxObjectTypeInfo;
 begin
   Result := Default(TAccessContext);
   Result.Security.AccessMaskType := TuCidAccessMaskType(CidType);
@@ -577,7 +577,7 @@ end;
 
 function TuGetAccessSingletonObject;
 var
-  Info: TObjectTypeInfo;
+  Info: TNtxObjectTypeInfo;
 begin
   Result := Default(TAccessContext);
   Result.Security.HandleProvider := TuMakeSingletonOpener(ObjectType);

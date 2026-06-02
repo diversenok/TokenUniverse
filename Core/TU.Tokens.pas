@@ -116,7 +116,7 @@ type
     // Querying
     function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
     function QueryBasicInfo(out Info: TObjectBasicInformation): TNtxStatus;
-    function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus;
+    function QueryHandles(out Handles: TArray<TNtxSystemHandleEntry>): TNtxStatus;
     function QueryKernelAddress(out ObjectAddress: Pointer; ForceRefresh: Boolean = False): TNtxStatus;
     function QueryCreatorPID(out CreatorPID: TProcessId; ForceRefresh: Boolean = False): TNtxStatus;
     function QueryUser(out User: TGroup): TNtxStatus;
@@ -171,7 +171,7 @@ type
     // Observing changes
     function ObserveString(InfoClass: TTokenStringClass; Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
     function ObserveBasicInfo(Callback: TEventCallback<TNtxStatus, TObjectBasicInformation>): IAutoReleasable;
-    function ObserveHandles(Callback: TEventCallback<TNtxStatus, TArray<TSystemHandleEntry>>): IAutoReleasable;
+    function ObserveHandles(Callback: TEventCallback<TNtxStatus, TArray<TNtxSystemHandleEntry>>): IAutoReleasable;
     function ObserveKernelAddress(Callback: TEventCallback<TNtxStatus, Pointer>): IAutoReleasable;
     function ObserveCreatorPID(Callback: TEventCallback<TNtxStatus, TProcessId>): IAutoReleasable;
     function ObserveUser(Callback: TEventCallback<TNtxStatus, TGroup>): IAutoReleasable;
@@ -369,8 +369,8 @@ type
     SystemHandlesSubscription: IAutoReleasable;
     SystemObjectsSubscription: IAutoReleasable;
     LinkedLogonSessionsSubscription: IAutoReleasable;
-    procedure ChangedSystemHandles(const AllHandles: TArray<TSystemHandleEntry>);
-    procedure ChangedSystemObjects(const KernelObjects: TArray<TObjectTypeEntry>);
+    procedure ChangedSystemHandles(const AllHandles: TArray<TNtxSystemHandleEntry>);
+    procedure ChangedSystemObjects(const KernelObjects: TArray<TNtxObjectTypeEntry>);
     procedure LinkedLogonSessions;
 
     constructor Create(const Handle: IHandle; const Caption: String; KernelObjectAddress: Pointer = nil);
@@ -385,7 +385,7 @@ type
     property PerHandleString[InfoClass: TTokenPerHandleStringClass]: String read GetPerHandleString write SetPerHandleString;
     function QueryString(InfoClass: TTokenStringClass; ForceRefresh: Boolean = False): String;
     function QueryBasicInfo(out Info: TObjectBasicInformation): TNtxStatus;
-    function QueryHandles(out Handles: TArray<TSystemHandleEntry>): TNtxStatus;
+    function QueryHandles(out Handles: TArray<TNtxSystemHandleEntry>): TNtxStatus;
     function QueryKernelAddress(out ObjectAddress: Pointer; ForceRefresh: Boolean = False): TNtxStatus;
     function QueryCreatorPID(out CreatorPID: TProcessId; ForceRefresh: Boolean = False): TNtxStatus;
     function QueryUser(out User: TGroup): TNtxStatus;
@@ -438,7 +438,7 @@ type
     function QueryIsAppSilo(out IsAppSilo: LongBool): TNtxStatus;
     function ObserveString(InfoClass: TTokenStringClass; Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
     function ObserveBasicInfo(Callback: TEventCallback<TNtxStatus, TObjectBasicInformation>): IAutoReleasable;
-    function ObserveHandles(Callback: TEventCallback<TNtxStatus, TArray<TSystemHandleEntry>>): IAutoReleasable;
+    function ObserveHandles(Callback: TEventCallback<TNtxStatus, TArray<TNtxSystemHandleEntry>>): IAutoReleasable;
     function ObserveKernelAddress(Callback: TEventCallback<TNtxStatus, Pointer>): IAutoReleasable;
     function ObserveCreatorPID(Callback: TEventCallback<TNtxStatus, TProcessId>): IAutoReleasable;
     function ObserveUser(Callback: TEventCallback<TNtxStatus, TGroup>): IAutoReleasable;
@@ -630,9 +630,9 @@ end;
 
 procedure TToken.ChangedSystemHandles;
 var
-  Handles: TArray<TSystemHandleEntry>;
+  Handles: TArray<TNtxSystemHandleEntry>;
   Status: TNtxStatus;
-  Entry: TSystemHandleEntry;
+  Entry: TNtxSystemHandleEntry;
 begin
   if Assigned(FKernelObjectAddress) and not Events.OnHandles.HasObservers then
     Exit;
@@ -667,7 +667,7 @@ end;
 
 procedure TToken.ChangedSystemObjects;
 var
-  Entry: PObjectEntry;
+  Entry: PNtxObjectEntry;
 begin
   if not Assigned(FKernelObjectAddress) or Events.CreatorPIDIsKnown then
     Exit;
@@ -871,7 +871,7 @@ end;
 
 function TToken.ObserveHandles;
 var
-  Info: TArray<TSystemHandleEntry>;
+  Info: TArray<TNtxSystemHandleEntry>;
 begin
   Callback(QueryHandles(Info), Info);
   Result := Events.OnHandles.Subscribe(Callback);
@@ -1519,7 +1519,7 @@ end;
 
 function TToken.QueryKernelAddress;
 var
-  Handles: TArray<TSystemHandleEntry>;
+  Handles: TArray<TNtxSystemHandleEntry>;
 begin
   if Assigned(FKernelObjectAddress) and not ForceRefresh then
   begin

@@ -72,7 +72,7 @@ end;
 
 function TokenGenericMapping;
 var
-  TokenType: TObjectTypeInfo;
+  TokenType: TNtxObjectTypeInfo;
 begin
   // Try to use the type snapshot, but fall back to local definition if needed
 

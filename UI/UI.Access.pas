@@ -185,7 +185,7 @@ end;
 procedure TAccessCheckForm.tbxNameChange;
 var
   Entry: TNamespaceEntry;
-  EntryType: TObjectTypeInfo;
+  EntryType: TNtxObjectTypeInfo;
 begin
   Entry := RtlxQueryNamespaceEntry(tbxName.Text);
   tbxNameType.Text := Rttix.Format(Entry.KnownType);

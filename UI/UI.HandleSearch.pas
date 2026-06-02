@@ -42,9 +42,9 @@ end;
 
 procedure TFormHandleSearch.ButtonRefreshClick;
 var
-  Handles: TArray<TSystemHandleEntry>;
-  PerProcess: TArray<TArrayGroup<TProcessId, TSystemHandleEntry>>;
-  TokenType: TObjectTypeInfo;
+  Handles: TArray<TNtxSystemHandleEntry>;
+  PerProcess: TArray<TArrayGroup<TProcessId, TNtxSystemHandleEntry>>;
+  TokenType: TNtxObjectTypeInfo;
   hxProcess, hxToken: IHandle;
   ImageName: String;
   i, j: Integer;
@@ -53,8 +53,8 @@ begin
   RtlxFindKernelType('Token', TokenType).RaiseOnError;
 
   // Include only tokens from other processes
-  TArray.FilterInline<TSystemHandleEntry>(Handles,
-    function (const Entry: TSystemHandleEntry): Boolean
+  TArray.FilterInline<TNtxSystemHandleEntry>(Handles,
+    function (const Entry: TNtxSystemHandleEntry): Boolean
     begin
       Result := (Entry.ObjectTypeIndex = TokenType.Native.TypeIndex) and
         (Entry.UniqueProcessId <> NtCurrentTeb.ClientID.UniqueProcess);
@@ -62,8 +62,8 @@ begin
   );
 
   // Group tokens by process
-  PerProcess := TArray.GroupBy<TSystemHandleEntry, TProcessId>(Handles,
-    function (const Entry: TSystemHandleEntry): TProcessId
+  PerProcess := TArray.GroupBy<TNtxSystemHandleEntry, TProcessId>(Handles,
+    function (const Entry: TNtxSystemHandleEntry): TProcessId
     begin
       Result := Entry.UniqueProcessId;
     end,

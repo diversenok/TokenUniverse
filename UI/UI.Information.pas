@@ -826,7 +826,7 @@ end;
 procedure TInfoDialog.UpdateObjectTab;
 var
   BasicInfo: TObjectBasicInformation;
-  Handles: TArray<TSystemHandleEntry>;
+  Handles: TArray<TNtxSystemHandleEntry>;
   i: Integer;
 begin
   if TabObject.Tag = TAB_UPDATED then
