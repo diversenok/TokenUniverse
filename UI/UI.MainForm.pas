@@ -56,7 +56,6 @@ type
     cmCreateToken: TMenuItem;
     cmAnonymousToken: TMenuItem;
     N5: TMenuItem;
-    cmCopyHandle: TMenuItem;
     cmSearchToken: TMenuItem;
     N6: TMenuItem;
     cmRevokeCurrent: TMenuItem;
@@ -86,7 +85,6 @@ type
     procedure ActionOpenLinked(Sender: TObject);
     procedure ActionOpen(Node: INodeProvider);
     procedure RunAsSystemClick(Sender: TObject);
-    procedure ActionSteal(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure ActionWTSQuery(Sender: TObject);
     procedure ActionRestrict(Sender: TObject);
@@ -132,7 +130,7 @@ implementation
 uses
   System.UITypes, TU.Tokens.Old.Types, Ntapi.WinNt,
   NtUtils.Objects.Snapshots, TU.RestartSvc, TU.Suggestions, TU.Tokens,
-  UI.Information, UI.ProcessList, UI.HandleSearch, NtUtilsUI.Components,
+  UI.Information, UI.HandleSearch, NtUtilsUI.Components,
   UI.Restrict, UI.CreateToken, UI.Modal.Columns, UI.Modal.Access,
   UI.Modal.Logon, UI.Modal.AccessAndType, UI.Modal.PickUser, UI.Settings,
   UI.New.Safer, Ntapi.ntpsapi, UI.Audit.System, UI.Process.Run, Ntapi.ntstatus,
@@ -155,9 +153,7 @@ begin
   if AskConvertToPrimary(Handle, Token) then
     TokenView.Add(Token);
 
-  Token.AssignToProcessById(TProcessListDialog
-    .Execute(Self, False).ProcessID)
-    .RaiseOnError;
+  Token.AssignToProcessById(UiLibPickProcess(Self)).RaiseOnError;
 
   ShowSuccessMessage(Handle, 'The token was successfully assigned to the process.');
 end;
@@ -172,7 +168,7 @@ begin
   if AskConvertToImpersonation(Handle, Token) then
     TokenView.Add(Token);
 
-  TID := TProcessListDialog.Execute(Self, True).ThreadID;
+  TID := UiLibPickThread(Self).UniqueThread;
 
   if TSettings.UseSafeImpersonation then
     Token.AssignToThreadSafeById(TID).RaiseOnError
@@ -217,8 +213,8 @@ procedure TFormMain.ActionOpenEffective;
 var
   Token: IToken;
 begin
-  MakeCopyViaDirectImpersonation(Token, nil, TProcessListDialog.Execute(Self,
-    True).ThreadID, SecurityImpersonation).RaiseOnError;
+  MakeCopyViaDirectImpersonation(Token, nil, UiLibPickThread(Self).UniqueThread,
+    SecurityImpersonation).RaiseOnError;
   TokenView.Add(Token);
 end;
 
@@ -234,9 +230,7 @@ procedure TFormMain.ActionOpenProcess;
 var
   Token: IToken;
 begin
-  MakeOpenProcessToken(Token, nil, TProcessListDialog.Execute(Self,
-    False).ProcessID).RaiseOnError;
-
+  MakeOpenProcessToken(Token, nil, UiLibPickProcess(Self)).RaiseOnError;
   TokenView.Add(Token);
 end;
 
@@ -252,9 +246,7 @@ procedure TFormMain.ActionOpenThread;
 var
   Token: IToken;
 begin
-  MakeOpenThreadToken(Token, nil, TProcessListDialog.Execute(Self,
-    True).ThreadID).RaiseOnError;
-
+  MakeOpenThreadToken(Token, nil, UiLibPickThread(Self).UniqueThread).RaiseOnError;
   TokenView.Add(Token);
 end;
 
@@ -281,7 +273,7 @@ procedure TFormMain.ActionRevertThread;
 var
   TID: TThreadId;
 begin
-  TID := TProcessListDialog.Execute(Self, True).ThreadID;
+  TID := UiLibPickThread(Self).UniqueThread;
   NtxSetThreadTokenById(TID, nil).RaiseOnError;
 
   if TID = NtCurrentThreadId then
@@ -310,19 +302,13 @@ var
   hxTargetProcess: IHandle;
   NewHandle: NativeUInt;
 begin
-  NtxOpenProcess(hxTargetProcess, TProcessListDialog.Execute(Self,
-    False).ProcessID, PROCESS_DUP_HANDLE).RaiseOnError;
-
+  NtxOpenProcess(hxTargetProcess, UiLibPickProcess(Self),
+    PROCESS_DUP_HANDLE).RaiseOnError;
   NtxDuplicateHandleTo(hxTargetProcess, TokenView.Selected.Handle,
     NewHandle).RaiseOnError;
 
   ShowSuccessMessage(Handle, Format('The handle was successfully sent.'#$D#$A +
     'Its value is %d (0x%X)', [NewHandle, NewHandle]));
-end;
-
-procedure TFormMain.ActionSteal;
-begin
-  TProcessListDialog.Execute(Self, False);//TODO: Copy handle from process
 end;
 
 procedure TFormMain.ActionWTSQuery;

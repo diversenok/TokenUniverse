@@ -152,9 +152,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.Information.pas">
             <Form>InfoDialog</Form>
         </DCCReference>
-        <DCCReference Include="UI\UI.ProcessList.pas">
-            <Form>ProcessListDialog</Form>
-        </DCCReference>
         <DCCReference Include="Core\TU.RestartSvc.pas"/>
         <DCCReference Include="Core\TU.Suggestions.pas"/>
         <DCCReference Include="UI\UI.Restrict.pas">
@@ -179,9 +176,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <Form>DialogAccess</Form>
         </DCCReference>
         <DCCReference Include="Core\TU.Winapi.pas"/>
-        <DCCReference Include="UI\UI.Modal.ThreadList.pas">
-            <Form>ThreadListDialog</Form>
-        </DCCReference>
         <DCCReference Include="UI\UI.Modal.PickToken.pas">
             <Form>DialogPickToken</Form>
         </DCCReference>
@@ -349,6 +343,17 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Privileges.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Components.Factories.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.SessionID.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Tree.Hysteresis.pas"/>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Processes.pas">
+            <Form>UiLibProcesses</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.Processes.Threads.pas">
+            <Form>UiLibThreads</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

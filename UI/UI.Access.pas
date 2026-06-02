@@ -70,22 +70,21 @@ implementation
 {$R *.dfm}
 
 uses
-  NtUtils.Objects, NtUtils.Objects.Snapshots, NtUiLib.AutoCompletion.Namespace,
-  NtUtils.Lsa.Sid, NtUiLib.Errors, DelphiUiLib.LiteReflection, UI.ProcessList,
-  NtUiCommon.Prototypes, DelphiUiLib.Strings;
+  Ntapi.ntdef, NtUtils.Objects, NtUtils.Objects.Snapshots,
+  NtUiLib.AutoCompletion.Namespace, NtUtils.Lsa.Sid, NtUiLib.Errors,
+  DelphiUiLib.LiteReflection, NtUiCommon.Prototypes, DelphiUiLib.Strings,
+  NtUtilsUI.Components;
 
 procedure TAccessCheckForm.btnSelectCidClick;
 var
   IsThread: Boolean;
-  ClientIdEx: TClientIdEx;
 begin
   IsThread := cbxCidType.ItemIndex = 1;
-  ClientIdEx := TProcessListDialog.Execute(Self, IsThread);
 
   if IsThread then
-    tbxCid.Text := UiLibUIntToDec(ClientIdEx.ThreadID)
+    tbxCid.Text := UiLibUIntToDec(UiLibPickProcess(Self))
   else
-    tbxCid.Text := UiLibUIntToDec(ClientIdEx.ProcessID);
+    tbxCid.Text := UiLibUIntToDec(UiLibPickThread(Self).UniqueThread);
 end;
 
 procedure TAccessCheckForm.ButtonCloseClick;

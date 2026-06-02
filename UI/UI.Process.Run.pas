@@ -135,9 +135,9 @@ uses
   NtUtils.Objects, NtUtils.WinUser, NtUtils.Tokens, NtUtils.Tokens.Info,
   NtUtils.Profiles, NtUiLib.Errors, NtUiLib.TaskDialog, NtUiLib.WinCred,
   DelphiUiLib.LiteReflection, DelphiUiLib.Strings, UI.Information,
-  UI.ProcessList, UI.MainForm, TU.Tokens.Open, UI.Settings,
-  System.UITypes, NtUtils.Security.Sid, NtUiCommon.Prototypes,
-  UI.Modal.PickUser;
+  UI.MainForm, TU.Tokens.Open, UI.Settings, System.UITypes,
+  NtUtils.Security.Sid, NtUiCommon.Prototypes, UI.Modal.PickUser,
+  NtUtilsUI.Components;
 
 {$R *.dfm}
 
@@ -152,15 +152,13 @@ end;
 
 procedure TDialogRun.ButtonChooseParentClick;
 var
-  ClientIdEx: TClientIdEx;
+  SelectedParent: TProcessId;
 begin
-  ClientIdEx := TProcessListDialog.Execute(Self, False);
-  NtxOpenProcess(hxParentProcess, ClientIdEx.ProcessID,
-    ParentAccessMask).RaiseOnError;
+  SelectedParent := UiLibPickProcess(Self);
 
-  ParentProcessId := ClientIdEx.ProcessID;
-  EditParent.Text := Format('%s [%d]', [ClientIdEx.ImageName,
-    ClientIdEx.ProcessID]);
+  NtxOpenProcess(hxParentProcess, SelectedParent, ParentAccessMask).RaiseOnError;
+  ParentProcessId := SelectedParent;
+  EditParent.Text := Rttix.Format(SelectedParent);
 end;
 
 procedure TDialogRun.ButtonCloseClick;

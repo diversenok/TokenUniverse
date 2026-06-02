@@ -14,7 +14,6 @@ uses
   UI.Modal.AccessAndType in 'UI\UI.Modal.AccessAndType.pas' {DialogAccessAndType},
   UI.HandleSearch in 'UI\UI.HandleSearch.pas' {FormHandleSearch},
   UI.Information in 'UI\UI.Information.pas' {InfoDialog},
-  UI.ProcessList in 'UI\UI.ProcessList.pas' {ProcessListDialog},
   TU.RestartSvc in 'Core\TU.RestartSvc.pas',
   TU.Suggestions in 'Core\TU.Suggestions.pas',
   UI.Restrict in 'UI\UI.Restrict.pas' {DialogRestrictToken},
@@ -27,7 +26,6 @@ uses
   UI.Settings in 'UI\UI.Settings.pas',
   UI.Modal.Access in 'UI\UI.Modal.Access.pas' {DialogAccess},
   TU.Winapi in 'Core\TU.Winapi.pas',
-  UI.Modal.ThreadList in 'UI\UI.Modal.ThreadList.pas' {ThreadListDialog},
   UI.Modal.PickToken in 'UI\UI.Modal.PickToken.pas' {DialogPickToken},
   UI.New.Safer in 'UI\UI.New.Safer.pas' {DialogSafer},
   UI.Prototypes.AuditFrame in 'UI\UI.Prototypes.AuditFrame.pas' {FrameAudit: TFrame},
@@ -98,7 +96,10 @@ uses
   NtUtilsUI.Number in 'NtUtilsUI\Components\NtUtilsUI.Number.pas',
   NtUtilsUI.Privileges in 'NtUtilsUI\Components\NtUtilsUI.Privileges.pas',
   NtUtilsUI.Components.Factories in 'NtUtilsUI\Components\NtUtilsUI.Components.Factories.pas',
-  NtUtilsUI.SessionID in 'NtUtilsUI\Components\NtUtilsUI.SessionID.pas';
+  NtUtilsUI.SessionID in 'NtUtilsUI\Components\NtUtilsUI.SessionID.pas',
+  NtUtilsUI.Tree.Hysteresis in 'NtUtilsUI\Components\NtUtilsUI.Tree.Hysteresis.pas',
+  NtUtilsUI.Processes in 'NtUtilsUI\Components\NtUtilsUI.Processes.pas' {UiLibProcesses: TFrame},
+  NtUtilsUI.Processes.Threads in 'NtUtilsUI\Components\NtUtilsUI.Processes.Threads.pas' {UiLibThreads: TFrame};
 
 {$R *.res}
 {$WEAKLINKRTTI ON}
