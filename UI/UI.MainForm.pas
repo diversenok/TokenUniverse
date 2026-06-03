@@ -71,6 +71,7 @@ type
     cmUmgrTokens: TMenuItem;
     N8: TMenuItem;
     MenuStackTraces: TMenuItem;
+    cmProcesses: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -120,6 +121,7 @@ type
     procedure TokenSetLinkedClick(Sender: TObject);
     procedure cmUmgrTokensClick(Sender: TObject);
     procedure MenuStackTracesClick(Sender: TObject);
+    procedure cmProcessesClick(Sender: TObject);
   end;
 
 var
@@ -378,6 +380,11 @@ var
 begin
   MakePipeLoopbackToken(Token).RaiseOnError;
   TokenView.Add(Token);
+end;
+
+procedure TFormMain.cmProcessesClick;
+begin
+  UiLibShowProcesses;
 end;
 
 procedure TFormMain.cmUmgrTokensClick;

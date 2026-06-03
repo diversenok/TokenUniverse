@@ -170,6 +170,11 @@ object FormMain: TFormMain
         ShortCut = 120
         OnClick = MenuRunProgramClick
       end
+      object cmProcesses: TMenuItem
+        Caption = 'Processes...'
+        ShortCut = 121
+        OnClick = cmProcessesClick
+      end
     end
     object View1: TMenuItem
       Caption = 'Settings'
