@@ -13,23 +13,21 @@ type
   TAccessCheckForm = class(TUiLibChildForm)
     PageControlModes: TPageControl;
     TabByName: TTabSheet;
-    TabByCID: TTabSheet;
+    TabByPid: TTabSheet;
     lblNameType: TLabel;
     tbxName: TUiLibEdit;
     lblName: TLabel;
     tbxNameType: TUiLibEdit;
     TabBySid: TTabSheet;
     ButtonClose: TButton;
-    lblCidtType: TLabel;
-    lblCid: TLabel;
-    tbxCid: TUiLibEdit;
-    cbxCidType: TUiLibComboBox;
-    btnSelectCid: TButton;
+    lblPidType: TLabel;
+    lblPid: TLabel;
+    tbxPid: TUiLibEdit;
+    cbxPidType: TUiLibComboBox;
+    btnSelectPid: TButton;
     lblSidType: TLabel;
     cbxSidType: TUiLibComboBox;
     lblSid: TLabel;
-    lblCidSubType: TLabel;
-    cbxCidSubType: TUiLibComboBox;
     SidEditor: TSidEditor;
     lblSidLookupType: TLabel;
     tbxSidLookupType: TUiLibEdit;
@@ -43,18 +41,28 @@ type
     TabSingleton: TTabSheet;
     lblSingleton: TLabel;
     cbxSingleton: TUiLibComboBox;
+    TabByTid: TTabSheet;
+    lblTid: TLabel;
+    tbxTid: TUiLibEdit;
+    btnSelectTid: TButton;
+    lblTidType: TLabel;
+    cbxTidType: TUiLibComboBox;
     procedure FormCreate(Sender: TObject);
     procedure tbxNameChange(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
-    procedure tbxCidChange(Sender: TObject);
+    procedure tbxPidChange(Sender: TObject);
     procedure tbxSidChange(Sender: TObject);
-    procedure btnSelectCidClick(Sender: TObject);
+    procedure btnSelectPidClick(Sender: TObject);
     procedure PageControlModesChange(Sender: TObject);
     procedure ButtonSecurityClick(Sender: TObject);
     procedure tbxServiceNameChange(Sender: TObject);
     procedure tbxServiceNameEnter(Sender: TObject);
     procedure cbxSingletonChange(Sender: TObject);
     procedure tbxNameEnter(Sender: TObject);
+    procedure btnSelectTidClick(Sender: TObject);
+    procedure tbxTidChange(Sender: TObject);
+    procedure UiLibChildFormKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     FContext: TAccessContext;
     FNamespaceSuggestions: IAutoCompletionSuggestions;
@@ -75,16 +83,14 @@ uses
   DelphiUiLib.LiteReflection, NtUiCommon.Prototypes, DelphiUiLib.Strings,
   NtUtilsUI.Components;
 
-procedure TAccessCheckForm.btnSelectCidClick;
-var
-  IsThread: Boolean;
+procedure TAccessCheckForm.btnSelectPidClick;
 begin
-  IsThread := cbxCidType.ItemIndex = 1;
+  tbxPid.Text := UiLibUIntToDec(UiLibPickProcess(Self));
+end;
 
-  if IsThread then
-    tbxCid.Text := UiLibUIntToDec(UiLibPickProcess(Self))
-  else
-    tbxCid.Text := UiLibUIntToDec(UiLibPickThread(Self).UniqueThread);
+procedure TAccessCheckForm.btnSelectTidClick;
+begin
+  tbxTid.Text := UiLibUIntToDec(UiLibPickThread(Self).UniqueThread)
 end;
 
 procedure TAccessCheckForm.ButtonCloseClick;
@@ -153,32 +159,26 @@ begin
   AccessMaskFrame.Value := Context.MaximumAccess;
 end;
 
-procedure TAccessCheckForm.tbxCidChange;
+procedure TAccessCheckForm.tbxPidChange;
 var
   CidType: TCidType;
-  Cid: NativeUInt;
+  Pid: NativeUInt;
 begin
-  if (cbxCidType.ItemIndex = 0) and (cbxCidSubType.ItemIndex = 0) then
-    CidType := ctProcess
-  else if (cbxCidType.ItemIndex = 0) and (cbxCidSubType.ItemIndex = 1) then
-    CidType := ctProcessToken
-  else if (cbxCidType.ItemIndex = 0) and (cbxCidSubType.ItemIndex = 2) then
-    CidType := ctProcessDebugObject
-  else if (cbxCidType.ItemIndex = 1) and (cbxCidSubType.ItemIndex = 0) then
-    CidType := ctThread
-  else if (cbxCidType.ItemIndex = 1) and (cbxCidSubType.ItemIndex = 1) then
-    CidType := ctThreadToken
+  case cbxPidType.ItemIndex of
+    0: CidType := ctProcess;
+    1: CidType := ctProcessToken;
+    2: CidType := ctProcessDebugObject;
   else
     CidType := ctInvalid;
+  end;
 
-  if not (CidType in [ctProcess..ctThreadToken]) or
-    not UiLibStringToUIntPtr(tbxCid.Text, Cid) then
+  if (CidType = ctInvalid) or not UiLibStringToUIntPtr(tbxPid.Text, Pid) then
   begin
     ResetAccessMask;
     Exit;
   end;
 
-  ShowAccessMask(TuGetAccessCidObject(Cid, CidType));
+  ShowAccessMask(TuGetAccessCidObject(Pid, CidType));
 end;
 
 procedure TAccessCheckForm.tbxNameChange;
@@ -255,6 +255,34 @@ begin
   end;
 
   ShowAccessMask(TuGetAccessSidObject(Sid, SidType));
+end;
+
+procedure TAccessCheckForm.tbxTidChange;
+var
+  CidType: TCidType;
+  Tid: NativeUInt;
+begin
+  case cbxTidType.ItemIndex of
+    0: CidType := ctThread;
+    1: CidType := ctThreadToken;
+  else
+    CidType := ctInvalid;
+  end;
+
+  if (CidType = ctInvalid) or not UiLibStringToUIntPtr(tbxTid.Text, Tid) then
+  begin
+    ResetAccessMask;
+    Exit;
+  end;
+
+  ShowAccessMask(TuGetAccessCidObject(Tid, CidType));
+end;
+
+procedure TAccessCheckForm.UiLibChildFormKeyDown;
+begin
+  // Ctrl+Digit to switch between tabs
+  if (Shift = [ssCtrl]) and (Key >= Ord('1')) and (Key <= Ord('6')) then
+    PageControlModes.ActivePageIndex := Key - Ord('1');
 end;
 
 end.

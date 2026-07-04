@@ -10,7 +10,9 @@ object AccessCheckForm: TAccessCheckForm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  KeyPreview = True
   OnCreate = FormCreate
+  OnKeyDown = UiLibChildFormKeyDown
   TextHeight = 13
   object PageControlModes: TPageControl
     AlignWithMargins = True
@@ -61,80 +63,111 @@ object AccessCheckForm: TAccessCheckForm
         Text = 'Unknown'
       end
     end
-    object TabByCID: TTabSheet
-      Caption = 'Client IDs'
+    object TabByPid: TTabSheet
+      Caption = 'Processes'
       ImageIndex = 1
-      object lblCidtType: TLabel
+      object lblPidType: TLabel
         Left = 3
         Top = 16
         Width = 63
         Height = 13
-        Caption = 'Parent Type:'
+        Caption = 'Object Type:'
       end
-      object lblCid: TLabel
+      object lblPid: TLabel
         Left = 3
         Top = 43
-        Width = 45
+        Width = 55
         Height = 13
-        Caption = 'Client ID:'
+        Caption = 'Process ID:'
       end
-      object lblCidSubType: TLabel
-        Left = 324
-        Top = 16
-        Width = 54
-        Height = 13
-        Anchors = [akTop, akRight]
-        Caption = 'Child Type:'
-      end
-      object tbxCid: TUiLibEdit
+      object tbxPid: TUiLibEdit
         Left = 72
         Top = 40
         Width = 457
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
-        TextHint = 'PID or TID value'
-        OnChange = tbxCidChange
+        TextHint = 'PID value'
+        OnChange = tbxPidChange
       end
-      object cbxCidType: TUiLibComboBox
+      object cbxPidType: TUiLibComboBox
         Left = 72
         Top = 13
-        Width = 225
+        Width = 537
         Height = 21
         Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 1
+        TabOrder = 2
         Text = 'Process'
-        OnChange = tbxCidChange
+        OnChange = tbxPidChange
         Items.Strings = (
           'Process'
-          'Thread')
+          'Process Token'
+          'Process Debug Object')
       end
-      object btnSelectCid: TButton
+      object btnSelectPid: TButton
         Left = 534
         Top = 38
         Width = 75
         Height = 25
         Anchors = [akTop, akRight]
         Caption = 'Select...'
-        TabOrder = 2
-        OnClick = btnSelectCidClick
+        TabOrder = 1
+        OnClick = btnSelectPidClick
       end
-      object cbxCidSubType: TUiLibComboBox
-        Left = 384
+    end
+    object TabByTid: TTabSheet
+      Caption = 'Threads'
+      ImageIndex = 5
+      object lblTid: TLabel
+        Left = 3
+        Top = 43
+        Width = 52
+        Height = 13
+        Caption = 'Thread ID:'
+      end
+      object lblTidType: TLabel
+        Left = 3
+        Top = 16
+        Width = 63
+        Height = 13
+        Caption = 'Object Type:'
+      end
+      object tbxTid: TUiLibEdit
+        Left = 72
+        Top = 40
+        Width = 457
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        TextHint = 'TID value'
+        OnChange = tbxTidChange
+      end
+      object btnSelectTid: TButton
+        Left = 534
+        Top = 38
+        Width = 75
+        Height = 25
+        Anchors = [akTop, akRight]
+        Caption = 'Select...'
+        TabOrder = 1
+        OnClick = btnSelectTidClick
+      end
+      object cbxTidType: TUiLibComboBox
+        Left = 72
         Top = 13
-        Width = 225
+        Width = 537
         Height = 21
         Style = csDropDownList
-        Anchors = [akTop, akRight]
+        Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 3
-        Text = 'None'
-        OnChange = tbxCidChange
+        TabOrder = 2
+        Text = 'Thread'
+        OnChange = tbxTidChange
         Items.Strings = (
-          'None'
-          'Token'
-          'Debug Object')
+          'Thread'
+          'Thread Token')
       end
     end
     object TabBySid: TTabSheet
@@ -143,9 +176,9 @@ object AccessCheckForm: TAccessCheckForm
       object lblSidType: TLabel
         Left = 3
         Top = 16
-        Width = 49
+        Width = 63
         Height = 13
-        Caption = 'Category:'
+        Caption = 'Object Type:'
       end
       object lblSid: TLabel
         Left = 3
