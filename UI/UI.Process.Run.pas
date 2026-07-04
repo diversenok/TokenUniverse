@@ -120,7 +120,7 @@ type
     procedure OnCaptionChange(const InfoClass: TTokenStringClass; const NewCaption: String);
     procedure SetToken(const Value: IToken);
     procedure UpdateDesktopList;
-    function TryOpenToken(const Info: TProcessInfo): TNtxStatus;
+    function TryOpenToken(const Info: TNtxProcessInfo): TNtxStatus;
     function GetProtection(out Value: TProtectionLevel): Boolean;
   public
     property UseToken: IToken read FToken write SetToken;
@@ -168,9 +168,9 @@ end;
 
 procedure TDialogRun.ButtonRunClick;
 var
-  Options: TCreateProcessOptions;
+  Options: TNtxCreateProcessOptions;
   OptionsEx: TTuCreateProcessOptions;
-  ProcInfo: TProcessInfo;
+  ProcInfo: TNtxProcessInfo;
   Credentials: TLogonCredentials;
   Status: TNtxStatus;
 begin
@@ -190,7 +190,7 @@ begin
     Exit;
   end;
 
-  Options := Default(TCreateProcessOptions);
+  Options := Default(TNtxCreateProcessOptions);
   Options.Application := EditExe.Text;
   Options.Parameters := EditParams.Text;
   Options.CurrentDirectory := EditDir.Text;
@@ -599,7 +599,7 @@ end;
 
 procedure TDialogRun.UpdateEnabledState;
 var
-  SupportedOptions: TSupportedCreateParameters;
+  SupportedOptions: TNtxSupportedCreateParameters;
 begin
   SupportedOptions := TuPsMethodSupports(Method);
 

@@ -69,10 +69,10 @@ end;
 
 procedure ReSvcDelegate;
 var
-  Options: TCreateProcessOptions;
-  ProcessInfo: TProcessInfo;
+  Options: TNtxCreateProcessOptions;
+  ProcessInfo: TNtxProcessInfo;
 begin
-  Options := Default(TCreateProcessOptions);
+  Options := Default(TNtxCreateProcessOptions);
   Options.Application := ParamStr(0);
   Options.Flags := [poRequireElevation];
 
@@ -117,15 +117,15 @@ end;
 
 procedure ReSvcRunInSession;
 var
-  Options: TCreateProcessOptions;
-  ProcessInfo: TProcessInfo;
+  Options: TNtxCreateProcessOptions;
+  ProcessInfo: TNtxProcessInfo;
   Session: Cardinal;
   {$IFDEF DEBUG}
   BasicInfo: TProcessBasicInformation;
   Status: TNtxStatus;
   {$ENDIF}
 begin
-  Options := Default(TCreateProcessOptions);
+  Options := Default(TNtxCreateProcessOptions);
   Options.Application := ParamStr(0);
 
   if (Length(ScvParams) >= 2) and RtlxStrToUInt(ScvParams[1], Session) then

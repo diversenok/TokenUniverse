@@ -13,7 +13,7 @@ uses
 {$MINENUMSIZE 4}
 
 type
-  TSupportedCreateParameters = set of TSupportedCreateProcessOptions;
+  TNtxSupportedCreateParameters = set of TNtxSupportedCreateProcessOptions;
 
   [NamingStyle(nsCamelCase, 'cm'), MinValue(1)]
   TKnownCreateMethod = (
@@ -65,20 +65,20 @@ const
 [Result: MayReturnNil]
 function TuGetPsMethod(
   KnownMethod: TKnownCreateMethod
-): TCreateProcessMethod;
+): TNtxCreateProcessMethod;
 
 // Determine if a process creation KnownMethod supports an option
 function TuPsMethodSupports(
   KnownMethod: TKnownCreateMethod
-): TSupportedCreateParameters;
+): TNtxSupportedCreateParameters;
 
 // Create a process via the specified method
 function TuCreateProcess(
   ParentHwnd: THwnd;
-  [in] Options: TCreateProcessOptions;
+  [in] Options: TNtxCreateProcessOptions;
   const OptionsEx: TTuCreateProcessOptions;
   const KnownMethod: TKnownCreateMethod;
-  out Info: TProcessInfo
+  out Info: TNtxProcessInfo
 ): TNtxStatus;
 
 implementation
@@ -120,7 +120,7 @@ begin
   end;
 end;
 
-const PS_SUPPORTS: array [TKnownCreateMethod] of TSupportedCreateParameters = (
+const PS_SUPPORTS: array [TKnownCreateMethod] of TNtxSupportedCreateParameters = (
   [],
 
   // CreateProcessAsUser
@@ -240,7 +240,7 @@ end;
 
 function RequiresPostCreationTokenCheck(
   KnownMethod: TKnownCreateMethod;
-  const Options: TCreateProcessOptions
+  const Options: TNtxCreateProcessOptions
 ): Boolean;
 begin
   // Any method with tokens except for WMI since it's better to do pre-creation
@@ -250,7 +250,7 @@ end;
 
 function TuCreateProcess;
 var
-  Method: TCreateProcessMethod;
+  Method: TNtxCreateProcessMethod;
   ResumeLater: Boolean;
   AutoTerminate: IDeferredOperation;
   hxManifestSection: IHandle;
