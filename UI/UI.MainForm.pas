@@ -155,6 +155,7 @@ begin
   if AskConvertToPrimary(Handle, Token) then
     TokenView.Add(Token);
 
+  CheckPrivilege(Handle, SE_ASSIGN_PRIMARY_TOKEN_PRIVILEGE);
   Token.AssignToProcessById(UiLibPickProcess(Self)).RaiseOnError;
 
   ShowSuccessMessage(Handle, 'The token was successfully assigned to the process.');
