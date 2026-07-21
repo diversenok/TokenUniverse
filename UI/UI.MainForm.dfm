@@ -96,7 +96,7 @@ object FormMain: TFormMain
       end
       object cmAnonymousToken: TMenuItem
         Caption = 'Anonymous token'
-        ShortCut = 49217
+        ShortCut = 24641
         OnClick = NewAnonymousClick
       end
       object cmPipeLoopbackToken: TMenuItem
@@ -260,17 +260,17 @@ object FormMain: TFormMain
     end
     object AssignToProcess: TMenuItem
       Caption = 'Assign primary token to process...'
-      ShortCut = 24641
+      ShortCut = 49217
       OnClick = ActionAssignToProcess
     end
     object cmImpersonate: TMenuItem
       Caption = 'Impersonate'
-      ShortCut = 16457
+      ShortCut = 24649
       OnClick = cmImpersonateClick
     end
     object AssignToThread: TMenuItem
       Caption = 'Impersonate on thread...'
-      ShortCut = 24649
+      ShortCut = 49225
       OnClick = ActionAssignToThread
     end
     object N3: TMenuItem
