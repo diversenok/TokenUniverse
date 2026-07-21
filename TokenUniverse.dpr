@@ -99,7 +99,8 @@ uses
   NtUtilsUI.SessionID in 'NtUtilsUI\Components\NtUtilsUI.SessionID.pas',
   NtUtilsUI.Tree.Hysteresis in 'NtUtilsUI\Components\NtUtilsUI.Tree.Hysteresis.pas',
   NtUtilsUI.Processes in 'NtUtilsUI\Components\NtUtilsUI.Processes.pas' {UiLibProcesses: TFrame},
-  NtUtilsUI.Processes.Threads in 'NtUtilsUI\Components\NtUtilsUI.Processes.Threads.pas' {UiLibThreads: TFrame};
+  NtUtilsUI.Processes.Threads in 'NtUtilsUI\Components\NtUtilsUI.Processes.Threads.pas' {UiLibThreads: TFrame},
+  UI.Packages.Activate in 'UI\UI.Packages.Activate.pas' {FormActivatePackage};
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

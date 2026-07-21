@@ -72,6 +72,7 @@ type
     N8: TMenuItem;
     MenuStackTraces: TMenuItem;
     cmProcesses: TMenuItem;
+    cmActivatePackage: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -122,6 +123,7 @@ type
     procedure cmUmgrTokensClick(Sender: TObject);
     procedure MenuStackTracesClick(Sender: TObject);
     procedure cmProcessesClick(Sender: TObject);
+    procedure cmActivatePackageClick(Sender: TObject);
   end;
 
 var
@@ -140,7 +142,8 @@ uses
   NtUiLib.Exceptions.Dialog, TU.Tokens.Open, NtUtils.Tokens.Impersonate,
   NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
   UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog,
-  DelphiUiLib.LiteReflection.Types, NtUtils.Processes.Info, NtUtils.Console;
+  DelphiUiLib.LiteReflection.Types, NtUtils.Processes.Info, NtUtils.Console,
+  UI.Packages.Activate;
 
 {$R *.dfm}
 
@@ -325,6 +328,11 @@ end;
 procedure TFormMain.cmAccessClick(Sender: TObject);
 begin
   TAccessCheckForm.Create(Self, cfmDesktop).Show;
+end;
+
+procedure TFormMain.cmActivatePackageClick(Sender: TObject);
+begin
+  TFormActivatePackage.CreateAndShow(True);
 end;
 
 procedure TFormMain.cmAllocConsoleClick(Sender: TObject);
