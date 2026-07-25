@@ -76,7 +76,6 @@ uses
   NtUiBuiltin.DsObjectPicker in 'NtUtilsUI\Prototypes\NtUiBuiltin.DsObjectPicker.pas',
   NtUtilsUI.Sid.Trust in 'NtUtilsUI\Components\NtUtilsUI.Sid.Trust.pas',
   UI.New.UserManager in 'UI\UI.New.UserManager.pas' {UserManagerTokens},
-  TU.UserManager in 'Core\TU.UserManager.pas',
   NtUiBackend.Sids.Abbreviations in 'NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas',
   NtUiFrame.Sids.Abbreviations in 'NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas' {SidAbbreviationFrame: TFrame},
   NtUiBackend.Sids in 'NtUtilsUI\Common\NtUiBackend.Sids.pas',
@@ -100,7 +99,8 @@ uses
   NtUtilsUI.Tree.Hysteresis in 'NtUtilsUI\Components\NtUtilsUI.Tree.Hysteresis.pas',
   NtUtilsUI.Processes in 'NtUtilsUI\Components\NtUtilsUI.Processes.pas' {UiLibProcesses: TFrame},
   NtUtilsUI.Processes.Threads in 'NtUtilsUI\Components\NtUtilsUI.Processes.Threads.pas' {UiLibThreads: TFrame},
-  UI.Packages.Activate in 'UI\UI.Packages.Activate.pas' {FormActivatePackage};
+  UI.Packages.Activate in 'UI\UI.Packages.Activate.pas' {FormActivatePackage},
+  NtUtilsUI.UmgrContext in 'NtUtilsUI\Components\NtUtilsUI.UmgrContext.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

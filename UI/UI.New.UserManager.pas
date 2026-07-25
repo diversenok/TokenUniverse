@@ -5,8 +5,8 @@ interface
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, NtUtilsUI, NtUtilsUI.StdCtrls,
-  UI.Prototypes.Sid.Edit, UI.Prototypes, Ntapi.WinNt, NtUtilsUI.Base,
-  NtUtilsUI.SessionID;
+  UI.Prototypes.Sid.Edit, Ntapi.WinNt, NtUtilsUI.Base, NtUtilsUI.SessionID,
+  NtUtilsUI.UmgrContext;
 
 type
   TUserManagerTokens = class(TUiLibChildForm)
@@ -18,21 +18,17 @@ type
     rbxName: TRadioButton;
     cbxSessionId: TUiLibSessionIdBox;
     BevelSession: TBevel;
-    cbxContext: TUiLibComboBox;
     cbxName: TUiLibEdit;
     btnOpen: TButton;
     btnClose: TButton;
     SidEditor: TSidEditor;
+    cbxContext: TUiLibUmgrContextBox;
     procedure btnOpenClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnCloseClick(Sender: TObject);
     procedure cbxContextEnter(Sender: TObject);
     procedure cbxNameEnter(Sender: TObject);
     procedure cbxSessionIdEnter(Sender: TObject);
     procedure SidEditorEnter(Sender: TObject);
-  private
-    ContextsSource: TUmgrContextSource;
   public
     { Public declarations }
   end;
@@ -60,7 +56,7 @@ begin
   else if rbxShell.Checked then
     MakeUmgrActiveShellToken(Token, cbxSessionId.SessionID).RaiseOnError
   else if rbxContext.Checked then
-    MakeUmgrTokenByContext(Token, ContextsSource.SelectedContext).RaiseOnError
+    MakeUmgrTokenByContext(Token, cbxContext.UserContext).RaiseOnError
   else if rbxSid.Checked then
     MakeUmgrTokenBySid(Token, SidEditor.Sid).RaiseOnError
   else if rbxName.Checked then
@@ -88,16 +84,6 @@ procedure TUserManagerTokens.cbxSessionIdEnter;
 begin
   if not rbxSession.Checked and not rbxShell.Checked then
     rbxShell.Checked := True;
-end;
-
-procedure TUserManagerTokens.FormClose;
-begin
-  ContextsSource.Free;
-end;
-
-procedure TUserManagerTokens.FormCreate;
-begin
-  ContextsSource := TUmgrContextSource.Create(cbxContext);
 end;
 
 procedure TUserManagerTokens.SidEditorEnter;

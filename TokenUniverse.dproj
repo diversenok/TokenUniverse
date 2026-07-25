@@ -314,7 +314,6 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.New.UserManager.pas">
             <Form>UserManagerTokens</Form>
         </DCCReference>
-        <DCCReference Include="Core\TU.UserManager.pas"/>
         <DCCReference Include="NtUtilsUI\Common\NtUiBackend.Sids.Abbreviations.pas"/>
         <DCCReference Include="NtUtilsUI\Prototypes\NtUiFrame.Sids.Abbreviations.pas">
             <Form>SidAbbreviationFrame</Form>
@@ -358,6 +357,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
             <Form>FormActivatePackage</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.UmgrContext.pas"/>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

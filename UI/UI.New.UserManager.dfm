@@ -16,8 +16,6 @@ object UserManagerTokens: TUserManagerTokens
   Font.Style = []
   Position = poOwnerFormCenter
   ShowHint = True
-  OnClose = FormClose
-  OnCreate = FormCreate
   TextHeight = 15
   object BevelSession: TBevel
     Left = 4
@@ -87,7 +85,7 @@ object UserManagerTokens: TUserManagerTokens
     TabOrder = 3
     OnEnter = cbxSessionIdEnter
   end
-  object cbxContext: TUiLibComboBox
+  object cbxContext: TUiLibUmgrContextBox
     Left = 179
     Top = 98
     Width = 342

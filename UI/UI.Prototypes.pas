@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, Vcl.ComCtrls, Vcl.StdCtrls, NtUtilsUI.ListView, TU.Tokens,
-  TU.Tokens.Old.Types, Ntapi.WinNt, NtUtils.WinStation, NtUtils, TU.UserManager,
+  TU.Tokens.Old.Types, Ntapi.WinNt, NtUtils.WinStation, NtUtils,
   NtUtilsUI.StdCtrls;
 
 type
@@ -32,18 +32,6 @@ type
   public
     constructor Create(OwnedComboBox: TUiLibComboBox);
     property SelectedIntegrity: Cardinal read GetIntegrity write SetIntegrity;
-  end;
-
-  TUmgrContextSource = class
-  private
-    Contexts: TArray<TUmgrContextEntry>;
-    ComboBox: TUiLibComboBox;
-    function GetContext: TLuid;
-    procedure SetContext(const Value: TLuid);
-  public
-    constructor Create(OwnedComboBox: TUiLibComboBox);
-    procedure RefreshList;
-    property SelectedContext: TLuid read GetContext write SetContext;
   end;
 
   TAccessMaskSource = class
@@ -292,64 +280,6 @@ begin
 
     Items.EndUpdate;
   end;
-end;
-
-{ TUmgrContextSource }
-
-constructor TUmgrContextSource.Create;
-begin
-  ComboBox := OwnedComboBox;
-  RefreshList;
-end;
-
-function TUmgrContextSource.GetContext;
-begin
-  if ComboBox.ItemIndex = -1 then
-    Result := UiLibStringToUIntRaiseOnError(ComboBox.Text, 'context value')
-  else
-    Result := Contexts[ComboBox.ItemIndex].Context;
-end;
-
-procedure TUmgrContextSource.RefreshList;
-var
-  i: Integer;
-  S: String;
-begin
-  ComboBox.Items.BeginUpdate;
-  ComboBox.Items.Clear;
-  Contexts := TuCollectUmgrContexts;
-
-  for i := 0 to High(Contexts) do
-  begin
-    S := UiLibUIntToHex(Contexts[i].Context);
-
-    if Contexts[i].SessionIdValid then
-      S := S + ' (Session ' + UiLibUIntToDec(Contexts[i].SessionId)+ ')';
-
-    ComboBox.Items.Add(S);
-  end;
-
-  if Length(Contexts) > 0 then
-    ComboBox.ItemIndex := 0;
-
-  ComboBox.Items.EndUpdate;
-end;
-
-procedure TUmgrContextSource.SetContext;
-var
-  i: Integer;
-begin
-  ComboBox.ItemIndex := -1;
-
-  for i := 0 to High(Contexts) do
-    if Contexts[i].Context = Value then
-    begin
-      ComboBox.ItemIndex := i;
-      Break;
-    end;
-
-  if ComboBox.ItemIndex = -1 then
-    ComboBox.Text := UiLibUIntToHex(Value);
 end;
 
 { TAccessMaskSource }
