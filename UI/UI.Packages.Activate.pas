@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, NtUtilsUI.StdCtrls,
-  NtUiLib.AutoCompletion, NtUtilsUI;
+  NtUiLib.AutoCompletion, NtUtilsUI, NtUtilsUI.Base, NtUtilsUI.SessionID,
+  NtUtilsUI.UmgrContext, NtUiFrame.Bits;
 
 type
   TFormActivatePackage = class (TUiLibChildForm)
@@ -18,13 +19,23 @@ type
     btnActivate: TButton;
     btnClose: TButton;
     tbxResult: TUiLibEdit;
-    lblHost: TLabel;
+    lblResult: TLabel;
+    cbxMethod: TComboBox;
+    lblMethod: TLabel;
+    cbxSession: TUiLibSessionIdBox;
+    chkSession: TCheckBox;
+    cbxContext: TUiLibUmgrContextBox;
+    fmxOptions: TBitsFrame;
+    lblOptions: TLabel;
+    chkContext: TCheckBox;
     procedure btnActivateClick(Sender: TObject);
     procedure tbxAumidEnter(Sender: TObject);
     procedure tbxAumidChange(Sender: TObject);
     procedure btnCloseClick(Sender: TObject);
+    procedure cbxMethodChange(Sender: TObject);
+    procedure UiLibChildFormCreate(Sender: TObject);
   private
-    FSuggestions: IAutoCompletionSuggestions;
+    FAumidSuggestions: IAutoCompletionSuggestions;
   public
     { Public declarations }
   end;
@@ -32,9 +43,9 @@ type
 implementation
 
 uses
-  Ntapi.WinNt, NtUtils, NtUtils.Processes.Create.Package, NtUtils.Packages,
-  NtUtils.Packages.SRCache, NtUtils.Packages.Mrm, NtUtils.SysUtils,
-  DelphiUiLib.LiteReflection, NtUiLib.Errors;
+  Ntapi.WinNt, Ntapi.appmodel, NtUtils, NtUtils.Processes.Create.Package,
+  NtUtils.Packages, NtUtils.Packages.SRCache, NtUtils.Packages.Mrm,
+  NtUtils.SysUtils, DelphiUiLib.LiteReflection, NtUiLib.Errors;
 
 {$R *.dfm}
 
@@ -125,13 +136,34 @@ end;
 
 procedure TFormActivatePackage.btnActivateClick;
 var
+  Options: TPkgxActivatePackageOptions;
   ProcessId: TProcessId32;
+  ExtendedMethod: Boolean;
 begin
   tbxResult.Text := '';
+  ExtendedMethod := cbxMethod.ItemIndex = 1;
+
+  // Collection activation settings
+  Options := Default(TPkgxActivatePackageOptions);
+  Options.Aumid := tbxAumid.Text;
+  Options.Arguments := tbxArguments.Text;
+  Options.Options := Cardinal(fmxOptions.Value);
+
+  if ExtendedMethod and chkSession.Checked then
+  begin
+    Include(Options.Flags, apUseSessionId);
+    Options.SessionId := cbxSession.SessionID;
+  end;
+
+  if ExtendedMethod and chkContext.Checked then
+    Options.UserContext := cbxContext.UserContext;
 
   // Request package activation
-  PkgxActivateApplication(tbxAumid.Text, tbxArguments.Text, 0,
-    @ProcessId).RaiseOnError;
+  if ExtendedMethod then
+    PkgxActivateApplicationEx(Options, ProcessId).RaiseOnError
+  else
+    PkgxActivateApplication(Options.Aumid, Options.Arguments, Options.Options,
+      @ProcessId).RaiseOnError;
 
   // Report the returned PID
   tbxResult.Text := Rttix.Format(ProcessId);
@@ -140,6 +172,17 @@ end;
 procedure TFormActivatePackage.btnCloseClick;
 begin
   Close;
+end;
+
+procedure TFormActivatePackage.cbxMethodChange;
+var
+  Extended: Boolean;
+begin
+  Extended := cbxMethod.ItemIndex = 1;
+  chkSession.Enabled := Extended;
+  cbxSession.Enabled := Extended and chkSession.Checked;
+  chkContext.Enabled := Extended;
+  cbxContext.Enabled := Extended and chkContext.Checked;
 end;
 
 procedure TFormActivatePackage.tbxAumidChange;
@@ -164,11 +207,16 @@ end;
 
 procedure TFormActivatePackage.tbxAumidEnter;
 begin
-  if Assigned(FSuggestions) then
+  if Assigned(FAumidSuggestions) then
     Exit;
 
-  FSuggestions := ShlxPrepareDynamicSuggestions(SuggestAumids);
-  ShlxEnableSuggestions(tbxAumid.Handle, FSuggestions);
+  FAumidSuggestions := ShlxPrepareDynamicSuggestions(SuggestAumids);
+  ShlxEnableSuggestions(tbxAumid.Handle, FAumidSuggestions);
+end;
+
+procedure TFormActivatePackage.UiLibChildFormCreate;
+begin
+  fmxOptions.LoadType(TypeInfo(TActivateOptionsInternal))
 end;
 
 end.
