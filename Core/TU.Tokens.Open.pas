@@ -49,6 +49,12 @@ function MakeSessionToken(
   SessionID: TSessionId
 ): TNtxStatus;
 
+// Open a logon session token
+function MakeLogonSessionToken(
+  out Token: IToken;
+  LogonId: TLogonId
+): TNtxStatus;
+
 // Open a token of a process
 function MakeOpenProcessToken(
   out Token: IToken;
@@ -239,6 +245,17 @@ begin
 
   if Result.IsSuccess then
     Token := CaptureTokenHandle(hxToken, Format('Session %d token', [SessionID]));
+end;
+
+function MakeLogonSessionToken;
+var
+  hxToken: IHandle;
+begin
+  Result := LsaxLookupLogonToken(hxToken, LogonId);
+
+  if Result.IsSuccess then
+    Token := CaptureTokenHandle(hxToken, 'Logon ID ' + UiLibUIntToHex(LogonId) +
+      ' token');
 end;
 
 function MakeOpenProcessToken;

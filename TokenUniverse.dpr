@@ -101,7 +101,8 @@ uses
   NtUtilsUI.Processes.Threads in 'NtUtilsUI\Components\NtUtilsUI.Processes.Threads.pas' {UiLibThreads: TFrame},
   UI.Packages.Activate in 'UI\UI.Packages.Activate.pas' {FormActivatePackage},
   NtUtilsUI.UmgrContext in 'NtUtilsUI\Components\NtUtilsUI.UmgrContext.pas',
-  TU.Profiles in 'Core\TU.Profiles.pas';
+  TU.Profiles in 'Core\TU.Profiles.pas',
+  NtUtilsUI.LogonId in 'NtUtilsUI\Components\NtUtilsUI.LogonId.pas';
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

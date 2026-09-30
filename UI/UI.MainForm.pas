@@ -75,6 +75,7 @@ type
     cmActivatePackage: TMenuItem;
     cmLoadProfile: TMenuItem;
     cmUnloadProfile: TMenuItem;
+    cmQueryLogonSession: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -128,6 +129,7 @@ type
     procedure cmActivatePackageClick(Sender: TObject);
     procedure cmLoadProfileClick(Sender: TObject);
     procedure cmUnloadProfileClick(Sender: TObject);
+    procedure cmQueryLogonSessionClick(Sender: TObject);
   end;
 
 var
@@ -403,6 +405,14 @@ end;
 procedure TFormMain.cmProcessesClick;
 begin
   UiLibShowProcesses;
+end;
+
+procedure TFormMain.cmQueryLogonSessionClick;
+var
+  Token: IToken;
+begin
+  MakeLogonSessionToken(Token, UiLibPickLogonId(Self)).RaiseOnError;
+  TokenView.Add(Token);
 end;
 
 procedure TFormMain.cmUmgrTokensClick;

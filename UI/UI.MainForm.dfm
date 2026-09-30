@@ -50,7 +50,7 @@ object FormMain: TFormMain
         OnClick = RunAsSystemClick
       end
       object RunAsSystemPlus: TMenuItem
-        Caption = 'Restart as SYSTEM+'
+        Caption = 'Restart as SYSTEM with SeCreateTokenPrivilege'
         ImageIndex = 0
         OnClick = RunAsSystemClick
       end
@@ -114,8 +114,13 @@ object FormMain: TFormMain
         ShortCut = 16469
         OnClick = ActionWTSQuery
       end
+      object cmQueryLogonSession: TMenuItem
+        Caption = 'Logon session token...'
+        ShortCut = 24661
+        OnClick = cmQueryLogonSessionClick
+      end
       object cmUmgrTokens: TMenuItem
-        Caption = 'User Manager tokens...'
+        Caption = 'User Manager token...'
         ShortCut = 16461
         OnClick = cmUmgrTokensClick
       end
