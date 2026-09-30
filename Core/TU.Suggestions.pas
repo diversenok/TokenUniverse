@@ -18,10 +18,10 @@ procedure CheckPrivilege(Parent: THwnd; Privilege: TSeWellKnownPrivilege);
 implementation
 
 uses
-  Ntapi.ntstatus, Ntapi.WinError, Ntapi.ntdef, Ntapi.ntpsapi, Ntapi.ntpebteb,
-  System.TypInfo, NtUtils, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
-  TU.Tokens.Open, TU.Tokens.Old.Types, NtUiLib.Errors, System.SysUtils,
-  DelphiUiLib.LiteReflection;
+  Ntapi.ntstatus, Ntapi.ntdef, Ntapi.ntpsapi, Ntapi.ntpebteb, Ntapi.NtSecApi,
+  NtUtils, NtUiLib.Errors.Dialog, NtUiLib.Exceptions.Dialog, NtUiLib.TaskDialog,
+  TU.Tokens.Open, TU.Tokens.Old.Types, DelphiUiLib.LiteReflection,
+  System.SysUtils;
 
 const
   BUGTRACKER = 'If you known how to reproduce this error please ' +
@@ -158,23 +158,19 @@ end;
 type
   TSuggestion = record
     Location: String;
-    Status: NTSTATUS;
-    Text: String;
-  end;
-
-  TInfoClassSuggestion = record
+    CallType: TLastCallType;
     InfoClass: Cardinal;
     Status: NTSTATUS;
     Text: String;
   end;
 
 const
-  TokenOperations: array [0..4] of TSuggestion = (
+  KnownSuggesions: array [0..9] of TSuggestion = (
     (Location: 'NtDuplicateToken';
      Status: STATUS_BAD_IMPERSONATION_LEVEL;
      Text: 'You can''t duplicate a token from a lower impersonation ' +
       'level to a higher one. Although, you can create primary tokens ' +
-      'from impersonation/delegation-level tokens.'),
+      'from impersonation- and delegation-level tokens.'),
 
     (Location: 'NtCreateLowBoxToken';
      Status: STATUS_BAD_IMPERSONATION_LEVEL;
@@ -185,7 +181,7 @@ const
      Status: STATUS_BAD_IMPERSONATION_LEVEL;
      Text: 'Since Safer API always returns primary tokens the rules are the ' +
        'the same as while performing duplication. This means only primary or ' +
-       'impersonation/delegation-level tokens are suitable.'),
+       'impersonation- and delegation-level tokens are suitable.'),
 
     (Location: 'NtAdjustPrivilegesToken';
      Status: STATUS_NOT_ALL_ASSIGNED;
@@ -199,68 +195,63 @@ const
       'NtSetInformationThread succeeds, but the target thread gets an ' +
       'identification-level copy of the token which is not suitable for any ' +
       'access checks. Safe impersonation technique prevents it from ' +
-      'happening.')
-  );
+      'happening.'),
 
-  TokenSetters: array [0..2] of TInfoClassSuggestion = (
-    (InfoClass: Cardinal(TokenOwner);
+    (Location: 'NtSetInformationToken';
+     CallType: lcQuerySetCall;
+     InfoClass: Cardinal(TokenOwner);
      Status: STATUS_INVALID_OWNER;
-     Text: 'Only the user itself and those groups that are marked with the ' +
-      '`Owner` flag can be set as an owner of a token.'),
+     Text: 'Only the user SID and groups marked with the `Owner` flag can be ' +
+      'set as an owner of a token.'),
 
-    (InfoClass: Cardinal(TokenPrimaryGroup);
+    (Location: 'NtSetInformationToken';
+     CallType: lcQuerySetCall;
+     InfoClass: Cardinal(TokenPrimaryGroup);
      Status: STATUS_INVALID_PRIMARY_GROUP;
-     Text: 'The Security ID must present in the group list of the token to ' +
+     Text: 'The SID must present in the group list of the token to ' +
       'be suitable as a primary group.'),
 
-    (InfoClass: Cardinal(TokenAuditPolicy);
+    (Location: 'NtSetInformationToken';
+     CallType: lcQuerySetCall;
+     InfoClass: Cardinal(TokenAuditPolicy);
      Status: STATUS_INVALID_PARAMETER;
-     Text: 'It''s not very informative, but the problem might be caused by ' +
-      'limitations enforced on this information class: auditing policy can ' +
-      'be set on a token only once.')
-  );
+     Text: 'The error code is not very informative, but it might be caused ' +
+      'by limitations enforced on this information class: auditing policy ' +
+      'can be set on a token only once.'),
 
-  ProcessSetters: array [0..1] of TInfoClassSuggestion = (
-    (InfoClass: Cardinal(ProcessAccessToken);
+    (Location: 'NtSetInformationProcess';
+     CallType: lcQuerySetCall;
+     InfoClass: Cardinal(ProcessAccessToken);
      Status: STATUS_NOT_SUPPORTED;
      Text: 'Tokens can be assigned to processes only on early stages of ' +
       'their lifetime. Try this action on a newly created suspended process.'),
 
-    (InfoClass: Cardinal(ProcessAccessToken);
-     Status: STATUS_BAD_IMPERSONATION_LEVEL;
-     Text: 'Only a primary token can be assigned to a process.')
+    (Location: 'LsaCallAuthenticationPackage';
+     CallType: lcQuerySetCall;
+     InfoClass: Cardinal(MsV1_0LookupToken);
+     Status: STATUS_ACCESS_DENIED;
+     Text: 'Querying logon session tokens requires NT SERVICE\CscService ' +
+       'group membership and SeTcbPrivilege.')
   );
 
-function IsQuerySetCall(const NtxStatus: TNtxStatus; Location: String;
-  InfoClassType: PTypeInfo): Boolean;
-begin
-  Result := (NtxStatus.LastCall.CallType = lcQuerySetCall) and
-    (NtxStatus.LastCall.InfoClassType = InfoClassType) and
-    (NtxStatus.Location = Location);
-end;
-
-function Suggestions(const NtxStatus: TNtxStatus): String;
+function SuggestionProvider(
+  const Status: TNtxStatus;
+  out Suggestion: String
+): Boolean;
 var
   i: Integer;
 begin
-  for i := 0 to High(TokenOperations) do
-    if NtxStatus.Matches(TokenOperations[i].Status,
-      TokenOperations[i].Location) then
-      Exit(TokenOperations[i].Text);
+  for i := 0 to High(KnownSuggesions) do
+    if (Status.Status = KnownSuggesions[i].Status) and
+      (Status.LastCall.CallType = KnownSuggesions[i].CallType) and
+      (Status.LastCall.InfoClass = KnownSuggesions[i].InfoClass) and
+      (Status.LastCall.Location = KnownSuggesions[i].Location) then
+    begin
+      Suggestion := KnownSuggesions[i].Text;
+      Exit(True);
+    end;
 
-  if IsQuerySetCall(NtxStatus, 'NtSetInformationToken',
-    TypeInfo(TTokenInformationClass)) then
-    for i := 0 to High(TokenSetters) do
-      if (NtxStatus.LastCall.InfoClass = Cardinal(TokenSetters[i].InfoClass))
-        and (NtxStatus.Status = TokenSetters[i].Status) then
-        Exit(TokenSetters[i].Text);
-
-  if IsQuerySetCall(NtxStatus, 'NtSetInformationProcess',
-    TypeInfo(TProcessInfoClass)) then
-    for i := 0 to High(ProcessSetters) do
-      if (NtxStatus.LastCall.InfoClass = Cardinal(ProcessSetters[i].InfoClass))
-        and (NtxStatus.Status = ProcessSetters[i].Status) then
-        Exit(ProcessSetters[i].Text);
+  Result := False;
 end;
 
 initialization
@@ -268,7 +259,7 @@ initialization
   BUG_MESSAGE := BUGTRACKER;
 
   // Register our error suggestions
-  RegisterSuggestions(Suggestions);
+  UiLibRegisterSuggestionProvider(SuggestionProvider);
 finalization
 
 end.

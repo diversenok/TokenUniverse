@@ -163,7 +163,7 @@ begin
       Status := AddLogonSidToObject(hxWinSta, LogonSid.Sid, WINSTA_ALL_ACCESS);
 
     if not Status.IsSuccess then
-      ShowNtxStatus(ParentHwnd, Status);
+      UiLibShowNtxStatus(ParentHwnd, Status);
   end;
 
   if SuggestForDesktop then
@@ -176,7 +176,7 @@ begin
       Status := AddLogonSidToObject(hxDesktop, LogonSid.Sid, DESKTOP_ALL_ACCESS);
 
     if not Status.IsSuccess then
-      ShowNtxStatus(ParentHwnd, Status);
+      UiLibShowNtxStatus(ParentHwnd, Status);
   end;
 end;
 

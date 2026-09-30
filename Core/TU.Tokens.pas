@@ -319,7 +319,8 @@ uses
   Ntapi.ntstatus, Ntapi.ntpsapi, DelphiApi.Reflection, NtUtils.Security.Sid,
   NtUtils.Lsa.Sid, NtUtils.Objects, NtUtils.Tokens, NtUtils.Tokens.Impersonate,
   NtUtils.WinStation, NtUtils.SysUtils, DelphiUiLib.Strings, DelphiUtils.Arrays,
-  DelphiUiLib.LiteReflection, System.SysUtils, TU.Tokens.Events, TU.Events;
+  DelphiUiLib.LiteReflection, System.SysUtils, TU.Tokens.Events, TU.Events,
+  NtUtils.Packages.Mrm;
 
 { Helper functions }
 
@@ -1204,6 +1205,7 @@ begin
   begin
     Events.StringCache[tsAppContainerName] := AppContainer.FullMoniker;
     Events.StringCache[tsAppContainerDisplayName] := AppContainer.DisplayName;
+    PkgxMrmResolveStringVar(AppContainer.DisplayName, AppContainer.FullMoniker);
   end;
 
   Events.OnAppContainerInfo.Notify(Result, AppContainer);

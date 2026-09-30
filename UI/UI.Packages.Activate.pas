@@ -115,7 +115,7 @@ begin
     Exit;
 
   // Non-resource strings appear as-is
-  if PkgxMrmResourceReferenceType(DisplayName) = rkUnknown then
+  if PkgxMrmClassifyReference(DisplayName) = rkInvalid then
   begin
     Result := NtxSuccess;
     Exit;
