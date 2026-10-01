@@ -179,7 +179,7 @@ begin
   if FMode in [amManager, amBroker] then
     tbxResult.Text := Rttix.Format(ProcessId)
   else
-    tbxResult.Text := '(Unavailble for this method)';
+    tbxResult.Text := '(Unavailable for this method)';
 end;
 
 procedure TFormActivatePackage.btnCloseClick;
