@@ -136,7 +136,8 @@ object FormActivatePackage: TFormActivatePackage
     OnChange = cbxMethodChange
     Items.Strings = (
       'IApplicationActivationManager::ActivateApplication'
-      'IApplicationActivationBroker::ActivateApplication')
+      'IApplicationActivationBroker::ActivateApplication'
+      'ISwitchController::SwitchToAppByIdWithArguments')
   end
   object cbxSession: TUiLibSessionIdBox
     Left = 5

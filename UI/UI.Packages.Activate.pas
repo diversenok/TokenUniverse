@@ -9,6 +9,12 @@ uses
   NtUtilsUI.UmgrContext, NtUiFrame.Bits;
 
 type
+  TActivationMode = (
+    amManager,
+    amBroker,
+    amShell
+  );
+
   TFormActivatePackage = class (TUiLibChildForm)
     tbxAumid: TUiLibEdit;
     lblAumid: TLabel;
@@ -36,6 +42,7 @@ type
     procedure UiLibChildFormCreate(Sender: TObject);
   private
     FAumidSuggestions: IAutoCompletionSuggestions;
+    FMode: TActivationMode;
   public
     { Public declarations }
   end;
@@ -138,10 +145,8 @@ procedure TFormActivatePackage.btnActivateClick;
 var
   Options: TPkgxActivatePackageOptions;
   ProcessId: TProcessId32;
-  ExtendedMethod: Boolean;
 begin
   tbxResult.Text := '';
-  ExtendedMethod := cbxMethod.ItemIndex = 1;
 
   // Collection activation settings
   Options := Default(TPkgxActivatePackageOptions);
@@ -149,24 +154,32 @@ begin
   Options.Arguments := tbxArguments.Text;
   Options.Options := Cardinal(fmxOptions.Value);
 
-  if ExtendedMethod and chkSession.Checked then
+  if (FMode in [amBroker, amShell]) and chkSession.Checked then
   begin
     Include(Options.Flags, apUseSessionId);
     Options.SessionId := cbxSession.SessionID;
   end;
 
-  if ExtendedMethod and chkContext.Checked then
+  if (FMode = amBroker) and chkContext.Checked then
     Options.UserContext := cbxContext.UserContext;
 
   // Request package activation
-  if ExtendedMethod then
-    PkgxActivateApplicationEx(Options, ProcessId).RaiseOnError
-  else
-    PkgxActivateApplication(Options.Aumid, Options.Arguments, Options.Options,
-      @ProcessId).RaiseOnError;
+  case FMode of
+    amManager:
+      PkgxActivateApplication(Options, @ProcessId).RaiseOnError;
+
+    amBroker:
+      PkgxActivateApplicationViaBroker(Options, ProcessId).RaiseOnError;
+
+    amShell:
+      PkgxActivateApplicationViaImmersiveShell(Options).RaiseOnError
+  end;
 
   // Report the returned PID
-  tbxResult.Text := Rttix.Format(ProcessId);
+  if FMode in [amManager, amBroker] then
+    tbxResult.Text := Rttix.Format(ProcessId)
+  else
+    tbxResult.Text := '(Unavailble for this method)';
 end;
 
 procedure TFormActivatePackage.btnCloseClick;
@@ -175,14 +188,12 @@ begin
 end;
 
 procedure TFormActivatePackage.cbxMethodChange;
-var
-  Extended: Boolean;
 begin
-  Extended := cbxMethod.ItemIndex = 1;
-  chkSession.Enabled := Extended;
-  cbxSession.Enabled := Extended and chkSession.Checked;
-  chkContext.Enabled := Extended;
-  cbxContext.Enabled := Extended and chkContext.Checked;
+  FMode := TActivationMode(cbxMethod.ItemIndex);
+  chkSession.Enabled := FMode in [amBroker, amShell];
+  cbxSession.Enabled := (FMode in [amBroker, amShell]) and chkSession.Checked;
+  chkContext.Enabled := FMode = amBroker;
+  cbxContext.Enabled := (FMode = amBroker) and chkContext.Checked;
 end;
 
 procedure TFormActivatePackage.tbxAumidChange;
