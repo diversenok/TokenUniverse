@@ -54,20 +54,21 @@ type
     OnAppContainerSid: TAutoObservers<ISid>;
     OnAppContainerInfo: TAutoObservers<TRtlxAppContainerInfo>;
     OnAppContainerNumber: TAutoObservers<Cardinal>;
-    OnUserClaims: TAutoObservers<TArray<TSecurityAttribute>>;
-    OnDeviceClaims: TAutoObservers<TArray<TSecurityAttribute>>;
-    OnRestrictedUserClaims: TAutoObservers<TArray<TSecurityAttribute>>;
-    OnRestrictedDeviceClaims: TAutoObservers<TArray<TSecurityAttribute>>;
+    OnUserClaims: TAutoObservers<TArray<TNtxSecurityAttribute>>;
+    OnDeviceClaims: TAutoObservers<TArray<TNtxSecurityAttribute>>;
+    OnRestrictedUserClaims: TAutoObservers<TArray<TNtxSecurityAttribute>>;
+    OnRestrictedDeviceClaims: TAutoObservers<TArray<TNtxSecurityAttribute>>;
     OnDeviceGroups: TAutoObservers<TArray<TGroup>>;
     OnRestrictedDeviceGroups: TAutoObservers<TArray<TGroup>>;
-    OnSecurityAttributes: TAutoObservers<TArray<TSecurityAttribute>>;
+    OnSecurityAttributes: TAutoObservers<TArray<TNtxSecurityAttribute>>;
     OnIsLPAC: TAutoObservers<Boolean>;
+    OnPackageIdentity: TAutoObservers<TNtxSysAppIdAttribute>;
     OnPackageClaims: TAutoObservers<TPsPkgClaim>;
     OnIsRestricted: TAutoObservers<LongBool>;
     OnTrustLevel: TAutoObservers<ISid>;
     OnPrivateNamespace: TAutoObservers<LongBool>;
-    OnSingletonAttributes: TAutoObservers<TArray<TSecurityAttribute>>;
-    OnBnoIsolation: TAutoObservers<TBnoIsolation>;
+    OnSingletonAttributes: TAutoObservers<TArray<TNtxSecurityAttribute>>;
+    OnBnoIsolation: TAutoObservers<TNtxBnoIsolation>;
     OnIsSandboxed: TAutoObservers<LongBool>;
     OnIsAppSilo: TAutoObservers<LongBool>;
     FStrings: array [TTokenStringClass] of String;
@@ -333,7 +334,7 @@ begin
   Result := (A.Flags = B.Flags) and (A.Origin = B.Origin)
 end;
 
-function CompareBnoIsolation(const A, B: TBnoIsolation): Boolean;
+function CompareBnoIsolation(const A, B: TNtxBnoIsolation): Boolean;
 begin
   Result := (A.Enabled = B.Enabled) and (A.Prefix = B.Prefix);
 end;

@@ -87,6 +87,9 @@ type
     tsSecAttributes,           // Number of security attributes
     tsSecAttributesNames,      // The names of all security attributes
     tsLPAC,                    // Whether Low Privilege AppContainer attribute set
+    tsIsPackaged,              // Whether the token has package identity
+    tsPackageFullName,         // {PackageName}_{Version}_{Architecture}_{ResourceId}_{PublisherId}
+    tsPackageAumid,            // {PackageName}_{PublisherId}!{RelativeAppId}
     tsPackageFlags,            // Flags that define package attribute behavior
     tsPackageOrigin,           // The origin of the application package
     tsIsRestricted,            // Whether token is restricted or write-only restricted
@@ -151,20 +154,21 @@ type
     function QueryAppContainerSid(out Package: ISid): TNtxStatus;
     function QueryAppContainerInfo(out AppContainer: TRtlxAppContainerInfo): TNtxStatus;
     function QueryAppContainerNumber(out Number: Cardinal): TNtxStatus;
-    function QueryUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryRestrictedUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryRestrictedDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryUserClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryDeviceClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedUserClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedDeviceClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
     function QueryDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
     function QueryRestrictedDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
-    function QuerySecurityAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
+    function QuerySecurityAttributes(out Attributes: TArray<TNtxSecurityAttribute>): TNtxStatus;
     function QueryIsLPAC(out IsLPAC: Boolean): TNtxStatus;
+    function QueryPackageIdentity(out SysAppId: TNtxSysAppIdAttribute): TNtxStatus;
     function QueryPackageClaims(out PkgClaim: TPsPkgClaim): TNtxStatus;
     function QueryIsRestricted(out IsRestricted: LongBool): TNtxStatus;
     function QueryTrustLevel(out TrustLevel: ISid): TNtxStatus;
     function QueryPrivateNamespace(out PrivateNamespace: LongBool): TNtxStatus;
-    function QuerySingletonAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryBnoIsolation(out Isolation: TBnoIsolation): TNtxStatus;
+    function QuerySingletonAttributes(out Attributes: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryBnoIsolation(out Isolation: TNtxBnoIsolation): TNtxStatus;
     function QueryIsSandboxed(out IsSandboxed: LongBool): TNtxStatus;
     function QueryIsAppSilo(out IsAppSilo: LongBool): TNtxStatus;
 
@@ -205,20 +209,21 @@ type
     function ObserveAppContainerSid(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
     function ObserveAppContainerInfo(Callback: TEventCallback<TNtxStatus, TRtlxAppContainerInfo>): IAutoReleasable;
     function ObserveAppContainerNumber(Callback: TEventCallback<TNtxStatus, Cardinal>): IAutoReleasable;
-    function ObserveUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveRestrictedUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveRestrictedDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
     function ObserveDeviceGroups(Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveRestrictedDeviceGroups(Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
-    function ObserveSecurityAttributes(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveSecurityAttributes(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
     function ObserveIsLPAC(Callback: TEventCallback<TNtxStatus, Boolean>): IAutoReleasable;
+    function ObservePackageIdentity(Callback: TEventCallback<TNtxStatus, TNtxSysAppIdAttribute>): IAutoReleasable;
     function ObservePackageClaims(Callback: TEventCallback<TNtxStatus, TPsPkgClaim>): IAutoReleasable;
     function ObserveIsRestricted(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveTrustLevel(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
     function ObservePrivateNamespace(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
-    function ObserveSingletonAttributes(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveBnoIsolation(Callback: TEventCallback<TNtxStatus, TBnoIsolation>): IAutoReleasable;
+    function ObserveSingletonAttributes(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveBnoIsolation(Callback: TEventCallback<TNtxStatus, TNtxBnoIsolation>): IAutoReleasable;
     function ObserveIsSandboxed(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveIsAppSilo(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
 
@@ -268,6 +273,7 @@ type
     function RefreshRestrictedDeviceGroups: TNtxStatus;
     function RefreshSecurityAttributes: TNtxStatus;
     function RefreshIsLPAC: TNtxStatus;
+    function RefreshPackageIdentity: TNtxStatus;
     function RefreshPackageClaims: TNtxStatus;
     function RefreshIsRestricted: TNtxStatus;
     function RefreshTrustLevel: TNtxStatus;
@@ -421,20 +427,21 @@ type
     function QueryAppContainerSid(out Package: ISid): TNtxStatus;
     function QueryAppContainerInfo(out AppContainer: TRtlxAppContainerInfo): TNtxStatus;
     function QueryAppContainerNumber(out Number: Cardinal): TNtxStatus;
-    function QueryUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryRestrictedUserClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryRestrictedDeviceClaims(out Claims: TArray<TSecurityAttribute>): TNtxStatus;
+    function QueryUserClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryDeviceClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedUserClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryRestrictedDeviceClaims(out Claims: TArray<TNtxSecurityAttribute>): TNtxStatus;
     function QueryDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
     function QueryRestrictedDeviceGroups(out Groups: TArray<TGroup>): TNtxStatus;
-    function QuerySecurityAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
+    function QuerySecurityAttributes(out Attributes: TArray<TNtxSecurityAttribute>): TNtxStatus;
     function QueryIsLPAC(out IsLPAC: Boolean): TNtxStatus;
+    function QueryPackageIdentity(out SysAppId: TNtxSysAppIdAttribute): TNtxStatus;
     function QueryPackageClaims(out PkgClaim: TPsPkgClaim): TNtxStatus;
     function QueryIsRestricted(out IsRestricted: LongBool): TNtxStatus;
     function QueryTrustLevel(out TrustLevel: ISid): TNtxStatus;
     function QueryPrivateNamespace(out PrivateNamespace: LongBool): TNtxStatus;
-    function QuerySingletonAttributes(out Attributes: TArray<TSecurityAttribute>): TNtxStatus;
-    function QueryBnoIsolation(out Isolation: TBnoIsolation): TNtxStatus;
+    function QuerySingletonAttributes(out Attributes: TArray<TNtxSecurityAttribute>): TNtxStatus;
+    function QueryBnoIsolation(out Isolation: TNtxBnoIsolation): TNtxStatus;
     function QueryIsSandboxed(out IsSandboxed: LongBool): TNtxStatus;
     function QueryIsAppSilo(out IsAppSilo: LongBool): TNtxStatus;
     function ObserveString(InfoClass: TTokenStringClass; Callback: TEventCallback<TTokenStringClass, String>; ForceRefresh: Boolean = False): IAutoReleasable;
@@ -473,20 +480,21 @@ type
     function ObserveAppContainerSid(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
     function ObserveAppContainerInfo(Callback: TEventCallback<TNtxStatus, TRtlxAppContainerInfo>): IAutoReleasable;
     function ObserveAppContainerNumber(Callback: TEventCallback<TNtxStatus, Cardinal>): IAutoReleasable;
-    function ObserveUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveRestrictedUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveRestrictedDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedUserClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveRestrictedDeviceClaims(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
     function ObserveDeviceGroups(Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
     function ObserveRestrictedDeviceGroups(Callback: TEventCallback<TNtxStatus, TArray<TGroup>>): IAutoReleasable;
-    function ObserveSecurityAttributes(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
+    function ObserveSecurityAttributes(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
     function ObserveIsLPAC(Callback: TEventCallback<TNtxStatus, Boolean>): IAutoReleasable;
+    function ObservePackageIdentity(Callback: TEventCallback<TNtxStatus, TNtxSysAppIdAttribute>): IAutoReleasable;
     function ObservePackageClaims(Callback: TEventCallback<TNtxStatus, TPsPkgClaim>): IAutoReleasable;
     function ObserveIsRestricted(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveTrustLevel(Callback: TEventCallback<TNtxStatus, ISid>): IAutoReleasable;
     function ObservePrivateNamespace(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
-    function ObserveSingletonAttributes(Callback: TEventCallback<TNtxStatus, TArray<TSecurityAttribute>>): IAutoReleasable;
-    function ObserveBnoIsolation(Callback: TEventCallback<TNtxStatus, TBnoIsolation>): IAutoReleasable;
+    function ObserveSingletonAttributes(Callback: TEventCallback<TNtxStatus, TArray<TNtxSecurityAttribute>>): IAutoReleasable;
+    function ObserveBnoIsolation(Callback: TEventCallback<TNtxStatus, TNtxBnoIsolation>): IAutoReleasable;
     function ObserveIsSandboxed(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     function ObserveIsAppSilo(Callback: TEventCallback<TNtxStatus, LongBool>): IAutoReleasable;
     procedure SmartRefresh;
@@ -534,6 +542,7 @@ type
     function RefreshRestrictedDeviceGroups: TNtxStatus;
     function RefreshSecurityAttributes: TNtxStatus;
     function RefreshIsLPAC: TNtxStatus;
+    function RefreshPackageIdentity: TNtxStatus;
     function RefreshPackageClaims: TNtxStatus;
     function RefreshIsRestricted: TNtxStatus;
     function RefreshTrustLevel: TNtxStatus;
@@ -800,7 +809,7 @@ end;
 
 function TToken.ObserveBnoIsolation;
 var
-  Info: TBnoIsolation;
+  Info: TNtxBnoIsolation;
 begin
   Callback(QueryBnoIsolation(Info), Info);
   Result := Events.OnBnoIsolation.Subscribe(Callback);
@@ -832,7 +841,7 @@ end;
 
 function TToken.ObserveDeviceClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Callback(QueryDeviceClaims(Info), Info);
   Result := Events.OnDeviceClaims.Subscribe(Callback);
@@ -998,6 +1007,14 @@ begin
   Result := Events.OnPackageClaims.Subscribe(Callback);
 end;
 
+function TToken.ObservePackageIdentity;
+var
+  Info: TNtxSysAppIdAttribute;
+begin
+  Callback(QueryPackageIdentity(Info), Info);
+  Result := Events.OnPackageIdentity.Subscribe(Callback);
+end;
+
 function TToken.ObservePrimaryGroup;
 var
   Info: ISid;
@@ -1024,7 +1041,7 @@ end;
 
 function TToken.ObserveRestrictedDeviceClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Callback(QueryRestrictedDeviceClaims(Info), Info);
   Result := Events.OnRestrictedDeviceClaims.Subscribe(Callback);
@@ -1048,7 +1065,7 @@ end;
 
 function TToken.ObserveRestrictedUserClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Callback(QueryRestrictedUserClaims(Info), Info);
   Result := Events.OnRestrictedUserClaims.Subscribe(Callback);
@@ -1064,7 +1081,7 @@ end;
 
 function TToken.ObserveSecurityAttributes;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Callback(QuerySecurityAttributes(Info), Info);
   Result := Events.OnSecurityAttributes.Subscribe(Callback);
@@ -1088,7 +1105,7 @@ end;
 
 function TToken.ObserveSingletonAttributes;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Callback(QuerySingletonAttributes(Info), Info);
   Result := Events.OnSingletonAttributes.Subscribe(Callback);
@@ -1157,7 +1174,7 @@ end;
 
 function TToken.ObserveUserClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Callback(QueryUserClaims(Info), Info);
   Result := Events.OnUserClaims.Subscribe(Callback);
@@ -1625,6 +1642,27 @@ begin
   Events.OnOwner.Notify(Result, Owner);
 end;
 
+function TToken.QueryPackageIdentity;
+begin
+  Result := NtxQueryPackageIdentityToken(hxToken, SysAppId);
+
+  if Result.IsSuccess then
+  begin
+    Events.StringCache[tsIsPackaged] := 'Yes';
+    Events.StringCache[tsPackageFullName] := SysAppId.PackageFullName;
+    Events.StringCache[tsPackageAumid] := SysAppId.PackageFamily + '!' +
+      SysAppId.RelativeAppId;
+  end
+  else if Result.Status = STATUS_NOT_FOUND then
+  begin
+    Events.StringCache[tsIsPackaged] := 'No';
+    Events.StringCache[tsPackageFullName] := 'N/A';
+    Events.StringCache[tsPackageAumid] := 'N/A';
+  end;
+
+  Events.OnPackageIdentity.Notify(Result, SysAppId);
+end;
+
 function TToken.QueryPackageClaims;
 begin
   Result := NtxQueryPackageClaimsToken(hxToken, PkgClaim);
@@ -1636,8 +1674,8 @@ begin
   end
   else if Result.Status = STATUS_NOT_FOUND then
   begin
-    Events.StringCache[tsPackageFlags] := '(Not found)';
-    Events.StringCache[tsPackageOrigin] := '(Not found)';
+    Events.StringCache[tsPackageFlags] := 'N/A';
+    Events.StringCache[tsPackageOrigin] := 'N/A';
   end;
 
   Events.OnPackageClaims.Notify(Result, PkgClaim);
@@ -1945,6 +1983,9 @@ begin
     tsSecAttributes,
     tsSecAttributesNames:      Success := RefreshSecurityAttributes.IsSuccess;
     tsLPAC:                    Success := RefreshIsLPAC.IsSuccess;
+    tsIsPackaged,
+    tsPackageFullName,
+    tsPackageAumid:            Success := RefreshPackageIdentity.IsSuccess;
     tsPackageFlags,
     tsPackageOrigin:           Success := RefreshPackageClaims.IsSuccess;
     tsIsRestricted:            Success := RefreshIsRestricted.IsSuccess;
@@ -2058,7 +2099,7 @@ end;
 
 function TToken.RefreshBnoIsolation;
 var
-  Info: TBnoIsolation;
+  Info: TNtxBnoIsolation;
 begin
   Result := QueryBnoIsolation(Info);
 end;
@@ -2086,7 +2127,7 @@ end;
 
 function TToken.RefreshDeviceClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Result := QueryDeviceClaims(Info);
 end;
@@ -2229,6 +2270,13 @@ begin
   Result := QueryPackageClaims(Info);
 end;
 
+function TToken.RefreshPackageIdentity;
+var
+  Info: TNtxSysAppIdAttribute;
+begin
+  Result := QueryPackageIdentity(Info);
+end;
+
 function TToken.RefreshPrimaryGroup;
 var
   Info: ISid;
@@ -2252,7 +2300,7 @@ end;
 
 function TToken.RefreshRestrictedDeviceClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Result := QueryRestrictedDeviceClaims(Info);
 end;
@@ -2273,7 +2321,7 @@ end;
 
 function TToken.RefreshRestrictedUserClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Result := QueryRestrictedUserClaims(Info);
 end;
@@ -2287,7 +2335,7 @@ end;
 
 function TToken.RefreshSecurityAttributes;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Result := QuerySecurityAttributes(Info);
 end;
@@ -2308,7 +2356,7 @@ end;
 
 function TToken.RefreshSingletonAttributes;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Result := QuerySingletonAttributes(Info);
 end;
@@ -2364,7 +2412,7 @@ end;
 
 function TToken.RefreshUserClaims;
 var
-  Info: TArray<TSecurityAttribute>;
+  Info: TArray<TNtxSecurityAttribute>;
 begin
   Result := QueryUserClaims(Info);
 end;

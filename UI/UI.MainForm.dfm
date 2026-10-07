@@ -3,7 +3,7 @@ object FormMain: TFormMain
   Top = 0
   Caption = 'Token Universe :: Main Window'
   ClientHeight = 290
-  ClientWidth = 818
+  ClientWidth = 884
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,14 +18,14 @@ object FormMain: TFormMain
   inline TokenView: TFrameTokens
     Left = 0
     Top = 0
-    Width = 818
+    Width = 884
     Height = 290
     Align = alClient
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
     inherited VST: TUiLibTree
-      Width = 818
+      Width = 884
       Height = 290
       EmptyListMessage = 'No opened tokens'
       PopupMenu = TokenMenu

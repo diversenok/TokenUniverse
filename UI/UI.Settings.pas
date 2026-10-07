@@ -88,6 +88,9 @@ const
     (Caption: 'Security Attributes';      Width: 110; Alignment: taCenter),
     (Caption: 'Security Attribute Names'; Width: 240; Alignment: taLeftJustify),
     (Caption: 'LPAC';                     Width: 50;  Alignment: taCenter),
+    (Caption: 'Packaged';                 Width: 80;  Alignment: taCenter),
+    (Caption: 'Package Full Name';        Width: 300; Alignment: taLeftJustify),
+    (Caption: 'AUMID';                    Width: 300; Alignment: taLeftJustify),
     (Caption: 'Package Flags';            Width: 140; Alignment: taLeftJustify),
     (Caption: 'Package Origin';           Width: 90;  Alignment: taCenter),
     (Caption: 'Is Restricted';            Width: 80;  Alignment: taCenter),
@@ -106,7 +109,7 @@ implementation
 class constructor TSettings.Create;
 begin
   SelectedColumns := [tsCaption, tsType, tsAccess, tsUser, tsSessionId,
-    tsElevation, tsIntegrity];
+    tsElevation, tsIntegrity, tsIsPackaged];
 
   UseSafeImpersonation := True;
 end;
