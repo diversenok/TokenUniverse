@@ -185,7 +185,8 @@ const PS_SUPPORTS: array [TKnownCreateMethod] of TNtxSupportedCreateParameters =
     spoAppUserModeId],
 
   // IShellDispatch
-  [spoParameters, spoCurrentDirectory, spoRequireElevation, spoWindowMode],
+  [spoParameters, spoCurrentDirectory, spoRequireElevation, spoWindowMode,
+    spoSessionId],
 
   // MMC20.Application
   [spoParameters, spoCurrentDirectory, spoWindowMode],

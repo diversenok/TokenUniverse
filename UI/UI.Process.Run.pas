@@ -86,6 +86,8 @@ type
     MenuRemoveCapability: TMenuItem;
     CheckBoxSession: TCheckBox;
     SessionIdBox: TUiLibSessionIdBox;
+    EditPackageFullName: TUiLibEdit;
+    LabelPackageFullName: TLabel;
     procedure MenuSelfClick(Sender: TObject);
     procedure MenuCmdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -201,6 +203,7 @@ begin
   Options.OwnerWindow := Handle;
   Options.WindowMode := TShowMode32(ComboBoxShowMode.ItemIndex);
   Options.AppUserModeId := EditAppId.Text;
+  Options.PackageFullName := EditPackageFullName.Text;
   Options.Capabilities := CapabilitiesFrame.All;
 
   if Assigned(FToken) then
@@ -633,6 +636,7 @@ begin
   LabelManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
   ComboBoxManifestDpi.Enabled := spoDetectManifest in SupportedOptions;
   EditAppId.Enabled := spoAppUserModeId in SupportedOptions;
+  EditPackageFullName.Enabled := spoPackage in SupportedOptions;
   CheckBoxSession.Enabled := spoSessionId in SupportedOptions;
   SessionIdBox.Enabled := (spoSessionId in SupportedOptions) and CheckBoxSession.Checked;
   ButtonAddCapability.Enabled := spoAppContainer in SupportedOptions;

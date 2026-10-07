@@ -298,7 +298,7 @@ object DialogRun: TDialogRun
       ImageIndex = 1
       object LabelProtection: TLabel
         Left = 3
-        Top = 167
+        Top = 215
         Width = 53
         Height = 13
         Caption = 'Protection:'
@@ -306,18 +306,25 @@ object DialogRun: TDialogRun
       object LabelAppId: TLabel
         Left = 3
         Top = 7
-        Width = 81
+        Width = 93
         Height = 13
-        Caption = 'AppUserModeId:'
+        Caption = 'App User Model ID:'
+      end
+      object LabelPackageFullName: TLabel
+        Left = 3
+        Top = 55
+        Width = 93
+        Height = 13
+        Caption = 'Package Full Name:'
       end
       object GroupBoxChildFlags: TGroupBox
-        Left = 1
-        Top = 53
+        Left = 3
+        Top = 104
         Width = 411
         Height = 105
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Child Process Policy: '
-        TabOrder = 1
+        TabOrder = 2
         object CheckBoxChildRestricted: TCheckBox
           Left = 16
           Top = 24
@@ -347,14 +354,14 @@ object DialogRun: TDialogRun
         end
       end
       object ComboBoxProtection: TUiLibComboBox
-        Left = 1
-        Top = 186
+        Left = 3
+        Top = 234
         Width = 411
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
         ItemIndex = 0
-        TabOrder = 2
+        TabOrder = 3
         Text = 'Not specified'
         Items.Strings = (
           'Not specified'
@@ -373,29 +380,41 @@ object DialogRun: TDialogRun
         Top = 26
         Width = 409
         Height = 21
-        Hint = '{PackageFamilyName}!{AppId}'
+        Hint = '{PackageName}_{PublisherId}!{RelativeAppId}'
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
-        TextHint = '{PackageFamilyName}!{AppId}'
+        TextHint = '{PackageName}_{PublisherId}!{RelativeAppId}'
       end
       object CheckBoxSession: TCheckBox
         Left = 3
-        Top = 215
+        Top = 263
         Width = 409
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Session:'
-        TabOrder = 3
+        TabOrder = 4
         OnClick = CheckBoxSessionClick
       end
       object SessionIdBox: TUiLibSessionIdBox
-        Left = 0
-        Top = 238
+        Left = 3
+        Top = 286
         Width = 412
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         Enabled = False
-        TabOrder = 4
+        TabOrder = 5
+      end
+      object EditPackageFullName: TUiLibEdit
+        Left = 3
+        Top = 74
+        Width = 409
+        Height = 21
+        Hint = '{PackageFamilyName}!{AppId}'
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 1
+        TextHint = 
+          '{PackageName}_{Version}_{Architecture}_{ResourceId}_{PublisherId' +
+          '}'
       end
     end
     object TabAppContainer: TTabSheet
