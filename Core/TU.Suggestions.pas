@@ -165,7 +165,7 @@ type
   end;
 
 const
-  KnownSuggesions: array [0..9] of TSuggestion = (
+  KnownSuggesions: array [0..10] of TSuggestion = (
     (Location: 'NtDuplicateToken';
      Status: STATUS_BAD_IMPERSONATION_LEVEL;
      Text: 'You can''t duplicate a token from a lower impersonation ' +
@@ -218,6 +218,13 @@ const
      Text: 'The error code is not very informative, but it might be caused ' +
       'by limitations enforced on this information class: auditing policy ' +
       'can be set on a token only once.'),
+
+    (Location: 'NtSetInformationToken';
+     CallType: lcQuerySetCall;
+     InfoClass: Cardinal(TokenLinkedToken);
+     Status: STATUS_INVALID_PARAMETER;
+     Text: 'Both input tokens must be primary tokens belonging to logon ' +
+      'sessions not already linked to other logon sessions.'),
 
     (Location: 'NtSetInformationProcess';
      CallType: lcQuerySetCall;

@@ -258,7 +258,7 @@ object FormMain: TFormMain
       OnClick = ActionOpenLinked
     end
     object TokenSetLinked: TMenuItem
-      Caption = 'Set linked token...'
+      Caption = 'Set (limited) linked token...'
       OnClick = TokenSetLinkedClick
     end
     object N2: TMenuItem
