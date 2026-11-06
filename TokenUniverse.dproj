@@ -360,6 +360,10 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.UmgrContext.pas"/>
         <DCCReference Include="Core\TU.Profiles.pas"/>
         <DCCReference Include="NtUtilsUI\Components\NtUtilsUI.LogonId.pas"/>
+        <DCCReference Include="UI\UI.Com.Activate.pas">
+            <Form>FormActivateComClass</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

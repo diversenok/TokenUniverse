@@ -76,6 +76,7 @@ type
     cmLoadProfile: TMenuItem;
     cmUnloadProfile: TMenuItem;
     cmQueryLogonSession: TMenuItem;
+    cmActivateCom: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -130,6 +131,7 @@ type
     procedure cmLoadProfileClick(Sender: TObject);
     procedure cmUnloadProfileClick(Sender: TObject);
     procedure cmQueryLogonSessionClick(Sender: TObject);
+    procedure cmActivateComClick(Sender: TObject);
   end;
 
 var
@@ -149,7 +151,7 @@ uses
   NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
   UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog,
   DelphiUiLib.LiteReflection.Types, NtUtils.Processes.Info, NtUtils.Console,
-  UI.Packages.Activate, TU.Profiles;
+  UI.Packages.Activate, TU.Profiles, UI.Com.Activate;
 
 {$R *.dfm}
 
@@ -331,17 +333,22 @@ begin
   TokenView.Add(Token);
 end;
 
-procedure TFormMain.cmAccessClick(Sender: TObject);
+procedure TFormMain.cmAccessClick;
 begin
   TAccessCheckForm.Create(Self, cfmDesktop).Show;
 end;
 
-procedure TFormMain.cmActivatePackageClick(Sender: TObject);
+procedure TFormMain.cmActivateComClick;
+begin
+  TFormActivateComClass.CreateAndShow(True);
+end;
+
+procedure TFormMain.cmActivatePackageClick;
 begin
   TFormActivatePackage.CreateAndShow(True);
 end;
 
-procedure TFormMain.cmAllocConsoleClick(Sender: TObject);
+procedure TFormMain.cmAllocConsoleClick;
 begin
   if not cmAllocConsole.Checked then
   begin

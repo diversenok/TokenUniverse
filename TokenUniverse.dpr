@@ -102,7 +102,8 @@ uses
   UI.Packages.Activate in 'UI\UI.Packages.Activate.pas' {FormActivatePackage},
   NtUtilsUI.UmgrContext in 'NtUtilsUI\Components\NtUtilsUI.UmgrContext.pas',
   TU.Profiles in 'Core\TU.Profiles.pas',
-  NtUtilsUI.LogonId in 'NtUtilsUI\Components\NtUtilsUI.LogonId.pas';
+  NtUtilsUI.LogonId in 'NtUtilsUI\Components\NtUtilsUI.LogonId.pas',
+  UI.Com.Activate in 'UI\UI.Com.Activate.pas' {FormActivateComClass};
 
 {$R *.res}
 {$WEAKLINKRTTI ON}
@@ -130,9 +131,11 @@ begin
   ReportMemoryLeaksOnShutdown := True;
   {$ENDIF}
 
-  // Help COM initialization under LPAC + use at least implicit MTA
+  // Help COM initialization under LPAC, use at least implicit MTA &
+  // dynamic cloaking
   ComxSuppressCapabilityCheck;
   ComxInitializeImplicitOnce;
+  ComxInitializeSecurity;
 
   // Enable lite reflection for custom types
   RttixRegisterAllFormatter;

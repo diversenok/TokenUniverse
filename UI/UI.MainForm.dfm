@@ -170,6 +170,11 @@ object FormMain: TFormMain
         ShortCut = 119
         OnClick = cmAccessClick
       end
+      object cmActivateCom: TMenuItem
+        Caption = 'Activate COM class...'
+        ShortCut = 16504
+        OnClick = cmActivateComClick
+      end
       object cmActivatePackage: TMenuItem
         Caption = 'Activate package...'
         ShortCut = 8312
