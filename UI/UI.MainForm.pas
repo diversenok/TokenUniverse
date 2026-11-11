@@ -77,6 +77,7 @@ type
     cmUnloadProfile: TMenuItem;
     cmQueryLogonSession: TMenuItem;
     cmActivateCom: TMenuItem;
+    cmActivateWinRT: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure ActionDuplicate(Sender: TObject);
     procedure ActionClose(Sender: TObject);
@@ -132,6 +133,7 @@ type
     procedure cmUnloadProfileClick(Sender: TObject);
     procedure cmQueryLogonSessionClick(Sender: TObject);
     procedure cmActivateComClick(Sender: TObject);
+    procedure cmActivateWinRTClick(Sender: TObject);
   end;
 
 var
@@ -151,7 +153,7 @@ uses
   NtUtils.Processes, NtUtils.Objects, TU.Startup, NtUiCommon.Prototypes,
   UI.Modal.PickToken, UI.New.UserManager, NtUiLib.Errors.Dialog,
   DelphiUiLib.LiteReflection.Types, NtUtils.Processes.Info, NtUtils.Console,
-  UI.Packages.Activate, TU.Profiles, UI.Com.Activate;
+  UI.Packages.Activate, TU.Profiles, UI.Com.Activate, UI.WinRT.Activate;
 
 {$R *.dfm}
 
@@ -346,6 +348,11 @@ end;
 procedure TFormMain.cmActivatePackageClick;
 begin
   TFormActivatePackage.CreateAndShow(True);
+end;
+
+procedure TFormMain.cmActivateWinRTClick;
+begin
+  TFormActivateWinRTClass.CreateAndShow(True);
 end;
 
 procedure TFormMain.cmAllocConsoleClick;

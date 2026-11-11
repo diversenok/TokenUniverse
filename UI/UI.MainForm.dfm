@@ -162,7 +162,7 @@ object FormMain: TFormMain
     object MenuTools: TMenuItem
       Caption = 'Tools'
       object MenuSystemAudit: TMenuItem
-        Caption = 'Manage System Audit...'
+        Caption = 'Manage audit policy...'
         OnClick = MenuSystemAuditClick
       end
       object cmAccess: TMenuItem
@@ -175,8 +175,13 @@ object FormMain: TFormMain
         ShortCut = 16504
         OnClick = cmActivateComClick
       end
+      object cmActivateWinRT: TMenuItem
+        Caption = 'Activate WinRT class...'
+        ShortCut = 24696
+        OnClick = cmActivateWinRTClick
+      end
       object cmActivatePackage: TMenuItem
-        Caption = 'Activate package...'
+        Caption = 'Activate MSIX package...'
         ShortCut = 8312
         OnClick = cmActivatePackageClick
       end

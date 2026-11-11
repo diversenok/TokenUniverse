@@ -276,6 +276,11 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DCCReference Include="UI\UI.Com.Activate.pas">
             <Form>FormActivateComClass</Form>
         </DCCReference>
+        <DCCReference Include="UI\UI.WinRT.Activate.pas">
+            <Form>FormActivateWinRTClass</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TUiLibChildForm</DesignClass>
+        </DCCReference>
         <None Include="TokenUniverse.todo"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -29,7 +29,7 @@ object FormActivateComClass: TFormActivateComClass
     Height = 15
     Caption = 'CLSID:'
   end
-  object Label1: TLabel
+  object lblCatalog: TLabel
     Left = 5
     Top = 56
     Width = 54

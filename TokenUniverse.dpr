@@ -103,7 +103,8 @@ uses
   NtUtilsUI.UmgrContext in 'NtUtilsUI\Components\NtUtilsUI.UmgrContext.pas',
   TU.Profiles in 'Core\TU.Profiles.pas',
   NtUtilsUI.LogonId in 'NtUtilsUI\Components\NtUtilsUI.LogonId.pas',
-  UI.Com.Activate in 'UI\UI.Com.Activate.pas' {FormActivateComClass};
+  UI.Com.Activate in 'UI\UI.Com.Activate.pas' {FormActivateComClass},
+  UI.WinRT.Activate in 'UI\UI.WinRT.Activate.pas' {FormActivateWinRTClass: TUiLibChildForm};
 
 {$R *.res}
 {$WEAKLINKRTTI ON}

@@ -25,7 +25,7 @@ type
     lblClsid: TLabel;
     tbxClsid: TUiLibGuidBox;
     uiCatalog: TUiLibTree;
-    Label1: TLabel;
+    lblCatalog: TLabel;
     uiClsCtx: TBitsFrame;
     Label2: TLabel;
     chkxSessionId: TCheckBox;
@@ -59,6 +59,11 @@ type
     { Public declarations }
   end;
 
+// Format an interface adress and proxy info
+function FormatInterfacePointer(
+  const Unk: IUnknown
+): String;
+
 implementation
 
 uses
@@ -73,6 +78,28 @@ const
   colProperty = 0;
   colValue = 1;
   colMax = 2;
+
+function FormatInterfacePointer(
+  const Unk: IUnknown
+): String;
+var
+  Locality: TRpcOptServerLocalityValues;
+  ServerPid: TProcessId32;
+begin
+  if Assigned(Unk) then
+  begin
+    Result := 'Pointer @ ' + RtlxIntToHex(UIntPtr(Unk),
+      NUMERIC_WIDTH_ROUND_TO_GROUP);
+
+    if ComxQueryServerLocality(Unk, Locality).IsSuccess then
+      Result := Result + ' - ' + Rttix.Format(Locality) + ' Proxy';
+
+    if ComxQueryServerProcessId(Unk, ServerPid).IsSuccess then
+      Result := Result + ' - ' + Rttix.Format(ServerPid);
+  end
+  else
+    Result := '';
+end;
 
 function CollectClsidsSuggestions: TArray<String>;
 var
@@ -215,30 +242,11 @@ begin
 end;
 
 procedure TFormActivateComClass.SetComObject;
-var
-  Locality: TRpcOptServerLocalityValues;
-  ServerPid: TProcessId32;
-  ResultInfo: String;
 begin
   FComObject := Value;
   btnRelease.Enabled := Assigned(Value);
   btnQueryIntf.Enabled := Assigned(Value);
-
-  if Assigned(Value) then
-  begin
-    ResultInfo := 'Pointer @ ' + RtlxIntToHex(UIntPtr(Value),
-      NUMERIC_WIDTH_ROUND_TO_GROUP);
-
-    if ComxQueryServerLocality(Value, Locality).IsSuccess then
-      ResultInfo := ResultInfo + ' - ' + Rttix.Format(Locality) + ' Proxy';
-
-    if ComxQueryServerProcessId(Value, ServerPid).IsSuccess then
-      ResultInfo := ResultInfo + ' - ' + Rttix.Format(ServerPid);
-  end
-  else
-    ResultInfo := '';
-
-  tbxResult.Text := ResultInfo;
+  tbxResult.Text := FormatInterfacePointer(Value);
 end;
 
 procedure TFormActivateComClass.tbxClsidChange;
